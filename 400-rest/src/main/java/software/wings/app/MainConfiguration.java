@@ -37,6 +37,8 @@ import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.stream.AtmosphereBroadcaster;
+import io.harness.telemetry.segment.SegmentConfiguration;
+import io.harness.threading.ThreadPoolConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
 import software.wings.DataStorageMode;
@@ -106,6 +108,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("elasticsearch")
   private ElasticsearchConfig elasticsearchConfig = ElasticsearchConfig.builder().build();
   @JsonProperty(value = "searchEnabled") private boolean isSearchEnabled;
+  @JsonProperty(value = "graphQLEnabled") private boolean isGraphQLEnabled;
+  @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
   @JsonProperty private PortalConfig portal = new PortalConfig();
   @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;
@@ -144,6 +148,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("ceSetUpConfig") private CESetUpConfig ceSetUpConfig;
   @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
+  @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
   @JsonProperty("salesforceConfig") private SalesforceConfig salesforceConfig = SalesforceConfig.builder().build();
   @JsonProperty("datadogConfig") private DatadogConfig datadogConfig;
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;

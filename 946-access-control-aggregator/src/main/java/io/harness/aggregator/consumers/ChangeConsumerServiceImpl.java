@@ -39,8 +39,8 @@ public class ChangeConsumerServiceImpl implements ChangeConsumerService {
   public List<ACL> getAClsForRoleAssignment(RoleAssignmentDBO roleAssignment) {
     Optional<Role> role = roleService.get(
         roleAssignment.getRoleIdentifier(), roleAssignment.getScopeIdentifier(), ManagedFilter.NO_FILTER);
-    Optional<ResourceGroup> resourceGroup =
-        resourceGroupService.get(roleAssignment.getResourceGroupIdentifier(), roleAssignment.getScopeIdentifier());
+    Optional<ResourceGroup> resourceGroup = resourceGroupService.get(
+        roleAssignment.getResourceGroupIdentifier(), roleAssignment.getScopeIdentifier(), ManagedFilter.NO_FILTER);
     if (!role.isPresent() || !resourceGroup.isPresent()) {
       return new ArrayList<>();
     }

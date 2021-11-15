@@ -23,6 +23,9 @@ public interface PMSPipelineRepositoryCustom {
   Optional<PipelineEntity> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean notDeleted);
 
+  Optional<PipelineEntity> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
+
   PipelineEntity updatePipelineYaml(
       PipelineEntity pipelineToUpdate, PipelineEntity oldPipelineEntity, PipelineConfig yamlDTO, ChangeType changeType);
 

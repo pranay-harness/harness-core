@@ -70,8 +70,10 @@ public class RedisProducer extends AbstractProducer {
     Map<String, String> redisData = new HashMap<>(message.getMetadataMap());
     redisData.put(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(message.getData().toByteArray()));
     populateOtherProducerSpecificData(redisData);
-    log.info("trying to add {}", message.getMetadataMap());
+
     StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
+    redisData.remove(REDIS_STREAM_INTERNAL_KEY);
+    log.info("Events framework message inserted - messageId: {}, metaData: {}", messageId, redisData);
     return messageId.toString();
   }
 

@@ -53,6 +53,7 @@ java_library(
         "//950-ng-authentication-service:module",
         "//950-ng-core:module",
         "//950-ng-project-n-orgs:module",
+        "//950-telemetry:module",
         "//950-wait-engine:module",
         "//951-ng-audit-commons:module",
         "//953-events-api:module",

@@ -1823,6 +1823,9 @@ public class UserServiceImpl implements UserService {
     }
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
+    if (user.isTwoFactorAuthenticationEnabled()) {
+      totpAuthHandler.sendTwoFactorAuthenticationResetEmail(user);
+    }
     // Empty user group list because this user invite is from NG and the method adds user to CG user groups
     moveAccountFromPendingToConfirmed(user, account, Collections.emptyList(), true);
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), user);

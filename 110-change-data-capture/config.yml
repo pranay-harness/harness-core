@@ -29,7 +29,7 @@ mongotags:
 gcp-project-id: "ce-qa-274307"
 
 harness-mongo:
-  uri: mongodb://localhost:30001/harness
+  uri: mongodb://localhost:27017/harness
   connectTimeout: 30000
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
@@ -37,7 +37,7 @@ harness-mongo:
   indexManagerMode: MANUAL
 
 events-mongo:
-  uri: mongodb://localhost:30001/events
+  uri: mongodb://localhost:27017/events
   connectTimeout: 30000
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
@@ -45,7 +45,7 @@ events-mongo:
   indexManagerMode: MANUAL
 
 cdc-mongo:
-  uri: mongodb://localhost:30001/change-data-capture
+  uri: mongodb://localhost:27017/change-data-capture
   connectTimeout: 30000
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
@@ -53,7 +53,7 @@ cdc-mongo:
   indexManagerMode: MANUAL
 
 pms-harness:
-  uri: mongodb://localhost:30001/pms-harness
+  uri: mongodb://localhost:27017/pms-harness
   connectTimeout: 30000
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
@@ -61,7 +61,7 @@ pms-harness:
   indexManagerMode: MANUAL
 
 ng-harness:
-  uri: mongodb://localhost:30001/ng-harness
+  uri: mongodb://localhost:27017/ng-harness
   connectTimeout: 30000
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000

@@ -177,6 +177,8 @@ import software.wings.licensing.LicenseService;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.prune.PruneEntityListener;
 import software.wings.resources.AppResource;
+import software.wings.resources.SearchResource;
+import software.wings.resources.graphql.GraphQLResource;
 import software.wings.scheduler.AccessRequestHandler;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.scheduler.DeletedEntityHandler;
@@ -398,7 +400,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     MaintenanceController.forceMaintenance(true);
 
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
-        20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
+        configuration.getCommonPoolConfig().getCorePoolSize(), configuration.getCommonPoolConfig().getMaxPoolSize(),
+        configuration.getCommonPoolConfig().getIdleTime(), configuration.getCommonPoolConfig().getTimeUnit(),
+        new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
 
     List<Module> modules = new ArrayList<>();
     addModules(configuration, modules);
@@ -433,7 +437,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       registerQueryTracer(injector);
     }
 
-    registerResources(environment, injector);
+    registerResources(configuration, environment, injector);
 
     // Managed beans
     registerManagedBeansCommon(configuration, environment, injector);
@@ -655,12 +659,16 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new TemplateModule());
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new EventsModule(configuration));
-    modules.add(GraphQLModule.getInstance());
+    if (configuration.isGraphQLEnabled()) {
+      modules.add(GraphQLModule.getInstance());
+    }
     modules.add(new SSOModule());
     modules.add(new SignupModule());
     modules.add(new AuthModule());
     modules.add(new GcpMarketplaceIntegrationModule());
-    modules.add(new SearchModule());
+    if (configuration.isSearchEnabled()) {
+      modules.add(new SearchModule());
+    }
     modules.add(new ProviderModule() {
       @Provides
       public GrpcServerConfig getGrpcServerConfig() {
@@ -863,11 +871,17 @@ public class WingsApplication extends Application<MainConfiguration> {
     cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
   }
 
-  private void registerResources(Environment environment, Injector injector) {
+  private void registerResources(MainConfiguration configuration, Environment environment, Injector injector) {
     Reflections reflections =
         new Reflections(AppResource.class.getPackage().getName(), DelegateTaskResource.class.getPackage().getName());
 
     Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
+    if (!configuration.isGraphQLEnabled()) {
+      resourceClasses.remove(GraphQLResource.class);
+    }
+    if (!configuration.isSearchEnabled()) {
+      resourceClasses.remove(SearchResource.class);
+    }
     for (Class<?> resource : resourceClasses) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));

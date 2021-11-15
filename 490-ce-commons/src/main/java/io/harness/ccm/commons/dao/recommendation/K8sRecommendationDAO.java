@@ -161,7 +161,7 @@ public class K8sRecommendationDAO {
             max(t2.field(MAXCPU)).as(MAXCPU), max(t2.field(MAXMEMORY)).as(MAXMEMORY));
 
     SelectFinalStep<? extends Record> finalStepT3 = dslContext.select(selectStepT3.getSelect()).from(t2);
-    log.info("maxResourceOfAllTimeBucketsForANodePool, final query\n{}", finalStepT3.toString());
+    log.debug("maxResourceOfAllTimeBucketsForANodePool, final query\n{}", finalStepT3.toString());
 
     return finalStepT3.fetchOneInto(TotalResourceUsage.class);
   }

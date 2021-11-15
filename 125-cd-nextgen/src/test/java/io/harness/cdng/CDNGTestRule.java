@@ -32,6 +32,8 @@ import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.lock.DistributedLockImplementation;
+import io.harness.lock.PersistentLockModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
@@ -45,6 +47,7 @@ import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
+import io.harness.redis.RedisConfig;
 import io.harness.registrars.CDServiceAdviserRegistrar;
 import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.rule.Cache;
@@ -224,6 +227,22 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     modules.add(OrchestrationModule.getInstance(getOrchestrationConfig()));
     modules.add(mongoTypeModule(annotations));
     modules.add(new EntitySetupUsageModule());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      DistributedLockImplementation distributedLockImplementation() {
+        return DistributedLockImplementation.NOOP;
+      }
+
+      @Provides
+      @Named("lock")
+      @Singleton
+      RedisConfig redisConfig() {
+        return RedisConfig.builder().build();
+      }
+    });
+    modules.add(PersistentLockModule.getInstance());
+
     CacheConfigBuilder cacheConfigBuilder =
         CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
     if (annotations.stream().anyMatch(annotation -> annotation instanceof Cache)) {

@@ -10,6 +10,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
+import static io.harness.rule.OwnerRule.KAPIL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 
@@ -32,11 +33,13 @@ import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DSConfigService;
+import io.harness.cvng.core.utils.ServiceEnvKey;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
@@ -1368,6 +1371,29 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     assertHealthScore(historicalTrend.getHealthScores().get(0), 52);
     assertHealthScore(historicalTrend.getHealthScores().get(47), 52);
     assertHealthScore(historicalTrend.getHealthScores().get(46), 61);
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScoreByServiceMap() {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    HeatMap heatMap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.80, 0.75);
+    hPersistence.save(heatMap);
+    Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap = heatMapService.getLatestRiskScoreByServiceMap(
+        projectParams, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
+    ServiceEnvKey serviceEnvKey =
+        ServiceEnvKey.builder().serviceIdentifier(serviceIdentifier).envIdentifier(envIdentifier).build();
+
+    assertThat(latestRiskScoreByServiceMap.keySet().size()).isEqualTo(1);
+    assertThat(latestRiskScoreByServiceMap.get(serviceEnvKey).getHealthScore()).isEqualTo(25);
+    assertThat(latestRiskScoreByServiceMap.get(serviceEnvKey).getRiskStatus()).isEqualTo(Risk.NEED_ATTENTION);
   }
 
   private void assertHealthScore(RiskData riskData, int val) {

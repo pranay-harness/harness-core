@@ -37,6 +37,8 @@ public class AccountExecutionMetadataRepositoryCustomImplTest extends PipelineSe
     Mockito.when(persistentLocker.tryToAcquireLock(any(), any())).thenReturn(AcquiredDistributedLock.builder().build());
     accountExecutionMetadataRepository.updateAccountExecutionMetadata(
         ACCOUNT_ID, Sets.newHashSet("cd"), System.currentTimeMillis());
+    accountExecutionMetadataRepository.updateAccountExecutionMetadata(
+        ACCOUNT_ID, Sets.newHashSet("ci"), System.currentTimeMillis());
     Optional<AccountExecutionMetadata> accountExecutionMetadata =
         accountExecutionMetadataRepository.findByAccountId(ACCOUNT_ID);
     assertThat(accountExecutionMetadata.isPresent()).isTrue();

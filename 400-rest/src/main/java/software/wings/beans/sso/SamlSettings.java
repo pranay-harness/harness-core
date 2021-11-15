@@ -27,19 +27,22 @@ public class SamlSettings extends SSOSettings {
   @NotNull private String origin;
   private String logoutUrl;
   private String groupMembershipAttr;
+  private String entityIdentifier;
 
   @JsonCreator
   @Builder
   public SamlSettings(@JsonProperty("type") SSOType ssoType, @JsonProperty("displayName") String displayName,
       @JsonProperty("url") String url, @JsonProperty("metaDataFile") String metaDataFile,
       @JsonProperty("accountId") String accountId, @JsonProperty("origin") String origin,
-      @JsonProperty("groupMembershipAttr") String groupMembershipAttr, @JsonProperty("logoutUrl") String logoutUrl) {
+      @JsonProperty("groupMembershipAttr") String groupMembershipAttr, @JsonProperty("logoutUrl") String logoutUrl,
+      @JsonProperty() String entityIdentifier) {
     super(SSOType.SAML, displayName, url);
     this.metaDataFile = metaDataFile;
     this.accountId = accountId;
     this.origin = origin;
     this.groupMembershipAttr = groupMembershipAttr;
     this.logoutUrl = logoutUrl;
+    this.entityIdentifier = entityIdentifier;
   }
 
   @Override

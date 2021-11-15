@@ -101,7 +101,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                            .build();
 
     if (input.getEndTime().isAfter(cvConfig.getBaseline().getStartTime())
-        && input.getEndTime().isBefore(cvConfig.getBaseline().getEndTime())) {
+        && input.getEndTime().compareTo(cvConfig.getBaseline().getEndTime()) <= 0) {
       task.setBaselineWindow(true);
     }
     task.setAnalysisType(LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS);

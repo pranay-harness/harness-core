@@ -21,6 +21,10 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	pkgDetectTestdata = "testdata/pkg_detection"
+)
+
 func TestCreateJavaAgentArg(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
@@ -58,6 +62,47 @@ testAnnotations: a1, a2, a3`
 	arg, err := r.createJavaAgentArg()
 	assert.Nil(t, err)
 	assert.Equal(t, arg, fmt.Sprintf(javaAgentArg, "/test/tmp/config.ini"))
+}
+
+func TestDetectJavaPkgs(t *testing.T) {
+	ctrl, _ := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("could not get working directory: %s", err)
+	}
+	wd = wd + pkgDetectTestdata
+
+	tmpFilePath := "/test/tmp"
+	packages := ""
+
+	r := runTestsTask{
+		id:                   "id",
+		runOnlySelectedTests: true,
+		fs:                   filesystem.NewOSFileSystem(log.Sugar()),
+		tmpFilePath:          tmpFilePath,
+		packages:             packages,
+		log:                  log.Sugar(),
+		addonLogger:          log.Sugar(),
+	}
+
+	oldGetWorkspace := getWorkspace
+	defer func() {
+		getWorkspace = oldGetWorkspace
+	}()
+	getWorkspace = func() (string, error) {
+		return pkgDetectTestdata, nil
+	}
+
+	l, err := r.detectJavaPkgs()
+	assert.Contains(t, l, "com.google.test.test")
+	assert.Contains(t, l, "xyz")
+	assert.Contains(t, l, "test1.test1")
+	assert.Len(t, l, 3)
+	assert.Nil(t, err)
 }
 
 func TestCreateJavaAgentArg_WithWriteFailure(t *testing.T) {

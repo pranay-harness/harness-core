@@ -59,6 +59,7 @@ import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
+import io.harness.delegate.beans.DelegateType;
 import io.harness.delegate.beans.K8sConfigDetails;
 import io.harness.delegate.beans.K8sPermissionType;
 import io.harness.delegate.beans.TaskData;
@@ -669,7 +670,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testObtainDelegateIdShouldReturnDelegateId() {
-    Delegate delegate = createDelegateBuilder().delegateName(TEST_DELEGATE_NAME).build();
+    Delegate delegate = createDelegateBuilder().ng(true).delegateName(TEST_DELEGATE_NAME).build();
     String delegateId = persistence.save(delegate);
 
     List<String> delegateIds =
@@ -950,6 +951,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
             .size(DelegateSize.LAPTOP)
             .identifier(DELEGATE_GROUP_IDENTIFIER)
             .tags(tags)
+            .delegateType(DelegateType.KUBERNETES)
             .build());
 
     assertThat(returnedDelegateGroup).isNotNull();
@@ -989,6 +991,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                        .size(DelegateSize.LAPTOP)
                        .identifier(DELEGATE_GROUP_IDENTIFIER)
                        .tags(tags)
+                       .delegateType(DelegateType.KUBERNETES)
                        .build());
 
     // test delete event
@@ -1017,6 +1020,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                        .description("description")
                        .size(DelegateSize.LAPTOP)
                        .identifier(null)
+                       .delegateType(DelegateType.KUBERNETES)
                        .build());
   }
 
@@ -1433,6 +1437,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     return DelegateSetupDetails.builder()
         .name(TEST_DELEGATE_GROUP_NAME)
         .size(DelegateSize.LAPTOP)
-        .delegateConfigurationId("configId");
+        .delegateConfigurationId("configId")
+        .delegateType(DelegateType.KUBERNETES);
   }
 }

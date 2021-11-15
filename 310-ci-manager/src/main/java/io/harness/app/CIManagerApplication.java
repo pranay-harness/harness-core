@@ -17,9 +17,15 @@ import io.harness.ci.plan.creator.CIModuleInfoProvider;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
 import io.harness.ci.plan.creator.filter.CIFilterCreationResponseMerger;
 import io.harness.controller.PrimaryVersionChangeScheduler;
+import io.harness.core.ci.services.CIActiveCommitterUsageImpl;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
+import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
+import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
+import io.harness.enforcement.client.usage.RestrictionUsageInterface;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.exception.GeneralException;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
@@ -143,6 +149,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   private static final String APP_NAME = "CI Manager Service Application";
   public static final String BASE_PACKAGE = "io.harness.app.resources";
   public static final String NG_PIPELINE_PACKAGE = "io.harness.ngpipeline";
+  public static final String ENFORCEMENT_CLIENT_PACKAGE = "io.harness.enforcement.client.resources";
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -157,6 +164,9 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     Set<Class<?>> classSet = basePackageClasses.getTypesAnnotatedWith(Path.class);
     Reflections pipelinePackageClasses = new Reflections(NG_PIPELINE_PACKAGE);
     classSet.addAll(pipelinePackageClasses.getTypesAnnotatedWith(Path.class));
+    Reflections enforcementClientPackageClasses = new Reflections(ENFORCEMENT_CLIENT_PACKAGE);
+    classSet.addAll(enforcementClientPackageClasses.getTypesAnnotatedWith(Path.class));
+
     return classSet;
   }
 
@@ -276,6 +286,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     scheduleJobs(injector);
     registerQueueListener(injector);
     registerPmsSdkEvents(injector);
+    initializeEnforcementFramework(injector);
     registerOasResource(configuration, environment, injector);
     log.info("Starting app done");
     MaintenanceController.forceMaintenance(false);
@@ -474,5 +485,25 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
                                                     .requireValidatorInit(false)
                                                     .build();
     YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
+  }
+
+  private void initializeEnforcementFramework(Injector injector) {
+    CustomRestrictionRegisterConfiguration customConfig =
+        CustomRestrictionRegisterConfiguration.builder()
+            .customRestrictionMap(
+                ImmutableMap
+                    .<FeatureRestrictionName,
+                        Class<? extends io.harness.enforcement.client.custom.CustomRestrictionInterface>>builder()
+                    .build())
+            .build();
+    RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
+        RestrictionUsageRegisterConfiguration.builder()
+            .restrictionNameClassMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
+                    .put(FeatureRestrictionName.ACTIVE_COMMITTERS, CIActiveCommitterUsageImpl.class)
+                    .build())
+            .build();
+    injector.getInstance(EnforcementSdkRegisterService.class)
+        .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }
 }

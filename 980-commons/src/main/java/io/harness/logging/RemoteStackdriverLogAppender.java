@@ -122,6 +122,8 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
           log.error("Error appending log entry", ex);
         }
       });
+    } else {
+      log.error("Logging event is not ILogEvent: {}", eventObject);
     }
   }
 

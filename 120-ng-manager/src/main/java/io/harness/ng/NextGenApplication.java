@@ -77,7 +77,6 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.migrations.InstanceMigrationProvider;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationJob;
-import io.harness.ng.cdOverview.eventGenerator.DeploymentEventGenerator;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.NGEventConsumerService;
@@ -97,6 +96,7 @@ import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.migration.SourceCodeManagerMigrationProvider;
 import io.harness.ng.migration.UserMembershipMigrationProvider;
 import io.harness.ng.migration.UserMetadataMigrationProvider;
+import io.harness.ng.overview.eventGenerator.DeploymentEventGenerator;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
@@ -141,7 +141,6 @@ import io.harness.service.stats.statscollector.InstanceStatsIteratorHandler;
 import io.harness.springdata.HMongoTemplate;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
-import io.harness.threading.ThreadPoolConfig;
 import io.harness.token.remote.TokenClient;
 import io.harness.tracing.MongoRedisTracer;
 import io.harness.utils.NGObjectMapperHelper;
@@ -263,8 +262,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   @Override
   public void run(NextGenConfiguration appConfig, Environment environment) {
     log.info("Starting Next Gen Application ...");
-    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
-        20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(appConfig.getCommonPoolConfig().getCorePoolSize(),
+        appConfig.getCommonPoolConfig().getMaxPoolSize(), appConfig.getCommonPoolConfig().getIdleTime(),
+        appConfig.getCommonPoolConfig().getTimeUnit(),
+        new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     MaintenanceController.forceMaintenance(true);
     List<Module> modules = new ArrayList<>();
     modules.add(new NextGenModule(appConfig));
@@ -539,9 +540,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(appConfig.getEventsFrameworkConfiguration())
         .engineEventHandlersMap(getOrchestrationEventHandlers())
-        .executionPoolConfig(ThreadPoolConfig.builder().corePoolSize(20).maxPoolSize(100).idleTime(120L).build())
-        .orchestrationEventPoolConfig(
-            ThreadPoolConfig.builder().corePoolSize(10).maxPoolSize(50).idleTime(120L).build())
+        .executionPoolConfig(appConfig.getPmsSdkExecutionPoolConfig())
+        .orchestrationEventPoolConfig(appConfig.getPmsSdkOrchestrationEventPoolConfig())
         .build();
   }
 

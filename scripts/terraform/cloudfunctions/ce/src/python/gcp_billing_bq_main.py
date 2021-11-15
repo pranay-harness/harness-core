@@ -169,7 +169,7 @@ def isFreshSync(jsonData):
     else:
         # Only applicable for US regions
         query = """  SELECT count(*) as count from %s.%s.%s
-                   WHERE usage_start_time >= DATETIME_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY);
+                   WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 10 DAY) AND usage_start_time >= DATETIME_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY);
                    """ % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
     print_(query)
     try:
@@ -197,7 +197,7 @@ def syncDataset(jsonData):
     destination = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
     if jsonData["isFreshSync"]:
         # Fresh sync. Sync only for 45 days.
-        query = """  SELECT * FROM `%s.%s.gcp_billing_export_v1_*` WHERE DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 45 DAY);
+        query = """  SELECT * FROM `%s.%s.gcp_billing_export_v1_*` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(@run_date, INTERVAL 52 DAY) AND DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 45 DAY);
         """ % (jsonData["sourceGcpProjectId"], jsonData["sourceDataSetId"])
         # Configure the query job.
         print_(" Destination :%s" % destination)
@@ -216,10 +216,10 @@ def syncDataset(jsonData):
     else:
         # Sync past 3 days only. Specify columns here explicitely.
         query = """  DELETE FROM `%s` 
-                WHERE DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY); 
+                WHERE DATE(_PARTITIONTIME) >= DATE_SUB(@run_date, INTERVAL 10 DAY) and DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY); 
             INSERT INTO `%s` (billing_account_id,service,sku,usage_start_time,usage_end_time,project,labels,system_labels,location,export_time,cost,currency,currency_conversion_rate,usage,credits,invoice,cost_type,adjustment_info)
                 SELECT billing_account_id,service,sku,usage_start_time,usage_end_time,project,labels,system_labels,location,export_time,cost,currency,currency_conversion_rate,usage,credits,invoice,cost_type,adjustment_info FROM `%s.%s.gcp_billing_export_v1_*`
-                WHERE DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY);
+                WHERE DATE(_PARTITIONTIME) >= DATE_SUB(@run_date, INTERVAL 10 DAY) AND DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY);
         """ % (destination, destination,
                jsonData["sourceGcpProjectId"], jsonData["sourceDataSetId"])
 
@@ -324,10 +324,10 @@ def ingest_into_unified(jsonData):
                      sku.description AS gcpSkuDescription, TIMESTAMP_TRUNC(usage_start_time, DAY) as startTime, project.id AS gcpProjectId,
                      location.region AS region, location.zone AS zone, billing_account_id AS gcpBillingAccountId, "GCP" AS cloudProvider, credits.amount as discount, labels AS labels
                 FROM `%s.%s` LEFT JOIN UNNEST(credits) as credits
-                WHERE DATE(usage_start_time) <= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 1 DAY) AND
+                WHERE DATE(_PARTITIONTIME) >= DATE_SUB(@run_date, INTERVAL %s DAY) AND DATE(usage_start_time) <= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 1 DAY) AND
                      DATE(usage_start_time) >= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL %s DAY) ;
         """ % ( jsonData["datasetName"], jsonData["interval"], jsonData["billingAccountIds"], jsonData["datasetName"], jsonData["datasetName"],
-                jsonData["tableName"], jsonData["interval"])
+                jsonData["tableName"], str(int(jsonData["interval"])+7), jsonData["interval"])
 
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
@@ -359,11 +359,11 @@ def ingest_into_preaggregated(jsonData):
              location.region AS region, location.zone AS zone, billing_account_id AS gcpBillingAccountId, "GCP" AS cloudProvider, SUM(credits.amount) as
              discount
            FROM `%s.%s` LEFT JOIN UNNEST(credits) as credits
-           WHERE DATE(usage_start_time) <= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 1 DAY) AND
+           WHERE DATE(_PARTITIONTIME) >= DATE_SUB(@run_date, INTERVAL %s DAY) AND DATE(usage_start_time) <= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 1 DAY) AND
              DATE(usage_start_time) >= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL %s DAY)
            GROUP BY service.description, sku.id, sku.description, startTime, project.id, location.region, location.zone, billing_account_id;
         """ % (jsonData["datasetName"], jsonData["interval"], jsonData["billingAccountIds"], jsonData["datasetName"], jsonData["datasetName"],
-        jsonData["tableName"], jsonData["interval"])
+        jsonData["tableName"], str(int(jsonData["interval"])+7), jsonData["interval"])
 
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
@@ -389,7 +389,7 @@ def get_unique_billingaccount_id(jsonData):
     # Get unique billingAccountIds from main gcp table
     print_("Getting unique billingAccountIds from %s" % jsonData["tableName"])
     query = """  SELECT DISTINCT(billing_account_id) as billing_account_id FROM `%s.%s.%s` 
-            WHERE DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY);
+            WHERE DATE(_PARTITIONTIME) >= DATE_SUB(@run_date, INTERVAL 10 DAY) AND DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY);
             """ % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
     # Configure the query job.
     job_config = bigquery.QueryJobConfig(

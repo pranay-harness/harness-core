@@ -10,7 +10,7 @@ docker network create my-mongo-cluster
 
 Run the Following Command to bring up the Docker Container in ReplicaSet Mode 
 ```yml
-docker run -v ~/_mongodb_data:/data/db -p 30001:27017 --name mongoContainer --net my-mongo-cluster mongo:3.6 mongod --replSet my-mongo-set
+docker run -v ~/_mongodb_data:/data/db -p 27017:27017 --name mongoContainer --net my-mongo-cluster mongo:3.6 mongod --replSet my-mongo-set
 ```
 Please note _mongo_data is the location where data datagen will generate data, change it accordingly.
 

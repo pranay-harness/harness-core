@@ -50,9 +50,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @StoreIn(ACCESS_CONTROL)
 public class ResourceGroupDBO implements PersistentRegularIterable, AccessControlEntity {
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
-  @EqualsAndHashCode.Include @NotEmpty final String scopeIdentifier;
+  @EqualsAndHashCode.Include final String scopeIdentifier;
   @EqualsAndHashCode.Include @NotEmpty final String identifier;
   @EqualsAndHashCode.Include @NotEmpty final String name;
+  @EqualsAndHashCode.Include final Set<String> allowedScopeLevels;
   @EqualsAndHashCode.Include @NotNull final Set<String> resourceSelectors;
   @EqualsAndHashCode.Include @NotNull @Builder.Default final Boolean fullScopeSelected = Boolean.FALSE;
   @EqualsAndHashCode.Include @NotNull @Builder.Default final Boolean managed = Boolean.FALSE;

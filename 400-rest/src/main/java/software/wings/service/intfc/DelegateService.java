@@ -178,4 +178,13 @@ public interface DelegateService extends OwnedByAccount {
   DelegateTask abortTask(String accountId, String delegateTaskId);
 
   String expireTask(String accountId, String delegateTaskId);
+
+  DelegateSizeDetails fetchDefaultDelegateSize();
+
+  void validateDockerSetupDetails(String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType);
+
+  File downloadNgDocker(String managerHost, String verificationServiceUrl, String accountId,
+      DelegateSetupDetails delegateSetupDetails) throws IOException;
+
+  String createDelegateGroup(String accountId, DelegateSetupDetails delegateSetupDetails);
 }
