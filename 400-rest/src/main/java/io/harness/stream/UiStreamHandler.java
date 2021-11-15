@@ -6,8 +6,8 @@ import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.eraro.Level.ERROR;
 import static io.harness.govern.Switch.unhandled;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
