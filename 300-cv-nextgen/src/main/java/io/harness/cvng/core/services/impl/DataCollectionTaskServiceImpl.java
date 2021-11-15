@@ -7,6 +7,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
@@ -42,6 +43,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +56,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @Slf4j
 public class DataCollectionTaskServiceImpl implements DataCollectionTaskService {
   @Inject private HPersistence hPersistence;
-  @Inject private Injector injector;
+  @Inject private Map<DataSourceType, DataCollectionInfoMapper> dataSourceTypeDataCollectionInfoMapperMap;
   @Inject private Clock clock;
   @Inject private MetricPackService metricPackService;
   // move this dependency out and use helper method with no exposure to client directly
@@ -392,8 +394,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
         .verificationTaskId(
             verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid()))
         .dataCollectionInfo(
-            injector.getInstance(Key.get(DataCollectionInfoMapper.class, Names.named(cvConfig.getType().name())))
-                .toDataCollectionInfo(cvConfig))
+            dataSourceTypeDataCollectionInfoMapperMap.get(cvConfig.getType()).toDataCollectionInfo(cvConfig))
         .build();
   }
 }

@@ -300,20 +300,19 @@ public class CVServiceModule extends AbstractModule {
     bind(SplunkService.class).to(SplunkServiceImpl.class);
     bind(CVConfigService.class).to(CVConfigServiceImpl.class);
     bind(DeletedCVConfigService.class).to(DeletedCVConfigServiceImpl.class);
-    MapBinder<DataSourceType, CVConfigToHealthSourceTransformer>
-        dataSourceTypeCVConfigToHealthSourceTransformerMapBinder =
-            MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigToHealthSourceTransformer.class);
-    dataSourceTypeCVConfigToHealthSourceTransformerMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
+    MapBinder<DataSourceType, CVConfigToHealthSourceTransformer> dataSourceTypeToHealthSourceTransformerMapBinder =
+        MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigToHealthSourceTransformer.class);
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
         .to(AppDynamicsHealthSourceSpecTransformer.class);
-    dataSourceTypeCVConfigToHealthSourceTransformerMapBinder.addBinding(DataSourceType.NEW_RELIC)
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.NEW_RELIC)
         .to(NewRelicHealthSourceSpecTransformer.class);
-    dataSourceTypeCVConfigToHealthSourceTransformerMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
         .to(StackdriverLogHealthSourceSpecTransformer.class);
-    dataSourceTypeCVConfigToHealthSourceTransformerMapBinder.addBinding(DataSourceType.SPLUNK)
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.SPLUNK)
         .to(SplunkHealthSourceSpecTransformer.class);
-    dataSourceTypeCVConfigToHealthSourceTransformerMapBinder.addBinding(DataSourceType.PROMETHEUS)
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.PROMETHEUS)
         .to(PrometheusHealthSourceSpecTransformer.class);
-    dataSourceTypeCVConfigToHealthSourceTransformerMapBinder.addBinding(DataSourceType.STACKDRIVER)
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.STACKDRIVER)
         .to(StackdriverMetricHealthSourceSpecTransformer.class);
     MapBinder<DataSourceType, DataCollectionInfoMapper> dataSourceTypeDataCollectionInfoMapperMapBinder =
         MapBinder.newMapBinder(binder(), DataSourceType.class, DataCollectionInfoMapper.class);
