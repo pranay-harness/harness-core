@@ -96,8 +96,8 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameToken;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.FetchType;
@@ -619,7 +619,7 @@ public class K8sStepHelperTest extends CategoryTest {
                                 .authType(GitAuthType.HTTP)
                                 .credentials(GithubHttpCredentialsDTO.builder()
                                                  .type(GithubHttpAuthenticationType.USERNAME_AND_TOKEN)
-                                                 .httpCredentialsSpec(GithubUsernameTokenDTO.builder()
+                                                 .httpCredentialsSpec(GithubUsernameToken.builder()
                                                                           .username("usermane")
                                                                           .tokenRef(SecretRefData.builder().build())
                                                                           .build())
@@ -666,7 +666,7 @@ public class K8sStepHelperTest extends CategoryTest {
                                 .authType(GitAuthType.HTTP)
                                 .credentials(GithubHttpCredentialsDTO.builder()
                                                  .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                                                 .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
+                                                 .httpCredentialsSpec(GithubUsernamePassword.builder()
                                                                           .username("usermane")
                                                                           .passwordRef(SecretRefData.builder().build())
                                                                           .build())
@@ -740,7 +740,7 @@ public class K8sStepHelperTest extends CategoryTest {
                                 .authType(GitAuthType.HTTP)
                                 .credentials(GithubHttpCredentialsDTO.builder()
                                                  .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                                                 .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
+                                                 .httpCredentialsSpec(GithubUsernamePassword.builder()
                                                                           .username("usermane")
                                                                           .passwordRef(SecretRefData.builder().build())
                                                                           .build())

@@ -13,8 +13,6 @@ import io.harness.connector.entities.embedded.githubconnector.GithubConnector;
 import io.harness.connector.entities.embedded.githubconnector.GithubHttpAuthentication;
 import io.harness.connector.entities.embedded.githubconnector.GithubSshAuthentication;
 import io.harness.connector.entities.embedded.githubconnector.GithubTokenApiAccess;
-import io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword;
-import io.harness.connector.entities.embedded.githubconnector.GithubUsernameToken;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
@@ -26,8 +24,8 @@ import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationTy
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameToken;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
@@ -62,7 +60,7 @@ public class GithubDTOToEntityTest extends CategoryTest {
             .authType(HTTP)
             .credentials(GithubHttpCredentialsDTO.builder()
                              .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
+                             .httpCredentialsSpec(GithubUsernamePassword.builder()
                                                       .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
                                                       .username(username)
                                                       .build())
@@ -94,7 +92,7 @@ public class GithubDTOToEntityTest extends CategoryTest {
     assertThat(githubConnector.getAuthenticationDetails())
         .isEqualTo(GithubHttpAuthentication.builder()
                        .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                       .auth(GithubUsernamePassword.builder().username(username).passwordRef(passwordRef).build())
+                       .auth(io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword.builder().username(username).passwordRef(passwordRef).build())
                        .build());
     assertThat(githubConnector.getGithubApiAccess())
         .isEqualTo(GithubAppApiAccess.builder()
@@ -120,7 +118,7 @@ public class GithubDTOToEntityTest extends CategoryTest {
             .authType(HTTP)
             .credentials(GithubHttpCredentialsDTO.builder()
                              .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
+                             .httpCredentialsSpec(GithubUsernamePassword.builder()
                                                       .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
                                                       .usernameRef(SecretRefHelper.createSecretRef(usernameRef))
                                                       .build())
@@ -150,7 +148,7 @@ public class GithubDTOToEntityTest extends CategoryTest {
     assertThat(githubConnector.getAuthenticationDetails())
         .isEqualTo(GithubHttpAuthentication.builder()
                        .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                       .auth(GithubUsernamePassword.builder().usernameRef(usernameRef).passwordRef(passwordRef).build())
+                       .auth(io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword.builder().usernameRef(usernameRef).passwordRef(passwordRef).build())
                        .build());
     assertThat(githubConnector.getGithubApiAccess())
         .isEqualTo(GithubAppApiAccess.builder()
@@ -173,7 +171,7 @@ public class GithubDTOToEntityTest extends CategoryTest {
                 GithubHttpCredentialsDTO.builder()
                     .type(GithubHttpAuthenticationType.USERNAME_AND_TOKEN)
                     .httpCredentialsSpec(
-                        GithubUsernameTokenDTO.builder().tokenRef(SecretRefHelper.createSecretRef(tokenRef)).build())
+                        GithubUsernameToken.builder().tokenRef(SecretRefHelper.createSecretRef(tokenRef)).build())
                     .build())
             .build();
 
@@ -196,7 +194,7 @@ public class GithubDTOToEntityTest extends CategoryTest {
     assertThat(githubConnector.getAuthenticationDetails())
         .isEqualTo(GithubHttpAuthentication.builder()
                        .type(GithubHttpAuthenticationType.USERNAME_AND_TOKEN)
-                       .auth(GithubUsernameToken.builder().tokenRef(tokenRef).build())
+                       .auth(io.harness.connector.entities.embedded.githubconnector.GithubUsernameToken.builder().tokenRef(tokenRef).build())
                        .build());
     assertThat(githubConnector.getGithubApiAccess())
         .isEqualTo(GithubTokenApiAccess.builder().tokenRef(tokenRef).build());

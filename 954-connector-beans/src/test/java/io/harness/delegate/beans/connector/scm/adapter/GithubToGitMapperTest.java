@@ -25,7 +25,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
@@ -64,7 +64,7 @@ public class GithubToGitMapperTest extends CategoryTest {
             .authType(HTTP)
             .credentials(GithubHttpCredentialsDTO.builder()
                              .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
+                             .httpCredentialsSpec(GithubUsernamePassword.builder()
                                                       .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
                                                       .username(username)
                                                       .build())

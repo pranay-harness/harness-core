@@ -9,8 +9,6 @@ import io.harness.connector.entities.embedded.githubconnector.GithubHttpAuth;
 import io.harness.connector.entities.embedded.githubconnector.GithubHttpAuthentication;
 import io.harness.connector.entities.embedded.githubconnector.GithubSshAuthentication;
 import io.harness.connector.entities.embedded.githubconnector.GithubTokenApiAccess;
-import io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword;
-import io.harness.connector.entities.embedded.githubconnector.GithubUsernameToken;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
@@ -22,11 +20,11 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsSpec;
 import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameToken;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.govern.Switch;
@@ -64,7 +62,7 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
         final GithubHttpAuthentication githubHttpAuthentication = (GithubHttpAuthentication) authenticationDetails;
         final GithubHttpAuthenticationType type = githubHttpAuthentication.getType();
         final GithubHttpAuth auth = githubHttpAuthentication.getAuth();
-        GithubHttpCredentialsSpecDTO githubHttpCredentialsSpecDTO = getHttpCredentialsSpecDTO(type, auth);
+        GithubHttpCredentialsSpec githubHttpCredentialsSpecDTO = getHttpCredentialsSpecDTO(type, auth);
         githubCredentialsDTO =
             GithubHttpCredentialsDTO.builder().type(type).httpCredentialsSpec(githubHttpCredentialsSpecDTO).build();
         break;
@@ -74,30 +72,30 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
     return GithubAuthenticationDTO.builder().authType(authType).credentials(githubCredentialsDTO).build();
   }
 
-  private static GithubHttpCredentialsSpecDTO getHttpCredentialsSpecDTO(
+  private static GithubHttpCredentialsSpec getHttpCredentialsSpecDTO(
       GithubHttpAuthenticationType type, Object auth) {
-    GithubHttpCredentialsSpecDTO githubHttpCredentialsSpecDTO = null;
+    GithubHttpCredentialsSpec githubHttpCredentialsSpecDTO = null;
     switch (type) {
       case USERNAME_AND_TOKEN:
-        final GithubUsernameToken usernameToken = (GithubUsernameToken) auth;
+        final io.harness.connector.entities.embedded.githubconnector.GithubUsernameToken usernameToken = (io.harness.connector.entities.embedded.githubconnector.GithubUsernameToken) auth;
         SecretRefData usernameReference = null;
         if (usernameToken.getUsernameRef() != null) {
           usernameReference = SecretRefHelper.createSecretRef(usernameToken.getUsernameRef());
         }
-        githubHttpCredentialsSpecDTO = GithubUsernameTokenDTO.builder()
+        githubHttpCredentialsSpecDTO = GithubUsernameToken.builder()
                                            .username(usernameToken.getUsername())
                                            .usernameRef(usernameReference)
                                            .tokenRef(SecretRefHelper.createSecretRef(usernameToken.getTokenRef()))
                                            .build();
         break;
       case USERNAME_AND_PASSWORD:
-        final GithubUsernamePassword githubUsernamePassword = (GithubUsernamePassword) auth;
+        final io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword githubUsernamePassword = (io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword) auth;
         SecretRefData usernameRef = null;
         if (githubUsernamePassword.getUsernameRef() != null) {
           usernameRef = SecretRefHelper.createSecretRef(githubUsernamePassword.getUsernameRef());
         }
         githubHttpCredentialsSpecDTO =
-            GithubUsernamePasswordDTO.builder()
+            GithubUsernamePassword.builder()
                 .passwordRef(SecretRefHelper.createSecretRef(githubUsernamePassword.getPasswordRef()))
                 .username(githubUsernamePassword.getUsername())
                 .usernameRef(usernameRef)

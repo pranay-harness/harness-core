@@ -60,7 +60,7 @@ public class GithubConnectorDTO
   public List<DecryptableEntity> getDecryptableEntities() {
     List<DecryptableEntity> decryptableEntities = new ArrayList<>();
     if (authentication.getAuthType() == GitAuthType.HTTP) {
-      GithubHttpCredentialsSpecDTO httpCredentialsSpec =
+      GithubHttpCredentialsSpec httpCredentialsSpec =
           ((GithubHttpCredentialsDTO) authentication.getCredentials()).getHttpCredentialsSpec();
       if (httpCredentialsSpec != null) {
         decryptableEntities.add(httpCredentialsSpec);

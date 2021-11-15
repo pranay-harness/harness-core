@@ -52,8 +52,8 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameToken;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
@@ -562,12 +562,12 @@ public class ConnectorUtils {
       GithubHttpCredentialsDTO githubHttpCredentialsDTO =
           (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
       if (githubHttpCredentialsDTO.getType() == GithubHttpAuthenticationType.USERNAME_AND_PASSWORD) {
-        GithubUsernamePasswordDTO githubHttpCredentialsSpecDTO =
-            (GithubUsernamePasswordDTO) githubHttpCredentialsDTO.getHttpCredentialsSpec();
+        GithubUsernamePassword githubHttpCredentialsSpecDTO =
+            (GithubUsernamePassword) githubHttpCredentialsDTO.getHttpCredentialsSpec();
         return githubHttpCredentialsSpecDTO.getUsername();
       } else if (githubHttpCredentialsDTO.getType() == GithubHttpAuthenticationType.USERNAME_AND_TOKEN) {
-        GithubUsernameTokenDTO githubHttpCredentialsSpecDTO =
-            (GithubUsernameTokenDTO) githubHttpCredentialsDTO.getHttpCredentialsSpec();
+        GithubUsernameToken githubHttpCredentialsSpecDTO =
+            (GithubUsernameToken) githubHttpCredentialsDTO.getHttpCredentialsSpec();
         return githubHttpCredentialsSpecDTO.getUsername();
       }
     }

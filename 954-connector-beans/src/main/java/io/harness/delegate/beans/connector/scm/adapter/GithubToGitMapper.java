@@ -10,8 +10,8 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameToken;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 
@@ -31,17 +31,17 @@ public class GithubToGitMapper {
       String username;
       SecretRefData usernameRef, passwordRef;
       if (credentials.getType() == GithubHttpAuthenticationType.USERNAME_AND_PASSWORD) {
-        final GithubUsernamePasswordDTO httpCredentialsSpec =
-            (GithubUsernamePasswordDTO) credentials.getHttpCredentialsSpec();
+        final GithubUsernamePassword httpCredentialsSpec =
+            (GithubUsernamePassword) credentials.getHttpCredentialsSpec();
         username = httpCredentialsSpec.getUsername();
         usernameRef = httpCredentialsSpec.getUsernameRef();
         passwordRef = httpCredentialsSpec.getPasswordRef();
       } else {
-        final GithubUsernameTokenDTO githubUsernameTokenDTO =
-            (GithubUsernameTokenDTO) credentials.getHttpCredentialsSpec();
-        username = githubUsernameTokenDTO.getUsername();
-        usernameRef = githubUsernameTokenDTO.getUsernameRef();
-        passwordRef = githubUsernameTokenDTO.getTokenRef();
+        final GithubUsernameToken githubUsernameToken =
+            (GithubUsernameToken) credentials.getHttpCredentialsSpec();
+        username = githubUsernameToken.getUsername();
+        usernameRef = githubUsernameToken.getUsernameRef();
+        passwordRef = githubUsernameToken.getTokenRef();
       }
       return GitConfigCreater.getGitConfigForHttp(connectionType, url, validationRepo, username, usernameRef,
           passwordRef, githubConnectorDTO.getDelegateSelectors());

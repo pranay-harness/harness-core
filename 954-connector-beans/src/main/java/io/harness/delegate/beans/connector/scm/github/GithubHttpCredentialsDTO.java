@@ -25,10 +25,10 @@ public class GithubHttpCredentialsDTO implements GithubCredentialsDTO {
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @Valid
   @NotNull
-  GithubHttpCredentialsSpecDTO httpCredentialsSpec;
+  GithubHttpCredentialsSpec httpCredentialsSpec;
 
   @Builder
-  public GithubHttpCredentialsDTO(GithubHttpAuthenticationType type, GithubHttpCredentialsSpecDTO httpCredentialsSpec) {
+  public GithubHttpCredentialsDTO(GithubHttpAuthenticationType type, GithubHttpCredentialsSpec httpCredentialsSpec) {
     this.type = type;
     this.httpCredentialsSpec = httpCredentialsSpec;
   }

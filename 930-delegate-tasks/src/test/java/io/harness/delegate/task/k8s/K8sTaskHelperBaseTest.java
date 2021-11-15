@@ -90,7 +90,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -2624,7 +2624,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
                                 .authType(GitAuthType.HTTP)
                                 .credentials(GithubHttpCredentialsDTO.builder()
                                                  .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                                                 .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
+                                                 .httpCredentialsSpec(GithubUsernamePassword.builder()
                                                                           .username("usermane")
                                                                           .passwordRef(SecretRefData.builder().build())
                                                                           .build())

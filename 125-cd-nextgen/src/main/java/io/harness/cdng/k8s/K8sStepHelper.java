@@ -84,7 +84,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameToken;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
@@ -470,7 +470,7 @@ public class K8sStepHelper {
         && isGithubUsernameTokenAuth((GithubConnectorDTO) scmConnector)) {
       GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) scmConnector;
       SecretRefData tokenRef =
-          ((GithubUsernameTokenDTO) ((GithubHttpCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials())
+          ((GithubUsernameToken) ((GithubHttpCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials())
                   .getHttpCredentialsSpec())
               .getTokenRef();
       GithubApiAccessDTO apiAccessDTO = GithubApiAccessDTO.builder()

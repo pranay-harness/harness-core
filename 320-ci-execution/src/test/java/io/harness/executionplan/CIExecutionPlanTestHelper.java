@@ -95,7 +95,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.k8s.model.ImageDetails;
@@ -1044,7 +1044,7 @@ public class CIExecutionPlanTestHelper {
                                 .credentials(GithubHttpCredentialsDTO.builder()
                                                  .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
                                                  .httpCredentialsSpec(
-                                                     GithubUsernamePasswordDTO.builder()
+                                                     GithubUsernamePassword.builder()
                                                          .username("username")
                                                          .passwordRef(SecretRefData.builder()
                                                                           .identifier("gitPassword")

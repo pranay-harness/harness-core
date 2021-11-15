@@ -2,6 +2,7 @@ package io.harness.delegate.beans.connector.scm.github;
 
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
+import io.harness.validation.OneOfField;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
@@ -16,9 +17,10 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@ApiModel("GithubUsernameToken")
-public class GithubUsernameTokenDTO implements GithubHttpCredentialsSpecDTO {
+@ApiModel("GithubUsernamePassword")
+@OneOfField(fields = {"username", "usernameRef"})
+public class GithubUsernamePassword implements GithubHttpCredentialsSpec {
   String username;
   @SecretReference @ApiModelProperty(dataType = "string") SecretRefData usernameRef;
-  @NotNull @ApiModelProperty(dataType = "string") @SecretReference SecretRefData tokenRef;
+  @NotNull @SecretReference @ApiModelProperty(dataType = "string") SecretRefData passwordRef;
 }

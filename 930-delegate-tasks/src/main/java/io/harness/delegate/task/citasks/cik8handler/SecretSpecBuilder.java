@@ -38,8 +38,8 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthen
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameToken;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
@@ -273,21 +273,21 @@ public class SecretSpecBuilder {
 
       log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
       if (gitHTTPAuthenticationDTO.getType() == GithubHttpAuthenticationType.USERNAME_AND_PASSWORD) {
-        GithubUsernamePasswordDTO githubUsernamePasswordDTO =
-            (GithubUsernamePasswordDTO) gitHTTPAuthenticationDTO.getHttpCredentialsSpec();
+        GithubUsernamePassword githubUsernamePassword =
+            (GithubUsernamePassword) gitHTTPAuthenticationDTO.getHttpCredentialsSpec();
 
         String username = getSecretAsStringFromPlainTextOrSecretRef(
-            githubUsernamePasswordDTO.getUsername(), githubUsernamePasswordDTO.getUsernameRef());
+            githubUsernamePassword.getUsername(), githubUsernamePassword.getUsernameRef());
         if (isEmpty(username)) {
           throw new CIStageExecutionException("Github connector should have not empty username");
         }
         secretData.put(DRONE_NETRC_USERNAME,
             SecretParams.builder().secretKey(DRONE_NETRC_USERNAME).value(encodeBase64(username)).type(TEXT).build());
 
-        if (githubUsernamePasswordDTO.getPasswordRef() == null) {
+        if (githubUsernamePassword.getPasswordRef() == null) {
           throw new CIStageExecutionException("Github connector should have not empty passwordRef");
         }
-        String password = String.valueOf(githubUsernamePasswordDTO.getPasswordRef().getDecryptedValue());
+        String password = String.valueOf(githubUsernamePassword.getPasswordRef().getDecryptedValue());
         if (isEmpty(password)) {
           throw new CIStageExecutionException(
               "Unsupported github connector auth" + gitConfigDTO.getAuthentication().getAuthType());
@@ -296,21 +296,21 @@ public class SecretSpecBuilder {
             SecretParams.builder().secretKey(DRONE_NETRC_PASSWORD).value(encodeBase64(password)).type(TEXT).build());
 
       } else if (gitHTTPAuthenticationDTO.getType() == GithubHttpAuthenticationType.USERNAME_AND_TOKEN) {
-        GithubUsernameTokenDTO githubUsernameTokenDTO =
-            (GithubUsernameTokenDTO) gitHTTPAuthenticationDTO.getHttpCredentialsSpec();
+        GithubUsernameToken githubUsernameToken =
+            (GithubUsernameToken) gitHTTPAuthenticationDTO.getHttpCredentialsSpec();
 
         String username = getSecretAsStringFromPlainTextOrSecretRef(
-            githubUsernameTokenDTO.getUsername(), githubUsernameTokenDTO.getUsernameRef());
+            githubUsernameToken.getUsername(), githubUsernameToken.getUsernameRef());
         if (isEmpty(username)) {
           throw new CIStageExecutionException("Github connector should have not empty username");
         }
         secretData.put(DRONE_NETRC_USERNAME,
             SecretParams.builder().secretKey(DRONE_NETRC_USERNAME).value(encodeBase64(username)).type(TEXT).build());
 
-        if (githubUsernameTokenDTO.getTokenRef() == null) {
+        if (githubUsernameToken.getTokenRef() == null) {
           throw new CIStageExecutionException("Github connector should have not empty tokenRef");
         }
-        String token = String.valueOf(githubUsernameTokenDTO.getTokenRef().getDecryptedValue());
+        String token = String.valueOf(githubUsernameToken.getTokenRef().getDecryptedValue());
         if (isEmpty(token)) {
           throw new CIStageExecutionException("Github connector should have not empty token");
         }

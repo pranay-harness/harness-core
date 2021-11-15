@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = GithubUsernamePasswordDTO.class, name = USERNAME_AND_PASSWORD)
-  , @JsonSubTypes.Type(value = GithubUsernameTokenDTO.class, name = USERNAME_AND_TOKEN)
+  @JsonSubTypes.Type(value = GithubUsernamePassword.class, name = USERNAME_AND_PASSWORD)
+  , @JsonSubTypes.Type(value = GithubUsernameToken.class, name = USERNAME_AND_TOKEN)
 })
-public interface GithubHttpCredentialsSpecDTO extends DecryptableEntity {}
+public interface GithubHttpCredentialsSpec extends DecryptableEntity {}
