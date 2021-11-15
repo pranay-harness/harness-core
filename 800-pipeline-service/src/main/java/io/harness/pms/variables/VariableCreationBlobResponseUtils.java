@@ -10,11 +10,9 @@ import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.variables.VariableMergeServiceResponse.ServiceExpressionProperties;
 import io.harness.pms.variables.VariableMergeServiceResponse.VariableResponseMapValue;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import lombok.experimental.UtilityClass;
+import rx.internal.operators.BackpressureUtils;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
@@ -97,24 +95,39 @@ public class VariableCreationBlobResponseUtils {
 
   public void mergeResolvedDependencies(
       VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
+    Map<String, String> dataMap = new HashMap<>();
+    Map<String, String> dataMapForDeps = new HashMap<>();
     if (isNotEmpty(otherResponse.getResolvedDeps().getDependenciesMap())) {
-      otherResponse.getResolvedDeps().getDependenciesMap().forEach((key, value) -> {
-        builder.setResolvedDeps(
-            Dependencies.newBuilder().setYaml(otherResponse.getDeps().getYaml()).putDependencies(key, value).build());
-        //        builder.getDeps().getDependenciesMap().remove(key);
+      otherResponse.getResolvedDeps().getDependenciesMap().forEach((key, value) -> { dataMap.put(key, value); });
+    }
+
+    if (isNotEmpty(otherResponse.getDeps().getDependenciesMap())) {
+      otherResponse.getDeps().getDependenciesMap().forEach((key, value) -> {
+        if (!dataMap.containsKey(key))
+          dataMapForDeps.put(key, value);
       });
     }
+
+    builder.setResolvedDeps(
+        Dependencies.newBuilder().setYaml(otherResponse.getDeps().getYaml()).putAllDependencies(dataMap).build());
+
+    builder.setDeps(Dependencies.newBuilder()
+                        .setYaml(otherResponse.getDeps().getYaml())
+                        .putAllDependencies(dataMapForDeps)
+                        .build());
   }
 
   public void mergeDependencies(
       VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
+    Map<String, String> dataMap = new HashMap<>();
     if (isNotEmpty(otherResponse.getDeps().getDependenciesMap())) {
       otherResponse.getDeps().getDependenciesMap().forEach((key, value) -> {
         if (!builder.getResolvedDeps().containsDependencies(key)) {
-          builder.setDeps(
-              Dependencies.newBuilder().setYaml(otherResponse.getDeps().getYaml()).putDependencies(key, value).build());
+          dataMap.put(key, value);
         }
       });
     }
+    builder.setDeps(
+        Dependencies.newBuilder().setYaml(otherResponse.getDeps().getYaml()).putAllDependencies(dataMap).build());
   }
 }
