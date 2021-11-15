@@ -27,7 +27,6 @@ import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
-import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingService;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingServiceImpl;
@@ -48,6 +47,8 @@ import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.ccm.ngperpetualtask.service.K8sWatchTaskService;
 import io.harness.ccm.ngperpetualtask.service.K8sWatchTaskServiceImpl;
 import io.harness.ccm.setup.CESetupServiceModule;
+import io.harness.ccm.views.businessMapping.service.impl.BusinessMappingServiceImpl;
+import io.harness.ccm.views.businessMapping.service.intf.BusinessMappingService;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEReportTemplateBuilderService;
 import io.harness.ccm.views.service.CEViewService;
@@ -192,6 +193,8 @@ import io.harness.service.EventService;
 import io.harness.service.EventServiceImpl;
 import io.harness.service.impl.DelegateTokenServiceImpl;
 import io.harness.service.intfc.DelegateTokenService;
+import io.harness.telemetry.AbstractTelemetryModule;
+import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
@@ -199,6 +202,8 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.usermembership.UserMembershipClientModule;
+import io.harness.utils.featureflaghelper.CGFeatureFlagHelperServiceImpl;
+import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
 import io.harness.version.VersionModule;
 
 import software.wings.DataStorageMode;
@@ -852,6 +857,13 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
   @Provides
   @Singleton
+  @Named("gcpConfig")
+  public io.harness.ccm.commons.beans.config.GcpConfig noOpDummyConfig() {
+    return io.harness.ccm.commons.beans.config.GcpConfig.builder().build();
+  }
+
+  @Provides
+  @Singleton
   public CdnStorageUrlGenerator cdnStorageUrlGenerator() {
     String clusterType = System.getenv("CLUSTER_TYPE");
     boolean isFreeCluster = StringUtils.equals(clusterType, "freemium");
@@ -885,6 +897,13 @@ public class WingsModule extends AbstractModule implements ServersModule {
             .mockAccessControlService(false)
             .build(),
         MANAGER.getServiceId()));
+
+    install(new AbstractTelemetryModule() {
+      @Override
+      public TelemetryConfiguration telemetryConfiguration() {
+        return configuration.getSegmentConfiguration();
+      }
+    });
 
     bind(MainConfiguration.class).toInstance(configuration);
     bind(PortalConfig.class).toInstance(configuration.getPortal());
@@ -1084,10 +1103,12 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(LoginSettingsService.class).to(LoginSettingsServiceImpl.class);
     bind(CCMSettingService.class).to(CCMSettingServiceImpl.class);
     bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
+    bind(io.harness.ccm.bigQuery.BigQueryService.class).to(BigQueryServiceImpl.class);
     bind(BudgetService.class).to(BudgetServiceImpl.class);
     bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
     bind(ViewsBillingService.class).to(ViewsBillingServiceImpl.class);
     bind(CEViewService.class).to(CEViewServiceImpl.class);
+    bind(BusinessMappingService.class).to(BusinessMappingServiceImpl.class);
     bind(CECommunicationsService.class).to(CECommunicationsServiceImpl.class);
     bind(CESlackWebhookService.class).to(CESlackWebhookServiceImpl.class);
     bind(CEReportScheduleService.class).to(CEReportScheduleServiceImpl.class);
@@ -1276,7 +1297,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .annotatedWith(Names.named("TimeScaleDBConfig"))
         .toInstance(configuration.getTimeScaleDBConfig() != null ? configuration.getTimeScaleDBConfig()
                                                                  : TimeScaleDBConfig.builder().build());
-    bind(BigQueryService.class).to(BigQueryServiceImpl.class);
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
     }
@@ -1316,7 +1336,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     // End of deployment trigger dependencies
 
     install(new PerpetualTaskServiceModule());
-    install(new CESetupServiceModule());
+    install(CESetupServiceModule.getInstance());
     install(new CVNextGenCommonsServiceModule());
     try {
       install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
@@ -1373,6 +1393,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);
     install(new CVCommonsServiceModule());
     bind(CDChangeSourceIntegrationService.class).to(CDChangeSourceIntegrationServiceImpl.class);
+    bind(FeatureFlagHelperService.class).to(CGFeatureFlagHelperServiceImpl.class);
   }
 
   private void bindFeatures() {

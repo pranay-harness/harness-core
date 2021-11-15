@@ -59,6 +59,8 @@ public class TemplateServiceConfiguration extends Configuration {
   @JsonProperty("jwtIdentityServiceSecret") private String jwtIdentityServiceSecret;
   @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
   @JsonProperty("accessControlClientConfig") private AccessControlClientConfiguration accessControlClientConfiguration;
+  @JsonProperty("hostname") String hostname;
+  @JsonProperty("basePathPrefix") String basePathPrefix;
 
   private boolean shouldDeployWithGitSync;
   private GitSdkConfiguration gitSdkConfiguration;
@@ -130,5 +132,9 @@ public class TemplateServiceConfiguration extends Configuration {
     fileAppenderFactory.setArchivedFileCount(14);
     logbackAccessRequestLogFactory.setAppenders(ImmutableList.of(fileAppenderFactory));
     return logbackAccessRequestLogFactory;
+  }
+
+  public static Set<String> getUniquePackagesContainingResources() {
+    return getResourceClasses().stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }
 }

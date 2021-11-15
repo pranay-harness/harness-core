@@ -1,5 +1,6 @@
 package io.harness.ci.plan.creator.filter;
 
+import static io.harness.beans.yaml.extended.infrastrucutre.Infrastructure.Type.KUBERNETES_DIRECT;
 import static io.harness.filters.FilterCreatorHelper.convertToEntityDetailProtoDTO;
 import static io.harness.git.GitClientHelper.getGitRepo;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.CI;
@@ -130,16 +131,18 @@ public class CIStageFilterJsonCreator extends GenericStageFilterJsonCreator {
     if (integrationStage.getInfrastructure() == null) {
       throw new CIStageExecutionException("Input infrastructure is not set");
     } else {
-      K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) integrationStage.getInfrastructure();
+      if (integrationStage.getInfrastructure().getType() == KUBERNETES_DIRECT) {
+        K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) integrationStage.getInfrastructure();
 
-      final String clusterConnectorRef = k8sDirectInfraYaml.getSpec().getConnectorRef();
+        final String clusterConnectorRef = k8sDirectInfraYaml.getSpec().getConnectorRef();
 
-      String fullQualifiedDomainName =
-          YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode()) + PATH_CONNECTOR
-          + YAMLFieldNameConstants.SPEC + PATH_CONNECTOR + clusterConnectorRef;
-      result.add(
-          convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier, projectIdentifier, fullQualifiedDomainName,
-              ParameterField.createValueField(clusterConnectorRef), EntityTypeProtoEnum.CONNECTORS));
+        String fullQualifiedDomainName =
+            YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode()) + PATH_CONNECTOR
+            + YAMLFieldNameConstants.SPEC + PATH_CONNECTOR + clusterConnectorRef;
+        result.add(
+            convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier, projectIdentifier, fullQualifiedDomainName,
+                ParameterField.createValueField(clusterConnectorRef), EntityTypeProtoEnum.CONNECTORS));
+      }
     }
 
     return result;

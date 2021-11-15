@@ -96,7 +96,7 @@ public class PMSInputSetElementMapper {
         .tags(TagMapper.convertToMap(entity.getTags()))
         .version(entity.getVersion())
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
-        .isInvalid(entity.getIsInvalid())
+        .isOutdated(entity.getIsInvalid())
         .build();
   }
 
@@ -121,7 +121,7 @@ public class PMSInputSetElementMapper {
         .isErrorResponse(isError)
         .invalidInputSetReferences(invalidReferences)
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
-        .isInvalid(entity.getIsInvalid())
+        .isOutdated(entity.getIsInvalid())
         .build();
   }
 
@@ -135,6 +135,9 @@ public class PMSInputSetElementMapper {
         .tags(TagMapper.convertToMap(entity.getTags()))
         .version(entity.getVersion())
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
+        .createdAt(entity.getCreatedAt())
+        .lastUpdatedAt(entity.getLastUpdatedAt())
+        .isOutdated(entity.getIsInvalid())
         .build();
   }
 }

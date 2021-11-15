@@ -4,6 +4,7 @@ import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.aggregator.ACLUtils.buildACL;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.persistence.ACL;
@@ -70,10 +71,12 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
       return;
     }
 
-    Criteria criteria = Criteria.where(RoleAssignmentDBOKeys.resourceGroupIdentifier)
-                            .is(resourceGroup.get().getIdentifier())
-                            .and(RoleAssignmentDBOKeys.scopeIdentifier)
-                            .is(resourceGroup.get().getScopeIdentifier());
+    Criteria criteria =
+        Criteria.where(RoleAssignmentDBOKeys.resourceGroupIdentifier).is(resourceGroup.get().getIdentifier());
+    if (isNotEmpty(resourceGroup.get().getScopeIdentifier())) {
+      criteria.and(RoleAssignmentDBOKeys.scopeIdentifier).is(resourceGroup.get().getScopeIdentifier());
+    }
+
     List<ReProcessRoleAssignmentOnResourceGroupUpdateTask> tasksToExecute =
         roleAssignmentRepository.findAll(criteria, Pageable.unpaged())
             .stream()

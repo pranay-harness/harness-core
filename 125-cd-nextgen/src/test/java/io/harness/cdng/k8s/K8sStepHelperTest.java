@@ -128,7 +128,6 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesTaskException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.helm.HelmSubCommandType;
@@ -146,6 +145,7 @@ import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.refobjects.RefType;
 import io.harness.pms.data.OrchestrationRefType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
@@ -203,7 +203,6 @@ public class K8sStepHelperTest extends CategoryTest {
   @Mock private ConnectorInfoDTO connectorInfoDTO;
   @Mock private StoreConfig storeConfig;
   @Mock private SecretManagerClientService secretManagerClientService;
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private CDFeatureFlagHelper cdFeatureFlagHelper;
   @Spy @InjectMocks private K8sEntityHelper k8sEntityHelper;
   @Spy @InjectMocks private K8sStepHelper k8sStepHelper;
@@ -215,7 +214,9 @@ public class K8sStepHelperTest extends CategoryTest {
   @Before
   public void setup() {
     doReturn(mockLogCallback).when(k8sStepHelper).getLogCallback(anyString(), eq(ambiance), anyBoolean());
-    doReturn(true).when(featureFlagService).isEnabled(FeatureName.USE_LATEST_CHARTMUSEUM_VERSION, "test-account");
+    doReturn(true)
+        .when(cdFeatureFlagHelper)
+        .isEnabled(AmbianceUtils.getAccountId(ambiance), FeatureName.USE_LATEST_CHARTMUSEUM_VERSION);
     doAnswer(invocation -> invocation.getArgumentAt(1, String.class))
         .when(engineExpressionService)
         .renderExpression(eq(ambiance), anyString());

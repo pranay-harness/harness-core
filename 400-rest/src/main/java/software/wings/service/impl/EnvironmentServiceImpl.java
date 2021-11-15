@@ -520,6 +520,20 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         .collect(Collectors.toList());
   }
 
+  @Override
+  @Nonnull
+  public List<Environment> getEnvironmentsFromIds(@NotEmpty String accountId, @Nonnull List<String> envIds) {
+    if (isEmpty(envIds)) {
+      return Collections.emptyList();
+    }
+    return new ArrayList<>(wingsPersistence.createQuery(Environment.class)
+                               .field(EnvironmentKeys.accountId)
+                               .equal(accountId)
+                               .field(EnvironmentKeys.uuid)
+                               .in(envIds)
+                               .asList());
+  }
+
   private void ensureEnvironmentSafeToDelete(Environment environment) {
     List<String> refPipelines =
         pipelineService.obtainPipelineNamesReferencedByEnvironment(environment.getAppId(), environment.getUuid());

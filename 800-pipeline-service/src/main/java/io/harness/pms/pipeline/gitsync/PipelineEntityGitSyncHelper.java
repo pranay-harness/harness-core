@@ -104,8 +104,7 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   }
 
   @Override
-  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      boolean invalid, String erroneousYaml) {
+  public boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String erroneousYaml) {
     return false;
   }
 

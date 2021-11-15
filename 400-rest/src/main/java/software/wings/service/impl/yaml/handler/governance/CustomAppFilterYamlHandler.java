@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<CustomAppFilter.Yaml, CustomAppFilter> {
@@ -31,10 +32,12 @@ public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<Cus
 
   @Override
   public CustomAppFilter.Yaml toYaml(CustomAppFilter bean, String accountId) {
-    List<String> appNames = appService.getAppsByIds(new HashSet<String>(bean.getApps()))
-                                .stream()
-                                .map(Application::getName)
-                                .collect(Collectors.toList());
+    Map<String, String> appIdName = appService.getAppsByIds(new HashSet<String>(bean.getApps()))
+                                        .stream()
+                                        .collect(Collectors.toMap(Application::getUuid, Application::getName));
+
+    // Preserve the order of applications
+    List<String> orderedAppNames = bean.getApps().stream().map(appIdName::get).collect(Collectors.toList());
 
     EnvironmentFilterYamlHandler environmentFilterYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.ENV_FILTER, bean.getEnvSelection().getFilterType().name());
@@ -42,7 +45,7 @@ public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<Cus
 
     // envSelection is made a List to make Yaml cleanup work YamlUtils.cleanUpDoubleExclamationLines
     return CustomAppFilter.Yaml.builder()
-        .apps(appNames)
+        .apps(orderedAppNames)
         .envSelection(Arrays.asList(environmentFilterYamlHandler.toYaml(bean.getEnvSelection(), accountId)))
         .serviceSelection(bean.getServiceSelection() == null
                 ? null

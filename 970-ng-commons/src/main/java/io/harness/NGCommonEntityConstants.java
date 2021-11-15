@@ -61,6 +61,7 @@ public class NGCommonEntityConstants {
 
   public static final String PAGE_PARAM_MESSAGE = "The number of the page to fetch";
   public static final String SIZE_PARAM_MESSAGE = "The number of the elements to fetch";
+  public static final String SORT_PARAM_MESSAGE = "Sort criteria for the elements.";
   public static final String BAD_REQUEST_PARAM_MESSAGE = "Bad Request";
   public static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal Server Error";
   public static final String BAD_REQUEST_CODE = "400";

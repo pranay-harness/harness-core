@@ -72,6 +72,11 @@ public class Environment
                  .field(EnvironmentKeys.accountId)
                  .descSortField(EnvironmentKeys.createdAt)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_name")
+                 .field(EnvironmentKeys.accountId)
+                 .ascSortField(EnvironmentKeys.name)
+                 .build())
         .build();
   }
 

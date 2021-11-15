@@ -227,11 +227,10 @@ public class DelegateAgentResource {
   @Timed
   @ExceptionMetered
   public RestResponse<DelegateRegisterResponse> register(
-      @QueryParam("accountId") @NotEmpty String accountId, DelegateParams delegateParams) {
+      @QueryParam("accountId") @NotEmpty final String accountId, final DelegateParams delegateParams) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      long startTime = System.currentTimeMillis();
-      DelegateRegisterResponse registerResponse =
-          delegateService.register(delegateParams.toBuilder().accountId(accountId).build());
+      final long startTime = System.currentTimeMillis();
+      final DelegateRegisterResponse registerResponse = delegateService.register(delegateParams);
       log.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
       return new RestResponse<>(registerResponse);
     }

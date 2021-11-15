@@ -292,10 +292,11 @@ public class RoleAssignmentResource {
                                                  .collect(toList());
     List<String> resourceGroupIdentifiers =
         roleAssignments.stream().map(RoleAssignment::getResourceGroupIdentifier).distinct().collect(toList());
-    List<ResourceGroupDTO> resourceGroupDTOs = resourceGroupService.list(resourceGroupIdentifiers, scope.toString())
-                                                   .stream()
-                                                   .map(ResourceGroupDTOMapper::toDTO)
-                                                   .collect(toList());
+    List<ResourceGroupDTO> resourceGroupDTOs =
+        resourceGroupService.list(resourceGroupIdentifiers, scope.toString(), NO_FILTER)
+            .stream()
+            .map(ResourceGroupDTOMapper::toDTO)
+            .collect(toList());
     List<RoleAssignmentDTO> roleAssignmentDTOs =
         roleAssignments.stream().map(RoleAssignmentDTOMapper::toDTO).collect(toList());
     return ResponseDTO.newResponse(
@@ -569,7 +570,8 @@ public class RoleAssignmentResource {
     if (!scopeService.isPresent(scope.toString())) {
       harnessScopeService.sync(scope);
     }
-    if (!resourceGroupService.get(roleAssignment.getResourceGroupIdentifier(), scope.toString()).isPresent()) {
+    if (!resourceGroupService.get(roleAssignment.getResourceGroupIdentifier(), scope.toString(), NO_FILTER)
+             .isPresent()) {
       harnessResourceGroupService.sync(roleAssignment.getResourceGroupIdentifier(), scope);
     }
     if (roleAssignment.getPrincipalType().equals(USER_GROUP)

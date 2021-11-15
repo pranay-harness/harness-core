@@ -1,6 +1,5 @@
 package io.harness.enforcement.executions;
 
-import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.enforcement.beans.CustomRestrictionEvaluationDTO;
@@ -18,7 +17,7 @@ import java.util.Optional;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class BuildRestrictionUsageImpl implements CustomRestrictionInterface {
-  private static String moduleName = ModuleType.CI.name().toLowerCase();
+  private static final String moduleName = "ci_private_build";
   @Inject AccountExecutionMetadataRepository accountExecutionMetadataRepository;
 
   @Override
@@ -29,17 +28,19 @@ public class BuildRestrictionUsageImpl implements CustomRestrictionInterface {
       Optional<AccountExecutionMetadata> accountExecutionMetadata =
           accountExecutionMetadataRepository.findByAccountId(accountIdentifier);
       if (!accountExecutionMetadata.isPresent()
-          || accountExecutionMetadata.get().getModuleToExecutionCount().get(moduleName) <= 2600) {
+          || accountExecutionMetadata.get().getModuleToExecutionCount().getOrDefault(moduleName, 0L) <= 2600) {
         return true;
       }
       LocalDate startDate = Instant.now().atZone(ZoneId.systemDefault()).toLocalDate();
       YearMonth yearMonth = YearMonth.of(startDate.getYear(), startDate.getMonth());
-      return accountExecutionMetadata.get()
-                 .getModuleToExecutionInfoMap()
-                 .get(moduleName)
-                 .getCountPerMonth()
-                 .getOrDefault(yearMonth.toString(), 0L)
-          > 100;
+      if (accountExecutionMetadata.get().getModuleToExecutionInfoMap().get(moduleName) != null) {
+        return accountExecutionMetadata.get()
+                   .getModuleToExecutionInfoMap()
+                   .get(moduleName)
+                   .getCountPerMonth()
+                   .getOrDefault(yearMonth.toString(), 0L)
+            > 100;
+      }
     }
     return true;
   }

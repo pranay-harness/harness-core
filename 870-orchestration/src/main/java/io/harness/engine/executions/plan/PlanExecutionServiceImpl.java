@@ -33,6 +33,7 @@ import com.google.inject.Singleton;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.Getter;
@@ -41,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -181,5 +183,15 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
         .setMetadata(
             planExecution.getMetadata() == null ? ExecutionMetadata.newBuilder().build() : planExecution.getMetadata())
         .build();
+  }
+
+  @Override
+  public List<PlanExecution> findByStatusWithProjections(Set<Status> statuses, Set<String> fieldNames) {
+    Query query = query(where(PlanExecutionKeys.status).in(statuses));
+    Field field = query.fields();
+    for (String fieldName : fieldNames) {
+      field = field.include(fieldName);
+    }
+    return mongoTemplate.find(query, PlanExecution.class);
   }
 }

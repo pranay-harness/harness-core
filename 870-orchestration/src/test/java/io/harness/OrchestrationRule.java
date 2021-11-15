@@ -22,6 +22,8 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.lock.DistributedLockImplementation;
+import io.harness.lock.PersistentLockModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.opaclient.OpaServiceClient;
@@ -31,6 +33,7 @@ import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
+import io.harness.redis.RedisConfig;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
@@ -165,6 +168,21 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
         bind(OrchestrationEventEmitter.class).to(MockEventEmitter.class);
       }
     });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      DistributedLockImplementation distributedLockImplementation() {
+        return DistributedLockImplementation.NOOP;
+      }
+
+      @Provides
+      @Named("lock")
+      @Singleton
+      RedisConfig redisConfig() {
+        return RedisConfig.builder().build();
+      }
+    });
+    modules.add(PersistentLockModule.getInstance());
 
     modules.add(new AbstractModule() {
       @Override

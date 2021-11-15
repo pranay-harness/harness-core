@@ -11,6 +11,7 @@ import io.harness.ng.core.notification.NotificationSettingConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -26,6 +27,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
+@Schema(name = "UserGroup", description = "This is the view of the UserGroup entity defined in Harness")
 public class UserGroupDTO {
   String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;

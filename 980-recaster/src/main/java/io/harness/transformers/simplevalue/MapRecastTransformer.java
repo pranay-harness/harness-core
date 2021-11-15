@@ -64,7 +64,7 @@ public class MapRecastTransformer extends RecastTransformer implements SimpleVal
       }
       return mapToEncode;
     }
-    return null;
+    return map.isEmpty() ? map : null;
   }
 
   @Override

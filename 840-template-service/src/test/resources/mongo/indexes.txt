@@ -30,6 +30,9 @@ delegateScopes {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1
 delegateTokens {"name": "byAccountAndName", "unique": true} {"accountId": 1, "name": 1}
 delegateTokens {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "status": 1}
 delegateTokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+delegateTokensNG {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "owner": 1, "status": 1}
+delegateTokensNG {"name": "byAccountOwnerAndName", "unique": true} {"accountId": 1, "owner": 1, "name": 1}
+delegateTokensNG {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 encryptedRecords {"name": "acctKmsIdx", "background": true} {"accountId": 1, "kmsId": 1}
 encryptedRecords {"name": "acctNameIdx", "unique": true} {"accountId": 1, "name": 1, "ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.identifier": 1}
 encryptedRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}

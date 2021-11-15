@@ -22,6 +22,6 @@ public interface ConnectorService extends ConnectorCrudService, ConnectorValidat
    */
   void resetHeartbeatForReferringConnectors(List<Pair<String, String>> connectorPerpetualTaskInfoList);
 
-  boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      boolean invalid, String invalidYaml);
+  boolean markEntityInvalid(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml);
 }

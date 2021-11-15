@@ -34,7 +34,7 @@ public class ScopeMapper {
         .build();
   }
 
-  public static HarnessScopeParams toParams(@Valid @NotNull Scope scope) {
+  public static HarnessScopeParams toParams(@Valid Scope scope) {
     Map<String, String> params = new HashMap<>();
     Scope currentScope = scope;
     while (currentScope != null) {
@@ -53,8 +53,13 @@ public class ScopeMapper {
   }
 
   public static Scope fromParams(@Valid @NotNull HarnessScopeParams harnessScopeParams) {
-    Scope scope =
-        Scope.builder().instanceId(harnessScopeParams.getAccountIdentifier()).level(HarnessScopeLevel.ACCOUNT).build();
+    Scope scope = null;
+    if (isNotEmpty(harnessScopeParams.getAccountIdentifier())) {
+      scope = Scope.builder()
+                  .instanceId(harnessScopeParams.getAccountIdentifier())
+                  .level(HarnessScopeLevel.ACCOUNT)
+                  .build();
+    }
     if (isNotEmpty(harnessScopeParams.getOrgIdentifier())) {
       scope = Scope.builder()
                   .instanceId(harnessScopeParams.getOrgIdentifier())

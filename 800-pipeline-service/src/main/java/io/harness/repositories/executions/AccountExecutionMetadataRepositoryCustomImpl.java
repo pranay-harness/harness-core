@@ -61,7 +61,7 @@ public class AccountExecutionMetadataRepositoryCustomImpl implements AccountExec
       }
       for (String module : moduleNames) {
         // increase total count for given module
-        long currentCount = accountExecutionMetadata.getModuleToExecutionCount().get(module);
+        long currentCount = accountExecutionMetadata.getModuleToExecutionCount().getOrDefault(module, 0L);
         accountExecutionMetadata.getModuleToExecutionCount().put(module, currentCount + 1);
 
         // Increase count per month

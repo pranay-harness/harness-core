@@ -23,6 +23,24 @@ xxxxxxxx
     appenders: []
   maxThreads: 1024
 
+commonPoolConfig:
+  corePoolSize: ${COMMON_POOL_CORE_SIZE:-20}
+  maxPoolSize: ${COMMON_POOL_MAX_SIZE:-1000}
+  idleTime: ${COMMON_POOL_IDLE_TIME:-500}
+  timeUnit: ${COMMON_POOL_IDLE_TIME_TIME_UNIT:-MILLISECONDS}
+
+pmsSdkExecutionPoolConfig:
+  corePoolSize: ${PMS_SDK_EXECUTION_POOL_CORE_SIZE:-20}
+  maxPoolSize: ${PMS_SDK_EXECUTION_POOL_MAX_SIZE:-100}
+  idleTime: ${PMS_SDK_EXECUTION_POOL_IDLE_TIME:-120}
+  timeUnit: ${PMS_SDK_EXECUTION_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
+pmsSdkOrchestrationEventPoolConfig:
+  corePoolSize: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_CORE_SIZE:-10}
+  maxPoolSize: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_MAX_SIZE:-50}
+  idleTime: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME:-120}
+  timeUnit: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
 nextGen:
   managerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   userVerificationSecret: dyBvaWVmbGRrYyB6aHpjeHZvaWxzamt6ZGN6c2RhZmh5dBrebhmnjryRe54rX43W3565ytgbsDvnjws5
@@ -30,6 +48,7 @@ nextGen:
   pipelineServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
   jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
+  ciManagerSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 enableAudit: false
 
@@ -108,6 +127,11 @@ managerClientConfig:
 
 ngManagerClientConfig:
   baseUrl: http://localhost:7457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+ciManagerClientConfig:
+  baseUrl: http://localhost:7171/ci/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 

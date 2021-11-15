@@ -2,6 +2,7 @@ package io.harness.gitsync.common.beans;
 
 import io.harness.Microservice;
 
+import com.mongodb.lang.Nullable;
 import lombok.Builder;
 import lombok.Value;
 
@@ -9,5 +10,5 @@ import lombok.Value;
 @Builder
 public class GitToHarnessProcessingResponse {
   GitToHarnessProcessingResponseDTO processingResponse;
-  Microservice microservice;
+  @Nullable Microservice microservice;
 }

@@ -93,7 +93,8 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
                                         .withName(inputSetEntity.getName())
                                         .withDescription(inputSetEntity.getDescription())
                                         .withTags(inputSetEntity.getTags())
-                                        .withInputSetReferences(inputSetEntity.getInputSetReferences());
+                                        .withInputSetReferences(inputSetEntity.getInputSetReferences())
+                                        .withIsInvalid(false);
 
     return makeInputSetUpdateCall(entityToUpdate, changeType);
   }

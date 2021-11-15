@@ -1,0 +1,6 @@
+{
+  "label" : "Default",
+  "taskLimit" : "50",
+  "ram" : "768",
+  "cpu" : "0.5"
+}

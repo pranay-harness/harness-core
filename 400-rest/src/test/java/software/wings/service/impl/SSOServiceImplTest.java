@@ -12,8 +12,8 @@ import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -133,12 +133,12 @@ public class SSOServiceImplTest extends WingsBaseTest {
     ssoService.uploadOauthConfiguration(
         accountId, "", ImmutableSet.of(OauthProviderType.GOOGLE, OauthProviderType.BITBUCKET));
     SamlClient samlClient = mock(SamlClient.class);
-    doReturn(samlClient).when(samlClientService).getSamlClient(anyString());
+    doReturn(samlClient).when(samlClientService).getSamlClient(anyString(), anyString());
     doReturn("https://harness.onelogin.com").when(samlClient).getIdentityProviderUrl();
 
     // Upload SAML config and enable
     ssoService.uploadSamlConfiguration(
-        accountId, new ByteArrayInputStream("test data".getBytes()), "test", "", false, "");
+        accountId, new ByteArrayInputStream("test data".getBytes()), "test", "", false, "", "");
     ssoService.setAuthenticationMechanism(accountId, SAML);
     account = accountService.get(account.getUuid());
     assertThat(account.getAuthenticationMechanism()).isEqualTo(SAML);
@@ -169,12 +169,12 @@ public class SSOServiceImplTest extends WingsBaseTest {
 
     accountService.save(account, false);
     SamlClient samlClient = mock(SamlClient.class);
-    doReturn(samlClient).when(samlClientService).getSamlClient(anyString());
+    doReturn(samlClient).when(samlClientService).getSamlClient(anyString(), anyString());
     doReturn("https://harness.onelogin.com").when(samlClient).getIdentityProviderUrl();
 
     // Upload SAML config and enable
     ssoService.uploadSamlConfiguration(
-        accountId, new ByteArrayInputStream("test data".getBytes()), "test", "", false, "");
+        accountId, new ByteArrayInputStream("test data".getBytes()), "test", "", false, "", "");
     ssoService.setAuthenticationMechanism(accountId, SAML);
     account = accountService.get(account.getUuid());
     assertThat(account.getAuthenticationMechanism()).isEqualTo(SAML);
