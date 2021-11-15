@@ -77,7 +77,6 @@ public class SignupResource {
   /**
    * Follows the "free trial sign up" path
    * Module type can be optional but by default we will always redirect to NG
-   *
    * @param dto
    * @return
    */
@@ -91,8 +90,7 @@ public class SignupResource {
   @PUT
   @Path("/complete/{token}")
   @PublicApi
-  public RestResponse<UserInfo> completeSignupInvite(
-      @PathParam("token") String token, @Context HttpServletRequest request) {
+  public RestResponse<UserInfo> completeSignupInvite(@PathParam("token") String token) {
     return new RestResponse<>(signupService.completeSignupInvite(token));
   }
 
@@ -113,8 +111,7 @@ public class SignupResource {
   @POST
   @Path("/verify/{token}")
   @PublicApi
-  public RestResponse<VerifyTokenResponseDTO> verifyToken(
-      @PathParam("token") String token, @Context HttpServletRequest request) {
+  public RestResponse<VerifyTokenResponseDTO> verifyToken(@PathParam("token") String token) {
     return new RestResponse<>(signupService.verifyToken(token));
   }
 
