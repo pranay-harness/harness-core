@@ -54,7 +54,7 @@ public class CeProductMetricsTasklet implements Tasklet {
       Instant end = CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE)
                         .minus(3, ChronoUnit.DAYS);
       log.info("Sending CE account traits through Segment group call.");
-      sendStatsToSegment(accountId, start, end);
+      //sendStatsToSegment(accountId, start, end);
       nextGenInstrumentation(accountId, start, end);
     }
     return null;
