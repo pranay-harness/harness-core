@@ -126,8 +126,8 @@ public class SignupServiceImpl implements SignupService {
 
     dto.setEmail(dto.getEmail().toLowerCase());
 
-    AccountDTO account = createAccount(dto, "");
-    UserInfo user = createUser(dto, account, "");
+    AccountDTO account = createAccount(dto);
+    UserInfo user = createUser(dto, account);
     sendSucceedTelemetryEvent(
         dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user, SignupType.SIGNUP_FORM_FLOW, "");
     executorService.submit(() -> {
@@ -326,11 +326,11 @@ public class SignupServiceImpl implements SignupService {
         .get();
   }
 
-  private AccountDTO createAccount(SignupDTO dto, String ipAddress) {
+  private AccountDTO createAccount(SignupDTO dto) {
     try {
       return accountService.createAccount(dto);
     } catch (Exception e) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Account creation", ipAddress);
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Account creation", dto.getIpAddress());
       throw e;
     }
   }
@@ -397,7 +397,7 @@ public class SignupServiceImpl implements SignupService {
     }
 
     SignupDTO signupDTO = SignupDTO.builder().email(dto.getEmail()).utmInfo(dto.getUtmInfo()).build();
-    AccountDTO account = createAccount(signupDTO, ipAddress);
+    AccountDTO account = createAccount(signupDTO);
     UserInfo oAuthUser = createOAuthUser(dto, account, ipAddress);
 
     sendSucceedTelemetryEvent(
@@ -481,7 +481,7 @@ public class SignupServiceImpl implements SignupService {
     log.info("Resend verification email for {}", email);
   }
 
-  private UserInfo createUser(SignupDTO signupDTO, AccountDTO account, String ipAddress) {
+  private UserInfo createUser(SignupDTO signupDTO, AccountDTO account) {
     try {
       String passwordHash = hashpw(signupDTO.getPassword(), BCrypt.gensalt());
       List<AccountDTO> accountList = new ArrayList<>();
@@ -501,7 +501,7 @@ public class SignupServiceImpl implements SignupService {
                                        .build();
       return getResponse(userClient.createNewUser(userRequest));
     } catch (Exception e) {
-      sendFailedTelemetryEvent(signupDTO.getEmail(), signupDTO.getUtmInfo(), e, account, "User creation", ipAddress);
+      sendFailedTelemetryEvent(signupDTO.getEmail(), signupDTO.getUtmInfo(), e, account, "User creation", signupDTO.getIpAddress());
       throw e;
     }
   }
