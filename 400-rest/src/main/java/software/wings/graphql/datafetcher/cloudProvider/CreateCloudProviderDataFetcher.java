@@ -7,7 +7,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
-import software.wings.beans.Application;
+import software.wings.beans.CGConstants;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -94,7 +94,7 @@ public class CreateCloudProviderDataFetcher
     }
 
     settingAttribute =
-        settingsService.saveWithPruning(settingAttribute, Application.GLOBAL_APP_ID, mutationContext.getAccountId());
+        settingsService.saveWithPruning(settingAttribute, CGConstants.GLOBAL_APP_ID, mutationContext.getAccountId());
     settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);
     return builder.cloudProvider(CloudProviderController.populateCloudProvider(settingAttribute).build()).build();
   }

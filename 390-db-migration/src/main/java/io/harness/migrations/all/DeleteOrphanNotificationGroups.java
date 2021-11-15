@@ -6,7 +6,7 @@ import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HQuery;
 
-import software.wings.beans.Application;
+import software.wings.beans.CGConstants;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
@@ -40,7 +40,7 @@ public class DeleteOrphanNotificationGroups implements Migration {
     Stopwatch stopwatch = Stopwatch.createStarted();
     try {
       List<String> ngIds = persistence.createQuery(NotificationGroup.class, HQuery.excludeCount)
-                               .filter("appId", Application.GLOBAL_APP_ID)
+                               .filter("appId", CGConstants.GLOBAL_APP_ID)
                                .asList()
                                .stream()
                                .map(NotificationGroup::getUuid)

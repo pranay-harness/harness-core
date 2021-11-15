@@ -4,7 +4,7 @@ import static io.harness.generator.TemplateGalleryGenerator.TemplateGalleries.HA
 import static io.harness.generator.TemplateGalleryGenerator.TemplateGalleries.HARNESS_IMPORTED_TEMPLATE_GALLERY;
 import static io.harness.govern.Switch.unhandled;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import software.wings.beans.Account;
 import software.wings.beans.template.TemplateFolder;

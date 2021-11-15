@@ -61,7 +61,6 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
         .build();
   }
 
-  public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   public static final String LOG_KEY_FOR_ID = LogKeyUtils.calculateLogKeyForId(Application.class);
 
   @Override

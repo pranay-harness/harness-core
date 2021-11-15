@@ -17,8 +17,8 @@ import static io.harness.validation.Validator.equalCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.app.ManagerCacheRegistrar.NEW_RELIC_APPLICATION_CACHE;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.GitConfig.GIT_USER;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
@@ -381,7 +381,8 @@ public class SettingsServiceImpl implements SettingsService {
       artifactStreams.forEach(artifactStream -> {
         Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
         ArtifactStreamSummary artifactStreamSummary =
-            ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact);
+            ArtifactStreamServiceBindingServiceImpl.prepareSummaryFromArtifactStream(
+                artifactStream, lastCollectedArtifact);
         artifactStreamSummaries.add(artifactStreamSummary);
       });
       settingAttribute.setArtifactStreamCount(totalArtifactStreamCount);

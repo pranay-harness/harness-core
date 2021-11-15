@@ -22,6 +22,7 @@ import io.harness.persistence.HIterator;
 
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
+import software.wings.beans.CGConstants;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.InfrastructureProvisioner;
@@ -134,7 +135,7 @@ public class ResourceLookupMigration implements Migration {
           continue;
         }
 
-        addResourceLookupRecord(settingAttribute.getAccountId(), Application.GLOBAL_APP_ID, settingAttribute.getUuid(),
+        addResourceLookupRecord(settingAttribute.getAccountId(), CGConstants.GLOBAL_APP_ID, settingAttribute.getUuid(),
             settingAttribute.getName(), settingValue.fetchResourceCategory());
       }
     }
@@ -149,7 +150,7 @@ public class ResourceLookupMigration implements Migration {
                                  .fetch())) {
       while (userGroupIterator.hasNext()) {
         UserGroup userGroup = userGroupIterator.next();
-        addResourceLookupRecord(userGroup.getAccountId(), Application.GLOBAL_APP_ID, userGroup.getUuid(),
+        addResourceLookupRecord(userGroup.getAccountId(), CGConstants.GLOBAL_APP_ID, userGroup.getUuid(),
             userGroup.getName(), USER_GROUP.name());
       }
     }

@@ -3,7 +3,7 @@ package software.wings.integration.yaml;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

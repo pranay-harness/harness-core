@@ -5,11 +5,15 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutput;
 
+import software.wings.beans.Log;
 import software.wings.beans.TerraGroupProvisioners;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.ngmigration.NGMigrationEntity;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
+import software.wings.verification.CVActivityLog;
 
 import java.util.Set;
 
@@ -23,8 +27,13 @@ public class CgOrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TerraGroupProvisioners.class);
     set.add(SweepingOutput.class);
     set.add(NGMigrationEntity.class);
+    set.add(ThirdPartyApiCallLog.class);
+    set.add(Log.class);
+    set.add(CVActivityLog.class);
   }
 
   @Override
-  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {}
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
+    w.put("metrics.TimeSeriesMetricDefinition", TimeSeriesMetricDefinition.class);
+  }
 }
