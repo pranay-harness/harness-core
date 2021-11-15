@@ -34,6 +34,7 @@ import java.time.Instant;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import org.jooq.Table;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -53,6 +54,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
   private static final String projectIdentifier = "PROJECT_ID";
   private static final String instanceKey = "INSTANCE";
   private static final String serviceIdentifier = "SERVICE";
+  private static final String envIdentifier = "ENV_ID";
   private static final long timestamp = 1632066423L;
 
   @Before
@@ -142,7 +144,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetLicenseUsageEmptyAggregateServiceUsageInfo() {
     when(cdLicenseUsageHelper.getActiveServicesInfoWithPercentileServiceInstanceCount(
-             anyString(), anyDouble(), anyLong(), anyLong()))
+             anyString(), anyDouble(), anyLong(), anyLong(), any(Table.class)))
         .thenReturn(emptyList());
 
     ServiceUsageDTO serviceTypeLicenseUsage = (ServiceUsageDTO) cdLicenseUsage.getLicenseUsage(accountIdentifier,
@@ -164,11 +166,12 @@ public class CDLicenseUsageImplTest extends CategoryTest {
     List<AggregateServiceUsageInfo> testServiceUsageInfoData = createTestServiceUsageInfoData(3);
 
     when(cdLicenseUsageHelper.getActiveServicesInfoWithPercentileServiceInstanceCount(
-             anyString(), anyDouble(), anyLong(), anyLong()))
+             anyString(), anyDouble(), anyLong(), anyLong(), any(Table.class)))
         .thenReturn(testServiceUsageInfoData);
     when(instanceService.getInstancesModifiedInInterval(anyString(), anyLong(), anyLong()))
         .thenReturn(testInstanceDTOData);
     when(cdLicenseUsageHelper.getServiceEntities(any(), any())).thenReturn(testServiceData);
+    when(cdLicenseUsageHelper.getOrgProjectServiceTableFromInstances(any())).thenCallRealMethod();
   }
 
   private ReferenceDTO getExpectedActiveServiceReference() {
@@ -199,6 +202,8 @@ public class CDLicenseUsageImplTest extends CategoryTest {
                               .accountIdentifier(accountIdentifier + i)
                               .projectIdentifier(projectIdentifier + i)
                               .orgIdentifier(orgIdentifier + i)
+                              .envIdentifier(envIdentifier + i)
+                              .serviceIdentifier(serviceIdentifier + i)
                               .build());
     }
     return instanceDTOList;

@@ -6,6 +6,7 @@ import static io.harness.timescaledb.Tables.SERVICES;
 import static org.jooq.impl.DSL.row;
 
 import io.harness.cdng.usage.impl.AggregateServiceUsageInfo.AggregateServiceUsageInfoKeys;
+import io.harness.dtos.InstanceDTO;
 import io.harness.timescaledb.tables.pojos.Services;
 
 import com.google.inject.Inject;
@@ -26,8 +27,9 @@ public class CDLicenseUsageDslHelper {
   public static final String PROJECT_ID = "projectId";
   public static final String SERVICE_ID = "serviceId";
 
-  List<AggregateServiceUsageInfo> getActiveServicesInfoWithPercentileServiceInstanceCount(
-      String accountIdentifier, double percentile, long startInterval, long endInterval) {
+  List<AggregateServiceUsageInfo> getActiveServicesInfoWithPercentileServiceInstanceCount(String accountIdentifier,
+      double percentile, long startInterval, long endInterval,
+      Table<Record3<String, String, String>> orgProjectServiceTable) {
     Field<Long> reportedDateEpoch = DSL.epoch(NG_INSTANCE_STATS.REPORTEDAT).cast(Long.class).mul(1000);
     return dsl
         .select(NG_INSTANCE_STATS.ORGID, NG_INSTANCE_STATS.PROJECTID, NG_INSTANCE_STATS.SERVICEID,
@@ -38,6 +40,13 @@ public class CDLicenseUsageDslHelper {
         .where(NG_INSTANCE_STATS.ACCOUNTID.eq(accountIdentifier)
                    .and(reportedDateEpoch.greaterOrEqual(startInterval))
                    .and(reportedDateEpoch.lessOrEqual(endInterval)))
+        .andExists(
+            dsl.selectOne()
+                .from(orgProjectServiceTable)
+                .where(
+                    SERVICES.ORG_IDENTIFIER.eq((Field<String>) orgProjectServiceTable.field(ORG_ID))
+                        .and(SERVICES.PROJECT_IDENTIFIER.eq((Field<String>) orgProjectServiceTable.field(PROJECT_ID)))
+                        .and(SERVICES.IDENTIFIER.eq((Field<String>) orgProjectServiceTable.field(SERVICE_ID)))))
         .groupBy(NG_INSTANCE_STATS.ORGID, NG_INSTANCE_STATS.PROJECTID, NG_INSTANCE_STATS.SERVICEID)
         .fetchInto(AggregateServiceUsageInfo.class);
   }
@@ -57,13 +66,13 @@ public class CDLicenseUsageDslHelper {
         .fetchInto(Services.class);
   }
 
-  public Table<Record3<String, String, String>> getOrgProjectServiceTable(
-      List<AggregateServiceUsageInfo> serviceUsageInfoList) {
-    Row3<String, String, String>[] orgProjectServiceRows = new Row3[serviceUsageInfoList.size()];
+  public Table<Record3<String, String, String>> getOrgProjectServiceTableFromInstances(
+      List<InstanceDTO> instanceDTOList) {
+    Row3<String, String, String>[] orgProjectServiceRows = new Row3[instanceDTOList.size()];
     int index = 0;
-    for (AggregateServiceUsageInfo aggregateServiceInfo : serviceUsageInfoList) {
-      orgProjectServiceRows[index++] = row(aggregateServiceInfo.getOrgidentifier(),
-          aggregateServiceInfo.getProjectidentifier(), aggregateServiceInfo.getServiceId());
+    for (InstanceDTO instanceDTO : instanceDTOList) {
+      orgProjectServiceRows[index++] =
+          row(instanceDTO.getOrgIdentifier(), instanceDTO.getProjectIdentifier(), instanceDTO.getServiceIdentifier());
     }
 
     return DSL.values(orgProjectServiceRows).as("t", "orgId", "projectId", "serviceId");
