@@ -19,7 +19,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
-import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "HealthVerificationJobKeys")
@@ -96,15 +95,6 @@ public class HealthVerificationJob extends VerificationJob {
   public Instant eligibleToStartAnalysisTime(Instant startTime, Duration dataCollectionDelay, Instant createdAt) {
     // It is running as live monitoring so does not depend on dataCollectionDelay or createdAt
     return getAnalysisStartTime(startTime);
-  }
-
-  public static class HealthVerificationUpdatableEntity
-      extends VerificationJobUpdatableEntity<HealthVerificationJob, HealthVerificationJobDTO> {
-    @Override
-    public void setUpdateOperations(
-        UpdateOperations<HealthVerificationJob> updateOperations, HealthVerificationJobDTO dto) {
-      setCommonOperations(updateOperations, dto);
-    }
   }
 
   public Instant getPreActivityVerificationStartTime(Instant startTime) {

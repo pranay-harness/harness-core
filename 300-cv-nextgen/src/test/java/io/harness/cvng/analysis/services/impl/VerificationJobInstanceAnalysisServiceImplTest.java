@@ -51,6 +51,7 @@ import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
@@ -622,9 +623,11 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     activity.setVerificationJobInstanceIds(Arrays.asList(baselineVerificationJobInstanceId));
     activity.setType(ActivityType.DEPLOYMENT);
     activityService.createActivity(activity);
-    VerificationJobDTO verificationJobDTO = createTestVerificationJobDTO(baselineVerificationJobInstanceId);
-    verificationJobDTO.setActivitySourceIdentifier(activity.getActivitySourceId());
-    verificationJobService.update(accountId, identifier, verificationJobDTO);
+    hPersistence.update(verificationJob,
+        hPersistence.createUpdateOperations(VerificationJob.class)
+            .set(VerificationJob.VerificationJobKeys.activitySourceIdentifier, activity.getActivitySourceId())
+            .set(TestVerificationJob.TestVerificationJobKeys.baselineVerificationJobInstanceId,
+                baselineVerificationJobInstanceId));
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     VerificationJobInstance currentVerificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
