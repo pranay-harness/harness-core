@@ -244,7 +244,7 @@ public class RoleAssignmentValidatorTest extends AccessControlCoreTestBase {
                                                                           .build();
     RoleAssignmentValidationResult validationResult = roleAssignmentValidator.validate(roleAssignmentValidationRequest);
     verify(resourceGroupService, times(0))
-        .get(roleAssignment.getResourceGroupIdentifier(), roleAssignment.getScopeIdentifier());
+        .get(roleAssignment.getResourceGroupIdentifier(), roleAssignment.getScopeIdentifier(), ManagedFilter.NO_FILTER);
     assertRoleAssignmentValidationResult(validationResult, validResult, validResult, validResult, validResult);
 
     roleAssignmentValidationRequest = RoleAssignmentValidationRequest.builder()
@@ -254,21 +254,23 @@ public class RoleAssignmentValidatorTest extends AccessControlCoreTestBase {
                                           .validateRole(false)
                                           .validateResourceGroup(true)
                                           .build();
-    when(resourceGroupService.get(roleAssignment.getResourceGroupIdentifier(), roleAssignment.getScopeIdentifier()))
+    when(resourceGroupService.get(
+             roleAssignment.getResourceGroupIdentifier(), roleAssignment.getScopeIdentifier(), ManagedFilter.NO_FILTER))
         .thenReturn(Optional.of(ResourceGroup.builder()
                                     .scopeIdentifier(roleAssignment.getScopeIdentifier())
                                     .identifier(roleAssignment.getRoleIdentifier())
                                     .build()));
     validationResult = roleAssignmentValidator.validate(roleAssignmentValidationRequest);
     verify(resourceGroupService, times(1))
-        .get(roleAssignment.getResourceGroupIdentifier(), roleAssignment.getScopeIdentifier());
+        .get(roleAssignment.getResourceGroupIdentifier(), roleAssignment.getScopeIdentifier(), ManagedFilter.NO_FILTER);
     assertRoleAssignmentValidationResult(validationResult, validResult, validResult, validResult, validResult);
 
-    when(resourceGroupService.get(roleAssignment.getResourceGroupIdentifier(), roleAssignment.getScopeIdentifier()))
+    when(resourceGroupService.get(
+             roleAssignment.getResourceGroupIdentifier(), roleAssignment.getScopeIdentifier(), ManagedFilter.NO_FILTER))
         .thenReturn(Optional.empty());
     validationResult = roleAssignmentValidator.validate(roleAssignmentValidationRequest);
     verify(resourceGroupService, times(2))
-        .get(roleAssignment.getResourceGroupIdentifier(), roleAssignment.getScopeIdentifier());
+        .get(roleAssignment.getResourceGroupIdentifier(), roleAssignment.getScopeIdentifier(), ManagedFilter.NO_FILTER);
     assertRoleAssignmentValidationResult(validationResult, validResult, validResult, validResult, invalidResult);
   }
 }

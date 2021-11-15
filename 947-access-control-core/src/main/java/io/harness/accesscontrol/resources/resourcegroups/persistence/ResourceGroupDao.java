@@ -1,5 +1,6 @@
 package io.harness.accesscontrol.resources.resourcegroups.persistence;
 
+import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroup;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -18,9 +19,9 @@ public interface ResourceGroupDao {
 
   PageResponse<ResourceGroup> list(@NotNull PageRequest pageRequest, @NotEmpty String scopeIdentifier);
 
-  List<ResourceGroup> list(List<String> resourceGroupIdentifier, String scopeIdentifier);
+  List<ResourceGroup> list(List<String> resourceGroupIdentifier, String scopeIdentifier, ManagedFilter managedFilter);
 
-  Optional<ResourceGroup> get(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
+  Optional<ResourceGroup> get(@NotEmpty String identifier, String scopeIdentifier, ManagedFilter managedFilter);
 
-  Optional<ResourceGroup> delete(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
+  Optional<ResourceGroup> delete(@NotEmpty String identifier, String scopeIdentifier);
 }
