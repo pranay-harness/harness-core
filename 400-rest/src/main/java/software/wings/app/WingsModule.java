@@ -64,6 +64,8 @@ import io.harness.configuration.DeployVariant;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.connector.service.git.NGGitService;
 import io.harness.connector.service.git.NGGitServiceImpl;
+import io.harness.cron.LocalAwsSdkEncryptionModeMigrationHandler;
+import io.harness.cron.LocalMultiCryptoModeEncryptionMigrationHandler;
 import io.harness.cv.CVCommonsServiceModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
@@ -747,6 +749,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
@@ -766,6 +769,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -1667,6 +1671,12 @@ public class WingsModule extends AbstractModule implements ServersModule {
   @NotNull
   private Closeable getPersistentLockerCloseable(Injector injector) {
     return () -> {
+      injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("multiCryptoModeMigration")))
+          .scheduleWithFixedDelay(
+              injector.getInstance(LocalMultiCryptoModeEncryptionMigrationHandler.class), 0L, 4L, TimeUnit.SECONDS);
+      injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("awsSdkCryptoModeMigration")))
+          .scheduleWithFixedDelay(
+              injector.getInstance(LocalAwsSdkEncryptionModeMigrationHandler.class), 0L, 4L, TimeUnit.SECONDS);
       PersistentLocker persistentLocker = injector.getInstance(PersistentLocker.class);
       if (persistentLocker instanceof Managed) {
         try {
