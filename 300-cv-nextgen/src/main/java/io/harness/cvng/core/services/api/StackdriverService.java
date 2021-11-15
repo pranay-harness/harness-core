@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-public interface StackdriverService extends MonitoringSourceImportStatusCreator, DataSourceConnectivityChecker {
+public interface StackdriverService extends DataSourceConnectivityChecker {
   PageResponse<StackdriverDashboardDTO> listDashboards(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, int pageSize, int offset, String filter, String tracingId);
   List<StackdriverDashboardDetail> getDashboardDetails(String accountId, String connectorIdentifier,

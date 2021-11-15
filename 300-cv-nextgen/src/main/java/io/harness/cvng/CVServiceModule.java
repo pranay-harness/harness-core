@@ -95,7 +95,6 @@ import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
@@ -351,7 +350,6 @@ public class CVServiceModule extends AbstractModule {
     bind(HealthVerificationHeatMapService.class).to(HealthVerificationHeatMapServiceImpl.class);
     bind(AnalysisService.class).to(AnalysisServiceImpl.class);
     bind(OnboardingService.class).to(OnboardingServiceImpl.class);
-    bindTheMonitoringSourceImportStatusCreators();
     bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
     bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     bind(StackdriverService.class).to(StackdriverServiceImpl.class);
@@ -495,21 +493,6 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
         .to(StackdriverLogCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
-  }
-
-  private void bindTheMonitoringSourceImportStatusCreators() {
-    bind(MonitoringSourceImportStatusCreator.class)
-        .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
-        .to(AppDynamicsService.class);
-    bind(MonitoringSourceImportStatusCreator.class)
-        .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
-        .to(StackdriverService.class);
-    bind(MonitoringSourceImportStatusCreator.class)
-        .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
-        .to(SplunkService.class);
-    bind(MonitoringSourceImportStatusCreator.class)
-        .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
-        .to(NewRelicService.class);
   }
 
   @Provides
