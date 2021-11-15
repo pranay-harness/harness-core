@@ -10,6 +10,7 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.YamlTypes;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,6 +31,7 @@ public class ApprovalStepVariableCreator extends GenericStepVariableCreator {
   protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap,
       Map<String, YamlOutputProperties> yamlOutputPropertiesMap, YamlNode yamlNode) {
     List<String> complexFields = new ArrayList<>();
+    complexFields.add(YamlTypes.APPROVAL_INPUTS);
     complexFields.add(YAMLFieldNameConstants.OUTPUT_VARIABLES);
 
     List<YamlField> fields = yamlNode.fields();
@@ -43,5 +45,19 @@ public class ApprovalStepVariableCreator extends GenericStepVariableCreator {
     if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
       addVariablesForOutputVariables(outputVariablesField, yamlOutputPropertiesMap);
     }
+
+    YamlField inputsField = yamlNode.getField(YamlTypes.APPROVAL_INPUTS);
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(inputsField)) {
+      addVariablesForInputs(inputsField, yamlPropertiesMap);
+    }
+  }
+
+  private void addVariablesForInputs(YamlField inputsField, Map<String, YamlProperties> yamlPropertiesMap) {
+    List<YamlField> fields = inputsField.getNode().fields();
+    fields.forEach(field -> {
+      if (!field.getName().equals(YAMLFieldNameConstants.UUID)) {
+        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
+      }
+    });
   }
 }
