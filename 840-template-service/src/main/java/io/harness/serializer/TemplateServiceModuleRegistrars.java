@@ -33,6 +33,7 @@ public class TemplateServiceModuleRegistrars {
           .addAll(OutboxEventRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
+          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           .add(NGTemplateKryoRegistrar.class)
           .addAll(NGCoreRegistrars.kryoRegistrars)
           .build();

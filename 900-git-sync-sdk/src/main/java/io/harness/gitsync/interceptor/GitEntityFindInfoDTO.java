@@ -20,7 +20,6 @@ import lombok.experimental.FieldNameConstants;
 @OwnedBy(DX)
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(name = "GitEntityFindInfo", description = "This contains details of the Git Entity like Git Branch")
 public class GitEntityFindInfoDTO {
   @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch;
   @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String yamlGitConfigId;
