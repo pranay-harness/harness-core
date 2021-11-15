@@ -66,6 +66,12 @@ shared_dependencies = [
     "@maven//:org_springframework_data_spring_data_mongodb",
     "@maven//:org_springframework_spring_context",
     "//:lombok",
+    "@maven//:io_swagger_core_v3_swagger_jaxrs2",
+    "@maven//:io_swagger_core_v3_swagger_jaxrs2_servlet_initializer_v2",
+    "@maven//:io_swagger_core_v3_swagger_core",
+    "@maven//:io_swagger_core_v3_swagger_annotations",
+    "@maven//:io_swagger_core_v3_swagger_models",
+    "@maven//:io_swagger_core_v3_swagger_integration",
 ]
 
 java_binary(
