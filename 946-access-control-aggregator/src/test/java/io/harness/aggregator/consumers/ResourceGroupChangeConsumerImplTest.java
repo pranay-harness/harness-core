@@ -227,8 +227,8 @@ public class ResourceGroupChangeConsumerImplTest extends AggregatorTestBase {
                                       .identifier(roleAssignmentDBO.getRoleIdentifier())
                                       .permissions(getRandomStrings())
                                       .build()));
-      when(resourceGroupService.get(
-               roleAssignmentDBO.getResourceGroupIdentifier(), roleAssignmentDBO.getScopeIdentifier()))
+      when(resourceGroupService.get(roleAssignmentDBO.getResourceGroupIdentifier(),
+               roleAssignmentDBO.getScopeIdentifier(), ManagedFilter.NO_FILTER))
           .thenReturn(Optional.of(toResourceGroup(updatedResourceGroupDBO)));
     });
   }
@@ -245,7 +245,8 @@ public class ResourceGroupChangeConsumerImplTest extends AggregatorTestBase {
       verify(roleService, times(previousInvocationsCount + 1))
           .get(roleAssignmentDBO.getRoleIdentifier(), roleAssignmentDBO.getScopeIdentifier(), ManagedFilter.NO_FILTER);
       verify(resourceGroupService, times((previousInvocationsCount + 1) * randomCount))
-          .get(updatedResourceGroupDBO.getIdentifier(), updatedResourceGroupDBO.getScopeIdentifier());
+          .get(updatedResourceGroupDBO.getIdentifier(), updatedResourceGroupDBO.getScopeIdentifier(),
+              ManagedFilter.NO_FILTER);
       if (PrincipalType.USER_GROUP.equals(roleAssignmentDBO.getPrincipalType())) {
         verify(userGroupService, times(previousInvocationsCount + 1))
             .get(roleAssignmentDBO.getPrincipalIdentifier(), roleAssignmentDBO.getScopeIdentifier());

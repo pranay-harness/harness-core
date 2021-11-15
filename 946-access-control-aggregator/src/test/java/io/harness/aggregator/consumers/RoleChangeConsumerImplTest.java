@@ -78,7 +78,8 @@ public class RoleChangeConsumerImplTest extends AggregatorTestBase {
         aclRepository, roleAssignmentRepository, changeConsumerService, roleAssignmentCRUDEventHandler);
 
     mockRoleServices(role);
-    when(resourceGroupService.get(resourceGroup.getIdentifier(), resourceGroup.getScopeIdentifier()))
+    when(resourceGroupService.get(
+             resourceGroup.getIdentifier(), resourceGroup.getScopeIdentifier(), ManagedFilter.NO_FILTER))
         .thenReturn(Optional.of(resourceGroup));
   }
 
