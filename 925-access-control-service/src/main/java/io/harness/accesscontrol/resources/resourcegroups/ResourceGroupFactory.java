@@ -1,7 +1,11 @@
 package io.harness.accesscontrol.resources.resourcegroups;
 
 import static io.harness.accesscontrol.scopes.core.Scope.PATH_DELIMITER;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.accesscontrol.scopes.core.Scope;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.resourcegroup.model.DynamicResourceSelector;
@@ -37,7 +41,21 @@ public class ResourceGroupFactory {
         .resourceSelectors(resourceSelectors)
         .managed(resourceGroupResponse.isHarnessManaged())
         .fullScopeSelected(resourceGroupDTO.isFullScopeSelected())
+        .allowedScopeLevels(resourceGroupDTO.getAllowedScopeLevels())
         .build();
+  }
+
+  public ResourceGroup buildResourceGroup(ResourceGroupResponse resourceGroupResponse) {
+    ResourceGroupDTO resourceGroupDTO = resourceGroupResponse.getResourceGroup();
+    Scope scope = null;
+    if (isNotEmpty(resourceGroupDTO.getAccountIdentifier())) {
+      scope = ScopeMapper.fromParams(HarnessScopeParams.builder()
+                                         .accountIdentifier(resourceGroupDTO.getAccountIdentifier())
+                                         .orgIdentifier(resourceGroupDTO.getOrgIdentifier())
+                                         .projectIdentifier(resourceGroupDTO.getProjectIdentifier())
+                                         .build());
+    }
+    return buildResourceGroup(resourceGroupResponse, scope == null ? null : scope.toString());
   }
 
   public Set<String> buildResourceSelector(ResourceSelector resourceSelector) {
