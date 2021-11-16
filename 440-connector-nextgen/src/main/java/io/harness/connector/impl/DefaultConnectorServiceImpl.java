@@ -753,16 +753,16 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      boolean invalid, String invalidYaml) {
+  public boolean markEntityInvalid(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml) {
     Optional<Connector> existingConnectorOptional =
         getInternal(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (!existingConnectorOptional.isPresent()) {
       return false;
     }
     Connector existingConnector = existingConnectorOptional.get();
-    existingConnector.setEntityInvalid(invalid);
-    existingConnector.setInvalidYamlString(invalid ? invalidYaml : null);
+    existingConnector.setEntityInvalid(true);
+    existingConnector.setInvalidYamlString(invalidYaml);
     existingConnector.setObjectIdOfYaml(EntityObjectIdUtils.getObjectIdOfYaml(invalidYaml));
     connectorRepository.save(existingConnector, ChangeType.NONE);
     return true;

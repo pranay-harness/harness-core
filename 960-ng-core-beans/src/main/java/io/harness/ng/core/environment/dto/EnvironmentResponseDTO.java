@@ -4,6 +4,7 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,6 +15,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(name = "EnvironmentResponse", description = "This is the Environment entity defined in Harness")
 public class EnvironmentResponseDTO {
   String accountId;
   String orgIdentifier;

@@ -20,7 +20,7 @@ message PolicyMetadata {
   string error = 12;
 }
 
-// next ID: 8
+// next ID: 11
 message PolicySetMetadata {
   string policySetId = 1;
   bool deny = 2;
@@ -29,6 +29,9 @@ message PolicySetMetadata {
   string status = 5;
   string identifier = 6;
   int64 created = 7;
+  string accountId = 8;
+  string orgId = 9;
+  string projectId = 10;
 }
 
 // next ID: 14

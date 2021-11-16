@@ -60,7 +60,7 @@ public class ChangeSetHelperServiceImpl implements GitSdkInterface {
 
   @Override
   public boolean markEntityInvalid(String accountId, EntityInfo entityInfo) {
-    EntityType entityType = EventProtoToEntityHelper.getEntityTypeFromProto(entityInfo.getEntityType());
+    EntityType entityType = EventProtoToEntityHelper.getEntityTypeFromProto(entityInfo.getEntityDetail().getType());
     GitSyncEntitiesConfiguration gitSyncEntitiesConfiguration = gitSyncEntityConfigurationsMap.get(entityType);
     Class<? extends GitSyncableEntity> entityClass = gitSyncEntitiesConfiguration.getEntityClass();
     GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
@@ -68,8 +68,9 @@ public class ChangeSetHelperServiceImpl implements GitSdkInterface {
     if (gitSdkEntityHandlerInterface == null) {
       return false;
     }
-
-    return gitSdkEntityHandlerInterface.markEntity(accountId, entityInfo.getOrgIdentifier(),
-        entityInfo.getProjectIdentifier(), entityInfo.getIdentifier(), true, entityInfo.getYaml());
+    final EntityDetail entityDetailDTO =
+        entityDetailProtoToRestMapper.createEntityDetailDTO(entityInfo.getEntityDetail());
+    return gitSdkEntityHandlerInterface.markEntityInvalid(
+        accountId, entityDetailDTO.getEntityRef(), entityInfo.getYaml());
   }
 }

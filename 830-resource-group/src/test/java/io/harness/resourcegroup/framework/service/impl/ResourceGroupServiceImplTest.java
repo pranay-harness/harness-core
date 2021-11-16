@@ -202,7 +202,7 @@ public class ResourceGroupServiceImplTest extends ResourceGroupTestBase {
     Criteria expectedManagedCriteria = getExpectedManagedCriteria();
     expectedManagedCriteria.and(ResourceGroupKeys.allowedScopeLevels)
         .is(ScopeLevel.of(accountIdentifier, orgIdentifier, null).toString().toLowerCase());
-    expectedCriteria.orOperator(scopeExpectedCriteria, expectedManagedCriteria);
+    expectedCriteria.andOperator(new Criteria().orOperator(scopeExpectedCriteria, expectedManagedCriteria));
     assertEquals(expectedCriteria, criteria);
   }
 
@@ -268,7 +268,7 @@ public class ResourceGroupServiceImplTest extends ResourceGroupTestBase {
     Criteria expectedManagedCriteria = getExpectedManagedCriteria();
     expectedManagedCriteria.and(ResourceGroupKeys.allowedScopeLevels)
         .is(ScopeLevel.of(accountIdentifier, orgIdentifier, null).toString().toLowerCase());
-    expectedCriteria.orOperator(scopeExpectedCriteria, expectedManagedCriteria);
+    expectedCriteria.andOperator(new Criteria().orOperator(scopeExpectedCriteria, expectedManagedCriteria));
     assertEquals(expectedCriteria, criteria);
   }
 
@@ -311,7 +311,7 @@ public class ResourceGroupServiceImplTest extends ResourceGroupTestBase {
       expectedManagedCriteria.and(ResourceGroupKeys.allowedScopeLevels)
           .is(ScopeLevel.of(accountIdentifier, orgIdentifier, null).toString().toLowerCase());
     }
-    expectedCriteria.orOperator(scopeExpectedCriteria, expectedManagedCriteria);
+    expectedCriteria.andOperator(new Criteria().orOperator(scopeExpectedCriteria, expectedManagedCriteria));
     assertEquals(expectedCriteria, criteria);
   }
 

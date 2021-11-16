@@ -9,6 +9,7 @@ import io.harness.platform.audit.AuditServiceConfiguration;
 import io.harness.platform.notification.NotificationServiceConfiguration;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.ResourceGroupServiceConfig;
+import io.harness.threading.ThreadPoolConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
@@ -42,6 +43,7 @@ public class PlatformConfiguration extends Configuration {
   public static final String ENFORCEMENT_PACKAGE = "io.harness.enforcement.client.resources";
 
   @Setter @JsonProperty("notificationServiceConfig") private NotificationServiceConfiguration notificationServiceConfig;
+  @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
   @JsonProperty("auditServiceConfig") private AuditServiceConfiguration auditServiceConfig;
   @JsonProperty("resourceGroupServiceConfig") private ResourceGroupServiceConfig resoureGroupServiceConfig;
 

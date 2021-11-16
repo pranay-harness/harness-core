@@ -23,4 +23,5 @@ public interface LicenseService extends LicenseCrudService {
   Edition calculateAccountEdition(String accountIdentifier);
   Map<Edition, Set<EditionActionDTO>> getEditionActions(String accountIdentifier, ModuleType moduleType);
   ModuleLicenseDTO upgradeLicense(String accountIdentifier, UpgradeLicenseDTO upgradeLicenseDTO);
+  Map<ModuleType, Long> getLastUpdatedAtMap(String accountIdentifier);
 }

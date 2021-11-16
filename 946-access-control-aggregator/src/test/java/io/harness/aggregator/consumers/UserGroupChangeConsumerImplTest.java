@@ -81,7 +81,8 @@ public class UserGroupChangeConsumerImplTest extends AggregatorTestBase {
     resourceGroup = buildResourceGroup(scopeIdentifier);
     when(roleService.get(role.getIdentifier(), role.getScopeIdentifier(), ManagedFilter.NO_FILTER))
         .thenReturn(Optional.of(role));
-    when(resourceGroupService.get(resourceGroup.getIdentifier(), resourceGroup.getScopeIdentifier()))
+    when(resourceGroupService.get(
+             resourceGroup.getIdentifier(), resourceGroup.getScopeIdentifier(), ManagedFilter.NO_FILTER))
         .thenReturn(Optional.of(resourceGroup));
   }
 

@@ -75,7 +75,7 @@ public class TokenServiceImpl implements TokenService {
   @Override
   public String createToken(TokenDTO tokenDTO) {
     validateTokenRequest(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
-        tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier());
+        tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier(), tokenDTO);
     validateTokenLimit(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
         tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier());
     String randomString = RandomStringUtils.random(20, 0, 0, true, true, null, new SecureRandom());
@@ -101,14 +101,28 @@ public class TokenServiceImpl implements TokenService {
   }
 
   private void validateTokenRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      ApiKeyType apiKeyType, String parentIdentifier, String apiKeyIdentifier) {
+      ApiKeyType apiKeyType, String parentIdentifier, String apiKeyIdentifier, TokenDTO tokenDTO) {
     if (!accountOrgProjectValidator.isPresent(accountIdentifier, orgIdentifier, projectIdentifier)) {
       throw new InvalidArgumentsException(String.format("Project [%s] in Org [%s] and Account [%s] does not exist",
                                               accountIdentifier, orgIdentifier, projectIdentifier),
           USER_SRE);
     }
+    validateTokenExpiryTime(tokenDTO);
     apiKeyService.getApiKey(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier);
+  }
+
+  private void validateTokenExpiryTime(TokenDTO tokenDTO) {
+    if (tokenDTO.getValidTo() != null && (tokenDTO.getValidTo() < Instant.now().toEpochMilli())) {
+      throw new InvalidRequestException(
+          String.format("Token's validTo cannot be set before current time TokenDTO: [%s]", tokenDTO, USER_SRE));
+    }
+
+    if (tokenDTO.getValidTo() != null && tokenDTO.getValidFrom() != null
+        && tokenDTO.getValidFrom() > tokenDTO.getValidTo()) {
+      throw new InvalidRequestException(
+          String.format("Token's validFrom time cannot be after validTo time TokenDTO: [%s]", tokenDTO, USER_SRE));
+    }
   }
 
   private void validateTokenLimit(String accountIdentifier, String orgIdentifier, String projectIdentifier,
@@ -130,7 +144,7 @@ public class TokenServiceImpl implements TokenService {
       throw new InvalidRequestException("Rotated tokens cannot be updated", USER_SRE);
     }
     validateTokenRequest(
-        accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier);
+        accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier, tokenDTO);
   }
 
   @Override
@@ -182,18 +196,21 @@ public class TokenServiceImpl implements TokenService {
                 accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier,
                 identifier);
     Preconditions.checkState(optionalToken.isPresent(), "No token present with identifier: " + identifier);
-    Token token = optionalToken.get();
-    TokenDTO oldToken = TokenDTOMapper.getDTOFromToken(token);
-    String oldIdentifier = token.getIdentifier();
-    token.setIdentifier("rotated_" + RandomStringUtils.randomAlphabetic(15));
-    token.setScheduledExpireTime(scheduledExpireTime);
-    token.setValidUntil(new Date(token.getExpiryTimestamp().toEpochMilli()));
+    Token tokenThatNeedsToBeRotated = optionalToken.get();
+    TokenDTO oldTokenDTO = TokenDTOMapper.getDTOFromToken(tokenThatNeedsToBeRotated);
+    String oldIdentifier = tokenThatNeedsToBeRotated.getIdentifier();
+
+    tokenThatNeedsToBeRotated.setIdentifier("rotated_" + RandomStringUtils.randomAlphabetic(15));
+    tokenThatNeedsToBeRotated.setScheduledExpireTime(scheduledExpireTime);
+    tokenThatNeedsToBeRotated.setValidUntil(new Date(tokenThatNeedsToBeRotated.getExpiryTimestamp().toEpochMilli()));
+
     Token newToken = Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
-      Token savedToken = tokenRepository.save(token);
-      TokenDTO newTokenDTO = TokenDTOMapper.getDTOFromToken(savedToken);
-      outboxService.save(new TokenUpdateEvent(oldToken, newTokenDTO));
-      return savedToken;
+      Token savedRotatedToken = tokenRepository.save(tokenThatNeedsToBeRotated);
+      TokenDTO newTokenDTO = TokenDTOMapper.getDTOFromToken(savedRotatedToken);
+      outboxService.save(new TokenUpdateEvent(oldTokenDTO, newTokenDTO));
+      return savedRotatedToken;
     }));
+
     TokenDTO rotatedTokenDTO = TokenDTOMapper.getDTOFromTokenForRotation(newToken);
     rotatedTokenDTO.setIdentifier(oldIdentifier);
     return createToken(rotatedTokenDTO);

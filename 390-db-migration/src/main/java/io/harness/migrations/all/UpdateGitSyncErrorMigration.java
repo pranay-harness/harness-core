@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;

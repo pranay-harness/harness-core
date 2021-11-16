@@ -34,6 +34,8 @@ public class ConnectorNextGenRegistrars {
           .addAll(GitSyncSdkRegistrar.kryoRegistrars)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .addAll(PmsSdkCoreModuleRegistrars.kryoRegistrars)
+          .addAll(DelegateTaskRegistrars.kryoRegistrars)
+          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -52,6 +54,7 @@ public class ConnectorNextGenRegistrars {
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
           .addAll(PmsSdkCoreModuleRegistrars.morphiaRegistrars)
+          .addAll(DelegateTaskRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

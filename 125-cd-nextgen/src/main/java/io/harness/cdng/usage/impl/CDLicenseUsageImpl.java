@@ -1,6 +1,11 @@
 package io.harness.cdng.usage.impl;
 
+import static io.harness.cdng.usage.beans.CDLicenseUsageConstants.LICENSE_INSTANCE_LIMIT;
+import static io.harness.cdng.usage.beans.CDLicenseUsageConstants.PERCENTILE;
+import static io.harness.cdng.usage.beans.CDLicenseUsageConstants.TIME_PERIOD_IN_DAYS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.licensing.beans.modules.types.CDLicenseType.SERVICES;
+import static io.harness.licensing.beans.modules.types.CDLicenseType.SERVICE_INSTANCES;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -10,14 +15,18 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.usage.beans.CDLicenseUsageConstants;
 import io.harness.cdng.usage.beans.CDLicenseUsageDTO;
+import io.harness.cdng.usage.beans.ServiceInstanceUsageDTO;
+import io.harness.cdng.usage.beans.ServiceUsageDTO;
 import io.harness.dtos.InstanceDTO;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.WingsException;
 import io.harness.licensing.usage.beans.ReferenceDTO;
 import io.harness.licensing.usage.beans.UsageDataDTO;
 import io.harness.licensing.usage.interfaces.LicenseUsageInterface;
 import io.harness.licensing.usage.params.CDUsageRequestParams;
-import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.service.instance.InstanceService;
+import io.harness.timescaledb.tables.pojos.Services;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -25,13 +34,16 @@ import com.google.inject.Singleton;
 import java.time.Instant;
 import java.time.Period;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
+import org.jetbrains.annotations.Nullable;
+import org.jooq.Record3;
+import org.jooq.Table;
 
 @OwnedBy(HarnessTeam.CDP)
 @Singleton
 public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageDTO, CDUsageRequestParams> {
+  @Inject CDLicenseUsageDslHelper cdLicenseUsageHelper;
   @Inject InstanceService instanceService;
   @Inject ServiceEntityService serviceEntityService;
 
@@ -41,23 +53,91 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
     Preconditions.checkArgument(timestamp > 0, format("Invalid timestamp %d while fetching LicenseUsages.", timestamp));
     Preconditions.checkArgument(ModuleType.CD == module, format("Invalid Module type %s provided", module.toString()));
 
-    List<InstanceDTO> activeInstancesByAccount = instanceService.getInstancesDeployedAfter(
-        accountIdentifier, getEpochMilliNDaysAgo(timestamp, CDLicenseUsageConstants.TIME_PERIOD_IN_DAYS));
+    long startInterval = getEpochMilliNDaysAgo(timestamp, TIME_PERIOD_IN_DAYS);
 
-    UsageDataDTO activeServiceInstances = getActiveServiceInstancesUsageDTO(activeInstancesByAccount);
-    UsageDataDTO activeServices = getActiveServicesUsageDTO(activeInstancesByAccount);
+    List<AggregateServiceUsageInfo> activeServicesUsageInfo =
+        cdLicenseUsageHelper.getActiveServicesInfoWithPercentileServiceInstanceCount(
+            accountIdentifier, PERCENTILE, startInterval, timestamp);
 
-    return CDLicenseUsageDTO.builder()
-        .activeServices(activeServices)
-        .activeServiceInstances(activeServiceInstances)
-        .accountIdentifier(accountIdentifier)
-        .timestamp(timestamp)
-        .module(module.getDisplayName())
+    UsageDataDTO activeServices = getActiveServicesUsageDTO(activeServicesUsageInfo, accountIdentifier);
+    UsageDataDTO serviceLicenseUsed = getServiceLicenseUsedDTO(usageRequest, activeServicesUsageInfo);
+    UsageDataDTO activeServiceInstances =
+        getActiveServiceInstancesDTO(accountIdentifier, activeServicesUsageInfo, startInterval, timestamp);
+
+    switch (usageRequest.getCdLicenseType()) {
+      case SERVICES:
+        return ServiceUsageDTO.builder()
+            .activeServices(activeServices)
+            .activeServiceInstances(activeServiceInstances)
+            .serviceLicenses(serviceLicenseUsed)
+            .cdLicenseType(SERVICES)
+            .accountIdentifier(accountIdentifier)
+            .module(module.getDisplayName())
+            .build();
+      case SERVICE_INSTANCES:
+        return ServiceInstanceUsageDTO.builder()
+            .activeServices(activeServices)
+            .activeServiceInstances(activeServiceInstances)
+            .cdLicenseType(SERVICE_INSTANCES)
+            .accountIdentifier(accountIdentifier)
+            .module(module.getDisplayName())
+            .build();
+      default:
+        throw new InvalidArgumentsException("Invalid License Type.", WingsException.USER);
+    }
+  }
+
+  @Nullable
+  private UsageDataDTO getServiceLicenseUsedDTO(
+      CDUsageRequestParams usageRequest, List<AggregateServiceUsageInfo> activeServicesInfo) {
+    UsageDataDTO serviceLicenseUsed = null;
+    if (usageRequest.getCdLicenseType().equals(SERVICES)) {
+      long cumulativeLicenseCount = getCumulativeLicenseCount(activeServicesInfo);
+      serviceLicenseUsed = getServiceLicenseUseDTO(activeServicesInfo, cumulativeLicenseCount);
+    }
+    return serviceLicenseUsed;
+  }
+
+  private UsageDataDTO getActiveServiceInstancesDTO(String accountIdentifier,
+      List<AggregateServiceUsageInfo> activeServicesUsageInfo, long startInterval, long timestamp) {
+    long aggregatedPercentileInstanceCount = getAggregatedServiceInstanceCount(activeServicesUsageInfo);
+
+    List<InstanceDTO> activeInstancesByAccount =
+        instanceService.getInstancesModifiedInInterval(accountIdentifier, startInterval, timestamp);
+    return createActiveServiceInstancesUsageDTO(activeInstancesByAccount, aggregatedPercentileInstanceCount);
+  }
+
+  private long getAggregatedServiceInstanceCount(List<AggregateServiceUsageInfo> activeServicesUsageInfo) {
+    if (isEmpty(activeServicesUsageInfo)) {
+      return 0;
+    }
+    return activeServicesUsageInfo.stream().mapToLong(AggregateServiceUsageInfo::getActiveInstanceCount).sum();
+  }
+
+  private UsageDataDTO getServiceLicenseUseDTO(
+      List<AggregateServiceUsageInfo> activeServiceUsageInfoList, long cumulativeLicenseCount) {
+    if (isEmpty(activeServiceUsageInfoList)) {
+      return UsageDataDTO.builder().count(0).displayName(CDLicenseUsageConstants.DISPLAY_NAME).build();
+    }
+
+    return UsageDataDTO.builder()
+        .count(cumulativeLicenseCount)
+        .displayName(CDLicenseUsageConstants.DISPLAY_NAME)
         .build();
   }
 
-  private UsageDataDTO getActiveServicesUsageDTO(List<InstanceDTO> activeInstancesByAccount) {
-    if (isEmpty(activeInstancesByAccount)) {
+  private long getCumulativeLicenseCount(List<AggregateServiceUsageInfo> serviceUsageInfoList) {
+    return serviceUsageInfoList.stream()
+        .map(serviceUsageInfo -> getLicencesCount(serviceUsageInfo.getActiveInstanceCount()))
+        .reduce(0L, Long::sum);
+  }
+  private static long getLicencesCount(long activeInstanceCount) {
+    return (activeInstanceCount + LICENSE_INSTANCE_LIMIT - 1) / LICENSE_INSTANCE_LIMIT;
+  }
+
+  private UsageDataDTO getActiveServicesUsageDTO(
+      List<AggregateServiceUsageInfo> activeServiceUsageInfoList, String accountIdentifier) {
+    if (isEmpty(activeServiceUsageInfoList)) {
       return UsageDataDTO.builder()
           .count(0)
           .displayName(CDLicenseUsageConstants.DISPLAY_NAME)
@@ -65,25 +145,36 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
           .build();
     }
 
-    Map<String, ReferenceDTO> referenceDTOMap = new HashMap<>();
-    activeInstancesByAccount.stream()
-        .map(this::createActiveServiceReferenceDTOFromInstanceDTO)
-        .forEach(serviceReferenceDTO -> referenceDTOMap.put(serviceReferenceDTO.getIdentifier(), serviceReferenceDTO));
+    Table<Record3<String, String, String>> orgProjectServiceTable =
+        cdLicenseUsageHelper.getOrgProjectServiceTable(activeServiceUsageInfoList);
+    List<Services> services = cdLicenseUsageHelper.getServiceEntities(accountIdentifier, orgProjectServiceTable);
+    List<ReferenceDTO> activeServiceReferenceDTOList =
+        services.stream()
+            .map(service -> createReferenceDTOFromService(accountIdentifier, service))
+            .collect(Collectors.toList());
 
     return UsageDataDTO.builder()
-        .count(referenceDTOMap.size())
+        .count(activeServiceReferenceDTOList.size())
         .displayName(CDLicenseUsageConstants.DISPLAY_NAME)
-        .references(new ArrayList<>(referenceDTOMap.values()))
+        .references(activeServiceReferenceDTOList)
         .build();
   }
 
-  private ReferenceDTO createActiveServiceReferenceDTOFromInstanceDTO(InstanceDTO instanceDTO) {
-    ServiceEntity serviceEntity = serviceEntityService.find(instanceDTO.getAccountIdentifier(),
-        instanceDTO.getOrgIdentifier(), instanceDTO.getProjectIdentifier(), instanceDTO.getServiceIdentifier(), false);
-    return createReferenceDTOFromServiceEntity(serviceEntity);
+  private ReferenceDTO createReferenceDTOFromService(String accountIdentifier, Services service) {
+    if (null == service) {
+      return ReferenceDTO.builder().build();
+    }
+    return ReferenceDTO.builder()
+        .identifier(service.getIdentifier())
+        .name(service.getName())
+        .accountIdentifier(accountIdentifier)
+        .orgIdentifier(service.getOrgIdentifier())
+        .projectIdentifier(service.getProjectIdentifier())
+        .build();
   }
 
-  private UsageDataDTO getActiveServiceInstancesUsageDTO(List<InstanceDTO> activeInstancesByAccount) {
+  private UsageDataDTO createActiveServiceInstancesUsageDTO(
+      List<InstanceDTO> activeInstancesByAccount, long aggregatedCount) {
     if (isEmpty(activeInstancesByAccount)) {
       return UsageDataDTO.builder()
           .count(0)
@@ -96,7 +187,7 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
     activeInstancesByAccount.stream().map(this::createReferenceDTOForInstance).forEach(references::add);
 
     return UsageDataDTO.builder()
-        .count(activeInstancesByAccount.size())
+        .count(aggregatedCount)
         .displayName(CDLicenseUsageConstants.DISPLAY_NAME)
         .references(references)
         .build();
@@ -115,20 +206,7 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
         .build();
   }
 
-  private ReferenceDTO createReferenceDTOFromServiceEntity(ServiceEntity serviceEntity) {
-    if (null == serviceEntity) {
-      return ReferenceDTO.builder().build();
-    }
-    return ReferenceDTO.builder()
-        .identifier(serviceEntity.getIdentifier())
-        .name(serviceEntity.getName())
-        .accountIdentifier(serviceEntity.getAccountId())
-        .orgIdentifier(serviceEntity.getOrgIdentifier())
-        .projectIdentifier(serviceEntity.getProjectIdentifier())
-        .build();
-  }
-
   private long getEpochMilliNDaysAgo(long timestamp, int days) {
-    return Instant.ofEpochSecond(timestamp).minus(Period.ofDays(days)).toEpochMilli();
+    return Instant.ofEpochMilli(timestamp).minus(Period.ofDays(days)).toEpochMilli();
   }
 }

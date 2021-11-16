@@ -15,6 +15,7 @@ import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.configuration.DeployVariant;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -31,6 +32,8 @@ import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import graphql.VisibleForTesting;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
@@ -38,25 +41,13 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class PasswordBasedAuthHandler implements AuthHandler {
-  private UserService userService;
-  private LoginSettingsService loginSettingsService;
-  private AuthenticationUtils authenticationUtils;
-  private AccountService accountService;
-  private DomainWhitelistCheckerService domainWhitelistCheckerService;
-  private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
-
-  @Inject
-  public PasswordBasedAuthHandler(UserService userService, LoginSettingsService loginSettingsService,
-      AuthenticationUtils authenticationUtils, AccountService accountService,
-      DomainWhitelistCheckerService domainWhitelistCheckerService,
-      FailedLoginAttemptCountChecker failedLoginAttemptCountChecker) {
-    this.userService = userService;
-    this.loginSettingsService = loginSettingsService;
-    this.authenticationUtils = authenticationUtils;
-    this.accountService = accountService;
-    this.domainWhitelistCheckerService = domainWhitelistCheckerService;
-    this.failedLoginAttemptCountChecker = failedLoginAttemptCountChecker;
-  }
+  @Inject private UserService userService;
+  @Inject private LoginSettingsService loginSettingsService;
+  @Inject private AuthenticationUtils authenticationUtils;
+  @Inject private AccountService accountService;
+  @Inject private DomainWhitelistCheckerService domainWhitelistCheckerService;
+  @Inject private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
+  @VisibleForTesting @Setter @Inject private DeployVariant deployVariant;
 
   @Override
   public AuthenticationResponse authenticate(String... credentials) {
@@ -103,10 +94,13 @@ public class PasswordBasedAuthHandler implements AuthHandler {
           checkUserLockoutStatus(user);
           updateFailedLoginAttemptCount(user);
 
-          try {
-            failedLoginAttemptCountChecker.check(user);
-          } catch (MaxLoginAttemptExceededException e) {
-            throw new WingsException(ErrorCode.MAX_FAILED_ATTEMPT_COUNT_EXCEEDED, "Too many incorrect login attempts");
+          if (!DeployVariant.COMMUNITY.equals(deployVariant)) {
+            try {
+              failedLoginAttemptCountChecker.check(user);
+            } catch (MaxLoginAttemptExceededException e) {
+              throw new WingsException(
+                  ErrorCode.MAX_FAILED_ATTEMPT_COUNT_EXCEEDED, "Too many incorrect login attempts");
+            }
           }
         }
       }

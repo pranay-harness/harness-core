@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static software.wings.alerts.AlertStatus.Pending;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;

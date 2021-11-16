@@ -2,10 +2,12 @@ package software.wings.security.authentication;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.NATHAN;
+import static io.harness.rule.OwnerRule.RAJ;
 import static io.harness.rule.OwnerRule.RUSHABH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
@@ -13,6 +15,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -21,6 +25,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.configuration.DeployVariant;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.account.AuthenticationMechanism;
@@ -32,16 +37,15 @@ import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.loginSettings.UserLockoutInfo;
-import software.wings.dl.WingsPersistence;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
 import software.wings.security.authentication.recaptcha.MaxLoginAttemptExceededException;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mindrot.jbcrypt.BCrypt;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -51,8 +55,6 @@ import org.mockito.Spy;
 @TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class PasswordBasedAuthHandlerTest extends CategoryTest {
   @Mock private MainConfiguration configuration;
-  @Mock private UserService userService;
-  @Mock private WingsPersistence wingsPersistence;
   @Mock private LoginSettingsService loginSettingsService;
   @Mock private AuthenticationUtils authenticationUtils;
   @Mock private AccountService accountService;
@@ -91,6 +93,48 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARGUMENT.name());
     }
+  }
+
+  @Test
+  @Owner(developers = RAJ)
+  @Category(UnitTests.class)
+  public void testCaptchaNotShownForCommunity() throws MaxLoginAttemptExceededException {
+    User user = new User();
+    user.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+    user.setEmailVerified(true);
+    user.setUuid("kmpySmUISimoRrJL6NL73w");
+    user.setPasswordHash(hashpw("notpassword", BCrypt.gensalt()));
+
+    authHandler.setDeployVariant(DeployVariant.COMMUNITY);
+    doReturn(user).when(authHandler).getUser(anyString());
+
+    try {
+      authHandler.authenticate("admin@harness.io", "admin");
+    } catch (WingsException e) {
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_CREDENTIAL.name());
+    }
+    verify(failedLoginAttemptCountChecker, times(0)).check(user);
+  }
+
+  @Test
+  @Owner(developers = RAJ)
+  @Category(UnitTests.class)
+  public void testCaptchShownForSaas() throws MaxLoginAttemptExceededException {
+    User user = new User();
+    user.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+    user.setEmailVerified(true);
+    user.setUuid("kmpySmUISimoRrJL6NL73w");
+    user.setPasswordHash(hashpw("notpassword", BCrypt.gensalt()));
+
+    authHandler.setDeployVariant(DeployVariant.SAAS);
+    doReturn(user).when(authHandler).getUser(anyString());
+
+    try {
+      authHandler.authenticate("admin@harness.io", "admin");
+    } catch (WingsException e) {
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_CREDENTIAL.name());
+    }
+    verify(failedLoginAttemptCountChecker, times(1)).check(user);
   }
 
   @Test

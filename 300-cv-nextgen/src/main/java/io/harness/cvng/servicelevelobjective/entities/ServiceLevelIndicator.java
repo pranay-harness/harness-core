@@ -4,6 +4,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.core.services.api.UpdatableEntity;
+import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -20,28 +22,29 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
-@Builder
+@SuperBuilder
 @FieldNameConstants(innerTypeName = "ServiceLevelIndicatorKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Entity(value = "serviceLevelIndicators", noClassnameStored = true)
+@Entity(value = "serviceLevelIndicators")
 @HarnessEntity(exportable = true)
 @OwnedBy(HarnessTeam.CV)
 @StoreIn(DbAliases.CVNG)
-public class ServiceLevelIndicator
+public abstract class ServiceLevelIndicator
     implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware, CreatedAtAware {
   String accountId;
   String orgIdentifier;
@@ -51,8 +54,20 @@ public class ServiceLevelIndicator
   String name;
   private long lastUpdatedAt;
   private long createdAt;
-  ServiceLevelIndicatorType type;
-  ServiceLevelIndicatorSpec spec;
+  private ServiceLevelIndicatorType type;
+  private SLIMetricType sliMetricType;
+
+  public abstract SLIMetricType getSLIMetricType();
+
+  public abstract ServiceLevelIndicatorSpec getServiceLevelIndicatorSpec();
+
+  public abstract static class ServiceLevelIndicatorUpdatableEntity<T extends ServiceLevelIndicator, D
+                                                                        extends ServiceLevelIndicator>
+      implements UpdatableEntity<T, D> {
+    protected void setCommonOperations(UpdateOperations<T> updateOperations, D serviceLevelIndicator) {
+      updateOperations.set(ServiceLevelIndicatorKeys.type, serviceLevelIndicator.getType());
+    }
+  }
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

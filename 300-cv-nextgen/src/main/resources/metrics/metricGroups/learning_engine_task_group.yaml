@@ -1,0 +1,5 @@
+name: LETask
+identifier: le_task
+labels:
+  - accountId
+  - leTaskType

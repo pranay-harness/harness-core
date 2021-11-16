@@ -8,6 +8,7 @@ import io.harness.ng.core.invites.InviteType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -23,6 +24,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel(value = "Invite")
 @OwnedBy(PL)
+@Schema(name = "Invite", description = "This is the view of the Invite entity defined in Harness")
 public class InviteDTO {
   @ApiModelProperty(required = true) String id;
   @ApiModelProperty(required = true) String name;

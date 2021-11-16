@@ -1,0 +1,50 @@
+Var dashboardUrl = concat(Env:baseUrl, "v1/dashboard/", Env:dashboardId)
+Var dashboardDetailsResponse = sync-call(url=Var:dashboardUrl, header=Env:commonHeaders)
+
+Var responseList = []
+
+Var widgets = extract(Var:dashboardDetailsResponse, $.widgets)
+
+Var nullObject = null
+foreach widget in Var:widgets {
+  Var widgetName = extract(Var:widget, $.definition.title)
+  Var widgetType = extract(Var:widget, $.definition.type)
+  if Var:widgetType == "timeseries" {
+    Var widgetMap = {}
+    Var:widgetMap.put("widgetName", Var:widgetName)
+
+    Var requests = extract(Var:widget, $.definition.requests)
+    Var dataSets = []
+    foreach widgetRequest in Var:requests {
+       Var requestQueries = extract(Var:widgetRequest, $.queries)
+       if Var:requestQueries != Var:nullObject {
+          foreach requestQuery in Var:requestQueries {
+            Var dataSourceType = extract(Var:requestQuery, $.data_source)
+            if Var:dataSourceType == "metrics" {
+               Var dataSetMap = {}
+               Var queryName = extract(Var:requestQuery, $.name)
+               Var queryValue = extract(Var:requestQuery, $.query)
+
+               if Var:queryName == Var:nullObject {
+                 Var:queryName = Var:queryValue
+               }
+               Var:dataSetMap.put("name", Var:queryName)
+               Var:dataSetMap.put("query", Var:queryValue)
+               Var:dataSets.append(Var:dataSetMap)
+            }
+          }
+       }
+       Var qValue = extract(Var:widgetRequest, $.q)
+       if Var:qValue != Var:nullObject {
+           Var queryMap = {}
+           Var:queryMap.put("name", Var:qValue)
+           Var:queryMap.put("query", Var:qValue)
+           Var:dataSets.append(Var:queryMap)
+       }
+    }
+    Var:widgetMap.put("dataSets", Var:dataSets)
+    Var:responseList.append(Var:widgetMap)
+  }
+}
+
+return Var:responseList

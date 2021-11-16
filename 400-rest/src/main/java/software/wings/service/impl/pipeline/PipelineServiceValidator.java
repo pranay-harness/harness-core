@@ -46,6 +46,9 @@ public class PipelineServiceValidator {
   public boolean validateRuntimeInputsConfig(
       PipelineStageElement pipelineStageElement, String accountId, List<Variable> workflowVariables) {
     RuntimeInputsConfig runtimeInputsConfig = pipelineStageElement.getRuntimeInputsConfig();
+    if (isEmpty(pipelineStageElement.getWorkflowVariables())) {
+      pipelineStageElement.setRuntimeInputsConfig(null);
+    }
     if (isEmpty(pipelineStageElement.getWorkflowVariables()) || runtimeInputsConfig == null
         || pipelineStageElement.checkDisableAssertion()) {
       return true;

@@ -209,9 +209,7 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
     doReturn(qaEnv).when(environmentService).getEnvironmentByName(eq(APP_ID), eq("qa"));
 
     doReturn(Collections.singletonList(testApp)).when(appService).getAppsByIds(any());
-    doReturn(testEnvs.stream().map(Environment::getName).collect(Collectors.toList()))
-        .when(environmentService)
-        .getNames(eq(ACCOUNT_ID), any());
+    doReturn(testEnvs).when(environmentService).getEnvironmentsFromIds(eq(ACCOUNT_ID), any());
 
     GovernanceConfig oldGovernanceConfig = GovernanceConfig.builder()
                                                .accountId(ACCOUNT_ID)

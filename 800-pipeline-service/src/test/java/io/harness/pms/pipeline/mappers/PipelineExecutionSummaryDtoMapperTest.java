@@ -13,13 +13,18 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.retry.RetryExecutionMetadata;
 import io.harness.execution.StagesExecutionMetadata;
 import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.beans.dto.EdgeLayoutListDTO;
+import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.rule.Owner;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -209,5 +214,56 @@ public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBa
     executionSummaryDTO = pipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntityWithIsLatest, null);
     assertThat(executionSummaryDTO.isCanRetry()).isEqualTo(true);
     assertThat(executionSummaryDTO.isShowRetryHistory()).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetStagesCount() {
+    String startingNodeId = "SQBPoxJCTi6k_gxILqb7SA";
+    String otherNodeId = "MQ5AFrizSeesedKbw-lZeQ";
+
+    GraphLayoutNodeDTO startingNode =
+        GraphLayoutNodeDTO.builder()
+            .nodeType("Approval")
+            .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Collections.singletonList(otherNodeId)).build())
+            .build();
+    GraphLayoutNodeDTO otherNode =
+        GraphLayoutNodeDTO.builder()
+            .nodeType("Approval")
+            .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Collections.emptyList()).build())
+            .build();
+    Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
+    layoutNodeDTOMap.put(startingNodeId, startingNode);
+    layoutNodeDTOMap.put(otherNodeId, otherNode);
+    int stagesCount = pipelineExecutionSummaryDtoMapper.getStagesCount(layoutNodeDTOMap, startingNodeId);
+    assertThat(stagesCount).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetStagesCountWithExecutionStatus() {
+    String startingNodeId = "SQBPoxJCTi6k_gxILqb7SA";
+    String otherNodeId = "MQ5AFrizSeesedKbw-lZeQ";
+
+    GraphLayoutNodeDTO startingNode =
+        GraphLayoutNodeDTO.builder()
+            .nodeType("Approval")
+            .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Collections.singletonList(otherNodeId)).build())
+            .status(ExecutionStatus.SUCCESS)
+            .build();
+    GraphLayoutNodeDTO otherNode =
+        GraphLayoutNodeDTO.builder()
+            .nodeType("Approval")
+            .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Collections.emptyList()).build())
+            .status(ExecutionStatus.ABORTED)
+            .build();
+    Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
+    layoutNodeDTOMap.put(startingNodeId, startingNode);
+    layoutNodeDTOMap.put(otherNodeId, otherNode);
+    int stagesCount =
+        pipelineExecutionSummaryDtoMapper.getStagesCount(layoutNodeDTOMap, startingNodeId, ExecutionStatus.ABORTED);
+    assertThat(stagesCount).isEqualTo(1);
   }
 }

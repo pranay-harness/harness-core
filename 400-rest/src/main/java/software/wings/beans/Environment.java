@@ -72,10 +72,13 @@ public class Environment
                  .field(EnvironmentKeys.accountId)
                  .descSortField(EnvironmentKeys.createdAt)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_name")
+                 .field(EnvironmentKeys.accountId)
+                 .ascSortField(EnvironmentKeys.name)
+                 .build())
         .build();
   }
-
-  public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
 
   @NotEmpty @EntityName @Trimmed private String name;
   private String description;

@@ -7,6 +7,7 @@ import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 import static io.harness.delegate.beans.connector.scm.GitAuthType.SSH;
 import static io.harness.delegate.task.terraform.TerraformCommand.APPLY;
 import static io.harness.delegate.task.terraform.TerraformCommand.DESTROY;
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
@@ -40,6 +41,7 @@ import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TerraformCommandExecutionException;
 import io.harness.exception.WingsException;
+import io.harness.exception.runtime.JGitRuntimeException;
 import io.harness.git.GitClientHelper;
 import io.harness.git.GitClientV2;
 import io.harness.git.model.DownloadFilesRequest;
@@ -523,7 +525,8 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
       String msg = isNotEmpty(ex.getMessage()) ? format("Failed performing git operation. Reason: %s", ex.getMessage())
                                                : "Failed performing git operation.";
       logCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.RUNNING);
-      throw new TerraformCommandExecutionException("Exception in processing git operation", WingsException.USER, ex);
+      throw new JGitRuntimeException(msg, ex.getCause(), DEFAULT_ERROR_CODE, gitBaseRequestForConfigFile.getCommitId(),
+          gitBaseRequestForConfigFile.getBranch());
     }
   }
 

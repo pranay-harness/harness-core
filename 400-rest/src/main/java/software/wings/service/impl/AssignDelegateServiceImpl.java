@@ -175,18 +175,18 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
     boolean canAssignCgNg = canAssignCgNg(delegate, task.getSetupAbstractions());
     if (!canAssignCgNg) {
-      log.info("can not assign canAssignCgNg {}", canAssignCgNg);
+      log.debug("can not assign canAssignCgNg {}", canAssignCgNg);
       return canAssignCgNg;
     }
     boolean canAssignOwner = canAssignOwner(batch, delegate, task.getSetupAbstractions());
     if (!canAssignOwner) {
-      log.info("can not assign canAssignOwner {}", canAssignOwner);
+      log.debug("can not assign canAssignOwner {}", canAssignOwner);
       return canAssignOwner;
     }
 
     boolean canAssignDelegateScopes = canAssignDelegateScopes(batch, delegate, task);
     if (!canAssignDelegateScopes) {
-      log.info("can not assign canAssignDelegateScopes {}", canAssignDelegateScopes);
+      log.debug("can not assign canAssignDelegateScopes {}", canAssignDelegateScopes);
       return canAssignDelegateScopes;
     }
 
@@ -194,13 +194,13 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         canAssignDelegateProfileScopes(batch, delegate, task.getSetupAbstractions());
 
     if (!canAssignDelegateProfileScopes) {
-      log.info("can not assign canAssignDelegateProfileScopes {}", canAssignDelegateProfileScopes);
+      log.debug("can not assign canAssignDelegateProfileScopes {}", canAssignDelegateProfileScopes);
       return canAssignDelegateProfileScopes;
     }
 
     boolean canAssignSelectors = canAssignSelectors(batch, delegate, task.getExecutionCapabilities());
     if (!canAssignSelectors) {
-      log.info("can not assign canAssignSelectors {}", canAssignSelectors);
+      log.debug("can not assign canAssignSelectors {}", canAssignSelectors);
       return canAssignSelectors;
     }
 

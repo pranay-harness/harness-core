@@ -15,6 +15,7 @@ import static io.harness.rule.OwnerRule.NATHAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.RAJ;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -815,6 +816,19 @@ public class AccountServiceTest extends WingsBaseTest {
     // Check unique suggested account name
     String suggestion1 = accountService.suggestAccountName(UNIQUE_NAME);
     assertThat(suggestion1).isEqualTo(UNIQUE_NAME);
+  }
+
+  @Test
+  @Owner(developers = RAJ)
+  @Category(UnitTests.class)
+  public void test_updateWhitelistedDomains_invalidDomainNames() {
+    Account account = saveAccount("Company 1");
+
+    try {
+      accountService.updateWhitelistedDomains(account.getUuid(), Sets.newHashSet("test", "123", "999.99", " "));
+    } catch (WingsException e) {
+      assertThat(e.getMessage()).isEqualTo("Invalid domain name");
+    }
   }
 
   @Test

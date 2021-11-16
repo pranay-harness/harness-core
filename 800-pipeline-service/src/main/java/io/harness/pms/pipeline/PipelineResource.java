@@ -215,12 +215,22 @@ public class PipelineResource implements YamlSchemaResource {
 
   @POST
   @Path("/variables")
+  @Operation(operationId = "createVariables",
+      summary = "Get all the Variables which can be used as expression in the Pipeline.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns all Variables used that are valid to be used as expression in pipeline.")
+      })
   @ApiOperation(value = "Create variables for Pipeline", nickname = "createVariables")
-  public ResponseDTO<VariableMergeServiceResponse> createVariables(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @NotNull @ApiParam(hidden = true) String yaml) {
+  public ResponseDTO<VariableMergeServiceResponse>
+  createVariables(@Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE,
+                      required = true) @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String orgId,
+      @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @RequestBody(required = true, description = "Pipeline YAML") @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Creating variables for pipeline.");
 
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
@@ -406,10 +416,13 @@ public class PipelineResource implements YamlSchemaResource {
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
-      @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @QueryParam("module") String module, @QueryParam("filterIdentifier") String filterIdentifier,
-      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
+      @Parameter(description = NGCommonEntityConstants.PAGE_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PAGE) @DefaultValue("0") int page,
+      @Parameter(description = NGCommonEntityConstants.SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE)
+      @DefaultValue("25") int size, @QueryParam("sort") List<String> sort,
+      @Parameter(description = PipelineResourceConstants.PIPELINE_SEARCH_TERM_PARAM_MESSAGE)
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @QueryParam("module") String module,
+      @QueryParam("filterIdentifier") String filterIdentifier, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @RequestBody(description = "This is the body for the filter properties for listing pipelines.")
       FilterPropertiesDTO filterProperties,
       @Parameter(description = "Boolean flag to get distinct pipelines from all branches.") @QueryParam(
@@ -467,8 +480,19 @@ public class PipelineResource implements YamlSchemaResource {
   @GET
   @Path("/steps")
   @ApiOperation(value = "Get Steps for given module", nickname = "getSteps")
-  public ResponseDTO<StepCategory> getSteps(@NotNull @QueryParam("category") String category,
-      @NotNull @QueryParam("module") String module, @QueryParam("accountId") String accountId) {
+  @Operation(operationId = "getSteps", summary = "Gets all the Steps for given Category",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns steps for a given Category")
+      })
+  public ResponseDTO<StepCategory>
+  getSteps(@Parameter(description = "Step Category for which you needs all its steps",
+               required = true) @NotNull @QueryParam("category") String category,
+      @Parameter(description = "Module of the step to which it belongs", required = true) @NotNull @QueryParam(
+          "module") String module,
+      @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE) @QueryParam(
+          "accountId") String accountId) {
     log.info("Get Steps for module " + module);
 
     return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category, accountId));
@@ -477,23 +501,48 @@ public class PipelineResource implements YamlSchemaResource {
   @POST
   @Path("/v2/steps")
   @ApiOperation(value = "Get Steps for given modules Version 2", nickname = "getStepsV2")
-  public ResponseDTO<StepCategory> getStepsV2(
-      @NotNull @QueryParam("accountId") String accountId, @NotNull StepPalleteFilterWrapper stepPalleteFilterWrapper) {
+  @Operation(operationId = "getStepsV2", summary = "Gets all the Steps for given Category (V2 Version)",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns steps for a given Category")
+      })
+  public ResponseDTO<StepCategory>
+  getStepsV2(@Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE,
+                 required = true) @NotNull @QueryParam("accountId") String accountId,
+      @RequestBody(required = true, description = "Step Pallete Filter request body")
+      @NotNull StepPalleteFilterWrapper stepPalleteFilterWrapper) {
     return ResponseDTO.newResponse(pmsPipelineService.getStepsV2(accountId, stepPalleteFilterWrapper));
   }
 
   @POST
   @Path("/execution/summary")
   @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
+  @Operation(operationId = "getListOfExecutions",
+      summary = "Gets list of Executions of Pipelines for specific filters.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns all the Executions of pipelines for given filters")
+      })
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  public ResponseDTO<Page<PipelineExecutionSummaryDTO>> getListOfExecutions(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @QueryParam("searchTerm") String searchTerm,
-      @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
-      @QueryParam("sort") List<String> sort, @QueryParam("filterIdentifier") String filterIdentifier,
+  public ResponseDTO<Page<PipelineExecutionSummaryDTO>>
+  getListOfExecutions(@Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true)
+                      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @Parameter(description = PipelineResourceConstants.PIPELINE_SEARCH_TERM_PARAM_MESSAGE) @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @Parameter(description = PipelineResourceConstants.PIPELINE_ID_LIST_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @Parameter(description = NGCommonEntityConstants.PAGE_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PAGE) @DefaultValue("0") int page,
+      @Parameter(description = NGCommonEntityConstants.SIZE_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.SIZE) @DefaultValue("10") int size,
+      @Parameter(description = NGCommonEntityConstants.SORT_PARAM_MESSAGE) @QueryParam("sort") List<String> sort,
+      @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
       @QueryParam("module") String moduleName, FilterPropertiesDTO filterProperties,
       @QueryParam("status") List<ExecutionStatus> statusesList, @QueryParam("myDeployments") boolean myDeployments,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
@@ -530,12 +579,24 @@ public class PipelineResource implements YamlSchemaResource {
   @GET
   @Path("/execution/{planExecutionId}")
   @ApiOperation(value = "Gets Execution Detail", nickname = "getExecutionDetail")
-  public ResponseDTO<PipelineExecutionDetailDTO> getExecutionDetail(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @QueryParam("filter") String filter, @QueryParam("stageNodeId") String stageNodeId,
-      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+  @Operation(operationId = "getExecutionDetail",
+      summary = "Get the Pipeline Execution details for given PlanExecution Id",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "default", description = "Return the Pipeline Execution details for given PlanExecution Id")
+      })
+  public ResponseDTO<PipelineExecutionDetailDTO>
+  getExecutionDetail(@NotNull @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true)
+                     @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @Parameter(description = PipelineResourceConstants.STAGE_NODE_ID_PARAM_MESSAGE) @QueryParam(
+          "stageNodeId") String stageNodeId,
+      @Parameter(description = "Plan Execution Id for which we want to get the Execution details",
+          required = true) @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     PipelineExecutionSummaryEntity executionSummaryEntity =
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
@@ -543,14 +604,14 @@ public class PipelineResource implements YamlSchemaResource {
     if (executionSummaryEntity.getEntityGitDetails() == null) {
       try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
                executionSummaryEntity.getGitSyncBranchContext(), false)) {
-        optionalPipelineEntity =
-            pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+        optionalPipelineEntity = pmsPipelineService.getWithoutIsDeleted(
+            accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier());
       }
     } else {
       try (PmsGitSyncBranchContextGuard ignore = new PmsGitSyncBranchContextGuard(
                executionSummaryEntity.getEntityGitDetails().toGitSyncBranchContext(), false)) {
-        optionalPipelineEntity =
-            pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+        optionalPipelineEntity = pmsPipelineService.getWithoutIsDeleted(
+            accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier());
       }
     }
     if (!optionalPipelineEntity.isPresent()) {
@@ -577,12 +638,22 @@ public class PipelineResource implements YamlSchemaResource {
   @Path("/execution/{planExecutionId}/inputset")
   @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYaml")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  public String getInputsetYaml(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+  @Operation(operationId = "getInputsetYaml", summary = "Get the Input Set YAML used for given Plan Execution",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Return the Input Set YAML used for given Plan Execution")
+      })
+  public String
+  getInputsetYaml(@NotNull @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true)
+                  @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @QueryParam("resolveExpressions") @DefaultValue("false") boolean resolveExpressions,
-      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+      @Parameter(description = "Plan Execution Id for which we want to get the Input Set YAML",
+          required = true) @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     return pmsExecutionService
         .getInputSetYamlWithTemplate(accountId, orgId, projectId, planExecutionId, false, resolveExpressions)
         .getInputSetYaml();
@@ -592,12 +663,22 @@ public class PipelineResource implements YamlSchemaResource {
   @Path("/execution/{planExecutionId}/inputsetV2")
   @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYamlV2")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  public ResponseDTO<InputSetYamlWithTemplateDTO> getInputsetYamlV2(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+  @Operation(operationId = "getInputsetYamlV2", summary = "Get the Input Set YAML used for given Plan Execution",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Return the Input Set YAML used for given Plan Execution")
+      })
+  public ResponseDTO<InputSetYamlWithTemplateDTO>
+  getInputsetYamlV2(@NotNull @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true)
+                    @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @QueryParam("resolveExpressions") @DefaultValue("false") boolean resolveExpressions,
-      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+      @Parameter(description = "Plan Execution Id for which we want to get the Input Set YAML",
+          required = true) @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     return ResponseDTO.newResponse(pmsExecutionService.getInputSetYamlWithTemplate(
         accountId, orgId, projectId, planExecutionId, false, resolveExpressions));
   }
@@ -613,11 +694,21 @@ public class PipelineResource implements YamlSchemaResource {
   @Path("/getExecutionNode")
   @ApiOperation(value = "get execution node", nickname = "getExecutionNode")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  public ResponseDTO<ExecutionNode> getExecutionNode(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @NotNull @QueryParam("nodeExecutionId") String nodeExecutionId) {
+  @Operation(operationId = "getExecutionNode", summary = "Get the Execution Node by Execution Id",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns Execution Node if it exists, else returns Null.")
+      })
+  public ResponseDTO<ExecutionNode>
+  getExecutionNode(@NotNull @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true)
+                   @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @Parameter(description = "Id for the corresponding Node Execution", required = true) @NotNull @QueryParam(
+          "nodeExecutionId") String nodeExecutionId) {
     if (nodeExecutionId == null) {
       return null;
     }

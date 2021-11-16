@@ -40,7 +40,7 @@ import static software.wings.api.DeploymentType.AZURE_WEBAPP;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS;
 import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS_REVERSE;
 import static software.wings.beans.EntityType.ARTIFACT;
@@ -220,6 +220,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
+import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.impl.workflow.creation.WorkflowCreator;
@@ -2743,7 +2744,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (artifactStream != null) {
           Artifact artifact = artifactService.fetchLastCollectedApprovedArtifactSorted(artifactStream);
           if (artifact != null) {
-            artifactStreamSummaryBuilder.defaultArtifact(ArtifactSummary.prepareSummaryFromArtifact(artifact));
+            artifactStreamSummaryBuilder.defaultArtifact(
+                ArtifactStreamServiceImpl.prepareSummaryFromArtifact(artifact));
           }
         }
         artifactVariable.setArtifactStreamSummaries(singletonList(artifactStreamSummaryBuilder.build()));
@@ -2754,7 +2756,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           ? getArtifactVariableDefaultArtifact(artifactVariable, workflowExecution)
           : null;
       ArtifactSummary artifactSummary =
-          (artifact != null) ? ArtifactSummary.prepareSummaryFromArtifact(artifact) : null;
+          (artifact != null) ? ArtifactStreamServiceImpl.prepareSummaryFromArtifact(artifact) : null;
       artifactVariable.setArtifactStreamSummaries(artifactVariable.getAllowedList()
                                                       .stream()
                                                       .map(artifactStreamId -> {

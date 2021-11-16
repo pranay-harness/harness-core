@@ -18,8 +18,5 @@ public interface BudgetService {
 
   boolean delete(String budgetId, String accountId);
 
-  Double getLastMonthCostForPerspective(String accountId, String perspectiveId);
-  Double getForecastCostForPerspective(String accountId, String perspectiveId);
-
   BudgetData getBudgetTimeSeriesStats(Budget budget);
 }

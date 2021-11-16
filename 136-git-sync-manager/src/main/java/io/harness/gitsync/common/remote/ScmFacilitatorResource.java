@@ -1,5 +1,16 @@
 package io.harness.gitsync.common.remote;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.APPLICATION_JSON_MEDIA_TYPE;
+import static io.harness.NGCommonEntityConstants.APPLICATION_YAML_MEDIA_TYPE;
+import static io.harness.NGCommonEntityConstants.BAD_REQUEST_CODE;
+import static io.harness.NGCommonEntityConstants.BAD_REQUEST_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.INTERNAL_SERVER_ERROR_CODE;
+import static io.harness.NGCommonEntityConstants.INTERNAL_SERVER_ERROR_MESSAGE;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PAGE_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.SIZE_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.NGCommonEntityConstants;
@@ -26,6 +37,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -47,6 +64,21 @@ import org.hibernate.validator.constraints.NotBlank;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@Tag(name = "Scm", description = "Contains APIs related to Scm")
+@io.swagger.v3.oas.annotations.responses.
+ApiResponse(responseCode = BAD_REQUEST_CODE, description = BAD_REQUEST_PARAM_MESSAGE,
+    content =
+    {
+      @Content(mediaType = APPLICATION_JSON_MEDIA_TYPE, schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = APPLICATION_YAML_MEDIA_TYPE, schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.
+ApiResponse(responseCode = INTERNAL_SERVER_ERROR_CODE, description = INTERNAL_SERVER_ERROR_MESSAGE,
+    content =
+    {
+      @Content(mediaType = APPLICATION_JSON_MEDIA_TYPE, schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = APPLICATION_YAML_MEDIA_TYPE, schema = @Schema(implementation = ErrorDTO.class))
+    })
 @NextGenManagerAuth
 @OwnedBy(DX)
 public class ScmFacilitatorResource {
@@ -63,15 +95,29 @@ public class ScmFacilitatorResource {
   @GET
   @Path("listRepoBranches")
   @ApiOperation(value = "Gets list of branches by Connector Identifier", nickname = "getListOfBranchesByConnector")
-  public ResponseDTO<List<String>> listBranchesForRepo(
-      @QueryParam(NGCommonEntityConstants.CONNECTOR_IDENTIFIER_REF) String connectorIdentifierRef,
-      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL,
-      @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0") int pageNum,
-      @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue("50") int pageSize,
-      @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm) {
+  @Operation(operationId = "getListOfBranchesByConnector",
+      summary = "Lists Branches of given Repo by referenced Connector Identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "This contains a list of Branches specific to Referenced Connector Id")
+      })
+  public ResponseDTO<List<String>>
+  listBranchesForRepo(@Parameter(description = "Connector Identifier Reference") @QueryParam(
+                          NGCommonEntityConstants.CONNECTOR_IDENTIFIER_REF) String connectorIdentifierRef,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = "Repo Url") @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL,
+      @Parameter(description = PAGE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue(
+          "0") int pageNum,
+      @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue(
+          "50") int pageSize,
+      @Parameter(description = "Search Term") @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue(
+          "") String searchTerm) {
     return ResponseDTO.newResponse(scmFacilitatorService.listBranchesUsingConnector(accountIdentifier, orgIdentifier,
         projectIdentifier, connectorIdentifierRef, URLDecoderUtility.getDecodedString(repoURL),
         PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(), searchTerm));
@@ -80,14 +126,28 @@ public class ScmFacilitatorResource {
   @GET
   @Path("listBranchesByGitConfig")
   @ApiOperation(value = "Gets list of branches by Git Config Identifier", nickname = "getListOfBranchesByGitConfig")
-  public ResponseDTO<List<String>> listBranchesForRepo(
-      @QueryParam(YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigIdentifier,
-      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0") int pageNum,
-      @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue("50") int pageSize,
-      @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm) {
+  @Operation(operationId = "getListOfBranchesByGitConfig",
+      summary = "Lists Branches by given Git Sync Config Identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "This contains a list of Branches specific to Git Sync Config Id")
+      })
+  public ResponseDTO<List<String>>
+  listBranchesForRepo(@Parameter(description = "Git Sync Config Id") @QueryParam(
+                          YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigIdentifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = PAGE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue(
+          "0") int pageNum,
+      @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue(
+          "50") int pageSize,
+      @Parameter(description = "Search Term") @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue(
+          "") String searchTerm) {
     return ResponseDTO.newResponse(scmOrchestratorService.processScmRequest(scmClientFacilitatorService
         -> scmClientFacilitatorService.listBranchesForRepoByGitSyncConfig(accountIdentifier, orgIdentifier,
             projectIdentifier, yamlGitConfigIdentifier,
@@ -98,13 +158,24 @@ public class ScmFacilitatorResource {
   @GET
   @Path("fileContent")
   @ApiOperation(value = "Gets file content", nickname = "getFileContent")
-  public ResponseDTO<GitFileContent> getFileContent(
-      @NotBlank @NotNull @QueryParam(YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigIdentifier,
-      @NotBlank @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @QueryParam(YamlConstants.FILE_PATH) @NotBlank @NotNull String filePath,
-      @QueryParam(YamlConstants.BRANCH) String branch, @QueryParam(YamlConstants.COMMIT_ID) String commitId) {
+  @Operation(operationId = "getFileContent", summary = "Gets Git File Content",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Git File Content including: object Id and content")
+      })
+  public ResponseDTO<GitFileContent>
+  getFileContent(@Parameter(description = "Git Sync Config Id", required = true) @NotBlank @NotNull @QueryParam(
+                     YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigIdentifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = "File Path") @QueryParam(YamlConstants.FILE_PATH) @NotBlank @NotNull String filePath,
+      @Parameter(description = "Branch Name") @QueryParam(YamlConstants.BRANCH) String branch,
+      @Parameter(description = "Commit Id") @QueryParam(YamlConstants.COMMIT_ID) String commitId) {
     return ResponseDTO.newResponse(scmOrchestratorService.processScmRequest(scmClientFacilitatorService
         -> scmClientFacilitatorService.getFileContent(
             yamlGitConfigIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, filePath, branch, commitId),
@@ -114,14 +185,25 @@ public class ScmFacilitatorResource {
   @POST
   @Path("isSaasGit")
   @ApiOperation(value = "Checks if Saas is possible", nickname = "isSaasGit")
-  public ResponseDTO<SaasGitDTO> isSaasGit(@QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
+  @Operation(operationId = "isSaasGit", summary = "Checks if Saas is possible for given Repo Url",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "True if Saas is possible for given Repo Url")
+      })
+  public ResponseDTO<SaasGitDTO>
+  isSaasGit(@Parameter(description = "Repo Url") @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
     return ResponseDTO.newResponse(GitUtils.isSaasGit(URLDecoderUtility.getDecodedString(repoURL)));
   }
 
   @POST
   @Path("createPR")
   @ApiOperation(value = "creates a pull request", nickname = "createPR")
-  public ResponseDTO<CreatePRDTO> createPR(@Valid @NotNull GitPRCreateRequest gitCreatePRRequest) {
+  @Operation(operationId = "createPR", summary = "creates a Pull Request",
+      responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Successfully created a PR") })
+  public ResponseDTO<CreatePRDTO>
+  createPR(@RequestBody(
+      description = "Details to create a PR", required = true) @Valid @NotNull GitPRCreateRequest gitCreatePRRequest) {
     return ResponseDTO.newResponse(scmOrchestratorService.processScmRequest(scmClientFacilitatorService
         -> scmClientFacilitatorService.createPullRequest(gitCreatePRRequest),
         gitCreatePRRequest.getProjectIdentifier(), gitCreatePRRequest.getOrgIdentifier(),

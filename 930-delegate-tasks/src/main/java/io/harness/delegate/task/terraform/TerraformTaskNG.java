@@ -10,6 +10,7 @@ import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.terraform.handlers.TerraformAbstractTaskHandler;
@@ -52,14 +53,23 @@ public class TerraformTaskNG extends AbstractDelegateRunnableTask {
     }
 
     TerraformAbstractTaskHandler taskHandler = tfTaskTypeToHandlerMap.get(taskParameters.getTaskType());
-    TerraformTaskNGResponse terraformTaskNGResponse =
-        taskHandler.executeTask(taskParameters, getDelegateId(), getTaskId(), logCallback);
-    terraformTaskNGResponse.setUnitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
-    return terraformTaskNGResponse;
+    try {
+      TerraformTaskNGResponse terraformTaskNGResponse =
+          taskHandler.executeTask(taskParameters, getDelegateId(), getTaskId(), logCallback);
+      terraformTaskNGResponse.setUnitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
+      return terraformTaskNGResponse;
+    } catch (Exception e) {
+      throw new TaskNGDataException(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress), e);
+    }
   }
 
   public LogCallback getLogCallback(ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName,
       boolean shouldOpenStream, CommandUnitsProgress commandUnitsProgress) {
     return new NGDelegateLogCallback(logStreamingTaskClient, commandUnitName, shouldOpenStream, commandUnitsProgress);
+  }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
   }
 }

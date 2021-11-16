@@ -24,6 +24,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(PL)
 public class AddUsersDTO {
   @ApiModelProperty(required = true) @NotEmpty @Size(max = 100) List<String> emails;
-  @ApiModelProperty(required = true) @NotEmpty List<RoleBinding> roleBindings;
+  List<RoleBinding> roleBindings;
   List<String> userGroups;
 }

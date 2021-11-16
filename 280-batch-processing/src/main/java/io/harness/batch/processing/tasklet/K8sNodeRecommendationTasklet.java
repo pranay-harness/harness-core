@@ -167,6 +167,9 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
       return; // shall we use any default value?
     }
 
+    String supportedRegion = VMPricingService.getSimilarRegionIfNotSupportedByBanzai(serviceProvider.getRegion());
+    serviceProvider.setRegion(supportedRegion);
+
     ProductDetails vmComputePricingInfo = vmPricingService.getComputeVMPricingInfo(
         serviceProvider.getInstanceFamily(), serviceProvider.getRegion(), serviceProvider.getCloudProvider());
 

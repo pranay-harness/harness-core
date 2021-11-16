@@ -23,6 +23,11 @@ public class BusinessMappingServiceImpl implements BusinessMappingService {
   }
 
   @Override
+  public BusinessMapping get(String uuid) {
+    return businessMappingDao.get(uuid);
+  }
+
+  @Override
   public BusinessMapping update(BusinessMapping businessMapping) {
     return businessMappingDao.update(businessMapping);
   }

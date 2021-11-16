@@ -36,7 +36,7 @@ public class InitializeStepGeneratorTest extends CIExecutionTestBase {
 
     CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
     InitializeStepInfo actual = initializeStepGenerator.createInitializeStepInfo(executionElementConfig,
-        ciExecutionPlanTestHelper.getCICodebase(), stageElementConfig, ciExecutionArgs, infrastructure);
+        ciExecutionPlanTestHelper.getCICodebase(), stageElementConfig, ciExecutionArgs, infrastructure, "abc");
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
@@ -70,7 +70,7 @@ public class InitializeStepGeneratorTest extends CIExecutionTestBase {
 
     CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
     InitializeStepInfo actual = initializeStepGenerator.createInitializeStepInfo(
-        executionElementConfig, null, stageElementConfig, ciExecutionArgs, infrastructure);
+        executionElementConfig, null, stageElementConfig, ciExecutionArgs, infrastructure, "ABX");
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()

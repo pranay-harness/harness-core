@@ -1,5 +1,7 @@
 package io.harness.managerclient;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.network.NoopHostnameVerifier;
@@ -15,12 +17,14 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.Request.Builder;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+@Slf4j
 public class WatcherManagerClientV2Factory implements Provider<ManagerClientV2> {
   private static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new WatcherManagerClientV2X509TrustManager());
@@ -63,7 +67,11 @@ public class WatcherManagerClientV2Factory implements Provider<ManagerClientV2> 
           .addInterceptor(chain -> {
             Builder request = chain.request().newBuilder().addHeader("User-Agent", "watcher");
             if (chain.request().url().uri().getPath().contains("delegateScripts")) {
-              request.addHeader("Version", chain.request().url().queryParameter("delegateVersion"));
+              String versionHeaderParam = chain.request().url().queryParameter("delegateVersion");
+              log.info("Delegate version on call for delegateScripts " + versionHeaderParam);
+              if (isNotBlank(versionHeaderParam)) {
+                request.addHeader("Version", chain.request().url().queryParameter("delegateVersion"));
+              }
             }
             return chain.proceed(request.build());
           })

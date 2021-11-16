@@ -23,9 +23,11 @@ import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.states.codebase.CodeBaseTaskStep;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -36,9 +38,8 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
   @Inject private GitBuildStatusUtility gitBuildStatusUtility;
   @Inject private StageCleanupUtility stageCleanupUtility;
 
-  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
-
+  @Inject @Named("ciEventHandlerExecutor") private ExecutorService executorService;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Override
@@ -47,9 +48,10 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
     String accountId = AmbianceUtils.getAccountId(ambiance);
     Level level = AmbianceUtils.obtainCurrentLevel(ambiance);
     Status status = event.getStatus();
-
-    sendGitStatus(level, ambiance, status, event, accountId);
-    sendCleanupRequest(level, ambiance, status, accountId);
+    executorService.submit(() -> {
+      sendGitStatus(level, ambiance, status, event, accountId);
+      sendCleanupRequest(level, ambiance, status, accountId);
+    });
   }
 
   private void sendCleanupRequest(Level level, Ambiance ambiance, Status status, String accountId) {
@@ -127,7 +129,7 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
     return new RetryPolicy<>()
         .handle(Exception.class)
-        .withBackoff(10, 60, ChronoUnit.MINUTES)
+        .withBackoff(5, 60, ChronoUnit.SECONDS)
         .withMaxAttempts(MAX_ATTEMPTS)
         .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
         .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));

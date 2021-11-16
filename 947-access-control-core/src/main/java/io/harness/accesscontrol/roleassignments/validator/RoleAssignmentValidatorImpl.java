@@ -104,7 +104,8 @@ public class RoleAssignmentValidatorImpl implements RoleAssignmentValidator {
   }
 
   private ValidationResult validateResourceGroup(String resourceGroupIdentifier, String scopeIdentifier) {
-    Optional<ResourceGroup> resourceGroup = resourceGroupService.get(resourceGroupIdentifier, scopeIdentifier);
+    Optional<ResourceGroup> resourceGroup =
+        resourceGroupService.get(resourceGroupIdentifier, scopeIdentifier, NO_FILTER);
     if (!resourceGroup.isPresent()) {
       return ValidationResult.builder()
           .valid(false)
