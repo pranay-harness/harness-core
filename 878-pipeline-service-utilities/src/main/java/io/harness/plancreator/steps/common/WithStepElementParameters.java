@@ -23,7 +23,7 @@ public interface WithStepElementParameters {
   }
 
   default StepParameters getStepParametersInfo(
-          AbstractStepNode stepElementConfig, OnFailRollbackParameters failRollbackParameters) {
+      AbstractStepNode stepElementConfig, OnFailRollbackParameters failRollbackParameters) {
     StepElementParametersBuilder stepParametersBuilder =
         StepParameterCommonUtils.getStepParameters(stepElementConfig, failRollbackParameters);
     stepParametersBuilder.spec(getSpecParameters());
