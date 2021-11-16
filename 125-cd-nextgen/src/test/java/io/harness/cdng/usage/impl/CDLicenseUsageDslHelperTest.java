@@ -1,0 +1,60 @@
+package io.harness.cdng.usage.impl;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.category.element.UnitTests;
+import io.harness.dtos.InstanceDTO;
+import io.harness.rule.Owner;
+import io.harness.rule.OwnerRule;
+
+import java.util.ArrayList;
+import java.util.List;
+import org.jooq.Row3;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+@OwnedBy(HarnessTeam.CDP)
+public class CDLicenseUsageDslHelperTest {
+  private static final String accountIdentifier = "ACCOUNT_ID";
+  private static final String orgIdentifier = "ORG_ID";
+  private static final String projectIdentifier = "PROJECT_ID";
+  private static final String instanceKey = "INSTANCE";
+  private static final String serviceIdentifier = "SERVICE";
+  private static final String envIdentifier = "ENV_ID";
+  private CDLicenseUsageDslHelper cdLicenseUsageDslHelper = new CDLicenseUsageDslHelper();
+
+  @Test
+  @Owner(developers = OwnerRule.TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetOrgProjectServiceRows() {
+    List<InstanceDTO> testInstanceDTOData = createTestInstanceDTOData(3);
+    testInstanceDTOData.add(InstanceDTO.builder()
+                                .instanceKey(instanceKey + 2)
+                                .accountIdentifier(accountIdentifier + 2)
+                                .projectIdentifier(projectIdentifier + 2)
+                                .orgIdentifier(orgIdentifier + 2)
+                                .envIdentifier(envIdentifier + 2)
+                                .serviceIdentifier(serviceIdentifier + 2)
+                                .build());
+    Row3<String, String, String>[] orgProjectServiceRows =
+        cdLicenseUsageDslHelper.getOrgProjectServiceRows(testInstanceDTOData);
+    assertThat(orgProjectServiceRows).hasSize(3);
+  }
+
+  List<InstanceDTO> createTestInstanceDTOData(int dataSize) {
+    List<InstanceDTO> instanceDTOList = new ArrayList<>();
+    for (int i = 0; i < dataSize; i++) {
+      instanceDTOList.add(InstanceDTO.builder()
+                              .instanceKey(instanceKey + i)
+                              .accountIdentifier(accountIdentifier + i)
+                              .projectIdentifier(projectIdentifier + i)
+                              .orgIdentifier(orgIdentifier + i)
+                              .envIdentifier(envIdentifier + i)
+                              .serviceIdentifier(serviceIdentifier + i)
+                              .build());
+    }
+    return instanceDTOList;
+  }
+}

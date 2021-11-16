@@ -9,9 +9,13 @@ import io.harness.cdng.usage.impl.AggregateServiceUsageInfo.AggregateServiceUsag
 import io.harness.dtos.InstanceDTO;
 import io.harness.timescaledb.tables.pojos.Services;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record3;
@@ -68,13 +72,28 @@ public class CDLicenseUsageDslHelper {
 
   public Table<Record3<String, String, String>> getOrgProjectServiceTableFromInstances(
       List<InstanceDTO> instanceDTOList) {
-    Row3<String, String, String>[] orgProjectServiceRows = new Row3[instanceDTOList.size()];
-    int index = 0;
-    for (InstanceDTO instanceDTO : instanceDTOList) {
-      orgProjectServiceRows[index++] =
-          row(instanceDTO.getOrgIdentifier(), instanceDTO.getProjectIdentifier(), instanceDTO.getServiceIdentifier());
-    }
+    Row3<String, String, String>[] orgProjectServiceRows = getOrgProjectServiceRows(instanceDTOList);
 
     return DSL.values(orgProjectServiceRows).as("t", "orgId", "projectId", "serviceId");
+  }
+
+  @VisibleForTesting
+  @NotNull
+  Row3<String, String, String>[] getOrgProjectServiceRows(List<InstanceDTO> instanceDTOList) {
+    Set<String> uniqueServiceOrgProjectIdSet =
+        instanceDTOList.stream().map(this::getUniqueServiceOrgProjectId).collect(Collectors.toSet());
+    Row3<String, String, String>[] orgProjectServiceRows = new Row3[uniqueServiceOrgProjectIdSet.size()];
+    int index = 0;
+    for (InstanceDTO instanceDTO : instanceDTOList) {
+      if (!uniqueServiceOrgProjectIdSet.contains(getUniqueServiceOrgProjectId(instanceDTO))) {
+        orgProjectServiceRows[index++] =
+            row(instanceDTO.getOrgIdentifier(), instanceDTO.getProjectIdentifier(), instanceDTO.getServiceIdentifier());
+      }
+    }
+    return orgProjectServiceRows;
+  }
+
+  private String getUniqueServiceOrgProjectId(InstanceDTO instanceDTO) {
+    return instanceDTO.getOrgIdentifier() + instanceDTO.getProjectIdentifier() + instanceDTO.getServiceIdentifier();
   }
 }
