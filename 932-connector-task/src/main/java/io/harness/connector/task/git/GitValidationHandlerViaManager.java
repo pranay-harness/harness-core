@@ -59,6 +59,9 @@ public class GitValidationHandlerViaManager extends AbstractGitValidationHandler
   @Override
   public SshSessionConfig getSSHSessionConfig(
       SSHKeySpecDTO sshKeySpecDTO, List<EncryptedDataDetail> encryptionDetails) {
+    if (sshKeySpecDTO == null) {
+      return null;
+    }
     return sshSessionConfigMapperViaManager.getSSHSessionConfig(sshKeySpecDTO, encryptionDetails);
   }
 }
