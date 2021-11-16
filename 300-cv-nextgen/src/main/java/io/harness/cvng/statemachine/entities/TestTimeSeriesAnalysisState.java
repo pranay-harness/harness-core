@@ -20,7 +20,7 @@ public class TestTimeSeriesAnalysisState extends TimeSeriesAnalysisState {
 
   @Override
   public StateType getType() {
-    return null;
+    return StateType.TEST_TIME_SERIES;
   }
 
   @Override

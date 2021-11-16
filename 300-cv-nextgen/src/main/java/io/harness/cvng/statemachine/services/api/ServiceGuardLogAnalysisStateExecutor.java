@@ -1,45 +1,37 @@
-package io.harness.cvng.statemachine.entities;
+package io.harness.cvng.statemachine.services.api;
 
-import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
+import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.cvng.statemachine.entities.ServiceGuardLogAnalysisState;
+import io.harness.cvng.statemachine.entities.ServiceGuardTrendAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 
 import java.util.Arrays;
 import java.util.Map;
-import lombok.Builder;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
-@Data
-@Builder
-@Slf4j
-public class ServiceGuardLogAnalysisState extends LogAnalysisState {
+public class ServiceGuardLogAnalysisStateExecutor extends LogAnalysisStateExecutor<ServiceGuardLogAnalysisState> {
   @Override
   protected String scheduleAnalysis(AnalysisInput analysisInput) {
-    return getLogAnalysisService().scheduleServiceGuardLogAnalysisTask(analysisInput);
+    return logAnalysisService.scheduleServiceGuardLogAnalysisTask(analysisInput);
   }
 
   @Override
-  public AnalysisState handleTransition() {
-    this.setStatus(AnalysisStatus.SUCCESS);
+  public AnalysisState handleTransition(ServiceGuardLogAnalysisState serviceGuardLogAnalysisState) {
+    serviceGuardLogAnalysisState.setStatus(AnalysisStatus.SUCCESS);
     ServiceGuardTrendAnalysisState serviceGuardTrendAnalysisState = ServiceGuardTrendAnalysisState.builder().build();
-    serviceGuardTrendAnalysisState.setInputs(getInputs());
+    serviceGuardTrendAnalysisState.setInputs(serviceGuardLogAnalysisState.getInputs());
     serviceGuardTrendAnalysisState.setStatus(AnalysisStatus.CREATED);
     return serviceGuardTrendAnalysisState;
   }
 
   @Override
-  public StateType getType() {
-    return StateType.SERVICE_GUARD_LOG_ANALYSIS;
-  }
-
-  @Override
-  public AnalysisStatus getExecutionStatus() {
-    if (getStatus() != AnalysisStatus.SUCCESS) {
-      Map<String, ExecutionStatus> taskStatuses = logAnalysisService.getTaskStatus(Arrays.asList(workerTaskId));
-      ExecutionStatus taskStatus = taskStatuses.get(workerTaskId);
+  public AnalysisStatus getExecutionStatus(ServiceGuardLogAnalysisState serviceGuardLogAnalysisState) {
+    if (serviceGuardLogAnalysisState.getStatus() != AnalysisStatus.SUCCESS) {
+      Map<String, LearningEngineTask.ExecutionStatus> taskStatuses =
+          logAnalysisService.getTaskStatus(Arrays.asList(workerTaskId));
+      LearningEngineTask.ExecutionStatus taskStatus = taskStatuses.get(workerTaskId);
       // This could be common code for all states.
       switch (taskStatus) {
         case SUCCESS:

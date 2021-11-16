@@ -28,7 +28,7 @@ public class PreDeploymentLogClusterState extends LogClusterState {
 
   @Override
   public StateType getType() {
-    return null;
+    return StateType.PRE_DEPLOYMENT_LOG_CLUSTER;
   }
 
   @Override

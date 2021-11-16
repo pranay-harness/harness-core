@@ -25,7 +25,7 @@ public class ServiceGuardTrendAnalysisState extends AnalysisState {
 
   @Override
   public StateType getType() {
-    return null;
+    return StateType.SERVICE_GUARD_TREND_ANALYSIS;
   }
 
   @Override

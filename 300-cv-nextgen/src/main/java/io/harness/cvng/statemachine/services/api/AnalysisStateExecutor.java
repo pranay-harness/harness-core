@@ -1,28 +1,28 @@
 package io.harness.cvng.statemachine.services.api;
 
+import static io.harness.cvng.analysis.CVAnalysisConstants.MAX_RETRIES;
+
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 
-import static io.harness.cvng.analysis.CVAnalysisConstants.MAX_RETRIES;
-
-public abstract class AnalysisStateExecutor {
-  public abstract AnalysisState execute(AnalysisState analysisState);
-  public abstract AnalysisStatus getExecutionStatus(AnalysisState analysisState);
-  public abstract AnalysisState handleRerun(AnalysisState analysisState);
-  public abstract AnalysisState handleRunning(AnalysisState analysisState);
-  public abstract AnalysisState handleSuccess(AnalysisState analysisState);
-  public abstract AnalysisState handleTransition(AnalysisState analysisState);
-  public abstract AnalysisState handleRetry(AnalysisState analysisState);
-  public void handleFinalStatuses(AnalysisState analysisState) {
+public abstract class AnalysisStateExecutor<T extends AnalysisState> {
+  public abstract AnalysisState execute(T analysisState);
+  public abstract AnalysisStatus getExecutionStatus(T analysisState);
+  public abstract AnalysisState handleRerun(T analysisState);
+  public abstract AnalysisState handleRunning(T analysisState);
+  public abstract AnalysisState handleSuccess(T analysisState);
+  public abstract AnalysisState handleTransition(T analysisState);
+  public abstract AnalysisState handleRetry(T analysisState);
+  public void handleFinalStatuses(T analysisState) {
     // no-op - designed to override
   }
 
-  public AnalysisState handleFailure(AnalysisState analysisState) {
+  public AnalysisState handleFailure(T analysisState) {
     analysisState.setStatus(AnalysisStatus.FAILED);
     return analysisState;
   }
 
-   public AnalysisState handleTimeout(AnalysisState analysisState) {
+  public AnalysisState handleTimeout(T analysisState) {
     analysisState.setStatus(AnalysisStatus.TIMEOUT);
     return analysisState;
   }

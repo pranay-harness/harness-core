@@ -20,6 +20,6 @@ public class ServiceGuardTimeSeriesAnalysisState extends TimeSeriesAnalysisState
 
   @Override
   public StateType getType() {
-    return null;
+    return StateType.SERVICE_GUARD_TIME_SERIES;
   }
 }

@@ -17,7 +17,7 @@ public class DeploymentLogAnalysisState extends LogAnalysisState {
 
   @Override
   public StateType getType() {
-    return StateType.DEPLOYMENT_LOG;
+    return StateType.DEPLOYMENT_LOG_ANALYSIS;
   }
 
   @Override
