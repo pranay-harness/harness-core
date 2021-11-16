@@ -249,7 +249,7 @@ public class DelegateSetupResourceTest extends CategoryTest {
                                                                             .replicas(1)
                                                                             .taskLimit(50)
                                                                             .cpu(0.5)
-                                                                            .ram(2560)
+                                                                            .ram(2048)
                                                                             .build());
     when(delegateService.fetchAvailableSizes()).thenReturn(delegateSizes);
     RestResponse<List<DelegateSizeDetails>> restResponse =
