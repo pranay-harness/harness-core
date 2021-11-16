@@ -27,6 +27,11 @@ public class PreDeploymentLogClusterState extends LogClusterState {
   }
 
   @Override
+  public StateType getType() {
+    return null;
+  }
+
+  @Override
   public AnalysisState handleTransition() {
     this.setStatus(AnalysisStatus.SUCCESS);
     return this;

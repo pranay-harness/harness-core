@@ -31,6 +31,11 @@ public class DeploymentLogClusterState extends LogClusterState {
   }
 
   @Override
+  public StateType getType() {
+    return null;
+  }
+
+  @Override
   public AnalysisState handleTransition() {
     this.setStatus(AnalysisStatus.SUCCESS);
     switch (clusterLevel) {

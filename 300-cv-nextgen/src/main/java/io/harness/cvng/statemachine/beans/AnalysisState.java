@@ -9,7 +9,7 @@ public abstract class AnalysisState {
   private AnalysisInput inputs;
   private AnalysisStatus status;
   private int retryCount;
-  private StateType type;
+  public abstract StateType getType();
 
   public abstract AnalysisState execute();
   public abstract AnalysisStatus getExecutionStatus();
@@ -37,6 +37,7 @@ public abstract class AnalysisState {
   }
 
   public enum StateType {
+    CANARY_TIME_SERIES, DEPLOYMENT_LOG, ACTIVITY_VERIFICATION
 
   }
 }

@@ -39,6 +39,11 @@ public class ActivityVerificationState extends AnalysisState {
   }
 
   @Override
+  public StateType getType() {
+    return StateType.ACTIVITY_VERIFICATION;
+  }
+
+  @Override
   public AnalysisState execute() {
     analysisCompletedUntil = healthVerificationService.aggregateActivityAnalysis(getInputs().getVerificationTaskId(),
         getInputs().getStartTime(), getInputs().getEndTime(), analysisCompletedUntil, healthVerificationPeriod);

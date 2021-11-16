@@ -19,6 +19,11 @@ public class TestTimeSeriesAnalysisState extends TimeSeriesAnalysisState {
   }
 
   @Override
+  public StateType getType() {
+    return null;
+  }
+
+  @Override
   public void handleFinalStatuses(AnalysisStatus finalStatus) {
     timeSeriesAnalysisService.logDeploymentVerificationProgress(getInputs(), finalStatus);
   }
