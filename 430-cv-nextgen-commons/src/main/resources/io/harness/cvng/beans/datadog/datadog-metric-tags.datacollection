@@ -1,0 +1,5 @@
+Var metricTagsUrl = concat(Env:baseUrl, "v2/metrics/", Env:metric, "/all-tags")
+Var metricTagsResponse = sync-call(url=Var:metricTagsUrl, header=Env:commonHeaders)
+Var metricTagsResponseList = extract(Var:metricTagsResponse, $.data.attributes.tags)
+
+return Var:metricTagsResponseList

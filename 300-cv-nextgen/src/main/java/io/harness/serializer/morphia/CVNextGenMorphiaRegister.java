@@ -37,6 +37,8 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVNGLog;
 import io.harness.cvng.core.entities.DataCollectionTask;
+import io.harness.cvng.core.entities.DatadogLogCVConfig;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
 import io.harness.cvng.core.entities.HostRecord;
@@ -84,6 +86,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
+
 @OwnedBy(HarnessTeam.CV)
 public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
   @Override
@@ -159,6 +162,8 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(Comparable.class);
     set.add(PrometheusCVConfig.class);
     set.add(StackdriverLogCVConfig.class);
+    set.add(DatadogMetricCVConfig.class);
+    set.add(DatadogLogCVConfig.class);
     set.add(MonitoredService.class);
     set.add(HarnessCDChangeSource.class);
     set.add(ChangeSource.class);

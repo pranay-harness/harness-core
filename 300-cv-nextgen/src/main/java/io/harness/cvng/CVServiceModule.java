@@ -65,6 +65,8 @@ import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.DatadogLogCVConfig.DatadogLogCVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig.DatadogMetricCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.PrometheusCVConfig.PrometheusUpdatableEntity;
 import io.harness.cvng.core.entities.SplunkCVConfig.SplunkCVConfigUpdatableEntity;
@@ -89,6 +91,7 @@ import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.DataSourceConnectivityChecker;
+import io.harness.cvng.core.services.api.DatadogService;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.FeatureFlagService;
@@ -121,6 +124,7 @@ import io.harness.cvng.core.services.impl.CVNGYamlSchemaServiceImpl;
 import io.harness.cvng.core.services.impl.ChangeEventServiceImpl;
 import io.harness.cvng.core.services.impl.ChangeSourceUpdateHandler;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
+import io.harness.cvng.core.services.impl.DatadogServiceImpl;
 import io.harness.cvng.core.services.impl.DefaultDeleteEntityByHandler;
 import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.FeatureFlagServiceImpl;
@@ -149,6 +153,7 @@ import io.harness.cvng.core.services.impl.WebhookServiceImpl;
 import io.harness.cvng.core.services.impl.demo.CVNGDemoDataIndexServiceImpl;
 import io.harness.cvng.core.services.impl.demo.CVNGDemoPerpetualTaskServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.ChangeSourceServiceImpl;
+import io.harness.cvng.core.services.impl.monitoredService.DatadogLogDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.monitoredService.HealthSourceServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.MonitoredServiceServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.ServiceDependencyServiceImpl;
@@ -166,6 +171,8 @@ import io.harness.cvng.core.transformer.changeSource.KubernetesChangeSourceSpecT
 import io.harness.cvng.core.transformer.changeSource.PagerDutyChangeSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.AppDynamicsHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
+import io.harness.cvng.core.utils.monitoredService.DatadogLogHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.DatadogMetricHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.NewRelicHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.PrometheusHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.SplunkHealthSourceSpecTransformer;
@@ -314,6 +321,10 @@ public class CVServiceModule extends AbstractModule {
         .to(PrometheusHealthSourceSpecTransformer.class);
     dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.STACKDRIVER)
         .to(StackdriverMetricHealthSourceSpecTransformer.class);
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.DATADOG_METRICS)
+        .to(DatadogMetricHealthSourceSpecTransformer.class);
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.DATADOG_LOG)
+        .to(DatadogLogHealthSourceSpecTransformer.class);
     MapBinder<DataSourceType, DataCollectionInfoMapper> dataSourceTypeDataCollectionInfoMapperMapBinder =
         MapBinder.newMapBinder(binder(), DataSourceType.class, DataCollectionInfoMapper.class);
     dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
@@ -328,6 +339,10 @@ public class CVServiceModule extends AbstractModule {
         .to(PrometheusDataCollectionInfoMapper.class);
     dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.STACKDRIVER)
         .to(StackdriverDataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.DATADOG_METRICS)
+        .to(DatadogLogDataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.DATADOG_LOG)
+        .to(DatadogLogDataCollectionInfoMapper.class);
 
     bind(MetricPackService.class).to(MetricPackServiceImpl.class);
     bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
@@ -352,6 +367,7 @@ public class CVServiceModule extends AbstractModule {
     bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
     bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     bind(StackdriverService.class).to(StackdriverServiceImpl.class);
+    bind(DatadogService.class).to(DatadogServiceImpl.class);
     bind(RedisConfig.class)
         .annotatedWith(Names.named("lock"))
         .toInstance(verificationConfiguration.getEventsFrameworkConfiguration().getRedisConfig());
@@ -481,6 +497,7 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.APP_DYNAMICS).to(AppDynamicsService.class);
     dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkService.class);
     dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackdriverService.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.DATADOG_METRICS).to(DatadogService.class);
 
     MapBinder<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder =
         MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigUpdatableEntity.class);
@@ -492,6 +509,9 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
         .to(StackdriverLogCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_METRICS)
+        .to(DatadogMetricCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_LOG).to(DatadogLogCVConfigUpdatableEntity.class);
   }
 
   @Provides
