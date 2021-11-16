@@ -30,7 +30,6 @@ public class CgOrchestrationRegistrars {
           .addAll(WaitEngineRegistrars.kryoRegistrars)
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationDelayRegistrars.kryoRegistrars)
-          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           .add(CgOrchestrationKryoRegister.class)
           .add(CgOrchestrationBeansKryoRegistrar.class)
           .add(CommonEntitiesKryoRegistrar.class)

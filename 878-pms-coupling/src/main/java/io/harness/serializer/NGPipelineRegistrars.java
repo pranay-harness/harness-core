@@ -30,7 +30,6 @@ public class NGPipelineRegistrars {
           .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
           .addAll(PmsSdkCoreModuleRegistrars.kryoRegistrars)
           .addAll(DelegateServiceDriverRegistrars.kryoRegistrars)
-          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

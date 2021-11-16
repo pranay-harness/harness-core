@@ -50,7 +50,6 @@ public class ManagerRegistrars {
           .addAll(FileServiceCommonsRegistrars.kryoRegistrars)
           .addAll(NotificationSenderRegistrars.kryoRegistrars)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
-          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           // temporary:
           .add(DelegateAgentKryoRegister.class)
           .add(DelegateAgentBeansKryoRegister.class)

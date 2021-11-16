@@ -35,7 +35,6 @@ public class ConnectorNextGenRegistrars {
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .addAll(PmsSdkCoreModuleRegistrars.kryoRegistrars)
           .addAll(DelegateTaskRegistrars.kryoRegistrars)
-          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
