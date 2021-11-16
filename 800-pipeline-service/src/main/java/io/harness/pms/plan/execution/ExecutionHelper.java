@@ -86,7 +86,7 @@ public class ExecutionHelper {
   public PipelineEntity fetchPipelineEntity(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, @NotNull String pipelineIdentifier) {
     Optional<PipelineEntity> pipelineEntityOptional =
-        pmsPipelineService.incrementRunSequence(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+        pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntityOptional.isPresent()) {
       throw new InvalidRequestException(
           String.format("Pipeline with the given ID: %s does not exist or has been deleted", pipelineIdentifier));
@@ -156,7 +156,7 @@ public class ExecutionHelper {
             .setExecutionUuid(executionId)
             .setTriggerInfo(triggerInfo)
             .setModuleType(moduleType)
-            .setRunSequence(pipelineEntity.getRunSequence())
+            .setRunSequence(pmsPipelineService.incrementRunSequence(pipelineEntity).getRunSequence())
             .setPipelineIdentifier(pipelineIdentifier)
             .setRetryInfo(retryExecutionInfo)
             .setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());

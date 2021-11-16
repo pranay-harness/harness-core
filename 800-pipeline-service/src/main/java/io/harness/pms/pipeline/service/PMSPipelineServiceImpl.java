@@ -28,6 +28,7 @@ import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
+import io.harness.pms.pipeline.PipelineMetadata;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepPalleteFilterWrapper;
 import io.harness.pms.pipeline.StepPalleteInfo;
@@ -38,6 +39,7 @@ import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
+import io.harness.repositories.pipeline.PipelineMetadataRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -66,6 +68,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
   @Inject private GitSyncSdkService gitSyncSdkService;
   @Inject private CommonStepInfo commonStepInfo;
+  @Inject private PipelineMetadataRepository pipelineMetadataRepository;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
@@ -204,13 +207,35 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public Optional<PipelineEntity> incrementRunSequence(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean deleted) {
-    Criteria criteria = PMSPipelineServiceHelper.getPipelineEqualityCriteria(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, null);
-    Update update = new Update();
-    update.inc(PipelineEntityKeys.runSequence);
-    return Optional.ofNullable(updatePipelineMetadata(accountId, orgIdentifier, projectIdentifier, criteria, update));
+  public PipelineMetadata incrementRunSequence(PipelineEntity pipelineEntity) {
+    String accountId = pipelineEntity.getAccountId();
+    String orgIdentifier = pipelineEntity.getOrgIdentifier();
+    String projectIdentifier = pipelineEntity.getProjectIdentifier();
+    Optional<PipelineMetadata> pipelineMetadataOptional =
+        pipelineMetadataRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPipelineIdentifier(
+            accountId, orgIdentifier, projectIdentifier, pipelineEntity.getIdentifier());
+    PipelineMetadata pipelineMetadata;
+    if (pipelineMetadataOptional.isPresent()) {
+      pipelineMetadata = pipelineMetadataRepository.incCounter(
+          accountId, orgIdentifier, projectIdentifier, pipelineEntity.getIdentifier());
+    } else {
+      try {
+        PipelineMetadata metadata = PipelineMetadata.builder()
+                                        .accountId(accountId)
+                                        .orgIdentifier(orgIdentifier)
+                                        .projectIdentifier(projectIdentifier)
+                                        .executionSummaryInfo(pipelineEntity.getExecutionSummaryInfo())
+                                        .runSequence(pipelineEntity.getRunSequence() + 1)
+                                        .pipelineIdentifier(pipelineEntity.getIdentifier())
+                                        .build();
+        pipelineMetadata = pipelineMetadataRepository.save(metadata);
+      } catch (DuplicateKeyException exception) {
+        // retry insert if above fails
+        pipelineMetadata = pipelineMetadataRepository.incCounter(
+            accountId, orgIdentifier, projectIdentifier, pipelineEntity.getIdentifier());
+      }
+    }
+    return pipelineMetadata;
   }
 
   @Override

@@ -7,6 +7,7 @@ import io.harness.git.model.ChangeType;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
+import io.harness.pms.pipeline.PipelineMetadata;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepPalleteFilterWrapper;
 import io.harness.pms.variables.VariableMergeServiceResponse;
@@ -35,8 +36,7 @@ public interface PMSPipelineService {
   void saveExecutionInfo(
       String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo);
 
-  Optional<PipelineEntity> incrementRunSequence(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean b);
+  PipelineMetadata incrementRunSequence(PipelineEntity pipelineEntity);
 
   boolean delete(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version);
