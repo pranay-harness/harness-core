@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import static io.harness.beans.DelegateTask.Status.ABORTED;
 import static io.harness.beans.DelegateTask.Status.PARKED;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
@@ -123,7 +124,7 @@ public class DelegateQueueTask implements Runnable {
     // Find tasks which have been queued for too long
     Query<DelegateTask> query = persistence.createQuery(DelegateTask.class, excludeAuthority)
                                     .field(DelegateTaskKeys.status)
-                                    .in(asList(QUEUED, PARKED))
+                                    .in(asList(QUEUED, PARKED, ABORTED))
                                     .field(DelegateTaskKeys.expiry)
                                     .lessThan(currentTimeMillis());
 
