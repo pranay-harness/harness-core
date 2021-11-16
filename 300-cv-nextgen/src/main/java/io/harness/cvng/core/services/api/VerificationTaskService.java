@@ -9,8 +9,9 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface VerificationTaskService {
-  String create(String accountId, String cvConfigId, DataSourceType provider);
-  String create(String accountId, String cvConfigId, String verificationJobInstanceId, DataSourceType provider);
+  String createLiveMonitoringVerificationTask(String accountId, String cvConfigId, DataSourceType provider);
+  String createDeploymentVerificationTask(
+      String accountId, String cvConfigId, String verificationJobInstanceId, DataSourceType provider);
   String getCVConfigId(String verificationTaskId);
   String getVerificationJobInstanceId(String verificationTaskId);
   VerificationTask get(String verificationTaskId);
@@ -27,7 +28,7 @@ public interface VerificationTaskService {
   String getServiceGuardVerificationTaskId(String accountId, String cvConfigId);
   List<String> getServiceGuardVerificationTaskIds(String accountId, List<String> cvConfigIds);
   boolean isServiceGuardId(String verificationTaskId);
-  void removeCVConfigMappings(String cvConfigId);
+  void removeCVConfigMappings(String accountId, String cvConfigId);
   List<String> getVerificationTaskIds(String cvConfigId);
   Optional<String> findBaselineVerificationTaskId(
       String currentVerificationTaskId, VerificationJobInstance verificationJobInstance);

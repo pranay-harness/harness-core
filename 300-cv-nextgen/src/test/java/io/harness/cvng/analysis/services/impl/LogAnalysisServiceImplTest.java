@@ -350,8 +350,8 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
   public void testScheduleDeploymentLogAnalysisTask_testVerificationWithNullBaseline() {
     VerificationJobInstance verificationJobInstance = newVerificationJobInstance();
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     AnalysisInput input = AnalysisInput.builder()
                               .verificationTaskId(verificationTaskId)
                               .startTime(instant.plus(5, ChronoUnit.MINUTES))
@@ -383,10 +383,10 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
     ((TestVerificationJob) verificationJobInstance.getResolvedJob())
         .setBaselineVerificationJobInstanceId(baselineJobInstanceId);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String baselineVerificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, baselineJobInstanceId, APP_DYNAMICS);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String baselineVerificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, baselineJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     AnalysisInput input = AnalysisInput.builder()
                               .verificationTaskId(verificationTaskId)
                               .startTime(instant.plus(5, ChronoUnit.MINUTES))

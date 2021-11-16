@@ -61,7 +61,8 @@ public class CVConfigServiceImpl implements CVConfigService {
     checkArgument(cvConfig.getUuid() == null, "UUID should be null when creating CVConfig");
     cvConfig.validate();
     hPersistence.save(cvConfig);
-    verificationTaskService.create(cvConfig.getAccountId(), cvConfig.getUuid(), cvConfig.getType());
+    verificationTaskService.createLiveMonitoringVerificationTask(
+        cvConfig.getAccountId(), cvConfig.getUuid(), cvConfig.getType());
     return cvConfig;
   }
 
