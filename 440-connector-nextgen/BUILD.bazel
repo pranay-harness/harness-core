@@ -37,6 +37,7 @@ java_library(
         "//956-feature-flag-beans:module",
         "//960-api-services:module",
         "//960-ng-core-beans:module",
+        "//960-ng-license-beans:module",
         "//960-persistence:module",
         "//960-yaml-sdk:module",
         "//970-api-services-beans:module",
