@@ -45,13 +45,14 @@ import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
 import io.harness.cvng.beans.job.HealthVerificationJobDTO;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
-import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob.TestVerificationJobKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
@@ -622,9 +623,10 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     activity.setVerificationJobInstanceIds(Arrays.asList(baselineVerificationJobInstanceId));
     activity.setType(ActivityType.DEPLOYMENT);
     activityService.createActivity(activity);
-    VerificationJobDTO verificationJobDTO = createTestVerificationJobDTO(baselineVerificationJobInstanceId);
-    verificationJobDTO.setActivitySourceIdentifier(activity.getActivitySourceId());
-    verificationJobService.update(accountId, identifier, verificationJobDTO);
+    hPersistence.update(verificationJob,
+        hPersistence.createUpdateOperations(VerificationJob.class)
+            .set(VerificationJobKeys.activitySourceIdentifier, activity.getActivitySourceId())
+            .set(TestVerificationJobKeys.baselineVerificationJobInstanceId, baselineVerificationJobInstanceId));
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     VerificationJobInstance currentVerificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);

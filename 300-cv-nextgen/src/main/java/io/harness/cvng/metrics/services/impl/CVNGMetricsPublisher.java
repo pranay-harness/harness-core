@@ -84,7 +84,6 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
 
   @Override
   public void recordMetrics() {
-    orchestrationService.recordMetrics();
     sendTaskStatusMetrics();
   }
   @VisibleForTesting
