@@ -19,9 +19,9 @@ import software.wings.audit.AuditHeader;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.ResourceType;
 import software.wings.beans.AccountAuditFilter;
-import software.wings.beans.Application;
 import software.wings.beans.ApplicationAuditFilter;
 import software.wings.beans.AuditPreference;
+import software.wings.beans.CGConstants;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.PreferenceType;
@@ -137,7 +137,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     header0.setAccountId(ACCOUNT_ID);
     header0.setCreatedAt(1559076765100l);
     EntityAuditRecord record0 = EntityAuditRecord.builder()
-                                    .appId(Application.GLOBAL_APP_ID)
+                                    .appId(CGConstants.GLOBAL_APP_ID)
                                     .affectedResourceType(ResourceType.CLOUD_PROVIDER.name())
                                     .affectedResourceId("cp1")
                                     .operationType(Type.UPDATE.name())
@@ -153,7 +153,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     header1.setCreatedAt(1559076765200l);
     header1.setAccountId(ACCOUNT_ID);
     EntityAuditRecord record1 = EntityAuditRecord.builder()
-                                    .appId(Application.GLOBAL_APP_ID)
+                                    .appId(CGConstants.GLOBAL_APP_ID)
                                     .affectedResourceType(ResourceType.CLOUD_PROVIDER.name())
                                     .affectedResourceId("cp2")
                                     .operationType(Type.CREATE.name())
@@ -169,7 +169,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     header2.setAccountId(ACCOUNT_ID);
     header2.setCreatedAt(1559076765300l);
     EntityAuditRecord record2 = EntityAuditRecord.builder()
-                                    .appId(Application.GLOBAL_APP_ID)
+                                    .appId(CGConstants.GLOBAL_APP_ID)
                                     .affectedResourceType(ResourceType.ARTIFACT_SERVER.name())
                                     .affectedResourceId("bambooId1")
                                     .operationType(Type.UPDATE.name())
@@ -185,7 +185,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     header3.setAccountId(ACCOUNT_ID);
     header3.setCreatedAt(1559076765400l);
     EntityAuditRecord record3 = EntityAuditRecord.builder()
-                                    .appId(Application.GLOBAL_APP_ID)
+                                    .appId(CGConstants.GLOBAL_APP_ID)
                                     .affectedResourceType(ResourceType.COLLABORATION_PROVIDER.name())
                                     .affectedResourceId("gitId1")
                                     .operationType(Type.DELETE.name())

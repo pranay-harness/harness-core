@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.connector;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.HELM_REPO;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;

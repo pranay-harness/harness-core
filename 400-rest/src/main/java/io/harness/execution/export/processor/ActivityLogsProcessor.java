@@ -23,7 +23,7 @@ import io.harness.execution.export.metadata.GraphNodeMetadata;
 import io.harness.execution.export.metadata.GraphNodeVisitor;
 import io.harness.persistence.CreatedAtAware;
 
-import software.wings.beans.Application;
+import software.wings.beans.CGConstants;
 import software.wings.beans.Log;
 import software.wings.beans.Log.LogKeys;
 import software.wings.service.impl.LogServiceImpl;
@@ -250,7 +250,7 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
     for (int currIdx = 0;; currIdx++) {
       pageRequest.setOffset(String.valueOf(currIdx * LOGS_BATCH_SIZE));
       pageRequest.setLimit(String.valueOf(LOGS_BATCH_SIZE));
-      PageResponse<Log> pageResponse = logService.list(Application.GLOBAL_APP_ID, pageRequest);
+      PageResponse<Log> pageResponse = logService.list(CGConstants.GLOBAL_APP_ID, pageRequest);
       if (pageResponse == null || isEmpty(pageResponse.getResponse())) {
         break;
       }

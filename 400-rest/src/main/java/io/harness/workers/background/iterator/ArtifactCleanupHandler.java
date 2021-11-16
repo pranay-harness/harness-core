@@ -34,6 +34,7 @@ import software.wings.service.intfc.SettingsService;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import java.util.Arrays;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +69,9 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
                        .in(asList(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.AMI.name(),
                            ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ECR.name(),
                            ArtifactStreamType.GCR.name(), ArtifactStreamType.ACR.name(),
-                           ArtifactStreamType.NEXUS.name(), ArtifactStreamType.AZURE_MACHINE_IMAGE.name())))
+                           ArtifactStreamType.NEXUS.name(), ArtifactStreamType.AZURE_MACHINE_IMAGE.name()))
+                       .field(ArtifactStreamKeys.collectionEnabled)
+                       .in(Arrays.asList(true, null)))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

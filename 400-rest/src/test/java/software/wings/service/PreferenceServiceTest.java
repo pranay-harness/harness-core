@@ -8,7 +8,7 @@ import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.service.impl.PreferenceServiceImpl.USER_ID_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;

@@ -29,9 +29,24 @@ capabilityTaskSelectionDetails {"name": "accountId_1", "background": true} {"acc
 capabilityTaskSelectionDetails {"name": "blocked_1", "background": true} {"blocked": 1}
 capabilityTaskSelectionDetails {"name": "capabilityId_1", "background": true} {"capabilityId": 1}
 capabilityTaskSelectionDetails {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+commandLogs {"name": "accountId_1", "background": true} {"accountId": 1}
+commandLogs {"name": "activityIdCreatedAt", "background": true} {"activityId": 1, "createdAt": 1}
+commandLogs {"name": "appId_activityId", "background": true} {"appId": 1, "activityId": 1}
+commandLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
+commandLogs {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+cvActivityLogs {"name": "accountId_1", "background": true} {"accountId": 1}
+cvActivityLogs {"name": "cvConfigId_1", "background": true} {"cvConfigId": 1}
+cvActivityLogs {"name": "dataCollectionMinute_1", "background": true} {"dataCollectionMinute": 1}
+cvActivityLogs {"name": "service_guard_idx", "background": true} {"cvConfigId": 1, "dataCollectionMinute": -1, "createdAt": 1}
+cvActivityLogs {"name": "stateExecutionId_1", "background": true} {"stateExecutionId": 1}
+cvActivityLogs {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delayQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 delayQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 delegateCallbacks {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+delegateConnectionResults {"name": "criteria_1", "background": true} {"criteria": 1}
+delegateConnectionResults {"name": "delegateConnectionResultsIdx", "unique": true} {"accountId": 1, "delegateId": 1, "criteria": 1}
+delegateConnectionResults {"name": "delegateId_1", "background": true} {"delegateId": 1}
+delegateConnectionResults {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateProfiles {"name": "byAcctNgOwner", "background": true} {"accountId": 1, "ng": 1, "owner": 1}
 delegateProfiles {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegateProfiles {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1, "owner": 1}
@@ -173,6 +188,9 @@ stepDetailInstance {"name": "nodeExecutionId_name_unique_idx", "unique": true} {
 stepDetailInstance {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 taskSelectorMaps {"name": "createdAt_1", "background": true} {"createdAt": 1}
 taskSelectorMaps {"name": "uniqueGroup", "unique": true} {"accountId": 1, "taskGroup": 1}
+thirdPartyApiCallLog {"name": "accountId_1", "background": true} {"accountId": 1}
+thirdPartyApiCallLog {"name": "queryIdx", "background": true} {"stateExecutionId": 1, "createdAt": -1}
+thirdPartyApiCallLog {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 timeoutInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}
 timeoutInstances {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 timeoutInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}

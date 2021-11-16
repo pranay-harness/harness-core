@@ -3,7 +3,7 @@ package software.wings.service.impl.instana;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.INSTANA_DOCKER_PLUGIN;
 import static software.wings.common.VerificationConstants.INSTANA_GROUPBY_TAG_TRACE_NAME;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;

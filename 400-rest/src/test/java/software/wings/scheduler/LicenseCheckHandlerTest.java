@@ -2,7 +2,7 @@ package software.wings.scheduler;
 
 import static io.harness.rule.OwnerRule.RAMA;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;

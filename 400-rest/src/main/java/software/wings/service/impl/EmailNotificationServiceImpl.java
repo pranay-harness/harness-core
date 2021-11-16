@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
