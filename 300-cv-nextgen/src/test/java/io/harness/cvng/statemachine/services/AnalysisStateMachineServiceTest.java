@@ -26,6 +26,7 @@ import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.VerificationTask.DeploymentInfo;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
@@ -108,8 +109,12 @@ public class AnalysisStateMachineServiceTest extends CvNextGenTestBase {
   public void testCreateStateMachine_forDeployment() {
     String verificationTaskId = generateUuid();
     String verificationJobInstanceId = generateUuid();
-    VerificationTask verificationTask =
-        VerificationTask.builder().verificationJobInstanceId(verificationJobInstanceId).cvConfigId(cvConfigId).build();
+    VerificationTask verificationTask = VerificationTask.builder()
+                                            .taskInfo(DeploymentInfo.builder()
+                                                          .verificationJobInstanceId(verificationJobInstanceId)
+                                                          .cvConfigId(cvConfigId)
+                                                          .build())
+                                            .build();
     verificationTask.setUuid(verificationTaskId);
     hPersistence.save(verificationTask);
     VerificationJobInstance verificationJobInstance =
@@ -138,8 +143,10 @@ public class AnalysisStateMachineServiceTest extends CvNextGenTestBase {
     String verificationTaskId = generateUuid();
     String verificationJobInstanceId = generateUuid();
     VerificationTask verificationTask = VerificationTask.builder()
-                                            .verificationJobInstanceId(verificationJobInstanceId)
-                                            .cvConfigId(cvConfig.getUuid())
+                                            .taskInfo(DeploymentInfo.builder()
+                                                          .verificationJobInstanceId(verificationJobInstanceId)
+                                                          .cvConfigId(cvConfig.getUuid())
+                                                          .build())
                                             .build();
     verificationTask.setUuid(verificationTaskId);
     hPersistence.save(verificationTask);
@@ -170,8 +177,10 @@ public class AnalysisStateMachineServiceTest extends CvNextGenTestBase {
     String verificationTaskId = generateUuid();
     String verificationJobInstanceId = generateUuid();
     VerificationTask verificationTask = VerificationTask.builder()
-                                            .verificationJobInstanceId(verificationJobInstanceId)
-                                            .cvConfigId(cvConfig.getUuid())
+                                            .taskInfo(DeploymentInfo.builder()
+                                                          .verificationJobInstanceId(verificationJobInstanceId)
+                                                          .cvConfigId(cvConfig.getUuid())
+                                                          .build())
                                             .build();
     verificationTask.setUuid(verificationTaskId);
     hPersistence.save(verificationTask);
@@ -200,8 +209,12 @@ public class AnalysisStateMachineServiceTest extends CvNextGenTestBase {
   public void testCreateStateMachine_forHealth() {
     String verificationTaskId = generateUuid();
     String verificationJobInstanceId = generateUuid();
-    VerificationTask verificationTask =
-        VerificationTask.builder().verificationJobInstanceId(verificationJobInstanceId).cvConfigId(cvConfigId).build();
+    VerificationTask verificationTask = VerificationTask.builder()
+                                            .taskInfo(DeploymentInfo.builder()
+                                                          .verificationJobInstanceId(verificationJobInstanceId)
+                                                          .cvConfigId(cvConfigId)
+                                                          .build())
+                                            .build();
     verificationTask.setUuid(verificationTaskId);
     hPersistence.save(verificationTask);
     Instant startTime = Instant.parse("2020-07-27T10:45:00.000Z");

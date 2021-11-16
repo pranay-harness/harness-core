@@ -25,6 +25,7 @@ import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
@@ -36,6 +37,8 @@ import io.harness.cvng.core.entities.DataCollectionTask.Type;
 import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
 import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.VerificationTask.DeploymentInfo;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
@@ -63,9 +66,6 @@ import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -93,7 +93,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
-  @Inject private Injector injector;
+  @Inject private Map<DataSourceType, DataCollectionInfoMapper> dataSourceTypeDataCollectionInfoMapperMap;
   @Inject private MetricPackService metricPackService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private VerificationJobInstanceAnalysisService verificationJobInstanceAnalysisService;
@@ -189,7 +189,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     // We dont do any data collection for health verification. So just queue the analysis.
     List<CVConfig> cvConfigs = getCVConfigsForVerificationJob(verificationJobInstance.getResolvedJob());
     cvConfigs.forEach(cvConfig -> {
-      String verificationTaskId = verificationTaskService.create(
+      String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
           cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType());
       log.info("For verificationJobInstance with ID: {}, creating a new health analysis with verificationTaskID {}",
           verificationJobInstance.getUuid(), verificationTaskId);
@@ -272,7 +272,10 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     progressLog.validate();
     VerificationTask verificationTask = verificationTaskService.get(progressLog.getVerificationTaskId());
     try (AccountMetricContext accountMetricContext = new AccountMetricContext(verificationTask.getAccountId())) {
-      String verificationJobInstanceId = verificationTask.getVerificationJobInstanceId();
+      Preconditions.checkNotNull(verificationTask.getTaskInfo().getTaskType().equals(TaskType.DEPLOYMENT),
+          "VerificationTask should be of Deployment type");
+      String verificationJobInstanceId =
+          ((DeploymentInfo) verificationTask.getTaskInfo()).getVerificationJobInstanceId();
       UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
           hPersistence.createUpdateOperations(VerificationJobInstance.class)
               .addToSet(VerificationJobInstanceKeys.progressLogs, progressLog);
@@ -329,7 +332,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       List<CVConfig> cvConfigs = getCVConfigsForVerificationJob(verificationJob);
       Preconditions.checkState(isNotEmpty(cvConfigs), "No config is matching the criteria");
       cvConfigs.forEach(cvConfig -> {
-        String verificationTaskId = verificationTaskService.create(
+        String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
             cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType());
         verificationJobInstanceAnalysisService.addDemoAnalysisData(
             verificationTaskId, cvConfig, verificationJobInstance);
@@ -755,10 +758,10 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     cvConfigs.forEach(cvConfig -> {
       populateMetricPack(cvConfig);
       List<DataCollectionTask> dataCollectionTasks = new ArrayList<>();
-      String verificationTaskId = verificationTaskService.create(
+      String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
           cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType());
       DataCollectionInfoMapper dataCollectionInfoMapper =
-          injector.getInstance(Key.get(DataCollectionInfoMapper.class, Names.named(cvConfig.getType().name())));
+          dataSourceTypeDataCollectionInfoMapperMap.get(cvConfig.getType());
 
       if (preDeploymentTimeRange.isPresent()) {
         DataCollectionInfo preDeploymentDataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);

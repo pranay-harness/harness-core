@@ -1,12 +1,8 @@
 package io.harness.cvng.core.jobs;
 
 import io.harness.beans.IdentifierRef;
-import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
-import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
-import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
@@ -24,11 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class ConnectorChangeEventMessageProcessor implements ConsumerMessageProcessor {
-  @Inject private CVConfigService cvConfigService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
-  @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
-  @Inject private DataCollectionTaskService dataCollectionTaskService;
-  @Inject private VerificationTaskService verificationTaskService;
   @Override
   public void processMessage(Message message) {
     Preconditions.checkState(validateMessage(message), "Invalid message received by Connector Change Event Processor");

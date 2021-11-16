@@ -36,6 +36,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.scheduler.SchedulerConfig;
+import io.harness.secret.SecretsConfiguration;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ThreadPoolConfig;
@@ -200,6 +201,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("dmsSecret") private String dmsSecret;
   @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
   private boolean disableDelegateMgmtInManager;
+  @JsonProperty("secretsConfiguration") private SecretsConfiguration secretsConfiguration;
   @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;
   @JsonProperty("eventListenersCountConfig") private EventListenersCountConfig eventListenersCountConfig;
   @JsonProperty(value = "useGlobalKMSAsBaseAlgo", defaultValue = "false") private boolean useGlobalKMSAsBaseAlgo;

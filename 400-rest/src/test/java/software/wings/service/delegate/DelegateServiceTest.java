@@ -3073,7 +3073,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                        .label("Laptop")
                                        .taskLimit(50)
                                        .replicas(1)
-                                       .ram(2560)
+                                       .ram(2048)
                                        .cpu(0.5)
                                        .build(),
             DelegateSizeDetails.builder()
@@ -3081,7 +3081,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Small")
                 .taskLimit(100)
                 .replicas(2)
-                .ram(5120)
+                .ram(4096)
                 .cpu(1)
                 .build(),
             DelegateSizeDetails.builder()
@@ -3089,7 +3089,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Medium")
                 .taskLimit(200)
                 .replicas(4)
-                .ram(10240)
+                .ram(8192)
                 .cpu(2)
                 .build(),
             DelegateSizeDetails.builder()
@@ -3097,7 +3097,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Large")
                 .taskLimit(400)
                 .replicas(8)
-                .ram(20480)
+                .ram(16384)
                 .cpu(4)
                 .build());
   }

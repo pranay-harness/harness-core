@@ -1,0 +1,6 @@
+Var logIndexesUrl = concat(Env:baseUrl, "v1/logs/config/index-order")
+
+Var logIndexesResponse = sync-call(url=Var:logIndexesUrl, header=Env:commonHeaders)
+Var logIndexesList = extract(Var:logIndexesResponse, $.index_names)
+
+return Var:logIndexesList

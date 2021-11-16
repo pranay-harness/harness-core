@@ -24,6 +24,7 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.VerificationTask.DeploymentInfo;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
@@ -95,8 +96,10 @@ public class HealthVerificationServiceImplTest extends CvNextGenTestBase {
     when(verificationJobInstanceService.getEmbeddedCVConfig(eq(cvConfigId), any())).thenReturn(getAppDCVConfig());
     when(verificationTaskService.get(verificationTaskId))
         .thenReturn(VerificationTask.builder()
-                        .cvConfigId(cvConfigId)
-                        .verificationJobInstanceId(verificationJobInstanceId)
+                        .taskInfo(DeploymentInfo.builder()
+                                      .cvConfigId(cvConfigId)
+                                      .verificationJobInstanceId(verificationJobInstanceId)
+                                      .build())
                         .build());
   }
 

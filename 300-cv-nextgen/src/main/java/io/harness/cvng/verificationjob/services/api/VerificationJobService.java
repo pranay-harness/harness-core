@@ -11,7 +11,6 @@ public interface VerificationJobService {
   VerificationJob getVerificationJob(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   void create(String accountId, VerificationJobDTO verificationJobDTO);
-  void update(String accountId, String identifier, VerificationJobDTO verificationJobDTO);
   void save(VerificationJob verificationJob);
 
   VerificationJob getResolvedHealthVerificationJob(String accountIdentifier, String orgIdentifier,
