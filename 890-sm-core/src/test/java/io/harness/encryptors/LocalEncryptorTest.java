@@ -80,4 +80,18 @@ public class LocalEncryptorTest extends SMCoreTestBase {
     String decryptedValue = new String(localEncryptor.fetchSecretValue(ACCOUNTID, encryptedRecord, null));
     assertThat(decryptedValue).isEqualTo(valueToEncrypt);
   }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testEncryptMultiCryptoModeThenDecryptWithoutIt() {
+    when(featureFlagHelperService.isEnabled(ACCOUNTID, FeatureName.LOCAL_MULTI_CRYPTO_MODE)).thenReturn(true);
+
+    String valueToEncrypt = "value";
+    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(ACCOUNTID, valueToEncrypt, null);
+
+    when(featureFlagHelperService.isEnabled(ACCOUNTID, FeatureName.LOCAL_MULTI_CRYPTO_MODE)).thenReturn(false);
+    String decryptedValue = new String(localEncryptor.fetchSecretValue(ACCOUNTID, encryptedRecord, null));
+    assertThat(decryptedValue).isEqualTo(valueToEncrypt);
+  }
 }

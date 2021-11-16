@@ -87,9 +87,11 @@ public class LocalEncryptor implements KmsEncryptor {
     if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)) {
       secretKeyUuid = encryptedRecord.getEncryptionKey();
       encryptedSecret = encryptedRecord.getEncryptedValueBytes();
+    } else if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_MULTI_CRYPTO_MODE)) {
+      secretKeyUuid = encryptedRecord.getAdditionalMetadata().getSecretKeyUuid();
+      encryptedSecret = encryptedRecord.getAdditionalMetadata().getAwsEncryptedSecret();
     } else {
-      secretKeyUuid = (String) encryptedRecord.getAdditionalMetadata().getSecretKeyUuid();
-      encryptedSecret = (byte[]) encryptedRecord.getAdditionalMetadata().getAwsEncryptedSecret();
+      return getLocalJavaDecryptedSecret(encryptedRecord);
     }
 
     Optional<SecretKey> secretKey = secretKeyService.getSecretKey(secretKeyUuid);
