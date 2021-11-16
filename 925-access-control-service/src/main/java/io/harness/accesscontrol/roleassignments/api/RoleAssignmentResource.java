@@ -163,7 +163,7 @@ public class RoleAssignmentResource {
 
   RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
   String ALL_RESOURCES = "_all_resources";
-  String ALL_RESOURCES_DEPRECATED_ERROR_MESSAGE = "_all_resources is deprecated, use _all_%s_resources instead";
+  String ALL_RESOURCES_DEPRECATED_ERROR_MESSAGE = "_all_resources is deprecated, please use _all_%s_resources.";
 
   @Inject
   public RoleAssignmentResource(RoleAssignmentService roleAssignmentService,
@@ -396,14 +396,34 @@ public class RoleAssignmentResource {
   create(@BeanParam HarnessScopeParams harnessScopeParams,
       @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO,
       @QueryParam("managed") @DefaultValue("false") Boolean managed) {
-    Scope scope = ScopeMapper.fromParams(harnessScopeParams);
+    List<RoleAssignmentDTO> roleAssignmentDTOs = new ArrayList<>();
     roleAssignmentCreateRequestDTO.getRoleAssignments().forEach(roleAssignmentDTO -> {
       if (ALL_RESOURCES.equals(roleAssignmentDTO.getResourceGroupIdentifier())) {
-        throw new InvalidRequestException(
-            String.format(ALL_RESOURCES_DEPRECATED_ERROR_MESSAGE, scope.getLevel().toString()));
+        roleAssignmentDTOs.add(RoleAssignmentDTO.builder()
+                                   .disabled(roleAssignmentDTO.isDisabled())
+                                   .identifier(roleAssignmentDTO.getIdentifier())
+                                   .managed(roleAssignmentDTO.isManaged())
+                                   .principal(roleAssignmentDTO.getPrincipal())
+                                   .roleIdentifier(roleAssignmentDTO.getRoleIdentifier())
+                                   .resourceGroupIdentifier(getDefaultResourceGroupIdentifier(harnessScopeParams))
+                                   .build());
+      } else {
+        roleAssignmentDTOs.add(roleAssignmentDTO);
       }
     });
+    roleAssignmentCreateRequestDTO =
+        RoleAssignmentCreateRequestDTO.builder().roleAssignments(roleAssignmentDTOs).build();
     return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, managed));
+  }
+
+  private String getDefaultResourceGroupIdentifier(HarnessScopeParams harnessScopeParams) {
+    if (isNotEmpty(harnessScopeParams.getProjectIdentifier())) {
+      return "_all_project_resources";
+    } else if (isNotEmpty(harnessScopeParams.getOrgIdentifier())) {
+      return "_all_organization_resources";
+    } else {
+      return "_all_account_resources";
+    }
   }
 
   @POST
