@@ -19,6 +19,8 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.time.EpochUtils;
 
 import software.wings.beans.ElementExecutionSummary;
@@ -43,6 +45,7 @@ import java.util.stream.IntStream;
 @Singleton
 public class StatisticsServiceImpl implements StatisticsService {
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private FeatureFlagService featureFlagService;
 
   private static final String[] workflowExecutionKeys = {WorkflowExecutionKeys.uuid, WorkflowExecutionKeys.accountId,
       WorkflowExecutionKeys.appId, WorkflowExecutionKeys.appName, WorkflowExecutionKeys.createdAt,
@@ -54,17 +57,33 @@ public class StatisticsServiceImpl implements StatisticsService {
       WorkflowExecutionKeys.status, WorkflowExecutionKeys.name, WorkflowExecutionKeys.workflowId,
       WorkflowExecutionKeys.orchestrationType, WorkflowExecutionKeys.workflowType, WorkflowExecutionKeys.startTs,
       WorkflowExecutionKeys.environments, WorkflowExecutionKeys.deploymentTriggerId, WorkflowExecutionKeys.triggeredBy};
+
+  private static final String[] workflowExecutionKeys2 = {WorkflowExecutionKeys.uuid, WorkflowExecutionKeys.accountId,
+      WorkflowExecutionKeys.appId, WorkflowExecutionKeys.appName, WorkflowExecutionKeys.createdAt,
+      WorkflowExecutionKeys.createdBy, WorkflowExecutionKeys.endTs, WorkflowExecutionKeys.envId,
+      WorkflowExecutionKeys.envIds, WorkflowExecutionKeys.envType,
+      WorkflowExecutionKeys.pipelineExecution_pipelineStageExecutions, WorkflowExecutionKeys.pipelineExecutionId,
+      WorkflowExecutionKeys.pipelineSummary, WorkflowExecutionKeys.releaseNo, WorkflowExecutionKeys.rollbackDuration,
+      WorkflowExecutionKeys.rollbackStartTs, WorkflowExecutionKeys.serviceExecutionSummaries,
+      WorkflowExecutionKeys.startTs, WorkflowExecutionKeys.serviceIds, WorkflowExecutionKeys.status,
+      WorkflowExecutionKeys.name, WorkflowExecutionKeys.workflowId, WorkflowExecutionKeys.orchestrationType,
+      WorkflowExecutionKeys.workflowType, WorkflowExecutionKeys.startTs, WorkflowExecutionKeys.environments,
+      WorkflowExecutionKeys.deploymentTriggerId, WorkflowExecutionKeys.triggeredBy};
   @Override
   public DeploymentStatistics getDeploymentStatistics(String accountId, List<String> appIds, int numOfDays) {
     long fromDateEpochMilli = getEpochMilliPSTZone(numOfDays);
     DeploymentStatistics deploymentStats = new DeploymentStatistics();
     List<WorkflowExecution> workflowExecutions;
+    String[] projectionKeys =
+        featureFlagService.isEnabled(FeatureName.DISABLE_DEPLOYMENTS_SEARCH_AND_LIMIT_DEPLOYMENT_STATS, accountId)
+        ? workflowExecutionKeys2
+        : workflowExecutionKeys;
     if (isEmpty(appIds)) {
       workflowExecutions =
-          workflowExecutionService.obtainWorkflowExecutions(accountId, fromDateEpochMilli, workflowExecutionKeys);
+          workflowExecutionService.obtainWorkflowExecutions(accountId, fromDateEpochMilli, projectionKeys);
     } else {
       workflowExecutions =
-          workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli, workflowExecutionKeys);
+          workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli, projectionKeys);
     }
 
     if (isEmpty(workflowExecutions)) {
@@ -92,12 +111,16 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     ServiceInstanceStatistics instanceStats = new ServiceInstanceStatistics();
     List<WorkflowExecution> workflowExecutions;
+    String[] projectionKeys =
+        featureFlagService.isEnabled(FeatureName.DISABLE_DEPLOYMENTS_SEARCH_AND_LIMIT_DEPLOYMENT_STATS, accountId)
+        ? workflowExecutionKeys2
+        : workflowExecutionKeys;
     if (isEmpty(appIds)) {
       workflowExecutions =
-          workflowExecutionService.obtainWorkflowExecutions(accountId, fromDateEpochMilli, workflowExecutionKeys);
+          workflowExecutionService.obtainWorkflowExecutions(accountId, fromDateEpochMilli, projectionKeys);
     } else {
       workflowExecutions =
-          workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli, workflowExecutionKeys);
+          workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli, projectionKeys);
     }
     if (isEmpty(workflowExecutions)) {
       return instanceStats;

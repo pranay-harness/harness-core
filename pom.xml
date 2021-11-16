@@ -2133,7 +2133,7 @@
         </repository>
         <repository>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>
             <id>spring-io</id>
             <url>https://repo.spring.io/plugins-release/</url>
@@ -2161,7 +2161,7 @@
         </repository>
         <repository>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>
             <id>bintray</id>
             <name>bintray</name>
