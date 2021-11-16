@@ -94,7 +94,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
               .fetchSignedPublicKey(sshVaultConfig.getSecretEngineName(), hostConnectionAttributes.getRole(),
                   vaultToken, signedSSHVaultRequest)
               .execute();
+
       if (response.isSuccessful() && response.body().getSignedSSHVaultResult() != null) {
+        log.info(
+            "[VaultSSH]: Public key {} is signed successfully and Signed Public Key is {} in SecretManagementDelegateServiceImpl",
+            hostConnectionAttributes.getPublicKey(), response.body().getSignedSSHVaultResult().getSignedPublicKey());
         hostConnectionAttributes.setSignedPublicKey(response.body().getSignedSSHVaultResult().getSignedPublicKey());
       } else {
         logAndThrowVaultError(sshVaultConfig, response, "sign public key with SSH secret engine");

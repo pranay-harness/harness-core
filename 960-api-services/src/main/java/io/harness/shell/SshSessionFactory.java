@@ -124,7 +124,7 @@ public class SshSessionFactory {
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else if (config.isVaultSSH()) {
       log.info("SSH using Vault SSH secret engine");
-
+      printSignedPublicKeyDetails(config.getSignedPublicKey());
       final char[] copyOfKey = getCopyOfKey(config);
       if (isEmpty(config.getKeyPassphrase())) {
         jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8),
@@ -161,6 +161,10 @@ public class SshSessionFactory {
     session.connect(config.getSshConnectionTimeout());
 
     return session;
+  }
+
+  private static void printSignedPublicKeyDetails(String signedPublicKey) {
+    log.info("[VaultSSH]: Signed Public Key in SSHSessionFactory before attempting ssh : {}", signedPublicKey);
   }
 
   @VisibleForTesting
