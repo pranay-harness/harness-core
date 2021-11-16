@@ -53,12 +53,18 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
   private void createEncryptedRecords(int numOfRecords) {
     for (int i = 0; i < numOfRecords; i++) {
       String value = RandomStringUtils.randomAlphabetic(10);
-      secretsDao.saveSecret(mapEncryptedRecordToEncryptedData(localEncryptor.encryptSecret(ACCOUNT_ID, value, null)));
+      String id = secretsDao.saveSecret(
+          mapEncryptedRecordToEncryptedData(localEncryptor.encryptSecret(ACCOUNT_ID, value, null)));
+      Optional<EncryptedData> fetchedEncryptedDataOptional = secretsDao.getSecretById(ACCOUNT_ID, id);
+      if (fetchedEncryptedDataOptional.isPresent()) {
+        System.out.println(fetchedEncryptedDataOptional.get());
+      }
     }
   }
 
   private EncryptedData mapEncryptedRecordToEncryptedData(EncryptedRecord encryptedRecord) {
     return EncryptedData.builder()
+        .accountId(ACCOUNT_ID)
         .encryptedMech(encryptedRecord.getEncryptedMech())
         .encryptedValue(encryptedRecord.getEncryptedValue())
         .encryptedValueBytes(encryptedRecord.getEncryptedValueBytes())
@@ -68,6 +74,7 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
         .backupEncryptionKey(encryptedRecord.getBackupEncryptionKey())
         .backupEncryptionType(encryptedRecord.getBackupEncryptionType())
         .backupKmsId(encryptedRecord.getBackupKmsId())
+        .encryptionType(encryptedRecord.getEncryptionType())
         .build();
   }
 }
