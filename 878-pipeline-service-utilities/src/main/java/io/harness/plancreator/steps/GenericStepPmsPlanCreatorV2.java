@@ -80,14 +80,14 @@ import java.util.stream.Collectors;
 
 @OwnedBy(PIPELINE)
 // Todo: Refactor this so as to split into more classes (PIE-1339)
-public abstract class GenericStepPmsPlanCreatorV2 implements PartialPlanCreator<BaseStepInfo> {
+public abstract class GenericStepPmsPlanCreatorV2 implements PartialPlanCreator<AbstractStepNode> {
   @Inject protected KryoSerializer kryoSerializer;
 
   public abstract Set<String> getSupportedStepTypes();
 
   @Override
-  public Class<BaseStepInfo> getFieldClass() {
-    return BaseStepInfo.class;
+  public Class<AbstractStepNode> getFieldClass() {
+    return AbstractStepNode.class;
   }
 
   @Override
@@ -100,7 +100,7 @@ public abstract class GenericStepPmsPlanCreatorV2 implements PartialPlanCreator<
   }
 
   @Override
-  public PlanCreationResponse createPlanForField(PlanCreationContext ctx, BaseStepInfo stepElement) {
+  public PlanCreationResponse createPlanForField(PlanCreationContext ctx, AbstractStepNode stepElement) {
     boolean isStepInsideRollback = false;
     if (YamlUtils.findParentNode(ctx.getCurrentField().getNode(), ROLLBACK_STEPS) != null) {
       isStepInsideRollback = true;
@@ -149,7 +149,7 @@ public abstract class GenericStepPmsPlanCreatorV2 implements PartialPlanCreator<
     return containsOnlyAllErrors;
   }
 
-  protected StepParameters getStepParameters(PlanCreationContext ctx, BaseStepInfo stepElement) {
+  protected StepParameters getStepParameters(PlanCreationContext ctx, AbstractStepNode stepElement) {
     if (stepElement.getStepSpecType() instanceof WithStepElementParameters) {
       stepElement.setTimeout(TimeoutUtils.getTimeout(stepElement.getTimeout()));
       return ((WithStepElementParameters) stepElement.getStepSpecType())
@@ -160,7 +160,7 @@ public abstract class GenericStepPmsPlanCreatorV2 implements PartialPlanCreator<
     return stepElement.getStepSpecType().getStepParameters();
   }
 
-  protected String getName(BaseStepInfo stepElement) {
+  protected String getName(AbstractStepNode stepElement) {
     String nodeName;
     if (EmptyPredicate.isEmpty(stepElement.getName())) {
       nodeName = stepElement.getIdentifier();
@@ -170,7 +170,7 @@ public abstract class GenericStepPmsPlanCreatorV2 implements PartialPlanCreator<
     return nodeName;
   }
 
-  protected ParameterField<String> getTimeoutString(BaseStepInfo stepElement) {
+  protected ParameterField<String> getTimeoutString(AbstractStepNode stepElement) {
     ParameterField<Timeout> timeout = TimeoutUtils.getTimeout(stepElement.getTimeout());
     if (timeout.isExpression()) {
       return ParameterField.createExpressionField(

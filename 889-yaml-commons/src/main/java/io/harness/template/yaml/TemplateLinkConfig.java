@@ -28,7 +28,6 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("templateLinkConfig")
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._884_PMS_COMMONS)
 public class TemplateLinkConfig {
   @JsonProperty(YamlNode.UUID_FIELD_NAME)
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })

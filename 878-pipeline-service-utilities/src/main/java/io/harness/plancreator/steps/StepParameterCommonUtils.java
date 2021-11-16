@@ -29,7 +29,7 @@ public class StepParameterCommonUtils {
     return stepBuilder;
   }
 
-  public StepElementParametersBuilder getStepParameters(BaseStepInfo stepElementConfig) {
+  public StepElementParametersBuilder getStepParameters(AbstractStepNode stepElementConfig) {
     StepElementParametersBuilder stepBuilder = StepElementParameters.builder();
     stepBuilder.name(stepElementConfig.getName());
     stepBuilder.identifier(stepElementConfig.getIdentifier());
@@ -53,7 +53,7 @@ public class StepParameterCommonUtils {
   }
 
   public StepElementParametersBuilder getStepParameters(
-      BaseStepInfo stepElementConfig, OnFailRollbackParameters failRollbackParameters) {
+          AbstractStepNode stepElementConfig, OnFailRollbackParameters failRollbackParameters) {
     StepElementParametersBuilder stepBuilder = getStepParameters(stepElementConfig);
     stepBuilder.rollbackParameters(failRollbackParameters);
     return stepBuilder;
