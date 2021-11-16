@@ -40,6 +40,7 @@ java_library(
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:net_jodah_failsafe",
         "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_httpcomponents_httpclient",
         "@maven//:org_atmosphere_atmosphere_runtime",
         "@maven//:org_eclipse_jetty_jetty_util",
         "@maven//:org_eclipse_jgit_org_eclipse_jgit",

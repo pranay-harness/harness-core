@@ -675,6 +675,10 @@ iteratorsConfig:
 
 disableDelegateMgmtInManager: false
 
+secretsConfiguration:
+  secretResolutionEnabled: false
+  gcpSecretManagerProject: harness-playground
+
 ldapSyncJobConfig:
   poolSize: 3
   syncInterval: 15
