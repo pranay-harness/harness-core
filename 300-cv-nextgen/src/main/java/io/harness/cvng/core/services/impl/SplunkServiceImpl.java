@@ -8,10 +8,8 @@ import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.RequestExecutor;
 import io.harness.cvng.client.VerificationManagerClient;
-import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
-import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.serializer.JsonUtils;
@@ -88,11 +86,6 @@ public class SplunkServiceImpl implements SplunkService {
     final Gson gson = new Gson();
     Type type = new TypeToken<List<LinkedHashMap>>() {}.getType();
     return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
-  }
-
-  public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
-      List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
-    throw new UnsupportedOperationException("Not Implemented yet");
   }
 
   @Override
