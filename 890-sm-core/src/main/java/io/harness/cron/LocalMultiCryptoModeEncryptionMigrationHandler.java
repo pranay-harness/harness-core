@@ -8,7 +8,9 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.LocalEncryptionMigrationInfo;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.security.encryption.EncryptedRecord;
 
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -20,7 +22,7 @@ public class LocalMultiCryptoModeEncryptionMigrationHandler extends LocalEncrypt
 
   @Override
   public void run() {
-    startMigration(featureFlag);
+    startMigration();
   }
 
   protected void performMigration(String accountId) {
@@ -35,9 +37,9 @@ public class LocalMultiCryptoModeEncryptionMigrationHandler extends LocalEncrypt
 
     PageResponse<EncryptedData> encryptedDataPageResponse =
         getEncryptedRecords(accountId, pageRequest, lastMigrationState);
-    while (encryptedDataPageResponse.iterator().hasNext()) {
-      EncryptedData encryptedData = encryptedDataPageResponse.iterator().next();
-      EncryptedData migratedRecord = (EncryptedData) localEncryptor.encryptSecret(
+    List<EncryptedData> encryptedDataList = encryptedDataPageResponse.getResponse();
+    for (EncryptedData encryptedData : encryptedDataList) {
+      EncryptedRecord migratedRecord = localEncryptor.encryptSecret(
           accountId, new String(localEncryptor.fetchSecretValue(accountId, encryptedData, null)), null);
 
       UpdateOperations<EncryptedData> updateOperations = secretsDao.getUpdateOperations();
@@ -48,7 +50,12 @@ public class LocalMultiCryptoModeEncryptionMigrationHandler extends LocalEncrypt
       lastMigratedRecord = encryptedData;
     }
 
-    saveMigrationState(migrationStateUuid, lastMigratedRecord);
+    saveMigrationState(accountId, migrationStateUuid, lastMigratedRecord);
+  }
+
+  @Override
+  protected FeatureName getFeatureName() {
+    return featureFlag;
   }
 
   private PageRequest<EncryptedData> getPageRequest(String accountId) {

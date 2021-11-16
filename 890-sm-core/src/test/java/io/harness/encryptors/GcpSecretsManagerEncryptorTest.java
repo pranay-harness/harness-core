@@ -34,6 +34,7 @@ import com.google.cloud.secretmanager.v1.SecretVersion;
 import com.google.cloud.secretmanager.v1.SecretVersionName;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
+import java.util.HashMap;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -116,7 +117,11 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
   @Owner(developers = PIYUSH)
   @Category(UnitTests.class)
   public void test_itShouldCreateSecretWithRegionSuccessFully() throws IOException {
-    AdditionalMetadata metadata = AdditionalMetadata.builder().value("regions", "us-east1").build();
+    AdditionalMetadata metadata = AdditionalMetadata.builder()
+                                      .values(new HashMap<String, Object>() {
+                                        { put("regions", "us-east1"); }
+                                      })
+                                      .build();
     EncryptedRecord expectedEncryptedData = EncryptedRecordData.builder()
                                                 .encryptionKey(mockedSecret.getName())
                                                 .encryptedValue(mockedSecrectVersion.getName().toCharArray())
@@ -133,7 +138,11 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_itShouldUpdateSecretVersionOnly() throws IOException {
     String updatedVersionName = "UpdatedVersionName";
-    AdditionalMetadata metadata = AdditionalMetadata.builder().value("regions", "us-east1").build();
+    AdditionalMetadata metadata = AdditionalMetadata.builder()
+                                      .values(new HashMap<String, Object>() {
+                                        { put("regions", "us-east1"); }
+                                      })
+                                      .build();
     SecretVersion internalMockedSecretVersion = SecretVersion.newBuilder().setName(updatedVersionName).build();
     doReturn(internalMockedSecretVersion)
         .when(secretManagerServiceClient)
@@ -154,7 +163,11 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
   @Owner(developers = PIYUSH)
   @Category(UnitTests.class)
   public void test_itShouldThrowExceptionIfNameIsUpdated() throws IOException {
-    AdditionalMetadata metadata = AdditionalMetadata.builder().value("regions", "us-east1").build();
+    AdditionalMetadata metadata = AdditionalMetadata.builder()
+                                      .values(new HashMap<String, Object>() {
+                                        { put("regions", "us-east1"); }
+                                      })
+                                      .build();
     EncryptedRecord existingEncryptedRecord = EncryptedRecordData.builder()
                                                   .encryptionKey(mockedSecret.getName())
                                                   .encryptedValue(mockedSecrectVersion.getName().toCharArray())

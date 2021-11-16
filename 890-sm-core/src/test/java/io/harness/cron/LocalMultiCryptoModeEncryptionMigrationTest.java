@@ -3,6 +3,7 @@ package io.harness.cron;
 import static io.harness.rule.OwnerRule.MOHIT_GARG;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.SMCoreTestBase;
@@ -16,6 +17,7 @@ import io.harness.repositories.LocalEncryptionMigrationInfoRepository;
 import io.harness.rule.Owner;
 import io.harness.secrets.SecretsDaoImpl;
 import io.harness.security.encryption.EncryptedRecord;
+import io.harness.security.encryption.EncryptionType;
 import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
 
 import com.google.inject.Inject;
@@ -28,9 +30,9 @@ import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.PL)
 public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase {
-  @InjectMocks @Inject LocalMultiCryptoModeEncryptionMigrationHandler localMultiCryptoModeEncryptionMigrationHandler;
   @Mock FeatureFlagHelperService featureFlagHelperService;
-  @Inject LocalEncryptor localEncryptor;
+  @InjectMocks @Inject LocalEncryptor localEncryptor;
+  @InjectMocks @Inject LocalMultiCryptoModeEncryptionMigrationHandler localMultiCryptoModeEncryptionMigrationHandler;
   @Inject LocalEncryptionMigrationInfoRepository localEncryptionMigrationInfoRepository;
   @Inject SecretsDaoImpl secretsDao;
 
@@ -40,8 +42,8 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
   @Owner(developers = MOHIT_GARG)
   @Category(UnitTests.class)
   public void testWhenLastMigrationStateIsNotPresent() {
-    createEncryptedRecords(10);
     when(featureFlagHelperService.isEnabled(ACCOUNT_ID, FeatureName.LOCAL_MULTI_CRYPTO_MODE)).thenReturn(true);
+    createEncryptedRecords(10);
 
     localMultiCryptoModeEncryptionMigrationHandler.performMigration(ACCOUNT_ID);
 
@@ -74,7 +76,7 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
         .backupEncryptionKey(encryptedRecord.getBackupEncryptionKey())
         .backupEncryptionType(encryptedRecord.getBackupEncryptionType())
         .backupKmsId(encryptedRecord.getBackupKmsId())
-        .encryptionType(encryptedRecord.getEncryptionType())
+        .encryptionType(EncryptionType.LOCAL)
         .build();
   }
 }

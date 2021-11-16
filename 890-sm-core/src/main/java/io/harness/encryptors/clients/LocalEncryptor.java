@@ -29,6 +29,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
@@ -63,8 +64,12 @@ public class LocalEncryptor implements KmsEncryptor {
           .encryptedValue(localJavaEncryptedSecret)
           .encryptedMech(EncryptedMech.MULTI_CRYPTO)
           .additionalMetadata(AdditionalMetadata.builder()
-                                  .value(AdditionalMetadata.SECRET_KEY_UUID_KEY, secretKey.getUuid())
-                                  .value(AdditionalMetadata.AWS_ENCRYPTED_SECRET, awsEncryptedSecret)
+                                  .values(new HashMap<String, Object>() {
+                                    {
+                                      put(AdditionalMetadata.SECRET_KEY_UUID_KEY, secretKey.getUuid());
+                                      put(AdditionalMetadata.AWS_ENCRYPTED_SECRET, awsEncryptedSecret);
+                                    }
+                                  })
                                   .build())
           .build();
     }

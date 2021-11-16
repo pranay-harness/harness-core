@@ -42,9 +42,12 @@ public abstract class LocalEncryptionMigrationHandler implements Runnable {
 
   private static final String PAGE_SIZE = "1000";
 
-  abstract protected void performMigration(String accountId);
+  protected abstract void performMigration(String accountId);
 
-  protected void startMigration(FeatureName featureFlag) {
+  protected abstract FeatureName getFeatureName();
+
+  protected void startMigration() {
+    FeatureName featureFlag = getFeatureName();
     Set<String> accountIds = featureFlagService.getAccountIds(featureFlag);
 
     accountIds.forEach(accountId -> {
@@ -85,12 +88,20 @@ public abstract class LocalEncryptionMigrationHandler implements Runnable {
     return localEncryptionMigrationInfoRepository.findByAccountIdAndMode(accountId, featureName.name());
   }
 
-  protected void saveMigrationState(String presentMigrationStateUuid, EncryptedData lastMigratedRecord) {
+  protected void saveMigrationState(
+      String accountId, String presentMigrationStateUuid, EncryptedData lastMigratedRecord) {
+    if (lastMigratedRecord == null) {
+      log.info("No records migrated during this run");
+      return;
+    }
+
     localEncryptionMigrationInfoRepository.save(
         LocalEncryptionMigrationInfo.builder()
+            .accountId(accountId)
             .uuid(presentMigrationStateUuid)
             .lastMigratedRecordCreatedAtTimestamp(lastMigratedRecord.getCreatedAt())
             .lastMigratedRecordId(lastMigratedRecord.getUuid())
+            .mode(getFeatureName().name())
             .build());
   }
 }

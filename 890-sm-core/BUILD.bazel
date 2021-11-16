@@ -93,6 +93,7 @@ java_library(
         "//980-commons:module",
         "//990-commons-test:module",
         "//999-annotations:module",
+        "@maven//:org_jooq_joor",
         "@maven//:com_amazonaws_aws_encryption_sdk_java",
         "@maven//:com_amazonaws_aws_java_sdk_core",
         "@maven//:com_amazonaws_aws_java_sdk_kms",

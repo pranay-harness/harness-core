@@ -19,7 +19,7 @@ public class LocalAwsSdkEncryptionModeMigrationHandler extends LocalEncryptionMi
 
   @Override
   public void run() {
-    startMigration(featureFlag);
+    startMigration();
   }
 
   @Override
@@ -57,7 +57,12 @@ public class LocalAwsSdkEncryptionModeMigrationHandler extends LocalEncryptionMi
       lastMigratedRecord = encryptedData;
     }
 
-    saveMigrationState(migrationStateUuid, lastMigratedRecord);
+    saveMigrationState(accountId, migrationStateUuid, lastMigratedRecord);
+  }
+
+  @Override
+  protected FeatureName getFeatureName() {
+    return featureFlag;
   }
 
   private PageRequest<EncryptedData> getPageRequest(String accountId) {
