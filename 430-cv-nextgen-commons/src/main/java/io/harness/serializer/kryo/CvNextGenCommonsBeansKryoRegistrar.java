@@ -12,6 +12,7 @@ import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.DatadogLogDataCollectionInfo;
 import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
@@ -41,6 +42,13 @@ import io.harness.cvng.beans.appd.AppDynamicsFetchTiersRequest;
 import io.harness.cvng.beans.appd.AppDynamicsFileDefinition;
 import io.harness.cvng.beans.appd.AppDynamicsMetricDataValidationRequest;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.datadog.DatadogActiveMetricsRequest;
+import io.harness.cvng.beans.datadog.DatadogDashboardDetailsRequest;
+import io.harness.cvng.beans.datadog.DatadogDashboardListRequest;
+import io.harness.cvng.beans.datadog.DatadogLogIndexesRequest;
+import io.harness.cvng.beans.datadog.DatadogLogSampleDataRequest;
+import io.harness.cvng.beans.datadog.DatadogMetricTagsRequest;
+import io.harness.cvng.beans.datadog.DatadogTimeSeriesPointsRequest;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
 import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
 import io.harness.cvng.beans.pagerduty.PagerDutyRegisterWebhookRequest;
@@ -131,5 +139,13 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(AppDynamicsFileDefinition.class, 9065);
     kryo.register(AppDynamicFetchFileStructureRequest.class, 9066);
     kryo.register(AppDynamicSingleMetricDataRequest.class, 9067);
+    kryo.register(DatadogDashboardListRequest.class, 9068);
+    kryo.register(DatadogDashboardDetailsRequest.class, 9069);
+    kryo.register(DatadogActiveMetricsRequest.class, 9070);
+    kryo.register(DatadogMetricTagsRequest.class, 9071);
+    kryo.register(DatadogTimeSeriesPointsRequest.class, 9072);
+    kryo.register(DatadogLogSampleDataRequest.class, 9073);
+    kryo.register(DatadogLogDataCollectionInfo.class, 9074);
+    kryo.register(DatadogLogIndexesRequest.class, 9075);
   }
 }
