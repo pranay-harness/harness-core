@@ -317,11 +317,11 @@ public class DelegateServiceImpl implements DelegateService {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
   }
 
-  private static final int DELEGATE_RAM_PER_REPLICA = 2560;
-  private static final int WATCHER_RAM_IN_MB = 500;
-  // Calculated as 30% of total RAM for delegate + watcher, in LAPTOP delegate which was 1250 (500 watcher + 250
+  private static final int DELEGATE_RAM_PER_REPLICA = 2048;
+  private static final int WATCHER_RAM_IN_MB = 192;
+  // Calculated as ~ 30% of total RAM for delegate + watcher, in LAPTOP delegate which was 942 (192 watcher + 250
   // base delegate memory + 250 to handle 50 tasks + 250 for ramp down for old version delegate during release)
-  private static final int POD_BASE_RAM_IN_MB = 400;
+  private static final int POD_BASE_RAM_IN_MB = 320;
 
   @Inject private HPersistence persistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
