@@ -20,6 +20,11 @@ public class CanaryTimeSeriesAnalysisState extends TimeSeriesAnalysisState {
   }
 
   @Override
+  public StateType getType() {
+    return StateType.CANARY_TIME_SERIES;
+  }
+
+  @Override
   public void handleFinalStatuses(AnalysisStatus finalStatus) {
     timeSeriesAnalysisService.logDeploymentVerificationProgress(getInputs(), finalStatus);
   }

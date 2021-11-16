@@ -17,4 +17,9 @@ public class ServiceGuardTimeSeriesAnalysisState extends TimeSeriesAnalysisState
   protected List<String> scheduleAnalysis(AnalysisInput analysisInput) {
     return timeSeriesAnalysisService.scheduleServiceGuardAnalysis(analysisInput);
   }
+
+  @Override
+  public StateType getType() {
+    return null;
+  }
 }

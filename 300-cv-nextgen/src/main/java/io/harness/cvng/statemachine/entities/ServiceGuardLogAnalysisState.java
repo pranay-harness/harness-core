@@ -31,6 +31,11 @@ public class ServiceGuardLogAnalysisState extends LogAnalysisState {
   }
 
   @Override
+  public StateType getType() {
+    return null;
+  }
+
+  @Override
   public AnalysisStatus getExecutionStatus() {
     if (getStatus() != AnalysisStatus.SUCCESS) {
       Map<String, ExecutionStatus> taskStatuses = logAnalysisService.getTaskStatus(Arrays.asList(workerTaskId));

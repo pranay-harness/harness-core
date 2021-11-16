@@ -24,6 +24,11 @@ public class ServiceGuardTrendAnalysisState extends AnalysisState {
   private String workerTaskId;
 
   @Override
+  public StateType getType() {
+    return null;
+  }
+
+  @Override
   public AnalysisState execute() {
     workerTaskId = trendAnalysisService.scheduleTrendAnalysisTask(getInputs());
     this.setStatus(AnalysisStatus.RUNNING);
