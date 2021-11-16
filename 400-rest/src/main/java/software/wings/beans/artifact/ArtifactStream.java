@@ -81,6 +81,7 @@ public abstract class ArtifactStream
         .add(CompoundMongoIndex.builder()
                  .name("artifactStream_cleanup")
                  .field(ArtifactStreamKeys.artifactStreamType)
+                 .field(ArtifactStreamKeys.collectionEnabled)
                  .field(ArtifactStreamKeys.nextCleanupIteration)
                  .build())
         .add(CompoundMongoIndex.builder()
