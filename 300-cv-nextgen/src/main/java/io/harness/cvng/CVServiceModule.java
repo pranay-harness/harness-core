@@ -190,12 +190,20 @@ import io.harness.cvng.dashboard.services.impl.ServiceDependencyGraphServiceImpl
 import io.harness.cvng.dashboard.services.impl.TimeSeriesDashboardServiceImpl;
 import io.harness.cvng.migration.impl.CVNGMigrationServiceImpl;
 import io.harness.cvng.migration.service.CVNGMigrationService;
+import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator.RatioServiceLevelIndicatorUpdatableEntity;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorUpdatableEntity;
+import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator.ThresholdServiceLevelIndicatorUpdatableEntity;
 import io.harness.cvng.servicelevelobjective.services.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.ServiceLevelObjectiveService;
 import io.harness.cvng.servicelevelobjective.services.UserJourneyService;
 import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelIndicatorServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelObjectiveServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.UserJourneyServiceImpl;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.RatioServiceLevelIndicatorTransformer;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorEntityAndDTOTransformer;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorTransformer;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ThresholdServiceLevelIndicatorTransformer;
 import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
 import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
@@ -396,6 +404,29 @@ public class CVServiceModule extends AbstractModule {
     bind(TimeSeriesAnomalousPatternsService.class).to(TimeSeriesAnomalousPatternsServiceImpl.class);
 
     bind(MonitoringSourcePerpetualTaskService.class).to(MonitoringSourcePerpetualTaskServiceImpl.class);
+    MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =
+        MapBinder.newMapBinder(binder(), DataSourceType.class, DataSourceConnectivityChecker.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.APP_DYNAMICS).to(AppDynamicsService.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkService.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackdriverService.class);
+
+    MapBinder<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder =
+        MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigUpdatableEntity.class);
+
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
+        .to(AppDynamicsCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.NEW_RELIC).to(NewRelicCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.PROMETHEUS).to(PrometheusUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackDriverCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
+        .to(StackdriverLogCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
+
+    MapBinder<SLIMetricType, ServiceLevelIndicatorUpdatableEntity> serviceLevelIndicatorMapBinder =
+        MapBinder.newMapBinder(binder(), SLIMetricType.class, ServiceLevelIndicatorUpdatableEntity.class);
+    serviceLevelIndicatorMapBinder.addBinding(SLIMetricType.RATIO).to(RatioServiceLevelIndicatorUpdatableEntity.class);
+    serviceLevelIndicatorMapBinder.addBinding(SLIMetricType.THRESHOLD)
+        .to(ThresholdServiceLevelIndicatorUpdatableEntity.class);
     bindDataSourceConnectivityChecker();
     // We have not used FeatureFlag module as it depends on stream and we don't have reliable way to tracking
     // if something goes wrong in feature flags stream
@@ -461,6 +492,15 @@ public class CVServiceModule extends AbstractModule {
     bind(ServiceLevelObjectiveService.class).to(ServiceLevelObjectiveServiceImpl.class);
     bind(UserJourneyService.class).to(UserJourneyServiceImpl.class);
     bind(ServiceLevelIndicatorService.class).to(ServiceLevelIndicatorServiceImpl.class);
+    bind(ServiceLevelIndicatorEntityAndDTOTransformer.class);
+    MapBinder<SLIMetricType, ServiceLevelIndicatorTransformer> serviceLevelIndicatorTransformerMapBinder =
+        MapBinder.newMapBinder(binder(), SLIMetricType.class, ServiceLevelIndicatorTransformer.class);
+    serviceLevelIndicatorTransformerMapBinder.addBinding(SLIMetricType.RATIO)
+        .to(RatioServiceLevelIndicatorTransformer.class)
+        .in(Scopes.SINGLETON);
+    serviceLevelIndicatorTransformerMapBinder.addBinding(SLIMetricType.THRESHOLD)
+        .to(ThresholdServiceLevelIndicatorTransformer.class)
+        .in(Scopes.SINGLETON);
 
     bind(LearningEngineDevService.class).to(LearningEngineDevServiceImpl.class);
     MapBinder<ChangeSourceType, ChangeEventMetaDataTransformer> changeTypeMetaDataTransformerMapBinder =
