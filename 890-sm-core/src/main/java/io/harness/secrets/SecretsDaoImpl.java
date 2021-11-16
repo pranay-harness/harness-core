@@ -178,11 +178,11 @@ public class SecretsDaoImpl implements SecretsDao {
   @Override
   public PageResponse<EncryptedData> listSecrets(PageRequest<EncryptedData> pageRequest) {
     Object[] allowedNgMetaDataValues = {null};
-    pageRequest.addFilter(SearchFilter.builder()
-                              .fieldName(EncryptedDataKeys.ngMetadata)
-                              .op(EQ)
-                              .fieldValues(allowedNgMetaDataValues)
-                              .build());
+    //    pageRequest.addFilter(SearchFilter.builder()
+    //                              .fieldName(EncryptedDataKeys.ngMetadata)
+    //                              .op(EQ)
+    //                              .fieldValues(allowedNgMetaDataValues)
+    //                              .build());
     return hPersistence.query(EncryptedData.class, pageRequest);
   }
 

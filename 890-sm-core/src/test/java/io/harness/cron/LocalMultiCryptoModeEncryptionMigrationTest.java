@@ -3,17 +3,19 @@ package io.harness.cron;
 import static io.harness.rule.OwnerRule.MOHIT_GARG;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.SMCoreTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.repositories.LocalEncryptionMigrationInfoRepository;
 import io.harness.rule.Owner;
+import io.harness.secrets.SecretsDaoImpl;
+import io.harness.security.encryption.EncryptedRecord;
 import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
 
 import com.google.inject.Inject;
@@ -30,6 +32,7 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
   @Mock FeatureFlagHelperService featureFlagHelperService;
   @Inject LocalEncryptor localEncryptor;
   @Inject LocalEncryptionMigrationInfoRepository localEncryptionMigrationInfoRepository;
+  @Inject SecretsDaoImpl secretsDao;
 
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
 
@@ -50,7 +53,21 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
   private void createEncryptedRecords(int numOfRecords) {
     for (int i = 0; i < numOfRecords; i++) {
       String value = RandomStringUtils.randomAlphabetic(10);
-      localEncryptor.encryptSecret(ACCOUNT_ID, value, null);
+      secretsDao.saveSecret(mapEncryptedRecordToEncryptedData(localEncryptor.encryptSecret(ACCOUNT_ID, value, null)));
     }
+  }
+
+  private EncryptedData mapEncryptedRecordToEncryptedData(EncryptedRecord encryptedRecord) {
+    return EncryptedData.builder()
+        .encryptedMech(encryptedRecord.getEncryptedMech())
+        .encryptedValue(encryptedRecord.getEncryptedValue())
+        .encryptedValueBytes(encryptedRecord.getEncryptedValueBytes())
+        .encryptionKey(encryptedRecord.getEncryptionKey())
+        .additionalMetadata(encryptedRecord.getAdditionalMetadata())
+        .backupEncryptedValue(encryptedRecord.getBackupEncryptedValue())
+        .backupEncryptionKey(encryptedRecord.getBackupEncryptionKey())
+        .backupEncryptionType(encryptedRecord.getBackupEncryptionType())
+        .backupKmsId(encryptedRecord.getBackupKmsId())
+        .build();
   }
 }
