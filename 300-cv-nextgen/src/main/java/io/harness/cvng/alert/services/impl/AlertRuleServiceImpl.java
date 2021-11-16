@@ -48,7 +48,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class AlertRuleServiceImpl implements AlertRuleService {
-  DateTimeFormatter DATE_TIME_FORMATTER =
+  private static final DateTimeFormatter DATE_TIME_FORMATTER =
       DateTimeFormatter.ofPattern("MMM dd' 'hh:mm a z").withZone(ZoneId.systemDefault());
 
   @Inject private HPersistence hPersistence;
