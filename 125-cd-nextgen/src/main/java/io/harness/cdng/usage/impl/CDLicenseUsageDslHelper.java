@@ -13,8 +13,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -80,20 +81,36 @@ public class CDLicenseUsageDslHelper {
   @VisibleForTesting
   @NotNull
   Row3<String, String, String>[] getOrgProjectServiceRows(List<InstanceDTO> instanceDTOList) {
-    Set<String> uniqueServiceOrgProjectIdSet =
-        instanceDTOList.stream().map(this::getUniqueServiceOrgProjectId).collect(Collectors.toSet());
-    Row3<String, String, String>[] orgProjectServiceRows = new Row3[uniqueServiceOrgProjectIdSet.size()];
+    Map<String, UniqueServiceEntityId> uniqueServiceEntityIdMap =
+        instanceDTOList.stream().collect(Collectors.toMap(this::getUniqueServiceOrgProjectId,
+            instanceDTO1
+            -> new UniqueServiceEntityId(instanceDTO1.getServiceIdentifier(), instanceDTO1.getProjectIdentifier(),
+                instanceDTO1.getOrgIdentifier()),
+            (entry1, entry2) -> entry1));
+
+    Row3<String, String, String>[] orgProjectServiceRows = new Row3[uniqueServiceEntityIdMap.size()];
+
     int index = 0;
-    for (InstanceDTO instanceDTO : instanceDTOList) {
-      if (!uniqueServiceOrgProjectIdSet.contains(getUniqueServiceOrgProjectId(instanceDTO))) {
-        orgProjectServiceRows[index++] =
-            row(instanceDTO.getOrgIdentifier(), instanceDTO.getProjectIdentifier(), instanceDTO.getServiceIdentifier());
-      }
+    for (UniqueServiceEntityId uniqueServiceEntityId : uniqueServiceEntityIdMap.values()) {
+      orgProjectServiceRows[index++] = row(uniqueServiceEntityId.getOrgIdentifier(),
+          uniqueServiceEntityId.getProjectIdentifier(), uniqueServiceEntityId.getServiceIdentifier());
     }
     return orgProjectServiceRows;
   }
 
   private String getUniqueServiceOrgProjectId(InstanceDTO instanceDTO) {
     return instanceDTO.getOrgIdentifier() + instanceDTO.getProjectIdentifier() + instanceDTO.getServiceIdentifier();
+  }
+
+  private class UniqueServiceEntityId {
+    @Getter private final String serviceIdentifier;
+    @Getter private final String projectIdentifier;
+    @Getter private final String orgIdentifier;
+
+    private UniqueServiceEntityId(String serviceIdentifier, String projectIdentifier, String orgIdentifier) {
+      this.serviceIdentifier = serviceIdentifier;
+      this.projectIdentifier = projectIdentifier;
+      this.orgIdentifier = orgIdentifier;
+    }
   }
 }

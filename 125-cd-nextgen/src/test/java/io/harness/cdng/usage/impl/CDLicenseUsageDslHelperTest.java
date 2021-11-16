@@ -10,6 +10,7 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.jooq.Row3;
 import org.junit.Test;
@@ -31,16 +32,18 @@ public class CDLicenseUsageDslHelperTest {
   public void testGetOrgProjectServiceRows() {
     List<InstanceDTO> testInstanceDTOData = createTestInstanceDTOData(3);
     testInstanceDTOData.add(InstanceDTO.builder()
-                                .instanceKey(instanceKey + 2)
+                                .instanceKey(instanceKey + 3)
                                 .accountIdentifier(accountIdentifier + 2)
                                 .projectIdentifier(projectIdentifier + 2)
                                 .orgIdentifier(orgIdentifier + 2)
-                                .envIdentifier(envIdentifier + 2)
+                                .envIdentifier(envIdentifier + 3)
                                 .serviceIdentifier(serviceIdentifier + 2)
                                 .build());
     Row3<String, String, String>[] orgProjectServiceRows =
         cdLicenseUsageDslHelper.getOrgProjectServiceRows(testInstanceDTOData);
     assertThat(orgProjectServiceRows).hasSize(3);
+    assertThat(Arrays.stream(orgProjectServiceRows).findFirst().get().eq("ORG_ID1", "PROJECT_ID1", "SERVICE1"))
+        .isNotNull();
   }
 
   List<InstanceDTO> createTestInstanceDTOData(int dataSize) {

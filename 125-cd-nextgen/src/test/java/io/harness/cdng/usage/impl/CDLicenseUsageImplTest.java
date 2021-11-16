@@ -172,6 +172,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
         .thenReturn(testInstanceDTOData);
     when(cdLicenseUsageHelper.getServiceEntities(any(), any())).thenReturn(testServiceData);
     when(cdLicenseUsageHelper.getOrgProjectServiceTableFromInstances(any())).thenCallRealMethod();
+    when(cdLicenseUsageHelper.getOrgProjectServiceRows(any())).thenCallRealMethod();
   }
 
   private ReferenceDTO getExpectedActiveServiceReference() {
