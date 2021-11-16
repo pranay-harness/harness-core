@@ -8,6 +8,8 @@ import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.VerificationTask.DeploymentInfo;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
@@ -34,10 +36,11 @@ public class HealthVerificationServiceImpl implements HealthVerificationService 
   public Instant aggregateActivityAnalysis(String verificationTaskId, Instant startTime, Instant endTime,
       Instant latestTimeOfAnalysis, HealthVerificationPeriod healthVerificationPeriod) {
     VerificationTask verificationTask = verificationTaskService.get(verificationTaskId);
-    Preconditions.checkNotNull(
-        verificationTask.getVerificationJobInstanceId(), "VerificationJobInstance should be present");
+    Preconditions.checkNotNull(verificationTask.getTaskInfo().getTaskType().equals(TaskType.DEPLOYMENT),
+        "VerificationTask should be of Deployment type");
     CVConfig cvConfig = verificationJobInstanceService.getEmbeddedCVConfig(
-        verificationTask.getCvConfigId(), verificationTask.getVerificationJobInstanceId());
+        ((DeploymentInfo) verificationTask.getTaskInfo()).getCvConfigId(),
+        ((DeploymentInfo) verificationTask.getTaskInfo()).getVerificationJobInstanceId());
     String serviceGuardVerificationTaskId =
         verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid());
     Double overallRisk = null;
@@ -75,8 +78,10 @@ public class HealthVerificationServiceImpl implements HealthVerificationService 
   public void updateProgress(
       String verificationTaskId, Instant latestTimeOfAnalysis, AnalysisStatus status, boolean isFinalState) {
     VerificationTask task = verificationTaskService.get(verificationTaskId);
-    VerificationJobInstance jobInstance =
-        verificationJobInstanceService.getVerificationJobInstance(task.getVerificationJobInstanceId());
+    Preconditions.checkNotNull(
+        task.getTaskInfo().getTaskType().equals(TaskType.DEPLOYMENT), "VerificationTask should be of Deployment type");
+    VerificationJobInstance jobInstance = verificationJobInstanceService.getVerificationJobInstance(
+        ((DeploymentInfo) task.getTaskInfo()).getVerificationJobInstanceId());
     Preconditions.checkNotNull(jobInstance);
     verificationJobInstanceService.logProgress(
         VerificationJobInstance.AnalysisProgressLog.builder()

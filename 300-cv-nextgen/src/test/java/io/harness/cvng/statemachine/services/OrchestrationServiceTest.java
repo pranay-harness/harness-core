@@ -66,7 +66,8 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     cvConfig.setUuid(cvConfigId);
     hPersistence.save(cvConfig);
     dataGenerator = DataGenerator.builder().accountId(accountId).build();
-    verificationTaskId = verificationTaskService.create(accountId, cvConfigId, cvConfig.getType());
+    verificationTaskId =
+        verificationTaskService.createLiveMonitoringVerificationTask(accountId, cvConfigId, cvConfig.getType());
     timeSeriesAnalysisState = ServiceGuardTimeSeriesAnalysisState.builder().build();
     timeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
     timeSeriesAnalysisState.setInputs(AnalysisInput.builder()

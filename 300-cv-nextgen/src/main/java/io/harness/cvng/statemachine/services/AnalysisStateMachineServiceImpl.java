@@ -11,6 +11,8 @@ import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.VerificationTask.DeploymentInfo;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
@@ -278,9 +280,12 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       stateMachine.setCurrentState(firstState);
     } else {
       VerificationTask verificationTask = verificationTaskService.get(inputForAnalysis.getVerificationTaskId());
-      VerificationJobInstance verificationJobInstance =
-          verificationJobInstanceService.getVerificationJobInstance(verificationTask.getVerificationJobInstanceId());
-      CVConfig cvConfigForDeployment = cvConfigService.get(verificationTask.getCvConfigId());
+      Preconditions.checkNotNull(verificationTask.getTaskInfo().getTaskType().equals(TaskType.DEPLOYMENT),
+          "VerificationTask should be of Deployment type");
+      VerificationJobInstance verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(
+          ((DeploymentInfo) verificationTask.getTaskInfo()).getVerificationJobInstanceId());
+      CVConfig cvConfigForDeployment =
+          cvConfigService.get(((DeploymentInfo) verificationTask.getTaskInfo()).getCvConfigId());
       Preconditions.checkNotNull(verificationJobInstance, "verificationJobInstance can not be null");
       Preconditions.checkNotNull(cvConfigForDeployment, "cvConfigForDeployment can not be null");
       stateMachine.setAccountId(verificationTask.getAccountId());
