@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -34,4 +35,5 @@ public class InputSetSummaryResponseDTOPMS {
   Long createdAt;
   Long lastUpdatedAt;
   Boolean isOutdated;
+  InputSetErrorWrapperDTOPMS inputSetErrorDetails;
 }
