@@ -9,6 +9,7 @@ public abstract class AnalysisState {
   private AnalysisInput inputs;
   private AnalysisStatus status;
   private int retryCount;
+  private StateType type;
 
   public abstract AnalysisState execute();
   public abstract AnalysisStatus getExecutionStatus();
@@ -33,5 +34,9 @@ public abstract class AnalysisState {
 
   protected int getMaxRetry() {
     return MAX_RETRIES;
+  }
+
+  public enum StateType {
+
   }
 }
