@@ -35,7 +35,7 @@ public class SamlSettings extends SSOSettings {
       @JsonProperty("url") String url, @JsonProperty("metaDataFile") String metaDataFile,
       @JsonProperty("accountId") String accountId, @JsonProperty("origin") String origin,
       @JsonProperty("groupMembershipAttr") String groupMembershipAttr, @JsonProperty("logoutUrl") String logoutUrl,
-      @JsonProperty() String entityIdentifier) {
+      @JsonProperty("entityIdentifier") String entityIdentifier) {
     super(SSOType.SAML, displayName, url);
     this.metaDataFile = metaDataFile;
     this.accountId = accountId;
