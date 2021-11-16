@@ -50,6 +50,7 @@ import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.invites.dto.RoleBinding.RoleBindingKeys;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
+import io.harness.ng.core.invites.mapper.RoleBindingMapper;
 import io.harness.ng.core.invites.utils.InviteUtils;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
@@ -111,8 +112,6 @@ public class InviteServiceImpl implements InviteService {
   private static final int INVITATION_VALIDITY_IN_DAYS = 30;
   private static final int LINK_VALIDITY_IN_DAYS = 7;
   private static final int DEFAULT_PAGE_SIZE = 1000;
-  private static final String DEFAULT_RESOURCE_GROUP_NAME = "All Resources";
-  private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   private static final String INVITE_URL =
       "/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s&generation=NG";
   private static final String NG_AUTH_UI_PATH_PREFIX = "auth/";
@@ -206,8 +205,10 @@ public class InviteServiceImpl implements InviteService {
     List<RoleBinding> roleBindings = invite.getRoleBindings();
     roleBindings.forEach(roleBinding -> {
       if (isBlank(roleBinding.getResourceGroupIdentifier())) {
-        roleBinding.setResourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER);
-        roleBinding.setResourceGroupName(DEFAULT_RESOURCE_GROUP_NAME);
+        roleBinding.setResourceGroupIdentifier(RoleBindingMapper.getDefaultResourceGroupIdentifier(
+            invite.getOrgIdentifier(), invite.getProjectIdentifier()));
+        roleBinding.setResourceGroupName(
+            RoleBindingMapper.getDefaultResourceGroupName(invite.getOrgIdentifier(), invite.getProjectIdentifier()));
       }
     });
   }

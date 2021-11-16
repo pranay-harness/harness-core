@@ -151,18 +151,29 @@ public class NGAccountSetupService {
     }
   }
 
-  private void assignAdminRoleToUsers(Scope scope, Collection<String> users, String roleIdentifier) {
-    createRoleAssignments(scope, buildRoleAssignments(users, roleIdentifier));
+  private static String getManagedResourceGroupIdentifier(Scope scope) {
+    if (!StringUtils.isEmpty(scope.getProjectIdentifier())) {
+      return "_all_project_resources";
+    } else if (!StringUtils.isEmpty(scope.getOrgIdentifier())) {
+      return "_all_organization_resources";
+    } else {
+      return "_all_account_resources";
+    }
   }
 
-  private List<RoleAssignmentDTO> buildRoleAssignments(Collection<String> userIds, String roleIdentifier) {
+  private void assignAdminRoleToUsers(Scope scope, Collection<String> users, String roleIdentifier) {
+    createRoleAssignments(scope, buildRoleAssignments(users, roleIdentifier, getManagedResourceGroupIdentifier(scope)));
+  }
+
+  private List<RoleAssignmentDTO> buildRoleAssignments(
+      Collection<String> userIds, String roleIdentifier, String resourceGroupIdentifier) {
     return userIds.stream()
         .map(userId
             -> RoleAssignmentDTO.builder()
                    .disabled(false)
                    .identifier("role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20)))
                    .roleIdentifier(roleIdentifier)
-                   .resourceGroupIdentifier("_all_resources")
+                   .resourceGroupIdentifier(resourceGroupIdentifier)
                    .principal(PrincipalDTO.builder().identifier(userId).type(PrincipalType.USER).build())
                    .build())
         .collect(Collectors.toList());

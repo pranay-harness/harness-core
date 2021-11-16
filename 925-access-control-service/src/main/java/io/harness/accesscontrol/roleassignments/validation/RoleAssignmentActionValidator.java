@@ -19,6 +19,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -35,6 +36,11 @@ public class RoleAssignmentActionValidator implements HarnessActionValidator<Rol
   private static final String ORG_ADMIN = "_organization_admin";
   private static final String ACCOUNT_ADMIN = "_account_admin";
   private static final String RESOURCE_GROUP_IDENTIFIER = "_all_resources";
+  private static final String ALL_PROJECT_RESOURCES = "_all_project_resources";
+  private static final String ALL_ORGANIZATION_RESOURCES = "_all_organization_resources";
+  private static final String ALL_ACCOUNT_RESOURCES = "_all_account_resources";
+  private static final List<String> MANAGED_RESOURCE_GROUP_IDENTIFIERS = ImmutableList.of(
+      RESOURCE_GROUP_IDENTIFIER, ALL_ACCOUNT_RESOURCES, ALL_ORGANIZATION_RESOURCES, ALL_PROJECT_RESOURCES);
 
   @Inject
   public RoleAssignmentActionValidator(
@@ -50,24 +56,30 @@ public class RoleAssignmentActionValidator implements HarnessActionValidator<Rol
       return ValidationResult.builder().valid(false).errorMessage("Cannot delete a managed role assignment").build();
     }
     Scope scope = scopeService.buildScopeFromScopeIdentifier(roleAssignment.getScopeIdentifier());
-    if (!RESOURCE_GROUP_IDENTIFIER.equals(roleAssignment.getResourceGroupIdentifier())) {
+    if (MANAGED_RESOURCE_GROUP_IDENTIFIERS.stream().noneMatch(
+            resourceIdentifier -> resourceIdentifier.equals(roleAssignment.getResourceGroupIdentifier()))) {
       return ValidationResult.builder().valid(true).build();
     }
-    RoleAssignmentFilterBuilder builder =
-        RoleAssignmentFilter.builder().resourceGroupFilter(Sets.newHashSet(RESOURCE_GROUP_IDENTIFIER));
+    RoleAssignmentFilterBuilder builder = RoleAssignmentFilter.builder();
     RoleAssignmentFilter roleAssignmentFilter;
     if (HarnessScopeLevel.ACCOUNT.equals(scope.getLevel())
         && ACCOUNT_ADMIN.equals(roleAssignment.getRoleIdentifier())) {
-      roleAssignmentFilter =
-          builder.scopeFilter(roleAssignment.getScopeIdentifier()).roleFilter(Sets.newHashSet(ACCOUNT_ADMIN)).build();
+      roleAssignmentFilter = builder.scopeFilter(roleAssignment.getScopeIdentifier())
+                                 .roleFilter(Sets.newHashSet(ACCOUNT_ADMIN))
+                                 .resourceGroupFilter(Sets.newHashSet(ALL_ACCOUNT_RESOURCES))
+                                 .build();
     } else if (HarnessScopeLevel.ORGANIZATION.equals(scope.getLevel())
         && ORG_ADMIN.equals(roleAssignment.getRoleIdentifier())) {
-      roleAssignmentFilter =
-          builder.scopeFilter(roleAssignment.getScopeIdentifier()).roleFilter(Sets.newHashSet(ORG_ADMIN)).build();
+      roleAssignmentFilter = builder.scopeFilter(roleAssignment.getScopeIdentifier())
+                                 .roleFilter(Sets.newHashSet(ORG_ADMIN))
+                                 .resourceGroupFilter(Sets.newHashSet(ALL_ORGANIZATION_RESOURCES))
+                                 .build();
     } else if (HarnessScopeLevel.PROJECT.equals(scope.getLevel())
         && PROJECT_ADMIN.equals(roleAssignment.getRoleIdentifier())) {
-      roleAssignmentFilter =
-          builder.scopeFilter(roleAssignment.getScopeIdentifier()).roleFilter(Sets.newHashSet(PROJECT_ADMIN)).build();
+      roleAssignmentFilter = builder.scopeFilter(roleAssignment.getScopeIdentifier())
+                                 .roleFilter(Sets.newHashSet(PROJECT_ADMIN))
+                                 .resourceGroupFilter(Sets.newHashSet(ALL_PROJECT_RESOURCES))
+                                 .build();
     } else {
       return ValidationResult.builder().valid(true).build();
     }

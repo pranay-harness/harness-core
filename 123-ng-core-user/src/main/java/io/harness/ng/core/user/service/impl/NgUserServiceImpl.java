@@ -120,9 +120,9 @@ public class NgUserServiceImpl implements NgUserService {
   private static final String ORG_ADMIN = "_organization_admin";
   private static final String PROJECT_ADMIN = "_project_admin";
   private static final String PROJECT_VIEWER = "_project_viewer";
-  private static final String DEFAULT_RESOURCE_GROUP_NAME = "All Resources";
-  private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
-  private final List<String> MANAGED_ROLE_IDENTIFIERS =
+  private static final List<String> MANAGED_RESOURCE_GROUP_IDENTIFIERS = ImmutableList.of(
+      "_all_resources", "_all_account_resources", "_all_organization_resources", "_all_project_resources");
+  private static final List<String> MANAGED_ROLE_IDENTIFIERS =
       ImmutableList.of(ACCOUNT_VIEWER, ORGANIZATION_VIEWER, PROJECT_VIEWER);
   public static final int DEFAULT_PAGE_SIZE = 10000;
   private final UserClient userClient;
@@ -474,7 +474,7 @@ public class NgUserServiceImpl implements NgUserService {
               .roleIdentifier(roleIdentifier)
               .disabled(false)
               .principal(PrincipalDTO.builder().type(SERVICE_ACCOUNT).identifier(serviceAccountId).build())
-              .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
+              .resourceGroupIdentifier(getDefaultResourceGroupIdentifier(scope))
               .build();
       roleAssignmentDTOs.add(roleAssignmentDTO);
     }
@@ -487,7 +487,7 @@ public class NgUserServiceImpl implements NgUserService {
     ensureUserMetadata(userId);
     addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));
     addUserToParentScope(userId, scope, source);
-    createRoleAssignments(userId, scope, createRoleAssignmentDTOs(roleBindings, userId));
+    createRoleAssignments(userId, scope, createRoleAssignmentDTOs(roleBindings, userId, scope));
     userGroupService.addUserToUserGroups(scope, userId, getValidUserGroups(scope, userGroups));
   }
 
@@ -537,7 +537,8 @@ public class NgUserServiceImpl implements NgUserService {
   private boolean isRoleAssignmentManaged(RoleAssignmentDTO roleAssignmentDTO) {
     return MANAGED_ROLE_IDENTIFIERS.stream().anyMatch(
                roleIdentifier -> roleIdentifier.equals(roleAssignmentDTO.getRoleIdentifier()))
-        && DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(roleAssignmentDTO.getResourceGroupIdentifier());
+        && MANAGED_RESOURCE_GROUP_IDENTIFIERS.stream().anyMatch(
+            resourceGroupIdentifier -> resourceGroupIdentifier.equals(roleAssignmentDTO.getResourceGroupIdentifier()));
   }
 
   private String getDefaultRoleIdentifier(Scope scope) {
@@ -612,7 +613,7 @@ public class NgUserServiceImpl implements NgUserService {
     try {
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
                                                 .principal(PrincipalDTO.builder().type(USER).identifier(userId).build())
-                                                .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
+                                                .resourceGroupIdentifier(getDefaultResourceGroupIdentifier(scope))
                                                 .disabled(false)
                                                 .roleIdentifier(roleIdentifier)
                                                 .build();
@@ -623,6 +624,16 @@ public class NgUserServiceImpl implements NgUserService {
       /**
        *  It's expected that user might already have this roleassignment.
        */
+    }
+  }
+
+  private String getDefaultResourceGroupIdentifier(Scope scope) {
+    if (isNotEmpty(scope.getProjectIdentifier())) {
+      return "_all_project_resources";
+    } else if (isNotEmpty(scope.getOrgIdentifier())) {
+      return "_all_organization_resources";
+    } else {
+      return "_all_account_resources";
     }
   }
 
