@@ -11,6 +11,9 @@ import java.util.List;
 
 public interface CEViewService {
   CEView save(CEView ceView);
+
+  double getActualCostForPerspectiveBudget(String accountId, String perspectiveId);
+
   CEView get(String uuid);
   CEView update(CEView ceView);
   CEView updateTotalCost(CEView ceView, BigQuery bigQuery, String cloudProviderTableName);
@@ -19,4 +22,7 @@ public interface CEViewService {
   List<CEView> getViewByState(String accountId, ViewState viewState);
   void createDefaultView(String accountId, ViewFieldIdentifier viewFieldIdentifier);
   DefaultViewIdDto getDefaultViewIds(String accountId);
+
+  Double getLastMonthCostForPerspective(String accountId, String perspectiveId);
+  Double getForecastCostForPerspective(String accountId, String perspectiveId);
 }

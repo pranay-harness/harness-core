@@ -35,8 +35,8 @@ public class InitializeStepGeneratorTest extends CIExecutionTestBase {
     Integer liteEngineCounter = 1;
 
     CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
-    InitializeStepInfo actual = initializeStepGenerator.createLiteEngineTaskStepInfo(executionElementConfig,
-        ciExecutionPlanTestHelper.getCICodebase(), stageElementConfig, ciExecutionArgs, infrastructure);
+    InitializeStepInfo actual = initializeStepGenerator.createInitializeStepInfo(executionElementConfig,
+        ciExecutionPlanTestHelper.getCICodebase(), stageElementConfig, ciExecutionArgs, infrastructure, "abc");
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
@@ -69,8 +69,8 @@ public class InitializeStepGeneratorTest extends CIExecutionTestBase {
     Infrastructure infrastructure = ciExecutionPlanTestHelper.getInfrastructure();
 
     CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
-    InitializeStepInfo actual = initializeStepGenerator.createLiteEngineTaskStepInfo(
-        executionElementConfig, null, stageElementConfig, ciExecutionArgs, infrastructure);
+    InitializeStepInfo actual = initializeStepGenerator.createInitializeStepInfo(
+        executionElementConfig, null, stageElementConfig, ciExecutionArgs, infrastructure, "ABX");
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()

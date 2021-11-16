@@ -46,6 +46,11 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -73,6 +78,19 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@Tag(name = "Triggers", description = "This contains APIs related to Triggers.")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -86,6 +104,12 @@ public class NGTriggerResource {
   private final NGTriggerElementMapper ngTriggerElementMapper;
 
   @POST
+  @Operation(operationId = "createTrigger", summary = "Creates Trigger for triggering target pipeline identifier.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns details of the created Trigger.")
+      })
   @ApiImplicitParams({
     @ApiImplicitParam(dataTypeClass = NGTriggerConfigV2.class,
         dataType = "io.harness.ngtriggers.beans.config.NGTriggerConfigV2", paramType = "body")
@@ -96,8 +120,8 @@ public class NGTriggerResource {
   create(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
-      @NotNull @ApiParam(hidden = true, type = "") String yaml) {
+      @Parameter(description = "Identifier of the target pipeline") @NotNull @QueryParam("targetIdentifier")
+      @ResourceIdentifier String targetIdentifier, @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     NGTriggerEntity createdEntity = null;
     try {
       TriggerDetails triggerDetails =
@@ -113,13 +137,23 @@ public class NGTriggerResource {
 
   @GET
   @Path("/{triggerIdentifier}")
+  @Operation(operationId = "getTrigger",
+      summary =
+          "Gets the trigger by accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier and triggerIdentifier.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "Returns the trigger with the accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier and triggerIdentifier.")
+      })
   @ApiOperation(value = "Gets a trigger by identifier", nickname = "getTrigger")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  public ResponseDTO<NGTriggerResponseDTO> get(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+  public ResponseDTO<NGTriggerResponseDTO>
+  get(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
+      @Parameter(description = "Identifier of the target pipeline under which trigger resides") @NotNull @QueryParam(
+          "targetIdentifier") @ResourceIdentifier String targetIdentifier,
       @PathParam("triggerIdentifier") String triggerIdentifier) {
     Optional<NGTriggerEntity> ngTriggerEntity = ngTriggerService.get(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier, false);
@@ -128,6 +162,12 @@ public class NGTriggerResource {
   }
 
   @PUT
+  @Operation(operationId = "updateTrigger", summary = "Updates trigger for pipeline with target pipeline identifier.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated trigger")
+      })
   @Path("/{triggerIdentifier}")
   @ApiImplicitParams({
     @ApiImplicitParam(dataTypeClass = NGTriggerConfigV2.class,
@@ -140,7 +180,8 @@ public class NGTriggerResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
+      @Parameter(description = "Identifier of the target pipeline under which trigger resides") @NotNull @QueryParam(
+          "targetIdentifier") @ResourceIdentifier String targetIdentifier,
       @PathParam("triggerIdentifier") String triggerIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     Optional<NGTriggerEntity> ngTriggerEntity = ngTriggerService.get(
@@ -166,13 +207,22 @@ public class NGTriggerResource {
 
   @PUT
   @Path("{triggerIdentifier}/status")
+  @Operation(operationId = "updateTriggerStatus",
+      summary = "Activates or deactivate trigger for pipeline with target pipeline identifier.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = " Returns the response status.")
+      })
   @ApiOperation(value = "Update a trigger's status by identifier", nickname = "updateTriggerStatus")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
-  public ResponseDTO<Boolean> updateTriggerStatus(
+  public ResponseDTO<Boolean>
+  updateTriggerStatus(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
+      @Parameter(description = "Identifier of the target pipeline under which trigger resides") @NotNull @QueryParam(
+          "targetIdentifier") @ResourceIdentifier String targetIdentifier,
       @PathParam("triggerIdentifier") String triggerIdentifier, @NotNull @QueryParam("status") boolean status) {
     Optional<NGTriggerEntity> ngTriggerEntity = ngTriggerService.get(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier, false);
@@ -180,30 +230,48 @@ public class NGTriggerResource {
   }
 
   @DELETE
+  @Operation(operationId = "deleteTrigger", summary = "Deletes Trigger by identifier.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the boolean status.")
+      })
   @Path("{triggerIdentifier}")
   @ApiOperation(value = "Delete a trigger by identifier", nickname = "deleteTrigger")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
-  public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
+  public ResponseDTO<Boolean>
+  delete(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
+      @Parameter(description = "Identifier of the target pipeline under which trigger resides.") @NotNull @QueryParam(
+          "targetIdentifier") @ResourceIdentifier String targetIdentifier,
       @PathParam("triggerIdentifier") String triggerIdentifier) {
     return ResponseDTO.newResponse(ngTriggerService.delete(accountIdentifier, orgIdentifier, projectIdentifier,
         targetIdentifier, triggerIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
 
   @GET
-  @ApiOperation(value = "Gets Triggers list for target", nickname = "getTriggerListForTarget")
+  @Operation(operationId = "getListForTarget",
+      summary =
+          "Gets the paginated list of triggers for accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "Returns the paginated list of triggers for accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier.")
+      })
+  @ApiOperation(value = "Gets paginated Triggers list for target", nickname = "getTriggerListForTarget")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  public ResponseDTO<PageResponse<NGTriggerDetailsResponseDTO>> getListForTarget(
+  public ResponseDTO<PageResponse<NGTriggerDetailsResponseDTO>>
+  getListForTarget(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
-      @QueryParam("filter") String filterQuery, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("25") int size, @QueryParam("sort") List<String> sort,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+      @Parameter(description = "Identifier of the target pipeline") @NotNull @QueryParam("targetIdentifier")
+      @ResourceIdentifier String targetIdentifier, @QueryParam("filter") String filterQuery,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
+      @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     Criteria criteria = TriggerFilterHelper.createCriteriaForGetList(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, null, searchTerm, false);
     Pageable pageRequest;
@@ -219,15 +287,24 @@ public class NGTriggerResource {
   }
 
   @GET
+  @Operation(operationId = "getTriggerDetails",
+      summary = "Gets the list of triggers for accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "Returns the list of triggers for accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier.")
+      })
   @Path("{triggerIdentifier}/details")
   @ApiOperation(value = "Gets Triggers list for target", nickname = "getTriggerDetails")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  public ResponseDTO<NGTriggerDetailsResponseDTO> getTriggerDetails(
+  public ResponseDTO<NGTriggerDetailsResponseDTO>
+  getTriggerDetails(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @PathParam("triggerIdentifier") String triggerIdentifier,
-      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier) {
+      @Parameter(description = "Identifier of the target pipeline") @PathParam("triggerIdentifier")
+      String triggerIdentifier, @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier) {
     Optional<NGTriggerEntity> ngTriggerEntity = ngTriggerService.get(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier, false);
 
@@ -240,11 +317,18 @@ public class NGTriggerResource {
   }
 
   @GET
+  @Operation(operationId = "generateWebhookToken", summary = "Generates random webhook token for new triggers.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns random webhook token.")
+      })
   @Path("regenerateToken")
   @ApiOperation(value = "Regenerate webhook token", nickname = "generateWebhookToken")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> generateWebhookToken() {
+  public RestResponse<String>
+  generateWebhookToken() {
     return new RestResponse<>(CryptoUtils.secureRandAlphaNumString(40));
   }
 }

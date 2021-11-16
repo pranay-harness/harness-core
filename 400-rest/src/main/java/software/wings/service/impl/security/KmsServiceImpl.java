@@ -121,12 +121,15 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
     EncryptedData accessKeyData = null;
     if (StringUtils.isNotBlank(kmsConfig.getAccessKey())) {
-      accessKeyData = encryptLocal(kmsConfig.getAccessKey().toCharArray());
+      accessKeyData = encryptUsingBaseAlgo(kmsConfig.getAccountId(), kmsConfig.getAccessKey().toCharArray());
+
       if (StringUtils.isNotBlank(kmsConfig.getUuid())) {
         EncryptedData savedAccessKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getAccessKey());
         if (savedAccessKey != null) {
           savedAccessKey.setEncryptionKey(accessKeyData.getEncryptionKey());
           savedAccessKey.setEncryptedValue(accessKeyData.getEncryptedValue());
+          savedAccessKey.setEncryptionType(accessKeyData.getEncryptionType());
+          savedAccessKey.setKmsId(accessKeyData.getKmsId());
           accessKeyData = savedAccessKey;
         }
       }
@@ -146,12 +149,15 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     }
     EncryptedData secretKeyData = null;
     if (StringUtils.isNotBlank(kmsConfig.getSecretKey())) {
-      secretKeyData = encryptLocal(kmsConfig.getSecretKey().toCharArray());
+      secretKeyData = encryptUsingBaseAlgo(kmsConfig.getAccountId(), kmsConfig.getSecretKey().toCharArray());
+
       if (StringUtils.isNotBlank(kmsConfig.getUuid())) {
         EncryptedData savedSecretKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getSecretKey());
         if (savedSecretKey != null) {
           savedSecretKey.setEncryptionKey(secretKeyData.getEncryptionKey());
           savedSecretKey.setEncryptedValue(secretKeyData.getEncryptedValue());
+          savedSecretKey.setEncryptionType(secretKeyData.getEncryptionType());
+          savedSecretKey.setKmsId(secretKeyData.getKmsId());
           secretKeyData = savedSecretKey;
         }
       }
@@ -170,12 +176,15 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     }
     EncryptedData arnKeyData = null;
     if (StringUtils.isNotBlank(kmsConfig.getKmsArn())) {
-      arnKeyData = encryptLocal(kmsConfig.getKmsArn().toCharArray());
+      arnKeyData = encryptUsingBaseAlgo(kmsConfig.getAccountId(), kmsConfig.getKmsArn().toCharArray());
+
       if (StringUtils.isNotBlank(kmsConfig.getUuid())) {
         EncryptedData savedArn = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getKmsArn());
         checkNotNull(savedArn, "ARN reference is null for KMS secret manager " + kmsConfig.getUuid());
         savedArn.setEncryptionKey(arnKeyData.getEncryptionKey());
         savedArn.setEncryptedValue(arnKeyData.getEncryptedValue());
+        savedArn.setEncryptionType(arnKeyData.getEncryptionType());
+        savedArn.setKmsId(arnKeyData.getKmsId());
         arnKeyData = savedArn;
       }
       arnKeyData.setAccountId(accountId);
@@ -274,18 +283,18 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public void decryptKmsConfigSecrets(String accountId, KmsConfig kmsConfig, boolean maskSecret) {
     if (StringUtils.isNotBlank(kmsConfig.getAccessKey())) {
       EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
-      kmsConfig.setAccessKey(new String(decryptLocal(accessKeyData)));
+      kmsConfig.setAccessKey(new String(decryptUsingBaseAlgo(accessKeyData)));
     }
     if (maskSecret) {
       kmsConfig.maskSecrets();
     } else {
       if (StringUtils.isNotBlank(kmsConfig.getSecretKey())) {
         EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
-        kmsConfig.setSecretKey(new String(decryptLocal(secretData)));
+        kmsConfig.setSecretKey(new String(decryptUsingBaseAlgo(secretData)));
       }
       EncryptedData arnData = wingsPersistence.get(EncryptedData.class, kmsConfig.getKmsArn());
       checkNotNull(arnData, "ARN reference is null for KMS secret manager " + kmsConfig.getUuid());
-      kmsConfig.setKmsArn(new String(decryptLocal(arnData)));
+      kmsConfig.setKmsArn(new String(decryptUsingBaseAlgo(arnData)));
     }
   }
 

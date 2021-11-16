@@ -124,7 +124,9 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
 
   private EncryptedData getEncryptedDataForSecretField(AzureVaultConfig savedSecretsManagerConfig,
       AzureVaultConfig secretsManagerConfig, String secretValue, String secretNameSuffix) {
-    EncryptedData encryptedData = isNotEmpty(secretValue) ? encryptLocal(secretValue.toCharArray()) : null;
+    EncryptedData encryptedData = isNotEmpty(secretValue)
+        ? encryptUsingBaseAlgo(secretsManagerConfig.getAccountId(), secretValue.toCharArray())
+        : null;
     if (savedSecretsManagerConfig != null && encryptedData != null) {
       // Get by auth token encrypted record by Id or name.
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
@@ -136,6 +138,8 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
       if (savedEncryptedData != null) {
         savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
         savedEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
+        savedEncryptedData.setEncryptionType(encryptedData.getEncryptionType());
+        savedEncryptedData.setKmsId(encryptedData.getKmsId());
         encryptedData = savedEncryptedData;
       }
     }
@@ -163,7 +167,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
           currentConfig, "Azure settings with id: " + secretManagerConfig.getUuid() + " not found in database.");
       EncryptedData secretData = wingsPersistence.get(EncryptedData.class, currentConfig.getSecretKey());
       Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + secretManagerConfig);
-      secretManagerConfig.setSecretKey(new String(decryptLocal(secretData)));
+      secretManagerConfig.setSecretKey(new String(decryptUsingBaseAlgo(secretData)));
     }
   }
 

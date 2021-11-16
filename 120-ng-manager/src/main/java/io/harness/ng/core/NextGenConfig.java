@@ -15,4 +15,5 @@ public class NextGenConfig {
   String pipelineServiceSecret;
   String jwtAuthSecret;
   String jwtIdentityServiceSecret;
+  String ciManagerSecret;
 }

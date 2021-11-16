@@ -21,4 +21,7 @@ public interface ConnectorService extends ConnectorCrudService, ConnectorValidat
    * @return Accepts a list of pairs (accountId, perpetualTaskId) and resets the perpetual task for given config
    */
   void resetHeartbeatForReferringConnectors(List<Pair<String, String>> connectorPerpetualTaskInfoList);
+
+  boolean markEntityInvalid(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml);
 }

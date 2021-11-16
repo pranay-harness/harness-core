@@ -7,5 +7,5 @@ import lombok.Value;
 @Builder
 public class HealthScoreDTO {
   RiskData currentHealthScore;
-  // TODO: dependency health score to be added in here.
+  RiskData dependentHealthScore;
 }

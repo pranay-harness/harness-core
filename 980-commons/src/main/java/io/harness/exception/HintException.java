@@ -11,10 +11,15 @@ import java.util.EnumSet;
 
 @OwnedBy(HarnessTeam.DX)
 public class HintException extends WingsException {
-  public static final String HINT_AWS_IRSA_CHECK = "Check IRSA role on delegate";
-  public static final String HINT_EMPTY_ACCESS_KEY = "Check if access key is empty";
-  public static final String HINT_EMPTY_SECRET_KEY = "Check if secret key is empty";
-  public static final String HINT_AWS_IAM_ROLE_CHECK = "Check IAM role on delegate ec2";
+  public static final String HINT_AWS_IRSA_CHECK = "Check IRSA role on delegate.";
+  public static final String HINT_EMPTY_ACCESS_KEY = "Check if Access Key is empty";
+  public static final String HINT_EMPTY_SECRET_KEY = "Check if Secret Key is empty";
+  public static final String HINT_EMPTY_CROSS_ACCOUNT_ROLE_ARN_KEY = "Check if Cross account role ARN is empty";
+  public static final String HINT_INCORRECT_ACCESS_KEY_SECRET_KEY_PERMISSIONS_KEY =
+      "Check if access key, secret key are valid. Check if user has required permissions to perform the activity.";
+  public static final String HINT_INVALID_CROSS_ACCOUNT_ROLE_ARN_EXTERNAL_ID_PERMISSIONS_KEY =
+      "Check if Cross account role ARN, External Id are valid. Check if User / IAM Role on delegate / IRSA role has permission to perform sts:AssumeRole. Check if assumed Cross account role has permissions to perform the activity.";
+  public static final String HINT_AWS_IAM_ROLE_CHECK = "Check IAM role on delegate ec2.";
   public static final String HINT_AWS_CLIENT_UNKNOWN_ISSUE = "Check AWS client on delegate";
   public static final String HINT_ECR_IMAGE_NAME = "Check if given ECR image is available in specified region";
   public static final String HINT_AWS_ACCESS_DENIED = "Please ensure AWS credentials are valid";

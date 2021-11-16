@@ -15,6 +15,7 @@ import io.harness.persistence.HPersistence;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -144,6 +145,21 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
     }
 
     return query.asList();
+  }
+
+  @Override
+  public Map<String, List<String>> getMonitoredServiceToDependentServicesMap(
+      @NonNull ProjectParams projectParams, List<String> monitoredServiceIdentifiers) {
+    Map<String, List<String>> monitoredServiceToDependentServicesMap = new HashMap<>();
+    monitoredServiceIdentifiers.forEach(monitoredServiceIdentifier -> {
+      Set<ServiceDependencyDTO> serviceDependencyDTOS =
+          getDependentServicesForMonitoredService(projectParams, monitoredServiceIdentifier);
+      List<String> dependentServiceIdentifiers = new ArrayList<>();
+      serviceDependencyDTOS.forEach(serviceDependencyDTO
+          -> dependentServiceIdentifiers.add(serviceDependencyDTO.getMonitoredServiceIdentifier()));
+      monitoredServiceToDependentServicesMap.put(monitoredServiceIdentifier, dependentServiceIdentifiers);
+    });
+    return monitoredServiceToDependentServicesMap;
   }
 
   @Override

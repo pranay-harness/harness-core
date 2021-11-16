@@ -949,7 +949,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     conditions.add(new BasicDBObject(Instance.CREATED_AT_KEY, new BasicDBObject("$gte", lhsCreatedAt)));
     conditions.add(new BasicDBObject(Instance.CREATED_AT_KEY, new BasicDBObject("$lte", rhsCreatedAt)));
     instanceQuery.put("$and", conditions);
-    Set<String> appIdsFromInstances = new HashSet<>(dbCollection.distinct(InstanceKeys.appId, instanceQuery));
+    Set<String> appIdsFromInstances =
+        new HashSet<>(dbCollection.distinct(InstanceKeys.appId, instanceQuery, ReadPreference.secondaryPreferred()));
 
     List<Application> appsByAccountId = appService.getAppsByAccountId(accountId);
     Set<String> existingApps = appsByAccountId.stream().map(Application::getUuid).collect(Collectors.toSet());

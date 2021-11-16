@@ -7,7 +7,11 @@ import io.harness.exception.WingsException;
 
 import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
+import software.wings.beans.JiraConfig;
+import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.QLConnectorType;
@@ -70,9 +74,11 @@ public class ConnectorsController {
     final SettingVariableTypes settingType = settingAttribute.getValue().getSettingType();
     switch (settingType) {
       case JIRA:
-        return QLJiraConnector.builder();
+        JiraConfig jiraConfig = (JiraConfig) settingAttribute.getValue();
+        return QLJiraConnector.builder().delegateSelectors(jiraConfig.getDelegateSelectors());
       case SERVICENOW:
-        return QLServiceNowConnector.builder();
+        ServiceNowConfig serviceNowConfig = (ServiceNowConfig) settingAttribute.getValue();
+        return QLServiceNowConnector.builder().delegateSelectors(serviceNowConfig.getDelegateSelectors());
       case SMTP:
         return QLSmtpConnector.builder();
       case SLACK:
@@ -115,9 +121,11 @@ public class ConnectorsController {
       case GCR:
         return QLGCRConnector.builder();
       case NEXUS:
-        return QLNexusConnector.builder();
+        NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
+        return QLNexusConnector.builder().delegateSelectors(nexusConfig.getDelegateSelectors());
       case ARTIFACTORY:
-        return QLArtifactoryConnector.builder();
+        ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingAttribute.getValue();
+        return QLArtifactoryConnector.builder().delegateSelectors(artifactoryConfig.getDelegateSelectors());
       case AMAZON_S3:
         return QLAmazonS3Connector.builder();
       case GCS:

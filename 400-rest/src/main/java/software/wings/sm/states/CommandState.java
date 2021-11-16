@@ -521,7 +521,7 @@ public class CommandState extends State {
               .deploymentType(deploymentType != null ? deploymentType.name() : null)
               .delegateSelectors(getDelegateSelectors(context))
               .disableWinRMEnvVariables(
-                  featureFlagService.isEnabled(FeatureName.DISABLE_WINRM_ENV_VARIABLES, accountId))
+                  featureFlagService.isNotEnabled(FeatureName.ENABLE_WINRM_ENV_VARIABLES, accountId))
               .sshVaultConfig(sshVaultConfig);
 
       if (host != null) {

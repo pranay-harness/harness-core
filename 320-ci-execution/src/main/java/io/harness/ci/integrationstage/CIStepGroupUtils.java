@@ -57,7 +57,7 @@ public class CIStepGroupUtils {
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public List<ExecutionWrapperConfig> createExecutionWrapperWithInitializeStep(StageElementConfig stageElementConfig,
-      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure) {
+      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure, String accountId) {
     List<ExecutionWrapperConfig> mainEngineExecutionSections = new ArrayList<>();
 
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
@@ -84,7 +84,7 @@ public class CIStepGroupUtils {
 
     if (isNotEmpty(initializeExecutionSections)) {
       ExecutionWrapperConfig liteEngineStepExecutionWrapper = fetchInitializeStepExecutionWrapper(
-          initializeExecutionSections, stageElementConfig, ciExecutionArgs, ciCodebase, infrastructure);
+          initializeExecutionSections, stageElementConfig, ciExecutionArgs, ciCodebase, infrastructure, accountId);
 
       mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
       // Also execute each step individually on main engine
@@ -99,11 +99,11 @@ public class CIStepGroupUtils {
 
   private ExecutionWrapperConfig fetchInitializeStepExecutionWrapper(
       List<ExecutionWrapperConfig> liteEngineExecutionSections, StageElementConfig integrationStage,
-      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure) {
+      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure, String accountId) {
     // TODO Do not generate new id
-    InitializeStepInfo initializeStepInfo = initializeStepGenerator.createLiteEngineTaskStepInfo(
+    InitializeStepInfo initializeStepInfo = initializeStepGenerator.createInitializeStepInfo(
         ExecutionElementConfig.builder().uuid(generateUuid()).steps(liteEngineExecutionSections).build(), ciCodebase,
-        integrationStage, ciExecutionArgs, infrastructure);
+        integrationStage, ciExecutionArgs, infrastructure, accountId);
 
     try {
       String uuid = generateUuid();
@@ -127,10 +127,17 @@ public class CIStepGroupUtils {
   }
 
   private ParameterField<Timeout> getTimeout(Infrastructure infrastructure) {
-    if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+    if (infrastructure == null) {
       throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
 
+    if (infrastructure.getType() != Infrastructure.Type.KUBERNETES_DIRECT) {
+      return ParameterField.createValueField(Timeout.fromString("10m"));
+    }
+
+    if (((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+      throw new CIStageExecutionException("Input infrastructure can not be empty");
+    }
     ParameterField<String> timeout = ((K8sDirectInfraYaml) infrastructure).getSpec().getInitTimeout();
 
     if (timeout != null && timeout.fetchFinalValue() != null && isNotEmpty((String) timeout.fetchFinalValue())) {

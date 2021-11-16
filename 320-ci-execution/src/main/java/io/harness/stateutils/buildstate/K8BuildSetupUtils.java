@@ -8,6 +8,7 @@ import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODEBASE;
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_CONNECTOR_REF;
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
+import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_BUILD_EVENT;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_AUTHOR;
@@ -77,12 +78,13 @@ import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
-import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8InitializeTaskParams;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.CIK8PodParams;
@@ -171,7 +173,7 @@ public class K8BuildSetupUtils {
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
 
-  public CIK8BuildTaskParams getCIk8BuildTaskParams(InitializeStepInfo initializeStepInfo, Ambiance ambiance,
+  public CIK8InitializeTaskParams getCIk8BuildTaskParams(InitializeStepInfo initializeStepInfo, Ambiance ambiance,
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
     K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.podDetails));
@@ -207,7 +209,7 @@ public class K8BuildSetupUtils {
         labels, stageRunAsUser, serviceAccountName);
 
     log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
-    return CIK8BuildTaskParams.builder()
+    return CIK8InitializeTaskParams.builder()
         .k8sConnector(k8sConnector)
         .cik8PodParams(podParams)
         .podMaxWaitUntilReadySecs(getPodWaitUntilReadTimeout(k8sDirectInfraYaml))
@@ -285,6 +287,13 @@ public class K8BuildSetupUtils {
             .cleanUpContainerNames(containerNames)
             .build(),
         StepOutcomeGroup.STAGE.name());
+    executionSweepingOutputResolver.consume(ambiance, STAGE_INFRA_DETAILS,
+        K8StageInfraDetails.builder()
+            .infrastructure(infrastructure)
+            .podName(podSetupInfo.getName())
+            .containerNames(containerNames)
+            .build(),
+        StepOutcomeGroup.STAGE.name());
 
     Map<String, String> buildLabels = getBuildLabels(ambiance, k8PodDetails);
     if (isNotEmpty(labels)) {
@@ -333,8 +342,9 @@ public class K8BuildSetupUtils {
       codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getBranch());
     }
 
-    if (isNotEmpty(codebaseSweeping.getEvent())) {
-      codebaseRuntimeVars.put(DRONE_BUILD_EVENT, codebaseSweeping.getEvent());
+    if (codebaseSweeping.getBuild() != null && isNotEmpty(codebaseSweeping.getBuild().getType())
+        && codebaseSweeping.getBuild().getType().equals("PR")) {
+      codebaseRuntimeVars.put(DRONE_BUILD_EVENT, "pull_request");
     }
 
     if (!isEmpty(codebaseSweeping.getTag())) {

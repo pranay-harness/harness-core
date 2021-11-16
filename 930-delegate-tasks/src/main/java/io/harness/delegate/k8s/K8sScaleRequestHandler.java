@@ -32,8 +32,13 @@ import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sScaleResponse;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.KubernetesTaskException;
+import io.harness.exception.NestedExceptionUtils;
+import io.harness.exception.WingsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
@@ -141,7 +146,15 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
       return;
     }
 
-    resourceIdToScale = createKubernetesResourceIdFromNamespaceKindName(request.getWorkload());
+    try {
+      resourceIdToScale = createKubernetesResourceIdFromNamespaceKindName(request.getWorkload());
+    } catch (WingsException e) {
+      throw NestedExceptionUtils.hintWithExplanationException(
+          format(
+              KubernetesExceptionHints.INVALID_RESOURCE_KIND_NAME_FORMAT, request.getWorkload(), request.getWorkload()),
+          format(KubernetesExceptionExplanation.INVALID_RESOURCE_KIND_NAME_FORMAT, request.getWorkload()),
+          new KubernetesTaskException(ExceptionUtils.getMessage(e)));
+    }
 
     executionLogCallback.saveExecutionLog(
         color("\nWorkload to scale is: ", White, Bold) + color(resourceIdToScale.namespaceKindNameRef(), Cyan, Bold));

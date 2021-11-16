@@ -24,6 +24,8 @@ import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.ngmigration.NGMigrationEntity;
+import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -49,7 +51,7 @@ import org.mongodb.morphia.annotations.Id;
 @OwnedBy(CDP)
 public class InfrastructureDefinition
     implements PersistentEntity, UuidAware, NameAccess, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,
-               ApplicationAccess, CustomDeploymentTypeAware, AccountAccess {
+               ApplicationAccess, CustomDeploymentTypeAware, AccountAccess, NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -118,5 +120,17 @@ public class InfrastructureDefinition
   @Override
   public void setDeploymentTypeName(String theCustomDeploymentName) {
     customDeploymentName = theCustomDeploymentName;
+  }
+
+  @JsonIgnore
+  @Override
+  public NGMigrationEntityType getMigrationEntityType() {
+    return NGMigrationEntityType.INFRA;
+  }
+
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
   }
 }

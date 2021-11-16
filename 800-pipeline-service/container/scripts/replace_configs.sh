@@ -11,6 +11,10 @@ replace_key_value () {
   fi
 }
 
+if [[ "" != "$SERVER_MAX_THREADS" ]]; then
+  yq write -i $CONFIG_FILE server.maxThreads "$SERVER_MAX_THREADS"
+fi
+
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
@@ -314,6 +318,7 @@ replace_key_value redisLockConfig.sentinel "$LOCK_CONFIG_USE_SENTINEL"
 replace_key_value redisLockConfig.masterName "$LOCK_CONFIG_SENTINEL_MASTER_NAME"
 replace_key_value redisLockConfig.userName "$LOCK_CONFIG_REDIS_USERNAME"
 replace_key_value redisLockConfig.password "$LOCK_CONFIG_REDIS_PASSWORD"
+replace_key_value redisLockConfig.nettyThreads "$REDIS_NETTY_THREADS"
 
 replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABLED"
 
@@ -340,6 +345,7 @@ replace_key_value triggerConfig.webhookBaseUrl "$WEBHOOK_TRIGGER_BASEURL"
 replace_key_value triggerConfig.customBaseUrl "$CUSTOM_TRIGGER_BASEURL"
 
 replace_key_value opaServerConfig.baseUrl "$OPA_SERVER_BASEURL"
+replace_key_value opaServerConfig.secret "$OPA_SERVER_SECRET"
 
 
 #Iterators Configuration

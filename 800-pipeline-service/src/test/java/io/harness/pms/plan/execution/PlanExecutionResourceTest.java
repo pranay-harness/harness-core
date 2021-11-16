@@ -93,8 +93,7 @@ public class PlanExecutionResourceTest extends CategoryTest {
     assertThat(stage1Data.getStageIdentifier()).isEqualTo("qaStage2");
     assertThat(stage1Data.getStageName()).isEqualTo("qa stage 2");
     assertThat(stage1Data.getMessage()).isNull();
-    assertThat(stage1Data.getStagesRequired()).hasSize(1);
-    assertThat(stage1Data.getStagesRequired().get(0)).isEqualTo("qaStage");
+    assertThat(stage1Data.getStagesRequired()).hasSize(0);
   }
 
   @Test

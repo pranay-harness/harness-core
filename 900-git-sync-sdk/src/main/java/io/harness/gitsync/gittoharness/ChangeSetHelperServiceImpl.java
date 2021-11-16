@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.UnexpectedException;
 import io.harness.gitsync.ChangeSet;
+import io.harness.gitsync.EntityInfo;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.persistance.GitSyncableEntity;
@@ -55,5 +56,21 @@ public class ChangeSetHelperServiceImpl implements GitSdkInterface {
         throw new UnexpectedException(
             String.format("Got unrecognized change set type for changeset [%s]", changeSet.getFilePath()));
     }
+  }
+
+  @Override
+  public boolean markEntityInvalid(String accountId, EntityInfo entityInfo) {
+    EntityType entityType = EventProtoToEntityHelper.getEntityTypeFromProto(entityInfo.getEntityDetail().getType());
+    GitSyncEntitiesConfiguration gitSyncEntitiesConfiguration = gitSyncEntityConfigurationsMap.get(entityType);
+    Class<? extends GitSyncableEntity> entityClass = gitSyncEntitiesConfiguration.getEntityClass();
+    GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
+    if (gitSdkEntityHandlerInterface == null) {
+      return false;
+    }
+    final EntityDetail entityDetailDTO =
+        entityDetailProtoToRestMapper.createEntityDetailDTO(entityInfo.getEntityDetail());
+    return gitSdkEntityHandlerInterface.markEntityInvalid(
+        accountId, entityDetailDTO.getEntityRef(), entityInfo.getYaml());
   }
 }

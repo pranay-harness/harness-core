@@ -21,6 +21,9 @@ public class KubernetesExceptionHints {
 
   public final String DRY_RUN_MANIFEST_FAILED =
       "Check manifest output for invalid fields name, types or empty manifest";
+  public final String READ_MANIFEST_FAILED =
+      "Manifest file contains invalid kubernetes yaml. Check invalid fields name, types or empty manifest";
+
   public final String APPLY_MANIFEST_FAILED =
       "Manifest could contain invalid values, one of resources name may not match kubernetes requirements or missing permissions to create or update specific kubernetes resources";
   public final String APPLY_NO_FILEPATH_SPECIFIED = "Please specify a valid file path to manifests from repository";
@@ -48,10 +51,14 @@ public class KubernetesExceptionHints {
   public final String BG_MULTIPLE_PRIMARY_SERVICE = "Mark primary and stage service with "
       + HarnessAnnotations.primaryService + " and " + HarnessAnnotations.stageService + " annotations";
   public final String BG_CONFLICTING_SERVICE = "Delete existing service [%s] to proceed";
+  public final String BG_SWAP_SERVICES_SERVICE_NOT_FOUND =
+      "Swap services requires primary and stage services to be present.";
 
   public final String SCALE_CLI_FAILED = "Check if resource %s exists";
   public final String ROLLBACK_CLI_FAILED = "Check if resource %s exists";
 
   public final String FAILED_TO_READ_FILE = "Failed to read file at path [%s].";
   public final String CHECK_IF_FILE_EXIST = "Check if file [%s] exists.";
+  public final String INVALID_RESOURCE_KIND_NAME_FORMAT =
+      "Provide resource name in kind/name or namespace/kind/name format, e.x. 'Deployment/%s' instead of '%s'";
 }

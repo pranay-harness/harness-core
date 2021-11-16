@@ -2,8 +2,12 @@ package io.harness.k8s.kubectl;
 
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(HarnessTeam.CDP)
 public class ApplyCommand extends AbstractExecutable {
   private Kubectl client;
   private String filename;
@@ -11,6 +15,7 @@ public class ApplyCommand extends AbstractExecutable {
   private boolean dryrun;
   private boolean record;
   private String output;
+  private boolean dryRunClient;
 
   public ApplyCommand(Kubectl client) {
     this.client = client;
@@ -41,6 +46,11 @@ public class ApplyCommand extends AbstractExecutable {
     return this;
   }
 
+  public ApplyCommand dryRunClient(boolean dryRunClient) {
+    this.dryRunClient = dryRunClient;
+    return this;
+  }
+
   @Override
   public String command() {
     StringBuilder command = new StringBuilder();
@@ -56,6 +66,10 @@ public class ApplyCommand extends AbstractExecutable {
 
     if (this.dryrun) {
       command.append(Kubectl.flag(Flag.dryrun));
+    }
+
+    if (this.dryRunClient) {
+      command.append(Kubectl.flag(Flag.dryRunClient));
     }
 
     if (this.record) {

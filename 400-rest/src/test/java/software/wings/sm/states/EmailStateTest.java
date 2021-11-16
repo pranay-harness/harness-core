@@ -186,8 +186,8 @@ public class EmailStateTest extends WingsBaseTest {
     assertThat(executionResponse.getStateExecutionData())
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but()
-                       .withSubject("Deployed ${host.hostName}")
-                       .withBody("Deployed to host ${host.hostName}")
+                       .withSubject("Deployed app123.application.com")
+                       .withBody("Deployed to host app123.application.com")
                        .build());
     assertThat(executionResponse.getErrorMessage()).isNull();
 
@@ -263,8 +263,8 @@ public class EmailStateTest extends WingsBaseTest {
     assertThat(executionResponse.getStateExecutionData())
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but()
-                       .withSubject("Deployment triggered by: ${deploymentTriggeredBy}")
-                       .withBody("Deployment triggered by: ${deploymentTriggeredBy}")
+                       .withSubject("Deployment triggered by: admin")
+                       .withBody("Deployment triggered by: admin")
                        .build());
     assertThat(executionResponse.getErrorMessage()).isNull();
 

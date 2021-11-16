@@ -249,7 +249,7 @@ public class GitClientV2Impl implements GitClientV2 {
       log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
       throw new YamlException(format("Unable to checkout given reference: %s",
                                   isEmpty(request.getCommitId()) ? request.getBranch() : request.getCommitId()),
-          USER);
+          ex, USER);
     }
   }
 

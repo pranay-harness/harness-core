@@ -8,6 +8,7 @@ import io.harness.pms.execution.ExecutionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
@@ -17,6 +18,7 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("executionSummaryInfo")
+@Schema(name = "ExecutionSummaryInfo", description = "This is the view of the Execution Summary")
 @OwnedBy(PIPELINE)
 public class ExecutionSummaryInfoDTO {
   List<Integer> numOfErrors; // total number of errors in the last 7 days

@@ -59,7 +59,7 @@ public class MonitoringSourcePerpetualTaskServiceImplTest extends CvNextGenTestB
   @Category(UnitTests.class)
   public void testCreateTask() {
     monitoringSourcePerpetualTaskService.createTask(
-        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, monitoringSourceIdentifier);
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, monitoringSourceIdentifier, false);
     List<MonitoringSourcePerpetualTask> monitoringSourcePerpetualTasks =
         hPersistence.createQuery(MonitoringSourcePerpetualTask.class, excludeAuthority)
             .filter(MonitoringSourcePerpetualTaskKeys.accountId, accountId)
@@ -78,7 +78,7 @@ public class MonitoringSourcePerpetualTaskServiceImplTest extends CvNextGenTestB
   @Category(UnitTests.class)
   public void testDeleteTask() {
     monitoringSourcePerpetualTaskService.createTask(
-        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, monitoringSourceIdentifier);
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, monitoringSourceIdentifier, false);
     MonitoringSourcePerpetualTask monitoringSourcePerpetualTask =
         hPersistence.createQuery(MonitoringSourcePerpetualTask.class, excludeAuthority)
             .filter(MonitoringSourcePerpetualTaskKeys.accountId, accountId)
@@ -111,7 +111,7 @@ public class MonitoringSourcePerpetualTaskServiceImplTest extends CvNextGenTestB
              eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any(DataCollectionConnectorBundle.class)))
         .thenReturn(taskId);
     monitoringSourcePerpetualTaskService.createTask(
-        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, monitoringSourceIdentifier);
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, monitoringSourceIdentifier, false);
     MonitoringSourcePerpetualTask monitoringSourcePerpetualTask =
         hPersistence.createQuery(MonitoringSourcePerpetualTask.class, excludeAuthority).get();
     assertThat(monitoringSourcePerpetualTask.getPerpetualTaskId()).isNull();
@@ -132,8 +132,8 @@ public class MonitoringSourcePerpetualTaskServiceImplTest extends CvNextGenTestB
     int numOfIdentifiers = 3;
     for (int i = 0; i < numOfIdentifiers; i++) {
       for (int j = 0; j < numOfConnectors; j++) {
-        monitoringSourcePerpetualTaskService.createTask(
-            accountId, orgIdentifier, projectIdentifier, "connectorIdentifier-" + j, "monitoringSourceIdentifier-" + i);
+        monitoringSourcePerpetualTaskService.createTask(accountId, orgIdentifier, projectIdentifier,
+            "connectorIdentifier-" + j, "monitoringSourceIdentifier-" + i, false);
       }
     }
 
@@ -162,7 +162,7 @@ public class MonitoringSourcePerpetualTaskServiceImplTest extends CvNextGenTestB
     for (int i = 0; i < numOfIdentifiers; i++) {
       for (int j = 0; j < numOfConnectors; j++) {
         monitoringSourcePerpetualTaskService.createTask(accountId, orgIdentifier, projectIdentifier,
-            "account.connectorIdentifier-" + j, "monitoringSourceIdentifier-" + i);
+            "account.connectorIdentifier-" + j, "monitoringSourceIdentifier-" + i, false);
       }
     }
 
@@ -191,7 +191,7 @@ public class MonitoringSourcePerpetualTaskServiceImplTest extends CvNextGenTestB
     for (int i = 0; i < numOfIdentifiers; i++) {
       for (int j = 0; j < numOfConnectors; j++) {
         monitoringSourcePerpetualTaskService.createTask(accountId, orgIdentifier, projectIdentifier,
-            "org.connectorIdentifier-" + j, "monitoringSourceIdentifier-" + i);
+            "org.connectorIdentifier-" + j, "monitoringSourceIdentifier-" + i, false);
       }
     }
 
@@ -219,8 +219,8 @@ public class MonitoringSourcePerpetualTaskServiceImplTest extends CvNextGenTestB
     int numOfIdentifiers = 3;
     for (int i = 0; i < numOfProjects; i++) {
       for (int j = 0; j < numOfIdentifiers; j++) {
-        monitoringSourcePerpetualTaskService.createTask(
-            accountId, orgIdentifier, "projectIdentifier-" + i, connectorIdentifier, "monitoringSourceIdentifier-" + j);
+        monitoringSourcePerpetualTaskService.createTask(accountId, orgIdentifier, "projectIdentifier-" + i,
+            connectorIdentifier, "monitoringSourceIdentifier-" + j, false);
       }
     }
 
@@ -253,7 +253,7 @@ public class MonitoringSourcePerpetualTaskServiceImplTest extends CvNextGenTestB
       for (int j = 0; j < numOfProjects; j++) {
         for (int k = 0; k < numOfIdentifiers; k++) {
           monitoringSourcePerpetualTaskService.createTask(accountId, "orgIdentifier-" + i, "projectIdentifier-" + j,
-              connectorIdentifier, "monitoringSourceIdentifier-" + k);
+              connectorIdentifier, "monitoringSourceIdentifier-" + k, false);
         }
       }
     }
@@ -288,7 +288,7 @@ public class MonitoringSourcePerpetualTaskServiceImplTest extends CvNextGenTestB
         for (int k = 0; k < numOfProjects; k++) {
           for (int l = 0; l < numOfIdentifiers; l++) {
             monitoringSourcePerpetualTaskService.createTask("accountId-" + i, "orgIdentifier-" + j,
-                "projectIdentifier-" + k, connectorIdentifier, "monitoringSourceIdentifier-" + l);
+                "projectIdentifier-" + k, connectorIdentifier, "monitoringSourceIdentifier-" + l, false);
           }
         }
       }
@@ -314,7 +314,7 @@ public class MonitoringSourcePerpetualTaskServiceImplTest extends CvNextGenTestB
   @Category(UnitTests.class)
   public void testResetLiveMonitoringPerpetualTask_whenNoTask() {
     monitoringSourcePerpetualTaskService.createTask(
-        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, monitoringSourceIdentifier);
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, monitoringSourceIdentifier, false);
     MonitoringSourcePerpetualTask monitoringSourcePerpetualTask =
         hPersistence.createQuery(MonitoringSourcePerpetualTask.class, excludeAuthority).get();
     monitoringSourcePerpetualTaskService.resetLiveMonitoringPerpetualTask(monitoringSourcePerpetualTask);
@@ -328,7 +328,7 @@ public class MonitoringSourcePerpetualTaskServiceImplTest extends CvNextGenTestB
   @Category(UnitTests.class)
   public void testResetLiveMonitoringPerpetualTask_whenTaskCreated() {
     monitoringSourcePerpetualTaskService.createTask(
-        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, monitoringSourceIdentifier);
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, monitoringSourceIdentifier, false);
     MonitoringSourcePerpetualTask monitoringSourcePerpetualTask =
         hPersistence.createQuery(MonitoringSourcePerpetualTask.class, excludeAuthority).get();
 

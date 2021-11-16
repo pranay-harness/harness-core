@@ -72,7 +72,27 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
   }
 
   @Override
+  public boolean isAvailableWithIncrement(
+      FeatureRestrictionName featureRestrictionName, String accountIdentifier, long increment) {
+    try {
+      checkAvailabilityWithIncrement(featureRestrictionName, accountIdentifier, increment);
+    } catch (Exception e) {
+      log.error(String.format("Enforcement check on feature [%s] for account [%s] does not succeed",
+                    featureRestrictionName, accountIdentifier),
+          e);
+      return false;
+    }
+    return true;
+  }
+
+  @Override
   public void checkAvailability(FeatureRestrictionName featureRestrictionName, String accountIdentifier) {
+    checkAvailabilityWithIncrement(featureRestrictionName, accountIdentifier, 1);
+  }
+
+  @Override
+  public void checkAvailabilityWithIncrement(
+      FeatureRestrictionName featureRestrictionName, String accountIdentifier, long increment) {
     if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
       return;
     }
@@ -90,7 +110,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
     ModuleType moduleType = featureMetadataDTO.getModuleType();
     RestrictionMetadataDTO currentRestriction = featureMetadataDTO.getRestrictionMetadata().get(edition);
     try {
-      verifyRestriction(featureRestrictionName, accountIdentifier, moduleType, edition, currentRestriction);
+      verifyRestriction(featureRestrictionName, accountIdentifier, moduleType, edition, currentRestriction, increment);
     } catch (FeatureNotSupportedException e) {
       if (RestrictionType.AVAILABILITY.equals(currentRestriction.getRestrictionType())) {
         String message = (String) e.getParams().get(MESSAGE);
@@ -136,7 +156,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
           ModuleType moduleType = featureMetadata.getModuleType();
           RestrictionMetadataDTO restrictionMetadataDTO = featureMetadata.getRestrictionMetadata().get(edition);
 
-          verifyRestriction(featureRestrictionName, accountIdentifier, moduleType, edition, restrictionMetadataDTO);
+          verifyRestriction(featureRestrictionName, accountIdentifier, moduleType, edition, restrictionMetadataDTO, 1);
         } catch (Exception e) {
           result.put(featureRestrictionName, false);
         }
@@ -187,12 +207,12 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
     }
   }
 
-  private boolean verifyExceedLimit(long limit, long count) {
-    return limit <= count;
+  private boolean verifyExceedLimit(long limit, long count, long increment) {
+    return limit < count + increment;
   }
 
   private void verifyRestriction(FeatureRestrictionName featureRestrictionName, String accountIdentifier,
-      ModuleType moduleType, Edition edition, RestrictionMetadataDTO currentRestriction) {
+      ModuleType moduleType, Edition edition, RestrictionMetadataDTO currentRestriction, long increment) {
     switch (currentRestriction.getRestrictionType()) {
       case AVAILABILITY:
         AvailabilityRestrictionMetadataDTO availabilityRestrictionMetadataDTO =
@@ -207,7 +227,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
         RestrictionUsageInterface staticUsage =
             enforcementSdkRegisterService.getRestrictionUsageInterface(featureRestrictionName);
         if (verifyExceedLimit(staticLimitRestrictionMetadataDTO.getLimit(),
-                staticUsage.getCurrentValue(accountIdentifier, staticLimitRestrictionMetadataDTO))) {
+                staticUsage.getCurrentValue(accountIdentifier, staticLimitRestrictionMetadataDTO), increment)) {
           throw new LimitExceededException(String.format(
               "Exceeded static limitation. Current Limit: %s", staticLimitRestrictionMetadataDTO.getLimit()));
         }
@@ -216,8 +236,8 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
         RateLimitRestrictionMetadataDTO rateLimitRestriction = (RateLimitRestrictionMetadataDTO) currentRestriction;
         RestrictionUsageInterface rateUsage =
             enforcementSdkRegisterService.getRestrictionUsageInterface(featureRestrictionName);
-        if (verifyExceedLimit(
-                rateLimitRestriction.getLimit(), rateUsage.getCurrentValue(accountIdentifier, rateLimitRestriction))) {
+        if (verifyExceedLimit(rateLimitRestriction.getLimit(),
+                rateUsage.getCurrentValue(accountIdentifier, rateLimitRestriction), increment)) {
           throw new LimitExceededException(
               String.format("Exceeded rate limitation. Current Limit: %s", rateLimitRestriction.getLimit()));
         }

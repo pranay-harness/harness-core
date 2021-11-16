@@ -45,7 +45,6 @@ public class MetricConfiguration {
         return View.create(View.Name.create(this.getMetricName()), this.getMetricDefinition(), measure,
             Aggregation.LastValue.create(), tagKeys);
       }
-
       switch (type) {
         case "LastValue":
           return View.create(View.Name.create(this.getMetricName()), this.getMetricDefinition(), measure,
@@ -55,6 +54,11 @@ public class MetricConfiguration {
           this.setMeasure(measure);
           return View.create(View.Name.create(this.getMetricName()), this.getMetricDefinition(), measure,
               Aggregation.Count.create(), tagKeys);
+        case "Sum":
+          measure = MeasureLong.create(this.getMetricName(), this.getMetricDefinition(), this.getUnit());
+          this.setMeasure(measure);
+          return View.create(View.Name.create(this.getMetricName()), this.getMetricDefinition(), measure,
+              Aggregation.Sum.create(), tagKeys);
         case "Duration":
           return View.create(View.Name.create(this.getMetricName()), this.getMetricDefinition(), measure,
               Aggregation.Distribution.create(BucketBoundaries.create(getDistributionMs())), tagKeys);

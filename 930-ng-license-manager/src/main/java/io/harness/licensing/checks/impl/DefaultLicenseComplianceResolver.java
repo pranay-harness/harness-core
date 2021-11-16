@@ -49,7 +49,9 @@ public class DefaultLicenseComplianceResolver implements LicenseComplianceResolv
     Set<EditionAction> editionActions = licenseEditionCheckerMap.get(moduleLicense.getEdition())
                                             .getEditionActions(currentModuleState, moduleType, lastExpiredLicenseMap);
     if (!editionActions.contains(targetAction)) {
-      throw new InvalidRequestException(String.format("[%s] is not allowed", targetAction.name()));
+      throw new InvalidRequestException(
+          String.format("[%s] is not allowed, current license state [%s], allowed actions [%s]", targetAction.name(),
+              currentModuleState, editionActions));
     }
 
     // Edition specific check

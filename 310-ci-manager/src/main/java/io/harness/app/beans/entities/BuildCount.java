@@ -9,4 +9,6 @@ public class BuildCount {
   private long total;
   private long success;
   private long failed;
+  private long aborted;
+  private long expired;
 }

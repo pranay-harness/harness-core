@@ -84,6 +84,8 @@ import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.mappers.sumologicmapper.SumoLogicDTOToEntity;
 import io.harness.connector.mappers.sumologicmapper.SumoLogicEntityToDTO;
+import io.harness.connector.task.ConnectorValidationHandler;
+import io.harness.connector.task.NotSupportedValidationHandler;
 import io.harness.connector.validator.ArtifactoryConnectionValidator;
 import io.harness.connector.validator.AwsConnectorValidator;
 import io.harness.connector.validator.CEAwsConnectorValidator;
@@ -116,101 +118,128 @@ public class ConnectorRegistryFactory {
   static {
     registrar.put(ConnectorType.KUBERNETES_CLUSTER,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, KubernetesConnectionValidator.class,
-            K8sConnectorValidationParamsProvider.class, KubernetesDTOToEntity.class, KubernetesEntityToDTO.class));
+            K8sConnectorValidationParamsProvider.class, KubernetesDTOToEntity.class, KubernetesEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.CE_KUBERNETES_CLUSTER,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEKubernetesConnectionValidator.class,
-            CEK8sConnectorValidationParamsProvider.class, CEKubernetesDTOToEntity.class,
-            CEKubernetesEntityToDTO.class));
+            CEK8sConnectorValidationParamsProvider.class, CEKubernetesDTOToEntity.class, CEKubernetesEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.GIT,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, GitConnectorValidator.class,
-            ScmConnectorValidationParamsProvider.class, GitDTOToEntity.class, GitEntityToDTO.class));
+            ScmConnectorValidationParamsProvider.class, GitDTOToEntity.class, GitEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.APP_DYNAMICS,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            CVConnectorParamsProvider.class, AppDynamicsDTOToEntity.class, AppDynamicsEntityToDTO.class));
+            CVConnectorParamsProvider.class, AppDynamicsDTOToEntity.class, AppDynamicsEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.NEW_RELIC,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            CVConnectorParamsProvider.class, NewRelicDTOToEntity.class, NewRelicEntityToDTO.class));
+            CVConnectorParamsProvider.class, NewRelicDTOToEntity.class, NewRelicEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.DATADOG,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            CVConnectorParamsProvider.class, DatadogDTOToEntity.class, DatadogEntityToDTO.class));
+            CVConnectorParamsProvider.class, DatadogDTOToEntity.class, DatadogEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.SPLUNK,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            CVConnectorParamsProvider.class, SplunkDTOToEntity.class, SplunkEntityToDTO.class));
+            CVConnectorParamsProvider.class, SplunkDTOToEntity.class, SplunkEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.PROMETHEUS,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            CVConnectorParamsProvider.class, PrometheusDTOToEntity.class, PrometheusEntityToDTO.class));
+            CVConnectorParamsProvider.class, PrometheusDTOToEntity.class, PrometheusEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.SUMOLOGIC,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            CVConnectorParamsProvider.class, SumoLogicDTOToEntity.class, SumoLogicEntityToDTO.class));
+            CVConnectorParamsProvider.class, SumoLogicDTOToEntity.class, SumoLogicEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.DYNATRACE,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            CVConnectorParamsProvider.class, DynatraceDTOToEntity.class, DynatraceEntityToDTO.class));
+            CVConnectorParamsProvider.class, DynatraceDTOToEntity.class, DynatraceEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.VAULT,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
-            VaultConnectorValidationParamsProvider.class, VaultDTOToEntity.class, VaultEntityToDTO.class));
+            VaultConnectorValidationParamsProvider.class, VaultDTOToEntity.class, VaultEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.AZURE_KEY_VAULT,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
             AzureKeyVaultConnectorValidationParamsProvider.class, AzureKeyVaultDTOToEntity.class,
-            AzureKeyVaultEntityToDTO.class));
+            AzureKeyVaultEntityToDTO.class, NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.GCP_KMS,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
-            GcpKmsConnectorValidationParamsProvider.class, GcpKmsDTOToEntity.class, GcpKmsEntityToDTO.class));
+            GcpKmsConnectorValidationParamsProvider.class, GcpKmsDTOToEntity.class, GcpKmsEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.AWS_KMS,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
-            AwsKmsConnectorValidationParamsProvider.class, AwsKmsDTOToEntity.class, AwsKmsEntityToDTO.class));
+            AwsKmsConnectorValidationParamsProvider.class, AwsKmsDTOToEntity.class, AwsKmsEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.AWS_SECRET_MANAGER,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
             AwsSecretManagerValidationParamsProvider.class, AwsSecretManagerDTOToEntity.class,
-            AwsSecretManagerEntityToDTO.class));
+            AwsSecretManagerEntityToDTO.class, NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.LOCAL,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, LocalDTOToEntity.class, LocalEntityToDTO.class));
+            NoOpConnectorValidationParamsProvider.class, LocalDTOToEntity.class, LocalEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.DOCKER,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, DockerConnectionValidator.class,
-            DockerConnectorValidationParamsProvider.class, DockerDTOToEntity.class, DockerEntityToDTO.class));
+            DockerConnectorValidationParamsProvider.class, DockerDTOToEntity.class, DockerEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.GCP,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, GcpConnectorValidator.class,
-            GcpValidationParamsProvider.class, GcpDTOToEntity.class, GcpEntityToDTO.class));
+            GcpValidationParamsProvider.class, GcpDTOToEntity.class, GcpEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.AWS,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, AwsConnectorValidator.class,
-            AwsValidationParamsProvider.class, AwsDTOToEntity.class, AwsEntityToDTO.class));
+            AwsValidationParamsProvider.class, AwsDTOToEntity.class, AwsEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.CE_AWS,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEAwsConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, CEAwsDTOToEntity.class, CEAwsEntityToDTO.class));
+            NoOpConnectorValidationParamsProvider.class, CEAwsDTOToEntity.class, CEAwsEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.ARTIFACTORY,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, ArtifactoryConnectionValidator.class,
-            ArtifactoryValidationParamsProvider.class, ArtifactoryDTOToEntity.class, ArtifactoryEntityToDTO.class));
+            ArtifactoryValidationParamsProvider.class, ArtifactoryDTOToEntity.class, ArtifactoryEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.JIRA,
         new ConnectorRegistrar(ConnectorCategory.TICKETING, JiraConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, JiraDTOToEntity.class, JiraEntityToDTO.class));
+            NoOpConnectorValidationParamsProvider.class, JiraDTOToEntity.class, JiraEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.NEXUS,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, NexusConnectorValidator.class,
-            NexusValidationParamsProvider.class, NexusDTOToEntity.class, NexusEntityToDTO.class));
+            NexusValidationParamsProvider.class, NexusDTOToEntity.class, NexusEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.GITHUB,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, GithubConnectorValidator.class,
-            ScmConnectorValidationParamsProvider.class, GithubDTOToEntity.class, GithubEntityToDTO.class));
+            ScmConnectorValidationParamsProvider.class, GithubDTOToEntity.class, GithubEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.GITLAB,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, GitlabConnectorValidator.class,
-            ScmConnectorValidationParamsProvider.class, GitlabDTOToEntity.class, GitlabEntityToDTO.class));
+            ScmConnectorValidationParamsProvider.class, GitlabDTOToEntity.class, GitlabEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.BITBUCKET,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, BitbucketConnectorValidator.class,
-            ScmConnectorValidationParamsProvider.class, BitbucketDTOToEntity.class, BitbucketEntityToDTO.class));
+            ScmConnectorValidationParamsProvider.class, BitbucketDTOToEntity.class, BitbucketEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.CODECOMMIT,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, AwsCodeCommitValidator.class,
-            NoOpConnectorValidationParamsProvider.class, AwsCodeCommitDTOToEntity.class,
-            AwsCodeCommitEntityToDTO.class));
+            NoOpConnectorValidationParamsProvider.class, AwsCodeCommitDTOToEntity.class, AwsCodeCommitEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.CE_AZURE,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEAzureConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, CEAzureDTOToEntity.class, CEAzureEntityToDTO.class));
+            NoOpConnectorValidationParamsProvider.class, CEAzureDTOToEntity.class, CEAzureEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.GCP_CLOUD_COST,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEGcpConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, GcpCloudCostDTOToEntity.class, GcpCloudCostEntityToDTO.class));
+            NoOpConnectorValidationParamsProvider.class, GcpCloudCostDTOToEntity.class, GcpCloudCostEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.HTTP_HELM_REPO,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, HttpHelmRepoConnectionValidator.class,
-            HttpHelmConnectorValidationParamsProvider.class, HttpHelmDTOToEntity.class, HttpHelmEntityToDTO.class));
+            HttpHelmConnectorValidationParamsProvider.class, HttpHelmDTOToEntity.class, HttpHelmEntityToDTO.class,
+            NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.PAGER_DUTY,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            CVConnectorParamsProvider.class, PagerDutyDTOToEntity.class, PagerDutyEntityToDTO.class));
+            CVConnectorParamsProvider.class, PagerDutyDTOToEntity.class, PagerDutyEntityToDTO.class,
+            NotSupportedValidationHandler.class));
   }
 
   public static Class<? extends ConnectionValidator> getConnectorValidator(ConnectorType connectorType) {
@@ -234,5 +263,9 @@ public class ConnectorRegistryFactory {
   public static Class<? extends ConnectorEntityToDTOMapper<?, ?>> getConnectorEntityToDTOMapper(
       ConnectorType connectorType) {
     return registrar.get(connectorType).getConnectorEntityToDTOMapper();
+  }
+
+  public static Class<? extends ConnectorValidationHandler> getConnectorValidationHandler(ConnectorType connectorType) {
+    return registrar.get(connectorType).getConnectorValidationHandler();
   }
 }

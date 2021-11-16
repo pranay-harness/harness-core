@@ -19,8 +19,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -31,7 +29,6 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.GitCommandTaskParameters;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitRepositoryInfo;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
@@ -50,7 +47,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@OwnedBy(HarnessTeam.DX)
 public class GitConfigHelperServiceTest extends WingsBaseTest {
   @Mock ExecutionContext context;
   @Mock DelegateService delegateService;
@@ -231,12 +227,10 @@ public class GitConfigHelperServiceTest extends WingsBaseTest {
     verify(delegateService, times(1)).executeTask(captor.capture());
     DelegateTask task = captor.getAllValues().get(0);
     Object[] parameters = task.getData().getParameters();
-    assertThat(parameters.length).isEqualTo(1);
-
-    GitCommandTaskParameters gitCommandTaskParameters = (GitCommandTaskParameters) parameters[0];
-    assertThat(gitCommandTaskParameters.getGitCommandType()).isEqualTo(VALIDATE);
-    assertThat(gitCommandTaskParameters.getGitConfig()).isEqualTo(gitConfig);
-    assertThat(gitCommandTaskParameters.getEncryptedDataDetails()).isEqualTo(encryptionDetails);
+    assertThat(parameters.length).isEqualTo(3);
+    assertThat(parameters[0]).isEqualTo(VALIDATE);
+    assertThat(parameters[1]).isEqualTo(gitConfig);
+    assertThat(parameters[2]).isEqualTo(encryptionDetails);
   }
 
   private void validateGitConfigUrlTypeAccount() throws InterruptedException {
@@ -266,10 +260,9 @@ public class GitConfigHelperServiceTest extends WingsBaseTest {
 
     DelegateTask task = captor.getAllValues().get(0);
     Object[] parameters = task.getData().getParameters();
-    assertThat(parameters.length).isEqualTo(1);
-    GitCommandTaskParameters gitCommandTaskParameters = (GitCommandTaskParameters) parameters[0];
-    assertThat(gitCommandTaskParameters.getGitCommandType()).isEqualTo(VALIDATE);
-    assertThat(gitCommandTaskParameters.getGitConfig()).isEqualTo(gitConfig);
-    assertThat(gitCommandTaskParameters.getEncryptedDataDetails()).isEqualTo(encryptionDetails);
+    assertThat(parameters.length).isEqualTo(3);
+    assertThat(parameters[0]).isEqualTo(VALIDATE);
+    assertThat(parameters[1]).isEqualTo(gitConfig);
+    assertThat(parameters[2]).isEqualTo(encryptionDetails);
   }
 }

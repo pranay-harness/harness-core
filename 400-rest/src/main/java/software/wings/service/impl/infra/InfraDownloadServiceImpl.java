@@ -12,7 +12,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.FeatureName;
 import io.harness.environment.SystemEnvironment;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccessTokenBean;
@@ -103,8 +102,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
       return LOCAL_DELEGATE;
     }
 
-    if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)
-        && !ON_PREM_ENV_STRING.equals(envString)) {
+    if (!ON_PREM_ENV_STRING.equals(envString)) {
       return cdnStorageUrlGenerator.getDelegateJarUrl(version);
     } else {
       String serviceAccountJson = getServiceAccountJson(DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR);
@@ -131,8 +129,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
       return LOCAL_WATCHER;
     }
 
-    if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)
-        && !ON_PREM_ENV_STRING.equals(envString)) {
+    if (!ON_PREM_ENV_STRING.equals(envString)) {
       return cdnStorageUrlGenerator.getWatcherJarUrl(version);
     } else {
       String serviceAccountJson = getServiceAccountJson(DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR);

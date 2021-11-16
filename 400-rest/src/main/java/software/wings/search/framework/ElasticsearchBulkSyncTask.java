@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.mongo.changestreams.ChangeEvent;
 import io.harness.mongo.changestreams.ChangeSubscriber;
 import io.harness.persistence.HIterator;
@@ -11,6 +13,7 @@ import io.harness.persistence.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.ElasticsearchBulkMigrationJob.ElasticsearchBulkMigrationJobBuilder;
 import software.wings.search.framework.SearchEntityIndexState.SearchEntityIndexStateKeys;
+import software.wings.timescale.framework.TimeScaleEntityIndexState;
 
 import com.google.inject.Inject;
 import java.time.Instant;
@@ -19,9 +22,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -41,6 +46,8 @@ public class ElasticsearchBulkSyncTask {
   @Inject private ElasticsearchBulkMigrationHelper elasticsearchBulkMigrationHelper;
   @Inject private ElasticsearchIndexManager elasticsearchIndexManager;
   @Inject private Set<SearchEntity<?>> searchEntities;
+  @Inject private Set<TimeScaleEntity<?>> timeScaleEntities;
+  @Inject private FeatureFlagService featureFlagService;
   private Queue<ChangeEvent<?>> changeEventsDuringBulkSync;
   private Map<Class, Boolean> isFirstChangeReceived;
 
@@ -151,6 +158,70 @@ public class ElasticsearchBulkSyncTask {
     };
   }
 
+  // TIMESCALE
+  private Set<TimeScaleEntity<?>> getTimeScaleEntitiesToMigrate(Collection<TimeScaleEntity<?>> timeScaleEntities) {
+    Set<TimeScaleEntity<?>> entitiesToMigrate = new HashSet<>();
+    for (TimeScaleEntity<?> timeScaleEntity : timeScaleEntities) {
+      entitiesToMigrate.add(timeScaleEntity);
+    }
+    return entitiesToMigrate;
+  }
+
+  private boolean doTimeScaleMigration(Set<TimeScaleEntity<?>> entitiesToMigrate) {
+    boolean hasTimeScaleMigrationSucceeded = true;
+
+    List<String> accountIds =
+        featureFlagService.getAccountIds(FeatureName.TIME_SCALE_CG_SYNC).stream().collect(Collectors.toList());
+
+    for (TimeScaleEntity timeScaleEntity : entitiesToMigrate) {
+      log.info("Migrating {} to timescale", timeScaleEntity.getClass().getCanonicalName());
+
+      // timeScaleEntity could be one of [APPLICATION,SERVICE,PIPELINE,WORKFLOW,TAGLINKS]
+
+      TimeScaleEntityIndexState timeScaleEntityIndexState =
+          wingsPersistence.get(TimeScaleEntityIndexState.class, timeScaleEntity.getClass().getCanonicalName());
+      if (timeScaleEntityIndexState == null) {
+        TimeScaleEntityIndexState initial_entity = new TimeScaleEntityIndexState(
+            timeScaleEntity.getClass().getCanonicalName(), System.currentTimeMillis(), new LinkedList<>(), accountIds);
+        wingsPersistence.save(initial_entity);
+        continue;
+      }
+      List<String> alreadyMigratedAccountIds = timeScaleEntityIndexState.getAlreadyMigratedAccountIds() != null
+          ? timeScaleEntityIndexState.getAlreadyMigratedAccountIds()
+          : new LinkedList<>();
+      List<String> toMigrateAccountIds = timeScaleEntityIndexState.getToMigrateAccountIds() != null
+          ? timeScaleEntityIndexState.getToMigrateAccountIds()
+          : new LinkedList<>(accountIds);
+      toMigrateAccountIds = toMigrateAccountIds.stream()
+                                .filter(id -> !alreadyMigratedAccountIds.contains(id))
+                                .collect(Collectors.toList());
+      int n = 0;
+      if (toMigrateAccountIds != null) {
+        n = toMigrateAccountIds.size();
+      }
+      for (int i = 0; i < n; i++) {
+        String accountId = toMigrateAccountIds.get(0);
+        hasTimeScaleMigrationSucceeded = timeScaleEntity.runMigration(accountId);
+        if (hasTimeScaleMigrationSucceeded) {
+          alreadyMigratedAccountIds.add(accountId);
+          toMigrateAccountIds.remove(accountId);
+        }
+      }
+      TimeScaleEntityIndexState app_entity =
+          new TimeScaleEntityIndexState(timeScaleEntity.getClass().getCanonicalName(), System.currentTimeMillis(),
+              alreadyMigratedAccountIds, toMigrateAccountIds);
+      wingsPersistence.save(app_entity);
+
+      if (hasTimeScaleMigrationSucceeded) {
+        log.info("{} migrated to timescale", timeScaleEntity.getClass().getCanonicalName());
+      } else {
+        log.error(String.format("Failed to migrate %s to timescale", timeScaleEntity.getClass().getCanonicalName()));
+        break;
+      }
+    }
+    return hasTimeScaleMigrationSucceeded;
+  }
+
   public ElasticsearchBulkSyncTaskResult run() {
     changeEventsDuringBulkSync = new LinkedList<>();
     isFirstChangeReceived = new HashMap<>();
@@ -166,6 +237,14 @@ public class ElasticsearchBulkSyncTask {
 
     log.info("Create jobs for bulk migration of search entities");
     boolean areJobsCreated = createElasticsearchBulkMigrationJobs(entitiesToBulkSync);
+
+    // TIMESCALE
+    log.info("Getting the timescale entities to migrate");
+    Set<TimeScaleEntity<?>> timeScaleEntitiesToMigrate = getTimeScaleEntitiesToMigrate(timeScaleEntities);
+
+    // TIMESCALE
+    log.info("Starting migration of timescale entities");
+    boolean hasTimeScaleMigrationSucceeded = doTimeScaleMigration(timeScaleEntitiesToMigrate);
 
     if (!areJobsCreated) {
       return new ElasticsearchBulkSyncTaskResult(false, changeEventsDuringBulkSync);

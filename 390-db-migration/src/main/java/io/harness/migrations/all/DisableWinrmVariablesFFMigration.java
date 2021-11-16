@@ -1,7 +1,6 @@
 package io.harness.migrations.all;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.beans.FeatureName.DISABLE_WINRM_ENV_VARIABLES;
 import static io.harness.beans.FeatureName.ENABLE_WINRM_ENV_VARIABLES;
 
 import static java.lang.String.format;
@@ -31,7 +30,7 @@ public class DisableWinrmVariablesFFMigration implements Migration {
     log.info("Starting the migration for WINRM_ENV_VARIABLES");
     FeatureFlag oldFeatureFlag = wingsPersistence.createQuery(FeatureFlag.class)
                                      .field(FeatureFlagKeys.name)
-                                     .equal(DISABLE_WINRM_ENV_VARIABLES)
+                                     .equal("DISABLE_WINRM_ENV_VARIABLES")
                                      .get();
     FeatureFlag newFeatureFlag = wingsPersistence.createQuery(FeatureFlag.class)
                                      .field(FeatureFlagKeys.name)

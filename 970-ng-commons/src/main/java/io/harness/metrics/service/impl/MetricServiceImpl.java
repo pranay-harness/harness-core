@@ -53,9 +53,12 @@ import org.reflections.scanners.ResourcesScanner;
 @OwnedBy(HarnessTeam.CV)
 public class MetricServiceImpl implements MetricService {
   public static final String GOOGLE_APPLICATION_CREDENTIALS = "GOOGLE_APPLICATION_CREDENTIALS";
+  // If "METRICS_TARGET_PROJECT_ID" env variable has a valid value, it identifies the GCP project ID to which the
+  // metrics will be published.
+  private static final String METRICS_TARGET_PROJECT_ID = "METRICS_TARGET_PROJECT_ID";
   private static boolean WILL_PUBLISH_METRICS;
-  private static final List<MetricConfiguration> METRIC_CONFIG_DEFINITIONS = new ArrayList<>();
-  private static final Map<String, MetricGroup> METRIC_GROUP_MAP = new HashMap<>();
+  private static List<MetricConfiguration> METRIC_CONFIG_DEFINITIONS = new ArrayList<>();
+  private static Map<String, MetricGroup> METRIC_GROUP_MAP = new HashMap<>();
 
   static {
     initializeFromYAML();
@@ -94,7 +97,6 @@ public class MetricServiceImpl implements MetricService {
     metricDefinitionFileNames.forEach(metricDefinition -> {
       try {
         String path = "/" + metricDefinition;
-        log.info("Loading metric definitions from {}", path);
         final String yaml = Resources.toString(MetricServiceImpl.class.getResource(path), Charsets.UTF_8);
         YamlUtils yamlUtils = new YamlUtils();
         final MetricConfiguration metricConfiguration =
@@ -111,7 +113,6 @@ public class MetricServiceImpl implements MetricService {
     metricGroupFileNames.forEach(name -> {
       try {
         String path = "/" + name;
-        log.info("Loading metrics group definitions from: {}", path);
         final String yaml = Resources.toString(MetricServiceImpl.class.getResource(path), Charsets.UTF_8);
         YamlUtils yamlUtils = new YamlUtils();
         final MetricGroup metricGroup = yamlUtils.read(yaml, new TypeReference<MetricGroup>() {});
@@ -124,26 +125,26 @@ public class MetricServiceImpl implements MetricService {
     METRIC_CONFIG_DEFINITIONS.addAll(metricConfigDefinitions);
 
     try {
-      log.info("GOOGLE_APPLICATION_CREDENTIALS: {}", System.getenv(GOOGLE_APPLICATION_CREDENTIALS));
       if (isNotEmpty(System.getenv(GOOGLE_APPLICATION_CREDENTIALS))) {
         WILL_PUBLISH_METRICS = true;
-        StackdriverStatsConfiguration configuration =
+        StackdriverStatsConfiguration.Builder builder =
             StackdriverStatsConfiguration.builder()
                 .setExportInterval(Duration.fromMillis(TimeUnit.MINUTES.toMillis(1)))
-                .setDeadline(Duration.fromMillis(TimeUnit.MINUTES.toMillis(5)))
-                .build();
-
-        StackdriverStatsExporter.createAndRegister(configuration);
-        log.info("StackdriverStatsExporter created");
+                .setDeadline(Duration.fromMillis(TimeUnit.MINUTES.toMillis(5)));
+        String projectId = System.getenv(METRICS_TARGET_PROJECT_ID);
+        if (isNotEmpty(projectId)) {
+          log.info("Publishing metrics to the GCP project {}", projectId);
+          builder.setProjectId(projectId);
+        } else {
+          log.info("Publishing metrics to the default project");
+        }
+        StackdriverStatsExporter.createAndRegister(builder.build());
       }
     } catch (Exception ex) {
       log.error("Exception while trying to register stackdriver metrics exporter", ex);
     }
-    log.info("Finished loading metrics definitions from YAML. time taken is {} ms, {} metrics loaded",
-        Instant.now().toEpochMilli() - startTime, METRIC_CONFIG_DEFINITIONS.size());
-    for (MetricConfiguration metricConfiguration : METRIC_CONFIG_DEFINITIONS) {
-      log.info("Loaded metric definition: {}", metricConfiguration);
-    }
+    log.info("Finished loading metrics definitions from YAML. time taken is {} ms",
+        Instant.now().toEpochMilli() - startTime);
   }
 
   @Override

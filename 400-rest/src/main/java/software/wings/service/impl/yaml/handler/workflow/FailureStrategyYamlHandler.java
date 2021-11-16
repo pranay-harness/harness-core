@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.beans.ExecutionInterruptType.ABORT_ALL;
+import static io.harness.beans.ExecutionInterruptType.ABORT;
 import static io.harness.beans.ExecutionInterruptType.END_EXECUTION;
 import static io.harness.beans.ExecutionInterruptType.IGNORE;
 import static io.harness.beans.ExecutionInterruptType.MARK_SUCCESS;
@@ -51,8 +51,7 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
       if (manualInterventionTimeout == null || manualInterventionTimeout < 60000) {
         throw new InvalidArgumentsException("\"manualInterventionTimeout\" should not be less than 1m (60000)");
       }
-      List<ExecutionInterruptType> allowedActions =
-          Arrays.asList(ABORT_ALL, END_EXECUTION, IGNORE, MARK_SUCCESS, ROLLBACK);
+      List<ExecutionInterruptType> allowedActions = Arrays.asList(ABORT, END_EXECUTION, IGNORE, MARK_SUCCESS, ROLLBACK);
       if (!allowedActions.contains(actionAfterTimeout)) {
         throw new InvalidArgumentsException(String.format(
             "\"actionAfterTimeout\" should not be empty. Please provide valid value: %s", allowedActions));

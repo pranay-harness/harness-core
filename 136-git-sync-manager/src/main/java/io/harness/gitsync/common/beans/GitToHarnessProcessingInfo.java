@@ -16,4 +16,5 @@ public class GitToHarnessProcessingInfo {
   String branchName;
   String commitId;
   String gitToHarnessProgressRecordId;
+  String commitMessage;
 }

@@ -174,7 +174,8 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
         request.getReleaseName(), k8sCanaryHandlerConfig.getKubernetesConfig().getNamespace(), logCallback,
         request.getTimeoutIntervalInMin());
 
-    List<KubernetesResource> resources = k8sTaskHelperBase.readManifests(manifestFiles, logCallback);
+    List<KubernetesResource> resources =
+        k8sTaskHelperBase.readManifests(manifestFiles, logCallback, isErrorFrameworkSupported());
     k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(
         resources, k8sCanaryHandlerConfig.getKubernetesConfig().getNamespace());
 
@@ -194,7 +195,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
     }
 
     k8sTaskHelperBase.dryRunManifests(k8sCanaryHandlerConfig.getClient(), k8sCanaryHandlerConfig.getResources(),
-        k8sDelegateTaskParams, logCallback, true);
+        k8sDelegateTaskParams, logCallback, true, request.isUseNewKubectlVersion());
   }
 
   @VisibleForTesting

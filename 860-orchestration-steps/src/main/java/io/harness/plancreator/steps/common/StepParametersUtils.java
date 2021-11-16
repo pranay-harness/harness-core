@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.ParameterFieldHelper;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.common.StageElementParameters.StageElementParametersBuilder;
 import io.harness.pms.tags.TagUtils;
@@ -30,7 +31,7 @@ public class StepParametersUtils {
     stageBuilder.uuid(stageElementConfig.getUuid());
     stageBuilder.variables(
         ParameterField.createValueField(NGVariablesUtils.getMapOfVariables(stageElementConfig.getVariables())));
-    stageBuilder.tags(stageElementConfig.getTags());
+    stageBuilder.tags(CollectionUtils.emptyIfNull(stageElementConfig.getTags()));
 
     return stageBuilder;
   }

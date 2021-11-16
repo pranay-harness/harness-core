@@ -24,6 +24,7 @@ shared_dependencies = [
     "//965-api-key-filter:module",
     "//970-ng-commons:module",
     "//980-commons:module",
+    "@maven//:aopalliance_aopalliance",
     "@maven//:com_google_inject_guice",
     "@maven//:com_google_cloud_google_cloud_pubsub",
     "@maven//:com_squareup_retrofit2_retrofit",

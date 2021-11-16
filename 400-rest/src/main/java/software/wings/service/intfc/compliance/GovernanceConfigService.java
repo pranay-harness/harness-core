@@ -2,6 +2,7 @@ package software.wings.service.intfc.compliance;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.governance.ApplicationFilter;
 import io.harness.governance.DeploymentFreezeInfo;
 import io.harness.governance.GovernanceFreezeConfig;
 
@@ -44,4 +45,8 @@ public interface GovernanceConfigService extends OwnedByAccount {
    *     particular window
    */
   Map<String, Set<String>> getFrozenEnvIdsForApp(String accountId, String appId, GovernanceConfig governanceConfig);
+
+  List<String> getEnvIdsFromAppSelection(String appId, ApplicationFilter appSelection);
+
+  List<String> getServiceIdsFromAppSelection(String appId, ApplicationFilter appSelection);
 }

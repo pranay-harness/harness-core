@@ -2,6 +2,7 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
 import static software.wings.sm.StateType.K8S_TRAFFIC_SPLIT;
@@ -79,17 +80,19 @@ public class K8sTrafficSplitState extends AbstractK8sState {
 
       renderStateVariables(context);
 
-      K8sTaskParameters k8sTaskParameters = K8sTrafficSplitTaskParameters.builder()
-                                                .activityId(activity.getUuid())
-                                                .commandName(K8S_TRAFFIC_SPLIT_STATE_NAME)
-                                                .releaseName(fetchReleaseName(context, infraMapping))
-                                                .k8sTaskType(K8sTaskType.TRAFFIC_SPLIT)
-                                                .timeoutIntervalInMin(10)
-                                                .virtualServiceName(virtualServiceName)
-                                                .istioDestinationWeights(istioDestinationWeights)
-                                                .useLatestKustomizeVersion(featureFlagService.isEnabled(
-                                                    FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
-                                                .build();
+      K8sTaskParameters k8sTaskParameters =
+          K8sTrafficSplitTaskParameters.builder()
+              .activityId(activity.getUuid())
+              .commandName(K8S_TRAFFIC_SPLIT_STATE_NAME)
+              .releaseName(fetchReleaseName(context, infraMapping))
+              .k8sTaskType(K8sTaskType.TRAFFIC_SPLIT)
+              .timeoutIntervalInMin(10)
+              .virtualServiceName(virtualServiceName)
+              .istioDestinationWeights(istioDestinationWeights)
+              .useLatestKustomizeVersion(
+                  featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
+              .useNewKubectlVersion(featureFlagService.isEnabled(NEW_KUBECTL_VERSION, infraMapping.getAccountId()))
+              .build();
       return queueK8sDelegateTask(context, k8sTaskParameters, null);
     } catch (WingsException e) {
       throw e;

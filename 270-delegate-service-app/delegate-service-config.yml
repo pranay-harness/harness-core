@@ -72,6 +72,11 @@ segmentConfig:
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
 
+segmentConfiguration:
+  enabled: false
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
+
 distributedLockImplementation: MONGO
 
 redisLockConfig:
@@ -190,10 +195,11 @@ delegateMetadataUrl: file:///local-storage/wingsdelegates/delegatelocal.txt
 
 apiUrl: "https://localhost:9080"
 deployMode: KUBERNETES
+deployVariant: SAAS
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: 87448d72
+scmVersion: 72f01538
 
 portal:
   url: https://localhost:8000

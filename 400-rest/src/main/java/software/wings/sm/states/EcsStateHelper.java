@@ -3,9 +3,9 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static io.harness.beans.FeatureName.ECS_BG_DOWNSIZE;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
+import static io.harness.beans.FeatureName.ENABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -653,7 +653,7 @@ public class EcsStateHelper {
   }
 
   public EcsSetupContextVariableHolder renderEcsSetupContextVariables(ExecutionContext context) {
-    if (featureFlagService.isEnabled(DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, context.getAccountId())) {
+    if (featureFlagService.isNotEnabled(ENABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, context.getAccountId())) {
       return EcsSetupContextVariableHolder.builder()
           .serviceVariables(Collections.EMPTY_MAP)
           .safeDisplayServiceVariables(Collections.EMPTY_MAP)

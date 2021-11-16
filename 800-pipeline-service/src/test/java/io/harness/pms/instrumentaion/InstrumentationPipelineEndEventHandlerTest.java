@@ -103,7 +103,9 @@ public class InstrumentationPipelineEndEventHandlerTest extends CategoryTest {
     doReturn(pipelineExecutionSummaryEntity)
         .when(pmsExecutionService)
         .getPipelineExecutionSummaryEntity("accountId", "orgId", "projectId", "planExecutionId", false);
-    doReturn(notificationRulesList).when(notificationInstrumentationHelper).getNotificationRules("planExecutionId");
+    doReturn(notificationRulesList)
+        .when(notificationInstrumentationHelper)
+        .getNotificationRules("planExecutionId", ambiance);
     doReturn(notificationMethods)
         .when(notificationInstrumentationHelper)
         .getNotificationMethodTypes(notificationRulesList);

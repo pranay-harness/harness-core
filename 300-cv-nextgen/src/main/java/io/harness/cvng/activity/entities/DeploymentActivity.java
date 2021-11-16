@@ -106,6 +106,11 @@ public class DeploymentActivity extends Activity {
       return DeploymentActivity.class;
     }
 
+    @Override
+    public String getEntityKeyLongString(DeploymentActivity activity) {
+      return super.getKeyBuilder(activity).add(activity.getPlanExecutionId()).add(activity.getStageStepId()).toString();
+    }
+
     public Query<DeploymentActivity> populateKeyQuery(Query<DeploymentActivity> query, DeploymentActivity activity) {
       return super.populateKeyQuery(query, activity)
           .filter(DeploymentActivityKeys.planExecutionId, activity.getPlanExecutionId())

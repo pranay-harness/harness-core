@@ -8,8 +8,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.EngineFunctorException;
 import io.harness.expression.LateBindingValue;
 import io.harness.network.SafeHttpCall;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 
 @OwnedBy(PIPELINE)
 public class AccountFunctor implements LateBindingValue {
@@ -23,7 +23,7 @@ public class AccountFunctor implements LateBindingValue {
 
   @Override
   public Object bind() {
-    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     if (EmptyPredicate.isEmpty(accountId)) {
       return null;
     }

@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.secrets;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme.NTLM;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;

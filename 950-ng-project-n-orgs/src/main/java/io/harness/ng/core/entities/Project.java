@@ -83,6 +83,16 @@ public class Project implements PersistentEntity, NGAccountAccess {
                  .field(ProjectKeys.lastModifiedAt)
                  .unique(false)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountOrgIdentifierDeletedLastModifiedAtCreatedAtIdx")
+                 .field(ProjectKeys.accountIdentifier)
+                 .field(ProjectKeys.orgIdentifier)
+                 .field(ProjectKeys.identifier)
+                 .field(ProjectKeys.deleted)
+                 .sortField(ProjectKeys.lastModifiedAt)
+                 .sortField(ProjectKeys.createdAt)
+                 .unique(false)
+                 .build())
         .build();
   }
 

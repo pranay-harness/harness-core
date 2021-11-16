@@ -22,6 +22,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -77,7 +78,8 @@ public class EnforcementResource {
   @NGAccessControlCheck(resourceType = RESOURCE_TYPE, permission = PERMISSION)
   public ResponseDTO<FeatureRestrictionDetailsDTO>
   getFeatureRestrictionDetail(@NotNull @Valid @Body FeatureRestrictionDetailRequestDTO requestDTO,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+      @Parameter(description = "Account id to get the feature restriction detail.") @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getFeatureDetail(requestDTO.getName(), accountIdentifier));
   }
 
@@ -95,7 +97,8 @@ public class EnforcementResource {
   @NGAccessControlCheck(resourceType = RESOURCE_TYPE, permission = PERMISSION)
   public ResponseDTO<List<FeatureRestrictionDetailsDTO>>
   getEnabledFeatureRestrictionForAccount(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+      @Parameter(description = "Account id to get the enable features for the account") @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getEnabledFeatureDetails(accountIdentifier));
   }
 
@@ -118,8 +121,10 @@ public class EnforcementResource {
   @ApiOperation(value = "Get Feature Restriction Metadata", nickname = "getFeatureRestrictionMetadata", hidden = true)
   @InternalApi
   public ResponseDTO<FeatureRestrictionMetadataDTO> getFeatureRestrictionMetadata(
-      @NotNull @PathParam(FEATURE_RESTRICTION_NAME) FeatureRestrictionName featureRestrictionName,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+      @Parameter(description = "The feature restriction to retrieve metadata from.") @NotNull @PathParam(
+          FEATURE_RESTRICTION_NAME) FeatureRestrictionName featureRestrictionName,
+      @Parameter(description = "Account id to get the feature metadata.") @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getFeatureMetadata(featureRestrictionName, accountIdentifier));
   }
 
@@ -130,7 +135,8 @@ public class EnforcementResource {
   @InternalApi
   public ResponseDTO<RestrictionMetadataMapResponseDTO>
   getFeatureRestrictionMetadataMap(@NotNull @Body RestrictionMetadataMapRequestDTO restrictionMetadataMapRequestDTO,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+      @Parameter(description = "Account id to get all metadata from.") @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getFeatureRestrictionMetadataMap(
         restrictionMetadataMapRequestDTO.getNames(), accountIdentifier));
   }

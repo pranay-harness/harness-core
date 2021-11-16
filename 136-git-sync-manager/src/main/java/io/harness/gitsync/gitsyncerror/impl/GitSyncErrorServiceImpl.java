@@ -209,14 +209,17 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       branch = StringUtils.isEmpty(branch) ? yamlGitConfigDTO.getBranch() : branch;
       repoBranchList.add(Pair.of(yamlGitConfigDTO.getRepo(), branch));
     }
-    Criteria repoBranchCriteria = new Criteria();
+    List<Criteria> criteriaList = new ArrayList<>();
     for (Pair<String, String> repoBranch : repoBranchList) {
-      repoBranchCriteria.orOperator(Criteria.where(GitSyncErrorKeys.repoUrl)
-                                        .is(repoBranch.getLeft())
-                                        .and(GitSyncErrorKeys.branchName)
-                                        .is(repoBranch.getRight()));
+      criteriaList.add(Criteria.where(GitSyncErrorKeys.repoUrl)
+                           .is(repoBranch.getLeft())
+                           .and(GitSyncErrorKeys.branchName)
+                           .is(repoBranch.getRight()));
     }
-    return repoBranchCriteria;
+    if (criteriaList.isEmpty()) {
+      return new Criteria();
+    }
+    return new Criteria().orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
   }
 
   @Override

@@ -55,6 +55,7 @@ public class UserInvite extends Base implements AccountAccess {
 
   private String accountId;
   @NotEmpty(groups = {Update.class}) private String email;
+  private String externalUserId;
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
   @Reference(idOnly = true, ignoreMissing = true) private List<UserGroup> userGroups = new ArrayList<>();
   private boolean completed;
@@ -142,6 +143,14 @@ public class UserInvite extends Base implements AccountAccess {
    */
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public String getExternalUserId() {
+    return externalUserId;
+  }
+
+  public void setExternalUserId(String externalUserId) {
+    this.externalUserId = externalUserId;
   }
 
   /**
@@ -297,6 +306,7 @@ public class UserInvite extends Base implements AccountAccess {
     private String accountId;
     private String email;
     private String name;
+    private String externalUserId;
     private List<Role> roles = new ArrayList<>();
     private List<UserGroup> userGroups = new ArrayList<>();
     private boolean completed;
@@ -457,6 +467,11 @@ public class UserInvite extends Base implements AccountAccess {
       return this;
     }
 
+    public UserInviteBuilder withUserId(String externalUserId) {
+      this.externalUserId = externalUserId;
+      return this;
+    }
+
     public UserInvite build() {
       UserInvite userInvite = new UserInvite();
       userInvite.setAccountId(accountId);
@@ -485,7 +500,7 @@ public class UserInvite extends Base implements AccountAccess {
       userInvite.setFreemiumProducts(freemiumProducts);
       userInvite.setCreatedFromNG(createdFromNG);
       userInvite.setIntent(intent);
-
+      userInvite.setExternalUserId(externalUserId);
       return userInvite;
     }
   }

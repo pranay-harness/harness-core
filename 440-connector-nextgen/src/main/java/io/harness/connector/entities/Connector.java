@@ -30,7 +30,10 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
@@ -83,7 +86,17 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
   String yamlGitConfigRef;
   String filePath;
   String rootFolder;
-  Boolean executeOnManager = Boolean.FALSE;
+  Boolean executeOnDelegate = Boolean.TRUE;
+  @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) Boolean isEntityInvalid;
+  String invalidYamlString;
+
+  public void setEntityInvalid(boolean isEntityInvalid) {
+    this.isEntityInvalid = isEntityInvalid;
+  }
+
+  public boolean isEntityInvalid() {
+    return Boolean.TRUE.equals(isEntityInvalid);
+  }
 
   @Override
   public String getAccountIdentifier() {

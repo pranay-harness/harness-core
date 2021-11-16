@@ -90,7 +90,9 @@ public class GitChangeSetRunnable implements Runnable {
 
         try (ProcessTimeLogContext ignore4 =
                  new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
-          log.info(GIT_YAML_LOG_PREFIX + "Successfully handled {} change sets", yamlChangeSets.size());
+          if (!yamlChangeSets.isEmpty()) {
+            log.info(GIT_YAML_LOG_PREFIX + "Successfully handled {} change sets", yamlChangeSets.size());
+          }
         }
       }
     } catch (WingsException exception) {

@@ -50,6 +50,9 @@ import io.harness.waiter.AbstractWaiterModule;
 import io.harness.waiter.WaiterConfiguration;
 import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 
+import software.wings.service.impl.security.NGEncryptorService;
+import software.wings.service.impl.security.NGEncryptorServiceImpl;
+
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -119,6 +122,7 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
         bind(PersistentLocker.class).toInstance(mock(PersistentLocker.class));
         bind(WebhookEventService.class).toInstance(mock(WebhookEventService.class));
         bind(AccountClient.class).toInstance(mock(AccountClient.class));
+        bind(NGEncryptorService.class).toInstance(mock(NGEncryptorServiceImpl.class));
         bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
             .toInstance(mock(NoOpProducer.class));

@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.collaborationprovider;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -9,7 +10,10 @@ import software.wings.beans.ServiceNowConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
 public class ServiceNowConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml, ServiceNowConfig> {
@@ -21,6 +25,7 @@ public class ServiceNowConfigYamlHandler extends CollaborationProviderYamlHandle
     config.setBaseUrl(yaml.getBaseUrl());
     config.setUsername(yaml.getUsername());
     config.setPassword(yaml.getPassword().toCharArray());
+    config.setDelegateSelectors(getDelegateSelectors(yaml.getDelegateSelectors()));
 
     final String accountId = changeContext.getChange().getAccountId();
     config.setAccountId(accountId);
@@ -31,16 +36,24 @@ public class ServiceNowConfigYamlHandler extends CollaborationProviderYamlHandle
 
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
-    final ServiceNowConfig jiraConfig = (ServiceNowConfig) settingAttribute.getValue();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(jiraConfig.getType())
-                    .baseUrl(jiraConfig.getBaseUrl())
-                    .username(jiraConfig.getUsername())
-                    .password(getEncryptedYamlRef(jiraConfig.getAccountId(), jiraConfig.getEncryptedPassword()))
-                    .build();
+    final ServiceNowConfig serviceNowConfig = (ServiceNowConfig) settingAttribute.getValue();
+    Yaml yaml =
+        Yaml.builder()
+            .harnessApiVersion(getHarnessApiVersion())
+            .type(serviceNowConfig.getType())
+            .baseUrl(serviceNowConfig.getBaseUrl())
+            .username(serviceNowConfig.getUsername())
+            .password(getEncryptedYamlRef(serviceNowConfig.getAccountId(), serviceNowConfig.getEncryptedPassword()))
+            .delegateSelectors(getDelegateSelectors(serviceNowConfig.getDelegateSelectors()))
+            .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
+  }
+
+  private List<String> getDelegateSelectors(List<String> delegateSelectors) {
+    return isNotEmpty(delegateSelectors)
+        ? delegateSelectors.stream().filter(StringUtils::isNotBlank).collect(Collectors.toList())
+        : new ArrayList<>();
   }
 
   @Override

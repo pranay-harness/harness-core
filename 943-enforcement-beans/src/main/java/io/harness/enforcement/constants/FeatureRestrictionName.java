@@ -13,6 +13,7 @@ public enum FeatureRestrictionName {
 
   // CCM Features
   PERSPECTIVES,
+  CCM_K8S_CLUSTERS,
 
   // All Features
   MULTIPLE_ORGANIZATIONS,
@@ -29,6 +30,10 @@ public enum FeatureRestrictionName {
   TWO_FACTOR_AUTH_SUPPORT,
   CUSTOM_ROLES,
   CUSTOM_RESOURCE_GROUPS,
+  MAX_TOTAL_BUILDS,
+  MAX_BUILDS_PER_MONTH,
+  ACTIVE_COMMITTERS,
+  TEST_INTELLIGENCE,
 
   // CD Step Palette
   K8S_BG_SWAP_SERVICES,

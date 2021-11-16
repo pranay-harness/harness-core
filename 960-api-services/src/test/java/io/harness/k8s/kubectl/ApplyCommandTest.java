@@ -1,17 +1,21 @@
 package io.harness.k8s.kubectl;
 
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PUNEET;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDP)
 public class ApplyCommandTest extends CategoryTest {
   @Test
   @Owner(developers = PUNEET)
@@ -74,6 +78,20 @@ public class ApplyCommandTest extends CategoryTest {
 
     applyCommand.dryrun(false);
     assertThat(applyCommand.command().contains("--dry-run")).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testDryRunClient() {
+    Kubectl client = Kubectl.client(null, null);
+
+    ApplyCommand applyCommand = client.apply().filename("manifests.yaml").dryRunClient(true).output("yaml");
+
+    assertThat(applyCommand.command().contains("--dry-run=client")).isTrue();
+
+    applyCommand.dryRunClient(false);
+    assertThat(applyCommand.command().contains("--dry-run=client")).isFalse();
   }
 
   @Test

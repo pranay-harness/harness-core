@@ -2,8 +2,6 @@ package io.harness.batch.processing.schedule;
 
 import static io.harness.batch.processing.ApplicationReadyListener.createLivenessMarker;
 
-import io.harness.metrics.service.api.MetricService;
-import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.timescaledb.metrics.QueryStatsPrinter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -18,18 +16,14 @@ public class StartUpJobScheduler {
 
   @Autowired private QueryStatsPrinter queryStatsPrinter;
 
-  @Autowired private MetricsPublisher metricsPublisher;
-  @Autowired private MetricService metricService;
-
   /**
    * Created this job because while running functional test
    * ApplicationReadyListener#createLivenessMarkerOnReadyEvent() is not executed.
    */
   @Scheduled(fixedDelay = Long.MAX_VALUE)
-  public void onAppStart() {
-    log.info("Inside onAppStart");
-    log.info("Initializing metrics");
-    metricService.initializeMetrics();
+  public void createLivenessMarkerJob() {
+    log.info("Inside createLivenessMarker");
+
     try {
       createLivenessMarker();
     } catch (Exception ex) {
@@ -44,11 +38,5 @@ public class StartUpJobScheduler {
         (k, v) -> allQueries.append(String.format("Query: [%s], Stats: [%s]", k, v)).append("\n"));
 
     log.info("PSQL query stats: {}", allQueries);
-  }
-
-  @Scheduled(fixedRate = 60L * 1000, initialDelay = 60L * 1000)
-  public void recordMetrics() {
-    log.info("Recording metrics");
-    metricsPublisher.recordMetrics();
   }
 }

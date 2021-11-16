@@ -14,6 +14,7 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ci.awsvm.AwsVmTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
@@ -179,5 +180,29 @@ public class InitializeTaskStepTest extends CIExecutionTestBase {
     StepResponse stepResponse = initializeTaskStep.handleTaskResultWithSecurityContext(
         ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
+  }
+
+  @SneakyThrows
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void handleAwsVmTaskSuccessWithSecurityContext() {
+    AwsVmTaskExecutionResponse executionResponse =
+        AwsVmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    StepResponse stepResponse = initializeTaskStep.handleTaskResultWithSecurityContext(
+        ambiance, stepElementParameters, () -> executionResponse);
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
+  }
+
+  @SneakyThrows
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void handleAwsVmTaskFailureWithSecurityContext() {
+    AwsVmTaskExecutionResponse executionResponse =
+        AwsVmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+    StepResponse stepResponse = initializeTaskStep.handleTaskResultWithSecurityContext(
+        ambiance, stepElementParameters, () -> executionResponse);
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
   }
 }

@@ -2,6 +2,7 @@ package io.harness.ccm.commons.entities.billing;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.budget.AlertThreshold;
+import io.harness.ccm.budget.BudgetPeriod;
 import io.harness.ccm.budget.BudgetScope;
 import io.harness.ccm.budget.BudgetType;
 import io.harness.mongo.index.FdIndex;
@@ -12,6 +13,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -27,6 +29,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "BudgetKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "budgets", noClassnameStored = true)
+@Schema(name = "Budget", description = "The Cloud Cost Budget definition")
 public final class Budget implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   @NotBlank @FdIndex String accountId;
@@ -34,6 +37,8 @@ public final class Budget implements PersistentEntity, UuidAware, AccountAccess,
   @NotBlank BudgetScope scope; // referred to as "Applies to" in the UI
   @NotBlank BudgetType type;
   @NotBlank Double budgetAmount;
+  @NotBlank BudgetPeriod period;
+  Double growthRate;
   Double actualCost;
   Double forecastCost;
   Double lastMonthCost;
@@ -41,6 +46,8 @@ public final class Budget implements PersistentEntity, UuidAware, AccountAccess,
   String[] emailAddresses;
   String[] userGroupIds; // reference
   boolean notifyOnSlack;
+  long startTime;
+  long endTime;
   long createdAt;
   long lastUpdatedAt;
 }

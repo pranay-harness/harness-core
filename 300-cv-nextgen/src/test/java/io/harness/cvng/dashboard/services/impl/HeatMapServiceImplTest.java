@@ -10,6 +10,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
+import static io.harness.rule.OwnerRule.KAPIL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 
@@ -32,11 +33,13 @@ import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DSConfigService;
+import io.harness.cvng.core.utils.ServiceEnvKey;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
@@ -975,8 +978,8 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     setStartTimeEndTimeAndRiskScoreWith5MinBucket(previousHeatmap, heatMap.getHeatMapBucketStartTime(), 0.5, 0.5);
     hPersistence.save(previousHeatmap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
-        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), bufferTimeForLatestHealthScore);
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(
+        accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
 
     assertThat(riskDataList.size()).isEqualTo(1);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.HEALTHY);
@@ -997,8 +1000,8 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     heatMap.setHeatMapRisks(risks.stream().collect(Collectors.toList()));
     hPersistence.save(heatMap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
-        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), bufferTimeForLatestHealthScore);
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(
+        accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
     assertThat(riskDataList.size()).isEqualTo(1);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.HEALTHY);
     assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(75);
@@ -1007,8 +1010,8 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     heatMap.setHeatMapRisks(risks.stream().collect(Collectors.toList()));
     hPersistence.save(heatMap);
 
-    riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
-        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), bufferTimeForLatestHealthScore);
+    riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(
+        accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
     assertThat(riskDataList.size()).isEqualTo(1);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.NO_DATA);
     assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(null);
@@ -1024,8 +1027,8 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     setStartTimeEndTimeAndRiskScoreWith5MinBucket(previousHeatmap, endTime.minus(4, ChronoUnit.HOURS), 0.50, 0.10);
     hPersistence.save(previousHeatmap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
-        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), bufferTimeForLatestHealthScore);
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(
+        accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
 
     assertThat(riskDataList.size()).isEqualTo(1);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.NO_DATA);
@@ -1048,8 +1051,8 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
             .build();
     hPersistence.save(previousHeatmap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
-        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), bufferTimeForLatestHealthScore);
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(
+        accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
 
     assertThat(riskDataList.size()).isEqualTo(1);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.NO_DATA);
@@ -1074,8 +1077,8 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     setStartTimeEndTimeAndRiskScoreWith5MinBucket(previousHeatmap, heatMap.getHeatMapBucketStartTime(), 0.5, 0.5);
     hPersistence.save(previousHeatmap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
-        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), bufferTimeForLatestHealthScore);
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(
+        accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
 
     assertThat(riskDataList.size()).isEqualTo(1);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.NEED_ATTENTION);
@@ -1101,9 +1104,8 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     setStartTimeEndTimeAndRiskScoreWith5MinBucket(anotherServiceEnvHeatMap, endTime, 0.11, 0.37);
     hPersistence.save(anotherServiceEnvHeatMap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
-        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier), Pair.of(newService, newEnv)),
-        bufferTimeForLatestHealthScore);
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(accountId, orgIdentifier,
+        projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier), Pair.of(newService, newEnv)));
 
     assertThat(riskDataList.size()).isEqualTo(2);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.HEALTHY);
@@ -1141,9 +1143,8 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     setStartTimeEndTimeAndRiskScoreWith5MinBucket(anotherServiceEnvHeatMap, endTime, 0.11, 0.37);
     hPersistence.save(anotherServiceEnvHeatMap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
-        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier), Pair.of(newService, newEnv)),
-        bufferTimeForLatestHealthScore);
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(accountId, orgIdentifier,
+        projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier), Pair.of(newService, newEnv)));
 
     assertThat(riskDataList.size()).isEqualTo(2);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.NEED_ATTENTION);
@@ -1370,6 +1371,29 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     assertHealthScore(historicalTrend.getHealthScores().get(0), 52);
     assertHealthScore(historicalTrend.getHealthScores().get(47), 52);
     assertHealthScore(historicalTrend.getHealthScores().get(46), 61);
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScoreByServiceMap() {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    HeatMap heatMap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.80, 0.75);
+    hPersistence.save(heatMap);
+    Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap = heatMapService.getLatestRiskScoreByServiceMap(
+        projectParams, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
+    ServiceEnvKey serviceEnvKey =
+        ServiceEnvKey.builder().serviceIdentifier(serviceIdentifier).envIdentifier(envIdentifier).build();
+
+    assertThat(latestRiskScoreByServiceMap.keySet().size()).isEqualTo(1);
+    assertThat(latestRiskScoreByServiceMap.get(serviceEnvKey).getHealthScore()).isEqualTo(25);
+    assertThat(latestRiskScoreByServiceMap.get(serviceEnvKey).getRiskStatus()).isEqualTo(Risk.NEED_ATTENTION);
   }
 
   private void assertHealthScore(RiskData riskData, int val) {

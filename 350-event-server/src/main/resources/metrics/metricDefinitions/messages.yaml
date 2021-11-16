@@ -1,0 +1,8 @@
+name: Messages Metrics
+identifier: messagesMetrics
+metricGroup: messages_group
+metrics:
+  - metricName: evsvc_incomingMessageCount
+    metricDefinition: Number of incoming messages
+    unit: "1"
+    type: Count

@@ -14,11 +14,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Service.ServiceKeys;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
@@ -518,6 +518,20 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         .stream()
         .map(Environment::getName)
         .collect(Collectors.toList());
+  }
+
+  @Override
+  @Nonnull
+  public List<Environment> getEnvironmentsFromIds(@NotEmpty String accountId, @Nonnull List<String> envIds) {
+    if (isEmpty(envIds)) {
+      return Collections.emptyList();
+    }
+    return new ArrayList<>(wingsPersistence.createQuery(Environment.class)
+                               .field(EnvironmentKeys.accountId)
+                               .equal(accountId)
+                               .field(EnvironmentKeys.uuid)
+                               .in(envIds)
+                               .asList());
   }
 
   private void ensureEnvironmentSafeToDelete(Environment environment) {

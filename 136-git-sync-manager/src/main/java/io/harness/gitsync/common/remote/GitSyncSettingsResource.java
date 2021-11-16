@@ -1,5 +1,14 @@
 package io.harness.gitsync.common.remote;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.APPLICATION_JSON_MEDIA_TYPE;
+import static io.harness.NGCommonEntityConstants.APPLICATION_YAML_MEDIA_TYPE;
+import static io.harness.NGCommonEntityConstants.BAD_REQUEST_CODE;
+import static io.harness.NGCommonEntityConstants.BAD_REQUEST_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.INTERNAL_SERVER_ERROR_CODE;
+import static io.harness.NGCommonEntityConstants.INTERNAL_SERVER_ERROR_MESSAGE;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.ng.core.rbac.ProjectPermissions.EDIT_PROJECT_PERMISSION;
 
@@ -12,11 +21,19 @@ import io.harness.connector.accesscontrol.ResourceTypes;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.dtos.GitSyncSettingsDTO;
 import io.harness.gitsync.common.service.GitSyncSettingsService;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -35,6 +52,21 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Tag(name = "Git Sync Settings", description = "Contains APIs related to Git Sync Settings")
+@io.swagger.v3.oas.annotations.responses.
+ApiResponse(responseCode = BAD_REQUEST_CODE, description = BAD_REQUEST_PARAM_MESSAGE,
+    content =
+    {
+      @Content(mediaType = APPLICATION_JSON_MEDIA_TYPE, schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = APPLICATION_YAML_MEDIA_TYPE, schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.
+ApiResponse(responseCode = INTERNAL_SERVER_ERROR_CODE, description = INTERNAL_SERVER_ERROR_MESSAGE,
+    content =
+    {
+      @Content(mediaType = APPLICATION_JSON_MEDIA_TYPE, schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = APPLICATION_YAML_MEDIA_TYPE, schema = @Schema(implementation = ErrorDTO.class))
+    })
 @OwnedBy(DX)
 public class GitSyncSettingsResource {
   private final GitSyncSettingsService gitSyncSettingsService;
@@ -42,7 +74,13 @@ public class GitSyncSettingsResource {
 
   @POST
   @ApiOperation(value = "Create a Git Sync Setting", nickname = "postGitSyncSetting")
-  public ResponseDTO<GitSyncSettingsDTO> create(@NotNull @Valid GitSyncSettingsDTO gitSyncSettings) {
+  @Operation(operationId = "createGitSyncSetting", summary = "Creates Git Sync Setting in a scope",
+      responses =
+      { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Successfully created Git Sync Setting") })
+  public ResponseDTO<GitSyncSettingsDTO>
+  create(@RequestBody(
+      required = true, description = "This contains details of Git Sync settings like - (scope, executionOnDelegate)")
+      @NotNull @Valid GitSyncSettingsDTO gitSyncSettings) {
     // todo(abhinav): when git sync comes at other level see for new permission
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(gitSyncSettings.getAccountIdentifier(), gitSyncSettings.getOrganizationIdentifier(),
@@ -54,9 +92,16 @@ public class GitSyncSettingsResource {
 
   @GET
   @ApiOperation(value = "Get git sync settings", nickname = "getGitSyncSettings")
-  public ResponseDTO<GitSyncSettingsDTO> get(@QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String organizationIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier) {
+  @Operation(operationId = "getGitSyncSettings", summary = "Get Git Sync Setting for the given scope",
+      responses =
+      { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Git Sync Setting of the given scope") })
+  public ResponseDTO<GitSyncSettingsDTO>
+  get(@Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String organizationIdentifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier) {
     final Optional<GitSyncSettingsDTO> gitSyncSettingsDTO =
         gitSyncSettingsService.get(accountIdentifier, organizationIdentifier, projectIdentifier);
     return gitSyncSettingsDTO.map(ResponseDTO::newResponse)
@@ -69,7 +114,12 @@ public class GitSyncSettingsResource {
 
   @PUT
   @ApiOperation(value = "Update a Git Sync Setting", nickname = "updateGitSyncSetting")
-  public ResponseDTO<GitSyncSettingsDTO> update(@NotNull @Valid GitSyncSettingsDTO gitSyncSettings) {
+  @Operation(operationId = "updateGitSyncSetting",
+      summary = "Update existing Git Sync Setting by scope. Only changing execution on delegate is allowed",
+      responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Updated Git Sync Setting") })
+  public ResponseDTO<GitSyncSettingsDTO>
+  update(@RequestBody(required = true, description = "Git Sync Setting details, including: scope, executionOnDelegate")
+      @NotNull @Valid GitSyncSettingsDTO gitSyncSettings) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(gitSyncSettings.getAccountIdentifier(), gitSyncSettings.getOrganizationIdentifier(),
             gitSyncSettings.getProjectIdentifier()),

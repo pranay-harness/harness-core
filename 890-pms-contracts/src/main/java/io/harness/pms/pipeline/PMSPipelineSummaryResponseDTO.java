@@ -8,6 +8,7 @@ import io.harness.gitsync.sdk.EntityGitDetails;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +21,8 @@ import org.springframework.data.annotation.Version;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("PMSPipelineSummaryResponse")
+@Schema(name = "PMSPipelineSummaryResponse",
+    description = "This is the view of the Pipeline Summary for Pipeline entity defined in Harness.")
 @OwnedBy(PIPELINE)
 public class PMSPipelineSummaryResponseDTO {
   String name;

@@ -48,7 +48,7 @@ public class ChangeEventProcessorTest extends WingsBaseTest {
     subscriptionEntities.add(sourceClass);
     searchEntities.add(searchEntity);
 
-    changeEventProcessor.startProcessingChangeEvents();
+    changeEventProcessor.startProcessingChangeEvents(new HashSet<>());
     when(searchEntity.getSubscriptionEntities()).thenReturn(subscriptionEntities);
     when(searchEntity.getChangeHandler()).thenReturn(changeHandler);
     when(changeHandler.handleChange(changeEvent)).thenReturn(true).thenThrow(new RuntimeException("Dummy error"));

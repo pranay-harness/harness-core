@@ -216,6 +216,13 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     return scmClient.deleteFile(decryptedConnector, gitFileDetails.build());
   }
 
+  @Override
+  public Commit findCommitById(YamlGitConfigDTO yamlGitConfigDTO, String commitId) {
+    final ScmConnector decryptedConnector =
+        gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
+    return scmClient.findCommit(decryptedConnector, commitId).getCommit();
+  }
+
   private void createBranch(String branch, String baseBranch, ScmConnector scmConnector) {
     scmClient.createNewBranch(scmConnector, branch, baseBranch);
   }

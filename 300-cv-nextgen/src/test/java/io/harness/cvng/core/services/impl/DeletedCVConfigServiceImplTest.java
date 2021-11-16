@@ -129,7 +129,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
     CVConfig cvConfig = createCVConfig();
     DeletedCVConfig saved = save(createDeletedCVConfig(cvConfig));
     monitoringSourcePerpetualTaskService.createTask(accountId, cvConfig.getOrgIdentifier(),
-        cvConfig.getProjectIdentifier(), cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier());
+        cvConfig.getProjectIdentifier(), cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier(), false);
     List<MonitoringSourcePerpetualTask> monitoringSourcePerpetualTasks =
         hPersistence.createQuery(MonitoringSourcePerpetualTask.class)
             .filter(MonitoringSourcePerpetualTaskKeys.monitoringSourceIdentifier, cvConfig.getIdentifier())

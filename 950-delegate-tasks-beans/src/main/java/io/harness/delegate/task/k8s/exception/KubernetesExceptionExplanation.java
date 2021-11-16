@@ -42,6 +42,7 @@ public class KubernetesExceptionExplanation {
       "Found %s services in manifest: [%s]. Could not locate primary service";
   public final String BG_CONFLICTING_SERVICE =
       "For blue/green deployment, the label [" + HarnessLabels.color + "] is required in service selector";
+  public final String BG_SWAP_SERVICES_SERVICE_NOT_FOUND = "Service [%s] not found.";
 
   public final String SCALE_CLI_FAILED = "%s failed with exit code: %d";
   public final String SCALE_CLI_FAILED_OUTPUT = "%s failed with exit code: %d and output: %s";
@@ -52,4 +53,6 @@ public class KubernetesExceptionExplanation {
   public final String ROLLBACK_CLI_FAILED_OUTPUT = "%s failed with exit code: %d and output: %s";
 
   public final String FAILED_TO_READ_FILE = "Could not read file at path [%s].";
+  public final String INVALID_RESOURCE_KIND_NAME_FORMAT =
+      "Resource name '%s' doesn't match kind/name or namespace/kind/name format";
 }

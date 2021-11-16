@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface MonitoringSourcePerpetualTaskService extends DeleteEntityByHandler<MonitoringSourcePerpetualTask> {
   void createTask(String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier,
-      String monitoringSourceIdentifier);
+      String monitoringSourceIdentifier, boolean isDemo);
   void deleteTask(String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier);
   List<MonitoringSourcePerpetualTask> listByConnectorIdentifier(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, Scope scope);

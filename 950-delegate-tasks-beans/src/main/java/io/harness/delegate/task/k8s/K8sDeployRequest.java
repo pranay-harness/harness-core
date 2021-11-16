@@ -40,6 +40,7 @@ public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDem
   Integer getTimeoutIntervalInMin();
   CommandUnitsProgress getCommandUnitsProgress();
   boolean isUseLatestKustomizeVersion();
+  boolean isUseNewKubectlVersion();
 
   @Override
   default List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

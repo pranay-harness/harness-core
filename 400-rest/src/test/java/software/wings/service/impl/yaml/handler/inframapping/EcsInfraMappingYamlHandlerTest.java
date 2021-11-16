@@ -19,10 +19,13 @@ import static java.util.Arrays.asList;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -70,6 +73,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.Key;
 
+@OwnedBy(HarnessTeam.CDP)
 public class EcsInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   @Mock protected SettingsService settingsService;
   @Mock protected ServiceResourceService serviceResourceService;
@@ -138,7 +142,7 @@ public class EcsInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
     when(appService.get(anyString())).thenReturn(getApplication());
     when(appService.getAppByName(anyString(), anyString())).thenReturn(getApplication());
     when(environmentService.getEnvironmentByName(anyString(), anyString())).thenReturn(getEnvironment());
-    when(containerService.validate(anyObject())).thenReturn(true);
+    when(containerService.validate(anyObject(), anyBoolean())).thenReturn(true);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(containerService);
     when(serviceResourceService.getServiceByName(anyString(), anyString())).thenReturn(getService());
     when(serviceResourceService.getWithDetails(anyString(), anyString())).thenReturn(getService());

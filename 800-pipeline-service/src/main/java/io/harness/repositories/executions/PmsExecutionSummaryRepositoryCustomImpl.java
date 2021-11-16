@@ -24,6 +24,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -110,7 +111,7 @@ public class PmsExecutionSummaryRepositoryCustomImpl implements PmsExecutionSumm
     query.fields().include(PlanExecutionSummaryKeys.endTs);
     query.fields().include(PlanExecutionSummaryKeys.status);
 
-    query.with(by(PlanExecutionSummaryKeys.createdAt));
+    query.with(by(Sort.Direction.DESC, PlanExecutionSummaryKeys.createdAt));
     return mongoTemplate.find(query, PipelineExecutionSummaryEntity.class);
   }
 

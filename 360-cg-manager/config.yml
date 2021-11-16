@@ -26,6 +26,12 @@ xxxxxxxx
         threshold: ERROR
   maxThreads: 1024
 
+commonPoolConfig:
+  corePoolSize: ${COMMON_POOL_CORE_SIZE:-20}
+  maxPoolSize: ${COMMON_POOL_MAX_SIZE:-1000}
+  idleTime: ${COMMON_POOL_IDLE_TIME:-500}
+  timeUnit: ${COMMON_POOL_IDLE_TIME_TIME_UNIT:-MILLISECONDS}
+
 auditConfig:
   storeRequestPayload: false
   storeResponsePayload: false
@@ -96,6 +102,11 @@ marketoConfig:
 
 segmentConfig:
   enabled: false #segmentConfigEnable
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
+
+segmentConfiguration:
+  enabled: false
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
 
@@ -291,6 +302,7 @@ events-mongo:
   indexManagerMode: AUTO
 
 searchEnabled: false
+graphQLEnabled: true
 
 elasticsearch:
   uri: http://localhost:9200
@@ -304,10 +316,11 @@ delegateMetadataUrl: file:///local-storage/wingsdelegates/delegatelocal.txt
 
 apiUrl: "https://localhost:9090"
 deployMode: KUBERNETES
+deployVariant: SAAS
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: 87448d72
+scmVersion: 72f01538
 
 ngAuthUIEnabled: false
 
@@ -666,3 +679,5 @@ ldapSyncJobConfig:
   poolSize: 3
   syncInterval: 15
   defaultCronExpression: "0 0/15 * 1/1 * ? *"
+
+useGlobalKMSAsBaseAlgo: false

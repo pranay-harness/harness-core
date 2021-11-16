@@ -229,7 +229,12 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
           .identifier(stageElementConfig.getIdentifier())
           .build();
     } else {
-      return null;
+      return BuildStatusUpdateParameter.builder()
+          .connectorIdentifier(codeBase.getConnectorRef())
+          .repoName(codeBase.getRepoName())
+          .name(stageElementConfig.getName())
+          .identifier(stageElementConfig.getIdentifier())
+          .build();
     }
   }
 

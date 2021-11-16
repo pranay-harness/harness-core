@@ -83,7 +83,6 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       savedSecretsManagerConfig.setSecretNamePrefix(secretsManagerConfig.getSecretNamePrefix());
       savedSecretsManagerConfig.setScopedToAccount(secretsManagerConfig.isScopedToAccount());
       savedSecretsManagerConfig.setUsageRestrictions(secretsManagerConfig.getUsageRestrictions());
-
       // PL-3237: Audit secret manager config changes.
       generateAuditForSecretManager(accountId, oldConfigForAudit, savedSecretsManagerConfig);
 
@@ -155,14 +154,16 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
             wingsPersistence.get(EncryptedData.class, secretsManagerConfig.getSecretKey());
         checkNotNull(
             encryptedSecretKey, "Secret key can't be null for AWS Secrets Manager " + secretsManagerConfig.getUuid());
-        secretsManagerConfig.setSecretKey(String.valueOf(decryptLocal(encryptedSecretKey)));
+        secretsManagerConfig.setSecretKey(String.valueOf(decryptUsingBaseAlgo(encryptedSecretKey)));
       }
     }
   }
 
   private EncryptedData getEncryptedDataForSecretField(AwsSecretsManagerConfig savedSecretsManagerConfig,
       AwsSecretsManagerConfig secretsManagerConfig, String secretValue, String secretNameSuffix) {
-    EncryptedData encryptedData = StringUtils.isNotBlank(secretValue) ? encryptLocal(secretValue.toCharArray()) : null;
+    EncryptedData encryptedData = StringUtils.isNotBlank(secretValue)
+        ? encryptUsingBaseAlgo(secretsManagerConfig.getAccountId(), secretValue.toCharArray())
+        : null;
     if (savedSecretsManagerConfig != null && encryptedData != null) {
       // Get by auth token encrypted record by Id or name.
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
@@ -174,6 +175,8 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       if (savedEncryptedData != null) {
         savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
         savedEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
+        savedEncryptedData.setEncryptionType(encryptedData.getEncryptionType());
+        savedEncryptedData.setKmsId(encryptedData.getKmsId());
         encryptedData = savedEncryptedData;
       }
     }

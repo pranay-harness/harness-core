@@ -21,6 +21,7 @@ import software.wings.beans.JiraConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.jira.JiraTask;
 
+import java.util.ArrayList;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -41,13 +42,14 @@ public class JiraTaskTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void getIssueUrlTest() {
-    JiraConfig jiraConfig = new JiraConfig(BASE_URL2, USER_NAME, PASSWORD, new String(PASSWORD), ACCOUNT_ID);
+    JiraConfig jiraConfig =
+        new JiraConfig(BASE_URL2, USER_NAME, PASSWORD, new String(PASSWORD), ACCOUNT_ID, new ArrayList<>());
     assertThat(jiraTask.getIssueUrl(jiraConfig, "TEST-1000"))
         .isEqualTo("https://dummyjira.atlassian.net/jira/browse/TEST-1000");
-    jiraConfig = new JiraConfig(BASE_URL1, USER_NAME, PASSWORD, new String(PASSWORD), ACCOUNT_ID);
+    jiraConfig = new JiraConfig(BASE_URL1, USER_NAME, PASSWORD, new String(PASSWORD), ACCOUNT_ID, new ArrayList<>());
     assertThat(jiraTask.getIssueUrl(jiraConfig, "TEST-1000"))
         .isEqualTo("https://dummyjira.atlassian.net/browse/TEST-1000");
-    jiraConfig = new JiraConfig(BASE_URL3, USER_NAME, PASSWORD, new String(PASSWORD), ACCOUNT_ID);
+    jiraConfig = new JiraConfig(BASE_URL3, USER_NAME, PASSWORD, new String(PASSWORD), ACCOUNT_ID, new ArrayList<>());
     assertThat(jiraTask.getIssueUrl(jiraConfig, "TEST-1000"))
         .isEqualTo("https://dummyjira.atlassian.net/browse/TEST-1000");
   }

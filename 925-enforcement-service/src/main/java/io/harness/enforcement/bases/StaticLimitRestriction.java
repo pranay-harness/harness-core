@@ -14,12 +14,14 @@ import lombok.NoArgsConstructor;
 public class StaticLimitRestriction extends Restriction implements LimitRestrictionInterface {
   Long limit;
   String clientName;
+  boolean allowedIfEqual;
   EnforcementSdkClient enforcementSdkClient;
 
   public StaticLimitRestriction(
-      RestrictionType restrictionType, long limit, EnforcementSdkClient enforcementSdkClient) {
+      RestrictionType restrictionType, long limit, boolean allowedIfEqual, EnforcementSdkClient enforcementSdkClient) {
     super(restrictionType);
     this.limit = limit;
+    this.allowedIfEqual = allowedIfEqual;
     this.enforcementSdkClient = enforcementSdkClient;
   }
 

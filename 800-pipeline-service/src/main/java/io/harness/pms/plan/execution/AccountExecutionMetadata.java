@@ -5,10 +5,14 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Setter;
@@ -36,4 +40,10 @@ public class AccountExecutionMetadata {
   String accountId;
   @Builder.Default Map<String, Long> moduleToExecutionCount = new HashMap<>();
   @NonFinal @Builder.Default @Setter Map<String, AccountExecutionInfo> moduleToExecutionInfoMap = new HashMap<>();
+
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder().name("accountId_idx").field(AccountExecutionMetadataKeys.accountId).build())
+        .build();
+  }
 }

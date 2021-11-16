@@ -12,6 +12,7 @@ import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
+import io.harness.exception.ngexception.ErrorMetadataDTO;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -74,15 +75,23 @@ public class WingsException extends RuntimeException {
 
   private EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
 
+  private ErrorMetadataDTO metadata;
+
   @Builder
   protected WingsException(String message, Throwable cause, ErrorCode code, Level level,
       EnumSet<ReportTarget> reportTargets, EnumSet<FailureType> failureTypes) {
+    this(message, cause, code, level, reportTargets, failureTypes, null);
+  }
+
+  protected WingsException(String message, Throwable cause, ErrorCode code, Level level,
+      EnumSet<ReportTarget> reportTargets, EnumSet<FailureType> failureTypes, ErrorMetadataDTO metadata) {
     super(message == null ? code.name() : message, cause);
     this.code = code == null ? UNKNOWN_ERROR : code;
     this.level = level == null ? Level.ERROR : level;
     this.reportTargets = reportTargets == null ? USER_SRE : reportTargets;
     this.failureTypes = failureTypes == null ? EnumSet.noneOf(FailureType.class) : failureTypes;
     contextObjects = MDC.getCopyOfContextMap();
+    this.metadata = metadata;
   }
 
   @Deprecated

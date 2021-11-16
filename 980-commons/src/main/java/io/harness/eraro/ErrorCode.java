@@ -30,6 +30,10 @@ public enum ErrorCode {
 
   DOMAIN_NOT_ALLOWED_TO_REGISTER,
 
+  COMMNITY_EDITION_NOT_FOUND,
+
+  DEPLOY_MODE_IS_NOT_ON_PREM,
+
   USER_ALREADY_REGISTERED(CONFLICT),
 
   USER_INVITATION_DOES_NOT_EXIST(UNAUTHORIZED, "User was not invited to access account or the invitation is obsolete"),

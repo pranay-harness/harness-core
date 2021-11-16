@@ -3,18 +3,30 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.beans.LogRecordDTO;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.LogRecord.LogRecordKeys;
+import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.LogRecordService;
+import io.harness.cvng.core.services.api.demo.CVNGDemoDataIndexService;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.JsonUtils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class LogRecordServiceImpl implements LogRecordService {
   @Inject private HPersistence hPersistence;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private CVNGDemoDataIndexService cvngDemoDataIndexService;
   @Override
   public void save(List<LogRecordDTO> logRecords) {
     saveRecords(logRecords.stream().map(this::toLogRecord).collect(Collectors.toList()));
@@ -42,5 +54,40 @@ public class LogRecordServiceImpl implements LogRecordService {
         .log(logRecordDTO.getLog())
         .timestamp(Instant.ofEpochMilli(logRecordDTO.getTimestamp()))
         .build();
+  }
+
+  @Override
+  public void createDemoAnalysisData(String accountId, String verificationTaskId, String dataCollectionWorkerId,
+      Instant startTime, Instant endTime) throws IOException {
+    List<LogRecordDTO> logRecordsToBeSaved = new ArrayList<>();
+    Instant time = startTime;
+    CVConfig cvConfig = cvConfigService.get(verificationTaskId);
+    String demoTemplatePath = getDemoTemplate(cvConfig);
+    List<List<LogRecordDTO>> logRecordsList =
+        JsonUtils.asObject(demoTemplatePath, new TypeReference<List<List<LogRecordDTO>>>() {});
+    int index = cvngDemoDataIndexService.readIndexForDemoData(accountId, dataCollectionWorkerId, verificationTaskId);
+    while (time.compareTo(endTime) < 0) {
+      if (index >= logRecordsList.size()) {
+        index = index % logRecordsList.size();
+      }
+      List<LogRecordDTO> logRecordsDTOAtTime = logRecordsList.get(index);
+      for (LogRecordDTO logRecordDTO : logRecordsDTOAtTime) {
+        logRecordDTO.setAccountId(accountId);
+        logRecordDTO.setVerificationTaskId(verificationTaskId);
+        logRecordDTO.setTimestamp(time.toEpochMilli());
+      }
+
+      logRecordsToBeSaved.addAll(logRecordsDTOAtTime);
+      index++;
+      time = time.plus(1, ChronoUnit.MINUTES);
+    }
+    cvngDemoDataIndexService.saveIndexForDemoData(accountId, dataCollectionWorkerId, verificationTaskId, index);
+    save(logRecordsToBeSaved);
+  }
+
+  private String getDemoTemplate(CVConfig cvConfig) throws IOException {
+    String path = "/io/harness/cvng/analysis/liveMonitoring/logs/$provider_logs_live_monitoring_demo_template.json";
+    path = path.replace("$provider", cvConfig.getType().getDemoTemplatePrefix());
+    return Resources.toString(this.getClass().getResource(path), Charsets.UTF_8);
   }
 }

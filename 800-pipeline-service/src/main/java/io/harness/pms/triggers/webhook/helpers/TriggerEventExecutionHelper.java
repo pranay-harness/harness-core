@@ -63,9 +63,15 @@ public class TriggerEventExecutionHelper {
       resultBuilder.mappedToTriggers(true);
       if (isNotEmpty(webhookEventMappingResponse.getTriggers())) {
         for (TriggerDetails triggerDetails : webhookEventMappingResponse.getTriggers()) {
+          if (triggerDetails.getNgTriggerEntity() == null) {
+            log.error("Trigger Entity is empty, This should not happen, please check");
+            continue;
+          }
+          long yamlVersion = triggerDetails.getNgTriggerEntity().getYmlVersion() == null
+              ? 3
+              : triggerDetails.getNgTriggerEntity().getYmlVersion();
           eventResponses.add(triggerPipelineExecution(triggerWebhookEvent, triggerDetails,
-              getTriggerPayloadForWebhookTrigger(webhookEventMappingResponse, triggerWebhookEvent,
-                  triggerDetails.getNgTriggerEntity().getYmlVersion()),
+              getTriggerPayloadForWebhookTrigger(webhookEventMappingResponse, triggerWebhookEvent, yamlVersion),
               triggerWebhookEvent.getPayload()));
         }
       }

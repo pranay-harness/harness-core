@@ -64,7 +64,6 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.prefixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.suffixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.trueFileFilter;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
 import static org.apache.commons.lang3.StringUtils.startsWith;
@@ -179,11 +178,12 @@ public class WatcherServiceImpl implements WatcherService {
   private long delegateRestartedToUpgradeJreAt;
   private boolean watcherRestartedToUpgradeJre;
 
-  private final String delegateNg = System.getenv().get("NEXT_GEN");
-
+  private final boolean delegateNg = isNotBlank(System.getenv().get("DELEGATE_SESSION_IDENTIFIER"))
+      || (isNotBlank(System.getenv().get("NEXT_GEN")) && Boolean.parseBoolean(System.getenv().get("NEXT_GEN")));
   private final SecureRandom random = new SecureRandom();
 
   private static final boolean multiVersion;
+  private static boolean accountVersion;
 
   static {
     String deployMode = System.getenv().get("DEPLOY_MODE");
@@ -226,7 +226,7 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       log.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
       log.info("Multiversion: {}", multiVersion);
-      if (isBlank(delegateNg)) {
+      if (!delegateNg) {
         log.info("Delegate is CG. Watcher will run CG delegates.");
       } else {
         log.info("Delegate is NG. Watcher will run NG delegates.");
@@ -640,6 +640,10 @@ public class WatcherServiceImpl implements WatcherService {
                   drainingNeededList.add(delegateProcess);
                 }
               }
+              if (accountVersion) {
+                messageService.writeMessageToChannel(
+                    DELEGATE, delegateProcess, DELEGATE_SEND_VERSION_HEADER, Boolean.FALSE.toString());
+              }
 
               if (newDelegate) {
                 log.info("New delegate process {} is starting", delegateProcess);
@@ -962,6 +966,9 @@ public class WatcherServiceImpl implements WatcherService {
         if (config != null && config.getAction() == SELF_DESTRUCT) {
           selfDestruct();
         }
+        if (config != null && config.isAccountVersion()) {
+          accountVersion = true;
+        }
 
         return config != null ? config.getDelegateVersions() : null;
       } else {
@@ -1002,11 +1009,11 @@ public class WatcherServiceImpl implements WatcherService {
     }
 
     // Get patched version
-    final String patchVersion = substringAfter(version, "-");
-    final String updatedVersion = version.contains("-") ? substringBefore(version, "-") : version;
-
+    final String patchVersion = !accountVersion ? substringAfter(version, "-") : "";
+    final String updatedVersion =
+        !accountVersion ? (version.contains("-") ? substringBefore(version, "-") : version) : "";
     RestResponse<DelegateScripts> restResponse = null;
-    if (isBlank(delegateNg)) {
+    if (!delegateNg) {
       log.info(format("Calling getDelegateScripts with version %s and patch %s", updatedVersion, patchVersion));
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
@@ -1229,7 +1236,8 @@ public class WatcherServiceImpl implements WatcherService {
       try {
         sleep(ofSeconds(5));
         log.info("Send kill -3 to delegateProcess {}", delegateProcess);
-        new ProcessExecutor().command("kill", "-3", delegateProcess).start();
+        final String killCmd = "kill -3 " + delegateProcess;
+        new ProcessExecutor().command("/bin/bash", "-c", killCmd).start();
         sleep(ofSeconds(15));
         ProcessControl.ensureKilled(delegateProcess, Duration.ofSeconds(120));
       } catch (Exception e) {

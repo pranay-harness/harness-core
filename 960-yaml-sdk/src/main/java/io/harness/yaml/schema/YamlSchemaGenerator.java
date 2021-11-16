@@ -3,6 +3,7 @@ package io.harness.yaml.schema;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.yaml.schema.beans.SchemaConstants.ADDITIONAL_PROPERTIES_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ARRAY_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.BOOL_TYPE_NODE;
@@ -17,7 +18,9 @@ import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PATTERN_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.REQUIRED_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.RUNTIME_INPUT_PATTERN;
+import static io.harness.yaml.schema.beans.SchemaConstants.SCHEMA_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.STRING_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.TYPE_NODE;
 
@@ -62,6 +65,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -230,7 +234,8 @@ public class YamlSchemaGenerator {
       final SwaggerDefinitionsMetaInfo swaggerDefinitionsMetaInfo = swaggerDefinitionsMetaInfoMap.get(name);
       List<ObjectNode> allOfNodeContents = new ArrayList<>();
       // conditionals
-      if (!isEmpty(swaggerDefinitionsMetaInfo.getSubtypeClassMap())) {
+      if (!isEmpty(swaggerDefinitionsMetaInfo.getSubtypeClassMap())
+          && swaggerDefinitionsMetaInfo.getOneOfSetMapping() == null) {
         addConditionalAndCleanupFields(swaggerDefinitionsMetaInfoMap, mapper, name, value, allOfNodeContents);
       }
       // oneof mapping
@@ -250,17 +255,121 @@ public class YamlSchemaGenerator {
         addNotEmptyFields(value, swaggerDefinitionsMetaInfo.getNotEmptyStringFields());
       }
 
-      if (isNotEmpty(allOfNodeContents)) {
-        if (value.has(SchemaConstants.ALL_OF_NODE)) {
-          final ArrayNode allOfNode = (ArrayNode) value.findValue(SchemaConstants.ALL_OF_NODE);
-          allOfNode.addAll(allOfNodeContents);
-        } else {
-          value.putArray(SchemaConstants.ALL_OF_NODE).addAll(allOfNodeContents);
-        }
+      if (swaggerDefinitionsMetaInfo.getOneOfSetMapping() != null) {
+        addOneOfSetNodes(value, swaggerDefinitionsMetaInfo, mapper);
       }
+
+      addAllOfNodeContents(value, allOfNodeContents);
     }
 
     removeUnwantedNodes(value, "originalRef");
+  }
+
+  private void addAllOfNodeContents(ObjectNode value, List<ObjectNode> allOfNodeContents) {
+    if (isNotEmpty(allOfNodeContents)) {
+      if (value.has(SchemaConstants.ALL_OF_NODE)) {
+        final ArrayNode allOfNode = (ArrayNode) value.findValue(SchemaConstants.ALL_OF_NODE);
+        allOfNode.addAll(allOfNodeContents);
+      } else {
+        value.putArray(SchemaConstants.ALL_OF_NODE).addAll(allOfNodeContents);
+      }
+    }
+  }
+
+  private void addOneOfSetNodes(
+      ObjectNode value, SwaggerDefinitionsMetaInfo swaggerDefinitionsMetaInfo, ObjectMapper mapper) {
+    Set<Set<String>> oneOfSets = swaggerDefinitionsMetaInfo.getOneOfSetMapping().getOneOfSets();
+    ObjectNode nodeWithProperties = getNodeWithPropertiesFromDefinitionNode(value);
+
+    Map<String, List<ObjectNode>> externalPropertyFieldNamesToAllOfNodeMap = new HashMap<>();
+    if (!isEmpty(swaggerDefinitionsMetaInfo.getSubtypeClassMap())) {
+      addConditionalNodes(swaggerDefinitionsMetaInfo, mapper, value, externalPropertyFieldNamesToAllOfNodeMap);
+    }
+
+    List<ObjectNode> oneOfSetList =
+        getOneOfSetList(mapper, oneOfSets, nodeWithProperties, externalPropertyFieldNamesToAllOfNodeMap);
+    emptyPropertiesAndRequiredFieldsFromOriginalNode(nodeWithProperties);
+
+    value.putArray(SchemaConstants.ONE_OF_NODE).addAll(oneOfSetList);
+  }
+
+  private List<ObjectNode> getOneOfSetList(ObjectMapper mapper, Set<Set<String>> oneOfSets,
+      ObjectNode nodeWithProperties, Map<String, List<ObjectNode>> externalPropertyFieldNamesToAllOfNodeMap) {
+    List<ObjectNode> oneOfSetList = new ArrayList<>();
+    Set<String> oneOfSetFieldNames = getAllOneOfSetFieldNames(oneOfSets);
+    for (Set<String> oneOfSet : oneOfSets) {
+      ObjectNode oneOfSetNode = nodeWithProperties.deepCopy();
+      ObjectNode newPropertiesNode = (ObjectNode) oneOfSetNode.get(PROPERTIES_NODE);
+      Set<String> fieldsToRemove = new HashSet<>(oneOfSetFieldNames);
+      fieldsToRemove.removeAll(oneOfSet);
+      newPropertiesNode.remove(fieldsToRemove);
+      oneOfSetNode.set(PROPERTIES_NODE, newPropertiesNode);
+      oneOfSetNode.put(ADDITIONAL_PROPERTIES_NODE, false);
+      oneOfSetNode.remove(SCHEMA_NODE);
+      ArrayNode requiredNode = (ArrayNode) oneOfSetNode.get(REQUIRED_NODE);
+      if (requiredNode != null) {
+        ArrayNode oneOfSetRequiredNode = mapper.createArrayNode();
+        requiredNode.forEach(n -> {
+          if (!fieldsToRemove.contains(n.asText())) {
+            oneOfSetRequiredNode.add(n.asText());
+          }
+        });
+        if (oneOfSetRequiredNode.size() > 0) {
+          oneOfSetNode.set(REQUIRED_NODE, oneOfSetRequiredNode);
+        } else {
+          oneOfSetNode.remove(REQUIRED_NODE);
+        }
+      }
+      externalPropertyFieldNamesToAllOfNodeMap.forEach((externalPropertyFieldName, allOfNodeList) -> {
+        if (!fieldsToRemove.contains(externalPropertyFieldName)) {
+          addAllOfNodeContents(oneOfSetNode, allOfNodeList);
+        }
+      });
+      oneOfSetList.add(oneOfSetNode);
+    }
+    return oneOfSetList;
+  }
+
+  private Set<String> getAllOneOfSetFieldNames(Set<Set<String>> oneOfSets) {
+    Set<String> oneOfSetFieldNames = new HashSet<>();
+    oneOfSets.forEach(oneOfSetFieldNames::addAll);
+    return oneOfSetFieldNames;
+  }
+
+  private void emptyPropertiesAndRequiredFieldsFromOriginalNode(ObjectNode nodeWithProperties) {
+    ObjectNode originalPropertiesNode = (ObjectNode) nodeWithProperties.get(PROPERTIES_NODE);
+    originalPropertiesNode.removeAll();
+    ArrayNode requiredNode = (ArrayNode) nodeWithProperties.get(REQUIRED_NODE);
+    if (requiredNode != null) {
+      requiredNode.removeAll();
+    }
+  }
+
+  private ObjectNode getNodeWithPropertiesFromDefinitionNode(ObjectNode value) {
+    // In case of child classes they contain parent node information in 0 index of all of.
+    // assuming index 1 to have properties node.
+    // later if we find a corner case we will have to iterate over all the nodes to find properties node and see if it
+    // works.
+    if (value.get(ALL_OF_NODE) != null) {
+      return (ObjectNode) value.get(ALL_OF_NODE).get(1);
+    } else {
+      return value;
+    }
+  }
+
+  private void addConditionalNodes(SwaggerDefinitionsMetaInfo swaggerDefinitionsMetaInfoMap, ObjectMapper mapper,
+      ObjectNode value, Map<String, List<ObjectNode>> externalPropertyFieldNamesToAllOfNodeMap) {
+    List<FieldSubtypeData> fieldSubtypeDatas = new ArrayList<>(swaggerDefinitionsMetaInfoMap.getSubtypeClassMap());
+    fieldSubtypeDatas.sort(new FieldSubTypeComparator());
+    for (FieldSubtypeData fieldSubtypeData : fieldSubtypeDatas) {
+      if (fieldSubtypeData.getDiscriminatorType() == JsonTypeInfo.As.EXTERNAL_PROPERTY) {
+        List<ObjectNode> allOfNodeContents = new ArrayList<>();
+        addConditionalBlock(mapper, allOfNodeContents, fieldSubtypeData);
+        externalPropertyFieldNamesToAllOfNodeMap.put(fieldSubtypeData.getFieldName(), allOfNodeContents);
+      } else {
+        addInternalConditionalBlock(value, mapper, fieldSubtypeData);
+      }
+    }
   }
 
   private void addNotEmptyFields(ObjectNode value, Set<String> nonEmptyFields) {

@@ -88,6 +88,7 @@ public class JiraHelperService {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
+                                    .tags(jiraConfig.getDelegateSelectors())
                                     .data(TaskData.builder()
                                               .async(false)
                                               .taskType(TaskType.JIRA.name())

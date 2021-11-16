@@ -200,7 +200,7 @@ public class Trigger extends Base
   }
 
   public List<Long> recalculateNextIterations(String fieldName, boolean skipMissed, long throttled) {
-    if (!TriggerConditionType.SCHEDULED.equals(condition.getConditionType()) || disabled) {
+    if (!TriggerConditionType.SCHEDULED.equals(condition.getConditionType())) {
       nextIterations = new ArrayList<>();
       return nextIterations;
     }

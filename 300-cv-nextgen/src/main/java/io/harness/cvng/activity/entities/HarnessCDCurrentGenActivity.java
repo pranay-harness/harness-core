@@ -61,6 +61,11 @@ public class HarnessCDCurrentGenActivity extends Activity {
       return HarnessCDCurrentGenActivity.class;
     }
 
+    @Override
+    public String getEntityKeyLongString(HarnessCDCurrentGenActivity activity) {
+      return super.getKeyBuilder(activity).add(activity.getWorkflowExecutionId()).toString();
+    }
+
     public Query<HarnessCDCurrentGenActivity> populateKeyQuery(
         Query<HarnessCDCurrentGenActivity> query, HarnessCDCurrentGenActivity activity) {
       return super.populateKeyQuery(query, activity)

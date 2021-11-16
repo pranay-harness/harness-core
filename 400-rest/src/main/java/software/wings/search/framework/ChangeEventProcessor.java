@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class ChangeEventProcessor {
   @Inject private Set<SearchEntity<?>> searchEntities;
+  @Inject private Set<TimeScaleEntity<?>> timeScaleEntities;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ChangeEventMetricsTracker changeEventMetricsTracker;
   private BlockingQueue<ChangeEvent<?>> changeEventQueue = new LinkedBlockingQueue<>(1000);
@@ -28,9 +29,9 @@ class ChangeEventProcessor {
       Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("primary-change-processor").build());
   private Future<?> changeEventProcessorTaskFuture;
 
-  void startProcessingChangeEvents() {
-    ChangeEventProcessorTask changeEventProcessorTask =
-        new ChangeEventProcessorTask(searchEntities, wingsPersistence, changeEventMetricsTracker, changeEventQueue);
+  void startProcessingChangeEvents(Set<String> accountIdsToSyncToTimescale) {
+    ChangeEventProcessorTask changeEventProcessorTask = new ChangeEventProcessorTask(searchEntities, timeScaleEntities,
+        wingsPersistence, changeEventMetricsTracker, changeEventQueue, accountIdsToSyncToTimescale);
     changeEventProcessorTaskFuture = changeEventExecutorService.submit(changeEventProcessorTask);
   }
 

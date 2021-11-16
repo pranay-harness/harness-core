@@ -84,6 +84,8 @@ public class ExecuteLdapGetUsersRequest implements Function<LdapGetUsersRequest,
   private LdapSearch getFallBackLdapSearch(LdapSearch ldapSearch) {
     return LdapSearch.builder()
         .baseDN(ldapSearch.getBaseDN())
+        .bindDn(ldapSearch.getBindDn())
+        .bindCredential(ldapSearch.getBindCredential())
         .connectionFactory(ldapSearch.getConnectionFactory())
         .referralsEnabled(ldapSearch.isReferralsEnabled())
         .maxReferralHops(ldapSearch.getMaxReferralHops())

@@ -59,6 +59,7 @@ import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
+import io.harness.delegate.beans.DelegateType;
 import io.harness.delegate.beans.K8sConfigDetails;
 import io.harness.delegate.beans.K8sPermissionType;
 import io.harness.delegate.beans.TaskData;
@@ -109,6 +110,7 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -149,7 +151,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   private static final String SECRET_URL = "http://google.com/?q=${secretManager.obtain(\"test\", 1234)}";
 
   private static final String VERSION = "1.0.0";
-  private static final String TEST_SESSION_IDENTIFIER = generateUuid();
   private static final String TEST_DELEGATE_PROFILE_ID = generateUuid();
   private static final long TEST_PROFILE_EXECUTION_TIME = System.currentTimeMillis();
 
@@ -669,7 +670,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testObtainDelegateIdShouldReturnDelegateId() {
-    Delegate delegate = createDelegateBuilder().delegateName(TEST_DELEGATE_NAME).build();
+    Delegate delegate = createDelegateBuilder().ng(true).delegateName(TEST_DELEGATE_NAME).build();
     String delegateId = persistence.save(delegate);
 
     List<String> delegateIds =
@@ -685,8 +686,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void testGetConnectedDelegates() {
     List<String> delegateIds = new ArrayList<>();
 
-    Delegate delegate1 =
-        createDelegateBuilder().accountId(ACCOUNT_ID).sessionIdentifier(TEST_SESSION_IDENTIFIER).build();
+    Delegate delegate1 = createDelegateBuilder().accountId(ACCOUNT_ID).build();
     String delegateId1 = persistence.save(delegate1);
 
     DelegateConnection delegateConnection1 = DelegateConnection.builder()
@@ -701,8 +701,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     delegateIds.add(delegateId1);
 
-    Delegate delegate2 =
-        createDelegateBuilder().accountId(ACCOUNT_ID).sessionIdentifier(TEST_SESSION_IDENTIFIER).build();
+    Delegate delegate2 = createDelegateBuilder().accountId(ACCOUNT_ID).build();
     String delegateId2 = persistence.save(delegate2);
 
     DelegateConnection delegateConnection2 = DelegateConnection.builder()
@@ -790,7 +789,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .version(VERSION)
-                            .sessionIdentifier(TEST_SESSION_IDENTIFIER)
                             .lastHeartBeat(System.currentTimeMillis())
                             .profileError(true)
                             .build();
@@ -816,7 +814,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .version(VERSION)
-                            .sessionIdentifier(TEST_SESSION_IDENTIFIER)
                             .lastHeartBeat(System.currentTimeMillis())
                             .profileError(false)
                             .profileExecutedAt(TEST_PROFILE_EXECUTION_TIME)
@@ -843,7 +840,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .version(VERSION)
-                            .sessionIdentifier(TEST_SESSION_IDENTIFIER)
                             .lastHeartBeat(System.currentTimeMillis())
                             .profileError(false)
                             .profileExecutedAt(0L)
@@ -878,7 +874,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .version(VERSION)
-                            .sessionIdentifier(TEST_SESSION_IDENTIFIER)
                             .lastHeartBeat(System.currentTimeMillis())
                             .profileError(false)
                             .profileExecutedAt(0L)
@@ -945,6 +940,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void testUpsertDelegateGroup_noExistingGroup() throws IOException {
     K8sConfigDetails k8sConfigDetails =
         K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.NAMESPACE_ADMIN).namespace("namespace").build();
+    final ImmutableSet<String> tags = ImmutableSet.of("sometag", "anothertag");
     DelegateGroup returnedDelegateGroup = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID,
         DelegateSetupDetails.builder()
             .name(TEST_DELEGATE_GROUP_NAME)
@@ -952,9 +948,10 @@ public class DelegateServiceImplTest extends WingsBaseTest {
             .projectIdentifier(PROJECT_ID)
             .k8sConfigDetails(k8sConfigDetails)
             .description("description")
-            .delegateConfigurationId("delConfigId")
             .size(DelegateSize.LAPTOP)
             .identifier(DELEGATE_GROUP_IDENTIFIER)
+            .tags(tags)
+            .delegateType(DelegateType.KUBERNETES)
             .build());
 
     assertThat(returnedDelegateGroup).isNotNull();
@@ -964,10 +961,10 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     assertThat(returnedDelegateGroup.getName()).isEqualTo(TEST_DELEGATE_GROUP_NAME);
     assertThat(returnedDelegateGroup.getK8sConfigDetails()).isEqualTo(k8sConfigDetails);
     assertThat(returnedDelegateGroup.getDescription()).isEqualTo("description");
-    assertThat(returnedDelegateGroup.getDelegateConfigurationId()).isEqualTo("delConfigId");
     assertThat(returnedDelegateGroup.getSizeDetails().getSize()).isEqualTo(DelegateSize.LAPTOP);
     assertThat(returnedDelegateGroup.isNg()).isTrue();
     assertThat(returnedDelegateGroup.getIdentifier()).isEqualTo(DELEGATE_GROUP_IDENTIFIER);
+    assertThat(returnedDelegateGroup.getTags()).containsAll(tags);
 
     List<OutboxEvent> outboxEvents = outboxService.list(OutboxEventFilter.builder().maximumEventsPolled(100).build());
     assertThat(outboxEvents.size()).isEqualTo(1);
@@ -991,9 +988,10 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                        .projectIdentifier(PROJECT_ID)
                        .k8sConfigDetails(k8sConfigDetails)
                        .description("description")
-                       .delegateConfigurationId("delConfigId")
                        .size(DelegateSize.LAPTOP)
                        .identifier(DELEGATE_GROUP_IDENTIFIER)
+                       .tags(tags)
+                       .delegateType(DelegateType.KUBERNETES)
                        .build());
 
     // test delete event
@@ -1020,9 +1018,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                        .projectIdentifier(PROJECT_ID)
                        .k8sConfigDetails(k8sConfigDetails)
                        .description("description")
-                       .delegateConfigurationId("delConfigId")
                        .size(DelegateSize.LAPTOP)
                        .identifier(null)
+                       .delegateType(DelegateType.KUBERNETES)
                        .build());
   }
 
@@ -1080,7 +1078,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     DelegateGroup delegateGroup2 =
         delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails2);
 
-    assertThat(delegateGroup1.getUuid()).isNotEqualTo(delegateGroup2.getUuid());
+    assertThat(delegateGroup1.getUuid()).isEqualTo(delegateGroup2.getUuid());
   }
 
   @Test
@@ -1317,11 +1315,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ARPIT)
-  @Category(UnitTests.class)
-  public void shouldSaveTagsInDelegate_AndDelegateGroupCollection() {}
-
-  @Test
   @Owner(developers = VLAD)
   @Category(UnitTests.class)
   public void shouldValidateDelegateProfileWrongProfileId() {
@@ -1354,7 +1347,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate1 = Delegate.builder()
                              .accountId(ACCOUNT_ID)
                              .version(VERSION)
-                             .sessionIdentifier(TEST_SESSION_IDENTIFIER)
                              .lastHeartBeat(System.currentTimeMillis())
                              .profileError(true)
                              .build();
@@ -1362,7 +1354,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate2 = Delegate.builder()
                              .accountId(ACCOUNT_ID)
                              .version(VERSION)
-                             .sessionIdentifier(TEST_SESSION_IDENTIFIER)
                              .lastHeartBeat(System.currentTimeMillis())
                              .profileError(false)
                              .profileExecutedAt(TEST_PROFILE_EXECUTION_TIME)
@@ -1372,7 +1363,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate3 = Delegate.builder()
                              .accountId(ACCOUNT_ID)
                              .version(VERSION)
-                             .sessionIdentifier(TEST_SESSION_IDENTIFIER)
                              .lastHeartBeat(System.currentTimeMillis())
                              .profileError(false)
                              .profileExecutedAt(0L)
@@ -1388,7 +1378,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate4 = Delegate.builder()
                              .accountId(ACCOUNT_ID)
                              .version(VERSION)
-                             .sessionIdentifier(TEST_SESSION_IDENTIFIER)
                              .lastHeartBeat(System.currentTimeMillis())
                              .profileError(false)
                              .profileExecutedAt(0L)
@@ -1448,6 +1437,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     return DelegateSetupDetails.builder()
         .name(TEST_DELEGATE_GROUP_NAME)
         .size(DelegateSize.LAPTOP)
-        .delegateConfigurationId("configId");
+        .delegateConfigurationId("configId")
+        .delegateType(DelegateType.KUBERNETES);
   }
 }

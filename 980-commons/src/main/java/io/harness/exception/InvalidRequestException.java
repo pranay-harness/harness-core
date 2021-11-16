@@ -4,11 +4,16 @@ import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
+import io.harness.exception.ngexception.ErrorMetadataDTO;
 
 import java.util.EnumSet;
 
 public class InvalidRequestException extends WingsException {
   private static final String MESSAGE_ARG = "message";
+
+  public InvalidRequestException(String message, ErrorMetadataDTO metadata) {
+    super(message, null, INVALID_REQUEST, Level.ERROR, null, null, metadata);
+  }
 
   // This method does not create the intended message, needs to be fixed @George
   public InvalidRequestException(String message) {

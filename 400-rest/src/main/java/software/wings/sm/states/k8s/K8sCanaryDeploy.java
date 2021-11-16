@@ -2,6 +2,7 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
@@ -81,7 +82,7 @@ public class K8sCanaryDeploy extends AbstractK8sState {
   @Inject private transient AwsCommandHelper awsCommandHelper;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private transient OpenShiftManagerService openShiftManagerService;
-  @Inject private FeatureFlagService featureFlagService;
+  @Inject private transient FeatureFlagService featureFlagService;
 
   public static final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deploy";
 
@@ -179,6 +180,7 @@ public class K8sCanaryDeploy extends AbstractK8sState {
                 appManifestMap.get(K8sValuesLocation.Service).getSkipVersioningForAllK8sObjects())
             .useLatestKustomizeVersion(
                 featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
+            .useNewKubectlVersion(featureFlagService.isEnabled(NEW_KUBECTL_VERSION, infraMapping.getAccountId()))
             .build();
 
     return queueK8sDelegateTask(context, k8sTaskParameters, appManifestMap);

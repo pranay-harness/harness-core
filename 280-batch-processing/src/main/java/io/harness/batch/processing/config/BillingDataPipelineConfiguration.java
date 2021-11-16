@@ -2,11 +2,9 @@ package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.reader.SettingAttributeReader;
-import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.tasklet.AwsBillingDataPipelineTasklet;
 import io.harness.batch.processing.tasklet.AzureBillingDataPipelineTasklet;
 import io.harness.batch.processing.tasklet.GcpBillingDataPipelineTasklet;
-import io.harness.metrics.service.api.MetricService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -23,8 +21,6 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class BillingDataPipelineConfiguration {
-  @Autowired private MetricService metricService;
-
   @Bean
   public Tasklet awsBillingDataPipelineTasklet() {
     return new AwsBillingDataPipelineTasklet();
@@ -47,7 +43,6 @@ public class BillingDataPipelineConfiguration {
       Step gcpBillingDataPipelineStep, Step azureBillingDataPipelineStep, Step deletePipelineForExpiredAccountsStep) {
     return jobBuilderFactory.get(BatchJobType.BILLING_DATA_PIPELINE.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
         .start(awsBillingDataPipelineStep)
         .next(gcpBillingDataPipelineStep)
         .next(azureBillingDataPipelineStep)

@@ -24,11 +24,14 @@ import lombok.NoArgsConstructor;
 public abstract class ApplicationFilter implements BlackoutWindowFilter {
   private BlackoutWindowFilterType filterType;
   private EnvironmentFilter envSelection;
+  private ServiceFilter serviceSelection;
 
   @JsonCreator
   public ApplicationFilter(@JsonProperty("filterType") BlackoutWindowFilterType filterType,
-      @JsonProperty("envSelection") EnvironmentFilter envSelection) {
+      @JsonProperty("envSelection") EnvironmentFilter envSelection,
+      @JsonProperty("serviceSelection") ServiceFilter serviceSelection) {
     this.envSelection = envSelection;
     this.filterType = filterType;
+    this.serviceSelection = serviceSelection;
   }
 }

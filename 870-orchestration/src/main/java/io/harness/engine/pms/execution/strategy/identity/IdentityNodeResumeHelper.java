@@ -13,7 +13,8 @@ import java.util.Map;
 public class IdentityNodeResumeHelper {
   @Inject private NodeResumeEventPublisher nodeResumeEventPublisher;
 
-  public void resume(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError) {
-    nodeResumeEventPublisher.publishEvent(nodeExecution, responseMap, isError);
+  public void resume(
+      NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError, String serviceName) {
+    nodeResumeEventPublisher.publishEventForIdentityNode(nodeExecution, responseMap, isError, serviceName);
   }
 }

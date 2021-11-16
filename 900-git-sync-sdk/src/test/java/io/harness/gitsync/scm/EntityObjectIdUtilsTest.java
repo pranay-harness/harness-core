@@ -24,6 +24,6 @@ public class EntityObjectIdUtilsTest extends CategoryTest {
   public void testObjectId() throws IOException {
     String yaml = IOUtils.resourceToString("testYaml.yaml", UTF_8, this.getClass().getClassLoader());
     final String objectIdOfYaml = EntityObjectIdUtils.getObjectIdOfYaml(yaml);
-    assertThat(objectIdOfYaml).isEqualTo("afd399ea525e7c8fdf0748415e06961fadf192c7");
+    assertThat(objectIdOfYaml).isEqualTo("e1ba3a974b9300b862c53023a3aeee5735b7d914");
   }
 }

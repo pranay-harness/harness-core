@@ -110,6 +110,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
     assertThat(form.getCriteriaObject().containsKey("status")).isEqualTo(false);
     assertThat(form.getCriteriaObject().get("pipelineDeleted")).isNotEqualTo(true);
     assertThat(form.getCriteriaObject().containsKey("executionTriggerInfo")).isEqualTo(false);
+    assertThat(form.getCriteriaObject().get("isLatestExecution")).isNotEqualTo(false);
   }
 
   @Test

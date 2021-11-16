@@ -117,7 +117,8 @@ public class K8sNodeInfoTasklet implements Tasklet {
     metaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, labelsMap.get(K8sCCMConstants.OPERATING_SYSTEM));
     metaData.put(InstanceMetaDataConstants.NODE_UID, nodeUid);
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, cloudProviderInstanceId);
-    metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, getInstanceCategory(k8SCloudProvider, labelsMap).name());
+    metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY,
+        getInstanceCategory(k8SCloudProvider, labelsMap, accountId).name());
     metaData.put(InstanceMetaDataConstants.POD_CAPACITY,
         String.valueOf(K8sResourceUtils.getPodCapacity(nodeInfo.getAllocatableResourceMap())));
     if (null != labelsMap.get(K8sCCMConstants.COMPUTE_TYPE)) {

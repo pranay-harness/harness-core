@@ -14,4 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 public class ChangeSetHelperServiceImpl implements GitSdkInterface {
   @Override
   public void process(ChangeSet changeSet) {}
+
+  @Override
+  public boolean markEntityInvalid(String accountId, EntityInfo entityInfo) {
+    return false;
+  }
 }

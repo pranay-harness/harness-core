@@ -231,6 +231,7 @@ public class SecretTextTest extends SMCoreTestBase {
     when(kmsEncryptor.encryptSecret(accountId, secretText.getValue(), config)).thenReturn(encryptedRecordData);
     when(kmsEncryptorsRegistry.getKmsEncryptor(config)).thenReturn(kmsEncryptor);
     when(mockSecretManagerConfigService.getSecretManager(accountId, accountId)).thenReturn(config);
+    secretText.setKmsId(accountId);
     EncryptedData encryptedData = secretService.encryptSecret(accountId, secretText, false);
     assertThat(encryptedData).isNotNull();
     assertThat(encryptedData.getName()).isEqualTo(secretText.getName());

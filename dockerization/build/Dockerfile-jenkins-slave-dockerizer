@@ -33,6 +33,10 @@ RUN apt-get update && \
     chmod +x /usr/local/bin/docker-compose && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN curl -o gsutil.tar.gz https://storage.googleapis.com/pub/gsutil.tar.gz
-RUN tar -xzf gsutil.tar.gz -C /opt
+RUN echo "deb https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
+    apt-get update -y && apt-get install -y google-cloud-sdk
+
+RUN curl -o gsutil.tar.gz https://storage.googleapis.com/pub/gsutil.tar.gz && \
+    tar -xzf gsutil.tar.gz -C /opt
 ENV PATH ${PATH}:/opt/gsutil

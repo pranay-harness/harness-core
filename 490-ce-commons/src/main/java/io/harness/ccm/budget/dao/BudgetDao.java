@@ -63,15 +63,22 @@ public class BudgetDao {
                                                     .set(BudgetKeys.notifyOnSlack, budget.isNotifyOnSlack())
                                                     .set(BudgetKeys.actualCost, budget.getActualCost())
                                                     .set(BudgetKeys.forecastCost, budget.getForecastCost())
-                                                    .set(BudgetKeys.lastMonthCost, budget.getLastMonthCost());
+                                                    .set(BudgetKeys.lastMonthCost, budget.getLastMonthCost())
+                                                    .set(BudgetKeys.startTime, budget.getStartTime())
+                                                    .set(BudgetKeys.endTime, budget.getEndTime());
 
+    if (budget.getGrowthRate() != null) {
+      updateOperations.set(BudgetKeys.growthRate, budget.getGrowthRate());
+    }
+    if (budget.getPeriod() != null) {
+      updateOperations.set(BudgetKeys.period, budget.getPeriod());
+    }
     if (null != budget.getAlertThresholds()) {
       updateOperations.set(BudgetKeys.alertThresholds, budget.getAlertThresholds());
     }
     if (null != budget.getEmailAddresses()) {
       updateOperations.set(BudgetKeys.emailAddresses, budget.getEmailAddresses());
     }
-
     if (null != budget.getUserGroupIds()) {
       updateOperations.set(BudgetKeys.userGroupIds, budget.getUserGroupIds());
     }

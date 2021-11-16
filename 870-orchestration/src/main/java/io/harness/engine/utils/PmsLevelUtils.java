@@ -4,7 +4,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plan.Node;
 import io.harness.pms.contracts.ambiance.Level;
-import io.harness.pms.contracts.steps.StepType;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PmsLevelUtils {
@@ -20,10 +19,7 @@ public class PmsLevelUtils {
                                      .setRetryIndex(retryIndex)
                                      .setSkipExpressionChain(node.isSkipExpressionChain())
                                      .setStartTs(System.currentTimeMillis())
-                                     .setStepType(StepType.newBuilder()
-                                                      .setType(node.getStepType().getType())
-                                                      .setStepCategory(node.getStepType().getStepCategory())
-                                                      .build())
+                                     .setStepType(node.getStepType())
                                      .setNodeType(node.getNodeType().toString());
     if (node.getGroup() != null) {
       levelBuilder.setGroup(node.getGroup());

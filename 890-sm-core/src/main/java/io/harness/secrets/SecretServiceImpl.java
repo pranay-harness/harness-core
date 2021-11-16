@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS;
@@ -164,7 +165,8 @@ public class SecretServiceImpl implements SecretService {
   }
   @Override
   public EncryptedData encryptSecret(String accountId, HarnessSecret secret, boolean validateScopes) {
-    SecretManagerConfig secretManagerConfig = secretManagerConfigService.getSecretManager(accountId, accountId);
+    String kmsId = (null != secret && isNotEmpty(secret.getKmsId())) ? secret.getKmsId() : accountId;
+    SecretManagerConfig secretManagerConfig = secretManagerConfigService.getSecretManager(accountId, kmsId);
     secret.setKmsId(secretManagerConfig.getUuid());
     secretValidatorsRegistry.getSecretValidator(secretManagerConfig.getEncryptionType())
         .validateSecret(accountId, secret, secretManagerConfig);
@@ -585,15 +587,10 @@ public class SecretServiceImpl implements SecretService {
   }
 
   @Override
-  public char[] fetchSecretValue(String accountId, String secretId) {
-    EncryptedData encryptedData =
-        secretsDao.getSecretById(accountId, secretId).<SecretManagementException>orElseThrow(() -> {
-          String message = String.format("Could not find the secret with secret id %s to get content", secretId);
-          throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
-        });
+  public char[] fetchSecretValue(EncryptedData encryptedData) {
     SecretManagerConfig secretManagerConfig = secretManagerConfigService.getSecretManager(
-        accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
-    return fetchSecretValue(accountId, encryptedData, secretManagerConfig);
+        encryptedData.getAccountId(), encryptedData.getKmsId(), encryptedData.getEncryptionType());
+    return fetchSecretValue(encryptedData.getAccountId(), encryptedData, secretManagerConfig);
   }
 
   @Override

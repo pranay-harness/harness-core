@@ -2,6 +2,7 @@ package io.harness.delegate.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.task.k8s.DeleteResourcesType.ResourceName;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getResourcesInStringFormat;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.K8sCommandUnitConstants.Delete;
@@ -29,7 +30,13 @@ import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.KubernetesTaskException;
+import io.harness.exception.NestedExceptionUtils;
+import io.harness.exception.WingsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -189,8 +196,20 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
     kubernetesConfig =
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(k8sDeleteRequest.getK8sInfraDelegateConfig());
 
-    resourceIdsToDelete =
-        k8sDeleteBaseHandler.getResourceIdsToDelete(k8sDeleteRequest, kubernetesConfig, executionLogCallback);
+    try {
+      resourceIdsToDelete =
+          k8sDeleteBaseHandler.getResourceIdsToDelete(k8sDeleteRequest, kubernetesConfig, executionLogCallback);
+    } catch (WingsException e) {
+      if (ResourceName == k8sDeleteRequest.getDeleteResourcesType()) {
+        throw NestedExceptionUtils.hintWithExplanationException(
+            format(KubernetesExceptionHints.INVALID_RESOURCE_KIND_NAME_FORMAT, k8sDeleteRequest.getResources(),
+                k8sDeleteRequest.getResources()),
+            format(KubernetesExceptionExplanation.INVALID_RESOURCE_KIND_NAME_FORMAT, k8sDeleteRequest.getResources()),
+            new KubernetesTaskException(ExceptionUtils.getMessage(e)));
+      }
+
+      throw e;
+    }
 
     if (resourceIdsToDelete.isEmpty()) {
       executionLogCallback.saveExecutionLog("\nNo resources found to delete.", INFO, SUCCESS);

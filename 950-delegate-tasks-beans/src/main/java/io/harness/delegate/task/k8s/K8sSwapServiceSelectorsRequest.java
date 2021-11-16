@@ -21,4 +21,5 @@ public class K8sSwapServiceSelectorsRequest implements K8sDeployRequest {
   String service2;
   CommandUnitsProgress commandUnitsProgress;
   boolean useLatestKustomizeVersion;
+  boolean useNewKubectlVersion;
 }

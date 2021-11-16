@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.governance.TimeRangeOccurrence;
 import io.harness.time.CalendarUtils;
 import io.harness.yaml.BaseYaml;
@@ -39,7 +40,6 @@ public class TimeRange {
   // this field is used for proper rendering in UI
   private boolean expires;
 
-  @JsonCreator
   public TimeRange(@JsonProperty("from") long from, @JsonProperty("to") long to,
       @JsonProperty("timeZone") String timeZone, @JsonProperty("durationBased") boolean durationBased,
       @JsonProperty("duration") Long duration, @JsonProperty("endTime") Long endTime,
@@ -94,6 +94,9 @@ public class TimeRange {
     if (endTime != null && freezeOccurrence != null) {
       yaml.setEndTime(String.valueOf(this.getEndTime()));
       yaml.setFreezeOccurrence(this.getFreezeOccurrence().name());
+    }
+    if (EmptyPredicate.isNotEmpty(this.getTimeZone())) {
+      yaml.setTimeZone(this.getTimeZone());
     }
     return yaml;
   }

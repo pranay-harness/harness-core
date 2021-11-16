@@ -1,0 +1,18 @@
+extend type Mutation {
+  #Disable artifact collection for artifact source
+  setArtifactCollectionEnabled(input: SetArtifactCollectionEnabledInput!): setArtifactCollectionEnabledPayload
+    @dataFetcher(name: setArtifactCollectionEnabled)
+}
+
+input SetArtifactCollectionEnabledInput {
+  #Unique ID of the artifact stream
+  appId: String!
+  artifactStreamId: String!
+  artifactCollectionEnabled: Boolean!
+  clientMutationId: String
+}
+
+type setArtifactCollectionEnabledPayload {
+  clientMutationId: String
+  message: String
+}

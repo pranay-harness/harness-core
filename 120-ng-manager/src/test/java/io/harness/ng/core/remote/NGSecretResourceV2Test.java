@@ -22,6 +22,8 @@ import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.rule.Owner;
 
+import software.wings.service.impl.security.NGEncryptorService;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,14 +41,16 @@ public class NGSecretResourceV2Test extends CategoryTest {
   private Validator validator;
   private NGEncryptedDataService encryptedDataService;
   private NGSecretResourceV2 ngSecretResourceV2;
+  private NGEncryptorService ngEncryptorService;
 
   @Before
   public void setup() {
     ngSecretService = mock(SecretCrudServiceImpl.class);
     secretPermissionValidator = mock(SecretPermissionValidator.class);
     encryptedDataService = mock(NGEncryptedDataService.class);
-    ngSecretResourceV2 =
-        new NGSecretResourceV2(ngSecretService, validator, encryptedDataService, secretPermissionValidator);
+    ngEncryptorService = mock(NGEncryptorService.class);
+    ngSecretResourceV2 = new NGSecretResourceV2(
+        ngSecretService, validator, encryptedDataService, secretPermissionValidator, ngEncryptorService);
   }
 
   @Test

@@ -64,6 +64,11 @@ public class PagerDutyActivity extends Activity {
       return PagerDutyActivity.class;
     }
 
+    @Override
+    public String getEntityKeyLongString(PagerDutyActivity activity) {
+      return getKeyBuilder(activity).add(activity.getEventId()).toString();
+    }
+
     public Query<PagerDutyActivity> populateKeyQuery(Query<PagerDutyActivity> query, PagerDutyActivity activity) {
       return super.populateKeyQuery(query, activity).filter(PagerDutyActivityKeys.eventId, activity.getEventId());
     }

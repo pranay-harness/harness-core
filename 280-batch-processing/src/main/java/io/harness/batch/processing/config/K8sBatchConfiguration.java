@@ -1,7 +1,6 @@
 package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.tasklet.K8SSyncEventTasklet;
 import io.harness.batch.processing.tasklet.K8sNodeEventTasklet;
 import io.harness.batch.processing.tasklet.K8sNodeInfoTasklet;
@@ -9,7 +8,6 @@ import io.harness.batch.processing.tasklet.K8sPVEventTasklet;
 import io.harness.batch.processing.tasklet.K8sPVInfoTasklet;
 import io.harness.batch.processing.tasklet.K8sPodEventTasklet;
 import io.harness.batch.processing.tasklet.K8sPodInfoTasklet;
-import io.harness.metrics.service.api.MetricService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -27,7 +25,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class K8sBatchConfiguration {
   @Autowired private StepBuilderFactory stepBuilderFactory;
-  @Autowired private MetricService metricService;
 
   @Bean
   public Tasklet k8sNodeInfoTasklet() {
@@ -106,7 +103,6 @@ public class K8sBatchConfiguration {
       Step k8sPodInfoStep, Step k8sPodEventStep, Step k8sPVInfoStep, Step k8sPVEventStep, Step k8sSyncEventStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_EVENT.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
         .start(k8sNodeInfoStep)
         .next(k8sNodeEventStep)
         .next(k8sPodInfoStep)

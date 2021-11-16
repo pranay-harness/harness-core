@@ -4,6 +4,7 @@ import static io.harness.timescaledb.Tables.PIPELINES;
 
 import static org.jooq.impl.DSL.row;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.OrgProjectIdentifier;
 import io.harness.pms.dashboards.PipelinesCount;
 
@@ -23,12 +24,16 @@ public class PMSLandingDashboardServiceImpl implements PMSLandingDashboardServic
   @Override
   public PipelinesCount getPipelinesCount(String accountIdentifier, List<OrgProjectIdentifier> orgProjectIdentifiers,
       long startInterval, long endInterval) {
+    if (EmptyPredicate.isEmpty(orgProjectIdentifiers)) {
+      return PipelinesCount.builder().build();
+    }
     Table<Record2<String, String>> orgProjectTable = getOrgProjectTable(orgProjectIdentifiers);
 
     Integer totalCount = getTotalPipelinesCount(accountIdentifier, orgProjectTable);
-    Integer newCount = getPipelinesCount(accountIdentifier, startInterval, endInterval, orgProjectTable);
+    int trendCount = getNewPipelinesCount(accountIdentifier, startInterval, endInterval, orgProjectTable)
+        - getDeletedPipelinesCount(accountIdentifier, startInterval, endInterval, orgProjectTable);
 
-    return PipelinesCount.builder().totalCount(totalCount).newCount(newCount).build();
+    return PipelinesCount.builder().totalCount(totalCount).newCount(trendCount).build();
   }
 
   private Integer getTotalPipelinesCount(String accountIdentifier, Table<Record2<String, String>> orgProjectTable) {
@@ -45,7 +50,7 @@ public class PMSLandingDashboardServiceImpl implements PMSLandingDashboardServic
         .get(0);
   }
 
-  private Integer getPipelinesCount(
+  private Integer getNewPipelinesCount(
       String accountIdentifier, long startInterval, long endInterval, Table<Record2<String, String>> orgProjectTable) {
     return dsl.select(DSL.count())
         .from(PIPELINES)
@@ -53,6 +58,24 @@ public class PMSLandingDashboardServiceImpl implements PMSLandingDashboardServic
         .and(PIPELINES.CREATED_AT.greaterOrEqual(startInterval))
         .and(PIPELINES.CREATED_AT.lessThan(endInterval))
         .and(PIPELINES.DELETED.eq(false))
+        .andExists(
+            dsl.selectOne()
+                .from(orgProjectTable)
+                .where(PIPELINES.ORG_IDENTIFIER.eq((Field<String>) orgProjectTable.field("orgId"))
+                           .and(PIPELINES.PROJECT_IDENTIFIER.eq((Field<String>) orgProjectTable.field("projectId")))))
+        .fetchInto(Integer.class)
+        .get(0);
+  }
+
+  private Integer getDeletedPipelinesCount(
+      String accountIdentifier, long startInterval, long endInterval, Table<Record2<String, String>> orgProjectTable) {
+    return dsl.select(DSL.count())
+        .from(PIPELINES)
+        .where(PIPELINES.ACCOUNT_ID.eq(accountIdentifier))
+        .and(PIPELINES.LAST_UPDATED_AT.greaterOrEqual(startInterval))
+        .and(PIPELINES.LAST_UPDATED_AT.lessThan(endInterval))
+        .and(PIPELINES.DELETED.eq(true))
+        .and(PIPELINES.CREATED_AT.lessThan(startInterval))
         .andExists(
             dsl.selectOne()
                 .from(orgProjectTable)

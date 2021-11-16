@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.ParameterFieldHelper;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.plancreator.flowcontrol.FlowControlConfig;
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
@@ -53,7 +54,7 @@ public class PipelineSetupStepParameters implements StepParameters {
     this.identifier = identifier;
     this.flowControl = flowControl;
     this.description = description;
-    this.tags = tags;
+    this.tags = CollectionUtils.emptyIfNull(tags);
     this.properties = properties;
     this.variables = ParameterField.createValueField(NGVariablesUtils.getMapOfVariables(originalVariables));
     this.executionId = executionId;

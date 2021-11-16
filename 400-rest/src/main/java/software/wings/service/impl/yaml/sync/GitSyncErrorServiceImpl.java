@@ -12,7 +12,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.CreatedAtAware.CREATED_AT_KEY;
 
 import static software.wings.alerts.AlertStatus.Open;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.template.Template.APP_ID_KEY;
 import static software.wings.beans.yaml.Change.Builder.aFileChange;

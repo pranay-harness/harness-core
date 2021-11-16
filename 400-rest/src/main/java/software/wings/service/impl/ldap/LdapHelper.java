@@ -106,11 +106,12 @@ public class LdapHelper {
     }
   }
 
-  LdapResponse validateUserConfig(List<? extends LdapUserConfig> configs) {
+  LdapResponse validateUserConfig(LdapSettings ldapSettings) {
     Status searchStatus = Status.FAILURE;
     String searchStatusMsg = null;
-
+    List<? extends LdapUserConfig> configs = ldapSettings.getUserSettingsList();
     LdapResponse connectionTestResponse = validateConnectionConfig();
+
     if (connectionTestResponse.getStatus() == Status.FAILURE) {
       searchStatus = connectionTestResponse.getStatus();
       searchStatusMsg = connectionTestResponse.getMessage();
@@ -122,10 +123,11 @@ public class LdapHelper {
           LdapSearch search = LdapSearch.builder()
                                   .connectionFactory(getConnectionFactory())
                                   .baseDN(config.getBaseDN())
+                                  .bindDn(ldapSettings.getConnectionSettings().getBindDN())
+                                  .bindCredential(ldapSettings.getConnectionSettings().getBindPassword())
                                   .searchFilter(config.getLoadUsersFilter())
                                   .limit(LdapConstants.MIN_USER_QUERY_SIZE)
                                   .build();
-
           searchResult = search.execute();
 
         } catch (LdapException e) {
@@ -133,7 +135,6 @@ public class LdapHelper {
               config.getBaseDN(), config.getSearchFilter());
           searchStatusMsg = e.getResultCode().toString();
         }
-
         if (searchResult != null) { // Scenario when search result
           if (searchResult.size() > 0) {
             searchStatus = Status.SUCCESS;
@@ -150,7 +151,8 @@ public class LdapHelper {
     return LdapResponse.builder().status(searchStatus).message(searchStatusMsg).build();
   }
 
-  LdapResponse validateGroupConfig(LdapGroupConfig config) {
+  LdapResponse validateGroupConfig(LdapSettings settings) {
+    LdapGroupConfig config = settings.getGroupSettingsList().get(0);
     LdapResponse connectionTestResponse = validateConnectionConfig();
     if (Status.FAILURE == connectionTestResponse.getStatus()) {
       return connectionTestResponse;
@@ -160,7 +162,8 @@ public class LdapHelper {
     Status status = Status.FAILURE;
     LdapListGroupsResponse ldapListGroupsResponses = null;
     try {
-      ldapListGroupsResponses = listGroups(Arrays.asList(config), null, LdapConstants.MIN_GROUP_QUERY_SIZE).get(0);
+      ldapListGroupsResponses =
+          listGroups(settings, Arrays.asList(config), null, LdapConstants.MIN_GROUP_QUERY_SIZE).get(0);
     } catch (LdapException e) {
       log.error("Ldap validate group config failed for: [{}]", config.getNameAttr(), e);
       message = e.getResultCode().toString();
@@ -180,27 +183,30 @@ public class LdapHelper {
     return LdapResponse.builder().status(status).message(message).build();
   }
 
-  private LdapSearch.Builder getDefaultLdapSearchBuilder(LdapSearchConfig config) {
+  private LdapSearch.Builder getDefaultLdapSearchBuilder(LdapSettings settings, LdapSearchConfig config) {
     return LdapSearch.builder()
+        .bindCredential(settings.getConnectionSettings().getBindPassword())
+        .bindDn(settings.getConnectionSettings().getBindDN())
         .baseDN(config.getBaseDN())
         .connectionFactory(getConnectionFactory())
         .referralsEnabled(connectionConfig.isReferralsEnabled())
         .maxReferralHops(connectionConfig.getMaxReferralHops());
   }
 
-  private LdapUserConfig userExists(List<LdapUserSettings> userConfigs, String identifier) {
+  private LdapUserConfig userExists(LdapSettings ldapSettings, String identifier) {
+    List<LdapUserSettings> userConfigs = ldapSettings.getUserSettingsList();
     LdapUserConfig ldapUserConfig = null;
     List<LdapUserExistsRequest> searchDnResolverList = null;
     if (CollectionUtils.isNotEmpty(userConfigs)) {
-      searchDnResolverList =
-          userConfigs.stream()
-              .map(userConfig -> {
-                LdapSearch search =
-                    getDefaultLdapSearchBuilder(userConfig).searchFilter(userConfig.getSearchFilter()).build();
-                return new LdapUserExistsRequest(userConfig, search, identifier,
-                    connectionConfig.getConnectTimeout() + connectionConfig.getResponseTimeout());
-              })
-              .collect(Collectors.toList());
+      searchDnResolverList = userConfigs.stream()
+                                 .map(userConfig -> {
+                                   LdapSearch search = getDefaultLdapSearchBuilder(ldapSettings, userConfig)
+                                                           .searchFilter(userConfig.getSearchFilter())
+                                                           .build();
+                                   return new LdapUserExistsRequest(userConfig, search, identifier,
+                                       connectionConfig.getConnectTimeout() + connectionConfig.getResponseTimeout());
+                                 })
+                                 .collect(Collectors.toList());
 
       AbstractLdapResponse abstractLdapResponse =
           ldapParallelSearchExecutor.userExist(searchDnResolverList, executeLdapUserExistsRequest);
@@ -213,23 +219,24 @@ public class LdapHelper {
     return ldapUserConfig;
   }
 
-  private List<LdapListGroupsResponse> listGroups(List<? extends LdapGroupConfig> ldapGroupConfigs,
-      String additionalFilter, int limit, String... returnFields) throws LdapException {
+  private List<LdapListGroupsResponse> listGroups(LdapSettings ldapSettings,
+      List<? extends LdapGroupConfig> ldapGroupConfigs, String additionalFilter, int limit, String... returnFields)
+      throws LdapException {
     List<LdapListGroupsResponse> ldapListGroupsResponses = Lists.newArrayList();
     if (CollectionUtils.isNotEmpty(ldapGroupConfigs)) {
       List<LdapListGroupsRequest> ldapGetUsersRequests =
-          getLdapGetUsersRequests(ldapGroupConfigs, additionalFilter, limit, returnFields);
+          getLdapGetUsersRequests(ldapSettings, ldapGroupConfigs, additionalFilter, limit, returnFields);
       ldapListGroupsResponses =
           ldapParallelSearchExecutor.listGroupsSearchResult(ldapGetUsersRequests, executeLdapGroupsSearchRequest);
     }
     return ldapListGroupsResponses;
   }
 
-  private List<LdapListGroupsRequest> getLdapGetUsersRequests(
+  private List<LdapListGroupsRequest> getLdapGetUsersRequests(LdapSettings ldapSettings,
       List<? extends LdapGroupConfig> ldapGroupConfigs, String additionalFilter, int limit, String... returnFields) {
     return ldapGroupConfigs.stream()
         .map(groupConfig -> {
-          LdapSearch search = getDefaultLdapSearchBuilder(groupConfig)
+          LdapSearch search = getDefaultLdapSearchBuilder(ldapSettings, groupConfig)
                                   .limit(limit)
                                   .searchFilter(groupConfig.getFilter(additionalFilter))
                                   .build();
@@ -239,9 +246,9 @@ public class LdapHelper {
         .collect(Collectors.toList());
   }
 
-  private List<LdapListGroupsResponse> listGroupsByName(List<LdapGroupSettings> groupConfig, String name)
-      throws LdapException {
-    return listGroups(groupConfig, String.format("*%s*", name), LdapConstants.MAX_GROUP_SEARCH_SIZE);
+  private List<LdapListGroupsResponse> listGroupsByName(LdapSettings ldapSettings, String name) throws LdapException {
+    return listGroups(ldapSettings, ldapSettings.getGroupSettingsList(), String.format("*%s*", name),
+        LdapConstants.MAX_GROUP_SEARCH_SIZE);
   }
 
   List<LdapGetUsersResponse> listGroupUsers(LdapSettings ldapSettings, List<String> groupDnList) {
@@ -252,7 +259,9 @@ public class LdapHelper {
       ldapGetUsersRequests =
           groupDnList.stream()
               .flatMap(groupDn -> ldapUserConfigs.stream().map(userConfig -> {
-                LdapSearch search = getDefaultLdapSearchBuilder(userConfig)
+                LdapSearch search = getDefaultLdapSearchBuilder(ldapSettings, userConfig)
+                                        .bindDn(ldapSettings.getConnectionSettings().getBindDN())
+                                        .bindCredential(ldapSettings.getConnectionSettings().getBindPassword())
                                         .searchFilter(userConfig.getGroupMembershipFilter(groupDn))
                                         .fallBackSearchFilter(userConfig.getFallbackGroupMembershipFilter(groupDn))
                                         .build();
@@ -291,18 +300,18 @@ public class LdapHelper {
     log.info("elapsedTime : {}", elapsedTime);
   }
 
-  List<LdapListGroupsResponse> searchGroupsByName(List<LdapGroupSettings> groupConfig, String name)
-      throws LdapException {
-    return listGroupsByName(groupConfig, name);
+  List<LdapListGroupsResponse> searchGroupsByName(LdapSettings ldapSettings, String name) throws LdapException {
+    return listGroupsByName(ldapSettings, name);
   }
 
-  LdapListGroupsResponse getGroupByDn(List<LdapGroupSettings> groupConfigs, String dn) throws LdapException {
+  LdapListGroupsResponse getGroupByDn(LdapSettings settings, String dn) throws LdapException {
+    List<LdapGroupSettings> groupConfigs = settings.getGroupSettingsList();
     LdapListGroupsResponse listGroupsResponse = null;
     for (LdapGroupSettings groupConfig : groupConfigs) {
       String oldBaseDn = groupConfig.getBaseDN();
       groupConfig.setBaseDN(dn);
       List<LdapListGroupsResponse> ldapListGroupsResponses =
-          listGroups(Arrays.asList(groupConfig), null, 1, groupConfig.getReturnAttrs());
+          listGroups(settings, Arrays.asList(groupConfig), null, 1, groupConfig.getReturnAttrs());
 
       // There could only be one groups since the base dn is given and we are passing limit as 1.
       if (ldapListGroupsResponses.size() == 1) {
@@ -320,16 +329,19 @@ public class LdapHelper {
     return listGroupsResponse;
   }
 
-  public LdapResponse authenticate(List<LdapUserSettings> userConfigs, String identifier, String password) {
+  public LdapResponse authenticate(LdapSettings ldapSettings, String identifier, String password) {
+    List<LdapUserSettings> userConfigs = ldapSettings.getUserSettingsList();
     LdapUserConfig ldapUserConfig = null;
     try {
-      ldapUserConfig = userExists(userConfigs, identifier);
+      ldapUserConfig = userExists(ldapSettings, identifier);
       if (ldapUserConfig == null) {
         return LdapResponse.builder().status(Status.FAILURE).message(LdapConstants.USER_NOT_FOUND).build();
       }
 
       LdapSearch search = LdapSearch.builder()
                               .baseDN(ldapUserConfig.getBaseDN())
+                              .bindCredential(ldapSettings.getConnectionSettings().getBindPassword())
+                              .bindDn(ldapSettings.getConnectionSettings().getBindDN())
                               .connectionFactory(getConnectionFactory())
                               .searchFilter(ldapUserConfig.getSearchFilter())
                               .referralsEnabled(connectionConfig.isReferralsEnabled())

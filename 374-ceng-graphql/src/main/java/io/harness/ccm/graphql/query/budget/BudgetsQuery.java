@@ -6,6 +6,8 @@ import static io.harness.ccm.budget.AlertThresholdBase.FORECASTED_COST;
 import io.harness.ccm.budget.dao.BudgetDao;
 import io.harness.ccm.budget.utils.BudgetUtils;
 import io.harness.ccm.commons.entities.billing.Budget;
+import io.harness.ccm.commons.entities.budget.BudgetData;
+import io.harness.ccm.graphql.core.budget.BudgetService;
 import io.harness.ccm.graphql.dto.budget.BudgetSummary;
 import io.harness.ccm.graphql.utils.GraphQLUtils;
 import io.harness.ccm.graphql.utils.annotations.GraphQLApi;
@@ -27,30 +29,31 @@ import lombok.extern.slf4j.Slf4j;
 public class BudgetsQuery {
   @Inject private GraphQLUtils graphQLUtils;
   @Inject private BudgetDao budgetDao;
+  @Inject private BudgetService budgetService;
 
   @GraphQLQuery(name = "budgetSummary", description = "Budget card for perspectives")
   public BudgetSummary budgetSummaryForPerspective(@GraphQLArgument(name = "perspectiveId") String perspectiveId,
-      @GraphQLEnvironment final ResolutionEnvironment env) {
+      @GraphQLArgument(name = "budgetId") String budgetId, @GraphQLEnvironment final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
     try {
-      List<Budget> budgets = budgetDao.list(accountId);
-      List<Budget> perspectiveBudgets =
-          budgets.stream()
-              .filter(budget -> BudgetUtils.isBudgetBasedOnGivenPerspective(budget, perspectiveId))
-              .collect(Collectors.toList());
+      Budget budget = null;
+      if (perspectiveId != null) {
+        List<Budget> budgets = budgetDao.list(accountId);
+        List<Budget> perspectiveBudgets =
+            budgets.stream()
+                .filter(
+                    perspectiveBudget -> BudgetUtils.isBudgetBasedOnGivenPerspective(perspectiveBudget, perspectiveId))
+                .collect(Collectors.toList());
+        if (!perspectiveBudgets.isEmpty()) {
+          // UI allows only one budget per perspective
+          budget = perspectiveBudgets.get(0);
+        }
+      } else if (budgetId != null) {
+        budget = budgetDao.get(budgetId, accountId);
+      }
 
-      if (!perspectiveBudgets.isEmpty()) {
-        // UI allows only one budget per perspective
-        Budget perspectiveBudget = perspectiveBudgets.get(0);
-        return BudgetSummary.builder()
-            .id(perspectiveBudget.getUuid())
-            .name(perspectiveBudget.getName())
-            .budgetAmount(perspectiveBudget.getBudgetAmount())
-            .actualCost(perspectiveBudget.getActualCost())
-            .timeLeft(BudgetUtils.getTimeLeftForBudget(perspectiveBudget))
-            .timeUnit(BudgetUtils.DEFAULT_TIME_UNIT)
-            .timeScope(BudgetUtils.DEFAULT_TIME_SCOPE)
-            .build();
+      if (budget != null) {
+        return buildBudgetSummary(budget);
       }
 
     } catch (Exception e) {
@@ -71,20 +74,30 @@ public class BudgetsQuery {
     if (fetchOnlyPerspectiveBudgets) {
       budgets = budgets.stream().filter(BudgetUtils::isPerspectiveBudget).collect(Collectors.toList());
     }
-    budgets.forEach(budget
-        -> budgetSummaryList.add(
-            BudgetSummary.builder()
-                .id(budget.getUuid())
-                .name(budget.getName())
-                .budgetAmount(budget.getBudgetAmount())
-                .actualCost(budget.getActualCost())
-                .timeLeft(BudgetUtils.getTimeLeftForBudget(budget))
-                .timeUnit(BudgetUtils.DEFAULT_TIME_UNIT)
-                .timeScope(BudgetUtils.DEFAULT_TIME_SCOPE)
-                .actualCostAlerts(BudgetUtils.getAlertThresholdsForBudget(budget, ACTUAL_COST))
-                .forecastCostAlerts(BudgetUtils.getAlertThresholdsForBudget(budget, FORECASTED_COST))
-                .build()));
+    budgets.forEach(budget -> budgetSummaryList.add(buildBudgetSummary(budget)));
 
     return budgetSummaryList;
+  }
+
+  @GraphQLQuery(name = "budgetCostData", description = "Budget cost data")
+  public BudgetData budgetCostData(@GraphQLArgument(name = "budgetId", defaultValue = "") String budgetId,
+      @GraphQLEnvironment final ResolutionEnvironment env) {
+    final String accountId = graphQLUtils.getAccountIdentifier(env);
+    return budgetService.getBudgetTimeSeriesStats(budgetDao.get(budgetId, accountId));
+  }
+
+  private BudgetSummary buildBudgetSummary(Budget budget) {
+    return BudgetSummary.builder()
+        .id(budget.getUuid())
+        .name(budget.getName())
+        .budgetAmount(budget.getBudgetAmount())
+        .actualCost(budget.getActualCost())
+        .forecastCost(budget.getForecastCost())
+        .timeLeft(BudgetUtils.getTimeLeftForBudget(budget))
+        .timeUnit(BudgetUtils.DEFAULT_TIME_UNIT)
+        .timeScope(BudgetUtils.DEFAULT_TIME_SCOPE)
+        .actualCostAlerts(BudgetUtils.getAlertThresholdsForBudget(budget, ACTUAL_COST))
+        .forecastCostAlerts(BudgetUtils.getAlertThresholdsForBudget(budget, FORECASTED_COST))
+        .build();
   }
 }

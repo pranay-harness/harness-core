@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.azure.utility.AzureUtils.AZURE_GOV_REGIONS_NAMES;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.ff.FeatureFlagService;
 
@@ -50,13 +49,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
 
   @Override
   public Map<String, String> listSubscriptions(String accountId, String cloudProviderId) {
-    if (featureFlagService.isEnabled(FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE, accountId)) {
-      return buildSourceService.listSubscriptions(cloudProviderId);
-    }
-    SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
-    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listSubscriptions(
-        azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null));
+    return buildSourceService.listSubscriptions(cloudProviderId);
   }
 
   @Override
@@ -93,40 +86,19 @@ public class AzureResourceServiceImpl implements AzureResourceService {
 
   @Override
   public List<AzureResourceGroup> listResourceGroups(String accountId, String cloudProviderId, String subscriptionId) {
-    if (featureFlagService.isEnabled(FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE, accountId)) {
-      return buildSourceService.listResourceGroups(cloudProviderId, subscriptionId);
-    }
-    SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
-    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService
-        .listResourceGroups(azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId)
-        .stream()
-        .map(name -> AzureResourceGroup.builder().name(name).subscriptionId(subscriptionId).build())
-        .collect(Collectors.toList());
+    return buildSourceService.listResourceGroups(cloudProviderId, subscriptionId);
   }
 
   @Override
   public List<AzureImageGallery> listImageGalleries(
       String accountId, String cloudProviderId, String subscriptionId, String resourceGroupName) {
-    if (featureFlagService.isEnabled(FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE, accountId)) {
-      return buildSourceService.listImageGalleries(cloudProviderId, subscriptionId, resourceGroupName);
-    }
-    SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
-    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listImageGalleries(
-        azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId, resourceGroupName);
+    return buildSourceService.listImageGalleries(cloudProviderId, subscriptionId, resourceGroupName);
   }
 
   @Override
   public List<AzureImageDefinition> listImageDefinitions(
       String accountId, String cloudProviderId, String subscriptionId, String resourceGroupName, String galleryName) {
-    if (featureFlagService.isEnabled(FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE, accountId)) {
-      return buildSourceService.listImageDefinitions(cloudProviderId, subscriptionId, resourceGroupName, galleryName);
-    }
-    SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
-    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listImageDefinitions(azureConfig,
-        secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId, resourceGroupName, galleryName);
+    return buildSourceService.listImageDefinitions(cloudProviderId, subscriptionId, resourceGroupName, galleryName);
   }
 
   private AzureConfig validateAndGetAzureConfig(SettingAttribute cloudProviderSetting) {

@@ -89,7 +89,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   private final boolean localOverrideFeatureFlag;
   private final boolean saveExecutionLogs;
   boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
-  boolean disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+  boolean disableWinRMEnvVariables; // stop passing service variables as env variables
   private boolean isVaultSSH;
   private String role;
   private String publicKey;

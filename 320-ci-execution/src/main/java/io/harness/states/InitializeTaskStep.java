@@ -25,7 +25,9 @@ import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
+import io.harness.delegate.beans.ci.CIInitializeTaskParams;
+import io.harness.delegate.beans.ci.CITaskExecutionResponse;
+import io.harness.delegate.beans.ci.awsvm.AwsVmTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
@@ -77,7 +79,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CI)
-public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementParameters, K8sTaskExecutionResponse> {
+public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementParameters, CITaskExecutionResponse> {
   public static final String TASK_TYPE_INITIALIZATION_PHASE = "INITIALIZATION_PHASE";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
@@ -123,7 +125,7 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
     String logPrefix = getLogPrefix(ambiance);
     Map<String, String> stepLogKeys = getStepLogKeys(stepParameters, ambiance, logPrefix);
 
-    CIBuildSetupTaskParams buildSetupTaskParams =
+    CIInitializeTaskParams buildSetupTaskParams =
         buildSetupUtils.getBuildSetupTaskParams(stepParameters, ambiance, taskIds, logPrefix, stepLogKeys);
     log.info("Created params for build task: {}", buildSetupTaskParams);
 
@@ -139,10 +141,22 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
 
   @Override
   public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
-      StepElementParameters stepElementParameters, ThrowingSupplier<K8sTaskExecutionResponse> responseSupplier)
+      StepElementParameters stepElementParameters, ThrowingSupplier<CITaskExecutionResponse> responseSupplier)
       throws Exception {
-    K8sTaskExecutionResponse k8sTaskExecutionResponse = responseSupplier.get();
+    CITaskExecutionResponse ciTaskExecutionResponse = responseSupplier.get();
+    if (ciTaskExecutionResponse.getType() == CITaskExecutionResponse.Type.K8) {
+      return handleK8TaskResponse(ambiance, stepElementParameters, ciTaskExecutionResponse);
+    } else if (ciTaskExecutionResponse.getType() == CITaskExecutionResponse.Type.AWS_VM) {
+      return handleAwsVmTaskResponse(ambiance, stepElementParameters, ciTaskExecutionResponse);
+    } else {
+      throw new CIStageExecutionException(
+          format("Invalid infra type for task response: %s", ciTaskExecutionResponse.getType()));
+    }
+  }
 
+  private StepResponse handleK8TaskResponse(
+      Ambiance ambiance, StepElementParameters stepElementParameters, CITaskExecutionResponse ciTaskExecutionResponse) {
+    K8sTaskExecutionResponse k8sTaskExecutionResponse = (K8sTaskExecutionResponse) ciTaskExecutionResponse;
     InitializeStepInfo stepParameters = (InitializeStepInfo) stepElementParameters.getSpec();
 
     DependencyOutcome dependencyOutcome =
@@ -178,6 +192,16 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
             FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build());
       }
       return stepResponseBuilder.build();
+    }
+  }
+
+  private StepResponse handleAwsVmTaskResponse(
+      Ambiance ambiance, StepElementParameters stepElementParameters, CITaskExecutionResponse ciTaskExecutionResponse) {
+    AwsVmTaskExecutionResponse awsVmTaskExecutionResponse = (AwsVmTaskExecutionResponse) ciTaskExecutionResponse;
+    if (awsVmTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
+      return StepResponse.builder().status(Status.SUCCEEDED).build();
+    } else {
+      return StepResponse.builder().status(Status.FAILED).build();
     }
   }
 
@@ -287,13 +311,16 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
 
   private List<EntityDetail> getConnectorIdentifiers(
       InitializeStepInfo initializeStepInfo, String accountIdentifier, String projectIdentifier, String orgIdentifier) {
-    K8BuildJobEnvInfo.PodsSetupInfo podSetupInfo =
-        ((K8BuildJobEnvInfo) initializeStepInfo.getBuildJobEnvInfo()).getPodsSetupInfo();
-    if (isEmpty(podSetupInfo.getPodSetupInfoList())) {
+    Infrastructure infrastructure = initializeStepInfo.getInfrastructure();
+    if (infrastructure == null) {
+      throw new CIStageExecutionException("Input infrastructure can not be empty");
+    }
+    // TODO (shubham): Add entity details for aws vm
+    if (infrastructure.getType() == Infrastructure.Type.AWS_VM) {
       return new ArrayList<>();
     }
-    Infrastructure infrastructure = initializeStepInfo.getInfrastructure();
-    if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+
+    if (((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
       throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
 
@@ -313,6 +340,11 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
           initializeStepInfo.getCiCodebase().getConnectorRef(), accountIdentifier, projectIdentifier, orgIdentifier));
     }
 
+    K8BuildJobEnvInfo.PodsSetupInfo podSetupInfo =
+        ((K8BuildJobEnvInfo) initializeStepInfo.getBuildJobEnvInfo()).getPodsSetupInfo();
+    if (isEmpty(podSetupInfo.getPodSetupInfoList())) {
+      return new ArrayList<>();
+    }
     Optional<PodSetupInfo> podSetupInfoOptional = podSetupInfo.getPodSetupInfoList().stream().findFirst();
     try {
       if (podSetupInfoOptional.isPresent()) {

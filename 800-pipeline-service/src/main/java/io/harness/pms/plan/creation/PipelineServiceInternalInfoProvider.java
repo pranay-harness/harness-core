@@ -1,5 +1,6 @@
 package io.harness.pms.plan.creation;
 
+import io.harness.OrchestrationStepTypes;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.pipeline.CfExecutionPMSPlanCreator;
@@ -20,6 +21,7 @@ import io.harness.plancreator.steps.internal.PMSStepPlanCreator;
 import io.harness.plancreator.steps.internal.PmsStepFilterJsonCreator;
 import io.harness.plancreator.steps.resourceconstraint.ResourceConstraintStepPlanCreator;
 import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.variables.PipelineVariableCreator;
 import io.harness.pms.sdk.core.pipeline.variables.StepGroupVariableCreator;
@@ -28,12 +30,12 @@ import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvide
 import io.harness.pms.sdk.core.variables.VariableCreator;
 import io.harness.pms.utils.InjectorUtils;
 import io.harness.pms.variables.HTTPStepVariableCreator;
+import io.harness.steps.cf.FlagConfigurationStep;
 import io.harness.steps.shellscript.ShellScriptStepVariableCreator;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -85,6 +87,18 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
 
   @Override
   public List<StepInfo> getStepInfo() {
-    return Collections.emptyList();
+    StepInfo k8sRolling = StepInfo.newBuilder()
+                              .setName(FlagConfigurationStep.STEP_NAME)
+                              .setType(OrchestrationStepTypes.FLAG_CONFIGURATION)
+                              .setStepMetaData(StepMetaData.newBuilder()
+                                                   .addCategory(FlagConfigurationStep.STEP_CATEGORY)
+                                                   .addFolderPaths("Feature Flags")
+                                                   .build())
+                              .build();
+
+    List<StepInfo> stepInfos = new ArrayList<>();
+
+    stepInfos.add(k8sRolling);
+    return stepInfos;
   }
 }

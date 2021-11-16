@@ -31,6 +31,8 @@ io.harness.beans.steps.stepinfo.ECRStepInfo
 io.harness.beans.steps.stepinfo.RestoreCacheGCSStepInfo
 io.harness.steps.approval.step.harness.HarnessApprovalStepInfo
 io.harness.beans.sweepingoutputs.PodCleanupDetails
+io.harness.beans.sweepingoutputs.AwsVmStageInfraDetails
+io.harness.beans.sweepingoutputs.K8StageInfraDetails
 io.harness.steps.http.HttpOutcome
 io.harness.advisers.rollback.OnFailRollbackParameters
 io.harness.ngpipeline.artifact.bean.GcrArtifactOutcome
@@ -42,6 +44,7 @@ io.harness.beans.steps.stepinfo.TestStepInfo
 io.harness.advisers.rollback.OnFailRollbackOutput
 io.harness.steps.shellscript.ShellScriptInlineSource
 io.harness.beans.sweepingoutputs.K8PodDetails
+io.harness.beans.sweepingoutputs.StageDetails
 io.harness.beans.steps.stepinfo.RunTestsStepInfo
 io.harness.ngpipeline.artifact.bean.SidecarsOutcome
 io.harness.steps.jira.update.JiraUpdateSpecParameters

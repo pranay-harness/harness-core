@@ -15,6 +15,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -66,7 +67,8 @@ public class FeedbackResource {
         ApiResponse(responseCode = "default", description = "Returns a boolean")
       })
   public ResponseDTO<Boolean>
-  saveFeedback(@QueryParam("accountIdentifier") String accountIdentifier, FeedbackFormDTO dto) {
+  saveFeedback(@Parameter(description = "Account id to save the feedback to.") @QueryParam("accountIdentifier")
+               String accountIdentifier, FeedbackFormDTO dto) {
     return ResponseDTO.newResponse(feedbackService.saveFeedback(dto));
   }
 }

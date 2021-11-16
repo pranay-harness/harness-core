@@ -32,4 +32,5 @@ public class ConnectorResponseDTO {
   ConnectorActivityDetails activityDetails;
   boolean harnessManaged;
   EntityGitDetails gitDetails;
+  EntityValidityDetails entityValidityDetails;
 }

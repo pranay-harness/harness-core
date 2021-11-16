@@ -153,7 +153,7 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
     }
 
     k8sTaskHelperBase.dryRunManifests(k8sApplyHandlerConfig.getClient(), k8sApplyHandlerConfig.getResources(),
-        k8sDelegateTaskParams, logCallback, isErrorFrameworkSupported());
+        k8sDelegateTaskParams, logCallback, isErrorFrameworkSupported(), request.isUseNewKubectlVersion());
   }
 
   @VisibleForTesting

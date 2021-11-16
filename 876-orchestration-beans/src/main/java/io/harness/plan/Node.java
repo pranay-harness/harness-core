@@ -26,7 +26,7 @@ public interface Node extends UuidAccess {
     return false;
   }
 
-  String getServiceName();
+  @Deprecated String getServiceName();
 
   PmsStepParameters getStepParameters();
 

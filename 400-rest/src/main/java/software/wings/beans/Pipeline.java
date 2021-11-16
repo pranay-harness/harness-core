@@ -76,6 +76,11 @@ public class Pipeline
                  .field(PipelineKeys.accountId)
                  .descSortField(PipelineKeys.createdAt)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_name")
+                 .field(PipelineKeys.accountId)
+                 .ascSortField(PipelineKeys.name)
+                 .build())
         .build();
   }
 
@@ -152,6 +157,12 @@ public class Pipeline
   @Override
   public NGMigrationEntityType getMigrationEntityType() {
     return NGMigrationEntityType.PIPELINE;
+  }
+
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
   }
 
   @Data

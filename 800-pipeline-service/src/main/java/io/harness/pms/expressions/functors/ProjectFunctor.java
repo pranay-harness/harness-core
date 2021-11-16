@@ -8,8 +8,8 @@ import io.harness.exception.EngineFunctorException;
 import io.harness.expression.LateBindingValue;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.dto.ProjectResponse;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.project.remote.ProjectClient;
 
 import java.util.Optional;
@@ -26,9 +26,9 @@ public class ProjectFunctor implements LateBindingValue {
 
   @Override
   public Object bind() {
-    String accountId = AmbianceHelper.getAccountId(ambiance);
-    String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
-    String projectIdentifier = AmbianceHelper.getProjectIdentifier(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
+    String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
+    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
     if (EmptyPredicate.isEmpty(accountId) || EmptyPredicate.isEmpty(orgIdentifier)
         || EmptyPredicate.isEmpty(projectIdentifier)) {
       return null;

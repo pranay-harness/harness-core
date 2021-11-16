@@ -1,6 +1,7 @@
 package io.harness.cvng.statemachine.services;
 
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES;
+import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES_FOR_DEMO;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -108,7 +109,9 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   public Optional<AnalysisStateMachine> ignoreOldStateMachine(AnalysisStateMachine analysisStateMachine) {
     Instant instantForAnalysis = analysisStateMachine.getAnalysisEndTime();
     if (analysisStateMachine.getStatus() != AnalysisStatus.RUNNING
-        && clock.instant().minus(STATE_MACHINE_IGNORE_MINUTES, ChronoUnit.MINUTES).isAfter(instantForAnalysis)) {
+        && clock.instant()
+               .minus(analysisStateMachine.getStateMachineIgnoreMinutes().intValue(), ChronoUnit.MINUTES)
+               .isAfter(instantForAnalysis)) {
       log.info("The statemachine for {} and range {} to {} is before {} minutes. We will be ignoring it.",
           analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
           analysisStateMachine.getAnalysisEndTime(), STATE_MACHINE_IGNORE_MINUTES);
@@ -265,6 +268,9 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
         default:
           throw new AnalysisStateMachineException(
               "Unimplemented verification type for orchestration : " + verificationType);
+      }
+      if (cvConfig.isDemo()) {
+        stateMachine.setStateMachineIgnoreMinutes(STATE_MACHINE_IGNORE_MINUTES_FOR_DEMO);
       }
       firstState.setStatus(AnalysisStatus.CREATED);
       firstState.setInputs(inputForAnalysis);

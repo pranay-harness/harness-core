@@ -4,3 +4,4 @@ sampleBean:
   accountIdentifier: accountid
   projectIdentifier: projid
   orgIdentifier: orgid
+  entityInvalid: false

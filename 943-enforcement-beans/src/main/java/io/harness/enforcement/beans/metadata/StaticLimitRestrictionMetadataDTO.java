@@ -22,4 +22,5 @@ import lombok.experimental.SuperBuilder;
 @OwnedBy(HarnessTeam.GTM)
 public class StaticLimitRestrictionMetadataDTO extends RestrictionMetadataDTO {
   private Long limit;
+  private boolean allowedIfEqual;
 }

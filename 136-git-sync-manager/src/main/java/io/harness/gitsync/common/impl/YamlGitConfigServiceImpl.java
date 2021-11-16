@@ -252,6 +252,8 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
           wasGitSyncEnabled ? GitSyncConfigSwitchType.NONE : GitSyncConfigSwitchType.ENABLED);
       sendEventForConnectorSetupUsageChange(gitSyncConfigDTO);
     } catch (DuplicateKeyException ex) {
+      log.error("A git sync config with this identifier or repo %s and branch %s already exists",
+          gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch());
       throw new InvalidRequestException(
           String.format("A git sync config with this identifier or repo %s and branch %s already exists",
               gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch()));

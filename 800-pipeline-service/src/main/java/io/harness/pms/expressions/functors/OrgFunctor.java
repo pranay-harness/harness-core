@@ -8,9 +8,9 @@ import io.harness.exception.EngineFunctorException;
 import io.harness.expression.LateBindingValue;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.dto.OrganizationResponse;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.organization.remote.OrganizationClient;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 
 import java.util.Optional;
 
@@ -26,8 +26,8 @@ public class OrgFunctor implements LateBindingValue {
 
   @Override
   public Object bind() {
-    String accountId = AmbianceHelper.getAccountId(ambiance);
-    String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
+    String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
     if (EmptyPredicate.isEmpty(accountId) || EmptyPredicate.isEmpty(orgIdentifier)) {
       return null;
     }

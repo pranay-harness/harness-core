@@ -85,7 +85,7 @@ public abstract class GenericStageFilterJsonCreator implements FilterJsonCreator
     return creationResponse.build();
   }
 
-  private Set<EntityDetailProtoDTO> getReferredEntities(
+  public Set<EntityDetailProtoDTO> getReferredEntities(
       FilterCreationContext filterCreationContext, StageElementConfig stageElementConfig) {
     Set<EntityDetailProtoDTO> referredEntities = getReferences(filterCreationContext.getSetupMetadata().getAccountId(),
         filterCreationContext.getSetupMetadata().getOrgId(), filterCreationContext.getSetupMetadata().getProjectId(),

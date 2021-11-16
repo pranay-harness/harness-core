@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,6 +29,7 @@ import lombok.experimental.FieldNameConstants;
 @ToString
 @EqualsAndHashCode
 @ApiModel(value = MODEL_NAME)
+@Schema(name = MODEL_NAME)
 @OwnedBy(PL)
 public class RoleAssignmentDTO {
   public static final String MODEL_NAME = "RoleAssignment";

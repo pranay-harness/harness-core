@@ -9,6 +9,7 @@ import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.NonNull;
 
@@ -27,4 +28,7 @@ public interface ServiceDependencyService extends DeleteEntityByHandler<ServiceD
 
   List<ServiceDependency> getServiceDependencies(
       @NonNull ProjectParams projectParams, @NonNull List<String> monitoredServiceIdentifiers);
+
+  Map<String, List<String>> getMonitoredServiceToDependentServicesMap(
+      @NonNull ProjectParams projectParams, List<String> monitoredServiceIdentifiers);
 }

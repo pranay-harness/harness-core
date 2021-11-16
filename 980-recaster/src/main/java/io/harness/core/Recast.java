@@ -61,6 +61,12 @@ public class Recast {
     typesAnnotatedWith.forEach(aliasRegistry::register);
   }
 
+  public void registerAliases(Reflections reflections, String... params) {
+    Set<Class<?>> typesAnnotatedWith = reflections.getTypesAnnotatedWith(RecasterAlias.class);
+    aliasRegistry.addPackages(params);
+    typesAnnotatedWith.forEach(aliasRegistry::register);
+  }
+
   public <T> T fromMap(final Map<String, Object> map, final Class<T> entityClazz) {
     return recaster.fromMap(map, entityClazz);
   }

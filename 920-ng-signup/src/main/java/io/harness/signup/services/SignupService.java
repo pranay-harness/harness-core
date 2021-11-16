@@ -13,6 +13,8 @@ import io.harness.signup.dto.VerifyTokenResponseDTO;
 public interface SignupService {
   UserInfo signup(SignupDTO dto, String captchaToken) throws WingsException;
 
+  UserInfo communitySignup(SignupDTO dto) throws WingsException;
+
   boolean createSignupInvite(SignupDTO dto, String captchaToken);
 
   UserInfo completeSignupInvite(String token);

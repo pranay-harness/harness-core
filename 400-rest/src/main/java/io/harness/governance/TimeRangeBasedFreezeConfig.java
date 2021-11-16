@@ -22,6 +22,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.jackson.annotate.JsonCreator;
+import org.mongodb.morphia.annotations.Transient;
 
 @Getter
 @ToString
@@ -32,6 +33,10 @@ import org.codehaus.jackson.annotate.JsonCreator;
 public class TimeRangeBasedFreezeConfig extends GovernanceFreezeConfig {
   // if freezeForAllApps=true, ignore appIds
   @Setter private TimeRange timeRange;
+
+  public enum FreezeWindowStateType { ACTIVE, INACTIVE }
+  // this field is used for proper UI rendering
+  @Transient @EqualsAndHashCode.Exclude private FreezeWindowStateType freezeWindowState;
 
   public TimeRange getTimeRange() {
     return timeRange;
@@ -70,6 +75,42 @@ public class TimeRangeBasedFreezeConfig extends GovernanceFreezeConfig {
       return timeRange.isInRange();
     }
     return currentTime <= getTimeRange().getTo() && currentTime >= getTimeRange().getFrom();
+  }
+
+  public FreezeWindowStateType getFreezeWindowState() {
+    if (!isApplicable()) {
+      return FreezeWindowStateType.INACTIVE;
+    }
+    long currentTime = System.currentTimeMillis();
+    log.info("Window id: {}, Current time: {}, from: {}, to: {}", getUuid(), currentTime, getTimeRange().getFrom(),
+        getTimeRange().getTo());
+    if (timeRange == null) {
+      log.warn("Time range is null for deployment freeze window: " + getUuid());
+      return FreezeWindowStateType.INACTIVE;
+    }
+    if (timeRange.getFreezeOccurrence() != null) {
+      return timeRange.isInRange() ? FreezeWindowStateType.ACTIVE : FreezeWindowStateType.INACTIVE;
+    }
+    return currentTime <= getTimeRange().getTo() && currentTime >= getTimeRange().getFrom()
+        ? FreezeWindowStateType.ACTIVE
+        : FreezeWindowStateType.INACTIVE;
+  }
+
+  public void toggleExpiredWindowsOff() {
+    long currentTime = System.currentTimeMillis();
+    if (timeRange != null) {
+      // After all iterations of scheduled windows are done, toggle the window
+      if (timeRange.getFreezeOccurrence() != null && currentTime > timeRange.getEndTime()) {
+        setApplicable(false);
+        // toggle scheduled NEVER reoccurring windows and start now windows
+      } else if (timeRange.getFreezeOccurrence() == null && currentTime > timeRange.getTo()) {
+        setApplicable(false);
+      }
+    }
+  }
+
+  public void recalculateFreezeWindowState() {
+    this.freezeWindowState = getFreezeWindowState();
   }
 
   @Override

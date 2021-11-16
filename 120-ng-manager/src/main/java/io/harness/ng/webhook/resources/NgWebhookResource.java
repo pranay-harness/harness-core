@@ -19,6 +19,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -36,6 +40,19 @@ import lombok.extern.slf4j.Slf4j;
 @Produces({"application/json", "application/yaml", "text/plain"})
 @Consumes({"application/json", "application/yaml", "text/plain"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@Tag(name = "Webhook Event Handler", description = "Contains APIs corresponding to Webhook Triggers.")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -48,11 +65,17 @@ public class NgWebhookResource {
   private WebhookHelper webhookHelper;
 
   @POST
+  @Operation(operationId = "processWebhookEvent", summary = "Process event payload for webhook triggers.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns UUID of newly created webhook processing event.")
+      })
   @ApiOperation(value = "accept webhook event", nickname = "webhookEndpoint")
   @PublicApi
-  public ResponseDTO<String> processWebhookEvent(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier, @NotNull String eventPayload,
-      @Context HttpHeaders httpHeaders) {
+  public ResponseDTO<String>
+  processWebhookEvent(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull String eventPayload, @Context HttpHeaders httpHeaders) {
     WebhookEvent eventEntity = webhookHelper.toNGTriggerWebhookEvent(accountIdentifier, eventPayload, httpHeaders);
     if (eventEntity != null) {
       WebhookEvent newEvent = webhookService.addEventToQueue(eventEntity);

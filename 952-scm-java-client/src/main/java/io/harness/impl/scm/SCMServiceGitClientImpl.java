@@ -16,9 +16,11 @@ import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
 import io.harness.product.ci.scm.proto.FileContent;
+import io.harness.product.ci.scm.proto.FindCommitResponse;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
+import io.harness.product.ci.scm.proto.GetUserReposResponse;
 import io.harness.product.ci.scm.proto.IsLatestFileResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
@@ -162,5 +164,15 @@ public class SCMServiceGitClientImpl implements ScmClient {
   public CompareCommitsResponse compareCommits(
       ScmConnector scmConnector, String initialCommitId, String finalCommitId) {
     return scmServiceClient.compareCommits(scmConnector, initialCommitId, finalCommitId, scmBlockingStub);
+  }
+
+  @Override
+  public FindCommitResponse findCommit(ScmConnector scmConnector, String commitId) {
+    return scmServiceClient.findCommit(scmConnector, commitId, scmBlockingStub);
+  }
+
+  @Override
+  public GetUserReposResponse getUserRepos(ScmConnector scmConnector) {
+    return scmServiceClient.getUserRepos(scmConnector, scmBlockingStub);
   }
 }

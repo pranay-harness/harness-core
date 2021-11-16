@@ -12,6 +12,7 @@ import io.harness.ccm.CENextGenConfiguration;
 import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.ccm.commons.beans.usage.CELicenseUsageDTO;
+import io.harness.licensing.usage.params.UsageRequestParams;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -57,6 +58,7 @@ public class LicenseUsageInterfaceImplTest extends CategoryTest {
   FieldValueList octoberGcpFieldValuesList;
   FieldValueList septemberClusterFieldValuesList;
   FieldValueList septemberGcpFieldValuesList;
+  UsageRequestParams usageRequestParams;
 
   @Before
   public void setup() throws InterruptedException {
@@ -103,6 +105,8 @@ public class LicenseUsageInterfaceImplTest extends CategoryTest {
     septemberClusterFieldValues.add(FieldValue.of(PRIMITIVE, "K8S_AZURE"));
     septemberClusterFieldValues.add(FieldValue.of(PRIMITIVE, "September"));
     septemberClusterFieldValuesList = FieldValueList.of(septemberClusterFieldValues, fieldList);
+
+    usageRequestParams = UsageRequestParams.builder().build();
   }
 
   @Test
@@ -113,7 +117,8 @@ public class LicenseUsageInterfaceImplTest extends CategoryTest {
         Arrays.asList(septemberClusterFieldValuesList, octoberClusterFieldValuesList);
     when(tableResult.iterateAll()).thenReturn(fieldValueListIterator);
 
-    CELicenseUsageDTO licenseUsage = licenseUsageInterface.getLicenseUsage(ACCOUNT_1, ModuleType.CE, 0L);
+    CELicenseUsageDTO licenseUsage =
+        licenseUsageInterface.getLicenseUsage(ACCOUNT_1, ModuleType.CE, 0L, usageRequestParams);
     assertThat(licenseUsage.getActiveSpend().getCount()).isEqualTo(Long.valueOf(180));
   }
 
@@ -125,7 +130,8 @@ public class LicenseUsageInterfaceImplTest extends CategoryTest {
         Arrays.asList(septemberClusterFieldValuesList, octoberClusterFieldValuesList, octoberAzureFieldValuesList);
     when(tableResult.iterateAll()).thenReturn(fieldValueListIterator);
 
-    CELicenseUsageDTO licenseUsage = licenseUsageInterface.getLicenseUsage(ACCOUNT_1, ModuleType.CE, 0L);
+    CELicenseUsageDTO licenseUsage =
+        licenseUsageInterface.getLicenseUsage(ACCOUNT_1, ModuleType.CE, 0L, usageRequestParams);
     assertThat(licenseUsage.getActiveSpend().getCount()).isEqualTo(Long.valueOf(320));
   }
 
@@ -137,7 +143,8 @@ public class LicenseUsageInterfaceImplTest extends CategoryTest {
         octoberClusterFieldValuesList, octoberAzureFieldValuesList, octoberGcpFieldValuesList);
     when(tableResult.iterateAll()).thenReturn(fieldValueListIterator);
 
-    CELicenseUsageDTO licenseUsage = licenseUsageInterface.getLicenseUsage(ACCOUNT_1, ModuleType.CE, 0L);
+    CELicenseUsageDTO licenseUsage =
+        licenseUsageInterface.getLicenseUsage(ACCOUNT_1, ModuleType.CE, 0L, usageRequestParams);
     assertThat(licenseUsage.getActiveSpend().getCount()).isEqualTo(Long.valueOf(920));
   }
 
@@ -150,7 +157,8 @@ public class LicenseUsageInterfaceImplTest extends CategoryTest {
             octoberAzureFieldValuesList, octoberGcpFieldValuesList);
     when(tableResult.iterateAll()).thenReturn(fieldValueListIterator);
 
-    CELicenseUsageDTO licenseUsage = licenseUsageInterface.getLicenseUsage(ACCOUNT_1, ModuleType.CE, 0L);
+    CELicenseUsageDTO licenseUsage =
+        licenseUsageInterface.getLicenseUsage(ACCOUNT_1, ModuleType.CE, 0L, usageRequestParams);
     assertThat(licenseUsage.getActiveSpend().getCount()).isEqualTo(Long.valueOf(1370));
   }
 }

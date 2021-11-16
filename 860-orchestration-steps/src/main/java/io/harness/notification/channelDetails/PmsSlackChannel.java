@@ -3,12 +3,15 @@ package io.harness.notification.channelDetails;
 import io.harness.Team;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SwaggerConstants;
 import io.harness.notification.channeldetails.NotificationChannel;
 import io.harness.notification.channeldetails.SlackChannel;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Lists;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,7 +27,7 @@ import lombok.EqualsAndHashCode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PmsSlackChannel extends PmsNotificationChannel {
   List<String> userGroups;
-  String webhookUrl;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> webhookUrl;
 
   @Override
   public NotificationChannel toNotificationChannel(String accountId, String orgIdentifier, String projectIdentifier,
@@ -38,7 +41,8 @@ public class PmsSlackChannel extends PmsNotificationChannel {
             userGroups.stream()
                 .map(e -> NotificationChannelUtils.getUserGroups(e, accountId, orgIdentifier, projectIdentifier))
                 .collect(Collectors.toList()))
-        .webhookUrls(Lists.newArrayList(webhookUrl))
+        .webhookUrls(
+            Lists.newArrayList(webhookUrl.getValue() != null ? webhookUrl.getValue() : webhookUrl.getExpressionValue()))
         .build();
   }
 }

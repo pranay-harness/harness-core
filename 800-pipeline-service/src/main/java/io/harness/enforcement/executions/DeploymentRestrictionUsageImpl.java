@@ -29,7 +29,7 @@ public class DeploymentRestrictionUsageImpl implements CustomRestrictionInterfac
       Optional<AccountExecutionMetadata> accountExecutionMetadata =
           accountExecutionMetadataRepository.findByAccountId(accountIdentifier);
       if (!accountExecutionMetadata.isPresent()
-          || accountExecutionMetadata.get().getModuleToExecutionCount().get(moduleName) <= 1000) {
+          || accountExecutionMetadata.get().getModuleToExecutionCount().get(moduleName) <= 1100) {
         return true;
       }
       LocalDate startDate = Instant.now().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -38,7 +38,7 @@ public class DeploymentRestrictionUsageImpl implements CustomRestrictionInterfac
                  .getModuleToExecutionInfoMap()
                  .get(moduleName)
                  .getCountPerMonth()
-                 .getOrDefault(yearMonth, 0L)
+                 .getOrDefault(yearMonth.toString(), 0L)
           > 100;
     }
     return true;

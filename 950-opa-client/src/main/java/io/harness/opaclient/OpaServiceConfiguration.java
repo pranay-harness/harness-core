@@ -11,4 +11,5 @@ import lombok.Value;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class OpaServiceConfiguration {
   String baseUrl;
+  String secret;
 }

@@ -2,6 +2,9 @@ package io.harness.data.validator;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Set;
@@ -9,6 +12,7 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl;
 
+@OwnedBy(HarnessTeam.CDC)
 public class EntityNameValidator implements ConstraintValidator<EntityName, String> {
   private static final String ALLOWED_CHARS_STRING_DEFAULT =
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ ";
@@ -16,9 +20,9 @@ public class EntityNameValidator implements ConstraintValidator<EntityName, Stri
       Sets.newHashSet(Lists.charactersOf(ALLOWED_CHARS_STRING_DEFAULT));
 
   public static final String ALLOWED_CHARS_SERVICE_VARIABLE_STRING =
-      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
   public static final String ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE =
-      "Service Variable name can only have a-z, A-Z, 0-9, - and _";
+      "Service Variable name can only have a-z, A-Z, 0-9 and _";
 
   @Override
   public void initialize(EntityName constraintAnnotation) {}

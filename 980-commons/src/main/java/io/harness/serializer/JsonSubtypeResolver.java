@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.jsontype.SubtypeResolver;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -33,7 +34,8 @@ public class JsonSubtypeResolver extends SubtypeResolver {
           .build(new CacheLoader<Class<?>, List<NamedType>>() {
             @Override
             public List<NamedType> load(Class<?> key) {
-              Reflections reflections = new Reflections("software.wings", "io.harness");
+              Reflections reflections =
+                  HarnessReflections.getReflections(ImmutableSet.of("io.harness", "software.wings"));
               return reflections.getSubTypesOf(key)
                   .stream()
                   .filter(subClass -> subClass.isAnnotationPresent(JsonTypeName.class))

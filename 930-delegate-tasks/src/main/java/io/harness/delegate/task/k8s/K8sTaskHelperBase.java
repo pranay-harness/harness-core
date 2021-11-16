@@ -56,6 +56,7 @@ import io.harness.concurrent.HTimeLimiter;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
+import io.harness.connector.service.git.NGGitService;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.CEFeatures;
@@ -73,7 +74,6 @@ import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
-import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
@@ -93,6 +93,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesTaskException;
 import io.harness.exception.KubernetesValuesException;
+import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.UrlNotProvidedException;
 import io.harness.exception.UrlNotReachableException;
@@ -106,6 +107,7 @@ import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.K8sConstants;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
+import io.harness.k8s.RetryHelper;
 import io.harness.k8s.kubectl.AbstractExecutable;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.DeleteCommand;
@@ -153,6 +155,7 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.github.resilience4j.retry.Retry;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
@@ -186,6 +189,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -1035,9 +1039,10 @@ public class K8sTaskHelperBase {
   }
 
   public boolean dryRunManifests(Kubectl client, List<KubernetesResource> resources,
-      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) {
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean useKubectlNewVersion) {
     try {
-      return dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback, false);
+      return dryRunManifests(
+          client, resources, k8sDelegateTaskParams, executionLogCallback, false, useKubectlNewVersion);
     } catch (Exception ignore) {
       // Not expected if error framework is not enabled. Make the compiler happy until will not adopt error framework
       // for all steps
@@ -1046,8 +1051,8 @@ public class K8sTaskHelperBase {
   }
 
   public boolean dryRunManifests(Kubectl client, List<KubernetesResource> resources,
-      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean isErrorFrameworkEnabled)
-      throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean isErrorFrameworkEnabled,
+      boolean useKubectlNewVersion) throws Exception {
     try {
       executionLogCallback.saveExecutionLog(color("\nValidating manifests with Dry Run", White, Bold), INFO);
 
@@ -1056,7 +1061,9 @@ public class K8sTaskHelperBase {
 
       Kubectl overriddenClient = getOverriddenClient(client, resources, k8sDelegateTaskParams);
 
-      final ApplyCommand dryrun = overriddenClient.apply().filename("manifests-dry-run.yaml").dryrun(true);
+      final ApplyCommand dryrun = useKubectlNewVersion
+          ? overriddenClient.apply().filename("manifests-dry-run.yaml").dryRunClient(true)
+          : overriddenClient.apply().filename("manifests-dry-run.yaml").dryrun(true);
       ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, dryrun);
       if (result.getExitValue() != 0) {
         executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
@@ -1606,6 +1613,11 @@ public class K8sTaskHelperBase {
   }
 
   public List<KubernetesResource> readManifests(List<FileData> manifestFiles, LogCallback executionLogCallback) {
+    return readManifests(manifestFiles, executionLogCallback, false);
+  }
+
+  public List<KubernetesResource> readManifests(
+      List<FileData> manifestFiles, LogCallback executionLogCallback, boolean isErrorFrameworkSupported) {
     List<KubernetesResource> result = new ArrayList<>();
 
     for (FileData manifestFile : manifestFiles) {
@@ -1614,12 +1626,25 @@ public class K8sTaskHelperBase {
           result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
         } catch (Exception e) {
           executionLogCallback.saveExecutionLog("Exception while processing " + manifestFile.getFileName(), ERROR);
+          if (isErrorFrameworkSupported) {
+            throwReadManifestExceptionWithHintAndExplanation(e, manifestFile.getFileName());
+          }
           throw e;
         }
       }
     }
 
     return result.stream().sorted(new KubernetesResourceComparer()).collect(toList());
+  }
+
+  private void throwReadManifestExceptionWithHintAndExplanation(Exception e, String manifestFileName) {
+    String explanation = e.getMessage();
+    if (e instanceof KubernetesYamlException) {
+      explanation += ":" + ((KubernetesYamlException) e).getParams().get("reason");
+    }
+
+    throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.READ_MANIFEST_FAILED, explanation,
+        new KubernetesTaskException(format(KubernetesExceptionMessages.READ_MANIFEST_FAILED, manifestFileName)));
   }
 
   public List<FileData> readManifestFilesFromDirectory(String manifestFilesDirectory) {
@@ -1663,10 +1688,15 @@ public class K8sTaskHelperBase {
 
   public List<KubernetesResource> readManifestAndOverrideLocalSecrets(
       List<FileData> manifestFiles, LogCallback executionLogCallback, boolean overrideLocalSecrets) {
+    return readManifestAndOverrideLocalSecrets(manifestFiles, executionLogCallback, overrideLocalSecrets, false);
+  }
+
+  public List<KubernetesResource> readManifestAndOverrideLocalSecrets(List<FileData> manifestFiles,
+      LogCallback executionLogCallback, boolean overrideLocalSecrets, boolean isErrorFrameworkSupported) {
     if (overrideLocalSecrets) {
       manifestFiles = replaceManifestPlaceholdersWithLocalDelegateSecrets(manifestFiles);
     }
-    return readManifests(manifestFiles, executionLogCallback);
+    return readManifests(manifestFiles, executionLogCallback, isErrorFrameworkSupported);
   }
 
   public String writeValuesToFile(String directoryPath, List<String> valuesFiles) throws Exception {
@@ -1942,7 +1972,7 @@ public class K8sTaskHelperBase {
         }
       } else {
         executionLogCallback.saveExecutionLog(
-            format("%nStatus check for resources in namespace [%s] failed.", namespaces), INFO,
+            format("%nStatus check for resources in namespace [%s] failed.", namespaces), ERROR,
             CommandExecutionStatus.FAILURE);
       }
     }
@@ -2003,9 +2033,13 @@ public class K8sTaskHelperBase {
     executionLogCallback.saveExecutionLog(getPrintableCommand(crdStatusCommand.command()) + "\n");
     final Map<String, Object> evaluatorResponseContext = new HashMap<>(1);
 
-    while (true) {
-      ProcessResult result = crdStatusCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), null, null, false);
+    Predicate<Object> retryCondition = retryConditionForProcessResult();
+    Retry retry = buildRetryAndRegisterListeners(retryCondition);
 
+    while (true) {
+      Callable<ProcessResult> callable = Retry.decorateCallable(
+          retry, () -> crdStatusCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), null, null, false));
+      ProcessResult result = callable.call();
       boolean success = 0 == result.getExitValue();
       if (!success) {
         log.warn(result.outputUTF8());
@@ -2031,7 +2065,21 @@ public class K8sTaskHelperBase {
           return true;
         }
       }
+      sleep(ofSeconds(1));
     }
+  }
+
+  private Predicate<Object> retryConditionForProcessResult() {
+    return o -> {
+      ProcessResult p = (ProcessResult) o;
+      return p.getExitValue() != 0;
+    };
+  }
+
+  private Retry buildRetryAndRegisterListeners(Predicate<Object> retryCondition) {
+    Retry exponentialRetry = RetryHelper.getExponentialRetry(this.getClass().getSimpleName(), retryCondition);
+    RetryHelper.registerEventListeners(exponentialRetry);
+    return exponentialRetry;
   }
 
   @VisibleForTesting

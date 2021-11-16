@@ -6,7 +6,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.steps.stepinfo.InitializeStepInfo;
-import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
+import io.harness.delegate.beans.ci.CIInitializeTaskParams;
 import io.harness.pms.contracts.ambiance.Ambiance;
 
 import com.google.inject.Inject;
@@ -20,12 +20,15 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CI)
 public class BuildSetupUtils {
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
+  @Inject private AWSVmInitializeTaskUtils awsVmInitializeTaskUtils;
 
-  public CIBuildSetupTaskParams getBuildSetupTaskParams(InitializeStepInfo initializeStepInfo, Ambiance ambiance,
+  public CIInitializeTaskParams getBuildSetupTaskParams(InitializeStepInfo initializeStepInfo, Ambiance ambiance,
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
     switch (initializeStepInfo.getBuildJobEnvInfo().getType()) {
       case K8:
         return k8BuildSetupUtils.getCIk8BuildTaskParams(initializeStepInfo, ambiance, taskIds, logPrefix, stepLogKeys);
+      case AWS_VM:
+        return awsVmInitializeTaskUtils.getInitializeTaskParams(initializeStepInfo, ambiance, logPrefix);
       default:
         unhandled(initializeStepInfo.getBuildJobEnvInfo().getType());
     }

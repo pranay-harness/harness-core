@@ -83,7 +83,7 @@ public class InstanceMetaDataUtilsTest extends BatchProcessingTestBase {
   }
 
   private static boolean isGCPSpotInstance(final Map<String, String> labels) {
-    final InstanceCategory instanceCategory = getInstanceCategory(CloudProvider.GCP, labels);
+    final InstanceCategory instanceCategory = getInstanceCategory(CloudProvider.GCP, labels, null);
     return instanceCategory == InstanceCategory.SPOT;
   }
 
@@ -98,7 +98,7 @@ public class InstanceMetaDataUtilsTest extends BatchProcessingTestBase {
     label.put(K8sCCMConstants.AWS_LIFECYCLE_KEY, "Ec2");
     label.put("kubernetes.io/lifecycle", "spot");
 
-    InstanceCategory instanceCategory = getInstanceCategory(CloudProvider.AWS, label);
+    InstanceCategory instanceCategory = getInstanceCategory(CloudProvider.AWS, label, null);
     assertThat(instanceCategory).isEqualTo(InstanceCategory.SPOT);
   }
 
@@ -113,7 +113,7 @@ public class InstanceMetaDataUtilsTest extends BatchProcessingTestBase {
     label.put(K8sCCMConstants.AWS_LIFECYCLE_KEY, "Ec2");
     label.put("eks.amazonaws.com/capacityType", "spot");
 
-    InstanceCategory instanceCategory = getInstanceCategory(CloudProvider.AWS, label);
+    InstanceCategory instanceCategory = getInstanceCategory(CloudProvider.AWS, label, null);
     assertThat(instanceCategory).isEqualTo(InstanceCategory.SPOT);
   }
 
@@ -127,7 +127,7 @@ public class InstanceMetaDataUtilsTest extends BatchProcessingTestBase {
     label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
     label.put(K8sCCMConstants.AZURE_LIFECYCLE_KEY, "spot");
 
-    InstanceCategory instanceCategory = getInstanceCategory(CloudProvider.AZURE, label);
+    InstanceCategory instanceCategory = getInstanceCategory(CloudProvider.AZURE, label, null);
     assertThat(instanceCategory).isEqualTo(InstanceCategory.SPOT);
   }
 
@@ -140,7 +140,20 @@ public class InstanceMetaDataUtilsTest extends BatchProcessingTestBase {
     label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
     label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
 
-    InstanceCategory instanceCategory = getInstanceCategory(CloudProvider.AZURE, label);
+    InstanceCategory instanceCategory = getInstanceCategory(CloudProvider.AZURE, label, null);
     assertThat(instanceCategory).isEqualTo(InstanceCategory.ON_DEMAND);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testSpotLabelFromPoolNameForBancoOnly() {
+    InstanceCategory spotInstanceCategory =
+        getInstanceCategory(CloudProvider.AWS, ImmutableMap.of("node-pool-name", "abc-spot"), "aYXZz76ETU-_3LLQSzBt1Q");
+    assertThat(spotInstanceCategory).isEqualTo(InstanceCategory.SPOT);
+
+    InstanceCategory onDemandInstanceCategory =
+        getInstanceCategory(CloudProvider.AWS, ImmutableMap.of("node-pool-name", "abc-spot"), "randomName");
+    assertThat(onDemandInstanceCategory).isEqualTo(InstanceCategory.ON_DEMAND);
   }
 }

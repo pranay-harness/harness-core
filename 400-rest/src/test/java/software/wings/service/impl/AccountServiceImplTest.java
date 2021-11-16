@@ -86,7 +86,7 @@ public class AccountServiceImplTest extends WingsBaseTest {
     List<String> delegateVersions = new ArrayList<>();
     delegateVersions.add(version);
     DelegateConfiguration individualConfiguration =
-        DelegateConfiguration.builder().delegateVersions(delegateVersions).build();
+        DelegateConfiguration.builder().delegateVersions(delegateVersions).accountVersion(true).build();
     account.setDelegateConfiguration(individualConfiguration);
 
     Account globalAccount = new Account();
