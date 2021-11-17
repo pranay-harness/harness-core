@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -18,6 +19,7 @@ import lombok.experimental.SuperBuilder;
 @OwnedBy(PL)
 @JsonTypeName("AWS_CODE_COMMIT")
 @Data
+@Schema(name = "AwsCodeCommitSCM", description = "This Contains details of the Aws Code Commit Source Code Manager")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SuperBuilder
 @NoArgsConstructor
