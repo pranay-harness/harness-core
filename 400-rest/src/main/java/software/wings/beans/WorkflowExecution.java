@@ -60,6 +60,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
@@ -80,6 +81,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @BreakDependencyOn("software.wings.service.impl.WorkflowExecutionServiceHelper")
+@EqualsAndHashCode(exclude = {"validUntil"})
 public class WorkflowExecution implements PersistentRegularIterable, AccountDataRetentionEntity, UuidAware,
                                           CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

@@ -90,7 +90,7 @@ public class SplunkResourceTest extends CvNextGenTestBase {
     assertThat(validationError.get(1).getField()).isEqualTo("query");
 
     assertThat(asList(validationError.get(0).getMessage(), validationError.get(1).getMessage()))
-        .containsAll(asList("may not be null", "may not be empty"));
+        .containsAll(asList("may not be empty", "must not be null"));
   }
 
   @Test
@@ -151,7 +151,7 @@ public class SplunkResourceTest extends CvNextGenTestBase {
     assertThat(validationError.get(1).getField()).isEqualTo("query");
 
     assertThat(asList(validationError.get(0).getMessage(), validationError.get(1).getMessage()))
-        .containsAll(asList("may not be null", "may not be empty"));
+        .containsAll(asList("may not be empty", "must not be null"));
   }
 
   @Test
