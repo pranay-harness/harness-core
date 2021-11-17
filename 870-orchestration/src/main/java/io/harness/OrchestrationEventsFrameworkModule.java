@@ -1,7 +1,6 @@
 package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
-import static io.harness.OrchestrationEventsFrameworkConstants.ORCHESTRATION_REDIS_CLIENT;
 import static io.harness.OrchestrationEventsFrameworkConstants.PARTIAL_PLAN_EVENT_BATCH_SIZE;
 import static io.harness.OrchestrationEventsFrameworkConstants.PARTIAL_PLAN_EVENT_CONSUMER;
 import static io.harness.OrchestrationEventsFrameworkConstants.SDK_RESPONSE_EVENT_BATCH_SIZE;
@@ -10,6 +9,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PARTI
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_TOPIC;
 import static io.harness.pms.events.PmsEventFrameworkConstants.MAX_PROCESSING_TIME_SECONDS;
 
+import io.harness.events.PmsRedissonClientFactory;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
@@ -43,8 +43,7 @@ public class OrchestrationEventsFrameworkModule extends AbstractModule {
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
-      RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
-      bind(RedissonClient.class).annotatedWith(Names.named(ORCHESTRATION_REDIS_CLIENT)).toInstance(redissonClient);
+      RedissonClient redissonClient = PmsRedissonClientFactory.getRedisClient(redisConfig);
       bind(Consumer.class)
           .annotatedWith(Names.named(SDK_RESPONSE_EVENT_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_SDK_RESPONSE_EVENT_TOPIC, PIPELINE_SERVICE.getServiceId(),
