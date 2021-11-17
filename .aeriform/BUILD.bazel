@@ -476,7 +476,7 @@ aeriform("//960-expression-service:tests")
 
 aeriform("//960-ng-core-beans:module")
 
-aeriform("//960-ng-license-beans:module")
+aeriform("//962-ng-license-beans:module")
 
 aeriform("//960-ng-license-usage-beans:module")
 

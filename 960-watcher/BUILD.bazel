@@ -25,6 +25,7 @@ java_binary(
     ],
     deps = [
         "//:lombok",
+        "//962-ng-license-beans:module",
         "//970-grpc:module",
         "//970-watcher-beans:module",
         "//980-commons:module",

@@ -175,13 +175,13 @@ BAZEL_MODULES="\
   //960-expression-service/src/main/proto/io/harness/expression/service:all \
   //960-expression-service:module \
   //960-ng-core-beans:module \
-  //960-ng-license-beans:module \
   //960-ng-license-usage-beans:module \
   //960-notification-beans/src/main/proto:all \
   //960-notification-beans:module \
   //960-persistence:module \
   //960-persistence:supporter-test \
   //960-yaml-sdk:module \
+  //962-ng-license-beans:module \
   //970-api-services-beans:module \
   //970-grpc:module \
   //970-ng-commons:module \

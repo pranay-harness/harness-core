@@ -96,11 +96,11 @@ directories:
   960-api-services
   960-continuous-features
   960-ng-core-beans
-  960-ng-license-beans
   960-ng-license-usage-beans
   960-notification-beans
   960-persistence
   960-yaml-sdk
+  962-ng-license-beans
   965-api-key-filter
   970-api-services-beans
   970-grpc
