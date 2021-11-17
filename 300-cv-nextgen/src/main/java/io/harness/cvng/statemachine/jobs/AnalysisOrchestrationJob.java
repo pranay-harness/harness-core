@@ -1,7 +1,7 @@
 package io.harness.cvng.statemachine.jobs;
 
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
-import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.cvng.statemachine.services.api.OrchestrationService;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 
 import com.google.inject.Inject;
