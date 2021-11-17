@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.git.model.ChangeType.ADD;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import static java.lang.String.format;
@@ -66,9 +67,13 @@ import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.ConnectorValidationException;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.helpers.GitContextHelper;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -270,7 +275,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
    */
   @Override
   public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
-    return createInternal(connectorRequestDTO, accountIdentifier, ChangeType.ADD);
+    return createInternal(connectorRequestDTO, accountIdentifier, ADD);
   }
 
   @Override
@@ -349,8 +354,14 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     assurePredefined(connectorRequest, accountIdentifier);
     ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
     Objects.requireNonNull(connector.getIdentifier());
-    Optional<Connector> existingConnectorOptional = getInternal(
-        accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
+    Optional<Connector> existingConnectorOptional;
+    if (GitContextHelper.isFullSyncFlow()) {
+      existingConnectorOptional = getUnSyncedConnector(
+          accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
+    } else {
+      existingConnectorOptional = getInternal(
+          accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
+    }
     if (!existingConnectorOptional.isPresent()) {
       throw new InvalidRequestException(
           format("No connector exists with the  Identifier %s", connector.getIdentifier()));
@@ -388,6 +399,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             -> outboxService.save(new ConnectorUpdateEvent(
                 accountIdentifier, oldConnectorDTO.getConnector(), connectorRequest.getConnectorInfo()));
       }
+      if (GitContextHelper.isFullSyncFlow()) {
+        gitChangeType = ADD;
+      }
       Connector updatedConnector = connectorRepository.save(newConnector, connectorRequest, gitChangeType, supplier);
       connectorEntityReferenceHelper.createSetupUsageForSecret(connector, accountIdentifier, true);
       return connectorMapper.writeDTO(updatedConnector);
@@ -395,6 +409,25 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
     }
+  }
+
+  private Optional<Connector> getUnSyncedConnector(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    Optional<Connector> connectorOptional = Optional.empty();
+    GitEntityInfo oldGitEntityInfo = GitContextHelper.getGitEntityInfo();
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      final GitEntityInfo emptyInfo = GitEntityInfo.builder().build();
+      // todo: @deepak Why we are following this upsert pattern, why not try with resources
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(emptyInfo).build());
+      connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+          fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+    } finally {
+      GlobalContextManager.upsertGlobalContextRecord(
+          GitSyncBranchContext.builder().gitBranchInfo(oldGitEntityInfo).build());
+    }
+    return connectorOptional;
   }
 
   private Criteria createCriteriaToFetchConnector(
