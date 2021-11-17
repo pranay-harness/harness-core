@@ -4,8 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ProjectAggregateDTO;
+import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,4 +17,6 @@ public interface AggregateProjectService {
 
   Page<ProjectAggregateDTO> listProjectAggregateDTO(
       String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO);
+
+  List<ProjectDTO> listProjectDtO(String accountIdentifier, ProjectFilterDTO projectFilterDTO);
 }

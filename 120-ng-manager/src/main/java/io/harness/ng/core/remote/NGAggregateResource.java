@@ -35,16 +35,7 @@ import io.harness.ng.core.api.AggregateAccountResourceService;
 import io.harness.ng.core.api.AggregateOrganizationService;
 import io.harness.ng.core.api.AggregateProjectService;
 import io.harness.ng.core.api.AggregateUserGroupService;
-import io.harness.ng.core.dto.AccountResourcesDTO;
-import io.harness.ng.core.dto.AggregateACLRequest;
-import io.harness.ng.core.dto.ErrorDTO;
-import io.harness.ng.core.dto.FailureDTO;
-import io.harness.ng.core.dto.OrganizationAggregateDTO;
-import io.harness.ng.core.dto.OrganizationFilterDTO;
-import io.harness.ng.core.dto.ProjectAggregateDTO;
-import io.harness.ng.core.dto.ProjectFilterDTO;
-import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.dto.UserGroupAggregateDTO;
+import io.harness.ng.core.dto.*;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project.ProjectKeys;
@@ -128,6 +119,21 @@ public class NGAggregateResource {
     ProjectFilterDTO projectFilterDTO = getProjectFilterDTO(searchTerm, permittedOrgIds, hasModule, moduleType);
     return ResponseDTO.newResponse(getNGPageResponse(aggregateProjectService.listProjectAggregateDTO(
         accountIdentifier, getPageRequest(pageRequest), projectFilterDTO)));
+  }
+
+  @GET
+  @Path("all-projects")
+  @ApiOperation(value = "Get ProjectDTO list", nickname = "getProjectDTOList")
+  public ResponseDTO<List<ProjectDTO>> list(
+          @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+          @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+          @QueryParam("hasModule") @DefaultValue("true") boolean hasModule,
+          @QueryParam(NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
+          @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+    Set<String> permittedOrgIds = getPermittedOrganizations(accountIdentifier, orgIdentifier);
+    ProjectFilterDTO projectFilterDTO = getProjectFilterDTO(searchTerm, permittedOrgIds, hasModule, moduleType);
+    return ResponseDTO.newResponse(aggregateProjectService.listProjectDtO(
+            accountIdentifier, projectFilterDTO));
   }
 
   private ProjectFilterDTO getProjectFilterDTO(
