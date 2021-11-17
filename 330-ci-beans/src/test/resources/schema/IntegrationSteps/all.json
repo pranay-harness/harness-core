@@ -845,8 +845,7 @@
             "buildTool",
             "connectorRef",
             "image",
-            "language",
-            "packages"
+            "language"
           ],
           "properties": {
             "args": {
