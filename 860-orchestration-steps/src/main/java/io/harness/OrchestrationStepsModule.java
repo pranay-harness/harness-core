@@ -52,6 +52,7 @@ public class OrchestrationStepsModule extends AbstractModule {
     ApiClient apiClient = new ApiClient();
     if (configuration != null) {
       apiClient.setBasePath(configuration.getFfServerBaseUrl());
+      apiClient.setVerifyingSsl(configuration.getFfServerSSLVerify());
     }
     return new CFApi(apiClient);
   }

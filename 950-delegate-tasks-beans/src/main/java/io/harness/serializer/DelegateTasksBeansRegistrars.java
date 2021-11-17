@@ -30,6 +30,7 @@ public class DelegateTasksBeansRegistrars {
           .addAll(ScmJavaClientRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
           .addAll(FileServiceCommonsRegistrars.kryoRegistrars)
+          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           .add(RbacCoreKryoRegistrar.class)
           .add(DelegateTasksBeansKryoRegister.class)
           .add(CgOrchestrationBeansKryoRegistrar.class)

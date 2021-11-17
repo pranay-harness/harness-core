@@ -75,10 +75,10 @@ spec:
         resources:
           limits:
             cpu: "0.5"
-            memory: "2560Mi"
+            memory: "2048Mi"
           requests:
             cpu: "0.5"
-            memory: "2560Mi"
+            memory: "2048Mi"
         readinessProbe:
           exec:
             command:

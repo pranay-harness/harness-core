@@ -1,5 +1,6 @@
 package io.harness.stream;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.stream.AtmosphereBroadcaster.HAZELCAST;
 import static io.harness.stream.AtmosphereBroadcaster.REDIS;
 
@@ -22,6 +23,9 @@ import org.atmosphere.cpr.DefaultMetaBroadcaster;
 import org.atmosphere.cpr.MetaBroadcaster;
 
 public class StreamModule extends AbstractModule {
+  private static final String ATMOSPHERE_MESSAGE_PROCESSING_THREADPOOL_MAXSIZE =
+      "ATMOSPHERE_MESSAGE_PROCESSING_THREADPOOL_MAXSIZE";
+  private static final String ATMOSPHERE_ASYNC_WRITE_THREADPOOL_MAXSIZE = "ATMOSPHERE_ASYNC_WRITE_THREADPOOL_MAXSIZE";
   private static volatile StreamModule instance;
 
   public static StreamModule getInstance() {
@@ -46,8 +50,14 @@ public class StreamModule extends AbstractModule {
     AtmosphereServlet atmosphereServlet = new AtmosphereServlet();
     atmosphereServlet.framework()
         .addInitParameter(ApplicationConfig.WEBSOCKET_CONTENT_TYPE, "application/json")
-        .addInitParameter(ApplicationConfig.BROADCASTER_MESSAGE_PROCESSING_THREADPOOL_MAXSIZE, "10")
-        .addInitParameter(ApplicationConfig.BROADCASTER_ASYNC_WRITE_THREADPOOL_MAXSIZE, "10")
+        .addInitParameter(ApplicationConfig.BROADCASTER_MESSAGE_PROCESSING_THREADPOOL_MAXSIZE,
+            isEmpty(System.getenv(ATMOSPHERE_MESSAGE_PROCESSING_THREADPOOL_MAXSIZE))
+                ? "200"
+                : System.getenv(ATMOSPHERE_MESSAGE_PROCESSING_THREADPOOL_MAXSIZE))
+        .addInitParameter(ApplicationConfig.BROADCASTER_ASYNC_WRITE_THREADPOOL_MAXSIZE,
+            isEmpty(System.getenv(ATMOSPHERE_ASYNC_WRITE_THREADPOOL_MAXSIZE))
+                ? "200"
+                : System.getenv(ATMOSPHERE_ASYNC_WRITE_THREADPOOL_MAXSIZE))
         .addInitParameter(ApplicationConfig.WEBSOCKET_SUPPORT, "true")
         .addInitParameter(ApplicationConfig.ANNOTATION_PACKAGE, getClass().getPackage().getName());
 

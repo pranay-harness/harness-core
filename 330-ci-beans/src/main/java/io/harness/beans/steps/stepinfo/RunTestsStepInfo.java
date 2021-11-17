@@ -68,7 +68,7 @@ public class RunTestsStepInfo implements CIStepInfo {
   @NotNull
   @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.TIBuildTool")
   private ParameterField<TIBuildTool> buildTool;
-  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> packages;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> packages;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> testAnnotations;
   private UnitTestReport reports;
   @YamlSchemaTypes({string})

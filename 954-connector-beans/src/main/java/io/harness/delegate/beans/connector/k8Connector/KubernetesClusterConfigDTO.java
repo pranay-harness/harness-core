@@ -9,6 +9,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -22,6 +23,7 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(name = "KubernetesClusterConfig", description = "This contains kubernetes cluster config details")
 public class KubernetesClusterConfigDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @Valid @NotNull KubernetesCredentialDTO credential;
   Set<String> delegateSelectors;

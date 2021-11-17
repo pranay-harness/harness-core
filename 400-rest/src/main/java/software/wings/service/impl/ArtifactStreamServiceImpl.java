@@ -13,7 +13,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
@@ -278,7 +278,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       }
 
       List<ArtifactSummary> artifactSummaries =
-          artifacts.stream().map(ArtifactSummary::prepareSummaryFromArtifact).collect(toList());
+          artifacts.stream().map(ArtifactStreamServiceImpl::prepareSummaryFromArtifact).collect(toList());
       artifactStream.setArtifactCount(totalArtifactCount);
       artifactStream.setArtifacts(artifactSummaries);
       newArtifactStreams.add(artifactStream);
@@ -1664,5 +1664,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
     validateIfNexus2AndParameterized(artifactStream, artifactStream.getAccountId());
     return artifactStream.fetchArtifactStreamParameters();
+  }
+
+  public static ArtifactSummary prepareSummaryFromArtifact(Artifact artifact) {
+    if (artifact == null) {
+      return null;
+    }
+
+    return ArtifactSummary.builder()
+        .uuid(artifact.getUuid())
+        .uiDisplayName(artifact.getUiDisplayName())
+        .buildNo(artifact.getBuildNo())
+        .build();
   }
 }

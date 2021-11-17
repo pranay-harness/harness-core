@@ -22,9 +22,10 @@ public class InitializeStepGenerator {
   @Inject private BuildJobEnvInfoBuilder buildJobEnvInfoBuilder;
 
   InitializeStepInfo createInitializeStepInfo(ExecutionElementConfig executionElement, CodeBase ciCodebase,
-      StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs, Infrastructure infrastructure) {
-    BuildJobEnvInfo buildJobEnvInfo =
-        buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(stageElementConfig, ciExecutionArgs, executionElement.getSteps());
+      StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs, Infrastructure infrastructure,
+      String accountId) {
+    BuildJobEnvInfo buildJobEnvInfo = buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(
+        stageElementConfig, ciExecutionArgs, executionElement.getSteps(), accountId);
 
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 

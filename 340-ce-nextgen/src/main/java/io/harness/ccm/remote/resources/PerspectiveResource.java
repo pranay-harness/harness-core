@@ -49,6 +49,7 @@ import org.springframework.stereotype.Service;
 @Api("perspective")
 @Path("perspective")
 @Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @NextGenManagerAuth
 @Slf4j
 @Service

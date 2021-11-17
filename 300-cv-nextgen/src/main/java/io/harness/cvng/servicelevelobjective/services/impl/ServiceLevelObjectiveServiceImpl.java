@@ -127,6 +127,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
 
   private void updateSLOEntity(ProjectParams projectParams, ServiceLevelObjective serviceLevelObjective,
       ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
+    prePersistenceCleanup(serviceLevelObjectiveDTO);
     UpdateOperations<ServiceLevelObjective> updateOperations =
         hPersistence.createUpdateOperations(ServiceLevelObjective.class);
     updateOperations.set(ServiceLevelObjectiveKeys.name, serviceLevelObjectiveDTO.getName());

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -17,6 +18,8 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("BitbucketHttpCredentials")
+@Schema(name = "BitbucketHttpCredentials",
+    description = "This contains details of the Bitbucket credentials used via HTTP connections")
 public class BitbucketHttpCredentialsDTO implements BitbucketCredentialsDTO {
   @NotNull BitbucketHttpAuthenticationType type;
   @JsonProperty("spec")

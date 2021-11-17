@@ -8,7 +8,6 @@ import java.util.Set;
 public interface OrchestrationService {
   void queueAnalysis(String verificationTaskId, Instant startTime, Instant endTime);
   void orchestrate(AnalysisOrchestrator orchestrator);
-  void recordMetrics();
   void markCompleted(String verificationTaskId);
   void markCompleted(Set<String> verificationTaskIds);
 }

@@ -6,7 +6,7 @@ import io.harness.cvng.core.beans.MetricPackValidationResponse;
 
 import java.util.List;
 
-public interface NewRelicService extends MonitoringSourceImportStatusCreator {
+public interface NewRelicService {
   List<String> getNewRelicEndpoints();
   List<NewRelicApplication> getNewRelicApplications(String accountId, String connectorIdentifier, String orgIdentifier,
       String projectIdentifier, String filter, String tracingId);

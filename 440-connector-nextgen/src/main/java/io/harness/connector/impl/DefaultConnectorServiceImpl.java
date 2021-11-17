@@ -762,7 +762,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     }
     Connector existingConnector = existingConnectorOptional.get();
     existingConnector.setEntityInvalid(true);
-    existingConnector.setInvalidYamlString(invalidYaml);
+    existingConnector.setYaml(invalidYaml);
     existingConnector.setObjectIdOfYaml(EntityObjectIdUtils.getObjectIdOfYaml(invalidYaml));
     connectorRepository.save(existingConnector, ChangeType.NONE);
     return true;

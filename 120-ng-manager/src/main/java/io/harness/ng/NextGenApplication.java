@@ -332,10 +332,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
-    intializeGitSync(injector, appConfig);
-    if (appConfig.getShouldDeployWithGitSync()) {
-      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
-    }
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
@@ -362,6 +358,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     initializeEnforcementService(injector, appConfig);
     initializeEnforcementSdk(injector);
 
+    if (appConfig.getShouldDeployWithGitSync()) {
+      intializeGitSync(injector);
+      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
+    }
     registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
   }
@@ -448,15 +448,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.jersey().register(new JsonProcessingExceptionMapper(true));
   }
 
-  private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {
-    if (nextGenConfiguration.getShouldDeployWithGitSync()) {
-      log.info("Initializing gRPC server for git sync...");
-      ServiceManager serviceManager =
-          injector.getInstance(Key.get(ServiceManager.class, Names.named("git-sync"))).startAsync();
-      serviceManager.awaitHealthy();
-      Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-      log.info("Git Sync SDK registration complete.");
-    }
+  private void intializeGitSync(Injector injector) {
+    log.info("Initializing gRPC server for git sync...");
+    ServiceManager serviceManager =
+        injector.getInstance(Key.get(ServiceManager.class, Names.named("git-sync"))).startAsync();
+    serviceManager.awaitHealthy();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+    log.info("Git Sync SDK registration complete.");
   }
 
   public void registerIterators(NgIteratorsConfig ngIteratorsConfig, Injector injector) {

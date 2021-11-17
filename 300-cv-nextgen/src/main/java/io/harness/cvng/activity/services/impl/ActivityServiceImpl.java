@@ -36,6 +36,7 @@ import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityType;
@@ -52,6 +53,7 @@ import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
 import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -68,7 +70,6 @@ import io.harness.persistence.HQuery;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -109,7 +110,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private AlertRuleService alertRuleService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
-  @Inject private Injector injector;
+  @Inject private Map<DataSourceType, CVConfigToHealthSourceTransformer> dataSourceTypeToHealthSourceTransformerMap;
   @Inject private Map<ActivityType, ActivityUpdatableEntity> activityUpdatableEntityMap;
   @Inject private Map<ActivityType, ActivityUpdateHandler> activityUpdateHandlerMap;
   // TODO: remove the dependency once UI moves to new APIs
@@ -694,8 +695,8 @@ public class ActivityServiceImpl implements ActivityService {
         verificationJobInstanceService.get(getVerificationJobInstanceId(activityId));
     verificationJobInstances.forEach(verificationJobInstance -> {
       verificationJobInstance.getCvConfigMap().forEach((s, cvConfig) -> {
-        healthSourceDTOS.add(
-            HealthSourceDTO.toHealthSourceDTO(HealthSourceDTO.toHealthSource(Arrays.asList(cvConfig), injector)));
+        healthSourceDTOS.add(HealthSourceDTO.toHealthSourceDTO(
+            HealthSourceDTO.toHealthSource(Arrays.asList(cvConfig), dataSourceTypeToHealthSourceTransformerMap)));
       });
     });
     return healthSourceDTOS;

@@ -13,7 +13,7 @@ import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static io.harness.shell.ScriptType.BASH;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.CommandCategory.Type.COMMANDS;
 import static software.wings.beans.CommandCategory.Type.COPY;
 import static software.wings.beans.CommandCategory.Type.SCRIPTS;

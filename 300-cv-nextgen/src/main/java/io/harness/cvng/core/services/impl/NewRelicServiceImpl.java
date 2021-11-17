@@ -9,14 +9,11 @@ import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
 import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
 import io.harness.cvng.core.beans.MetricPackValidationResponse;
 import io.harness.cvng.core.beans.MetricPackValidationResponse.MetricValidationResponse;
-import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
-import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.datacollection.exception.DataCollectionException;
-import io.harness.exception.UnsupportedOperationException;
 import io.harness.serializer.JsonUtils;
 
 import com.google.common.reflect.TypeToken;
@@ -95,11 +92,5 @@ public class NewRelicServiceImpl implements NewRelicService {
     } catch (DataCollectionException ex) {
       return MetricPackValidationResponse.builder().overallStatus(ThirdPartyApiResponseStatus.FAILED).build();
     }
-  }
-
-  @Override
-  public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
-      List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
-    throw new UnsupportedOperationException("Import status is not supported for NewRelic");
   }
 }

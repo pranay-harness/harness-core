@@ -8,6 +8,6 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import java.util.List;
 
 public interface InitializeStepInfoBuilder {
-  BuildJobEnvInfo getInitializeStepInfoBuilder(
-      StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs, List<ExecutionWrapperConfig> steps);
+  BuildJobEnvInfo getInitializeStepInfoBuilder(StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs,
+      List<ExecutionWrapperConfig> steps, String accountId);
 }
