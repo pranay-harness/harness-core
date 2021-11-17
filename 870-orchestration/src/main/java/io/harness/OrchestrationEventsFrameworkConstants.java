@@ -14,4 +14,6 @@ public class OrchestrationEventsFrameworkConstants {
 
   public static final String PARTIAL_PLAN_EVENT_CONSUMER = "PARTIAL_PLAN_EVENT_RESPONSE_CONSUMER";
   public static final int PARTIAL_PLAN_EVENT_BATCH_SIZE = 1;
+
+  public static final String ORCHESTRATION_REDIS_CLIENT = "orchestrationRedissonClient";
 }
