@@ -30,7 +30,6 @@ import io.harness.rule.Owner;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.utils.steps.TestStepParameters;
 
-import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

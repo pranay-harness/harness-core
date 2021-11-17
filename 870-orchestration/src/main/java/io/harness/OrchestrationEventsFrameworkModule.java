@@ -15,7 +15,6 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
-import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
