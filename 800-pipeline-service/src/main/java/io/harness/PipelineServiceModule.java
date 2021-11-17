@@ -223,7 +223,8 @@ public class PipelineServiceModule extends AbstractModule {
             .useFeatureFlagService(true)
             .build()));
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
-    install(OrchestrationVisualizationModule.getInstance(configuration.getEventsFrameworkConfiguration()));
+    install(OrchestrationVisualizationModule.getInstance(configuration.getEventsFrameworkConfiguration(),
+        configuration.getOrchestrationVisualizationThreadPoolConfig()));
     install(PrimaryVersionManagerModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
         configuration.getManagerTarget(), configuration.getManagerAuthority(), true));
