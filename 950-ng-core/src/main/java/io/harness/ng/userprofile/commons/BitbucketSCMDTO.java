@@ -7,6 +7,7 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthentication
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,6 +18,7 @@ import lombok.experimental.SuperBuilder;
 @OwnedBy(PL)
 @JsonTypeName("BITBUCKET")
 @Data
+@Schema(name = "BitbucketSCM", description = "This Contains details of the Bitbucket Source Code Manager")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SuperBuilder
 @NoArgsConstructor
