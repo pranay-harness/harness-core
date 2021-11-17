@@ -149,7 +149,7 @@ public class InputSetErrorsHelperTest extends CategoryTest {
     Map<String, String> invalidInputSetReferences =
         InputSetErrorsHelper.getInvalidInputSetReferences(inputSets, identifiers);
     assertThat(invalidInputSetReferences).hasSize(3);
-    assertThat(invalidInputSetReferences.get("i2")).isEqualTo("Reference is an invalid input set");
+    assertThat(invalidInputSetReferences.get("i2")).isEqualTo("Reference is an outdated input set");
     assertThat(invalidInputSetReferences.get("i3")).isEqualTo("References can't be other overlay input sets");
     assertThat(invalidInputSetReferences.get("i4")).isEqualTo("Reference does not exist");
   }

@@ -125,8 +125,8 @@ public class PMSInputSetElementMapper {
         .build();
   }
 
-  public InputSetSummaryResponseDTOPMS toInputSetSummaryResponseDTOPMS(
-      InputSetEntity entity, InputSetErrorWrapperDTOPMS inputSetErrorDetails) {
+  public InputSetSummaryResponseDTOPMS toInputSetSummaryResponseDTOPMS(InputSetEntity entity,
+      InputSetErrorWrapperDTOPMS inputSetErrorDetails, Map<String, String> overlaySetErrorDetails) {
     return InputSetSummaryResponseDTOPMS.builder()
         .identifier(entity.getIdentifier())
         .name(entity.getName())
@@ -140,6 +140,7 @@ public class PMSInputSetElementMapper {
         .lastUpdatedAt(entity.getLastUpdatedAt())
         .isOutdated(entity.getIsInvalid())
         .inputSetErrorDetails(inputSetErrorDetails)
+        .overlaySetErrorDetails(overlaySetErrorDetails)
         .build();
   }
 }

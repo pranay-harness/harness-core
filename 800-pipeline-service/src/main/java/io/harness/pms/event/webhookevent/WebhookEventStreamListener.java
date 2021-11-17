@@ -1,26 +1,33 @@
 package io.harness.pms.event.webhookevent;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.pms.sdk.PmsSdkModuleUtils.CORE_EXECUTOR_NAME;
+import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookDTO;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.event.MessageListener;
+import io.harness.pms.contracts.facilitators.FacilitatorEvent;
+import io.harness.pms.events.base.PmsAbstractMessageListener;
+import io.harness.pms.sdk.core.execution.events.node.facilitate.FacilitatorEventHandler;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionServiceV2;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(PIPELINE)
-public class WebhookEventStreamListener implements MessageListener {
-  TriggerWebhookExecutionServiceV2 triggerWebhookExecutionServiceV2;
+public class WebhookEventStreamListener extends PmsAbstractMessageListener<FacilitatorEvent, FacilitatorEventHandler> {
+  @Inject TriggerWebhookExecutionServiceV2 triggerWebhookExecutionServiceV2;
 
   @Inject
-  public WebhookEventStreamListener(TriggerWebhookExecutionServiceV2 triggerWebhookExecutionServiceV2) {
-    this.triggerWebhookExecutionServiceV2 = triggerWebhookExecutionServiceV2;
+  public WebhookEventStreamListener(@Named(SDK_SERVICE_NAME) String serviceName,
+      FacilitatorEventHandler facilitatorEventHandler, @Named(CORE_EXECUTOR_NAME) ExecutorService executorService) {
+    super(serviceName, FacilitatorEvent.class, facilitatorEventHandler, executorService);
   }
 
   @Override

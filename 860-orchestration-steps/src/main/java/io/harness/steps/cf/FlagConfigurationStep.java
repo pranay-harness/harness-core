@@ -194,10 +194,11 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
           LogLevel.INFO, CommandExecutionStatus.SUCCESS);
 
     } catch (ApiException e) {
-      log.error(format("error updating flag because %s", e.getResponseBody()));
+      log.error(format("API error while updating flag because %s : response [%s] code: %d", e.getMessage(),
+          e.getResponseBody(), e.getCode()));
       return StepResponse.builder()
           .status(Status.ERRORED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(e.getResponseBody()).build())
+          .failureInfo(FailureInfo.newBuilder().setErrorMessage(e.getMessage()).build())
           .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
                                                           .setUnitName(INFRASTRUCTURE_COMMAND_UNIT)
                                                           .setStatus(UnitStatus.FAILURE)

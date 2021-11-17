@@ -75,22 +75,27 @@ public class SCMGitSyncHelper {
 
   private FileInfo getFileInfo(
       GitEntityInfo gitBranchInfo, String yaml, ChangeType changeType, EntityDetail entityDetail) {
-    return FileInfo.newBuilder()
-        .setPrincipal(getPrincipal())
-        .setAccountId(entityDetail.getEntityRef().getAccountIdentifier())
-        .setBranch(gitBranchInfo.getBranch())
-        .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail))
-        .setChangeType(ChangeTypeMapper.toProto(changeType))
-        .setFilePath(gitBranchInfo.getFilePath())
-        .setFolderPath(gitBranchInfo.getFolderPath())
-        .setBaseBranch(StringValue.of(gitBranchInfo.getBaseBranch()))
-        .setOldFileSha(StringValue.of(gitBranchInfo.getLastObjectId()))
-        .setIsNewBranch(gitBranchInfo.isNewBranch())
-        .setCommitMsg(StringValue.of(gitBranchInfo.getCommitMsg()))
-        .setYamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
-        .putAllContextMap(MDC.getCopyOfContextMap())
-        .setYaml(emptyIfNull(yaml))
-        .build();
+    FileInfo.Builder builder = FileInfo.newBuilder()
+                                   .setPrincipal(getPrincipal())
+                                   .setAccountId(entityDetail.getEntityRef().getAccountIdentifier())
+                                   .setBranch(gitBranchInfo.getBranch())
+                                   .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail))
+                                   .setChangeType(ChangeTypeMapper.toProto(changeType))
+                                   .setFilePath(gitBranchInfo.getFilePath())
+                                   .setFolderPath(gitBranchInfo.getFolderPath())
+                                   .setIsNewBranch(gitBranchInfo.isNewBranch())
+                                   .setCommitMsg(StringValue.of(gitBranchInfo.getCommitMsg()))
+                                   .setYamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
+                                   .putAllContextMap(MDC.getCopyOfContextMap())
+                                   .setYaml(emptyIfNull(yaml));
+    if (gitBranchInfo.getBaseBranch() != null) {
+      builder.setBaseBranch(StringValue.of(gitBranchInfo.getBaseBranch()));
+    }
+
+    if (gitBranchInfo.getLastObjectId() != null) {
+      builder.setOldFileSha(StringValue.of(gitBranchInfo.getLastObjectId()));
+    }
+    return builder.build();
   }
 
   private SCMNoOpResponse getResponseInG2H(GitEntityInfo gitBranchInfo, EntityDetail entityDetail) {

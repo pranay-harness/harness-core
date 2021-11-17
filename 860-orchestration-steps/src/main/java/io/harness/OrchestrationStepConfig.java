@@ -13,4 +13,5 @@ import lombok.Data;
 public class OrchestrationStepConfig {
   @JsonProperty("ffServerBaseUrl") private String ffServerBaseUrl;
   @JsonProperty("ffServerApiKey") private String ffServerApiKey;
+  @JsonProperty("ffServerSSLVerify") private Boolean ffServerSSLVerify;
 }

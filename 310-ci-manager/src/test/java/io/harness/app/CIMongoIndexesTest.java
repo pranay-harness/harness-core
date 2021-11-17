@@ -8,6 +8,7 @@ import io.harness.app.impl.CIManagerTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.IndexCreator;
 import io.harness.mongo.IndexManagerSession;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.rule.Owner;
@@ -41,9 +42,9 @@ public class CIMongoIndexesTest extends CIManagerTestBase {
     morphia.getMapper().getOptions().setObjectFactory(objectFactory);
     morphia.getMapper().getOptions().setMapSubPackages(true);
     morphia.map(classes);
-    AdvancedDatastore advancedDatastore = persistence.getDatastore(Store.builder().name("cimanager-mongo").build());
+    AdvancedDatastore advancedDatastore = persistence.getDatastore(Store.builder().name(DbAliases.CIMANAGER).build());
     List<IndexCreator> indexCreators = IndexManagerSession.allIndexes(
-        advancedDatastore, morphia, Store.builder().name("cimanager-mongo").build(), true);
+        advancedDatastore, morphia, Store.builder().name(DbAliases.CIMANAGER).build(), true);
 
     List<String> indexes = indexCreators.stream()
                                .map(creator

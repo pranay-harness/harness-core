@@ -36,6 +36,8 @@ public interface YamlChangeSetService {
 
   boolean updateStatus(@NotNull String accountId, @NotNull String changeSetId, @NotNull YamlChangeSetStatus newStatus);
 
+  boolean markSkippedWithMessageCode(@NotNull String accountId, @NotNull String changeSetId, String messageCode);
+
   boolean updateStatusForGivenYamlChangeSets(@NotNull String accountId, @NotNull YamlChangeSetStatus newStatus,
       List<YamlChangeSetStatus> currentStatuses, List<String> yamlChangeSetIds);
 

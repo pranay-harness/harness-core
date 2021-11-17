@@ -1,4 +1,4 @@
-package io.harness.cvng.statemachine.entities;
+package io.harness.cvng.statemachine.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SOWMYA;
@@ -8,35 +8,40 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTestBase;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
+import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.services.api.TrendAnalysisService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.cvng.statemachine.entities.ServiceGuardTrendAnalysisState;
+import io.harness.cvng.statemachine.services.api.ServiceGuardTrendAnalysisStateExecutor;
 import io.harness.rule.Owner;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
+public class ServiceGuardTrendAnalysisStateExecutorTest extends CategoryTest {
   private String verificationTaskId;
   private Instant startTime;
   private Instant endTime;
   @Mock private TrendAnalysisService trendAnalysisService;
 
   private ServiceGuardTrendAnalysisState trendAnalysisState;
+  private ServiceGuardTrendAnalysisStateExecutor serviceGuardTrendAnalysisStateExecutor =
+      new ServiceGuardTrendAnalysisStateExecutor();
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
 
     verificationTaskId = generateUuid();
@@ -48,7 +53,8 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
 
     trendAnalysisState = ServiceGuardTrendAnalysisState.builder().build();
     trendAnalysisState.setInputs(input);
-    trendAnalysisState.setTrendAnalysisService(trendAnalysisService);
+
+    FieldUtils.writeField(serviceGuardTrendAnalysisStateExecutor, "trendAnalysisService", trendAnalysisService, true);
 
     when(trendAnalysisService.scheduleTrendAnalysisTask(any())).thenReturn(generateUuid());
   }
@@ -57,7 +63,8 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testExecute() {
-    trendAnalysisState.execute();
+    trendAnalysisState =
+        (ServiceGuardTrendAnalysisState) serviceGuardTrendAnalysisStateExecutor.execute(trendAnalysisState);
 
     assertThat(trendAnalysisState.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
     assertThat(trendAnalysisState.getWorkerTaskId()).isNotNull();
@@ -71,12 +78,12 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
     String taskId = generateUuid();
     trendAnalysisState.setStatus(AnalysisStatus.RUNNING);
     trendAnalysisState.setWorkerTaskId(taskId);
-    Map<String, ExecutionStatus> taskStatusMap = new HashMap<>();
-    taskStatusMap.put(taskId, ExecutionStatus.SUCCESS);
+    Map<String, LearningEngineTask.ExecutionStatus> taskStatusMap = new HashMap<>();
+    taskStatusMap.put(taskId, LearningEngineTask.ExecutionStatus.SUCCESS);
 
     when(trendAnalysisService.getTaskStatus(anyList())).thenReturn(taskStatusMap);
 
-    AnalysisStatus status = trendAnalysisState.getExecutionStatus();
+    AnalysisStatus status = serviceGuardTrendAnalysisStateExecutor.getExecutionStatus(trendAnalysisState);
 
     assertThat(status.name()).isEqualTo(AnalysisStatus.SUCCESS.name());
   }
@@ -88,12 +95,12 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
     String taskId = generateUuid();
     trendAnalysisState.setStatus(AnalysisStatus.RUNNING);
     trendAnalysisState.setWorkerTaskId(taskId);
-    Map<String, ExecutionStatus> taskStatusMap = new HashMap<>();
-    taskStatusMap.put(taskId, ExecutionStatus.RUNNING);
+    Map<String, LearningEngineTask.ExecutionStatus> taskStatusMap = new HashMap<>();
+    taskStatusMap.put(taskId, LearningEngineTask.ExecutionStatus.RUNNING);
 
     when(trendAnalysisService.getTaskStatus(anyList())).thenReturn(taskStatusMap);
 
-    AnalysisStatus status = trendAnalysisState.getExecutionStatus();
+    AnalysisStatus status = serviceGuardTrendAnalysisStateExecutor.getExecutionStatus(trendAnalysisState);
 
     assertThat(status.name()).isEqualTo(AnalysisStatus.RUNNING.name());
   }
@@ -105,12 +112,12 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
     String taskId = generateUuid();
     trendAnalysisState.setStatus(AnalysisStatus.RUNNING);
     trendAnalysisState.setWorkerTaskId(taskId);
-    Map<String, ExecutionStatus> taskStatusMap = new HashMap<>();
-    taskStatusMap.put(taskId, ExecutionStatus.FAILED);
+    Map<String, LearningEngineTask.ExecutionStatus> taskStatusMap = new HashMap<>();
+    taskStatusMap.put(taskId, LearningEngineTask.ExecutionStatus.FAILED);
 
     when(trendAnalysisService.getTaskStatus(anyList())).thenReturn(taskStatusMap);
 
-    AnalysisStatus status = trendAnalysisState.getExecutionStatus();
+    AnalysisStatus status = serviceGuardTrendAnalysisStateExecutor.getExecutionStatus(trendAnalysisState);
 
     assertThat(status.name()).isEqualTo(AnalysisStatus.RETRY.name());
   }
@@ -122,12 +129,12 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
     String taskId = generateUuid();
     trendAnalysisState.setStatus(AnalysisStatus.RUNNING);
     trendAnalysisState.setWorkerTaskId(taskId);
-    Map<String, ExecutionStatus> taskStatusMap = new HashMap<>();
-    taskStatusMap.put(taskId, ExecutionStatus.TIMEOUT);
+    Map<String, LearningEngineTask.ExecutionStatus> taskStatusMap = new HashMap<>();
+    taskStatusMap.put(taskId, LearningEngineTask.ExecutionStatus.TIMEOUT);
 
     when(trendAnalysisService.getTaskStatus(anyList())).thenReturn(taskStatusMap);
 
-    AnalysisStatus status = trendAnalysisState.getExecutionStatus();
+    AnalysisStatus status = serviceGuardTrendAnalysisStateExecutor.getExecutionStatus(trendAnalysisState);
 
     assertThat(status.name()).isEqualTo(AnalysisStatus.RETRY.name());
   }
@@ -139,12 +146,12 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
     String taskId = generateUuid();
     trendAnalysisState.setStatus(AnalysisStatus.RUNNING);
     trendAnalysisState.setWorkerTaskId(taskId);
-    Map<String, ExecutionStatus> taskStatusMap = new HashMap<>();
-    taskStatusMap.put(taskId, ExecutionStatus.QUEUED);
+    Map<String, LearningEngineTask.ExecutionStatus> taskStatusMap = new HashMap<>();
+    taskStatusMap.put(taskId, LearningEngineTask.ExecutionStatus.QUEUED);
 
     when(trendAnalysisService.getTaskStatus(anyList())).thenReturn(taskStatusMap);
 
-    AnalysisStatus status = trendAnalysisState.getExecutionStatus();
+    AnalysisStatus status = serviceGuardTrendAnalysisStateExecutor.getExecutionStatus(trendAnalysisState);
 
     assertThat(status.name()).isEqualTo(AnalysisStatus.RUNNING.name());
   }
@@ -156,7 +163,8 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
     trendAnalysisState.setRetryCount(2);
     trendAnalysisState.setStatus(AnalysisStatus.FAILED);
 
-    trendAnalysisState.handleRerun();
+    trendAnalysisState =
+        (ServiceGuardTrendAnalysisState) serviceGuardTrendAnalysisStateExecutor.handleRerun(trendAnalysisState);
 
     assertThat(trendAnalysisState.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
   }
@@ -167,7 +175,8 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
   public void testHandleRunning() {
     trendAnalysisState.setStatus(AnalysisStatus.RUNNING);
 
-    trendAnalysisState.handleRunning();
+    trendAnalysisState =
+        (ServiceGuardTrendAnalysisState) serviceGuardTrendAnalysisStateExecutor.handleRunning(trendAnalysisState);
 
     assertThat(trendAnalysisState.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
   }
@@ -176,7 +185,7 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandleSuccess() {
-    AnalysisState state = trendAnalysisState.handleSuccess();
+    AnalysisState state = serviceGuardTrendAnalysisStateExecutor.handleSuccess(trendAnalysisState);
     assertThat(state.getStatus().name()).isEqualTo(AnalysisStatus.SUCCESS.name());
   }
 
@@ -184,7 +193,7 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandleTransition() {
-    AnalysisState state = trendAnalysisState.handleTransition();
+    AnalysisState state = serviceGuardTrendAnalysisStateExecutor.handleTransition(trendAnalysisState);
     assertThat(state.getStatus().name()).isEqualTo(AnalysisStatus.SUCCESS.name());
   }
 
@@ -194,7 +203,8 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
   public void testHandleRetry() {
     trendAnalysisState.setRetryCount(1);
 
-    trendAnalysisState.handleRetry();
+    trendAnalysisState =
+        (ServiceGuardTrendAnalysisState) serviceGuardTrendAnalysisStateExecutor.handleRetry(trendAnalysisState);
 
     assertThat(trendAnalysisState.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
     assertThat(trendAnalysisState.getWorkerTaskId()).isNotNull();
@@ -207,7 +217,8 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTestBase {
   public void testHandleRetry_noMoreRetry() {
     trendAnalysisState.setRetryCount(2);
 
-    trendAnalysisState.handleRetry();
+    trendAnalysisState =
+        (ServiceGuardTrendAnalysisState) serviceGuardTrendAnalysisStateExecutor.handleRetry(trendAnalysisState);
 
     assertThat(trendAnalysisState.getStatus().name()).isEqualTo(AnalysisStatus.FAILED.name());
   }

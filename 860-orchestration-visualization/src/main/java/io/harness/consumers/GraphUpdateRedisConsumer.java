@@ -26,6 +26,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -36,17 +37,22 @@ import lombok.extern.slf4j.Slf4j;
 public class GraphUpdateRedisConsumer implements PmsRedisConsumer {
   private static final int WAIT_TIME_IN_SECONDS = 30;
 
+  private static final Duration THRESHOLD_PROCESS_DURATION = Duration.ofMillis(100);
+
   Consumer eventConsumer;
   GraphGenerationService graphGenerationService;
   QueueController queueController;
+  ExecutorService executorService;
   private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
   @Inject
   public GraphUpdateRedisConsumer(@Named(ORCHESTRATION_LOG) Consumer redisConsumer,
-      GraphGenerationService graphGenerationService, QueueController queueController) {
+      GraphGenerationService graphGenerationService, QueueController queueController,
+      @Named("OrchestrationVisualizationExecutorService") ExecutorService executorService) {
     this.eventConsumer = redisConsumer;
     this.graphGenerationService = graphGenerationService;
     this.queueController = queueController;
+    this.executorService = executorService;
   }
 
   @Override
@@ -103,15 +109,26 @@ public class GraphUpdateRedisConsumer implements PmsRedisConsumer {
     Set<String> planExecutionIds =
         orchestrationLogEvents.stream().map(OrchestrationLogEvent::getPlanExecutionId).collect(Collectors.toSet());
     for (String planExecutionId : planExecutionIds) {
-      try (AutoLogContext autoLogContext = new AutoLogContext(
-               ImmutableMap.of("planExecutionId", planExecutionId), AutoLogContext.OverrideBehavior.OVERRIDE_NESTS)) {
-        graphGenerationService.updateGraph(planExecutionId);
-      } catch (Exception ex) {
-        log.error("Exception occurred while updating graph with planExecutionId {}", planExecutionId, ex);
-      }
+      long startTs = System.currentTimeMillis();
+      executorService.submit(() -> {
+        try (AutoLogContext autoLogContext = new AutoLogContext(
+                 ImmutableMap.of("planExecutionId", planExecutionId), AutoLogContext.OverrideBehavior.OVERRIDE_NESTS)) {
+          checkAndLogSchedulingDelays(planExecutionId, startTs);
+          graphGenerationService.updateGraph(planExecutionId);
+        } catch (Exception ex) {
+          log.error("Exception occurred while updating graph with planExecutionId {}", planExecutionId, ex);
+        }
+      });
     }
   }
 
+  private void checkAndLogSchedulingDelays(String planExecutionId, long startTs) {
+    Duration scheduleDuration = Duration.ofMillis(System.currentTimeMillis() - startTs);
+    if (THRESHOLD_PROCESS_DURATION.compareTo(scheduleDuration) < 0) {
+      log.warn("[PMS_MESSAGE_LISTENER] Handler for graphUpdate event with planExecutionId {} called after {} delay",
+          planExecutionId, scheduleDuration);
+    }
+  }
   @Override
   public void shutDown() {
     shouldStop.set(true);
