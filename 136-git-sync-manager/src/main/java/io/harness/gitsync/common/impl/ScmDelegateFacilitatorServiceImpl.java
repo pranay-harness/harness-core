@@ -1,6 +1,7 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -10,6 +11,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.beans.gitsync.GitFileDetails.GitFileDetailsBuilder;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
+import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
@@ -22,9 +24,12 @@ import io.harness.delegate.task.scm.GitFileTaskResponseData;
 import io.harness.delegate.task.scm.GitFileTaskType;
 import io.harness.delegate.task.scm.GitPRTaskType;
 import io.harness.delegate.task.scm.GitRefType;
+import io.harness.delegate.task.scm.GitWebhookTaskType;
 import io.harness.delegate.task.scm.ScmGitFileTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
+import io.harness.delegate.task.scm.ScmGitWebhookTaskParams;
+import io.harness.delegate.task.scm.ScmGitWebhookTaskResponseData;
 import io.harness.delegate.task.scm.ScmPRTaskParams;
 import io.harness.delegate.task.scm.ScmPRTaskResponseData;
 import io.harness.delegate.task.scm.ScmPushTaskParams;
@@ -46,10 +51,12 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.webhook.UpsertWebhookRequestDTO;
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
@@ -468,6 +475,41 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
       return FindCommitResponse.parseFrom(scmGitRefTaskResponseData.getFindCommitResponse()).getCommit();
     } catch (InvalidProtocolBufferException e) {
       throw new UnexpectedException("Unexpected error occurred while doing scm operation");
+    }
+  }
+
+  @Override
+  public CreateWebhookResponse upsertWebhook(
+      UpsertWebhookRequestDTO upsertWebhookRequestDTO, String target, GitWebhookTaskType gitWebhookTaskType) {
+    final ScmConnector scmConnector =
+        getScmConnector(upsertWebhookRequestDTO.getAccountIdentifier(), upsertWebhookRequestDTO.getOrgIdentifier(),
+            upsertWebhookRequestDTO.getProjectIdentifier(), upsertWebhookRequestDTO.getConnectorIdentifierRef());
+    if (!isEmpty(upsertWebhookRequestDTO.getRepoURL())) {
+      scmConnector.setUrl(upsertWebhookRequestDTO.getRepoURL());
+    }
+    final List<EncryptedDataDetail> encryptionDetails =
+        getEncryptedDataDetails(upsertWebhookRequestDTO.getAccountIdentifier(),
+            upsertWebhookRequestDTO.getOrgIdentifier(), upsertWebhookRequestDTO.getProjectIdentifier(), scmConnector);
+    final ScmGitWebhookTaskParams gitWebhookTaskParams =
+        ScmGitWebhookTaskParams.builder()
+            .gitWebhookTaskType(gitWebhookTaskType)
+            .scmConnector(scmConnector)
+            .encryptedDataDetails(encryptionDetails)
+            .gitWebhookDetails(GitWebhookDetails.builder()
+                                   .hookEventType(upsertWebhookRequestDTO.getHookEventType())
+                                   .target(target)
+                                   .build())
+            .build();
+    DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(upsertWebhookRequestDTO.getAccountIdentifier(),
+        upsertWebhookRequestDTO.getOrgIdentifier(), upsertWebhookRequestDTO.getProjectIdentifier(),
+        gitWebhookTaskParams, TaskType.SCM_GIT_WEBHOOK_TASK);
+    ScmGitWebhookTaskResponseData scmGitWebhookTaskResponseData =
+        (ScmGitWebhookTaskResponseData) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    try {
+      return CreateWebhookResponse.parseFrom(scmGitWebhookTaskResponseData.getCreateWebhookResponse());
+
+    } catch (InvalidProtocolBufferException e) {
+      throw new UnexpectedException("Unexpected error occurred while doing scm operation", e);
     }
   }
 
