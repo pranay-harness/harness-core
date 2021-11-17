@@ -17,6 +17,7 @@ import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.service.impl.DelegateServiceImpl.TASK_CATEGORY_MAP;
 import static software.wings.service.impl.DelegateServiceImpl.TASK_SELECTORS;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -118,6 +119,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.TaskType;
+import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.cdn.CdnConfig;
 import software.wings.delegatetasks.cv.RateLimitExceededException;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -130,6 +132,7 @@ import software.wings.service.impl.DelegateTaskServiceClassicImpl;
 import software.wings.service.impl.DelegateTaskStatusObserver;
 import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.sm.ExecutionStatusData;
@@ -185,6 +188,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   @Mock private CapabilityService capabilityService;
   @Mock private DelegateSyncService delegateSyncService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
+  @Mock private AlertService alertService;
 
   @Inject private FeatureTestHelper featureTestHelper;
   @Inject private KryoSerializer kryoSerializer;
@@ -198,6 +202,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   @InjectMocks @Inject private DelegateTaskServiceClassicImpl delegateTaskServiceClassic;
   @InjectMocks @Inject private DelegateTaskService delegateTaskService;
   @InjectMocks @Inject private DelegateTaskBroadcastHelper broadcastHelper;
+
   @Inject private HPersistence persistence;
 
   private final Subject<DelegateProfileObserver> delegateProfileSubject = mock(Subject.class);
@@ -577,6 +582,8 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid()))
         .isNull();
+    verify(alertService, times(0))
+        .openAlert(eq(ACCOUNT_ID), anyString(), eq(NoEligibleDelegates), any(NoEligibleDelegatesAlert.class));
   }
 
   @Cache
