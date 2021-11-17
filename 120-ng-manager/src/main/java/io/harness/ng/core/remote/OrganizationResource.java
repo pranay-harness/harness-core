@@ -187,7 +187,8 @@ public class OrganizationResource {
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = "Search term") @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @Parameter(description = "list of ProjectIdentifiers to filter results by") List<String> identifiers) {
+      @RequestBody(
+          required = true, description = "list of ProjectIdentifiers to filter results by") List<String> identifiers) {
     OrganizationFilterDTO organizationFilterDTO =
         OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
     Page<Organization> orgsPage = organizationService.listPermittedOrgs(accountIdentifier,
