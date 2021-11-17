@@ -122,7 +122,7 @@ public final class EventsFrameworkConstants {
   public static final int DEFAULT_READ_BATCH_SIZE = 50;
   public static final int ENTITY_CRUD_READ_BATCH_SIZE = 50;
   public static final int NG_ACCOUNT_SETUP_READ_BATCH_SIZE = 50;
-  public static final int ORCHESTRATION_LOG_READ_BATCH_SIZE = 50;
+  public static final int ORCHESTRATION_LOG_READ_BATCH_SIZE = 200;
   public static final int USERMEMBERSHIP_READ_BATCH_SIZE = 50;
   public static final int SETUP_USAGE_READ_BATCH_SIZE = 50;
   public static final int ENTITY_ACTIVITY_READ_BATCH_SIZE = 50;
