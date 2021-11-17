@@ -58,7 +58,11 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
   @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, StageElementParameters stepParameters, StepInputPackage inputPackage) {
-    log.info("Executing integration stage with params [{}]", stepParameters);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
+    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
+
+    log.info("Executing integration stage with params accountId {} projectId {} [{}]", accountId, projectIdentifier,
+        stepParameters);
 
     IntegrationStageStepParametersPMS integrationStageStepParametersPMS =
         (IntegrationStageStepParametersPMS) stepParameters.getSpecConfig();

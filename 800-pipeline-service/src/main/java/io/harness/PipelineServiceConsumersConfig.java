@@ -23,4 +23,5 @@ public class PipelineServiceConsumersConfig {
   PipelineServiceConsumerConfig createPlan;
   PipelineServiceConsumerConfig planNotify;
   PipelineServiceConsumerConfig pmsNotify;
+  PipelineServiceConsumerConfig webhookEvent;
 }
