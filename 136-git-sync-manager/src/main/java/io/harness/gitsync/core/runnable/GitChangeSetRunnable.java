@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.gitsync.common.beans.YamlChangeSet.MAX_RETRY_COUNT_EXCEEDED_CODE;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 
@@ -115,10 +116,19 @@ public class GitChangeSetRunnable implements Runnable {
     try (AccountLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = createLogContextForChangeSet(yamlChangeSet)) {
       log.info("Processing changeSetId: [{}]", yamlChangeSet.getChangesetId());
-      yamlChangeSetLifeCycleHandlerService.handleChangeSet(yamlChangeSet);
+      if (changeSetReachedMaxRetries(yamlChangeSet)) {
+        yamlChangeSetService.markSkippedWithMessageCode(
+            yamlChangeSet.getAccountId(), yamlChangeSet.getChangesetId(), MAX_RETRY_COUNT_EXCEEDED_CODE);
+      } else {
+        yamlChangeSetLifeCycleHandlerService.handleChangeSet(yamlChangeSet);
+      }
     } catch (UnsupportedOperationException ex) {
       log.error("Couldn't process change set : {}", yamlChangeSet, ex);
     }
+  }
+
+  private boolean changeSetReachedMaxRetries(YamlChangeSetDTO yamlChangeSet) {
+    return yamlChangeSet.getRetryCount() >= MAX_RETRY_FOR_CHANGESET;
   }
 
   private List<YamlChangeSetDTO> getYamlChangeSetsPerQueueKey() {
@@ -230,7 +240,6 @@ public class GitChangeSetRunnable implements Runnable {
     yamlChangeSetService.updateStatusAndIncrementRetryCountForYamlChangeSets(
         accountId, YamlChangeSetStatus.QUEUED, runningStatusList, yamlChangeSetIds);
     log.info("Retrying stuck changesets: [{}]", yamlChangeSetIds);
-
     yamlChangeSetService.markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(accountId, MAX_RETRY_FOR_CHANGESET);
   }
 
