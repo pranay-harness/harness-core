@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.gitsync.sdk.EntityValidityDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -38,4 +39,5 @@ public class PMSPipelineSummaryResponseDTO {
   Map<String, org.bson.Document> filters;
   List<String> stageNames;
   EntityGitDetails gitDetails;
+  EntityValidityDetails entityValidityDetails;
 }
