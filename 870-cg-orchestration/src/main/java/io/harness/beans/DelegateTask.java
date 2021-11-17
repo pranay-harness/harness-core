@@ -39,6 +39,7 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Transient;
 
 @Data
 @Builder
@@ -152,6 +153,9 @@ public class DelegateTask
   private boolean forceExecute;
 
   private long expiry;
+
+  private Set<String> eligibleToExecuteDelegateIdSet;
+  @Transient private List<String> rebroadcastToList;
 
   @FdTtlIndex @Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
 

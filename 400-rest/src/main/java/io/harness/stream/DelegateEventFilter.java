@@ -1,5 +1,6 @@
 package io.harness.stream;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 
@@ -40,6 +41,15 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
 
       if (isNotBlank(broadcast.getPreAssignedDelegateId())
           && !StringUtils.equals(broadcast.getPreAssignedDelegateId(), delegateId)) {
+        return abort(message);
+      }
+
+      if (isEmpty(broadcast.getBroadcastToDelegatesList())) {
+        return abort(message);
+      }
+
+      if (isNotEmpty(broadcast.getBroadcastToDelegatesList())
+          && !broadcast.getBroadcastToDelegatesList().contains(delegateId)) {
         return abort(message);
       }
 

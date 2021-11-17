@@ -69,6 +69,7 @@ public class DelegateTaskBroadcastHelper {
                                                       .async(delegateTask.getData().isAsync())
                                                       .preAssignedDelegateId(delegateTask.getPreAssignedDelegateId())
                                                       .alreadyTriedDelegates(delegateTask.getAlreadyTriedDelegates())
+                                                      .broadcastToDelegatesList(delegateTask.getRebroadcastToList())
                                                       .build();
 
     Broadcaster broadcaster = broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true);

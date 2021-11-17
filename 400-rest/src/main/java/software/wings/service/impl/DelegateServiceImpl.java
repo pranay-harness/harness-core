@@ -2678,11 +2678,6 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  @Override
-  public void saveDelegateTask(DelegateTask task, Status status) {
-    delegateTaskServiceClassic.saveDelegateTask(task, status);
-  }
-
   @VisibleForTesting
   public List<CapabilityRequirement> createCapabilityRequirementInstances(
       String accountId, List<ExecutionCapability> agentCapabilities) {

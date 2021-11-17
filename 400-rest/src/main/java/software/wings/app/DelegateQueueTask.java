@@ -51,10 +51,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.security.SecureRandom;
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
@@ -257,25 +254,17 @@ public class DelegateQueueTask implements Runnable {
                 .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
                 .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask));
 
-        // Old way with rebroadcasting
-        if (featureFlagService.isNotEnabled(PER_AGENT_CAPABILITIES, delegateTask.getAccountId())
-            && delegateTask.getPreAssignedDelegateId() != null && delegateTask.getMustExecuteOnDelegateId() == null
-            && delegateTask.getBroadcastCount() > 0) {
+        // unset and track already tried delegates
+        if (delegateTask.getPreAssignedDelegateId() != null && delegateTask.getBroadcastCount() > 0) {
+          // add previously broadcast delegate ids to alreadyTriedDelegates
+          delegateTask.getAlreadyTriedDelegates().add(delegateTask.getPreAssignedDelegateId());
           updateOperations.unset(DelegateTaskKeys.preAssignedDelegateId);
         }
 
-        // New way with per agent capabilities. Batch capabilities check task is using mustExecuteOnDelegateIs and we
-        // must respect it
-        if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegateTask.getAccountId())
-            && isBlank(delegateTask.getMustExecuteOnDelegateId())) {
-          if (delegateTask.getPreAssignedDelegateId() != null) {
-            updateOperations.addToSet(DelegateTaskKeys.alreadyTriedDelegates, delegateTask.getPreAssignedDelegateId());
-          }
-
-          setUnset(updateOperations, DelegateTaskKeys.preAssignedDelegateId,
-              delegateTaskServiceClassic.obtainCapableDelegateId(
-                  delegateTask, delegateTask.getAlreadyTriedDelegates()));
-        }
+        Set<String> eligibleDelegatesList = delegateTask.getEligibleToExecuteDelegateIdSet();
+        List<String> connectedEligibleDelegatesList =
+            assignDelegateService.getConnectedDelegateList(eligibleDelegatesList, delegateTask.getAccountId(), null);
+        delegateTask.getRebroadcastToList().addAll(connectedEligibleDelegatesList);
 
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager

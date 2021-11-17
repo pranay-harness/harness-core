@@ -31,7 +31,7 @@ public interface DelegateTaskServiceClassic extends OwnedByAccount {
 
   <T extends DelegateResponseData> T executeTask(DelegateTask task) throws InterruptedException;
 
-  void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
+  void processDelegateTask(DelegateTask task, DelegateTask.Status taskStatus);
 
   String queueParkedTask(String accountId, String taskId);
 

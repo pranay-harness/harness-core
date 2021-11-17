@@ -1364,7 +1364,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
             .validationCompleteDelegateIds(ImmutableSet.of(DELEGATE_ID))
             .build();
 
-    delegateTaskServiceClassic.saveDelegateTask(delegateTask, status);
+    delegateTaskServiceClassic.processDelegateTask(delegateTask, status);
     return delegateTask;
   }
 

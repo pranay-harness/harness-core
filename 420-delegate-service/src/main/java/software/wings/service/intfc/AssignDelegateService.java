@@ -14,6 +14,7 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @OwnedBy(DEL)
 public interface AssignDelegateService {
@@ -43,4 +44,8 @@ public interface AssignDelegateService {
   List<String> retrieveActiveDelegates(String accountId, BatchDelegateSelectionLog batch);
 
   boolean noInstalledDelegates(String accountId);
+
+  Set<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch);
+
+  List<String> getConnectedDelegateList(Set<String> delegatesList, String accountId, BatchDelegateSelectionLog batch);
 }

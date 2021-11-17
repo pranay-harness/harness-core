@@ -853,6 +853,53 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   }
 
   @Override
+  public Set<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch) {
+    Set<String> eligibleDelegateIds = new HashSet<>();
+    try {
+      List<Delegate> accountDelegates = getAccountDelegates(task.getAccountId());
+      if (accountDelegates == null) {
+        return eligibleDelegateIds;
+      }
+      Set<String> assignableDelegateIds = accountDelegates.stream()
+                                              .filter(delegate
+                                                  -> delegate.getStatus() != DelegateInstanceStatus.DELETED
+                                                      && canAssign(batch, delegate.getUuid(), task))
+                                              .map(Delegate::getUuid)
+                                              .collect(Collectors.toSet());
+
+      List<String> criteria = fetchCriteria(task);
+      if (isEmpty(criteria)) {
+        return assignableDelegateIds;
+      }
+
+      for (String delegateId : assignableDelegateIds) {
+        boolean matching = true;
+        for (String criterion : criteria) {
+          Optional<DelegateConnectionResult> result =
+              delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criterion));
+          if (!result.isPresent() || !result.get().isValidated()) {
+            matching = false;
+            break;
+          }
+        }
+        if (matching) {
+          eligibleDelegateIds.add(delegateId);
+        }
+      }
+    } catch (Exception e) {
+      log.error("Error checking for eligible or whitelisted delegates", e);
+    }
+    return eligibleDelegateIds;
+  }
+
+  @Override
+  public List<String> getConnectedDelegateList(
+      Set<String> delegatesList, String accountId, BatchDelegateSelectionLog batch) {
+    List<String> connectedDelegates = retrieveActiveDelegates(accountId, batch);
+    return delegatesList.stream().filter(connectedDelegates::contains).collect(Collectors.toList());
+  }
+
+  @Override
   public List<Delegate> getAccountDelegates(String accountId) {
     try {
       return accountDelegatesCache.get(accountId);
