@@ -61,7 +61,7 @@ public class ConnectorMapper {
     connector.setDescription(connectorInfo.getDescription());
     connector.setType(connectorInfo.getConnectorType());
     connector.setEntityInvalid(false);
-    connector.setInvalidYamlString(null);
+    connector.setYaml(null);
     connector.setCategories(Arrays.asList(ConnectorRegistryFactory.getConnectorCategory(connector.getType())));
     if (connectorInfo.getConnectorConfig() instanceof DelegateSelectable) {
       Set<String> delegateSelectors = ((DelegateSelectable) connectorInfo.getConnectorConfig()).getDelegateSelectors();
@@ -102,7 +102,7 @@ public class ConnectorMapper {
         .gitDetails(entityGitDetails)
         .entityValidityDetails(EntityValidityDetails.builder()
                                    .valid(!connector.isEntityInvalid())
-                                   .invalidYaml(connector.getInvalidYamlString())
+                                   .invalidYaml(connector.getYaml())
                                    .build())
         .build();
   }
