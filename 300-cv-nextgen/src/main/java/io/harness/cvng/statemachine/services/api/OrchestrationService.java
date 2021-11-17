@@ -1,4 +1,4 @@
-package io.harness.cvng.statemachine.services.intfc;
+package io.harness.cvng.statemachine.services.api;
 
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 

@@ -1,4 +1,4 @@
-package io.harness.cvng.statemachine.entities;
+package io.harness.cvng.statemachine.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -10,30 +10,35 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
+import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.cvng.statemachine.entities.ServiceGuardLogAnalysisState;
+import io.harness.cvng.statemachine.services.api.ServiceGuardLogAnalysisStateExecutor;
 import io.harness.rule.Owner;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
+public class ServiceGuardLogAnalysisStateExecutorTest extends CategoryTest {
   private String verificationTaskId;
   private Instant startTime;
   private Instant endTime;
   @Mock private LogAnalysisService logAnalysisService;
 
   private ServiceGuardLogAnalysisState logAnalysisState;
+  private ServiceGuardLogAnalysisStateExecutor serviceGuardLogAnalysisStateExecutor =
+      new ServiceGuardLogAnalysisStateExecutor();
 
   @Before
   public void setup() throws Exception {
@@ -48,7 +53,7 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
 
     logAnalysisState = ServiceGuardLogAnalysisState.builder().build();
     logAnalysisState.setInputs(input);
-    logAnalysisState.setLogAnalysisService(logAnalysisService);
+    FieldUtils.writeField(serviceGuardLogAnalysisStateExecutor, "logAnalysisService", logAnalysisService, true);
 
     when(logAnalysisService.scheduleServiceGuardLogAnalysisTask(any())).thenReturn(generateUuid());
   }
@@ -56,7 +61,7 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testExecute() {
-    logAnalysisState.execute();
+    logAnalysisState = (ServiceGuardLogAnalysisState) serviceGuardLogAnalysisStateExecutor.execute(logAnalysisState);
 
     assertThat(logAnalysisState.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
     assertThat(logAnalysisState.getWorkerTaskId()).isNotNull();
@@ -70,12 +75,12 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
     String taskId = generateUuid();
     logAnalysisState.setStatus(AnalysisStatus.RUNNING);
     logAnalysisState.setWorkerTaskId(taskId);
-    Map<String, ExecutionStatus> taskStatusMap = new HashMap<>();
-    taskStatusMap.put(taskId, ExecutionStatus.SUCCESS);
+    Map<String, LearningEngineTask.ExecutionStatus> taskStatusMap = new HashMap<>();
+    taskStatusMap.put(taskId, LearningEngineTask.ExecutionStatus.SUCCESS);
 
     when(logAnalysisService.getTaskStatus(anyList())).thenReturn(taskStatusMap);
 
-    AnalysisStatus status = logAnalysisState.getExecutionStatus();
+    AnalysisStatus status = serviceGuardLogAnalysisStateExecutor.getExecutionStatus(logAnalysisState);
 
     assertThat(status.name()).isEqualTo(AnalysisStatus.TRANSITION.name());
   }
@@ -87,12 +92,12 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
     String taskId = generateUuid();
     logAnalysisState.setStatus(AnalysisStatus.RUNNING);
     logAnalysisState.setWorkerTaskId(taskId);
-    Map<String, ExecutionStatus> taskStatusMap = new HashMap<>();
-    taskStatusMap.put(taskId, ExecutionStatus.RUNNING);
+    Map<String, LearningEngineTask.ExecutionStatus> taskStatusMap = new HashMap<>();
+    taskStatusMap.put(taskId, LearningEngineTask.ExecutionStatus.RUNNING);
 
     when(logAnalysisService.getTaskStatus(anyList())).thenReturn(taskStatusMap);
 
-    AnalysisStatus status = logAnalysisState.getExecutionStatus();
+    AnalysisStatus status = serviceGuardLogAnalysisStateExecutor.getExecutionStatus(logAnalysisState);
 
     assertThat(status.name()).isEqualTo(AnalysisStatus.RUNNING.name());
   }
@@ -104,12 +109,12 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
     String taskId = generateUuid();
     logAnalysisState.setStatus(AnalysisStatus.RUNNING);
     logAnalysisState.setWorkerTaskId(taskId);
-    Map<String, ExecutionStatus> taskStatusMap = new HashMap<>();
-    taskStatusMap.put(taskId, ExecutionStatus.FAILED);
+    Map<String, LearningEngineTask.ExecutionStatus> taskStatusMap = new HashMap<>();
+    taskStatusMap.put(taskId, LearningEngineTask.ExecutionStatus.FAILED);
 
     when(logAnalysisService.getTaskStatus(anyList())).thenReturn(taskStatusMap);
 
-    AnalysisStatus status = logAnalysisState.getExecutionStatus();
+    AnalysisStatus status = serviceGuardLogAnalysisStateExecutor.getExecutionStatus(logAnalysisState);
 
     assertThat(status.name()).isEqualTo(AnalysisStatus.RETRY.name());
   }
@@ -121,12 +126,12 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
     String taskId = generateUuid();
     logAnalysisState.setStatus(AnalysisStatus.RUNNING);
     logAnalysisState.setWorkerTaskId(taskId);
-    Map<String, ExecutionStatus> taskStatusMap = new HashMap<>();
-    taskStatusMap.put(taskId, ExecutionStatus.TIMEOUT);
+    Map<String, LearningEngineTask.ExecutionStatus> taskStatusMap = new HashMap<>();
+    taskStatusMap.put(taskId, LearningEngineTask.ExecutionStatus.TIMEOUT);
 
     when(logAnalysisService.getTaskStatus(anyList())).thenReturn(taskStatusMap);
 
-    AnalysisStatus status = logAnalysisState.getExecutionStatus();
+    AnalysisStatus status = serviceGuardLogAnalysisStateExecutor.getExecutionStatus(logAnalysisState);
 
     assertThat(status.name()).isEqualTo(AnalysisStatus.RETRY.name());
   }
@@ -138,12 +143,12 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
     String taskId = generateUuid();
     logAnalysisState.setStatus(AnalysisStatus.RUNNING);
     logAnalysisState.setWorkerTaskId(taskId);
-    Map<String, ExecutionStatus> taskStatusMap = new HashMap<>();
-    taskStatusMap.put(taskId, ExecutionStatus.QUEUED);
+    Map<String, LearningEngineTask.ExecutionStatus> taskStatusMap = new HashMap<>();
+    taskStatusMap.put(taskId, LearningEngineTask.ExecutionStatus.QUEUED);
 
     when(logAnalysisService.getTaskStatus(anyList())).thenReturn(taskStatusMap);
 
-    AnalysisStatus status = logAnalysisState.getExecutionStatus();
+    AnalysisStatus status = serviceGuardLogAnalysisStateExecutor.getExecutionStatus(logAnalysisState);
 
     assertThat(status.name()).isEqualTo(AnalysisStatus.RUNNING.name());
   }
@@ -155,7 +160,8 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
     logAnalysisState.setRetryCount(2);
     logAnalysisState.setStatus(AnalysisStatus.FAILED);
 
-    logAnalysisState.handleRerun();
+    logAnalysisState =
+        (ServiceGuardLogAnalysisState) serviceGuardLogAnalysisStateExecutor.handleRerun(logAnalysisState);
 
     assertThat(logAnalysisState.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
   }
@@ -166,7 +172,8 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
   public void testHandleRunning() {
     logAnalysisState.setStatus(AnalysisStatus.RUNNING);
 
-    logAnalysisState.handleRunning();
+    logAnalysisState =
+        (ServiceGuardLogAnalysisState) serviceGuardLogAnalysisStateExecutor.handleRunning(logAnalysisState);
 
     assertThat(logAnalysisState.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
   }
@@ -175,7 +182,7 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testHandleSuccess() {
-    AnalysisState state = logAnalysisState.handleSuccess();
+    AnalysisState state = serviceGuardLogAnalysisStateExecutor.handleSuccess(logAnalysisState);
     assertThat(state.getStatus().name()).isEqualTo(AnalysisStatus.SUCCESS.name());
   }
 
@@ -183,7 +190,7 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testHandleTransition() {
-    AnalysisState state = logAnalysisState.handleTransition();
+    AnalysisState state = serviceGuardLogAnalysisStateExecutor.handleTransition(logAnalysisState);
     assertThat(state.getStatus().name()).isEqualTo(AnalysisStatus.CREATED.name());
   }
 
@@ -193,7 +200,8 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
   public void testHandleRetry() {
     logAnalysisState.setRetryCount(1);
 
-    logAnalysisState.handleRetry();
+    logAnalysisState =
+        (ServiceGuardLogAnalysisState) serviceGuardLogAnalysisStateExecutor.handleRetry(logAnalysisState);
 
     assertThat(logAnalysisState.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
     assertThat(logAnalysisState.getWorkerTaskId()).isNotNull();
@@ -206,7 +214,8 @@ public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
   public void testHandleRetry_noMoreRetry() {
     logAnalysisState.setRetryCount(2);
 
-    logAnalysisState.handleRetry();
+    logAnalysisState =
+        (ServiceGuardLogAnalysisState) serviceGuardLogAnalysisStateExecutor.handleRetry(logAnalysisState);
 
     assertThat(logAnalysisState.getStatus().name()).isEqualTo(AnalysisStatus.FAILED.name());
   }

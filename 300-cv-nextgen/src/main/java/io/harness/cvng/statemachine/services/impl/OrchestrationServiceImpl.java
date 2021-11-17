@@ -1,4 +1,4 @@
-package io.harness.cvng.statemachine.services;
+package io.harness.cvng.statemachine.services.impl;
 
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -10,8 +10,8 @@ import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrchestratorKeys;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
-import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
-import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.cvng.statemachine.services.api.AnalysisStateMachineService;
+import io.harness.cvng.statemachine.services.api.OrchestrationService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;

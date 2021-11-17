@@ -204,10 +204,22 @@ import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.R
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorEntityAndDTOTransformer;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorTransformer;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ThresholdServiceLevelIndicatorTransformer;
-import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
-import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
-import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
-import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.cvng.statemachine.beans.AnalysisState.StateType;
+import io.harness.cvng.statemachine.services.api.ActivityVerificationStateExecutor;
+import io.harness.cvng.statemachine.services.api.AnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.AnalysisStateMachineService;
+import io.harness.cvng.statemachine.services.api.CanaryTimeSeriesAnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.DeploymentLogAnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.DeploymentLogClusterStateExecutor;
+import io.harness.cvng.statemachine.services.api.OrchestrationService;
+import io.harness.cvng.statemachine.services.api.PreDeploymentLogClusterStateExecutor;
+import io.harness.cvng.statemachine.services.api.ServiceGuardLogAnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.ServiceGuardLogClusterStateExecutor;
+import io.harness.cvng.statemachine.services.api.ServiceGuardTimeSeriesAnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.ServiceGuardTrendAnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.TestTimeSeriesAnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.impl.AnalysisStateMachineServiceImpl;
+import io.harness.cvng.statemachine.services.impl.OrchestrationServiceImpl;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServiceImpl;
@@ -461,6 +473,8 @@ public class CVServiceModule extends AbstractModule {
     changeSourceTypeChangeSourceSpecTransformerMapBinder.addBinding(ChangeSourceType.HARNESS_CD_CURRENT_GEN)
         .to(HarnessCDCurrentGenChangeSourceSpecTransformer.class);
 
+    bindAnalysisStateExecutor();
+
     MapBinder<ActivityType, ActivityUpdatableEntity> activityTypeActivityUpdatableEntityMapBinder =
         MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.PAGER_DUTY)
@@ -529,6 +543,31 @@ public class CVServiceModule extends AbstractModule {
         .to(KubernetesChangeSource.UpdatableKubernetesChangeSourceEntity.class);
     changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CD_CURRENT_GEN)
         .to(HarnessCDCurrentGenChangeSource.UpdatableHarnessCDCurrentGenChangeSourceEntity.class);
+  }
+
+  private void bindAnalysisStateExecutor() {
+    MapBinder<StateType, AnalysisStateExecutor> stateTypeAnalysisStateExecutorMap =
+        MapBinder.newMapBinder(binder(), StateType.class, AnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.ACTIVITY_VERIFICATION)
+        .to(ActivityVerificationStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.CANARY_TIME_SERIES)
+        .to(CanaryTimeSeriesAnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.DEPLOYMENT_LOG_ANALYSIS)
+        .to(DeploymentLogAnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.SERVICE_GUARD_LOG_ANALYSIS)
+        .to(ServiceGuardLogAnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.SERVICE_GUARD_TIME_SERIES)
+        .to(ServiceGuardTimeSeriesAnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.TEST_TIME_SERIES)
+        .to(TestTimeSeriesAnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.DEPLOYMENT_LOG_CLUSTER)
+        .to(DeploymentLogClusterStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.PRE_DEPLOYMENT_LOG_CLUSTER)
+        .to(PreDeploymentLogClusterStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.SERVICE_GUARD_LOG_CLUSTER)
+        .to(ServiceGuardLogClusterStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.SERVICE_GUARD_TREND_ANALYSIS)
+        .to(ServiceGuardTrendAnalysisStateExecutor.class);
   }
 
   private void bindDataSourceConnectivityChecker() {
