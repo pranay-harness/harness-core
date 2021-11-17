@@ -62,7 +62,7 @@ public class PmsEventSender {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationModuleConfig moduleConfig;
   @Inject private PmsFeatureFlagService pmsFeatureFlagService;
-  @Inject @Named(ORCHESTRATION_REDIS_CLIENT) RedissonClient redissonClient;
+  @Inject(optional = true) @Named(ORCHESTRATION_REDIS_CLIENT) RedissonClient redissonClient;
 
   private final LoadingCache<ProducerCacheKey, Producer> producerCache =
       CacheBuilder.newBuilder()

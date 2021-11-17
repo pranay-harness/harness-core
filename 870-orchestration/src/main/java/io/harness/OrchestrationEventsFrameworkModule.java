@@ -19,9 +19,6 @@ import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Key;
-import com.google.inject.Provides;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.time.Duration;
 import org.redisson.api.RedissonClient;
