@@ -10,4 +10,9 @@ public class TestTimeSeriesAnalysisStateExecutor extends TimeSeriesAnalysisState
   protected List<String> scheduleAnalysis(AnalysisInput analysisInput) {
     return timeSeriesAnalysisService.scheduleTestVerificationTaskAnalysis(analysisInput);
   }
+
+  @Override
+  public void handleFinalStatuses(TestTimeSeriesAnalysisState analysisState) {
+    timeSeriesAnalysisService.logDeploymentVerificationProgress(analysisState.getInputs(), analysisState.getStatus());
+  }
 }

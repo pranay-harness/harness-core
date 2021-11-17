@@ -11,4 +11,9 @@ public class CanaryTimeSeriesAnalysisStateExecutor
   protected List<String> scheduleAnalysis(AnalysisInput analysisInput) {
     return timeSeriesAnalysisService.scheduleCanaryVerificationTaskAnalysis(analysisInput);
   }
+
+  @Override
+  public void handleFinalStatuses(CanaryTimeSeriesAnalysisState analysisState) {
+    timeSeriesAnalysisService.logDeploymentVerificationProgress(analysisState.getInputs(), analysisState.getStatus());
+  }
 }

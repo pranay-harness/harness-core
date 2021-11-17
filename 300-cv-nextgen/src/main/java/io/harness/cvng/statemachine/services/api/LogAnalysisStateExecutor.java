@@ -17,14 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class LogAnalysisStateExecutor<T extends LogAnalysisState> extends AnalysisStateExecutor<T> {
   @Inject protected transient LogAnalysisService logAnalysisService;
-  protected String workerTaskId;
 
   protected abstract String scheduleAnalysis(AnalysisInput analysisInput);
 
   @Override
   public AnalysisState execute(T analysisState) {
-    workerTaskId = scheduleAnalysis(analysisState.getInputs());
-    Preconditions.checkNotNull(workerTaskId, "workerId can not be null");
+    analysisState.setWorkerTaskId(scheduleAnalysis(analysisState.getInputs()));
+    Preconditions.checkNotNull(analysisState.getWorkerTaskId(), "workerId can not be null");
     analysisState.setStatus(AnalysisStatus.RUNNING);
     log.info("Executing service guard log analysis for {}", analysisState.getInputs());
     return analysisState;
@@ -34,8 +33,8 @@ public abstract class LogAnalysisStateExecutor<T extends LogAnalysisState> exten
   public AnalysisStatus getExecutionStatus(T analysisState) {
     if (analysisState.getStatus() != AnalysisStatus.SUCCESS) {
       Map<String, LearningEngineTask.ExecutionStatus> taskStatuses =
-          logAnalysisService.getTaskStatus(Arrays.asList(workerTaskId));
-      LearningEngineTask.ExecutionStatus taskStatus = taskStatuses.get(workerTaskId);
+          logAnalysisService.getTaskStatus(Arrays.asList(analysisState.getWorkerTaskId()));
+      LearningEngineTask.ExecutionStatus taskStatus = taskStatuses.get(analysisState.getWorkerTaskId());
       // This could be common code for all states.
       switch (taskStatus) {
         case SUCCESS:
@@ -61,8 +60,8 @@ public abstract class LogAnalysisStateExecutor<T extends LogAnalysisState> exten
 
     analysisState.setRetryCount(analysisState.getRetryCount() + 1);
     log.info("In serviceguard log analysis for Inputs {}, cleaning up worker task. Old taskID: {}",
-        analysisState.getInputs(), workerTaskId);
-    workerTaskId = null;
+        analysisState.getInputs(), analysisState.getWorkerTaskId());
+    analysisState.setWorkerTaskId(null);
     analysisState.execute();
     return analysisState;
   }
@@ -91,8 +90,8 @@ public abstract class LogAnalysisStateExecutor<T extends LogAnalysisState> exten
     } else {
       analysisState.setRetryCount(analysisState.getRetryCount() + 1);
       log.info("In serviceguard log analysis state, for Inputs {}, cleaning up worker task. Old taskID: {}",
-          analysisState.getInputs(), workerTaskId);
-      workerTaskId = null;
+          analysisState.getInputs(), analysisState.getWorkerTaskId());
+      analysisState.setWorkerTaskId(null);
       analysisState.execute();
     }
     return analysisState;

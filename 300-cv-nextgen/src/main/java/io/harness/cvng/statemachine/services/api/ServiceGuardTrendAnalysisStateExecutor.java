@@ -15,11 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ServiceGuardTrendAnalysisStateExecutor extends AnalysisStateExecutor<ServiceGuardTrendAnalysisState> {
   @Inject private transient TrendAnalysisService trendAnalysisService;
-  private String workerTaskId;
 
   @Override
   public AnalysisState execute(ServiceGuardTrendAnalysisState analysisState) {
-    workerTaskId = trendAnalysisService.scheduleTrendAnalysisTask(analysisState.getInputs());
+    analysisState.setWorkerTaskId(trendAnalysisService.scheduleTrendAnalysisTask(analysisState.getInputs()));
     analysisState.setStatus(AnalysisStatus.RUNNING);
     log.info("Executing service guard trend analysis for {}", analysisState.getInputs());
     return analysisState;
@@ -29,8 +28,8 @@ public class ServiceGuardTrendAnalysisStateExecutor extends AnalysisStateExecuto
   public AnalysisStatus getExecutionStatus(ServiceGuardTrendAnalysisState analysisState) {
     if (analysisState.getStatus() != AnalysisStatus.SUCCESS) {
       Map<String, LearningEngineTask.ExecutionStatus> taskStatuses =
-          trendAnalysisService.getTaskStatus(Collections.singletonList(workerTaskId));
-      LearningEngineTask.ExecutionStatus taskStatus = taskStatuses.get(workerTaskId);
+          trendAnalysisService.getTaskStatus(Collections.singletonList(analysisState.getWorkerTaskId()));
+      LearningEngineTask.ExecutionStatus taskStatus = taskStatuses.get(analysisState.getWorkerTaskId());
       // This could be common code for all states.
       switch (taskStatus) {
         case SUCCESS:
@@ -55,8 +54,8 @@ public class ServiceGuardTrendAnalysisStateExecutor extends AnalysisStateExecuto
     // clean up state in underlying worker and then execute
     analysisState.setRetryCount(analysisState.getRetryCount() + 1);
     log.info("In service guard trend analysis for Inputs {}, cleaning up worker task. Old taskID: {}",
-        analysisState.getInputs(), workerTaskId);
-    workerTaskId = null;
+        analysisState.getInputs(), analysisState.getWorkerTaskId());
+    analysisState.setWorkerTaskId(null);
     analysisState.execute();
     return analysisState;
   }
@@ -85,8 +84,8 @@ public class ServiceGuardTrendAnalysisStateExecutor extends AnalysisStateExecuto
     } else {
       analysisState.setRetryCount(analysisState.getRetryCount() + 1);
       log.info("In service guard trend analysis state, for Inputs {}, cleaning up worker task. Old taskID: {}",
-          analysisState.getInputs(), workerTaskId);
-      workerTaskId = null;
+          analysisState.getInputs(), analysisState.getWorkerTaskId());
+      analysisState.setWorkerTaskId(null);
       analysisState.execute();
     }
     return analysisState;

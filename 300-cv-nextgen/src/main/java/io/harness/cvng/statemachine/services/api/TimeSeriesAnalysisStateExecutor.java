@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class TimeSeriesAnalysisStateExecutor<T extends TimeSeriesAnalysisState>
     extends AnalysisStateExecutor<T> {
   @Inject protected transient TimeSeriesAnalysisService timeSeriesAnalysisService;
-  private String workerTaskId;
 
   @Override
   public AnalysisState execute(T analysisState) {
@@ -27,7 +26,7 @@ public abstract class TimeSeriesAnalysisStateExecutor<T extends TimeSeriesAnalys
     analysisState.setStatus(AnalysisStatus.RUNNING);
 
     if (taskIds != null && taskIds.size() == 1) {
-      workerTaskId = taskIds.get(0);
+      analysisState.setWorkerTaskId(taskIds.get(0));
     } else {
       throw new AnalysisStateMachineException(
           "Unknown number of worker tasks created in Timeseries Analysis State: " + taskIds);
@@ -41,9 +40,10 @@ public abstract class TimeSeriesAnalysisStateExecutor<T extends TimeSeriesAnalys
   @Override
   public AnalysisStatus getExecutionStatus(T analysisState) {
     if (!analysisState.getStatus().equals(AnalysisStatus.SUCCESS)) {
-      Map<String, LearningEngineTask.ExecutionStatus> taskStatuses = timeSeriesAnalysisService.getTaskStatus(
-          analysisState.getInputs().getVerificationTaskId(), new HashSet<>(Arrays.asList(workerTaskId)));
-      LearningEngineTask.ExecutionStatus taskStatus = taskStatuses.get(workerTaskId);
+      Map<String, LearningEngineTask.ExecutionStatus> taskStatuses =
+          timeSeriesAnalysisService.getTaskStatus(analysisState.getInputs().getVerificationTaskId(),
+              new HashSet<>(Arrays.asList(analysisState.getWorkerTaskId())));
+      LearningEngineTask.ExecutionStatus taskStatus = taskStatuses.get(analysisState.getWorkerTaskId());
       // This could be common code for all states.
       switch (taskStatus) {
         case SUCCESS:
@@ -80,8 +80,8 @@ public abstract class TimeSeriesAnalysisStateExecutor<T extends TimeSeriesAnalys
     } else {
       analysisState.setRetryCount(analysisState.getRetryCount() + 1);
       log.info("In TimeSeriesAnalysisState for Inputs {}, cleaning up worker task. Old taskID: {}",
-          analysisState.getInputs(), workerTaskId);
-      workerTaskId = null;
+          analysisState.getInputs(), analysisState.getWorkerTaskId());
+      analysisState.setWorkerTaskId(null);
       analysisState.execute();
     }
     return analysisState;
@@ -100,8 +100,8 @@ public abstract class TimeSeriesAnalysisStateExecutor<T extends TimeSeriesAnalys
 
     analysisState.setRetryCount(analysisState.getRetryCount() + 1);
     log.info("In TimeSeriesAnalysisState for Inputs {}, cleaning up worker task. Old taskID: {}",
-        analysisState.getInputs(), workerTaskId);
-    workerTaskId = null;
+        analysisState.getInputs(), analysisState.getWorkerTaskId());
+    analysisState.setWorkerTaskId(null);
     analysisState.execute();
     return analysisState;
   }

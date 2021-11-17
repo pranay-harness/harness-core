@@ -2,7 +2,6 @@ package io.harness.cvng.statemachine.services.api;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.services.api.LogClusterService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
@@ -20,24 +19,21 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class LogClusterStateExecutor<T extends LogClusterState> extends AnalysisStateExecutor<T> {
-  protected LogClusterLevel clusterLevel;
   @Inject protected transient LogClusterService logClusterService;
-  private Set<String> workerTaskIds;
-  private Map<String, LearningEngineTask.ExecutionStatus> workerTaskStatus;
 
-  protected abstract List<String> scheduleAnalysis(AnalysisInput analysisInput);
+  protected abstract List<String> scheduleAnalysis(AnalysisInput analysisInput, LogClusterState analysisState);
 
   @Override
   public AnalysisState execute(T analysisState) {
-    List<String> taskIds = scheduleAnalysis(analysisState.getInputs());
+    List<String> taskIds = scheduleAnalysis(analysisState.getInputs(), analysisState);
     if (isNotEmpty(taskIds)) {
-      if (workerTaskIds == null) {
-        workerTaskIds = new HashSet<>();
+      if (analysisState.getWorkerTaskIds() == null) {
+        analysisState.setWorkerTaskIds(new HashSet<>());
       }
-      workerTaskIds.addAll(taskIds);
+      analysisState.getWorkerTaskIds().addAll(taskIds);
       analysisState.setStatus(AnalysisStatus.RUNNING);
       log.info("Executing ServiceGuardLogClusterState for input: {}. Created {} tasks", analysisState.getInputs(),
-          workerTaskIds.size());
+          analysisState.getWorkerTaskIds().size());
     } else {
       log.error(
           "Executing ServiceGuardLogClusterState for input: {}. No clustering tasks were created. This is an error state",
@@ -52,7 +48,8 @@ public abstract class LogClusterStateExecutor<T extends LogClusterState> extends
   @Override
   public AnalysisStatus getExecutionStatus(T analysisState) {
     if (!analysisState.getStatus().equals(AnalysisStatus.SUCCESS)) {
-      Map<String, LearningEngineTask.ExecutionStatus> taskStatuses = logClusterService.getTaskStatus(workerTaskIds);
+      Map<String, LearningEngineTask.ExecutionStatus> taskStatuses =
+          logClusterService.getTaskStatus(analysisState.getWorkerTaskIds());
       Map<LearningEngineTask.ExecutionStatus, Set<String>> statusTaskMap = new HashMap<>();
       taskStatuses.forEach((taskId, taskStatus) -> {
         if (!statusTaskMap.containsKey(taskStatus)) {
@@ -63,7 +60,8 @@ public abstract class LogClusterStateExecutor<T extends LogClusterState> extends
 
       log.info("Current statuses of worker tasks with inputs {} is {}", analysisState.getInputs(), statusTaskMap);
       if (statusTaskMap.containsKey(LearningEngineTask.ExecutionStatus.SUCCESS)
-          && workerTaskIds.size() == statusTaskMap.get(LearningEngineTask.ExecutionStatus.SUCCESS).size()) {
+          && analysisState.getWorkerTaskIds().size()
+              == statusTaskMap.get(LearningEngineTask.ExecutionStatus.SUCCESS).size()) {
         log.info("All worker tasks have succeeded.");
         return AnalysisStatus.TRANSITION;
       } else {

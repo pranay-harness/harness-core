@@ -30,8 +30,8 @@ public class ServiceGuardLogAnalysisStateExecutor extends LogAnalysisStateExecut
   public AnalysisStatus getExecutionStatus(ServiceGuardLogAnalysisState serviceGuardLogAnalysisState) {
     if (serviceGuardLogAnalysisState.getStatus() != AnalysisStatus.SUCCESS) {
       Map<String, LearningEngineTask.ExecutionStatus> taskStatuses =
-          logAnalysisService.getTaskStatus(Arrays.asList(workerTaskId));
-      LearningEngineTask.ExecutionStatus taskStatus = taskStatuses.get(workerTaskId);
+          logAnalysisService.getTaskStatus(Arrays.asList(serviceGuardLogAnalysisState.getWorkerTaskId()));
+      LearningEngineTask.ExecutionStatus taskStatus = taskStatuses.get(serviceGuardLogAnalysisState.getWorkerTaskId());
       // This could be common code for all states.
       switch (taskStatus) {
         case SUCCESS:

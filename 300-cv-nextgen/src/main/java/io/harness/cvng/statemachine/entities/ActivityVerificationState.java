@@ -51,7 +51,7 @@ public class ActivityVerificationState extends AnalysisState {
     return this;
   }
 
-  private boolean isAllAnalysesComplete() {
+  public boolean isAllAnalysesComplete() {
     boolean shouldTransition = true;
     if (analysisCompletedUntil.isBefore(getInputs().getEndTime())) {
       shouldTransition = false;

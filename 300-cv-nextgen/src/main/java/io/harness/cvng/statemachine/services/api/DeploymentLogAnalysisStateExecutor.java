@@ -8,4 +8,9 @@ public class DeploymentLogAnalysisStateExecutor extends LogAnalysisStateExecutor
   protected String scheduleAnalysis(AnalysisInput analysisInput) {
     return logAnalysisService.scheduleDeploymentLogAnalysisTask(analysisInput);
   }
+
+  @Override
+  public void handleFinalStatuses(DeploymentLogAnalysisState analysisState) {
+    logAnalysisService.logDeploymentVerificationProgress(analysisState.getInputs(), analysisState.getStatus());
+  }
 }
