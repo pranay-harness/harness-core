@@ -15,15 +15,25 @@ public class AdditionalMetadata {
   private Map<String, Object> values;
 
   public Map<String, Object> addValues(Map<String, Object> newValues) {
+    if (newValues == null) {
+      return values;
+    }
+
     newValues.forEach((k, v) -> { values.put(k, v); });
     return values;
   }
 
   public String getSecretKeyUuid() {
+    if (values == null) {
+      return null;
+    }
     return (String) values.get(SECRET_KEY_UUID_KEY);
   }
 
   public byte[] getAwsEncryptedSecret() {
+    if (values == null) {
+      return null;
+    }
     return (byte[]) values.get(AWS_ENCRYPTED_SECRET);
   }
 }

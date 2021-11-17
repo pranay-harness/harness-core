@@ -3,7 +3,6 @@ package io.harness.cron;
 import static io.harness.rule.OwnerRule.MOHIT_GARG;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.SMCoreTestBase;
@@ -12,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.FeatureName;
+import io.harness.beans.LocalEncryptionMigrationInfo;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -29,6 +29,7 @@ import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -49,8 +50,10 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
   @Owner(developers = MOHIT_GARG)
   @Category(UnitTests.class)
   public void testWhenLastMigrationStateIsNotPresent() {
-    when(featureFlagHelperService.isEnabled(ACCOUNT_ID, FeatureName.LOCAL_MULTI_CRYPTO_MODE)).thenReturn(true);
     createEncryptedRecords(10);
+    testIfPresentRecordsAreNotMigrated();
+
+    when(featureFlagHelperService.isEnabled(ACCOUNT_ID, FeatureName.LOCAL_MULTI_CRYPTO_MODE)).thenReturn(true);
 
     localMultiCryptoModeEncryptionMigrationHandler.performMigration(ACCOUNT_ID);
 
@@ -71,15 +74,69 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
     });
   }
 
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testWhenLastMigrationStateIsPresent() {
+    int recordsToBeMigrated = 20;
+    int recordsNotToBeMigrated = 15;
+
+    createEncryptedRecords(recordsToBeMigrated);
+    long lastMigratedRecordCreatedAtTimestamp = 100;
+    createEncryptedRecordsWithCreatedAtBeforeGivenTimestamp(
+        recordsNotToBeMigrated, lastMigratedRecordCreatedAtTimestamp);
+    testIfPresentRecordsAreNotMigrated();
+
+    when(featureFlagHelperService.isEnabled(ACCOUNT_ID, FeatureName.LOCAL_MULTI_CRYPTO_MODE)).thenReturn(true);
+
+    localEncryptionMigrationInfoRepository.save(
+        LocalEncryptionMigrationInfo.builder()
+            .accountId(ACCOUNT_ID)
+            .uuid("uuid")
+            .lastMigratedRecordCreatedAtTimestamp(lastMigratedRecordCreatedAtTimestamp)
+            .lastMigratedRecordId("just-for-reference")
+            .mode(FeatureName.LOCAL_MULTI_CRYPTO_MODE.name())
+            .build());
+
+    localMultiCryptoModeEncryptionMigrationHandler.performMigration(ACCOUNT_ID);
+
+    Optional<LocalEncryptionMigrationInfo> localEncryptionMigrationInfo =
+        localEncryptionMigrationInfoRepository.findByAccountIdAndMode(
+            ACCOUNT_ID, FeatureName.LOCAL_MULTI_CRYPTO_MODE.name());
+
+    assertThat(localEncryptionMigrationInfo.isPresent()).isTrue();
+    assertThat(localEncryptionMigrationInfo.get().getLastMigratedRecordCreatedAtTimestamp())
+        .isNotEqualTo(lastMigratedRecordCreatedAtTimestamp);
+    PageResponse<EncryptedData> encryptedDataPageResponse = secretsDao.listSecrets(getPageRequest());
+    List<EncryptedData> encryptedDataList = encryptedDataPageResponse.getResponse();
+    AtomicInteger recordsMigrated = new AtomicInteger();
+    AtomicInteger recordsNotMigrated = new AtomicInteger();
+    encryptedDataList.forEach(encryptedData -> {
+      if (encryptedData.getEncryptedMech() == EncryptedMech.MULTI_CRYPTO) {
+        recordsMigrated.addAndGet(1);
+      } else {
+        recordsNotMigrated.addAndGet(1);
+      }
+    });
+
+    assertThat(recordsMigrated.get()).isEqualTo(recordsToBeMigrated);
+    assertThat(recordsNotMigrated.get()).isEqualTo(recordsNotToBeMigrated);
+  }
+
   private void createEncryptedRecords(int numOfRecords) {
     for (int i = 0; i < numOfRecords; i++) {
       String value = RandomStringUtils.randomAlphabetic(10);
-      String id = secretsDao.saveSecret(
-          mapEncryptedRecordToEncryptedData(localEncryptor.encryptSecret(ACCOUNT_ID, value, null)));
-      Optional<EncryptedData> fetchedEncryptedDataOptional = secretsDao.getSecretById(ACCOUNT_ID, id);
-      if (fetchedEncryptedDataOptional.isPresent()) {
-        System.out.println(fetchedEncryptedDataOptional.get());
-      }
+      secretsDao.saveSecret(mapEncryptedRecordToEncryptedData(localEncryptor.encryptSecret(ACCOUNT_ID, value, null)));
+    }
+  }
+
+  private void createEncryptedRecordsWithCreatedAtBeforeGivenTimestamp(int numOfRecords, long thresholdCreatedAt) {
+    for (int i = 0; i < numOfRecords; i++) {
+      String value = RandomStringUtils.randomAlphabetic(10);
+      EncryptedData encryptedData =
+          mapEncryptedRecordToEncryptedData(localEncryptor.encryptSecret(ACCOUNT_ID, value, null));
+      encryptedData.setCreatedAt(thresholdCreatedAt - i - 1);
+      String id = secretsDao.saveSecret(encryptedData);
     }
   }
 
@@ -105,5 +162,17 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
     pageRequest.setOffset("0");
     pageRequest.addFilter(EncryptedDataKeys.accountId, SearchFilter.Operator.EQ, ACCOUNT_ID);
     return pageRequest;
+  }
+
+  private void testIfPresentRecordsAreNotMigrated() {
+    PageResponse<EncryptedData> encryptedDataPageResponse = secretsDao.listSecrets(getPageRequest());
+    List<EncryptedData> encryptedDataList = encryptedDataPageResponse.getResponse();
+    encryptedDataList.forEach(encryptedData -> {
+      assertThat(encryptedData.getEncryptedMech()).isNull();
+      assertThat(encryptedData.getEncryptedValue()).isNotNull();
+      assertThat(encryptedData.getEncryptionKey()).isNotNull();
+      assertThat(encryptedData.getAdditionalMetadata().getAwsEncryptedSecret()).isNull();
+      assertThat(encryptedData.getAdditionalMetadata().getSecretKeyUuid()).isNull();
+    });
   }
 }
