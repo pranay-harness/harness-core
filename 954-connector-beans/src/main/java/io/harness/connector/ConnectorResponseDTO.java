@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.gitsync.sdk.EntityValidityDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
