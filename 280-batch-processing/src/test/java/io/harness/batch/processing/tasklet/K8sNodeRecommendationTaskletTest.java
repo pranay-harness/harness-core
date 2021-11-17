@@ -306,6 +306,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
 
     k8sServiceProvider.setInstanceCategory(InstanceCategory.SPOT);
     k8sServiceProvider.setRegion(notSupportedRegion);
+    k8sServiceProvider.setCloudProvider(CloudProvider.AZURE);
 
     when(k8sRecommendationDAO.getServiceProvider(any(), eq(nodePoolId))).thenReturn(k8sServiceProvider);
 
