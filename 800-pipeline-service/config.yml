@@ -315,6 +315,8 @@ pipelineEventConsumersConfig:
     threads: 1
   pmsNotify:
     threads: 1
+  webhookEvent:
+    threads: 1
 
 delegatePollingConfig:
   syncDelay: 2000
