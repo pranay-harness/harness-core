@@ -2,6 +2,7 @@ package io.harness.pms.ngpipeline.inputset.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.merger.helpers.InputSetTemplateHelper.removeRuntimeInputFromYaml;
+import static io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType.INPUT_SET;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Long.parseLong;
@@ -464,7 +465,16 @@ public class InputSetResourcePMS {
     }
     Page<InputSetSummaryResponseDTOPMS> inputSetList =
         pmsInputSetService.list(criteria, pageRequest, accountId, orgIdentifier, projectIdentifier)
-            .map(PMSInputSetElementMapper::toInputSetSummaryResponseDTOPMS);
+            .map(inputSetEntity -> {
+              InputSetErrorWrapperDTOPMS inputSetErrorWrapperDTOPMS = null;
+              if (inputSetEntity.getIsInvalid() && inputSetEntity.getInputSetEntityType() == INPUT_SET) {
+                inputSetErrorWrapperDTOPMS = validateAndMergeHelper.validateInputSet(accountId, orgIdentifier,
+                    projectIdentifier, pipelineIdentifier, inputSetEntity.getYaml(), gitEntityBasicInfo.getBranch(),
+                    gitEntityBasicInfo.getYamlGitConfigId());
+              }
+              return PMSInputSetElementMapper.toInputSetSummaryResponseDTOPMS(
+                  inputSetEntity, inputSetErrorWrapperDTOPMS);
+            });
     return ResponseDTO.newResponse(getNGPageResponse(inputSetList));
   }
 

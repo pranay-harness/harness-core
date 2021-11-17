@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -34,6 +35,7 @@ import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
+import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 
@@ -51,6 +53,7 @@ import org.mockito.MockitoAnnotations;
 public class PipelineEntityGitSyncHelperTest extends CategoryTest {
   @Mock private PMSPipelineService pipelineService;
   @Mock private PMSPipelineTemplateHelper pipelineTemplateHelper;
+  @Mock private PMSYamlSchemaService pmsYamlSchemaService;
   @InjectMocks PipelineEntityGitSyncHelper pipelineEntityGitSyncHelper;
   static String accountId = "accountId";
   static String orgId = "orgId";
@@ -151,12 +154,16 @@ public class PipelineEntityGitSyncHelperTest extends CategoryTest {
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
   public void testSave() throws IOException {
-    doReturn(PipelineEntity.builder().yaml(pipelineYaml).build()).when(pipelineService).create(any());
+    doReturn(PipelineEntity.builder().orgIdentifier(orgId).projectIdentifier(projectId).yaml(pipelineYaml).build())
+        .when(pipelineService)
+        .create(any());
     TemplateMergeResponseDTO templateMergeResponseDTO =
         TemplateMergeResponseDTO.builder().mergedPipelineYaml(pipelineYaml).build();
     doReturn(templateMergeResponseDTO)
         .when(pipelineTemplateHelper)
         .resolveTemplateRefsInPipeline(PMSPipelineDtoMapper.toPipelineEntity(accountId, pipelineYaml));
+    doNothing().when(pmsYamlSchemaService).validateYamlSchema(accountId, orgId, projectId, pipelineYaml);
+    doNothing().when(pmsYamlSchemaService).validateUniqueFqn(pipelineYaml);
     PipelineConfig pipelineConfig = pipelineEntityGitSyncHelper.save(accountId, pipelineYaml);
     verify(pipelineService, times(1)).create(any());
     assertEquals(pipelineConfig, YamlUtils.read(pipelineYaml, PipelineConfig.class));
@@ -166,11 +173,16 @@ public class PipelineEntityGitSyncHelperTest extends CategoryTest {
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
   public void testUpdate() throws IOException {
-    PipelineEntity pipelineEntity = PipelineEntity.builder().yaml(pipelineYaml).build();
+    PipelineEntity pipelineEntity =
+        PipelineEntity.builder().orgIdentifier(orgId).projectIdentifier(projectId).yaml(pipelineYaml).build();
     doReturn(pipelineEntity).when(pipelineService).updatePipelineYaml(any(), any());
     TemplateMergeResponseDTO templateMergeResponseDTO =
         TemplateMergeResponseDTO.builder().mergedPipelineYaml(pipelineYaml).build();
-    doReturn(templateMergeResponseDTO).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(pipelineEntity);
+    doReturn(templateMergeResponseDTO)
+        .when(pipelineTemplateHelper)
+        .resolveTemplateRefsInPipeline(PMSPipelineDtoMapper.toPipelineEntity(accountId, pipelineYaml));
+    doNothing().when(pmsYamlSchemaService).validateYamlSchema(accountId, orgId, projectId, pipelineYaml);
+    doNothing().when(pmsYamlSchemaService).validateUniqueFqn(pipelineYaml);
     PipelineConfig pipelineConfig = pipelineEntityGitSyncHelper.update(accountId, pipelineYaml, ChangeType.NONE);
     verify(pipelineService, times(1)).updatePipelineYaml(any(), any());
     assertEquals(pipelineConfig, YamlUtils.read(pipelineYaml, PipelineConfig.class));

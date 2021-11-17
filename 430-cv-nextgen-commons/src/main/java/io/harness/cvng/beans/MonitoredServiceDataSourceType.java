@@ -10,7 +10,9 @@ public enum MonitoredServiceDataSourceType {
   @JsonProperty("StackdriverLog") STACKDRIVER_LOG,
   @JsonProperty("Stackdriver") STACKDRIVER,
   @JsonProperty("Prometheus") PROMETHEUS,
-  @JsonProperty("Splunk") SPLUNK;
+  @JsonProperty("Splunk") SPLUNK,
+  @JsonProperty("DatadogMetrics") DATADOG_METRICS,
+  @JsonProperty("DatadogLog") DATADOG_LOG;
 
   public static Map<DataSourceType, MonitoredServiceDataSourceType> dataSourceTypeMonitoredServiceDataSourceTypeMap =
       new HashMap<DataSourceType, MonitoredServiceDataSourceType>() {
@@ -21,6 +23,8 @@ public enum MonitoredServiceDataSourceType {
           put(DataSourceType.STACKDRIVER, STACKDRIVER);
           put(DataSourceType.PROMETHEUS, PROMETHEUS);
           put(DataSourceType.SPLUNK, SPLUNK);
+          put(DataSourceType.DATADOG_METRICS, DATADOG_METRICS);
+          put(DataSourceType.DATADOG_LOG, DATADOG_LOG);
         }
       };
 }

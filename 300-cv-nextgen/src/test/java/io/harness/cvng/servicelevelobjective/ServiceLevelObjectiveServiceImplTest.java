@@ -211,6 +211,9 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
     assertThat(serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
     ServiceLevelIndicatorDTO serviceLevelIndicatorDTO1 = sloDTO.getServiceLevelIndicators().get(0);
     serviceLevelIndicatorDTO1.setType(ServiceLevelIndicatorType.AVAILABILITY);
+    RatioSLIMetricSpec ratioSLIMetricSpec = (RatioSLIMetricSpec) serviceLevelIndicatorDTO1.getSpec().getSpec();
+    ratioSLIMetricSpec.setMetric1("newMetric");
+    serviceLevelIndicatorDTO1.getSpec().setSpec(ratioSLIMetricSpec);
     ServiceLevelIndicatorDTO serviceLevelIndicatorDTO2 = builderFactory.getServiceLevelIndicatorDTOBuilder();
     serviceLevelIndicatorDTO2.setSpec(
         ServiceLevelIndicatorSpec.builder()

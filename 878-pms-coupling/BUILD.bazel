@@ -16,6 +16,7 @@ java_library(
         "//950-delegate-tasks-beans:module",
         "//950-ng-project-n-orgs:module",
         "//956-feature-flag-beans:module",
+        "//960-ng-license-beans:module",
         "//970-rbac-core:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
