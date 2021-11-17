@@ -4,6 +4,7 @@ import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
 import static io.harness.ng.core.invites.mapper.InviteMapper.writeDTO;
@@ -39,6 +40,7 @@ import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.ng.core.invites.mapper.InviteMapper;
+import io.harness.ng.core.invites.mapper.RoleBindingMapper;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
 
@@ -220,6 +222,16 @@ public class InviteResource {
           description = "Details of the Invite to create") @NotNull @Valid CreateInviteDTO createInviteDTO) {
     projectIdentifier = stripToNull(projectIdentifier);
     orgIdentifier = stripToNull(orgIdentifier);
+    if (isNotEmpty(createInviteDTO.getRoleBindings())) {
+      String finalOrgIdentifier = orgIdentifier;
+      String finalProjectIdentifier = projectIdentifier;
+      createInviteDTO.getRoleBindings().forEach(roleBinding -> {
+        if (RoleBindingMapper.ALL_RESOURCES.equals(roleBinding.getResourceGroupIdentifier())) {
+          throw new InvalidRequestException(String.format("_all_resources is deprecated, please use %s",
+              RoleBindingMapper.getDefaultResourceGroupIdentifier(finalOrgIdentifier, finalProjectIdentifier)));
+        }
+      });
+    }
     List<InviteOperationResponse> inviteOperationResponses =
         inviteService.createInvitations(accountIdentifier, orgIdentifier, projectIdentifier, createInviteDTO);
     return ResponseDTO.newResponse(inviteOperationResponses);
