@@ -1,6 +1,7 @@
 package io.harness.engine.pms.commons.events;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
+import static io.harness.OrchestrationEventsFrameworkConstants.ORCHESTRATION_REDIS_CLIENT;
 import static io.harness.eventsframework.EventsFrameworkConstants.DUMMY_REDIS_URL;
 import static io.harness.pms.events.PmsEventFrameworkConstants.PIPELINE_MONITORING_ENABLED;
 import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
@@ -37,6 +38,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.time.Duration;
 import java.util.Collections;
@@ -47,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.jetbrains.annotations.NotNull;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -59,6 +62,7 @@ public class PmsEventSender {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationModuleConfig moduleConfig;
   @Inject private PmsFeatureFlagService pmsFeatureFlagService;
+  @Inject @Named(ORCHESTRATION_REDIS_CLIENT) RedissonClient redissonClient;
 
   private final LoadingCache<ProducerCacheKey, Producer> producerCache =
       CacheBuilder.newBuilder()
@@ -161,7 +165,7 @@ public class PmsEventSender {
   private Producer buildRedisProducer(String topicName, RedisConfig redisConfig, String serviceId, int topicSize) {
     return redisConfig.getRedisUrl().equals(DUMMY_REDIS_URL)
         ? NoOpProducer.of(topicName)
-        : RedisProducer.of(topicName, redisConfig, topicSize, serviceId);
+        : RedisProducer.of(topicName, redissonClient, topicSize, serviceId, redisConfig.getEnvNamespace());
   }
 
   PmsSdkInstance getPmsSdkInstance(String serviceName) {
