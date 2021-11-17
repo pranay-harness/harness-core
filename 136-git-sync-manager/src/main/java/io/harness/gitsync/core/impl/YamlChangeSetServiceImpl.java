@@ -118,6 +118,17 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
+  public boolean markSkippedWithMessageCode(String accountId, String changeSetId, String messageCode) {
+    Update update = new Update().set(YamlChangeSetKeys.status, SKIPPED).set(YamlChangeSetKeys.messageCode, messageCode);
+    Query query = new Query().addCriteria(
+        new Criteria().and(YamlChangeSetKeys.accountId).is(accountId).and(YamlChangeSetKeys.uuid).is(changeSetId));
+    final UpdateResult status = yamlChangeSetRepository.update(query, update);
+    log.info(
+        "Updated the status of [{}] YamlChangeSets to Skipped. Max retry count exceeded", status.getModifiedCount());
+    return status.getModifiedCount() == 1;
+  }
+
+  @Override
   public boolean updateStatusAndCutoffTime(String accountId, String changeSetId, YamlChangeSetStatus newStatus) {
     Optional<YamlChangeSetDTO> yamlChangeSet = get(accountId, changeSetId);
     if (yamlChangeSet.isPresent()) {
