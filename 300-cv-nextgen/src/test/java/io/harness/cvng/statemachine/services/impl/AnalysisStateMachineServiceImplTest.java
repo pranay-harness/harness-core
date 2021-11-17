@@ -1,4 +1,4 @@
-package io.harness.cvng.statemachine.services;
+package io.harness.cvng.statemachine.services.impl;
 
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus.FAILED;
@@ -38,7 +38,7 @@ import io.harness.cvng.statemachine.entities.ServiceGuardLogClusterState;
 import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.entities.TimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
-import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
+import io.harness.cvng.statemachine.services.api.AnalysisStateMachineService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
@@ -57,7 +57,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 
-public class AnalysisStateMachineServiceTest extends CvNextGenTestBase {
+public class AnalysisStateMachineServiceImplTest extends CvNextGenTestBase {
   @Inject AnalysisStateMachineService stateMachineService;
   @Inject private Clock clock;
   @Inject HPersistence hPersistence;

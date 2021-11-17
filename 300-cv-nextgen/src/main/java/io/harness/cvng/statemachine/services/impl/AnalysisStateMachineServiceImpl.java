@@ -1,4 +1,4 @@
-package io.harness.cvng.statemachine.services;
+package io.harness.cvng.statemachine.services.impl;
 
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES;
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES_FOR_DEMO;
@@ -29,7 +29,8 @@ import io.harness.cvng.statemachine.entities.ServiceGuardLogClusterState;
 import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.entities.TestTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
-import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
+import io.harness.cvng.statemachine.services.api.AnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.AnalysisStateMachineService;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
@@ -37,19 +38,19 @@ import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
 public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineService {
-  @Inject private Injector injector;
+  @Inject private Map<AnalysisState.StateType, AnalysisStateExecutor> stateTypeAnalysisStateExecutorMap;
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
@@ -82,8 +83,8 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
     } else {
       stateMachine.setVerificationTaskId(verificationTaskId);
       stateMachine.setStatus(AnalysisStatus.RUNNING);
-      injector.injectMembers(stateMachine.getCurrentState());
-      stateMachine.getCurrentState().execute();
+      stateTypeAnalysisStateExecutorMap.get(stateMachine.getCurrentState().getType())
+          .execute(stateMachine.getCurrentState());
     }
     hPersistence.save(stateMachine);
   }
@@ -129,46 +130,46 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
         analysisStateMachine.getVerificationTaskId());
 
     AnalysisState currentState = analysisStateMachine.getCurrentState();
-    injector.injectMembers(currentState);
-    AnalysisStatus status = currentState.getExecutionStatus();
+    AnalysisStateExecutor analysisStateExecutor = stateTypeAnalysisStateExecutorMap.get(currentState.getType());
+    AnalysisStatus status = analysisStateExecutor.getExecutionStatus(currentState);
     AnalysisState nextState = null;
     switch (status) {
       case CREATED:
-        nextState = currentState.execute();
+        nextState = analysisStateExecutor.execute(currentState);
         break;
       case RUNNING:
         log.info("Analysis is currently RUNNING for {} and analysis range {} to {}. We will return.",
             analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
-        nextState = currentState.handleRunning();
+        nextState = analysisStateExecutor.handleRunning(currentState);
         break;
       case TRANSITION:
         log.info(
             "Analysis is currently in TRANSITION for {} and analysis range {} to {}. We will call handleTransition.",
             analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
-        nextState = currentState.handleTransition();
+        nextState = analysisStateExecutor.handleTransition(currentState);
         break;
       case TIMEOUT:
         log.info("Analysis has TIMED OUT for {} and analysis range {} to {}. We will call handleTimeout.",
             analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
-        nextState = currentState.handleTimeout();
+        nextState = analysisStateExecutor.handleTimeout(currentState);
         break;
       case FAILED:
         log.info("Analysis has FAILED for {} and analysis range {} to {}. We will call handleFailure.",
             analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
-        nextState = currentState.handleFailure();
+        nextState = analysisStateExecutor.handleFailure(currentState);
         break;
       case RETRY:
         log.info("Analysis is going to be RETRIED for {} and analysis range {} to {}. We will call handleRetry.",
             analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
-        nextState = currentState.handleRetry();
+        nextState = analysisStateExecutor.handleRetry(currentState);
         break;
       case SUCCESS:
-        nextState = currentState.handleSuccess();
+        nextState = analysisStateExecutor.handleSuccess(currentState);
         break;
       default:
         log.error("Unexpected state in analysis statemachine execution: " + status);
@@ -176,7 +177,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
     }
     AnalysisState previousState = analysisStateMachine.getCurrentState();
     analysisStateMachine.setCurrentState(nextState);
-    injector.injectMembers(nextState);
+    AnalysisStateExecutor nextStateExecutor = stateTypeAnalysisStateExecutorMap.get(nextState.getType());
     if (AnalysisStatus.getFinalStates().contains(nextState.getStatus())) {
       analysisStateMachine.setStatus(nextState.getStatus());
     } else if (nextState.getStatus() == AnalysisStatus.CREATED) {
@@ -184,7 +185,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
         analysisStateMachine.setCompletedStates(new ArrayList<>());
       }
       analysisStateMachine.getCompletedStates().add(previousState);
-      nextState.execute();
+      nextStateExecutor.execute(nextState);
     }
     if (nextState.getStatus() == AnalysisStatus.SUCCESS) {
       // the state machine is done, time to mark it as success
@@ -193,12 +194,12 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
           analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
           analysisStateMachine.getAnalysisEndTime());
       analysisStateMachine.setStatus(AnalysisStatus.SUCCESS);
-      nextState.handleFinalStatuses(nextState.getStatus());
+      nextStateExecutor.handleFinalStatuses(nextState);
     } else if (AnalysisStatus.getFinalStates().contains(nextState.getStatus())) {
       // The current state has closed down as either FAILED or TIMEOUT
       analysisStateMachine.setNextAttemptTime(Instant.now().plus(30, ChronoUnit.MINUTES).toEpochMilli());
       analysisStateMachine.setStatus(nextState.getStatus());
-      nextState.handleFinalStatuses(nextState.getStatus());
+      nextStateExecutor.handleFinalStatuses(nextState);
     }
     hPersistence.save(analysisStateMachine);
     return analysisStateMachine.getCurrentState().getStatus();
@@ -214,12 +215,10 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
     }
     log.info("Retrying state machine for cvConfig {}", analysisStateMachine.getVerificationTaskId());
     AnalysisState currentState = analysisStateMachine.getCurrentState();
-    injector.injectMembers(currentState);
+    AnalysisStateExecutor analysisStateExecutor = stateTypeAnalysisStateExecutorMap.get(currentState.getType());
     if (currentState.getStatus() == AnalysisStatus.FAILED || currentState.getStatus() == AnalysisStatus.TIMEOUT) {
       analysisStateMachine.setStatus(AnalysisStatus.RUNNING);
-
-      currentState.handleRerun();
-
+      analysisStateExecutor.handleRerun(currentState);
     } else {
       throw new AnalysisStateMachineException(
           "Attempting to retry state machine after failure when current status is not failed");

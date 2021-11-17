@@ -1,4 +1,4 @@
-package io.harness.cvng.statemachine.services;
+package io.harness.cvng.statemachine.services.impl;
 
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES;
@@ -24,8 +24,8 @@ import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrches
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.entities.TimeSeriesAnalysisState;
-import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
-import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.cvng.statemachine.services.api.AnalysisStateMachineService;
+import io.harness.cvng.statemachine.services.api.OrchestrationService;
 import io.harness.persistence.HPersistence;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
@@ -44,7 +44,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class OrchestrationServiceTest extends CvNextGenTestBase {
+public class OrchestrationServiceImplTest extends CvNextGenTestBase {
   @Inject HPersistence hPersistence;
   @Inject AnalysisStateMachineService analysisStateMachineService;
   @Inject private VerificationTaskService verificationTaskService;
