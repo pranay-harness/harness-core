@@ -646,7 +646,6 @@ import software.wings.sm.states.GcpClusterSetup;
 import software.wings.sm.states.HelmDeployState;
 import software.wings.sm.states.HelmRollbackState;
 import software.wings.sm.states.HttpState;
-import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 import software.wings.sm.states.InstanaState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
@@ -1468,7 +1467,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.HelmDeployState", HelmDeployState.class);
     w.put("sm.states.HelmRollbackState", HelmRollbackState.class);
     w.put("sm.states.HttpState", HttpState.class);
-    w.put("sm.states.HttpState$HttpStateExecutionResponse", HttpStateExecutionResponse.class);
     w.put("sm.states.InstanaState", InstanaState.class);
     w.put("sm.states.JenkinsState", JenkinsState.class);
     w.put("sm.states.JenkinsState$JenkinsExecutionResponse", JenkinsExecutionResponse.class);

@@ -419,6 +419,7 @@ import io.harness.secretmanagerclient.ValueType;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.beans.AwsConfig;
+import software.wings.beans.HttpStateExecutionResponse;
 import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CodeDeployParams;
@@ -466,6 +467,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(AwsConfig.class, 5013);
+    kryo.register(HttpStateExecutionResponse.class, 5375);
     kryo.register(ShellScriptProvisionParameters.class, 7151);
     kryo.register(CCMConfig.class, 7248);
     kryo.register(AlwaysFalseValidationCapability.class, 19036);

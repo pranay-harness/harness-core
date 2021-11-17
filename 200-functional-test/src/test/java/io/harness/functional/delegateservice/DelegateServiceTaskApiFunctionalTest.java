@@ -5,8 +5,6 @@ import static io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStu
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 
-import static software.wings.sm.states.HttpState.HttpStateExecutionResponse;
-
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -50,6 +48,7 @@ import io.harness.waiter.ProgressUpdateService;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.app.MainConfiguration;
+import software.wings.beans.HttpStateExecutionResponse;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;

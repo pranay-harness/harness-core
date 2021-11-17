@@ -16,7 +16,7 @@ import io.harness.http.HttpService;
 import io.harness.http.beans.HttpInternalConfig;
 import io.harness.http.beans.HttpInternalResponse;
 
-import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
+import software.wings.beans.HttpStateExecutionResponse;
 
 import com.google.inject.Inject;
 import java.io.IOException;

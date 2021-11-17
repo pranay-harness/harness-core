@@ -43,6 +43,7 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ng.core.models.Secret;
 
 import software.wings.beans.AwsConfig;
+import software.wings.beans.HttpStateExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 
@@ -100,5 +101,6 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse", EcsServiceDeployResponse.class);
     w.put("helpers.ext.helm.response.HelmInstallCommandResponse", HelmInstallCommandResponse.class);
     w.put("beans.AwsConfig", AwsConfig.class);
+    w.put("software.wings.beans.HttpStateExecutionResponse", HttpStateExecutionResponse.class);
   }
 }

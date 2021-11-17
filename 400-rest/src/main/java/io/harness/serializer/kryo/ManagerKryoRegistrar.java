@@ -701,7 +701,6 @@ import software.wings.sm.states.EcsRunTaskDataBag;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.sm.states.GcbState;
-import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesSteadyStateCheckResponse;
 import software.wings.sm.states.KubernetesSwapServiceSelectorsResponse;
@@ -1218,7 +1217,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BambooState.BambooExecutionResponse.class, 5374);
     kryo.register(CustomLogVerificationState.ResponseMapper.class, 5493);
     kryo.register(ForkStateExecutionData.class, 4006);
-    kryo.register(HttpStateExecutionResponse.class, 5375);
     kryo.register(JenkinsState.JenkinsExecutionResponse.class, 5146);
     kryo.register(KubernetesSteadyStateCheckResponse.class, 5277);
     kryo.register(KubernetesSwapServiceSelectorsResponse.class, 5366);

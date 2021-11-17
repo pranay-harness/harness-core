@@ -27,9 +27,7 @@ import io.harness.beans.KeyValuePair;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
-import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
@@ -46,6 +44,7 @@ import io.harness.tasks.ResponseData;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.api.HttpStateExecutionData.HttpStateExecutionDataBuilder;
 import software.wings.beans.Activity.Type;
+import software.wings.beans.HttpStateExecutionResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.TaskType;
@@ -87,11 +86,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -807,22 +802,5 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       httpState.setHeaders(headers);
       return httpState;
     }
-  }
-
-  @lombok.Builder
-  @Data
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = false)
-  public static final class HttpStateExecutionResponse implements DelegateTaskNotifyResponseData {
-    private DelegateMetaInfo delegateMetaInfo;
-    private ExecutionStatus executionStatus;
-    private String errorMessage;
-    private String httpResponseBody;
-    private int httpResponseCode;
-    private String httpMethod;
-    private String httpUrl;
-    private String header;
-    private boolean timedOut;
   }
 }
