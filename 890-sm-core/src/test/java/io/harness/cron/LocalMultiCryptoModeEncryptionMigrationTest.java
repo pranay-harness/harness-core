@@ -29,7 +29,6 @@ import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -107,20 +106,37 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
     assertThat(localEncryptionMigrationInfo.isPresent()).isTrue();
     assertThat(localEncryptionMigrationInfo.get().getLastMigratedRecordCreatedAtTimestamp())
         .isNotEqualTo(lastMigratedRecordCreatedAtTimestamp);
-    PageResponse<EncryptedData> encryptedDataPageResponse = secretsDao.listSecrets(getPageRequest());
-    List<EncryptedData> encryptedDataList = encryptedDataPageResponse.getResponse();
-    AtomicInteger recordsMigrated = new AtomicInteger();
-    AtomicInteger recordsNotMigrated = new AtomicInteger();
-    encryptedDataList.forEach(encryptedData -> {
-      if (encryptedData.getEncryptedMech() == EncryptedMech.MULTI_CRYPTO) {
-        recordsMigrated.addAndGet(1);
-      } else {
-        recordsNotMigrated.addAndGet(1);
-      }
-    });
+    assertThat(getMigratedRecordsCount()).isEqualTo(recordsToBeMigrated);
+    assertThat(getNonMigratedRecordsCount()).isEqualTo(recordsNotToBeMigrated);
+  }
 
-    assertThat(recordsMigrated.get()).isEqualTo(recordsToBeMigrated);
-    assertThat(recordsNotMigrated.get()).isEqualTo(recordsNotToBeMigrated);
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testIfMigratedRecordsCountIsConsistent() {
+    int page_size = Integer.parseInt(LocalEncryptionMigrationHandler.PAGE_SIZE);
+    createEncryptedRecords(5 * page_size);
+    when(featureFlagHelperService.isEnabled(ACCOUNT_ID, FeatureName.LOCAL_MULTI_CRYPTO_MODE)).thenReturn(true);
+
+    localMultiCryptoModeEncryptionMigrationHandler.performMigration(ACCOUNT_ID);
+    assertThat(getMigratedRecordsCount()).isEqualTo(1 * page_size);
+    assertThat(getNonMigratedRecordsCount()).isEqualTo(4 * page_size);
+
+    localMultiCryptoModeEncryptionMigrationHandler.performMigration(ACCOUNT_ID);
+    assertThat(getMigratedRecordsCount()).isEqualTo(2 * page_size);
+    assertThat(getNonMigratedRecordsCount()).isEqualTo(3 * page_size);
+
+    localMultiCryptoModeEncryptionMigrationHandler.performMigration(ACCOUNT_ID);
+    assertThat(getMigratedRecordsCount()).isEqualTo(3 * page_size);
+    assertThat(getNonMigratedRecordsCount()).isEqualTo(2 * page_size);
+
+    localMultiCryptoModeEncryptionMigrationHandler.performMigration(ACCOUNT_ID);
+    assertThat(getMigratedRecordsCount()).isEqualTo(4 * page_size);
+    assertThat(getNonMigratedRecordsCount()).isEqualTo(1 * page_size);
+
+    localMultiCryptoModeEncryptionMigrationHandler.performMigration(ACCOUNT_ID);
+    assertThat(getMigratedRecordsCount()).isEqualTo(5 * page_size);
+    assertThat(getNonMigratedRecordsCount()).isEqualTo(0 * page_size);
   }
 
   private void createEncryptedRecords(int numOfRecords) {
@@ -128,6 +144,7 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
       String value = RandomStringUtils.randomAlphabetic(10);
       secretsDao.saveSecret(mapEncryptedRecordToEncryptedData(localEncryptor.encryptSecret(ACCOUNT_ID, value, null)));
     }
+    getMigratedRecordsCount();
   }
 
   private void createEncryptedRecordsWithCreatedAtBeforeGivenTimestamp(int numOfRecords, long thresholdCreatedAt) {
@@ -136,7 +153,7 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
       EncryptedData encryptedData =
           mapEncryptedRecordToEncryptedData(localEncryptor.encryptSecret(ACCOUNT_ID, value, null));
       encryptedData.setCreatedAt(thresholdCreatedAt - i - 1);
-      String id = secretsDao.saveSecret(encryptedData);
+      secretsDao.saveSecret(encryptedData);
     }
   }
 
@@ -158,7 +175,7 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
 
   private PageRequest<EncryptedData> getPageRequest() {
     PageRequest<EncryptedData> pageRequest = new PageRequest<>();
-    pageRequest.setLimit("1000");
+    pageRequest.setLimit("100000");
     pageRequest.setOffset("0");
     pageRequest.addFilter(EncryptedDataKeys.accountId, SearchFilter.Operator.EQ, ACCOUNT_ID);
     return pageRequest;
@@ -174,5 +191,21 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
       assertThat(encryptedData.getAdditionalMetadata().getAwsEncryptedSecret()).isNull();
       assertThat(encryptedData.getAdditionalMetadata().getSecretKeyUuid()).isNull();
     });
+  }
+
+  private int getMigratedRecordsCount() {
+    PageResponse<EncryptedData> encryptedDataPageResponse = secretsDao.listSecrets(getPageRequest());
+    List<EncryptedData> encryptedDataList = encryptedDataPageResponse.getResponse();
+    return (int) encryptedDataList.stream()
+        .filter(encryptedData -> encryptedData.getEncryptedMech() == EncryptedMech.MULTI_CRYPTO)
+        .count();
+  }
+
+  private int getNonMigratedRecordsCount() {
+    PageResponse<EncryptedData> encryptedDataPageResponse = secretsDao.listSecrets(getPageRequest());
+    List<EncryptedData> encryptedDataList = encryptedDataPageResponse.getResponse();
+    return (int) encryptedDataList.stream()
+        .filter(encryptedData -> encryptedData.getEncryptedMech() != EncryptedMech.MULTI_CRYPTO)
+        .count();
   }
 }

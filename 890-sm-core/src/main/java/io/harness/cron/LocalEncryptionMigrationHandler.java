@@ -40,7 +40,7 @@ public abstract class LocalEncryptionMigrationHandler implements Runnable {
   private static final String LOCAL_ENCRYPTION_MIGRATION_CRON_PREFIX = "LOCAL_ENCRYPTION_MIGRATION_CRON:";
   private static final long LOCAL_ENCRYPTION_CRON_LOCK_EXPIRY_IN_SECONDS = 60;
 
-  private static final String PAGE_SIZE = "1000";
+  public static final String PAGE_SIZE = "100";
 
   protected abstract void performMigration(String accountId);
 
