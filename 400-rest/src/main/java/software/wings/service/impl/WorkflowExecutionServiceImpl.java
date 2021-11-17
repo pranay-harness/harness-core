@@ -5065,9 +5065,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (isNotEmpty(infraMappingList)) {
-      // Note: CDC-15698 for reasons why we are using a sorted list rather than a set.
-      List<String> sortedInfraMappings = infraMappingList.stream().distinct().sorted().collect(Collectors.toList());
-      workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, sortedInfraMappings);
+      workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, new HashSet<>(infraMappingList));
     }
 
     addressInefficientQueries(workflowExecutionQuery);
