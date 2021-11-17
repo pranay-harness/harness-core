@@ -5,6 +5,7 @@ import static io.harness.AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.govern.ProviderModule;
+import io.harness.ngaggregate.NGAggregateClientModule;
 import io.harness.organization.OrganizationClientModule;
 import io.harness.overviewdashboard.dashboardaggregateservice.impl.OverviewDashboardServiceImpl;
 import io.harness.overviewdashboard.dashboardaggregateservice.service.OverviewDashboardService;
@@ -52,6 +53,9 @@ public class DashboardServiceModule extends AbstractModule {
             .build();
       }
     });
+    install(NGAggregateClientModule.getInstance(config.getNgManagerClientConfig(),
+            config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
+            AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
     install(CDLandingDashboardResourceClientModule.getInstance(config.getNgManagerClientConfig(),
         config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
         AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));

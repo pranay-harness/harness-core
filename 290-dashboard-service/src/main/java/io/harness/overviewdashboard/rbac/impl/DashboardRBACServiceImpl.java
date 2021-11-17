@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.OrganizationResponse;
 import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.ngaggregate.remote.NGAggregateClient;
 import io.harness.organization.remote.OrganizationClient;
 import io.harness.overviewdashboard.rbac.service.DashboardRBACService;
 import io.harness.remote.client.NGRestUtils;
@@ -20,10 +21,11 @@ import java.util.Map;
 public class DashboardRBACServiceImpl implements DashboardRBACService {
   @Inject private UserNGClient userNGClient;
   @Inject private OrganizationClient organizationClient;
+  @Inject private NGAggregateClient ngAggregateClient;
 
   @Override
   public List<ProjectDTO> listAccessibleProject(String accountIdentifier, String userId) {
-    return NGRestUtils.getResponse(userNGClient.getUserAllProjectsInfo(accountIdentifier, userId));
+    return NGRestUtils.getResponse(ngAggregateClient.getUserAllProjectsInfo(accountIdentifier));
   }
 
   @Override
