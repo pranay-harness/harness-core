@@ -1,6 +1,8 @@
 package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
+import static io.harness.OrchestrationEventsFrameworkConstants.ORCHESTRATION_REDIS_CLIENT;
+import static io.harness.OrchestrationVisualizationConstants.ORCHESTRATION_VISUALIZATION_REDISSON_CLIENT;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eventsframework.EventsFrameworkConstants.ORCHESTRATION_LOG;
 
@@ -63,6 +65,9 @@ public class OrchestrationVisualizationModule extends AbstractModule {
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
       RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
+      bind(RedissonClient.class)
+          .annotatedWith(Names.named(ORCHESTRATION_VISUALIZATION_REDISSON_CLIENT))
+          .toInstance(redissonClient);
       bind(Consumer.class)
           .annotatedWith(Names.named(ORCHESTRATION_LOG))
           .toInstance(RedisConsumer.of(ORCHESTRATION_LOG, PIPELINE_SERVICE.getServiceId(), redissonClient,

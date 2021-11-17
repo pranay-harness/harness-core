@@ -1,6 +1,7 @@
 package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
+import static io.harness.OrchestrationEventsFrameworkConstants.ORCHESTRATION_REDIS_CLIENT;
 import static io.harness.OrchestrationEventsFrameworkConstants.PARTIAL_PLAN_EVENT_BATCH_SIZE;
 import static io.harness.OrchestrationEventsFrameworkConstants.PARTIAL_PLAN_EVENT_CONSUMER;
 import static io.harness.OrchestrationEventsFrameworkConstants.SDK_RESPONSE_EVENT_BATCH_SIZE;
@@ -18,6 +19,9 @@ import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
+import com.google.inject.Provides;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.time.Duration;
 import org.redisson.api.RedissonClient;
@@ -43,6 +47,7 @@ public class OrchestrationEventsFrameworkModule extends AbstractModule {
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
       RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
+      bind(RedissonClient.class).annotatedWith(Names.named(ORCHESTRATION_REDIS_CLIENT)).toInstance(redissonClient);
       bind(Consumer.class)
           .annotatedWith(Names.named(SDK_RESPONSE_EVENT_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_SDK_RESPONSE_EVENT_TOPIC, PIPELINE_SERVICE.getServiceId(),
