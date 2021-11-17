@@ -149,9 +149,10 @@ public class PMSInputSetElementMapperTest extends CategoryTest {
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, inputSetYaml);
 
     InputSetErrorWrapperDTOPMS inputSetErrorWrapperDTOPMS = null;
+    Map<String, String> overlaySetErrorDetails = null;
 
-    InputSetSummaryResponseDTOPMS inputSetResponseDTOPMS =
-        PMSInputSetElementMapper.toInputSetSummaryResponseDTOPMS(entity, inputSetErrorWrapperDTOPMS);
+    InputSetSummaryResponseDTOPMS inputSetResponseDTOPMS = PMSInputSetElementMapper.toInputSetSummaryResponseDTOPMS(
+        entity, inputSetErrorWrapperDTOPMS, overlaySetErrorDetails);
 
     assertThat(inputSetResponseDTOPMS.getPipelineIdentifier()).isEqualTo(PIPELINE_IDENTIFIER);
 

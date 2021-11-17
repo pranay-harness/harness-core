@@ -36,4 +36,5 @@ public class InputSetSummaryResponseDTOPMS {
   Long lastUpdatedAt;
   Boolean isOutdated;
   InputSetErrorWrapperDTOPMS inputSetErrorDetails;
+  Map<String, String> overlaySetErrorDetails;
 }
