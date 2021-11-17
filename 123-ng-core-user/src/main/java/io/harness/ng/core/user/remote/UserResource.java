@@ -33,6 +33,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.invites.mapper.RoleBindingMapper;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.AddUsersDTO;
 import io.harness.ng.core.user.AddUsersResponse;
@@ -398,6 +399,14 @@ public class UserResource {
       String projectIdentifier, @NotNull @Valid AddUsersDTO addUsersDTO) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USER, null), MANAGE_USER_PERMISSION);
+    if (isNotEmpty(addUsersDTO.getRoleBindings())) {
+      addUsersDTO.getRoleBindings().forEach(roleBinding -> {
+        if (RoleBindingMapper.ALL_RESOURCES.equals(roleBinding.getResourceGroupIdentifier())) {
+          throw new InvalidRequestException(String.format("_all_resources is deprecated, please use %s",
+              RoleBindingMapper.getDefaultResourceGroupIdentifier(orgIdentifier, projectIdentifier)));
+        }
+      });
+    }
     return ResponseDTO.newResponse(
         ngUserService.addUsers(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), addUsersDTO));
   }

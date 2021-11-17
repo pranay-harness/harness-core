@@ -22,6 +22,8 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(PL)
 @UtilityClass
 public class RoleBindingMapper {
+  public static String ALL_RESOURCES = "_all_resources";
+
   public static io.harness.audit.beans.custom.user.RoleBinding toAuditRoleBinding(RoleBinding roleBinding) {
     return io.harness.audit.beans.custom.user.RoleBinding.builder()
         .roleIdentifier(roleBinding.getRoleIdentifier())
