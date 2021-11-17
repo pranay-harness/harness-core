@@ -99,7 +99,8 @@ public class CDLicenseUsageDslHelper {
   }
 
   private String getUniqueServiceOrgProjectId(InstanceDTO instanceDTO) {
-    return instanceDTO.getOrgIdentifier() + instanceDTO.getProjectIdentifier() + instanceDTO.getServiceIdentifier();
+    return String.join(
+        "&", instanceDTO.getOrgIdentifier(), instanceDTO.getProjectIdentifier(), instanceDTO.getServiceIdentifier());
   }
 
   private class UniqueServiceEntityId {
