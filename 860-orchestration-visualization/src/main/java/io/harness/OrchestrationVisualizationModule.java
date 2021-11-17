@@ -19,6 +19,7 @@ import io.harness.service.impl.GraphGenerationServiceImpl;
 import io.harness.skip.service.VertexSkipperService;
 import io.harness.skip.service.impl.VertexSkipperServiceImpl;
 import io.harness.threading.ThreadPool;
+import io.harness.threading.ThreadPoolConfig;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
@@ -27,24 +28,26 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.redisson.api.RedissonClient;
 
 @OwnedBy(CDC)
 public class OrchestrationVisualizationModule extends AbstractModule {
   private static OrchestrationVisualizationModule instance;
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  private final ThreadPoolConfig visualizationThreadPoolConfig;
 
   public static OrchestrationVisualizationModule getInstance(
-      EventsFrameworkConfiguration eventsFrameworkConfiguration) {
+      EventsFrameworkConfiguration eventsFrameworkConfiguration, ThreadPoolConfig visualizationThreadPoolConfig) {
     if (instance == null) {
-      instance = new OrchestrationVisualizationModule(eventsFrameworkConfiguration);
+      instance = new OrchestrationVisualizationModule(eventsFrameworkConfiguration, visualizationThreadPoolConfig);
     }
     return instance;
   }
 
-  OrchestrationVisualizationModule(EventsFrameworkConfiguration eventsFrameworkConfiguration) {
+  OrchestrationVisualizationModule(
+      EventsFrameworkConfiguration eventsFrameworkConfiguration, ThreadPoolConfig visualizationThreadPoolConfig) {
     this.eventsFrameworkConfiguration = eventsFrameworkConfiguration;
+    this.visualizationThreadPoolConfig = visualizationThreadPoolConfig;
   }
 
   @Override
@@ -72,7 +75,9 @@ public class OrchestrationVisualizationModule extends AbstractModule {
   @Singleton
   @Named("OrchestrationVisualizationExecutorService")
   public ExecutorService orchestrationVisualizationExecutorService() {
-    return ThreadPool.create(4, 8, 10, TimeUnit.SECONDS,
+    return ThreadPool.create(visualizationThreadPoolConfig.getCorePoolSize(),
+        visualizationThreadPoolConfig.getMaxPoolSize(), visualizationThreadPoolConfig.getIdleTime(),
+        visualizationThreadPoolConfig.getTimeUnit(),
         new ThreadFactoryBuilder().setNameFormat("OrchestrationVisualizationExecutorService-%d").build());
   }
 }

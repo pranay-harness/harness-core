@@ -22,6 +22,7 @@ import io.harness.git.model.ChangeType;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
+import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
@@ -41,6 +42,7 @@ import org.mockito.MockitoAnnotations;
 public class InputSetEntityGitSyncHelperTest extends CategoryTest {
   @Mock private PMSInputSetService pmsInputSetService;
   @InjectMocks InputSetEntityGitSyncHelper inputSetEntityGitSyncHelper;
+  @Mock ValidateAndMergeHelper validateAndMergeHelper;
   static String accountId = "accountId";
   static String orgId = "orgId";
   static String projectId = "projectId";
@@ -112,6 +114,8 @@ public class InputSetEntityGitSyncHelperTest extends CategoryTest {
     InputSetYamlDTO inputSetYamlDTO = inputSetEntityGitSyncHelper.save(accountId, inputSetYaml);
     verify(pmsInputSetService, times(1)).create(any());
     assertEquals(inputSetYamlDTO, YamlUtils.read(inputSetYaml, InputSetYamlDTO.class));
+    doReturn(null).when(validateAndMergeHelper).validateInputSet(any(), any(), any(), any(), any(), any(), any());
+    doReturn(null).when(validateAndMergeHelper).validateOverlayInputSet(any(), any(), any(), any(), any());
     inputSetEntityGitSyncHelper.save(accountId, overLayYaml);
     verify(pmsInputSetService, times(2)).create(any());
   }
@@ -121,6 +125,8 @@ public class InputSetEntityGitSyncHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdate() throws IOException {
     doReturn(InputSetEntity.builder().yaml(inputSetYaml).build()).when(pmsInputSetService).update(any(), any());
+    doReturn(null).when(validateAndMergeHelper).validateInputSet(any(), any(), any(), any(), any(), any(), any());
+    doReturn(null).when(validateAndMergeHelper).validateOverlayInputSet(any(), any(), any(), any(), any());
     InputSetYamlDTO inputSetYamlDTO = inputSetEntityGitSyncHelper.update(accountId, inputSetYaml, ChangeType.NONE);
     verify(pmsInputSetService, times(1)).update(any(), any());
     assertEquals(inputSetYamlDTO, YamlUtils.read(inputSetYaml, InputSetYamlDTO.class));

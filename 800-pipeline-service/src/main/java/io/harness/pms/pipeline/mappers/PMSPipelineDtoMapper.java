@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
+import io.harness.gitsync.sdk.EntityValidityDetails;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.pms.pipeline.ExecutionSummaryInfoDTO;
 import io.harness.pms.pipeline.PMSPipelineResponseDTO;
@@ -31,6 +32,9 @@ public class PMSPipelineDtoMapper {
         .yamlPipeline(pipelineEntity.getYaml())
         .version(pipelineEntity.getVersion())
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
+        .entityValidityDetails(pipelineEntity.isEntityInvalid()
+                ? EntityValidityDetails.builder().valid(false).invalidYaml(pipelineEntity.getYaml()).build()
+                : EntityValidityDetails.builder().valid(true).build())
         .build();
   }
 
@@ -70,6 +74,9 @@ public class PMSPipelineDtoMapper {
         .filters(pipelineEntity.getFilters())
         .stageNames(pipelineEntity.getStageNames())
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
+        .entityValidityDetails(pipelineEntity.isEntityInvalid()
+                ? EntityValidityDetails.builder().valid(false).invalidYaml(pipelineEntity.getYaml()).build()
+                : EntityValidityDetails.builder().valid(true).build())
         .build();
   }
 

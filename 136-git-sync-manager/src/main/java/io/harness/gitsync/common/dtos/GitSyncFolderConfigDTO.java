@@ -10,6 +10,7 @@ import io.harness.data.validator.Trimmed;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
+@Schema(name = "GitSyncFolderConfig", description = "This contains details of Root Folder")
 @OwnedBy(DX)
 public class GitSyncFolderConfigDTO {
   @Trimmed @NotEmpty private String rootFolder;

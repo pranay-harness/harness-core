@@ -7,6 +7,7 @@ import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Schema(name = "HttpHelmConnector", description = "This contains http helm connector details")
 public class HttpHelmConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @NotNull @NotBlank String helmRepoUrl;
   @Valid HttpHelmAuthenticationDTO auth;

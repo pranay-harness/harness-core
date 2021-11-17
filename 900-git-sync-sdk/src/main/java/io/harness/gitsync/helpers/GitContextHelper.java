@@ -38,4 +38,12 @@ public class GitContextHelper {
     }
     return gitEntityInfo.isNewBranch();
   }
+
+  public static boolean isFullSyncFlow() {
+    GitEntityInfo gitEntityInfo = getGitEntityInfo();
+    if (gitEntityInfo == null) {
+      return false;
+    }
+    return gitEntityInfo.getIsFullSyncFlow();
+  }
 }

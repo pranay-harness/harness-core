@@ -341,12 +341,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     injector.getInstance(InterruptMonitor.class).registerIterators(iteratorsConfig.getInterruptMonitorConfig());
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
-    log.info("Initializing gRPC servers...");
-    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
-    serviceManager.awaitHealthy();
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-
-    registerPmsSdk(appConfig, injector);
     registerYamlSdk(injector);
     if (appConfig.isShouldDeployWithGitSync()) {
       registerGitSyncSdk(appConfig, injector, environment);
@@ -355,8 +349,19 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
     registerPmsSdkEvents(appConfig.getPipelineServiceConsumersConfig(), injector);
+
+    initializeGrpcServer(injector);
+    registerPmsSdk(appConfig, injector);
     registerMigrations(injector);
+
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void initializeGrpcServer(Injector injector) {
+    log.info("Initializing gRPC servers...");
+    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+    serviceManager.awaitHealthy();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
   }
 
   private void registerOasResource(PipelineServiceConfiguration appConfig, Environment environment, Injector injector) {
