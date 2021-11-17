@@ -9,6 +9,6 @@ import io.harness.pms.pipeline.PipelineMetadata;
 public interface PipelineMetadataRepositoryCustom {
   PipelineMetadata incCounter(String accountId, String orgId, String projectIdentifier, String pipelineId);
 
-  long updateExecutionInfo(String accountId, String orgId, String projectIdentifier, String pipelineId,
+  long getRunSequence(String accountId, String orgId, String projectIdentifier, String pipelineId,
       ExecutionSummaryInfo executionSummaryInfo);
 }

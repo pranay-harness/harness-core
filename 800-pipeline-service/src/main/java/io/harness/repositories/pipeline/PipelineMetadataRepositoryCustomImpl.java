@@ -2,10 +2,10 @@ package io.harness.repositories.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineMetadata;
+import io.harness.pms.pipeline.PipelineMetadata.PipelineMetadataKeys;
 
 import com.google.inject.Inject;
 import lombok.AccessLevel;
@@ -26,14 +26,14 @@ public class PipelineMetadataRepositoryCustomImpl implements PipelineMetadataRep
   @Override
   public PipelineMetadata incCounter(String accountId, String orgId, String projectIdentifier, String pipelineId) {
     Update update = new Update();
-    update.inc(PipelineMetadata.PipelineMetadataKeys.runSequence);
-    Criteria criteria = Criteria.where(PipelineMetadata.PipelineMetadataKeys.accountId)
+    update.inc(PipelineMetadataKeys.runSequence);
+    Criteria criteria = Criteria.where(PipelineMetadataKeys.accountId)
                             .is(accountId)
-                            .and(PipelineMetadata.PipelineMetadataKeys.orgIdentifier)
+                            .and(PipelineMetadataKeys.orgIdentifier)
                             .is(orgId)
-                            .and(PipelineMetadata.PipelineMetadataKeys.projectIdentifier)
+                            .and(PipelineMetadataKeys.projectIdentifier)
                             .is(projectIdentifier)
-                            .and(PipelineMetadata.PipelineMetadataKeys.pipelineIdentifier)
+                            .and(PipelineMetadataKeys.pipelineIdentifier)
                             .is(pipelineId);
     PipelineMetadata pipelineMetadata = mongoTemplate.findAndModify(
         new Query(criteria), update, new FindAndModifyOptions().returnNew(true), PipelineMetadata.class);
@@ -41,20 +41,23 @@ public class PipelineMetadataRepositoryCustomImpl implements PipelineMetadataRep
   }
 
   @Override
-  public long updateExecutionInfo(String accountId, String orgId, String projectIdentifier, String pipelineId,
+  public long getRunSequence(String accountId, String orgId, String projectIdentifier, String pipelineId,
       ExecutionSummaryInfo executionSummaryInfo) {
     Update update = new Update();
     update.set(PipelineMetadata.PipelineMetadataKeys.executionSummaryInfo, executionSummaryInfo);
-    Criteria criteria = Criteria.where(PipelineMetadata.PipelineMetadataKeys.accountId)
+    Criteria criteria = Criteria.where(PipelineMetadataKeys.accountId)
                             .is(accountId)
-                            .and(PipelineMetadata.PipelineMetadataKeys.orgIdentifier)
+                            .and(PipelineMetadataKeys.orgIdentifier)
                             .is(orgId)
-                            .and(PipelineMetadata.PipelineMetadataKeys.projectIdentifier)
+                            .and(PipelineMetadataKeys.projectIdentifier)
                             .is(projectIdentifier)
-                            .and(PipelineMetadata.PipelineMetadataKeys.pipelineIdentifier)
+                            .and(PipelineMetadataKeys.pipelineIdentifier)
                             .is(pipelineId);
     PipelineMetadata pipelineMetadata = mongoTemplate.findAndModify(
         new Query(criteria), update, new FindAndModifyOptions().returnNew(true), PipelineMetadata.class);
-    return pipelineMetadata.getRunSequence();
+    if (pipelineMetadata != null) {
+      return pipelineMetadata.getRunSequence();
+    }
+    return 0;
   }
 }
