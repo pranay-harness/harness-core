@@ -5,14 +5,17 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.delegate.task.scm.GitWebhookTaskType;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.dtos.CreatePRDTO;
 import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.ng.beans.PageRequest;
+import io.harness.ng.webhook.UpsertWebhookRequestDTO;
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
+import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 
@@ -58,4 +61,7 @@ public interface ScmClientFacilitatorService {
   DeleteFileResponse deleteFile(InfoForGitPush infoForPush);
 
   Commit findCommitById(YamlGitConfigDTO yamlGitConfigDTO, String commitId);
+
+  CreateWebhookResponse upsertWebhook(
+      UpsertWebhookRequestDTO upsertWebhookRequestDTO, String target, GitWebhookTaskType gitWebhookTaskType);
 }

@@ -9,11 +9,13 @@ import io.harness.beans.IdentifierRef;
 import io.harness.beans.gitsync.GitFileDetails.GitFileDetailsBuilder;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
+import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.delegate.task.scm.GitWebhookTaskType;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.ScmException;
 import io.harness.exception.WingsException;
@@ -28,10 +30,12 @@ import io.harness.gitsync.common.helper.PRFileListMapper;
 import io.harness.gitsync.common.helper.UserProfileHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
+import io.harness.ng.webhook.UpsertWebhookRequestDTO;
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
@@ -221,6 +225,22 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     final ScmConnector decryptedConnector =
         gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
     return scmClient.findCommit(decryptedConnector, commitId).getCommit();
+  }
+
+  @Override
+  public CreateWebhookResponse upsertWebhook(
+      UpsertWebhookRequestDTO upsertWebhookRequestDTO, String target, GitWebhookTaskType gitWebhookTaskType) {
+    final ScmConnector decryptedConnector =
+        gitSyncConnectorHelper.getDecryptedConnector(upsertWebhookRequestDTO.getAccountIdentifier(),
+            upsertWebhookRequestDTO.getOrgIdentifier(), upsertWebhookRequestDTO.getProjectIdentifier(),
+            upsertWebhookRequestDTO.getConnectorIdentifierRef(), upsertWebhookRequestDTO.getRepoURL());
+    GitWebhookDetails gitWebhookDetails =
+        GitWebhookDetails.builder().hookEventType(upsertWebhookRequestDTO.getHookEventType()).target(target).build();
+    if (gitWebhookTaskType.equals(GitWebhookTaskType.CREATE)) {
+      return scmClient.createWebhook(decryptedConnector, gitWebhookDetails);
+    } else {
+      return scmClient.upsertWebhook(decryptedConnector, gitWebhookDetails);
+    }
   }
 
   private void createBranch(String branch, String baseBranch, ScmConnector scmConnector) {
