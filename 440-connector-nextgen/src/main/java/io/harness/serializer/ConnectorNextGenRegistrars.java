@@ -34,6 +34,7 @@ public class ConnectorNextGenRegistrars {
           .addAll(GitSyncSdkRegistrar.kryoRegistrars)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .addAll(PmsSdkCoreModuleRegistrars.kryoRegistrars)
+          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

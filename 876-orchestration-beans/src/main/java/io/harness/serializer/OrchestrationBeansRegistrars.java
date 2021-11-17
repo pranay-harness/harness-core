@@ -28,6 +28,7 @@ public class OrchestrationBeansRegistrars {
           .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
           .addAll(WaitEngineRegistrars.kryoRegistrars)
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
+          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           .add(OrchestrationBeansKryoRegistrar.class)
           .build();
 

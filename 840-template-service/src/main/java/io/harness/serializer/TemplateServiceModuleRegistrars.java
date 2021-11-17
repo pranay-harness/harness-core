@@ -35,6 +35,7 @@ public class TemplateServiceModuleRegistrars {
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .add(NGTemplateKryoRegistrar.class)
           .addAll(NGCoreRegistrars.kryoRegistrars)
+          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

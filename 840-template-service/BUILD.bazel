@@ -19,6 +19,7 @@ shared_dependencies = [
     "//955-outbox-sdk:module",
     "//958-migration-sdk:module",
     "//960-ng-core-beans:module",
+    "//960-ng-license-beans:module",
     "//960-persistence:module",
     "//965-api-key-filter:module",
     "//970-ng-commons:module",
