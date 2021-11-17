@@ -535,15 +535,19 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
 
     injector.getInstance(EventsModuleHelper.class).initialize();
+    registerDatadogPublisherIfEnabled(configuration);
+
+    initializeGrpcServer(injector);
+
+    log.info("Leaving startup maintenance mode");
+    MaintenanceController.resetForceMaintenance();
+  }
+
+  private void initializeGrpcServer(Injector injector) {
     log.info("Initializing gRPC server...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
     serviceManager.awaitHealthy();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-
-    registerDatadogPublisherIfEnabled(configuration);
-
-    log.info("Leaving startup maintenance mode");
-    MaintenanceController.resetForceMaintenance();
   }
 
   private void registerQueryTracer(Injector injector) {
