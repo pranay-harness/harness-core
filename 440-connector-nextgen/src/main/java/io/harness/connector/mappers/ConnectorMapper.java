@@ -13,7 +13,6 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorRegistryFactory;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.DelegateSelectable;
-import io.harness.connector.EntityValidityDetails;
 import io.harness.connector.ManagerExecutable;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsConnector;
@@ -23,6 +22,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
+import io.harness.gitsync.sdk.EntityValidityDetails;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 

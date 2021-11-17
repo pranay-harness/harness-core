@@ -1,4 +1,4 @@
-package io.harness.connector;
+package io.harness.gitsync.sdk;
 
 import lombok.Builder;
 import lombok.Data;
