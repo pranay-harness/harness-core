@@ -131,7 +131,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
 
     AnalysisState currentState = analysisStateMachine.getCurrentState();
     AnalysisStateExecutor analysisStateExecutor = stateTypeAnalysisStateExecutorMap.get(currentState.getType());
-    AnalysisStatus status = currentState.getExecutionStatus();
+    AnalysisStatus status = analysisStateExecutor.getExecutionStatus(currentState);
     AnalysisState nextState = null;
     switch (status) {
       case CREATED:

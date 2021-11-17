@@ -56,7 +56,7 @@ public class ServiceGuardTrendAnalysisStateExecutor extends AnalysisStateExecuto
     log.info("In service guard trend analysis for Inputs {}, cleaning up worker task. Old taskID: {}",
         analysisState.getInputs(), analysisState.getWorkerTaskId());
     analysisState.setWorkerTaskId(null);
-    analysisState.execute();
+    execute(analysisState);
     return analysisState;
   }
 
@@ -86,7 +86,7 @@ public class ServiceGuardTrendAnalysisStateExecutor extends AnalysisStateExecuto
       log.info("In service guard trend analysis state, for Inputs {}, cleaning up worker task. Old taskID: {}",
           analysisState.getInputs(), analysisState.getWorkerTaskId());
       analysisState.setWorkerTaskId(null);
-      analysisState.execute();
+      execute(analysisState);
     }
     return analysisState;
   }

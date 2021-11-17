@@ -82,7 +82,7 @@ public abstract class TimeSeriesAnalysisStateExecutor<T extends TimeSeriesAnalys
       log.info("In TimeSeriesAnalysisState for Inputs {}, cleaning up worker task. Old taskID: {}",
           analysisState.getInputs(), analysisState.getWorkerTaskId());
       analysisState.setWorkerTaskId(null);
-      analysisState.execute();
+      execute(analysisState);
     }
     return analysisState;
   }
@@ -102,7 +102,7 @@ public abstract class TimeSeriesAnalysisStateExecutor<T extends TimeSeriesAnalys
     log.info("In TimeSeriesAnalysisState for Inputs {}, cleaning up worker task. Old taskID: {}",
         analysisState.getInputs(), analysisState.getWorkerTaskId());
     analysisState.setWorkerTaskId(null);
-    analysisState.execute();
+    execute(analysisState);
     return analysisState;
   }
 }

@@ -62,7 +62,7 @@ public abstract class LogAnalysisStateExecutor<T extends LogAnalysisState> exten
     log.info("In serviceguard log analysis for Inputs {}, cleaning up worker task. Old taskID: {}",
         analysisState.getInputs(), analysisState.getWorkerTaskId());
     analysisState.setWorkerTaskId(null);
-    analysisState.execute();
+    execute(analysisState);
     return analysisState;
   }
 
@@ -92,7 +92,7 @@ public abstract class LogAnalysisStateExecutor<T extends LogAnalysisState> exten
       log.info("In serviceguard log analysis state, for Inputs {}, cleaning up worker task. Old taskID: {}",
           analysisState.getInputs(), analysisState.getWorkerTaskId());
       analysisState.setWorkerTaskId(null);
-      analysisState.execute();
+      execute(analysisState);
     }
     return analysisState;
   }
