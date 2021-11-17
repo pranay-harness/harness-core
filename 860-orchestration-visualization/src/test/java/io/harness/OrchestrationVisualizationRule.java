@@ -47,6 +47,7 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.threading.ThreadPoolConfig;
 import io.harness.time.TimeModule;
 import io.harness.user.remote.UserClient;
 import io.harness.version.VersionModule;
@@ -217,7 +218,8 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
     modules.add(OrchestrationVisualizationModule.getInstance(
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
-            .build()));
+            .build(),
+        ThreadPoolConfig.builder().build()));
     return modules;
   }
 
