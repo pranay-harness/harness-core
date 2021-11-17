@@ -8,6 +8,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.LocalEncryptionMigrationInfo;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedRecord;
 
 import java.util.List;
@@ -45,7 +46,10 @@ public class LocalMultiCryptoModeEncryptionMigrationHandler extends LocalEncrypt
       UpdateOperations<EncryptedData> updateOperations = secretsDao.getUpdateOperations();
       updateOperations.set(EncryptedDataKeys.encryptedMech, migratedRecord.getEncryptedMech())
           .set(EncryptedDataKeys.additionalMetadata,
-              migratedRecord.getAdditionalMetadata().addValues(encryptedData.getAdditionalMetadata().getValues()));
+              AdditionalMetadata.builder()
+                  .values(migratedRecord.getAdditionalMetadata().addValues(
+                      encryptedData.getAdditionalMetadata().getValues()))
+                  .build());
       secretsDao.updateSecret(encryptedData, updateOperations);
       lastMigratedRecord = encryptedData;
     }

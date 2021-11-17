@@ -10,17 +10,24 @@ import io.harness.SMCoreTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.FeatureName;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.repositories.LocalEncryptionMigrationInfoRepository;
 import io.harness.rule.Owner;
 import io.harness.secrets.SecretsDaoImpl;
+import io.harness.security.encryption.AdditionalMetadata;
+import io.harness.security.encryption.EncryptedMech;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
 
 import com.google.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
@@ -50,6 +57,18 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
     assertThat(localEncryptionMigrationInfoRepository.findByAccountIdAndMode(
                    ACCOUNT_ID, FeatureName.LOCAL_MULTI_CRYPTO_MODE.name()))
         .isNotEqualTo(Optional.empty());
+    PageResponse<EncryptedData> encryptedDataPageResponse = secretsDao.listSecrets(getPageRequest());
+    List<EncryptedData> encryptedDataList = encryptedDataPageResponse.getResponse();
+    encryptedDataList.forEach(encryptedData -> {
+      assertThat(EncryptedMech.MULTI_CRYPTO.equals(encryptedData.getEncryptedMech())).isTrue();
+      assertThat(encryptedData.getEncryptedMech()).isEqualTo(EncryptedMech.MULTI_CRYPTO);
+      assertThat(encryptedData.getEncryptedValue()).isNotNull();
+      assertThat(encryptedData.getEncryptionKey()).isNotNull();
+      assertThat(encryptedData.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_UUID_KEY))
+          .isNotNull();
+      assertThat(encryptedData.getAdditionalMetadata().getValues().get(AdditionalMetadata.AWS_ENCRYPTED_SECRET))
+          .isNotNull();
+    });
   }
 
   private void createEncryptedRecords(int numOfRecords) {
@@ -78,5 +97,13 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
         .backupKmsId(encryptedRecord.getBackupKmsId())
         .encryptionType(EncryptionType.LOCAL)
         .build();
+  }
+
+  private PageRequest<EncryptedData> getPageRequest() {
+    PageRequest<EncryptedData> pageRequest = new PageRequest<>();
+    pageRequest.setLimit("1000");
+    pageRequest.setOffset("0");
+    pageRequest.addFilter(EncryptedDataKeys.accountId, SearchFilter.Operator.EQ, ACCOUNT_ID);
+    return pageRequest;
   }
 }
