@@ -277,8 +277,8 @@ public class AuthenticationSettingsResource {
       @FormDataParam("file") FormDataContentDisposition fileDetail,
       @Parameter(description = "Display Name of the SAML") @FormDataParam("displayName") String displayName,
       @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
-      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
-      @FormDataParam("logoutUrl") String logoutUrl) {
+      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled, @FormDataParam("logoutUrl") String logoutUrl,
+      @FormDataParam("entityIdentifier") String entityIdentifier) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, null, null), Resource.of(AUTHSETTING, null), EDIT_AUTHSETTING_PERMISSION);
     try {
@@ -289,7 +289,7 @@ public class AuthenticationSettingsResource {
         formData = MultipartBody.Part.createFormData("file", null, RequestBody.create(MultipartBody.FORM, bytes));
       }
       SSOConfig response = authenticationSettingsService.updateSAMLMetadata(
-          accountId, formData, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl);
+          accountId, formData, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier);
       return new RestResponse<>(response);
     } catch (Exception e) {
       throw new GeneralException("Error while editing saml-config", e);
