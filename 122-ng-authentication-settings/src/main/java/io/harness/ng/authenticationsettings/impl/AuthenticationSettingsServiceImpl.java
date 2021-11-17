@@ -180,7 +180,7 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
     RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
     RequestBody logoutUrlPart = createPartFromString(logoutUrl);
-    RequestBody entityIdentifierPart = createPartFromString(logoutUrl);
+    RequestBody entityIdentifierPart = createPartFromString(entityIdentifier);
     return getResponse(managerClient.uploadSAMLMetadata(accountId, inputStream, displayNamePart,
         groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart, entityIdentifierPart));
   }
