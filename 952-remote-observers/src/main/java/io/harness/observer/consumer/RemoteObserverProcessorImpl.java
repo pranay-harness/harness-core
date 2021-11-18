@@ -15,6 +15,7 @@ import io.harness.observer.RemoteObserver;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.serializer.KryoSerializer;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -25,7 +26,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }), access = AccessLevel.PRIVATE)
+@AllArgsConstructor(onConstructor = @__({ @Inject }), access = AccessLevel.PACKAGE)
 @Slf4j
 public class RemoteObserverProcessorImpl implements RemoteObserverProcessor {
   Injector injector;
@@ -40,12 +41,15 @@ public class RemoteObserverProcessorImpl implements RemoteObserverProcessor {
       if (remoteObserver != null) {
         informAllObservers(message, remoteObserver);
       }
+    } catch (Exception e) {
+      log.error("Error in processing message: [{}]", message.getId());
+      throw e;
     }
     return true;
   }
 
   private void informAllObservers(Message message, RemoteObserver remoteObserver) {
-    final List<Class<Observer>> observers = remoteObserver.getObservers();
+    final List<Class> observers = remoteObserver.getObservers();
     Informant informant = getInformant(message);
     final String methodName = informant.getMethodName();
     observers.forEach(observer -> inform(message, informant, methodName, observer)
@@ -54,36 +58,42 @@ public class RemoteObserverProcessorImpl implements RemoteObserverProcessor {
   }
 
   private void inform(Message message, Informant informant, String methodName, Class<Observer> observer) {
-    final Observer observerClassObject = injector.getInstance(observer);
-    final Method method = ReflectionUtils.getMethod(observerClassObject.getClass(), methodName);
+    final Object observerClassObject = getObserver(observer);
     final InformantCase informantCase = informant.getInformantCase();
-    final int number = informantCase.getNumber();
     try {
-      switch (number) {
-        case 0:
-          method.invoke(observerClassObject);
+      switch (informantCase) {
+        case INFORMANT0:
+          final Method method0 = ReflectionUtils.getMethod(observerClassObject.getClass(), methodName);
+          method0.invoke(observerClassObject);
           break;
-        case 1:
+        case INFORMANT1:
           final Object param11 = kryoSerializer.asObject(informant.getInformant1().getParam1().toByteArray());
-          method.invoke(observerClassObject, param11);
+          final Method method1 = ReflectionUtils.getMethod(observerClassObject.getClass(), methodName, param11);
+          method1.invoke(observerClassObject, param11);
           break;
-        case 2:
+        case INFORMANT2:
           final Object param21 = kryoSerializer.asObject(informant.getInformant2().getParam1().toByteArray());
           final Object param22 = kryoSerializer.asObject(informant.getInformant2().getParam2().toByteArray());
-          method.invoke(observerClassObject, param21, param22);
+          final Method method2 =
+              ReflectionUtils.getMethod(observerClassObject.getClass(), methodName, param21, param22);
+          method2.invoke(observerClassObject, param21, param22);
           break;
-        case 3:
+        case INFORMANT3:
           final Object param31 = kryoSerializer.asObject(informant.getInformant3().getParam1().toByteArray());
           final Object param32 = kryoSerializer.asObject(informant.getInformant3().getParam2().toByteArray());
           final Object param33 = kryoSerializer.asObject(informant.getInformant3().getParam3().toByteArray());
-          method.invoke(observerClassObject, param31, param32, param33);
+          final Method method3 =
+              ReflectionUtils.getMethod(observerClassObject.getClass(), methodName, param31, param32, param33);
+          method3.invoke(observerClassObject, param31, param32, param33);
           break;
-        case 4:
+        case INFORMANT4:
           final Object param41 = kryoSerializer.asObject(informant.getInformant4().getParam1().toByteArray());
           final Object param42 = kryoSerializer.asObject(informant.getInformant4().getParam2().toByteArray());
           final Object param43 = kryoSerializer.asObject(informant.getInformant4().getParam3().toByteArray());
           final Object param44 = kryoSerializer.asObject(informant.getInformant4().getParam4().toByteArray());
-          method.invoke(observerClassObject, param41, param42, param43, param44);
+          final Method method4 =
+              ReflectionUtils.getMethod(observerClassObject.getClass(), methodName, param41, param42, param43, param44);
+          method4.invoke(observerClassObject, param41, param42, param43, param44);
           break;
         default:
           throw new UnexpectedException();
@@ -91,6 +101,11 @@ public class RemoteObserverProcessorImpl implements RemoteObserverProcessor {
     } catch (Exception e) {
       log.error("Error in informing observer {} about message {}", observer, message);
     }
+  }
+
+  @VisibleForTesting
+  Object getObserver(Class observer) {
+    return injector.getInstance(observer);
   }
 
   private Informant getInformant(Message message) {
