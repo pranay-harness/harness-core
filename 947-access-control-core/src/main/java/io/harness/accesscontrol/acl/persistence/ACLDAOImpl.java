@@ -59,7 +59,7 @@ public class ACLDAOImpl implements ACLDAO {
           principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
     }
 
-    if (scopeResourceTypes.contains(resourceType)) {
+    if (!scopeResourceTypes.contains(resourceType)) {
       // query for resource=/RESOURCE_TYPE/* in given scope
       queryStrings.add(getAclQueryString(scope, getResourceSelector(resourceType, "*"),
           principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
