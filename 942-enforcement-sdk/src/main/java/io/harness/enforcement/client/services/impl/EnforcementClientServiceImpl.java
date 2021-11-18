@@ -4,6 +4,9 @@ import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import io.harness.ModuleType;
 import io.harness.enforcement.beans.CustomRestrictionEvaluationDTO;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailListRequestDTO;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailRequestDTO;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailsDTO;
 import io.harness.enforcement.beans.internal.RestrictionMetadataMapRequestDTO;
 import io.harness.enforcement.beans.internal.RestrictionMetadataMapResponseDTO;
 import io.harness.enforcement.beans.metadata.AvailabilityRestrictionMetadataDTO;
@@ -126,6 +129,57 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
       e.getParams().put(MESSAGE, newMessage);
       throw e;
     }
+  }
+
+  @Override
+  public boolean isRemoteFeatureAvailable(FeatureRestrictionName featureRestrictionName, String accountIdentifier) {
+    if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
+      return true;
+    }
+
+    try {
+      FeatureRestrictionDetailsDTO response = getResponse(enforcementClient.getFeatureRestrictionDetail(
+          FeatureRestrictionDetailRequestDTO.builder().name(featureRestrictionName).build(), accountIdentifier));
+      if (response != null && response.isAllowed()) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (InvalidRequestException e) {
+      log.error("Invalid request on check feature details", e);
+      return false;
+    } catch (UnexpectedException e) {
+      log.error("Not able to fetch feature details", e);
+      return true;
+    }
+  }
+
+  @Override
+  public Map<FeatureRestrictionName, Boolean> getAvailabilityForRemoteFeatures(
+      List<FeatureRestrictionName> featureRestrictionNames, String accountIdentifier) {
+    // initiate result
+    Map<FeatureRestrictionName, Boolean> result = new HashMap<>();
+    for (FeatureRestrictionName name : featureRestrictionNames) {
+      result.put(name, true);
+    }
+    if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
+      return result;
+    }
+
+    try {
+      List<FeatureRestrictionDetailsDTO> response = getResponse(enforcementClient.getFeatureRestrictionMap(
+          FeatureRestrictionDetailListRequestDTO.builder().names(featureRestrictionNames).build(), accountIdentifier));
+      for (FeatureRestrictionDetailsDTO dto : response) {
+        result.put(dto.getName(), dto.isAllowed());
+      }
+    } catch (InvalidRequestException e) {
+      log.error("Invalid request on check feature details", e);
+      result.forEach((k, v) -> v = false);
+      return result;
+    } catch (UnexpectedException e) {
+      log.error("Not able to fetch feature details", e);
+    }
+    return result;
   }
 
   @Override
