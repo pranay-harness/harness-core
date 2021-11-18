@@ -26,7 +26,6 @@ public class ApiKeyDTO {
   @ApiModelProperty(required = true) private ApiKeyType apiKeyType;
   @ApiModelProperty(required = true) @NotBlank private String parentIdentifier;
   private Long defaultTimeToExpireToken;
-
   @ApiModelProperty(required = true) @NotBlank private String accountIdentifier;
   @EntityIdentifier(allowBlank = true) private String projectIdentifier;
   @EntityIdentifier(allowBlank = true) private String orgIdentifier;
