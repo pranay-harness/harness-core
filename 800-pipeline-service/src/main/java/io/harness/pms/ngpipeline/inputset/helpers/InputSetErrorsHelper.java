@@ -95,7 +95,7 @@ public class InputSetErrorsHelper {
         res.put(identifier, "References can't be other overlay input sets");
       }
       if (entity.get().getIsInvalid()) {
-        res.put(identifier, "Reference is an invalid input set");
+        res.put(identifier, "Reference is an outdated input set");
       }
     }
     return res;

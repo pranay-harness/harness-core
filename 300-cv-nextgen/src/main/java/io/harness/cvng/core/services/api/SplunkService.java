@@ -5,7 +5,7 @@ import io.harness.cvng.beans.SplunkSavedSearch;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-public interface SplunkService extends MonitoringSourceImportStatusCreator, DataSourceConnectivityChecker {
+public interface SplunkService extends DataSourceConnectivityChecker {
   List<SplunkSavedSearch> getSavedSearches(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String requestGuid);
 

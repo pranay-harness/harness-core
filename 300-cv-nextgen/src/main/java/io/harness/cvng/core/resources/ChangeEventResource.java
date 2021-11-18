@@ -12,6 +12,7 @@ import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.change.ChangeTimeline;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -37,6 +38,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.NonNull;
 import retrofit2.http.Body;
 
 @Api("change-event")
@@ -53,7 +55,10 @@ public class ChangeEventResource {
   @NextGenManagerAuth
   @Path(CHANGE_EVENT_PATH + "/register")
   @ApiOperation(value = "register a ChangeEvent", nickname = "registerChangeEvent")
-  public RestResponse<Boolean> register(@ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+  public RestResponse<Boolean> register(
+      @PathParam(CVNextGenConstants.ACCOUNT_IDENTIFIER_KEY) @NonNull String accountIdentifier,
+      @PathParam(CVNextGenConstants.ORG_IDENTIFIER_KEY) @NonNull String orgIdentifier,
+      @PathParam(CVNextGenConstants.PROJECT_IDENTIFIER_KEY) @NonNull String projectIdentifier,
       @NotNull @Valid @Body ChangeEventDTO changeEventDTO) {
     return new RestResponse<>(changeEventService.register(changeEventDTO));
   }
@@ -76,7 +81,10 @@ public class ChangeEventResource {
   @ExceptionMetered
   @Path(CHANGE_EVENT_PATH)
   @ApiOperation(value = "get ChangeEvent List", nickname = "changeEventList")
-  public RestResponse<PageResponse<ChangeEventDTO>> get(@BeanParam ProjectParams projectParams,
+  public RestResponse<PageResponse<ChangeEventDTO>> get(
+      @PathParam(CVNextGenConstants.ACCOUNT_IDENTIFIER_KEY) @NonNull String accountIdentifier,
+      @PathParam(CVNextGenConstants.ORG_IDENTIFIER_KEY) @NonNull String orgIdentifier,
+      @PathParam(CVNextGenConstants.PROJECT_IDENTIFIER_KEY) @NonNull String projectIdentifier,
       @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
       @QueryParam("envIdentifiers") List<String> envIdentifiers,
       @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
@@ -84,6 +92,11 @@ public class ChangeEventResource {
       @QueryParam("searchText") String searchText,
       @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime, @BeanParam PageRequest pageRequest) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountIdentifier)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
     return new RestResponse<>(changeEventService.getChangeEvents(projectParams, serviceIdentifiers, envIdentifiers,
         searchText, changeCategories, changeSourceTypes, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime),
         pageRequest));
@@ -95,13 +108,21 @@ public class ChangeEventResource {
   @Path(CHANGE_EVENT_PATH + "/summary")
   @ExceptionMetered
   @ApiOperation(value = "get ChangeEvent summary", nickname = "changeEventSummary")
-  public RestResponse<ChangeSummaryDTO> get(@BeanParam ProjectParams projectParams,
+  public RestResponse<ChangeSummaryDTO> get(
+      @PathParam(CVNextGenConstants.ACCOUNT_IDENTIFIER_KEY) @NonNull String accountIdentifier,
+      @PathParam(CVNextGenConstants.ORG_IDENTIFIER_KEY) @NonNull String orgIdentifier,
+      @PathParam(CVNextGenConstants.PROJECT_IDENTIFIER_KEY) @NonNull String projectIdentifier,
       @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
       @QueryParam("envIdentifiers") List<String> envIdentifiers,
       @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
       @QueryParam("changeSourceTypes") List<ChangeSourceType> changeSourceTypes,
       @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountIdentifier)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
     return new RestResponse<>(changeEventService.getChangeSummary(projectParams, serviceIdentifiers, envIdentifiers,
         changeCategories, changeSourceTypes, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
@@ -113,7 +134,10 @@ public class ChangeEventResource {
   @ExceptionMetered
   @ApiOperation(value = "get ChangeEvent detail", nickname = "getChangeEventDetail")
   public RestResponse<ChangeEventDTO> getChangeEventDetail(
-      @BeanParam ProjectParams projectParams, @PathParam("activityId") String activityId) {
+      @PathParam(CVNextGenConstants.ACCOUNT_IDENTIFIER_KEY) @NonNull String accountIdentifier,
+      @PathParam(CVNextGenConstants.ORG_IDENTIFIER_KEY) @NonNull String orgIdentifier,
+      @PathParam(CVNextGenConstants.PROJECT_IDENTIFIER_KEY) @NonNull String projectIdentifier,
+      @PathParam("activityId") String activityId) {
     return new RestResponse<>(changeEventService.get(activityId));
   }
 
@@ -123,7 +147,10 @@ public class ChangeEventResource {
   @Path(CHANGE_EVENT_PATH + "/timeline")
   @ExceptionMetered
   @ApiOperation(value = "get ChangeEvent timeline", nickname = "changeEventTimeline")
-  public RestResponse<ChangeTimeline> get(@BeanParam ProjectParams projectParams,
+  public RestResponse<ChangeTimeline> get(
+      @PathParam(CVNextGenConstants.ACCOUNT_IDENTIFIER_KEY) @NonNull String accountIdentifier,
+      @PathParam(CVNextGenConstants.ORG_IDENTIFIER_KEY) @NonNull String orgIdentifier,
+      @PathParam(CVNextGenConstants.PROJECT_IDENTIFIER_KEY) @NonNull String projectIdentifier,
       @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
       @QueryParam("envIdentifiers") List<String> envIdentifiers,
       @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
@@ -132,6 +159,11 @@ public class ChangeEventResource {
       @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime,
       @ApiParam @QueryParam("pointCount") @DefaultValue("48") Integer pointCount) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountIdentifier)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
     return new RestResponse<>(
         changeEventService.getTimeline(projectParams, serviceIdentifiers, envIdentifiers, searchText, changeCategories,
             changeSourceTypes, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), pointCount));

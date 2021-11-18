@@ -41,6 +41,7 @@ public class OrchestrationStepsModuleRegistrars {
           .addAll(NotificationClientRegistrars.kryoRegistrars)
           .addAll(RbacCoreRegistrars.kryoRegistrars)
           .addAll(NGCoreClientRegistrars.kryoRegistrars)
+          .addAll(DelegateTaskRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -51,6 +52,7 @@ public class OrchestrationStepsModuleRegistrars {
           .addAll(NotificationClientRegistrars.morphiaRegistrars)
           .addAll(RbacCoreRegistrars.morphiaRegistrars)
           .addAll(NGCoreClientRegistrars.morphiaRegistrars)
+          .addAll(DelegateTaskRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

@@ -3,6 +3,7 @@ package io.harness.enforcement.resource;
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailListRequestDTO;
 import io.harness.enforcement.beans.details.FeatureRestrictionDetailRequestDTO;
 import io.harness.enforcement.beans.details.FeatureRestrictionDetailsDTO;
 import io.harness.enforcement.beans.internal.RestrictionMetadataMapRequestDTO;
@@ -81,6 +82,23 @@ public class EnforcementResource {
       @Parameter(description = "Account id to get the feature restriction detail.") @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getFeatureDetail(requestDTO.getName(), accountIdentifier));
+  }
+
+  @POST
+  @Path("/details")
+  @ApiOperation(value = "Gets List of Feature Restriction Detail", nickname = "getFeatureRestrictionDetails")
+  @Operation(operationId = "getFeatureRestrictionDetails", summary = "Gets List of Feature Restriction Detail",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a list of feature restriction details DTO")
+      })
+  @NGAccessControlCheck(resourceType = RESOURCE_TYPE, permission = PERMISSION)
+  public ResponseDTO<List<FeatureRestrictionDetailsDTO>>
+  getFeatureRestrictionDetails(@NotNull @Valid @Body FeatureRestrictionDetailListRequestDTO requestDTO,
+      @Parameter(description = "Account id to get the feature restriction detail.") @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+    return ResponseDTO.newResponse(featureService.getFeatureDetails(requestDTO.getNames(), accountIdentifier));
   }
 
   @GET

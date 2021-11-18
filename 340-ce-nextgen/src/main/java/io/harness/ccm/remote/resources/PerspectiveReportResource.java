@@ -42,11 +42,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-// import org.springframework.web.bind.annotation.RequestBody;
 
 @Api("perspectiveReport")
 @Path("perspectiveReport")
 @Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @NextGenManagerAuth
 @Slf4j
 @Service

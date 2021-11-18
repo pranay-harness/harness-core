@@ -2,6 +2,7 @@ package io.harness.pms.event.webhookevent;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -9,6 +10,7 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.ng.core.event.MessageListener;
+import io.harness.pms.events.base.PmsAbstractRedisConsumer;
 import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
@@ -26,15 +28,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @OwnedBy(PIPELINE)
-public class WebhookEventStreamConsumer implements Runnable {
+public class WebhookEventStreamConsumer extends PmsAbstractRedisConsumer<WebhookEventStreamListener> {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
   private final List<MessageListener> messageListenersList;
   private final QueueController queueController;
+  private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
   @Inject
   public WebhookEventStreamConsumer(@Named(WEBHOOK_EVENTS_STREAM) Consumer redisConsumer,
-      @Named(WEBHOOK_EVENTS_STREAM) MessageListener webhookEventListener, QueueController queueController) {
+      WebhookEventStreamListener webhookEventListener, QueueController queueController) {
+    super(redisConsumer, webhookEventListener, null, queueController);
     this.redisConsumer = redisConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(webhookEventListener);
@@ -44,9 +48,15 @@ public class WebhookEventStreamConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the consumer for Webhook event stream");
+
+    log.info("Started the consumer for Webhook event stream {}", this.getClass().getSimpleName());
+    String threadName = this.getClass().getSimpleName() + "-handler-" + generateUuid();
+    log.debug("Setting thread name to {}", threadName);
+    Thread.currentThread().setName(threadName);
+
     try {
       SecurityContextBuilder.setContext(new ServicePrincipal(PIPELINE_SERVICE.getServiceId()));
-      while (!Thread.currentThread().isInterrupted()) {
+      while (!Thread.currentThread().isInterrupted() && !shouldStop.get()) {
         if (queueController.isNotPrimary()) {
           log.info(this.getClass().getSimpleName()
               + " is not running on primary deployment, will try again after some time...");
@@ -107,5 +117,9 @@ public class WebhookEventStreamConsumer implements Runnable {
       }
     });
     return success.get();
+  }
+
+  public void shutDown() {
+    shouldStop.set(true);
   }
 }

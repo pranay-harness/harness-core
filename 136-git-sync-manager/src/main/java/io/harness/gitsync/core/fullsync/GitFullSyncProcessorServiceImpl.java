@@ -71,6 +71,12 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
         .putAllLogContext(logContext)
         .setAccountIdentifier(entityInfo.getAccountIdentifier())
         .setFolderPath(yamlGitConfigDTO.getDefaultRootFolder().getRootFolder())
+        .setCommitMessage(getCommitMessageForTheFullSyncFlow(entityInfo.getFilePath()))
         .build();
+  }
+
+  private String getCommitMessageForTheFullSyncFlow(String filePath) {
+    return "Harness Full Sync: "
+        + "Add file " + filePath;
   }
 }

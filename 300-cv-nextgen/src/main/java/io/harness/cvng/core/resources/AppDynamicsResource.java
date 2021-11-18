@@ -1,13 +1,17 @@
 package io.harness.cvng.core.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
+import io.harness.cvng.beans.appd.AppDynamicsFileDefinition;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.appd.AppdynamicsMetricDataResponse;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -26,6 +30,8 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -89,5 +95,48 @@ public class AppDynamicsResource {
       @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter) {
     return ResponseDTO.newResponse(appDynamicsService.getTiers(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appName, offset, pageSize, filter));
+  }
+
+  @GET
+  @Path("/base-folders")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get all appdynamics base folders for an application", nickname = "getAppdynamicsBaseFolders")
+  public ResponseDTO<List<String>> getBaseFolders(@BeanParam ProjectParams projectParams,
+      @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
+      @NotNull @QueryParam("appName") String appName, @QueryParam("path") @DefaultValue("") String path) {
+    return ResponseDTO.newResponse(
+        appDynamicsService.getBaseFolders(projectParams, connectorIdentifier, appName, path, generateUuid()));
+  }
+
+  @GET
+  @Path("/metric-structure")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(
+      value = "get all appdynamics metric structure for an application", nickname = "getAppdynamicsMetricStructure")
+  public ResponseDTO<List<AppDynamicsFileDefinition>>
+  getMetricStructure(@BeanParam ProjectParams projectParams,
+      @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
+      @NotNull @QueryParam("appName") String appName, @NotNull @QueryParam("baseFolder") String baseFolder,
+      @NotNull @QueryParam("tier") String tier,
+      @NotNull @QueryParam("metricPath") @DefaultValue("") String metricPath) {
+    return ResponseDTO.newResponse(appDynamicsService.getMetricStructure(
+        projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, generateUuid()));
+  }
+
+  @GET
+  @Path("/metric-data")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get all appdynamics metric data for an application and a metric path",
+      nickname = "getAppdynamicsMetricDataByPath")
+  public ResponseDTO<AppdynamicsMetricDataResponse>
+  getMetricData(@BeanParam ProjectParams projectParams,
+      @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
+      @NotNull @QueryParam("appName") String appName, @NotNull @QueryParam("baseFolder") String baseFolder,
+      @NotNull @QueryParam("tier") String tier, @NotNull @QueryParam("metricPath") String metricPath) {
+    return ResponseDTO.newResponse(appDynamicsService.getMetricData(
+        projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, generateUuid()));
   }
 }

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.GitSyncApiConstants;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +19,7 @@ import lombok.experimental.FieldNameConstants;
 @OwnedBy(DX)
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "GitEntityCreateInfo", description = "This contains details of the Git Entity for creation")
 public class GitEntityCreateInfoDTO {
   @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch;
   @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String yamlGitConfigId;

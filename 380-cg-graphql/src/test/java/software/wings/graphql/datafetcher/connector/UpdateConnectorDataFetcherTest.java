@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.TMACARI;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.ACCOUNT_ID;
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.AUTHOR;
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.BRANCH;

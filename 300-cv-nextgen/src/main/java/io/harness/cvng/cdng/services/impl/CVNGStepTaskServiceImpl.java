@@ -2,12 +2,12 @@ package io.harness.cvng.cdng.services.impl;
 
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
-import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
@@ -20,6 +20,7 @@ import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceD
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
 import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
+import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.ng.beans.PageResponse;
@@ -27,23 +28,22 @@ import io.harness.persistence.HPersistence;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
   @Inject private HPersistence hPersistence;
-  @Inject private ActivityService activityService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NextGenService nextGenService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
-  @Inject private Injector injector;
+  @Inject private Map<DataSourceType, CVConfigToHealthSourceTransformer> dataSourceTypeToHealthSourceTransformerMap;
 
   @Override
   public void create(CVNGStepTask cvngStepTask) {
@@ -133,8 +133,8 @@ public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
         verificationJobInstanceService.get(Arrays.asList(getByCallBackId(callBackId).getVerificationJobInstanceId()));
     verificationJobInstances.forEach(verificationJobInstance -> {
       verificationJobInstance.getCvConfigMap().forEach((s, cvConfig) -> {
-        healthSourceDTOS.add(
-            HealthSourceDTO.toHealthSourceDTO(HealthSourceDTO.toHealthSource(Arrays.asList(cvConfig), injector)));
+        healthSourceDTOS.add(HealthSourceDTO.toHealthSourceDTO(
+            HealthSourceDTO.toHealthSource(Arrays.asList(cvConfig), dataSourceTypeToHealthSourceTransformerMap)));
       });
     });
     return healthSourceDTOS;

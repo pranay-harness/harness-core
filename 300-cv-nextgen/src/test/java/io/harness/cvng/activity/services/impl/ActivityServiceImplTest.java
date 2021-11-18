@@ -702,8 +702,8 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
     CVConfig cvConfig = verificationJobInstance.getCvConfigMap().values().iterator().next();
     String verificationJobInstanceId = realVerificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
 
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 

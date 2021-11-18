@@ -37,6 +37,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -189,9 +190,17 @@ public class SecretUtils {
         getRetryPolicy(format("[Retrying failed call to fetch secret Encryption details attempt: {}"),
             format("Failed to fetch secret encryption details after retrying {} times"));
 
-    return Failsafe.with(retryPolicy).get(() -> {
+    Instant startTime = Instant.now();
+    List<EncryptedDataDetail> encryptedDataDetails = Failsafe.with(retryPolicy).get(() -> {
       return secretManagerClientService.getEncryptionDetails(ngAccess, consumer);
     });
+
+    long elapsedTimeInSecs = Duration.between(startTime, Instant.now()).toMillis() / 1000;
+
+    log.info(
+        "Fetched secret variable encryption details successfully for secret ref {} in {} seconds accountId {}, projectId {}",
+        ngAccess.getIdentifier(), elapsedTimeInSecs, ngAccess.getAccountIdentifier(), ngAccess.getProjectIdentifier());
+    return encryptedDataDetails;
   }
 
   private SecretDTOV2 getSecret(IdentifierRef identifierRef) {

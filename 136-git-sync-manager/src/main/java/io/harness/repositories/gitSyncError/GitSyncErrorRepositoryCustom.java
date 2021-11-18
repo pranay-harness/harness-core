@@ -17,7 +17,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PL)
 public interface GitSyncErrorRepositoryCustom {
-  <C> AggregationResults aggregate(Aggregation aggregation, Class<C> castClass);
+  <C> AggregationResults<C> aggregate(Aggregation aggregation, Class<C> castClass);
 
   DeleteResult deleteByIds(List<String> ids);
 

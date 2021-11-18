@@ -122,6 +122,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         skip(pageable.getOffset()), limit(pageable.getPageSize()));
     List<GitSyncErrorAggregateByCommit> gitSyncErrorAggregateByCommitList =
         gitSyncErrorRepository.aggregate(aggregation, GitSyncErrorAggregateByCommit.class).getMappedResults();
+    long totalCount = gitSyncErrorRepository.count(criteria);
     List<GitSyncErrorAggregateByCommitDTO> gitSyncErrorAggregateByCommitDTOList =
         emptyIfNull(gitSyncErrorAggregateByCommitList)
             .stream()
@@ -132,20 +133,17 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                                .map(gitSyncErrorAggregateByCommitDTO
                                    -> gitSyncErrorAggregateByCommitDTO.getErrorsForSummaryView().get(0).getRepoUrl())
                                .collect(Collectors.toSet());
-    Map<String, String> repoIds = getRepoId(repoUrls, accountIdentifier, orgIdentifier, projectIdentifier);
-    gitSyncErrorAggregateByCommitDTOList.stream()
-        .map(gitSyncErrorAggregateByCommitDTO -> {
-          String repoUrl = gitSyncErrorAggregateByCommitDTO.getErrorsForSummaryView().get(0).getRepoUrl();
-          gitSyncErrorAggregateByCommitDTO.setRepoId(repoIds.get(repoUrl));
-          return gitSyncErrorAggregateByCommitDTO;
-        })
-        .collect(toList());
+    Map<String, String> repoIds = getRepoIds(repoUrls, accountIdentifier, orgIdentifier, projectIdentifier);
+    gitSyncErrorAggregateByCommitDTOList.forEach(gitSyncErrorAggregateByCommitDTO -> {
+      String repoUrl = gitSyncErrorAggregateByCommitDTO.getErrorsForSummaryView().get(0).getRepoUrl();
+      gitSyncErrorAggregateByCommitDTO.setRepoId(repoIds.get(repoUrl));
+    });
     Page<GitSyncErrorAggregateByCommitDTO> page =
-        new PageImpl<>(gitSyncErrorAggregateByCommitDTOList, pageable, gitSyncErrorAggregateByCommitDTOList.size());
+        new PageImpl<>(gitSyncErrorAggregateByCommitDTOList, pageable, totalCount);
     return getNGPageResponse(page);
   }
 
-  private Map<String, String> getRepoId(Set<String> repoUrls, String accountId, String orgId, String projectId) {
+  private Map<String, String> getRepoIds(Set<String> repoUrls, String accountId, String orgId, String projectId) {
     return repoUrls.stream().collect(Collectors.toMap(repoUrl
         -> repoUrl,
         repoUrl -> yamlGitConfigService.getByProjectIdAndRepo(accountId, orgId, projectId, repoUrl).getIdentifier()));
@@ -163,7 +161,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
     Set<String> repoUrls = new HashSet<>();
     gitSyncErrorPage.forEach(gitSyncErrorDTO -> { repoUrls.add(gitSyncErrorDTO.getRepoUrl()); });
-    Map<String, String> repoIds = getRepoId(repoUrls, accountId, orgIdentifier, projectIdentifier);
+    Map<String, String> repoIds = getRepoIds(repoUrls, accountId, orgIdentifier, projectIdentifier);
     gitSyncErrorPage.forEach(
         gitSyncErrorDTO -> { gitSyncErrorDTO.setRepoId(repoIds.get(gitSyncErrorDTO.getRepoUrl())); });
     return getNGPageResponse(gitSyncErrorPage);

@@ -52,7 +52,10 @@ if [ ${#errors[@]} -eq 0 ]; then
 else
     echo "${bold}You have changed files which are being used for delegate task communication. Your change should be backward compatible."
     echo "If you want to generate hash locally run this script: ./scripts/codebase/codebase-hash-check.sh $@"
-    echo "Please contact delegate team for backward compatibility check."
+    echo "Please read the documentation from the link provided below or contact delegate team for backward compatibility check."
+    echo -e "https://harness.atlassian.net/wiki/spaces/DEL/pages/2000781671/Backwards+compatibility+for+delegate+task+communication\n"
+    DIR="$(cd "$(dirname "$0")" && pwd)"
+    source $DIR/diff-with-target-branch.sh
 
     echo -e "${bold}\n----------------------------------------------------------------------------\n"
     echo "If the change is backward compatible replace the new hash:"
@@ -65,5 +68,3 @@ else
     echo -e "\nFailure.${normal}"
     exit 1
 fi
-
-

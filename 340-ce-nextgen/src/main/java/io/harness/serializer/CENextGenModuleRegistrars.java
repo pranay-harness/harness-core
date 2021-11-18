@@ -20,6 +20,7 @@ public class CENextGenModuleRegistrars {
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .add(CENextGenMorphiaRegistrars.class)
+          .addAll(DelegateTaskRegistrars.morphiaRegistrars)
           .addAll(CECommonsRegistrars.morphiaRegistrars)
           .addAll(DelegateServiceDriverRegistrars.morphiaRegistrars)
           .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)

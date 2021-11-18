@@ -260,6 +260,9 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   private void validateTheUpdateRequestIsValid(ConnectorInfoDTO connectorInfo, String accountIdentifier) {
+    if (GitContextHelper.isFullSyncFlow()) {
+      return;
+    }
     final Optional<ConnectorResponseDTO> connectorDTO = findExistingConnector(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
     if (!connectorDTO.isPresent()) {
@@ -644,10 +647,10 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      boolean invalid, String invalidYaml) {
-    return defaultConnectorService.markEntity(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalid, invalidYaml);
+  public boolean markEntityInvalid(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml) {
+    return defaultConnectorService.markEntityInvalid(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalidYaml);
   }
 
   private ConnectorValidationResult createValidationResultWithGenericError(Exception ex) {

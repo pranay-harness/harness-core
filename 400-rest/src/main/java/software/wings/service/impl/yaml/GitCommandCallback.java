@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.GitCommand.GitCommandType.COMMIT_AND_PUSH;
 import static software.wings.beans.yaml.GitCommand.GitCommandType.DIFF;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;

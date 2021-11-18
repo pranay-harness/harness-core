@@ -7,6 +7,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,6 +18,7 @@ import lombok.experimental.SuperBuilder;
 @OwnedBy(PL)
 @JsonTypeName("AZURE_DEV_OPS")
 @Data
+@Schema(name = "AzureDevOpsSCM", description = "This Contains details of the Azure DevOps Source Code Manager")
 @SuperBuilder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor

@@ -45,13 +45,14 @@ import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
 import io.harness.cvng.beans.job.HealthVerificationJobDTO;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
-import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob.TestVerificationJobKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
@@ -170,8 +171,8 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
         verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(verificationJob);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
 
     Set<String> preDeploymentHosts = new HashSet<>();
     preDeploymentHosts.add("node1");
@@ -236,7 +237,8 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
         verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(verificationJob);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
 
     CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
         verificationJobInstanceAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
@@ -260,8 +262,8 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(verificationJob);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
 
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
 
     Set<String> preDeploymentHosts = new HashSet<>();
     preDeploymentHosts.add("node1");
@@ -298,8 +300,8 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
         verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(verificationJob);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
 
     Set<String> preDeploymentHosts = new HashSet<>();
     preDeploymentHosts.add("node1");
@@ -343,8 +345,8 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
         verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(verificationJob);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
 
     Set<String> preDeploymentHosts = new HashSet<>();
     preDeploymentHosts.add("node1");
@@ -388,10 +390,10 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
         verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(verificationJob);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
-    String verificationTaskId2 =
-        verificationTaskService.create(accountId, generateUuid(), verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId2 = verificationTaskService.createDeploymentVerificationTask(
+        accountId, generateUuid(), verificationJobInstanceId, APP_DYNAMICS);
 
     Set<String> preDeploymentHosts = new HashSet<>();
     preDeploymentHosts.add("node1");
@@ -445,7 +447,8 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
         verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(verificationJob);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
 
     CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
         verificationJobInstanceAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
@@ -468,8 +471,8 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
         verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(verificationJob);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
 
     Set<String> preDeploymentHosts = new HashSet<>();
     preDeploymentHosts.add("node1");
@@ -506,10 +509,10 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
         verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(verificationJob);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
-    String verificationTaskId2 =
-        verificationTaskService.create(accountId, generateUuid(), verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId2 = verificationTaskService.createDeploymentVerificationTask(
+        accountId, generateUuid(), verificationJobInstanceId, APP_DYNAMICS);
 
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId);
 
@@ -554,8 +557,8 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
         verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(verificationJob);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
 
     Set<String> preDeploymentHosts = new HashSet<>();
     preDeploymentHosts.add("node1");
@@ -622,9 +625,10 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     activity.setVerificationJobInstanceIds(Arrays.asList(baselineVerificationJobInstanceId));
     activity.setType(ActivityType.DEPLOYMENT);
     activityService.createActivity(activity);
-    VerificationJobDTO verificationJobDTO = createTestVerificationJobDTO(baselineVerificationJobInstanceId);
-    verificationJobDTO.setActivitySourceIdentifier(activity.getActivitySourceId());
-    verificationJobService.update(accountId, identifier, verificationJobDTO);
+    hPersistence.update(verificationJob,
+        hPersistence.createUpdateOperations(VerificationJob.class)
+            .set(VerificationJobKeys.activitySourceIdentifier, activity.getActivitySourceId())
+            .set(TestVerificationJobKeys.baselineVerificationJobInstanceId, baselineVerificationJobInstanceId));
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     VerificationJobInstance currentVerificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
@@ -747,7 +751,7 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     verificationJobInstance.setVerificationStatus(ActivityVerificationStatus.VERIFICATION_PASSED);
     verificationJobInstanceService.create(verificationJobInstance);
     verificationJobInstanceAnalysisService.addDemoAnalysisData(
-        verificationTaskService.create(
+        verificationTaskService.createDeploymentVerificationTask(
             accountId, cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType()),
         cvConfig, verificationJobInstance);
     assertThat(

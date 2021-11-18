@@ -3,18 +3,18 @@ package tasks
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	"github.com/wings-software/portal/product/ci/addon/testintelligence"
+	"github.com/wings-software/portal/product/ci/addon/testintelligence/java"
 	"github.com/wings-software/portal/product/ci/common/external"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
@@ -24,10 +24,6 @@ import (
 const (
 	defaultRunTestsTimeout int64 = 14400 // 4 hour
 	defaultRunTestsRetries int32 = 1
-	mvnCmd                       = "mvn"
-	bazelCmd                     = "bazel"
-	gradleWrapperCmd             = "./gradlew"
-	gradleCmd                    = "gradle"
 	outDir                       = "%s/ti/callgraph/"    // path passed as outDir in the config.ini file
 	cgDir                        = "%s/ti/callgraph/cg/" // path where callgraph files will be generated
 	javaAgentArg                 = "-javaagent:/addon/bin/java-agent.jar=%s"
@@ -40,6 +36,7 @@ var (
 	collectTestReportsFn = collectTestReports
 	runCmdFn             = runCmd
 	isManualFn           = external.IsManualExecution
+	getWorkspace         = external.GetWrkspcPath
 )
 
 // RunTestsTask represents an interface to run tests intelligently
@@ -172,15 +169,21 @@ func (r *runTestsTask) Run(ctx context.Context) (map[string]string, int32, error
 }
 
 // createJavaAgentArg creates the ini file which is required as input to the java agent
-// and returns back the arg to be added to the test command for generation of partial
-// call graph.
-func (r *runTestsTask) createJavaAgentArg() (string, error) {
+// and returns back the path to the file.
+func (r *runTestsTask) createJavaAgentConfigFile(runner testintelligence.TestRunner) (string, error) {
 	// Create config file
 	dir := fmt.Sprintf(outDir, r.tmpFilePath)
 	err := r.fs.MkdirAll(dir, os.ModePerm)
 	if err != nil {
 		r.log.Errorw(fmt.Sprintf("could not create nested directory %s", dir), zap.Error(err))
 		return "", err
+	}
+	if r.packages == "" {
+		pkgs, err := runner.AutoDetectPackages()
+		if err != nil {
+			r.log.Errorw(fmt.Sprintf("could not auto detect packages: %s", err))
+		}
+		r.packages = strings.Join(pkgs, ",")
 	}
 	data := fmt.Sprintf(`outDir: %s
 logLevel: 0
@@ -203,221 +206,8 @@ instrPackages: %s`, dir, r.packages)
 		r.log.Errorw(fmt.Sprintf("could not write %s to file %s", data, iniFile), zap.Error(err))
 		return "", err
 	}
-	// Return java agent arg
-	return fmt.Sprintf(javaAgentArg, iniFile), nil
-}
-
-func (r *runTestsTask) getMavenCmd(ctx context.Context, tests []types.RunnableTest, ignoreInstr bool) (string, error) {
-	if ignoreInstr {
-		return strings.TrimSpace(fmt.Sprintf("%s %s", mvnCmd, r.args)), nil
-	}
-	instrArg, err := r.createJavaAgentArg()
-	if err != nil {
-		return "", err
-	}
-	re := regexp.MustCompile(`(-Duser\.\S*)`)
-	s := re.FindAllString(r.args, -1)
-	if s != nil {
-		// If user args are present, move them to instrumentation
-		r.args = re.ReplaceAllString(r.args, "")                            // Remove from arg
-		instrArg = fmt.Sprintf("\"%s %s\"", strings.Join(s, " "), instrArg) // Add to instrumentation
-	}
-	if !r.runOnlySelectedTests {
-		// Run all the tests
-		return strings.TrimSpace(fmt.Sprintf("%s -am -DargLine=%s %s", mvnCmd, instrArg, r.args)), nil
-	}
-	if len(tests) == 0 {
-		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\""), nil
-	}
-	// Use only unique <package, class> tuples
-	set := make(map[types.RunnableTest]interface{})
-	ut := []string{}
-	for _, t := range tests {
-		w := types.RunnableTest{Pkg: t.Pkg, Class: t.Class}
-		if _, ok := set[w]; ok {
-			// The test has already been added
-			continue
-		}
-		set[w] = struct{}{}
-		if t.Pkg != "" {
-			ut = append(ut, t.Pkg+"."+t.Class) // We should always have a package name. If not, use class to run
-		} else {
-			ut = append(ut, t.Class)
-		}
-	}
-	testStr := strings.Join(ut, ",")
-	return strings.TrimSpace(fmt.Sprintf("%s -Dtest=%s -am -DargLine=%s %s", mvnCmd, testStr, instrArg, r.args)), nil
-}
-
-/*
-The following needs to be added to a build.gradle to make it compatible with test intelligence:
-// This adds HARNESS_JAVA_AGENT to the testing command if it's provided through the command line.
-// Local builds will still remain same as it only adds if the parameter is provided.
-tasks.withType(Test) {
-  if(System.getProperty("HARNESS_JAVA_AGENT")) {
-    jvmArgs += [System.getProperty("HARNESS_JAVA_AGENT")]
-  }
-}
-
-// This makes sure that any test tasks for subprojects don't fail in case the test filter does not match
-// with any tests. This is needed since we want to search for a filter in all subprojects without failing if
-// the filter does not match with any of the subprojects.
-gradle.projectsEvaluated {
-        tasks.withType(Test) {
-            filter {
-                setFailOnNoMatchingTests(false)
-            }
-        }
-}
-*/
-func (r *runTestsTask) getGradleCmd(ctx context.Context, tests []types.RunnableTest, ignoreInstr bool) (string, error) {
-	// Check if gradlew exists. If not, fallback to gradle
-	gc := gradleWrapperCmd
-	_, err := r.fs.Stat("gradlew")
-	if errors.Is(err, os.ErrNotExist) {
-		gc = gradleCmd
-	}
-
-	if ignoreInstr {
-		return strings.TrimSpace(fmt.Sprintf("%s %s", gc, r.args)), nil
-	}
-
-	var orCmd string
-
-	if strings.Contains(r.args, "||") {
-		// args = "test || orCond1 || orCond2" gets split as:
-		// [test, orCond1 || orCond2]
-		s := strings.SplitN(r.args, "||", 2)
-		orCmd = s[1]
-		r.args = s[0]
-	}
-	r.args = strings.TrimSpace(r.args)
-	if orCmd != "" {
-		orCmd = "|| " + strings.TrimSpace(orCmd)
-	}
-
-	instrArg, err := r.createJavaAgentArg()
-	if err != nil {
-		return "", err
-	}
-
-	if !r.runOnlySelectedTests {
-		// Run all the tests
-		return strings.TrimSpace(fmt.Sprintf("%s %s -DHARNESS_JAVA_AGENT=%s %s", gc, r.args, instrArg, orCmd)), nil
-	}
-	if len(tests) == 0 {
-		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\""), nil
-	}
-	// Use only unique <package, class> tuples
-	set := make(map[types.RunnableTest]interface{})
-	var testStr string
-	for _, t := range tests {
-		w := types.RunnableTest{Pkg: t.Pkg, Class: t.Class}
-		if _, ok := set[w]; ok {
-			// The test has already been added
-			continue
-		}
-		set[w] = struct{}{}
-		testStr = testStr + " --tests " + fmt.Sprintf("\"%s.%s\"", t.Pkg, t.Class)
-	}
-
-	return strings.TrimSpace(fmt.Sprintf("%s %s -DHARNESS_JAVA_AGENT=%s%s %s", gc, r.args, instrArg, testStr, orCmd)), nil
-}
-
-func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest, ignoreInstr bool) (string, error) {
-	if ignoreInstr {
-		return fmt.Sprintf("%s %s //...", bazelCmd, r.args), nil
-	}
-	instrArg, err := r.createJavaAgentArg()
-	if err != nil {
-		return "", err
-	}
-	bazelInstrArg := fmt.Sprintf("--define=HARNESS_ARGS=%s", instrArg)
-	defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
-
-	if !r.runOnlySelectedTests {
-		// Run all the tests
-		return defaultCmd, nil
-	}
-	if len(tests) == 0 {
-		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\""), nil
-	}
-	// Use only unique classes
-	pkgs := []string{}
-	clss := []string{}
-	set := make(map[string]interface{})
-	ut := []string{}
-	for _, t := range tests {
-		if _, ok := set[t.Class]; ok {
-			// The class has already been added
-			continue
-		}
-		set[t.Class] = struct{}{}
-		ut = append(ut, t.Class)
-		pkgs = append(pkgs, t.Pkg)
-		clss = append(clss, t.Class)
-	}
-	rulesM := make(map[string]struct{})
-	rules := []string{} // List of unique bazel rules to be executed
-	for i := 0; i < len(pkgs); i++ {
-		c := fmt.Sprintf("%s query 'attr(name, %s.%s, //...)'", bazelCmd, pkgs[i], clss[i])
-		cmdArgs := []string{"-c", c}
-		resp, err := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
-		if err != nil || len(resp) == 0 {
-			r.log.Errorw(fmt.Sprintf("could not find an appropriate rule for pkgs %s and class %s", pkgs[i], clss[i]),
-				"index", i, "command", c, zap.Error(err))
-			// Hack to get bazel rules for portal
-			// TODO: figure out how to generically get rules to be executed from a package and a class
-			// Example commands:
-			//     find . -path "*pkg.class" -> can have multiple tests (eg helper/base tests)
-			//     export fullname=$(bazelisk query path.java)
-			//     bazelisk query "attr('srcs', $fullname, ${fullname//:*/}:*)" --output=label_kind | grep "java_test rule"
-
-			// Get list of paths for the tests
-			pathCmd := fmt.Sprintf(`find . -path '*%s/%s*' | sed -e "s/^\.\///g"`, strings.Replace(pkgs[i], ".", "/", -1), clss[i])
-			cmdArgs = []string{"-c", pathCmd}
-			pathResp, pathErr := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
-			if pathErr != nil {
-				r.log.Errorw(fmt.Sprintf("could not find path for pkgs %s and class %s", pkgs[i], clss[i]), zap.Error(pathErr))
-				continue
-			}
-			// Iterate over the paths and try to find the relevant rules
-			for _, p := range strings.Split(string(pathResp), "\n") {
-				p = strings.TrimSpace(p)
-				if len(p) == 0 || !strings.Contains(p, "src/test") {
-					continue
-				}
-				c = fmt.Sprintf("export fullname=$(%s query %s)\n"+
-					"%s query \"attr('srcs', $fullname, ${fullname//:*/}:*)\" --output=label_kind | grep 'java_test rule'",
-					bazelCmd, p, bazelCmd)
-				cmdArgs = []string{"-c", c}
-				resp2, err2 := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
-				if err2 != nil || len(resp2) == 0 {
-					r.log.Errorw(fmt.Sprintf("could not find an appropriate rule in failback for path %s", p), zap.Error(err2))
-					continue
-				}
-				t := strings.Fields(string(resp2))
-				resp = []byte(t[2])
-				r := strings.TrimSuffix(string(resp), "\n")
-				if _, ok := rulesM[r]; !ok {
-					rules = append(rules, r)
-					rulesM[r] = struct{}{}
-				}
-			}
-		} else {
-			r := strings.TrimSuffix(string(resp), "\n")
-			if _, ok := rulesM[r]; !ok {
-				rules = append(rules, r)
-				rulesM[r] = struct{}{}
-			}
-		}
-
-	}
-	if len(rules) == 0 {
-		return fmt.Sprintf("echo \"Could not find any relevant test rules. Skipping the run\""), nil
-	}
-	testList := strings.Join(rules, " ")
-	return fmt.Sprintf("%s %s %s %s", bazelCmd, r.args, bazelInstrArg, testList), nil
+	// Return path to the java agent file
+	return iniFile, nil
 }
 
 func valid(tests []types.RunnableTest) bool {
@@ -460,28 +250,21 @@ func (r *runTestsTask) getCmd(ctx context.Context, outputVarFile string) (string
 		r.log.Infow(fmt.Sprintf("intelligently running tests: %s", selection.Tests))
 	}
 
-	var testCmd string
-	switch r.buildTool {
-	case "maven":
-		r.log.Infow("setting up maven as the build tool")
-		testCmd, err = r.getMavenCmd(ctx, selection.Tests, isManual)
-		if err != nil {
-			return "", err
-		}
-	case "bazel":
-		r.log.Infow("setting up bazel as the build tool")
-		testCmd, err = r.getBazelCmd(ctx, selection.Tests, isManual)
-		if err != nil {
-			return "", err
-		}
-	case "gradle":
-		r.log.Infow("setting up gradle as the build tool")
-		testCmd, err = r.getGradleCmd(ctx, selection.Tests, isManual)
-		if err != nil {
-			return "", err
+	var runner testintelligence.TestRunner
+	switch r.language {
+	case "java":
+		switch r.buildTool {
+		case "maven":
+			runner = java.NewMavenRunner(r.log, r.fs, r.cmdContextFactory)
+		case "gradle":
+			runner = java.NewGradleRunner(r.log, r.fs, r.cmdContextFactory)
+		case "bazel":
+			runner = java.NewBazelRunner(r.log, r.fs, r.cmdContextFactory)
+		default:
+			return "", fmt.Errorf("build tool: %s is not supported for Java", r.buildTool)
 		}
 	default:
-		return "", fmt.Errorf("build tool %s is not suported", r.buildTool)
+		return "", fmt.Errorf("language %s is not suported", r.language)
 	}
 
 	outputVarCmd := ""
@@ -489,8 +272,17 @@ func (r *runTestsTask) getCmd(ctx context.Context, outputVarFile string) (string
 		outputVarCmd += fmt.Sprintf("\necho %s $%s >> %s", o, o, outputVarFile)
 	}
 
-	iniFile := fmt.Sprintf("%s/config.ini", r.tmpFilePath)
-	agentArg := fmt.Sprintf(javaAgentArg, iniFile)
+	// Create the java agent config file
+	iniFilePath, err := r.createJavaAgentConfigFile(runner)
+	if err != nil {
+		return "", err
+	}
+	agentArg := fmt.Sprintf(javaAgentArg, iniFilePath)
+
+	testCmd, err := runner.GetCmd(ctx, selection.Tests, r.args, iniFilePath, isManual, !r.runOnlySelectedTests)
+	if err != nil {
+		return "", err
+	}
 
 	// TMPDIR needs to be set for some build tools like bazel
 	command := fmt.Sprintf("set -xe\nexport TMPDIR=%s\nexport HARNESS_JAVA_AGENT=%s\n%s\n%s\n%s%s", r.tmpFilePath, agentArg, r.preCommand, testCmd, r.postCommand, outputVarCmd)

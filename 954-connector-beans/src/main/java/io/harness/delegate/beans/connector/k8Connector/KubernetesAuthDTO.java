@@ -3,6 +3,7 @@ package io.harness.delegate.beans.connector.k8Connector;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(name = "KubernetesAuth", description = "This contains kubernetes auth details")
 public class KubernetesAuthDTO {
   @NotNull @JsonProperty("type") KubernetesAuthType authType;
 

@@ -55,8 +55,9 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
         return Optional.ofNullable(response);
       });
       if (resourceGroupResponse.isPresent()) {
-        resourceGroupService.upsert(
-            resourceGroupFactory.buildResourceGroup(resourceGroupResponse.get(), scope.toString()));
+        resourceGroupService.upsert(resourceGroupFactory.buildResourceGroup(
+            resourceGroupResponse.get(), scope == null ? null : scope.toString()));
+        resourceGroupService.upsert(resourceGroupFactory.buildResourceGroup(resourceGroupResponse.get()));
       } else {
         deleteIfPresent(identifier, scope);
       }
@@ -67,7 +68,12 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
 
   @Override
   public void deleteIfPresent(String identifier, Scope scope) {
-    log.warn("Removing resource group with identifier {} in scope {}", identifier, scope.toString());
-    resourceGroupService.deleteIfPresent(identifier, scope.toString());
+    String flatScope = scope == null ? null : scope.toString();
+    log.warn("Removing resource group with identifier {} in scope {}", identifier, flatScope);
+    if (flatScope == null) {
+      resourceGroupService.deleteManagedIfPresent(identifier);
+    } else {
+      resourceGroupService.deleteIfPresent(identifier, flatScope);
+    }
   }
 }

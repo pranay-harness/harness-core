@@ -13,6 +13,7 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +34,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GithubConnector")
 @OwnedBy(HarnessTeam.DX)
+@Schema(name = "GithubConnector", description = "This contains details of Github connectors")
 public class GithubConnectorDTO
     extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable, ManagerExecutable {
   @NotNull @JsonProperty("type") GitConnectionType connectionType;

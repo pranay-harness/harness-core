@@ -37,8 +37,8 @@ import static io.harness.provision.TerragruntConstants.PLAN;
 import static io.harness.provision.TerragruntConstants.WRAP_UP;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.TERRAGRUNT_PROVISION_TASK;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.TERRAGRUNT_PROVISION;
 import static software.wings.beans.delegation.TerragruntProvisionParameters.TIMEOUT_IN_MINUTES;
