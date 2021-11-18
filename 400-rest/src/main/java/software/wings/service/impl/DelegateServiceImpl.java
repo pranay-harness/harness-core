@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
+import static io.harness.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertFromBase64;
@@ -17,6 +18,7 @@ import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
+import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PROXY;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.exception.WingsException.USER;
@@ -989,8 +991,8 @@ public class DelegateServiceImpl implements DelegateService {
       existingDelegate.setStatus(DelegateInstanceStatus.DELETED);
     }
 
-    existingDelegate.setUseCdn(true);
-    existingDelegate.setUseJreVersion(getTargetJreVersion());
+    existingDelegate.setUseCdn(featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId()));
+    existingDelegate.setUseJreVersion(getTargetJreVersion(delegate.getAccountId()));
     return existingDelegate;
   }
 
@@ -1240,7 +1242,8 @@ public class DelegateServiceImpl implements DelegateService {
     boolean jarFileExists = false;
     String delegateDockerImage = "harness/delegate:latest";
     CdnConfig cdnConfig = mainConfiguration.getCdnConfig();
-    boolean useCDN = cdnConfig != null;
+    boolean useCDN =
+        featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, inquiry.getAccountId()) && cdnConfig != null;
 
     boolean isCiEnabled = inquiry.isCiEnabled()
         && isNotEmpty(mainConfiguration.getPortal().getJwtNextGenManagerSecret())
@@ -1382,7 +1385,7 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateXmx", "-Xmx4096m");
       }
 
-      JreConfig jreConfig = getJreConfig();
+      JreConfig jreConfig = getJreConfig(inquiry.getAccountId());
 
       Preconditions.checkNotNull(jreConfig, "jreConfig cannot be null");
 
@@ -1472,16 +1475,18 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   /**
-   * Returns JreConfig for a given account Id on the basis of UPGRADE_JRE.
+   * Returns JreConfig for a given account Id on the basis of UPGRADE_JRE and USE_CDN_FOR_STORAGE_FILES FeatureFlags.
    *
    * @return
    */
-  private JreConfig getJreConfig() {
+  private JreConfig getJreConfig(String accountId) {
+    boolean useCDN = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, accountId);
+
     String jreVersion = mainConfiguration.getCurrentJre();
     JreConfig jreConfig = mainConfiguration.getJreConfigs().get(jreVersion);
     CdnConfig cdnConfig = mainConfiguration.getCdnConfig();
 
-    if (cdnConfig != null) {
+    if (useCDN && cdnConfig != null) {
       String tarPath = cdnConfig.getCdnJreTarPaths().get(jreVersion);
       String alpnJarPath = cdnConfig.getAlpnJarPath();
       jreConfig = JreConfig.builder()
@@ -1496,12 +1501,13 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   /**
-   * Returns delegate's JRE version
+   * Returns delegate's JRE version for a given account Id
    *
+   * @param accountId
    * @return
    */
-  private String getTargetJreVersion() {
-    return getJreConfig().getVersion();
+  private String getTargetJreVersion(String accountId) {
+    return getJreConfig(accountId).getVersion();
   }
 
   private Integer getMinorVersion(String delegateVersion) {
@@ -2269,9 +2275,11 @@ public class DelegateServiceImpl implements DelegateService {
       }
     }
 
-    broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(USE_CDN);
+    boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId());
+    broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
+        .broadcast(useCdn ? USE_CDN : USE_STORAGE_PROXY);
 
-    String delegateTargetJreVersion = getTargetJreVersion();
+    String delegateTargetJreVersion = getTargetJreVersion(delegate.getAccountId());
     StringBuilder jreMessage = new StringBuilder().append(JRE_VERSION).append(delegateTargetJreVersion);
     broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(jreMessage.toString());
     log.debug("Sending message to delegate: {}", jreMessage);
@@ -2333,10 +2341,12 @@ public class DelegateServiceImpl implements DelegateService {
       }
     }
 
-    broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(USE_CDN);
+    boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegateParams.getAccountId());
+    broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true)
+        .broadcast(useCdn ? USE_CDN : USE_STORAGE_PROXY);
 
-    final String delegateTargetJreVersion = getTargetJreVersion();
-    final StringBuilder jreMessage = new StringBuilder().append(JRE_VERSION).append(delegateTargetJreVersion);
+    String delegateTargetJreVersion = getTargetJreVersion(delegateParams.getAccountId());
+    StringBuilder jreMessage = new StringBuilder().append(JRE_VERSION).append(delegateTargetJreVersion);
     broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(jreMessage.toString());
     log.info("Sending message to delegate: {}", jreMessage);
 
@@ -2882,8 +2892,8 @@ public class DelegateServiceImpl implements DelegateService {
     }
     final Delegate registeredDelegate = handleEcsDelegateRegistration(delegate);
     updateExistingDelegateWithSequenceConfigData(registeredDelegate);
-    registeredDelegate.setUseCdn(true);
-    registeredDelegate.setUseJreVersion(getTargetJreVersion());
+    registeredDelegate.setUseCdn(featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId()));
+    registeredDelegate.setUseJreVersion(getTargetJreVersion(delegate.getAccountId()));
 
     return registeredDelegate;
   }
