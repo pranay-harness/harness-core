@@ -64,6 +64,5 @@ public interface OrganizationClient {
 
   @POST(ORGANIZATIONS_API + "/all-organizations")
   Call<ResponseDTO<PageResponse<OrganizationResponse>>> listAllOrganizations(
-      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Body List<String> identifiers);
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier, @Body List<String> identifiers);
 }
