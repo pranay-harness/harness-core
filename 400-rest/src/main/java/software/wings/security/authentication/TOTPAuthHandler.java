@@ -18,34 +18,45 @@ import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.logcontext.UserLogContext;
+import software.wings.security.authentication.totp.FeatureFlaggedTotpChecker;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTimeUtils;
 
 @OwnedBy(PL)
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class TOTPAuthHandler implements TwoFactorAuthHandler {
-  @Inject private UserService userService;
-  @Inject private AuthenticationUtils authenticationUtils;
-  @Inject private EmailNotificationService emailNotificationService;
+  private UserService userService;
+  private AuthenticationUtils authenticationUtils;
+  private EmailNotificationService emailNotificationService;
+  private TotpChecker<? super FeatureFlaggedTotpChecker.Request> totpChecker;
+
+  @Inject
+  public TOTPAuthHandler(UserService userService, AuthenticationUtils authenticationUtils,
+      EmailNotificationService emailNotificationService,
+      @Named("featureFlagged") TotpChecker<? super FeatureFlaggedTotpChecker.Request> totpChecker) {
+    this.userService = userService;
+    this.authenticationUtils = authenticationUtils;
+    this.emailNotificationService = emailNotificationService;
+    this.totpChecker = totpChecker;
+  }
 
   @Override
   public User authenticate(User user, String... credentials) {
-    String accountId = user == null ? null : user.getDefaultAccountId();
-    String uuid = user == null ? null : user.getUuid();
+    String accountId = user.getDefaultAccountId();
+    String uuid = user.getUuid();
     try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
       log.info("Authenticating via Two Factor Authenication");
       String passcode = credentials[0];
@@ -53,20 +64,16 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
       if (isBlank(totpSecret)) {
         throw new WingsException(ErrorCode.INVALID_TWO_FACTOR_AUTHENTICATION_CONFIGURATION);
       }
-
       final int code = Integer.parseInt(passcode);
-      final long currentTime = DateTimeUtils.currentTimeMillis();
-      if (!TimeBasedOneTimePasswordUtil.validateCurrentNumber(
-              totpSecret, code, 0, currentTime, TimeBasedOneTimePasswordUtil.DEFAULT_TIME_STEP_SECONDS)
-          && !TimeBasedOneTimePasswordUtil.validateCurrentNumber(
-              totpSecret, code, 0, currentTime - 10000, TimeBasedOneTimePasswordUtil.DEFAULT_TIME_STEP_SECONDS)
-          && !TimeBasedOneTimePasswordUtil.validateCurrentNumber(
-              totpSecret, code, 0, currentTime + 10000, TimeBasedOneTimePasswordUtil.DEFAULT_TIME_STEP_SECONDS)) {
+      FeatureFlaggedTotpChecker.Request totpRequest =
+          new FeatureFlaggedTotpChecker.Request(totpSecret, code, uuid, user.getEmail(), accountId);
+      if (!totpChecker.check(totpRequest)) {
         throw new WingsException(ErrorCode.INVALID_TOTP_TOKEN, USER);
       }
+
       return user;
 
-    } catch (GeneralSecurityException | NumberFormatException e) {
+    } catch (NumberFormatException e) {
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
     }
   }

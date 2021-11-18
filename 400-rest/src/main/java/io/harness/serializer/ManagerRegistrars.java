@@ -3,6 +3,7 @@ package io.harness.serializer;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.authenticationservice.serialization.NgAuthenticationServiceKryoRegistrar;
 import io.harness.ccm.serializer.morphia.CECommonsMorphiaRegistrar;
 import io.harness.morphia.CgOrchestrationBeansMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
@@ -60,6 +61,7 @@ public class ManagerRegistrars {
           .addAll(OutboxEventRegistrars.kryoRegistrars)
           .add(EventEntitiesKryoRegistrar.class)
           .addAll(DelegateTaskRegistrars.kryoRegistrars)
+          .add(NgAuthenticationServiceKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
