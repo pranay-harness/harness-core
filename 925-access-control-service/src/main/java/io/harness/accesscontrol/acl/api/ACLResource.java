@@ -110,7 +110,7 @@ public class ACLResource {
     io.harness.security.dto.Principal contextPrincipal = SecurityContextBuilder.getPrincipal();
     List<PermissionCheckDTO> permissionChecksDTOs = dto.getPermissions();
     Principal principalToCheckPermissionsFor = dto.getPrincipal();
-
+    log.info("in Check for access to resources");
     boolean preconditionsValid = checkPreconditions(contextPrincipal, principalToCheckPermissionsFor);
 
     if (serviceContextAndNoPrincipalInBody(contextPrincipal, principalToCheckPermissionsFor)) {

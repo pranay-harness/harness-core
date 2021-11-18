@@ -13,9 +13,12 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(HarnessTeam.PL)
+@Slf4j
 public abstract class AbstractAccessControlClient implements AccessControlClient {
   private static final String ORGANIZATION_RESOURCE_TYPE = "ORGANIZATION";
   private static final String ACCOUNT_RESOURCE_TYPE = "ACCOUNT";
@@ -27,6 +30,7 @@ public abstract class AbstractAccessControlClient implements AccessControlClient
 
   @Override
   public AccessCheckResponseDTO checkForAccess(Principal principal, List<PermissionCheckDTO> permissionCheckDTOList) {
+    log.info("in check for access method");
     AccessCheckRequestDTO accessCheckRequestDTO =
         AccessCheckRequestDTO.builder().principal(principal).permissions(permissionCheckDTOList).build();
     return checkForAccess(accessCheckRequestDTO);

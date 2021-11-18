@@ -282,7 +282,9 @@ public class NGAggregateResource {
                                                                .resourceType(ORGANIZATION)
                                                                .build())
                                                     .collect(Collectors.toList());
+    log.info("Created permission Check List");
     AccessCheckResponseDTO accessCheckResponse = accessControlClient.checkForAccess(permissionChecks);
+    log.info("got response from access contrl client");
     return accessCheckResponse.getAccessControlList()
         .stream()
         .filter(AccessControlDTO::isPermitted)
