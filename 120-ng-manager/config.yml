@@ -99,7 +99,7 @@ ngIteratorsConfig:
   ngVaultSecretManagerRenewalIteratorConfig:
     threadPoolSize: ${NG_VAULT_ITERATOR_THREAD_POOL_SIZE:-5}
   webhookEventProcessingServiceIteratorConfig:
-    threadPoolSize: ${WEBHOOK_EVENT_PROCESSING_SERVICE_THREAD_SIZE:-5}
+    threadPoolSize: ${WEBHOOK_EVENT_PROCESSING_SERVICE_THREAD_SIZE:-20}
   gitFullSyncEntityIteratorConfig:
     threadPoolSize: ${GIT_FULLSYNC_ENTITY_ITERATOR_THREAD_POOL_SIZE:-5}
 
