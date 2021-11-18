@@ -55,8 +55,4 @@ public class ResourceGroupConfig {
   public boolean getNestedScopesSelected() {
     return Boolean.TRUE.equals(this.nestedScopesSelected);
   }
-
-  public void setNestedScopesSelected(Boolean nestedScopesSelected) {
-    this.nestedScopesSelected = Boolean.TRUE.equals(nestedScopesSelected);
-  }
 }
