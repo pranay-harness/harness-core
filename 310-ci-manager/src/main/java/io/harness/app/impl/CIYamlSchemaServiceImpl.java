@@ -18,7 +18,6 @@ import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
 import io.harness.yaml.schema.beans.FieldEnumData;
-import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
@@ -35,7 +34,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.lang.reflect.Field;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -102,14 +100,9 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
     Field typedField = YamlSchemaUtils.getTypedField(STEP_ELEMENT_CONFIG_CLASS);
     Set<Class<?>> cachedSubtypes = yamlSchemaSubtypes.get(typedField.getType());
     Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.toSetOfSubtypeClassMap(cachedSubtypes);
-    Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
-    classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(typedField, mapOfSubtypes));
     Set<FieldEnumData> fieldEnumData = getFieldEnumData(typedField, mapOfSubtypes);
-    swaggerDefinitionsMetaInfoMap.put(STEP_ELEMENT_CONFIG,
-        SwaggerDefinitionsMetaInfo.builder()
-            .fieldEnumData(fieldEnumData)
-            .subtypeClassMap(classFieldSubtypeData)
-            .build());
+    swaggerDefinitionsMetaInfoMap.put(
+        STEP_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().fieldEnumData(fieldEnumData).build());
     yamlSchemaGenerator.convertSwaggerToJsonSchema(
         swaggerDefinitionsMetaInfoMap, mapper, STEP_ELEMENT_CONFIG, jsonNode);
   }
