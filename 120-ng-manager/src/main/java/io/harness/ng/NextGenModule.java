@@ -178,6 +178,9 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.UserProvider;
 import io.harness.pipeline.PipelineRemoteClientModule;
+import io.harness.plancreator.steps.AbstractStepNode;
+import io.harness.plancreator.steps.CdAbstractNode;
+import io.harness.plancreator.steps.http.PmsAbstractStepNode;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.polling.service.impl.PollingPerpetualTaskServiceImpl;
 import io.harness.polling.service.impl.PollingServiceImpl;
@@ -355,6 +358,28 @@ public class NextGenModule extends AbstractModule {
     Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
 
     return ImmutableMap.of(StepSpecType.class, set);
+  }
+
+  @Provides
+  @Named("new-yaml-schema-subtypes")
+  @Singleton
+  public Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypes() {
+    Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS);
+    Set<Class<? extends AbstractStepNode>> subTypesOfPmsAbstractStepNode =
+        reflections.getSubTypesOf(AbstractStepNode.class);
+    Set<Class<?>> newSchemaStepSet = new HashSet<>(subTypesOfPmsAbstractStepNode);
+    return ImmutableMap.of(PmsAbstractStepNode.class, newSchemaStepSet);
+  }
+
+  @Provides
+  @Named("new-yaml-schema-subtypes-cd")
+  @Singleton
+  public Map<Class<?>, Set<Class<?>>> newCdYamlSchemaSubtypes() {
+    Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS);
+    Set<Class<? extends CdAbstractNode>> subTypesOfPmsAbstractStepNode =
+        reflections.getSubTypesOf(CdAbstractNode.class);
+    Set<Class<?>> newSchemaStepSet = new HashSet<>(subTypesOfPmsAbstractStepNode);
+    return ImmutableMap.of(PmsAbstractStepNode.class, newSchemaStepSet);
   }
 
   @Provides

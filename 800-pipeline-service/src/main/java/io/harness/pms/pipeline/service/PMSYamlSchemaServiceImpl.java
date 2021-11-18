@@ -2,6 +2,7 @@ package io.harness.pms.pipeline.service;
 
 import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 
 import static java.lang.String.format;
 
@@ -136,15 +137,22 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
       String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope) {
     JsonNode pipelineSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINES, orgIdentifier, projectIdentifier, scope);
-
     JsonNode pipelineSteps =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINE_STEPS, orgIdentifier, projectIdentifier, scope);
+    JsonNode pipelineStepsV2 =
+        yamlSchemaProvider.getYamlSchema(EntityType.HTTP_STEP, orgIdentifier, projectIdentifier, scope);
+
     ObjectNode pipelineDefinitions = (ObjectNode) pipelineSchema.get(DEFINITIONS_NODE);
     ObjectNode pipelineStepsDefinitions = (ObjectNode) pipelineSteps.get(DEFINITIONS_NODE);
+    ObjectNode pipelineStepsV2Definitions = (ObjectNode) pipelineStepsV2.get(DEFINITIONS_NODE);
 
-    ObjectNode mergedDefinitions = (ObjectNode) JsonNodeUtils.merge(pipelineDefinitions, pipelineStepsDefinitions);
+    ObjectNode tempMergedDefinitions = (ObjectNode) JsonNodeUtils.merge(pipelineDefinitions, pipelineStepsDefinitions);
+    ObjectNode mergedDefinitions = (ObjectNode) JsonNodeUtils.merge(tempMergedDefinitions, pipelineStepsV2Definitions);
 
     ObjectNode stageElementConfig = (ObjectNode) pipelineDefinitions.get(STAGE_ELEMENT_CONFIG);
+    // Create a YamlSchemaTransientHelper where all this will be done. Will remove after complete migration. Add why for
+    // each method.
+    JsonNodeUtils.deletePropertiesInJsonNode((ObjectNode) stageElementConfig.get(PROPERTIES_NODE), "spec");
 
     PmsYamlSchemaHelper.flattenParallelElementConfig(pipelineDefinitions);
 

@@ -52,6 +52,8 @@ import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.plancreator.steps.AbstractStepNode;
+import io.harness.plancreator.steps.http.PmsAbstractStepNode;
 import io.harness.pms.Dashboard.PMSLandingDashboardService;
 import io.harness.pms.Dashboard.PMSLandingDashboardServiceImpl;
 import io.harness.pms.approval.ApprovalResourceService;
@@ -486,6 +488,27 @@ public class PipelineServiceModule extends AbstractModule {
     Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
 
     return ImmutableMap.of(StepSpecType.class, set);
+  }
+  @Provides
+  @Named("new-yaml-schema-subtypes")
+  @Singleton
+  public Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypes() {
+    Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS);
+    Set<Class<? extends AbstractStepNode>> subTypesOfPmsAbstractStepNode =
+        reflections.getSubTypesOf(AbstractStepNode.class);
+    Set<Class<?>> newSchemaStepSet = new HashSet<>(subTypesOfPmsAbstractStepNode);
+    return ImmutableMap.of(PmsAbstractStepNode.class, newSchemaStepSet);
+  }
+
+  @Provides
+  @Named("new-yaml-schema-subtypes-pms")
+  @Singleton
+  public Map<Class<?>, Set<Class<?>>> newPmsYamlSchemaSubtypes() {
+    Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS);
+    Set<Class<? extends PmsAbstractStepNode>> subTypesOfPmsAbstractStepNode =
+        reflections.getSubTypesOf(PmsAbstractStepNode.class);
+    Set<Class<?>> newSchemaStepSet = new HashSet<>(subTypesOfPmsAbstractStepNode);
+    return ImmutableMap.of(PmsAbstractStepNode.class, newSchemaStepSet);
   }
 
   @Provides
