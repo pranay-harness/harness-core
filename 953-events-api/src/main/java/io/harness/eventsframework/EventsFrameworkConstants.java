@@ -27,6 +27,7 @@ public final class EventsFrameworkConstants {
   public static final String NG_ACCOUNT_SETUP = "ng_account_setup";
   public static final String INSTANCE_SYNC_PERPETUAL_TASK_RESPONSE_STREAM = "instance_sync_perpetual_task_stream";
   public static final String INSTANCE_STATS = "instance_stats";
+  public static final String OBSERVER_EVENT_CHANNEL = "observer_event_channel";
 
   // created for git sdk, dont use outside sdk.
   public static final String GIT_CONFIG_STREAM = "git_config_stream";
@@ -122,7 +123,7 @@ public final class EventsFrameworkConstants {
   public static final int DEFAULT_READ_BATCH_SIZE = 50;
   public static final int ENTITY_CRUD_READ_BATCH_SIZE = 50;
   public static final int NG_ACCOUNT_SETUP_READ_BATCH_SIZE = 50;
-  public static final int ORCHESTRATION_LOG_READ_BATCH_SIZE = 50;
+  public static final int ORCHESTRATION_LOG_READ_BATCH_SIZE = 200;
   public static final int USERMEMBERSHIP_READ_BATCH_SIZE = 50;
   public static final int SETUP_USAGE_READ_BATCH_SIZE = 50;
   public static final int ENTITY_ACTIVITY_READ_BATCH_SIZE = 50;

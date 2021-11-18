@@ -348,6 +348,14 @@ portal:
   importantDelegateTaskRejectAtLimit: 50000
   criticalDelegateTaskRejectAtLimit: 100000
 
+totp:
+  secOpsEmail: secops.fake.email@mailnator.com
+  incorrectAttemptsUntilSecOpsNotified: 1000
+  limit:
+    count: 10
+    duration: 5
+    durationUnit: MINUTES
+
 cacheConfig:
   cacheBackend: HAZELCAST
   cacheNamespace: ""

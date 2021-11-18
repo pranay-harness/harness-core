@@ -56,6 +56,8 @@ public class PlatformConfiguration extends Configuration {
   @JsonProperty(value = "environment", defaultValue = "dev") private String environment;
   @JsonProperty(value = "accessControlClient") private AccessControlClientConfiguration accessControlClientConfig;
   @JsonProperty("enforcementClientConfiguration") private EnforcementClientConfiguration enforcementClientConfiguration;
+  @JsonProperty("hostname") String hostname;
+  @JsonProperty("basePathPrefix") String basePathPrefix;
 
   public static Collection<Class<?>> getNotificationServiceResourceClasses() {
     Reflections reflections = new Reflections(NOTIFICATION_RESOURCE_PACKAGE);

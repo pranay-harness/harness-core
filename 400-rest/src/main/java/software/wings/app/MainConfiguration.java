@@ -60,6 +60,7 @@ import software.wings.security.authentication.oauth.GithubConfig;
 import software.wings.security.authentication.oauth.GitlabConfig;
 import software.wings.security.authentication.oauth.GoogleConfig;
 import software.wings.security.authentication.oauth.LinkedinConfig;
+import software.wings.security.authentication.totp.TotpConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
@@ -205,6 +206,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;
   @JsonProperty("eventListenersCountConfig") private EventListenersCountConfig eventListenersCountConfig;
   @JsonProperty(value = "useGlobalKMSAsBaseAlgo", defaultValue = "false") private boolean useGlobalKMSAsBaseAlgo;
+  @JsonProperty("totp") private TotpConfig totpConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

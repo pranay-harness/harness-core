@@ -10,6 +10,7 @@ import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +31,7 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GcpConnector")
+@Schema(name = "GcpConnector", description = "This contains GCP connector details")
 public class GcpConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @Valid GcpConnectorCredentialDTO credential;
   Set<String> delegateSelectors;

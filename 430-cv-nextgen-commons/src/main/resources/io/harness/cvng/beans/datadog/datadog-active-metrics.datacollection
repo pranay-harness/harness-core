@@ -1,0 +1,9 @@
+Var activeMetricsUrl = concat(Env:baseUrl, "v1/metrics")
+
+Var params = {}
+Var:params.put("from", Env:from)
+
+Var activeMetricsResponse = sync-call(url=Var:activeMetricsUrl, header=Env:commonHeaders, options=Var:params)
+Var activeMetricsList = extract(Var:activeMetricsResponse, $.metrics)
+
+return Var:activeMetricsList

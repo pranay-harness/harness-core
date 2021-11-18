@@ -39,4 +39,5 @@ message FullSyncChangeSet {
   string branch_name = 5;
   map<string, string> log_context = 6;
   string account_identifier = 7;
+  string commit_message = 8;
 }

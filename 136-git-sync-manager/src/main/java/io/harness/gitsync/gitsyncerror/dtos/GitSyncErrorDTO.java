@@ -21,7 +21,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Schema(name = "GitSyncErrorDetails", description = "Error Details")
+@Schema(name = "GitSyncError", description = "This contains Git Sync Error Details")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 @OwnedBy(PL)

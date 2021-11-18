@@ -74,8 +74,6 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
 
     runTestsStepBuilder.setRunOnlySelectedTests(
         resolveBooleanParameter(runTestsStepInfo.getRunOnlySelectedTests(), true));
-    runTestsStepBuilder.setPackages(RunTimeInputHandler.resolveStringParameter(
-        "Packages", "RunTests", identifier, runTestsStepInfo.getPackages(), true));
 
     if (isNotEmpty(runTestsStepInfo.getOutputVariables())) {
       List<String> outputVarNames =
@@ -93,6 +91,12 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
         "TestAnnotations", "RunTests", identifier, runTestsStepInfo.getTestAnnotations(), false);
     if (StringUtils.isNotEmpty(testAnnotations)) {
       runTestsStepBuilder.setTestAnnotations(testAnnotations);
+    }
+
+    String packages = RunTimeInputHandler.resolveStringParameter(
+        "Packages", "RunTests", identifier, runTestsStepInfo.getPackages(), false);
+    if (StringUtils.isNotEmpty(packages)) {
+      runTestsStepBuilder.setPackages(packages);
     }
 
     UnitTestReport reports = runTestsStepInfo.getReports();

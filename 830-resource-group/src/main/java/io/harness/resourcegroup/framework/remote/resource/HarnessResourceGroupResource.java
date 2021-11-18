@@ -39,6 +39,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -59,6 +60,7 @@ import lombok.AllArgsConstructor;
 @Path("resourcegroup")
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
+@Tag(name = "Harness Resource Group", description = "This contains APIs related to Harness Resource Group")
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {

@@ -1,5 +1,8 @@
 package io.harness.connector;
 
+import io.harness.connector.helper.DecryptionHelper;
+import io.harness.connector.helper.DecryptionHelperViaManager;
+
 import com.google.inject.AbstractModule;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -12,7 +15,7 @@ public class ConnectorTaskModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    // add bindings
+    bind(DecryptionHelper.class).to(DecryptionHelperViaManager.class);
   }
 
   public static ConnectorTaskModule getInstance() {

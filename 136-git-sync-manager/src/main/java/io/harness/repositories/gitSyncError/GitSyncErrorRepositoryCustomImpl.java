@@ -29,7 +29,7 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public <C> AggregationResults aggregate(Aggregation aggregation, Class<C> castClass) {
+  public <C> AggregationResults<C> aggregate(Aggregation aggregation, Class<C> castClass) {
     return mongoTemplate.aggregate(aggregation, "gitSyncErrorNG", castClass);
   }
 

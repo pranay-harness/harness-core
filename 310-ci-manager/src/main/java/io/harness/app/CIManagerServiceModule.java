@@ -116,7 +116,9 @@ public class CIManagerServiceModule extends AbstractModule {
   @Named("yaml-schema-mapper")
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapper() {
-    return Jackson.newObjectMapper();
+    ObjectMapper objectMapper = Jackson.newObjectMapper();
+    CIManagerApplication.configureObjectMapper(objectMapper);
+    return objectMapper;
   }
 
   @Provides

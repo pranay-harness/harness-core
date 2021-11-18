@@ -1,15 +1,20 @@
 package io.harness.cvng.servicelevelobjective.services.impl;
 
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.services.api.UpdatableEntity;
+import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorKeys;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorUpdatableEntity;
 import io.harness.cvng.servicelevelobjective.services.ServiceLevelIndicatorService;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorEntityAndDTOTransformer;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +24,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorService {
   @Inject private HPersistence hPersistence;
+  @Inject private Map<SLIMetricType, ServiceLevelIndicatorUpdatableEntity> serviceLevelIndicatorMapBinder;
+  @Inject private ServiceLevelIndicatorEntityAndDTOTransformer serviceLevelIndicatorEntityAndDTOTransformer;
 
   @Override
   public List<String> create(ProjectParams projectParams, List<ServiceLevelIndicatorDTO> serviceLevelIndicatorDTOList,
@@ -96,28 +103,26 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
 
   private void updateServiceLevelIndicatorEntity(
       ProjectParams projectParams, ServiceLevelIndicatorDTO serviceLevelIndicatorDTO) {
+    UpdatableEntity<ServiceLevelIndicator, ServiceLevelIndicator> updatableEntity =
+        serviceLevelIndicatorMapBinder.get(serviceLevelIndicatorDTO.getSpec().getType());
     ServiceLevelIndicator serviceLevelIndicator =
         getServiceLevelIndicator(projectParams, serviceLevelIndicatorDTO.getIdentifier());
     UpdateOperations<ServiceLevelIndicator> updateOperations =
         hPersistence.createUpdateOperations(ServiceLevelIndicator.class);
-    updateOperations.set(ServiceLevelIndicatorKeys.type, serviceLevelIndicatorDTO.getType());
-    updateOperations.set(ServiceLevelIndicatorKeys.spec, serviceLevelIndicatorDTO.getSpec());
+    ServiceLevelIndicator updatableServiceLevelIndicator = convertDTOToEntity(projectParams, serviceLevelIndicatorDTO);
+    updatableEntity.setUpdateOperations(updateOperations, updatableServiceLevelIndicator);
     hPersistence.update(serviceLevelIndicator, updateOperations);
   }
 
   private void saveServiceLevelIndicatorEntity(
       ProjectParams projectParams, ServiceLevelIndicatorDTO serviceLevelIndicatorDTO) {
-    ServiceLevelIndicator serviceLevelIndicator = ServiceLevelIndicator.builder()
-                                                      .accountId(projectParams.getAccountIdentifier())
-                                                      .orgIdentifier(projectParams.getOrgIdentifier())
-                                                      .projectIdentifier(projectParams.getProjectIdentifier())
-                                                      .spec(serviceLevelIndicatorDTO.getSpec())
-                                                      .name(serviceLevelIndicatorDTO.getName())
-                                                      .identifier(serviceLevelIndicatorDTO.getIdentifier())
-                                                      .type(serviceLevelIndicatorDTO.getType())
-                                                      .build();
-
+    ServiceLevelIndicator serviceLevelIndicator = convertDTOToEntity(projectParams, serviceLevelIndicatorDTO);
     hPersistence.save(serviceLevelIndicator);
+  }
+
+  private ServiceLevelIndicator convertDTOToEntity(
+      ProjectParams projectParams, ServiceLevelIndicatorDTO serviceLevelIndicatorDTO) {
+    return createServiceLevelIndicatorEntity(projectParams, serviceLevelIndicatorDTO);
   }
 
   private ServiceLevelIndicator getServiceLevelIndicator(ProjectParams projectParams, String identifier) {
@@ -130,11 +135,11 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
   }
 
   private ServiceLevelIndicatorDTO sliEntityToDTO(ServiceLevelIndicator serviceLevelIndicator) {
-    return ServiceLevelIndicatorDTO.builder()
-        .identifier(serviceLevelIndicator.getIdentifier())
-        .name(serviceLevelIndicator.getName())
-        .type(serviceLevelIndicator.getType())
-        .spec(serviceLevelIndicator.getSpec())
-        .build();
+    return serviceLevelIndicatorEntityAndDTOTransformer.getDto(serviceLevelIndicator);
+  }
+
+  public ServiceLevelIndicator createServiceLevelIndicatorEntity(
+      ProjectParams projectParams, ServiceLevelIndicatorDTO serviceLevelIndicatorDTO) {
+    return serviceLevelIndicatorEntityAndDTOTransformer.getEntity(projectParams, serviceLevelIndicatorDTO);
   }
 }
