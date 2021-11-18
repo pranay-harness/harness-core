@@ -2622,6 +2622,25 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "KustomizePatchesManifest": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ManifestAttributes"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "metadata": {
+              "type": "string"
+            },
+            "store": {
+              "$ref": "#/definitions/StoreConfigWrapper"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ManifestAttributes": {
       "type": "object",
       "discriminator": "type",
@@ -2644,6 +2663,7 @@
             "HelmChart",
             "K8sManifest",
             "Kustomize",
+            "KustomizePatches",
             "OpenshiftParam",
             "OpenshiftTemplate",
             "Values"
@@ -2696,6 +2716,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/KustomizeManifest"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "KustomizePatches"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/KustomizePatchesManifest"
               }
             }
           }

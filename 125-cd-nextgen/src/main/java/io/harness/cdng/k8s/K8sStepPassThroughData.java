@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.manifest.yaml.KustomizePatchesManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
@@ -24,6 +25,7 @@ public class K8sStepPassThroughData implements PassThroughData {
   ManifestOutcome k8sManifestOutcome;
   List<ValuesManifestOutcome> valuesManifestOutcomes;
   List<OpenshiftParamManifestOutcome> openshiftParamManifestOutcomes;
+  List<KustomizePatchesManifestOutcome> kustomizePatchesManifestOutcomes;
   InfrastructureOutcome infrastructure;
   String helmValuesFileContent;
 }

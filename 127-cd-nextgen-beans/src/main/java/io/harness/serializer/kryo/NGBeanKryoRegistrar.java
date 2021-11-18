@@ -10,6 +10,7 @@ import io.harness.cdng.manifest.yaml.HelmCommandFlagType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
+import io.harness.cdng.manifest.yaml.KustomizePatchesManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
@@ -41,5 +42,6 @@ public class NGBeanKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceOutcome.ManifestsWrapperOutcome.class, 12506);
     kryo.register(ServiceOutcome.VariablesWrapperOutcome.class, 12507);
     kryo.register(StoreConfig.class, 8022);
+    kryo.register(KustomizePatchesManifestOutcome.class, 12548);
   }
 }

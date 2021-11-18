@@ -144,6 +144,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.YamlUtils;
 import io.harness.shell.SshSessionConfig;
+import io.harness.yaml.BooleanPatchedRepresenter;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -171,6 +172,7 @@ import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -212,6 +214,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.yaml.snakeyaml.Yaml;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
@@ -222,6 +227,10 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @OwnedBy(CDP)
 public class K8sTaskHelperBase {
   public static final Set<String> openshiftResources = ImmutableSet.of("Route");
+  public static final String kustomizeFileName = "kustomization.yaml";
+  public static final String patchFieldName = "patchesStrategicMerge";
+  public static final String patchYaml = "patches-%d.yaml";
+
   @Inject private TimeLimiter timeLimiter;
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private KubernetesHelperService kubernetesHelperService;
@@ -1712,6 +1721,80 @@ public class K8sTaskHelperBase {
     return valuesFilesOptionsBuilder.toString();
   }
 
+  static JSONObject readAndConvertYamlToJson(String yamlFilePath) throws IOException {
+    Yaml yaml = new Yaml();
+    Map<String, Object> obj = yaml.load(getYaml(yamlFilePath));
+    log.debug("Returning json of yaml file  ", yamlFilePath);
+    return new JSONObject(obj);
+  }
+
+  private static String getYaml(String filePath) throws IOException {
+    log.debug("Reading yaml file ", filePath);
+    return new String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8);
+  }
+
+  public String convertJsonToYaml(JSONObject jsonObject) {
+    String prettyJSONString = jsonObject.toString();
+    Yaml yaml = new Yaml(new io.kubernetes.client.util.Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+    Map<String, Object> map = yaml.load(prettyJSONString);
+    return yaml.dump(map);
+  }
+
+  public JSONArray updatePatchList(JSONObject kustomizationJson, JSONArray patchList) {
+    if (kustomizationJson.has(patchFieldName)) {
+      JSONArray newPatchList = (JSONArray) kustomizationJson.get(patchFieldName);
+      for (Object jsonObject : patchList) {
+        newPatchList.put(jsonObject);
+      }
+      return newPatchList;
+    }
+    return patchList;
+  }
+
+  public void updateKustomizationYaml(String kustomizePath, JSONArray patchList) throws IOException {
+    String kustomizationYamlPath = kustomizePath + '/' + kustomizeFileName;
+
+    JSONObject kustomizationJson = readAndConvertYamlToJson(kustomizationYamlPath);
+
+    JSONArray updatedPatchList = updatePatchList(kustomizationJson, patchList);
+    kustomizationJson.put(patchFieldName, updatedPatchList);
+
+    String newKustomize = convertJsonToYaml(kustomizationJson);
+    FileIo.deleteFileIfExists(kustomizationYamlPath);
+    FileIo.writeUtf8StringToFile(kustomizationYamlPath, newKustomize);
+  }
+
+  public JSONArray writePatchesToDirectory(String kustomizePath, List<String> patchesFiles) throws IOException {
+    StringBuilder patchesFilesOptionsBuilder = new StringBuilder(128);
+    JSONArray patchList = new JSONArray();
+
+    for (int i = 0; i < patchesFiles.size(); i++) {
+      validateValuesFileContents(patchesFiles.get(i));
+      String patchesFileName = format(patchYaml, i);
+      FileIo.writeUtf8StringToFile(kustomizePath + '/' + patchesFileName, patchesFiles.get(i));
+      patchesFilesOptionsBuilder.append(" -f ").append(patchesFileName);
+      patchList.put(patchesFileName);
+    }
+
+    log.info("Patches file options: " + patchesFilesOptionsBuilder.toString());
+    return patchList;
+  }
+
+  public void savingPatchesToDirectory(
+      String kustomizePath, List<String> patchesFiles, LogCallback executionLogCallback) {
+    if (isEmpty(patchesFiles)) {
+      executionLogCallback.saveExecutionLog("No Patches files found. Skipping kustomization.yaml updation");
+      return;
+    }
+
+    try {
+      JSONArray patchList = writePatchesToDirectory(kustomizePath, patchesFiles);
+      updateKustomizationYaml(kustomizePath, patchList);
+    } catch (IOException ioException) {
+      log.error("Error in Updating kustomization.yaml " + ioException);
+    }
+  }
+
   public List<FileData> renderManifestFilesForGoTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
       List<FileData> manifestFiles, List<String> valuesFiles, LogCallback executionLogCallback, long timeoutInMillis)
       throws Exception {
@@ -2145,7 +2228,7 @@ public class K8sTaskHelperBase {
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
-      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, List<String> manifestHelperFiles,
+      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, List<String> manifestOverrideFiles,
       String releaseName, String namespace, LogCallback executionLogCallback, Integer timeoutInMin) throws Exception {
     ManifestType manifestType = manifestDelegateConfig.getManifestType();
     long timeoutInMillis = K8sTaskHelperBase.getTimeoutMillisFromMinutes(timeoutInMin);
@@ -2154,17 +2237,22 @@ public class K8sTaskHelperBase {
       case K8S_MANIFEST:
         List<FileData> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
         return renderManifestFilesForGoTemplate(
-            k8sDelegateTaskParams, manifestFiles, manifestHelperFiles, executionLogCallback, timeoutInMillis);
+            k8sDelegateTaskParams, manifestFiles, manifestOverrideFiles, executionLogCallback, timeoutInMillis);
 
       case HELM_CHART:
         HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
         return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(),
-            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), manifestHelperFiles,
+            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), manifestOverrideFiles,
             releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
             helmChartManifest.getHelmCommandFlag());
 
       case KUSTOMIZE:
         KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
+
+        if (k8sDelegateTaskParams.isUseLatestKustomizeVersion()) {
+          String kustomizePath = manifestFilesDirectory + '/' + kustomizeManifest.getKustomizeDirPath();
+          savingPatchesToDirectory(kustomizePath, manifestOverrideFiles, executionLogCallback);
+        }
         return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
             kustomizeManifest.getPluginPath(), kustomizeManifest.getKustomizeDirPath(), executionLogCallback);
 
@@ -2174,7 +2262,7 @@ public class K8sTaskHelperBase {
         GitStoreDelegateConfig otGitStoreDelegateConfig =
             (GitStoreDelegateConfig) openshiftManifestConfig.getStoreDelegateConfig();
         return openShiftDelegateService.processTemplatization(manifestFilesDirectory, k8sDelegateTaskParams.getOcPath(),
-            otGitStoreDelegateConfig.getPaths().get(0), executionLogCallback, manifestHelperFiles);
+            otGitStoreDelegateConfig.getPaths().get(0), executionLogCallback, manifestOverrideFiles);
 
       default:
         throw new UnsupportedOperationException(
@@ -2184,7 +2272,7 @@ public class K8sTaskHelperBase {
 
   public List<FileData> renderTemplateForGivenFiles(K8sDelegateTaskParams k8sDelegateTaskParams,
       ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, @NotEmpty List<String> filesList,
-      List<String> valuesFiles, String releaseName, String namespace, LogCallback executionLogCallback,
+      List<String> manifestOverrideFiles, String releaseName, String namespace, LogCallback executionLogCallback,
       Integer timeoutInMin) throws Exception {
     ManifestType manifestType = manifestDelegateConfig.getManifestType();
     long timeoutInMillis = K8sTaskHelperBase.getTimeoutMillisFromMinutes(timeoutInMin);
@@ -2193,19 +2281,20 @@ public class K8sTaskHelperBase {
       case K8S_MANIFEST:
         List<FileData> manifestFiles = readFilesFromDirectory(manifestFilesDirectory, filesList, executionLogCallback);
         return renderManifestFilesForGoTemplate(
-            k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+            k8sDelegateTaskParams, manifestFiles, manifestOverrideFiles, executionLogCallback, timeoutInMillis);
 
       case HELM_CHART:
         HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
         return renderTemplateForHelmChartFiles(k8sDelegateTaskParams.getHelmPath(),
-            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), filesList, valuesFiles,
-            releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
-            helmChartManifest.getHelmCommandFlag());
+            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), filesList,
+            manifestOverrideFiles, releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(),
+            timeoutInMillis, helmChartManifest.getHelmCommandFlag());
 
       case KUSTOMIZE:
         KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
         return kustomizeTaskHelper.buildForApply(k8sDelegateTaskParams.getKustomizeBinaryPath(),
-            kustomizeManifest.getPluginPath(), manifestFilesDirectory, filesList, executionLogCallback);
+            kustomizeManifest.getPluginPath(), manifestFilesDirectory, filesList,
+            k8sDelegateTaskParams.isUseLatestKustomizeVersion(), manifestOverrideFiles, executionLogCallback);
 
       default:
         throw new UnsupportedOperationException(
@@ -2215,10 +2304,10 @@ public class K8sTaskHelperBase {
 
   public List<KubernetesResource> getResourcesFromManifests(K8sDelegateTaskParams k8sDelegateTaskParams,
       ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, @NotEmpty List<String> filesList,
-      List<String> valuesFiles, String releaseName, String namespace, LogCallback logCallback, Integer timeoutInMin)
-      throws Exception {
+      List<String> manifestOverrideFiles, String releaseName, String namespace, LogCallback logCallback,
+      Integer timeoutInMin) throws Exception {
     List<FileData> manifestFiles = renderTemplateForGivenFiles(k8sDelegateTaskParams, manifestDelegateConfig,
-        manifestFilesDirectory, filesList, valuesFiles, releaseName, namespace, logCallback, timeoutInMin);
+        manifestFilesDirectory, filesList, manifestOverrideFiles, releaseName, namespace, logCallback, timeoutInMin);
     if (isEmpty(manifestFiles)) {
       return new ArrayList<>();
     }
