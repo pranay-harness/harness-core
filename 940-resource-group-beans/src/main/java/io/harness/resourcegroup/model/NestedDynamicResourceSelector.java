@@ -10,6 +10,6 @@ import lombok.Data;
 @OwnedBy(HarnessTeam.PL)
 @Data
 @Builder
-public class DynamicResourceSelector implements ResourceSelector {
+public class NestedDynamicResourceSelector implements ResourceSelector {
   @NotNull String resourceType;
 }
