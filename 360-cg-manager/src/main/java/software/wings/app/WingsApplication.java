@@ -203,6 +203,7 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.security.authentication.totp.TotpModule;
 import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
@@ -645,6 +646,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new CapabilityModule());
     modules.add(MigrationModule.getInstance());
     modules.add(new WingsModule(configuration));
+    modules.add(new TotpModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
