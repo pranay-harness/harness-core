@@ -33,4 +33,39 @@ java_library(
     ],
 )
 
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        "module",
+        "//:lombok",
+        "//950-delegate-tasks-beans:module",
+        "//953-events-api:module",
+        "//960-persistence:module",
+        "//970-ng-commons:module",
+        "//980-commons:module",
+        "//990-commons-test:module",
+        "//999-annotations:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_inject_guice",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_protobuf_protobuf_java_util",
+        "@maven//:io_github_resilience4j_resilience4j_core",
+        "@maven//:io_github_resilience4j_resilience4j_retry",
+        "@maven//:io_vavr_vavr",
+        "@maven//:javax_validation_validation_api",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_redisson_redisson",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+run_tests()
+
 run_analysis()
