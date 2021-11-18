@@ -591,15 +591,20 @@ public class K8sTaskHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testRenderTemplateForGivenFilesKustomizeSourceRepo() throws Exception {
     final String workingDirectory = ".";
-    K8sDelegateTaskParams k8sDelegateTaskParams =
-        K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
+                                                      .workingDirectory(workingDirectory)
+                                                      .helmPath("helm")
+                                                      .useLatestKustomizeVersion(false)
+                                                      .build();
 
-    when(kustomizeTaskHelper.buildForApply(any(), any(), any(), any(), any())).thenReturn(new ArrayList<>());
+    doReturn(new ArrayList<>())
+        .when(kustomizeTaskHelper)
+        .buildForApply(any(), any(), any(), any(), anyBoolean(), any(), any());
     final List<FileData> manifestFiles = spyHelper.renderTemplateForGivenFiles(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder().manifestStoreTypes(KustomizeSourceRepo).build(), ".", new ArrayList<>(),
         new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build(),
         false);
-    verify(kustomizeTaskHelper).buildForApply(any(), any(), any(), any(), any());
+    verify(kustomizeTaskHelper).buildForApply(any(), any(), any(), any(), anyBoolean(), any(), any());
     assertThat(manifestFiles.size()).isEqualTo(0);
   }
 

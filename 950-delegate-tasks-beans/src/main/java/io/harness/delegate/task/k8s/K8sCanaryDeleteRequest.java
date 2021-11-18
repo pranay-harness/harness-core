@@ -5,6 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 
+import java.util.Collections;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -30,5 +32,20 @@ public class K8sCanaryDeleteRequest implements K8sDeployRequest {
   @Override
   public K8sTaskType getTaskType() {
     return K8sTaskType.CANARY_DELETE;
+  }
+
+  @Override
+  public List<String> getValuesYamlList() {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<String> getKustomizePatchesList() {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<String> getOpenshiftParamList() {
+    return Collections.emptyList();
   }
 }
