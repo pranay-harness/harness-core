@@ -8,8 +8,12 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.LocalEncryptionMigrationInfo;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedMech;
+import io.harness.security.encryption.EncryptedRecord;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -35,22 +39,30 @@ public class LocalAwsSdkEncryptionModeMigrationHandler extends LocalEncryptionMi
 
     PageResponse<EncryptedData> encryptedDataPageResponse =
         getEncryptedRecords(accountId, pageRequest, lastMigrationState);
-    while (encryptedDataPageResponse.iterator().hasNext()) {
-      EncryptedData encryptedData = encryptedDataPageResponse.iterator().next();
+
+    List<EncryptedData> encryptedDataList = encryptedDataPageResponse.getResponse();
+    for (EncryptedData encryptedData : encryptedDataList) {
       UpdateOperations<EncryptedData> updateOperations = secretsDao.getUpdateOperations();
       if (encryptedData.getEncryptedMech() == null) {
-        EncryptedData migratedRecord = (EncryptedData) localEncryptor.encryptSecret(
+        EncryptedRecord migratedRecord = localEncryptor.encryptSecret(
             accountId, new String(localEncryptor.fetchSecretValue(accountId, encryptedData, null)), null);
 
         updateOperations.set(EncryptedDataKeys.encryptedMech, migratedRecord.getEncryptedMech())
             .set(EncryptedDataKeys.encryptionKey, migratedRecord.getEncryptionKey())
             .set(EncryptedDataKeys.encryptedValueBytes, migratedRecord.getEncryptedValueBytes())
-            .set(EncryptedDataKeys.encryptedValue, null);
+            .unset(EncryptedDataKeys.encryptedValue);
       } else {
         updateOperations.set(EncryptedDataKeys.encryptedMech, EncryptedMech.AWS_ENCRYPTION_SDK_CRYPTO)
             .set(EncryptedDataKeys.encryptionKey, encryptedData.getAdditionalMetadata().getSecretKeyUuid())
             .set(EncryptedDataKeys.encryptedValueBytes, encryptedData.getAdditionalMetadata().getAwsEncryptedSecret())
-            .set(EncryptedDataKeys.encryptedValue, null);
+            .unset(EncryptedDataKeys.encryptedValue);
+
+        removeAwsSdkKeysFromMetadata(encryptedData);
+        if (encryptedData.getAdditionalMetadata().getValues() != null) {
+          updateOperations.set(EncryptedDataKeys.additionalMetadata, encryptedData.getAdditionalMetadata());
+        } else {
+          updateOperations.unset(EncryptedDataKeys.additionalMetadata);
+        }
       }
 
       secretsDao.updateSecret(encryptedData, updateOperations);
@@ -69,5 +81,13 @@ public class LocalAwsSdkEncryptionModeMigrationHandler extends LocalEncryptionMi
     PageRequest<EncryptedData> pageRequest = initPageRequest(accountId);
     pageRequest.addFilter(EncryptedData.EncryptedDataKeys.encryptedMech, null);
     return pageRequest;
+  }
+
+  private void removeAwsSdkKeysFromMetadata(EncryptedRecord encryptedRecord) {
+    Map<String, Object> values = encryptedRecord.getAdditionalMetadata().getValues();
+    if (values != null) {
+      values.remove(AdditionalMetadata.AWS_ENCRYPTED_SECRET);
+      values.remove(AdditionalMetadata.SECRET_KEY_UUID_KEY);
+    }
   }
 }

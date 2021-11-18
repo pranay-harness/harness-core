@@ -63,7 +63,6 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
     List<EncryptedData> encryptedDataList = encryptedDataPageResponse.getResponse();
     encryptedDataList.forEach(encryptedData -> {
       assertThat(EncryptedMech.MULTI_CRYPTO.equals(encryptedData.getEncryptedMech())).isTrue();
-      assertThat(encryptedData.getEncryptedMech()).isEqualTo(EncryptedMech.MULTI_CRYPTO);
       assertThat(encryptedData.getEncryptedValue()).isNotNull();
       assertThat(encryptedData.getEncryptionKey()).isNotNull();
       assertThat(encryptedData.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_UUID_KEY))
@@ -144,7 +143,6 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
       String value = RandomStringUtils.randomAlphabetic(10);
       secretsDao.saveSecret(mapEncryptedRecordToEncryptedData(localEncryptor.encryptSecret(ACCOUNT_ID, value, null)));
     }
-    getMigratedRecordsCount();
   }
 
   private void createEncryptedRecordsWithCreatedAtBeforeGivenTimestamp(int numOfRecords, long thresholdCreatedAt) {
