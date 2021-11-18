@@ -24,7 +24,7 @@ import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.metrics.CVNGMetricsUtils;
 import io.harness.cvng.metrics.services.impl.MetricContextBuilder;
-import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.cvng.statemachine.services.api.OrchestrationService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.DataCollectionProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.metrics.AutoMetricContext;
