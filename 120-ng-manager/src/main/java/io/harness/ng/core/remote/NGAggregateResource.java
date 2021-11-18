@@ -40,6 +40,7 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.services.ProjectService;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.common.collect.ImmutableList;
@@ -87,7 +88,7 @@ public class NGAggregateResource {
   private final OrganizationService organizationService;
   private final AccessControlClient accessControlClient;
   private final AggregateAccountResourceService aggregateAccountResourceService;
-
+  private final ProjectService projectService;
   @GET
   @Path("projects/{identifier}")
   @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
@@ -125,15 +126,30 @@ public class NGAggregateResource {
   @Path("all-projects")
   @ApiOperation(value = "Get ProjectDTO list", nickname = "getProjectDTOList")
   public ResponseDTO<List<ProjectDTO>> list(
-          @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-          @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-          @QueryParam("hasModule") @DefaultValue("true") boolean hasModule,
-          @QueryParam(NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
-          @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam("hasModule") @DefaultValue("true") boolean hasModule,
+      @QueryParam(NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     Set<String> permittedOrgIds = getPermittedOrganizations(accountIdentifier, orgIdentifier);
     ProjectFilterDTO projectFilterDTO = getProjectFilterDTO(searchTerm, permittedOrgIds, hasModule, moduleType);
-    return ResponseDTO.newResponse(aggregateProjectService.listProjectDtO(
-            accountIdentifier, projectFilterDTO));
+    return ResponseDTO.newResponse(projectService.listPermittedProjects(accountIdentifier, projectFilterDTO));
+  }
+  @GET
+  @Path("projects-count")
+  @ApiOperation(value = "Get count of projects accessible to a user", nickname = "getAccessibleProjectsCount")
+  public ResponseDTO<ActiveProjectsCountDTO> getAccessibleProjectsCount(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam("hasModule") @DefaultValue("true") boolean hasModule,
+      @QueryParam(NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    Set<String> permittedOrgIds = getPermittedOrganizations(accountIdentifier, orgIdentifier);
+    ProjectFilterDTO projectFilterDTO = getProjectFilterDTO(searchTerm, permittedOrgIds, hasModule, moduleType);
+    return ResponseDTO.newResponse(
+            projectService.permittedProjectsCount(accountIdentifier,projectFilterDTO,startInterval,endInterval));
   }
 
   private ProjectFilterDTO getProjectFilterDTO(
