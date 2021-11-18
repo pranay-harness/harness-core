@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -40,9 +39,9 @@ public class StackdriverCVConfig extends MetricCVConfig {
   private String dashboardPath;
 
   @Data
-  @Builder
+  @SuperBuilder
   @FieldNameConstants(innerTypeName = "MetricInfoKeys")
-  public static class MetricInfo {
+  public static class MetricInfo extends AnalysisInfo {
     private String metricName;
     private String jsonMetricDefinition;
     private List<String> tags;
@@ -89,14 +88,22 @@ public class StackdriverCVConfig extends MetricCVConfig {
 
     stackdriverDefinitions.forEach(definition -> {
       TimeSeriesMetricType metricType = definition.getRiskProfile().getMetricType();
-      metricInfoList.add(MetricInfo.builder()
-                             .metricName(definition.getMetricName())
-                             .jsonMetricDefinition(JsonUtils.asJson(definition.getJsonMetricDefinition()))
-                             .metricType(metricType)
-                             .tags(definition.getMetricTags())
-                             .isManualQuery(definition.isManualQuery())
-                             .serviceInstanceField(definition.getServiceInstanceField())
-                             .build());
+      metricInfoList.add(
+          MetricInfo.builder()
+              .metricName(definition.getMetricName())
+              .jsonMetricDefinition(JsonUtils.asJson(definition.getJsonMetricDefinition()))
+              .metricType(metricType)
+              .tags(definition.getMetricTags())
+              .isManualQuery(definition.isManualQuery())
+              .serviceInstanceField(definition.getServiceInstanceField())
+              .sli(AnalysisInfo.SLI.builder().enabled(definition.getSli().getEnabled()).build())
+              .liveMonitoring(AnalysisInfo.LiveMonitoring.builder()
+                                  .enabled(definition.getAnalysis().getLiveMonitoring().getEnabled())
+                                  .build())
+              .deploymentVerification(AnalysisInfo.DeploymentVerification.builder()
+                                          .enabled(definition.getAnalysis().getDeploymentVerification().getEnabled())
+                                          .build())
+              .build());
 
       // add this metric to the pack and the corresponding thresholds
       Set<TimeSeriesThreshold> thresholds = getThresholdsToCreateOnSaveForCustomProviders(

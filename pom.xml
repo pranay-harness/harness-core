@@ -997,7 +997,7 @@
             <dependency>
                 <groupId>io.cloudsoft.windows</groupId>
                 <artifactId>winrm4j</artifactId>
-                <version>0.12.2</version>
+                <version>0.12.3</version>
             </dependency>
             <dependency>
                 <groupId>io.debezium</groupId>

@@ -12,7 +12,7 @@ import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.ResourceType;
-import software.wings.beans.Application;
+import software.wings.beans.CGConstants;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
@@ -153,7 +153,7 @@ public class AuditRecordMigration implements Migration {
         auditHeader.getEntityAuditRecords().stream().filter(this::recordNeedsUpdateForGlobalAppId).collect(toList());
 
     if (isNotEmpty(recordList)) {
-      recordList.forEach(record -> record.setAppId(Application.GLOBAL_APP_ID));
+      recordList.forEach(record -> record.setAppId(CGConstants.GLOBAL_APP_ID));
       unchanged = false;
     }
 
@@ -200,6 +200,6 @@ public class AuditRecordMigration implements Migration {
 
   private boolean recordNeedsUpdateForGlobalAppId(EntityAuditRecord record) {
     return migrationAffectedTypes.contains(record.getAffectedResourceType())
-        && !Application.GLOBAL_APP_ID.equals(record.getAppId());
+        && !CGConstants.GLOBAL_APP_ID.equals(record.getAppId());
   }
 }

@@ -7,8 +7,8 @@ import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_MAIN_GIT_
 import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_MAIN_GIT_REPO;
 import static io.harness.shell.AccessType.KEY;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;

@@ -7,7 +7,7 @@ import io.harness.cvng.migration.beans.ChecklistItem;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrchestratorKeys;
-import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.cvng.statemachine.services.api.OrchestrationService;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 

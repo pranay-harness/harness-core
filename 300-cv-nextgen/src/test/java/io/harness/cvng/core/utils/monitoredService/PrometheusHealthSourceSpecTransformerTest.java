@@ -1,6 +1,6 @@
 package io.harness.cvng.core.utils.monitoredService;
 
-import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -11,6 +11,9 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.beans.PrometheusMetricDefinition;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.PrometheusHealthSourceSpec;
+import io.harness.cvng.core.entities.AnalysisInfo.DeploymentVerification;
+import io.harness.cvng.core.entities.AnalysisInfo.LiveMonitoring;
+import io.harness.cvng.core.entities.AnalysisInfo.SLI;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
 import io.harness.cvng.core.entities.PrometheusCVConfig.MetricInfo;
@@ -41,7 +44,7 @@ public class PrometheusHealthSourceSpecTransformerTest extends CvNextGenTestBase
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = DEEPAK_CHHIKARA)
   @Category(UnitTests.class)
   public void testTransformToHealthSourceConfig() {
     PrometheusHealthSourceSpec prometheusHealthSourceSpec =
@@ -65,6 +68,12 @@ public class PrometheusHealthSourceSpecTransformerTest extends CvNextGenTestBase
         .hasSameElementsAs(Arrays.asList(
             PrometheusMetricDefinition.PrometheusFilter.builder().labelName("filter2").labelValue("cv-2").build(),
             PrometheusMetricDefinition.PrometheusFilter.builder().labelName("filter3").labelValue("cv-3").build()));
+    assertThat(metricDefinition.getAnalysis().getDeploymentVerification().getEnabled()).isTrue();
+    assertThat(metricDefinition.getAnalysis().getLiveMonitoring().getEnabled()).isTrue();
+    assertThat(metricDefinition.getSli().getEnabled()).isTrue();
+    assertThat(metricDefinition.getAnalysis().getDeploymentVerification().getEnabled()).isTrue();
+    assertThat(metricDefinition.getAnalysis().getRiskProfile().getMetricType())
+        .isEqualTo(TimeSeriesMetricType.RESP_TIME);
   }
 
   private PrometheusCVConfig createCVConfig() {
@@ -72,7 +81,7 @@ public class PrometheusHealthSourceSpecTransformerTest extends CvNextGenTestBase
     cvConfig.setConnectorIdentifier(connectorIdentifier);
     cvConfig.setMetricPack(MetricPack.builder().category(CVMonitoringCategory.PERFORMANCE).build());
     MetricInfo metricInfo =
-        PrometheusCVConfig.MetricInfo.builder()
+        MetricInfo.builder()
             .metricName("myMetric")
             .metricType(TimeSeriesMetricType.RESP_TIME)
             .prometheusMetricName("cpu_usage_total")
@@ -87,6 +96,9 @@ public class PrometheusHealthSourceSpecTransformerTest extends CvNextGenTestBase
             .additionalFilters(Arrays.asList(
                 PrometheusMetricDefinition.PrometheusFilter.builder().labelName("filter2").labelValue("cv-2").build(),
                 PrometheusMetricDefinition.PrometheusFilter.builder().labelName("filter3").labelValue("cv-3").build()))
+            .deploymentVerification(DeploymentVerification.builder().enabled(Boolean.TRUE).build())
+            .liveMonitoring(LiveMonitoring.builder().enabled(Boolean.TRUE).build())
+            .sli(SLI.builder().enabled(Boolean.TRUE).build())
             .build();
 
     cvConfig.setMetricInfoList(Arrays.asList(metricInfo));

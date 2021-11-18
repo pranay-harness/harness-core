@@ -17,15 +17,19 @@ import com.google.common.collect.ImmutableList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.Singular;
+import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @Data
-@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "VerificationTaskKeys")
 @Entity(value = "verificationTasks", noClassnameStored = true)
@@ -41,15 +45,82 @@ public final class VerificationTask implements UuidAware, CreatedAtAware, Accoun
                  .field(VerificationTaskKeys.verificationJobInstanceId)
                  .field(VerificationTaskKeys.accountId)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("verification_job_instance_id_idx")
+                 .field(VerificationTaskKeys.taskInfo + ".verificationJobInstanceId")
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("cv_config_id_idx")
+                 .field(VerificationTaskKeys.taskInfo + ".cvConfigId")
+                 .build())
+        .add(CompoundMongoIndex.builder().name("sli_id_idx").field(VerificationTaskKeys.taskInfo + ".sliId").build())
         .build();
+  }
+
+  @Builder
+  public VerificationTask(
+      Map<String, String> tags, String uuid, String accountId, long createdAt, Date validUntil, TaskInfo taskInfo) {
+    this.tags = tags;
+    this.uuid = uuid;
+    this.accountId = accountId;
+    this.createdAt = createdAt;
+    this.validUntil = validUntil;
+    this.taskInfo = taskInfo;
   }
 
   @Singular Map<String, String> tags;
   @Id private String uuid;
   private String accountId;
   @FdIndex private long createdAt;
-  @FdIndex private String cvConfigId;
-  private String verificationJobInstanceId;
+  @Getter(AccessLevel.PRIVATE) @FdIndex @Deprecated private String cvConfigId;
+  @Getter(AccessLevel.PRIVATE) @Deprecated private String verificationJobInstanceId;
   @FdTtlIndex private Date validUntil;
   // TODO: figure out a way to cleanup old/deleted mappings.
+  private TaskInfo taskInfo;
+
+  public TaskInfo getTaskInfo() {
+    if (taskInfo == null) {
+      if (StringUtils.isNotEmpty(verificationJobInstanceId)) {
+        return DeploymentInfo.builder()
+            .verificationJobInstanceId(verificationJobInstanceId)
+            .cvConfigId(cvConfigId)
+            .build();
+      } else {
+        return LiveMonitoringInfo.builder().cvConfigId(cvConfigId).build();
+      }
+    }
+    return taskInfo;
+  }
+
+  public abstract static class TaskInfo {
+    public static final String TASK_TYPE_FIELD_NAME = "taskType";
+    public abstract TaskType getTaskType();
+  }
+
+  @Value
+  @Builder
+  @FieldNameConstants(innerTypeName = "LiveMonitoringInfoKeys")
+  public static class LiveMonitoringInfo extends TaskInfo {
+    private final TaskType taskType = TaskType.LIVE_MONITORING;
+    private String cvConfigId;
+  }
+
+  @Value
+  @Builder
+  @FieldNameConstants(innerTypeName = "DeploymentInfoKeys")
+  public static class DeploymentInfo extends TaskInfo {
+    private final TaskType taskType = TaskType.DEPLOYMENT;
+    @NonNull private String cvConfigId;
+    @NonNull private String verificationJobInstanceId;
+  }
+
+  @Value
+  @Builder
+  @FieldNameConstants(innerTypeName = "SLIInfoKeys")
+  public static class SLIInfo extends TaskInfo {
+    private final TaskType taskType = TaskType.SLI;
+    @NonNull private String sliId;
+  }
+
+  public enum TaskType { LIVE_MONITORING, DEPLOYMENT, SLI }
 }

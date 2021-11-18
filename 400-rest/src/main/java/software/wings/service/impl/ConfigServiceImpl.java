@@ -7,11 +7,11 @@ import static io.harness.delegate.beans.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;

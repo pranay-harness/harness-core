@@ -64,6 +64,7 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.template.exception.NGTemplateResolveExceptionMapper;
 import io.harness.notification.module.NotificationClientModule;
@@ -78,6 +79,7 @@ import io.harness.pms.approval.ApprovalInstanceHandler;
 import io.harness.pms.async.plan.PlanNotifyEventConsumer;
 import io.harness.pms.async.plan.PlanNotifyEventPublisher;
 import io.harness.pms.event.PMSEventConsumerService;
+import io.harness.pms.event.webhookevent.WebhookEventStreamConsumer;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
@@ -341,12 +343,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     injector.getInstance(InterruptMonitor.class).registerIterators(iteratorsConfig.getInterruptMonitorConfig());
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
-    log.info("Initializing gRPC servers...");
-    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
-    serviceManager.awaitHealthy();
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-
-    registerPmsSdk(appConfig, injector);
     registerYamlSdk(injector);
     if (appConfig.isShouldDeployWithGitSync()) {
       registerGitSyncSdk(appConfig, injector, environment);
@@ -355,8 +351,19 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
     registerPmsSdkEvents(appConfig.getPipelineServiceConsumersConfig(), injector);
+
+    initializeGrpcServer(injector);
+    registerPmsSdk(appConfig, injector);
     registerMigrations(injector);
+
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void initializeGrpcServer(Injector injector) {
+    log.info("Initializing gRPC servers...");
+    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+    serviceManager.awaitHealthy();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
   }
 
   private void registerOasResource(PipelineServiceConfiguration appConfig, Environment environment, Injector injector) {
@@ -392,7 +399,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     } catch (MalformedURLException e) {
       log.error("failed to set baseurl for server, {}/{}", appConfig.hostname, appConfig.getBasePathPrefix());
     }
-    Set<String> packages = PipelineServiceConfiguration.getUniquePackagesContainingResources();
+    Set<String> packages = PipelineServiceConfiguration.getUniquePackagesContainingOpenApiResources();
     return new SwaggerConfiguration().openAPI(oas).prettyPrint(true).resourcePackages(packages).scannerClass(
         "io.swagger.v3.jaxrs2.integration.JaxrsAnnotationScanner");
   }
@@ -579,6 +586,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     log.info("Initializing pms sdk redis abstract consumers...");
     PipelineEventConsumerController pipelineEventConsumerController =
         injector.getInstance(PipelineEventConsumerController.class);
+    pipelineEventConsumerController.register(injector.getInstance(WebhookEventStreamConsumer.class),
+        pipelineServiceConsumersConfig.getWebhookEvent().getThreads());
     pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class),
         pipelineServiceConsumersConfig.getInterrupt().getThreads());
     pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class),
@@ -695,6 +704,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {
+    environment.jersey().register(JerseyViolationExceptionMapperV2.class);
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(NGAccessDeniedExceptionMapper.class);

@@ -13,6 +13,7 @@ import io.harness.serializer.kryo.SecretManagerClientKryoRegistrar;
 import io.harness.serializer.kryo.WatcherBeansKryoRegister;
 import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.serializer.morphia.DelegateServiceMorphiaRegistrar;
+import io.harness.serializer.morphia.DelegateTasksMorphiaRegistrar;
 import io.harness.serializer.morphia.FeatureFlagBeansMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableSet;
@@ -36,6 +37,7 @@ public class DelegateServiceRegistrars {
           .add(ProjectAndOrgKryoRegistrar.class)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .addAll(OutboxEventRegistrars.kryoRegistrars)
+          .addAll(DelegateTaskRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -43,7 +45,8 @@ public class DelegateServiceRegistrars {
           .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
           .add(CommonEntitiesMorphiaRegister.class)
           .addAll(CgOrchestrationRegistrars.morphiaRegistrars)
-          .add(DelegateServiceMorphiaRegistrar.class)
+          .addAll(DelegateTaskRegistrars.morphiaRegistrars)
+          .add(DelegateTasksMorphiaRegistrar.class)
           .addAll(EventsFrameworkRegistrars.morphiaRegistrars)
           .add(FeatureFlagBeansMorphiaRegistrar.class)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
@@ -52,5 +55,6 @@ public class DelegateServiceRegistrars {
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
           .addAll(ProjectAndOrgRegistrars.morphiaRegistrars)
+          .add(DelegateServiceMorphiaRegistrar.class)
           .build();
 }

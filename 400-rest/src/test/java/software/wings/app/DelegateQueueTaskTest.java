@@ -4,6 +4,7 @@ import static io.harness.beans.DelegateTask.Status.PARKED;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.MARKO;
 
 import static java.util.Arrays.asList;
@@ -70,6 +71,22 @@ public class DelegateQueueTaskTest extends WingsBaseTest {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId("FOO")
                                     .status(PARKED)
+                                    .expiry(System.currentTimeMillis() - 10)
+                                    .data(TaskData.builder().timeout(1).build())
+                                    .build();
+    persistence.save(delegateTask);
+
+    delegateQueueTask.run();
+    assertThat(persistence.createQuery(DelegateTask.class).count()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testEndTasksWithAnortedRecord() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId("FOO")
+                                    .status(Status.ABORTED)
                                     .expiry(System.currentTimeMillis() - 10)
                                     .data(TaskData.builder().timeout(1).build())
                                     .build();

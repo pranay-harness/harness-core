@@ -2,7 +2,7 @@ package io.harness.secrets.setupusage;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
 
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.settings.SettingVariableTypes.SERVICE_VARIABLE;
 
 import static org.assertj.core.api.Assertions.assertThat;

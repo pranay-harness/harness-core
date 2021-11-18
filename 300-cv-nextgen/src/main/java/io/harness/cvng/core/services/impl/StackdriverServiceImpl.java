@@ -9,14 +9,11 @@ import io.harness.cvng.beans.stackdriver.StackdriverDashboardDetailsRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverLogSampleDataRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverSampleDataRequest;
-import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
-import io.harness.cvng.core.beans.StackdriverImportStatus;
 import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.stackdriver.StackdriverDashboardDTO;
 import io.harness.cvng.core.beans.stackdriver.StackdriverDashboardDetail;
-import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.StackdriverService;
 import io.harness.cvng.core.utils.DateTimeUtils;
@@ -177,11 +174,5 @@ public class StackdriverServiceImpl implements StackdriverService {
   public void checkConnectivity(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String tracingId) {
     listDashboards(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, 1, 0, null, tracingId);
-  }
-
-  @Override
-  public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
-      List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
-    return StackdriverImportStatus.builder().build();
   }
 }

@@ -58,7 +58,8 @@ public class LearningEngineTaskServiceImplTest extends CvNextGenTestBase {
     MockitoAnnotations.initMocks(this);
     accountId = generateUuid();
     cvConfigId = generateUuid();
-    verificationTaskId = verificationTaskService.create(accountId, cvConfigId, APP_DYNAMICS);
+    verificationTaskId =
+        verificationTaskService.createLiveMonitoringVerificationTask(accountId, cvConfigId, APP_DYNAMICS);
   }
 
   @Test

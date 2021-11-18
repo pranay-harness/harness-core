@@ -14,7 +14,6 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
-import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
@@ -40,7 +39,6 @@ import org.mockito.MockitoAnnotations;
 public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
   @Inject private CVNGStepTaskService cvngStepTaskService;
   @Inject private HPersistence hPersistence;
-  @Mock private ActivityService activityService;
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
   BuilderFactory builderFactory;
@@ -48,7 +46,6 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
   public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
     builderFactory = BuilderFactory.getDefault();
-    FieldUtils.writeField(cvngStepTaskService, "activityService", activityService, true);
     FieldUtils.writeField(cvngStepTaskService, "waitNotifyEngine", waitNotifyEngine, true);
     FieldUtils.writeField(cvngStepTaskService, "verificationJobInstanceService", verificationJobInstanceService, true);
   }

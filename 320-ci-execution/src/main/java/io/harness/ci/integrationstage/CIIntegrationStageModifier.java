@@ -48,8 +48,8 @@ public class CIIntegrationStageModifier implements StageExecutionModifier {
     log.info("Build execution args for integration stage  {}", stageElementConfig.getIdentifier());
     return ExecutionElementConfig.builder()
         .uuid(execution.getUuid())
-        .steps(ciStepGroupUtils.createExecutionWrapperWithInitializeStep(
-            stageElementConfig, ciExecutionArgs, ciCodeBase, infrastructure))
+        .steps(ciStepGroupUtils.createExecutionWrapperWithInitializeStep(stageElementConfig, ciExecutionArgs,
+            ciCodeBase, infrastructure, planCreationContextValue.getAccountIdentifier()))
         .build();
   }
 }

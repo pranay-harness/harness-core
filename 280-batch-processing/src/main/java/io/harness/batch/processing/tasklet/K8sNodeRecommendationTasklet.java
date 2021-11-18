@@ -18,6 +18,7 @@ import io.harness.ccm.commons.beans.recommendation.RecommendationUtils;
 import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
+import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
 import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.exception.InvalidRequestException;
@@ -167,7 +168,11 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
       return; // shall we use any default value?
     }
 
-    String supportedRegion = VMPricingService.getSimilarRegionIfNotSupportedByBanzai(serviceProvider.getRegion());
+    String supportedRegion = serviceProvider.getRegion();
+    if (serviceProvider.getCloudProvider() == CloudProvider.AZURE) {
+      supportedRegion = VMPricingService.getSimilarRegionIfNotSupportedByBanzai(serviceProvider.getRegion());
+    }
+
     serviceProvider.setRegion(supportedRegion);
 
     ProductDetails vmComputePricingInfo = vmPricingService.getComputeVMPricingInfo(

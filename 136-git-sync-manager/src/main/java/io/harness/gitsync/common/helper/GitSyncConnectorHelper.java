@@ -161,4 +161,19 @@ public class GitSyncConnectorHelper {
                                  identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())));
     return (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig();
   }
+
+  public ScmConnector getDecryptedConnector(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorRef, String repoUrl) {
+    try {
+      ScmConnector connector = getScmConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorRef);
+      final ScmConnector scmConnector =
+          decryptGitApiAccessHelper.decryptScmApiAccess(connector, accountIdentifier, projectIdentifier, orgIdentifier);
+      scmConnector.setUrl(repoUrl);
+      return scmConnector;
+    } catch (Exception ex) {
+      throw new UnexpectedException(
+          String.format("The connector with the  id %s, accountId %s, orgId %s, projectId %s is not a scm connector",
+              connectorRef, accountIdentifier, orgIdentifier, projectIdentifier));
+    }
+  }
 }

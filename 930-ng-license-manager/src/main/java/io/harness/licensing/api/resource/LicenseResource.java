@@ -80,27 +80,6 @@ public class LicenseResource {
   }
 
   @GET
-  @ApiOperation(
-      value = "Gets Module License By Account And ModuleType", nickname = "getModuleLicenseByAccountAndModuleType")
-  @Operation(operationId = "getModuleLicenseByAccountAndModuleType",
-      summary = "Gets Module License By Account And ModuleType",
-      responses =
-      {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns a module's license")
-      })
-  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
-  @Deprecated
-  public ResponseDTO<ModuleLicenseDTO>
-  getModuleLicense(@Parameter(description = "Account id to get a module license.") @NotNull @QueryParam(
-                       NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @Parameter(description = "A Harness Platform module.") @NotNull @QueryParam(
-          MODULE_TYPE_KEY) ModuleType moduleType) {
-    validateModuleType(moduleType);
-    return ResponseDTO.newResponse(licenseService.getModuleLicense(accountIdentifier, moduleType));
-  }
-
-  @GET
   @Path("/modules/{accountIdentifier}")
   @ApiOperation(
       value = "Gets Module Licenses By Account And ModuleType", nickname = "getModuleLicensesByAccountAndModuleType")
@@ -256,6 +235,24 @@ public class LicenseResource {
       @Parameter(description = "A Harness Platform module.") @NotNull @QueryParam(
           NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
     return ResponseDTO.newResponse(licenseService.getEditionActions(accountIdentifier, moduleType));
+  }
+
+  @POST
+  @Path("versions")
+  @ApiOperation(
+      value = "Get Last Modified Time For All Module Types", nickname = "getLastModifiedTimeForAllModuleTypes")
+  @Operation(operationId = "getLastModifiedTimeForAllModuleTypes",
+      summary = "Get Last Modified Time Under Each ModuleType",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns last modified time under each module type")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
+  public ResponseDTO<Map<ModuleType, Long>>
+  getLastModifiedTimeForAllModuleTypes(@Parameter(description = "Account id to get the last modified map.") @NotNull
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+    return ResponseDTO.newResponse(licenseService.getLastUpdatedAtMap(accountIdentifier));
   }
 
   @GET

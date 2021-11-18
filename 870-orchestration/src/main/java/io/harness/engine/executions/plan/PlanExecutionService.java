@@ -8,6 +8,7 @@ import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.execution.Status;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import lombok.NonNull;
 import org.springframework.data.mongodb.core.query.Update;
@@ -34,4 +35,6 @@ public interface PlanExecutionService extends NodeStatusUpdateObserver {
   PlanExecution updateCalculatedStatus(String planExecutionId);
 
   Status calculateStatusExcluding(String planExecutionId, String excludedNodeExecutionId);
+
+  List<PlanExecution> findByStatusWithProjections(Set<Status> statuses, Set<String> fieldNames);
 }

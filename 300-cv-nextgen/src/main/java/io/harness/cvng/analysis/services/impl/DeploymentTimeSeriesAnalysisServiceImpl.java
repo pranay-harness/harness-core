@@ -20,6 +20,8 @@ import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.VerificationTask.DeploymentInfo;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -176,10 +178,11 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
     Set<TransactionMetricInfo> transactionMetricInfoSet = new HashSet();
     for (DeploymentTimeSeriesAnalysis timeSeriesAnalysis : latestDeploymentTimeSeriesAnalysis) {
       VerificationTask verificationTask = verificationTaskService.get(timeSeriesAnalysis.getVerificationTaskId());
-      Preconditions.checkNotNull(
-          verificationTask.getVerificationJobInstanceId(), "VerificationJobInstance should be present");
+      Preconditions.checkNotNull(verificationTask.getTaskInfo().getTaskType().equals(TaskType.DEPLOYMENT),
+          "VerificationTask should be of Deployment type");
       CVConfig cvConfig = verificationJobInstanceService.getEmbeddedCVConfig(
-          verificationTask.getCvConfigId(), verificationTask.getVerificationJobInstanceId());
+          ((DeploymentInfo) verificationTask.getTaskInfo()).getCvConfigId(),
+          ((DeploymentInfo) verificationTask.getTaskInfo()).getVerificationJobInstanceId());
 
       String connectorName = getConnectorName(cvConfig);
       DataSourceType dataSourceType = cvConfig.getType();
@@ -294,8 +297,8 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
           verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter.getHealthSourceIdentifiers());
       verificationTaskIds =
           verificationTaskIds.stream()
-              .filter(verificationTaskId
-                  -> cvConfigIds.contains(verificationTaskService.get(verificationTaskId).getCvConfigId()))
+              .filter(
+                  verificationTaskId -> cvConfigIds.contains(verificationTaskService.getCVConfigId(verificationTaskId)))
               .collect(Collectors.toSet());
     }
 
