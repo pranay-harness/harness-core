@@ -241,6 +241,9 @@ import io.harness.perpetualtask.manifest.HelmRepositoryService;
 import io.harness.perpetualtask.manifest.ManifestRepositoryService;
 import io.harness.perpetualtask.polling.manifest.HelmChartCollectionService;
 import io.harness.perpetualtask.polling.manifest.ManifestCollectionService;
+import io.harness.secretkey.AESSecretKeyServiceImpl;
+import io.harness.secretkey.SecretKeyConstants;
+import io.harness.secretkey.SecretKeyService;
 import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.secrets.SecretsDelegateCacheHelperService;
 import io.harness.secrets.SecretsDelegateCacheHelperServiceImpl;
@@ -259,6 +262,8 @@ import io.harness.terragrunt.TerragruntClient;
 import io.harness.terragrunt.TerragruntClientImpl;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
+import io.harness.utils.featureflaghelper.CGFeatureFlagHelperServiceImpl;
+import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
 import io.harness.version.VersionModule;
 
 import software.wings.api.DeploymentType;
@@ -1482,6 +1487,11 @@ public class DelegateModule extends AbstractModule {
     bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
     bind(DelegateDecryptionService.class).to(DelegateDecryptionServiceImpl.class);
     bind(EncryptDecryptHelper.class).to(EncryptDecryptHelperImpl.class);
+    bind(FeatureFlagHelperService.class).to(CGFeatureFlagHelperServiceImpl.class);
+    binder()
+        .bind(SecretKeyService.class)
+        .annotatedWith(Names.named(SecretKeyConstants.AES_SECRET_KEY))
+        .to(AESSecretKeyServiceImpl.class);
 
     binder()
         .bind(VaultEncryptor.class)
