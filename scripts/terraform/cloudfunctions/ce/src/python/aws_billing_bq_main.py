@@ -5,7 +5,8 @@ import re
 import datetime
 import util
 
-from util import create_dataset, if_tbl_exists, createTable, print_, run_batch_query, COSTAGGREGATED, UNIFIED, PREAGGREGATED, CEINTERNALDATASET
+from util import create_dataset, if_tbl_exists, createTable, print_, run_batch_query, COSTAGGREGATED, UNIFIED, \
+    PREAGGREGATED, CEINTERNALDATASET, update_connector_data_sync_status
 from calendar import monthrange
 from google.cloud import bigquery
 from google.cloud import storage
@@ -49,7 +50,7 @@ def main(event, context):
 
     # Set accountid for GCP logging
     util.ACCOUNTID_LOG = jsonData.get("accountId")
-
+    jsonData["cloudProvider"] = "AWS"
     ps = jsonData["path"].split("/")
     if len(ps) == 4:
         monthfolder = ps[-1]  # last folder in path
@@ -61,12 +62,12 @@ def main(event, context):
     jsonData["reportYear"] = monthfolder.split("-")[0][:4]
     jsonData["reportMonth"] = monthfolder.split("-")[0][4:6]
 
-    connector_id = ps[1]  # second from beginning is connector id in mongo
+    jsonData["connectorId"] = ps[1]  # second from beginning is connector id in mongo
 
     accountIdBQ = re.sub('[^0-9a-z]', '_', jsonData.get("accountId").lower())
     jsonData["datasetName"] = "BillingReport_%s" % (accountIdBQ)
     jsonData["awsCurTableSuffix"] = "%s_%s" % (jsonData["reportYear"], jsonData["reportMonth"])
-    jsonData["tableSuffix"] = "%s_%s_%s" % (connector_id, jsonData["reportYear"], jsonData["reportMonth"])
+    jsonData["tableSuffix"] = "%s_%s_%s" % (jsonData["connectorId"], jsonData["reportYear"], jsonData["reportMonth"])
     jsonData["tableName"] = f"awsBilling_{jsonData['tableSuffix']}"
     jsonData["tableId"] = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
 
@@ -76,6 +77,7 @@ def main(event, context):
     ingest_data_to_awscur(jsonData)
     ingest_data_to_preagg(jsonData)
     ingest_data_to_unified(jsonData)
+    update_connector_data_sync_status(jsonData, PROJECTID, client)
     ingest_data_to_costagg(jsonData)
     print_("Completed")
 
