@@ -35,4 +35,27 @@ public class StepParameterCommonUtils {
     stepBuilder.rollbackParameters(failRollbackParameters);
     return stepBuilder;
   }
+
+  public StepElementParametersBuilder getStepParameters(AbstractStepNode stepElementConfig) {
+    StepElementParametersBuilder stepBuilder = StepElementParameters.builder();
+    stepBuilder.name(stepElementConfig.getName());
+    stepBuilder.identifier(stepElementConfig.getIdentifier());
+    stepBuilder.delegateSelectors(stepElementConfig.getDelegateSelectors());
+    stepBuilder.description(stepElementConfig.getDescription());
+    stepBuilder.failureStrategies(stepElementConfig.getFailureStrategies());
+    stepBuilder.skipCondition(stepElementConfig.getSkipCondition());
+    stepBuilder.timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())));
+    stepBuilder.when(stepElementConfig.getWhen());
+    stepBuilder.type(stepElementConfig.getType());
+    stepBuilder.uuid(stepElementConfig.getUuid());
+
+    return stepBuilder;
+  }
+
+  public StepElementParametersBuilder getStepParameters(
+      AbstractStepNode stepElementConfig, OnFailRollbackParameters failRollbackParameters) {
+    StepElementParametersBuilder stepBuilder = getStepParameters(stepElementConfig);
+    stepBuilder.rollbackParameters(failRollbackParameters);
+    return stepBuilder;
+  }
 }

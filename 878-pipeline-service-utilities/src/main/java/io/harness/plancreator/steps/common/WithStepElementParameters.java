@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.plancreator.steps.AbstractStepNode;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.StepParameterCommonUtils;
 import io.harness.plancreator.steps.common.StepElementParameters.StepElementParametersBuilder;
@@ -20,7 +21,13 @@ public interface WithStepElementParameters {
     stepParametersBuilder.spec(getSpecParameters());
     return stepParametersBuilder.build();
   }
-
+  default StepParameters getStepParametersInfo(
+      AbstractStepNode stepElementConfig, OnFailRollbackParameters failRollbackParameters) {
+    StepElementParametersBuilder stepParametersBuilder =
+        StepParameterCommonUtils.getStepParameters(stepElementConfig, failRollbackParameters);
+    stepParametersBuilder.spec(getSpecParameters());
+    return stepParametersBuilder.build();
+  }
   @JsonIgnore
   default SpecParameters getSpecParameters() {
     return null;
