@@ -40,11 +40,12 @@ public class ResourceGroupMapper {
                     ? new HashSet<>()
                     : resourceGroupDTO.getAllowedScopeLevels())
             .fullScopeSelected(resourceGroupDTO.isFullScopeSelected())
+            .nestedScopesSelected(Boolean.TRUE.equals(resourceGroupDTO.getNestedScopesSelected()))
             .resourceSelectors(resourceGroupDTO.getResourceSelectors() == null
                     ? new ArrayList<>()
                     : resourceGroupDTO.getResourceSelectors());
 
-    if (resourceGroupDTO.isFullScopeSelected()) {
+    if (resourceGroupDTO.isFullScopeSelected() || Boolean.TRUE.equals(resourceGroupDTO.getNestedScopesSelected())) {
       resourceGroupDTO.setResourceSelectors(Collections.emptyList());
     }
 
@@ -64,6 +65,7 @@ public class ResourceGroupMapper {
                                .color(resourceGroup.getColor())
                                .tags(convertToMap(resourceGroup.getTags()))
                                .fullScopeSelected(Boolean.TRUE.equals(resourceGroup.getFullScopeSelected()))
+                               .nestedScopesSelected(Boolean.TRUE.equals(resourceGroup.getNestedScopesSelected()))
                                .description(resourceGroup.getDescription())
                                .resourceSelectors(resourceGroup.getResourceSelectors())
                                .build();

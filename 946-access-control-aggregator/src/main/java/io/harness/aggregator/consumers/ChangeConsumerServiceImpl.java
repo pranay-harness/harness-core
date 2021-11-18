@@ -5,6 +5,8 @@ import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.aggregator.ACLUtils.buildACL;
 
+import static java.util.Collections.singleton;
+
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.persistence.ACL;
 import io.harness.accesscontrol.common.filter.ManagedFilter;
@@ -54,10 +56,12 @@ public class ChangeConsumerServiceImpl implements ChangeConsumerService {
       principals.add(roleAssignment.getPrincipalIdentifier());
     }
 
-    Set<String> resourceSelectors = new HashSet<>();
-    if (resourceGroup.get().isFullScopeSelected()) {
-      resourceSelectors.add("/*/*");
-    } else if (resourceGroup.get().getResourceSelectors() != null) {
+    Set<String> resourceSelectors;
+    if (Boolean.TRUE.equals(resourceGroup.get().getNestedScopesSelected())) {
+      resourceSelectors = singleton("/**/*/*");
+    } else if (resourceGroup.get().isFullScopeSelected()) {
+      resourceSelectors = singleton("/*/*");
+    } else {
       resourceSelectors = resourceGroup.get().getResourceSelectors();
     }
 

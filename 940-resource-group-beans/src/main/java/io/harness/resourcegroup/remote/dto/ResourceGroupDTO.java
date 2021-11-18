@@ -39,6 +39,7 @@ public class ResourceGroupDTO {
   @NGEntityName @ApiModelProperty(required = true) @NotNull @Size(max = 128) @NotEmpty String name;
   @Size(max = 256) @Valid List<ResourceSelector> resourceSelectors;
   boolean fullScopeSelected;
+  Boolean nestedScopesSelected;
   @Size(max = 128) Map<String, String> tags;
   @Size(max = 1024) String description;
   Set<String> allowedScopeLevels;
