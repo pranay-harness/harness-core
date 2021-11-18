@@ -78,6 +78,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 import retrofit2.http.Body;
 
@@ -92,6 +93,7 @@ import retrofit2.http.Body;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@Slf4j
 @NextGenManagerAuth
 public class NGAggregateResource {
   private final AggregateOrganizationService aggregateOrganizationService;
@@ -144,6 +146,7 @@ public class NGAggregateResource {
       @QueryParam("hasModule") @DefaultValue("true") boolean hasModule,
       @QueryParam(NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+    log.info("Getting accessible projects");
     Set<String> permittedOrgIds = getPermittedOrganizations(accountIdentifier, orgIdentifier);
     ProjectFilterDTO projectFilterDTO = getProjectFilterDTO(searchTerm, permittedOrgIds, hasModule, moduleType);
     return ResponseDTO.newResponse(projectService.listPermittedProjects(accountIdentifier, projectFilterDTO));
@@ -161,6 +164,7 @@ public class NGAggregateResource {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    log.info("Getting accessible projects count");
     Set<String> permittedOrgIds = getPermittedOrganizations(accountIdentifier, orgIdentifier);
     ProjectFilterDTO projectFilterDTO = getProjectFilterDTO(searchTerm, permittedOrgIds, hasModule, moduleType);
     return ResponseDTO.newResponse(
