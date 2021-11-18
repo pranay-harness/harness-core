@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Singleton
 public class SegmentConfig {
-  @JsonProperty(defaultValue = "true") private boolean enabled;
+  @JsonProperty(defaultValue = "false") private boolean enabled;
   private String url;
   private String apiKey;
 }

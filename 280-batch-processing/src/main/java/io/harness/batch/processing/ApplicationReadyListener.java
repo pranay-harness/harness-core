@@ -49,9 +49,9 @@ public class ApplicationReadyListener {
   @EventListener(ApplicationReadyEvent.class)
   public void ensureTimescaleConnectivity() {
     log.info("Inside ensureTimescaleConnectivity");
-    if (Boolean.TRUE.equals(environment.getProperty("ensure-timescale", Boolean.class, Boolean.TRUE))) {
-      verify(timeScaleDBService.isValid(), "Unable to connect to timescale db");
-    }
+//    if (Boolean.TRUE.equals(environment.getProperty("ensure-timescale", Boolean.class, Boolean.TRUE))) {
+//      verify(timeScaleDBService.isValid(), "Unable to connect to timescale db");
+//    }
     log.info("End ensureTimescaleConnectivity");
   }
 

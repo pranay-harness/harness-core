@@ -3,6 +3,8 @@ package io.harness.batch.processing.metrics;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.ccm.license.CeLicenseInfo;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.telemetry.Destination;
 import io.harness.telemetry.TelemetryReporter;
@@ -16,12 +18,8 @@ import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.GroupMessage;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
@@ -62,11 +60,31 @@ public class CeProductMetricsTasklet implements Tasklet {
 
   private void nextGenInstrumentation(String accountId, Instant start, Instant end) {
     HashMap<String, Object> properties = new HashMap<>();
-    properties.put(CONNECTORS_TELEMETRY, cengTelemetryService.getNextGenConnectorsCountByType(accountId));
+    List<CEConnectorsTelemetry> list = new ArrayList<>();
+    list.add(new CEConnectorsTelemetry(ConnectorType.CE_AZURE, ConnectivityStatus.SUCCESS));
+    list.add(new CEConnectorsTelemetry(ConnectorType.CE_AZURE, ConnectivityStatus.FAILURE));
+    list.add(new CEConnectorsTelemetry(ConnectorType.CE_AWS, ConnectivityStatus.SUCCESS));
+    list.add(new CEConnectorsTelemetry(ConnectorType.CE_AWS, ConnectivityStatus.SUCCESS));
+    list.add(new CEConnectorsTelemetry(ConnectorType.CE_KUBERNETES_CLUSTER, ConnectivityStatus.SUCCESS));
+    list.add(new CEConnectorsTelemetry(ConnectorType.CE_KUBERNETES_CLUSTER, ConnectivityStatus.SUCCESS));
+    list.add(new CEConnectorsTelemetry(ConnectorType.CE_KUBERNETES_CLUSTER, ConnectivityStatus.FAILURE));
+    list.add(new CEConnectorsTelemetry(ConnectorType.CE_KUBERNETES_CLUSTER, ConnectivityStatus.FAILURE));
+    list.add(new CEConnectorsTelemetry(ConnectorType.CE_KUBERNETES_CLUSTER, ConnectivityStatus.SUCCESS));
+    list.add(new CEConnectorsTelemetry(ConnectorType.KUBERNETES_CLUSTER, ConnectivityStatus.SUCCESS));
+    list.add(new CEConnectorsTelemetry(ConnectorType.KUBERNETES_CLUSTER, ConnectivityStatus.SUCCESS));
+    list.add(new CEConnectorsTelemetry(ConnectorType.KUBERNETES_CLUSTER, ConnectivityStatus.SUCCESS));
+    list.add(new CEConnectorsTelemetry(ConnectorType.KUBERNETES_CLUSTER, ConnectivityStatus.SUCCESS));
+    list.add(new CEConnectorsTelemetry(ConnectorType.KUBERNETES_CLUSTER, ConnectivityStatus.SUCCESS));
+    list.add(new CEConnectorsTelemetry(ConnectorType.GCP_CLOUD_COST, ConnectivityStatus.SUCCESS));
+
+
+    properties.put(CONNECTORS_TELEMETRY, list);
+    log.info("Pushing Data for account: {}", accountId);
     Map<Destination, Boolean> destinations = new EnumMap(Destination.class) {
       { put(Destination.AMPLITUDE, true); }
     };
     telemetryReporter.sendGroupEvent(accountId, properties, destinations);
+    log.info("Finished pushing Data for account: {}", accountId);
   }
 
   public void sendStatsToSegment(String accountId, Instant start, Instant end) {

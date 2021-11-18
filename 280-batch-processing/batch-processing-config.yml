@@ -13,9 +13,9 @@ events-mongo:
   indexManagerMode: AUTO
 
 timescaledb:
-  timescaledbUrl: "jdbc:postgresql://localhost:5432/harness"
-  timescaledbUsername: "postgres"
-  timescaledbPassword: ""
+  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessdev"
+  timescaledbUsername: "harnessappdev"
+  timescaledbPassword: "harnessappdev"
   connectTimeout: 10
   socketTimeout: 30
   logUnclosedConnections: false
@@ -69,8 +69,8 @@ smtp:
   password: "smtp_password_placeholder"
 
 segmentConfig:
-  enabled: false
-  apiKey: "segment_api_key"
+  enabled: true
+  apiKey: "UvSVfxy6KzApDrrlhCqSjJBlgPeEDBdf"
 
 baseUrl: https://localhost:8000
 
