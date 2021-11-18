@@ -38,6 +38,8 @@ public class WinRmExecutorHelper {
       String command, String psScriptFile, String powershell) {
     command = "$ErrorActionPreference=\"Stop\"\n" + command;
 
+    command = command.replaceAll("`", "``");
+
     // Yes, replace() is intentional. We are replacing only character and not a regex pattern.
     command = command.replace("$", "`$");
     // This is to escape quotes
@@ -76,6 +78,7 @@ public class WinRmExecutorHelper {
   public static List<String> constructPSScriptWithCommandsBulk(String command, String psScriptFile, String powershell) {
     command = "$ErrorActionPreference=\"Stop\"\n" + command;
 
+    command = command.replaceAll("`", "``");
     // Yes, replace() is intentional. We are replacing only character and not a regex pattern.
     command = command.replace("$", "`$");
     // This is to escape quotes
