@@ -457,7 +457,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       }
       List<Artifact> list = new ArrayList<>();
       for (ServiceArtifactElement artifactElement : artifactElements) {
-        list.add(artifactService.get(artifactElement.getUuid()));
+        if (artifactService.get(artifactElement.getUuid()) != null) {
+          list.add(artifactService.get(artifactElement.getUuid()));
+        }
       }
       return list;
     } else {
