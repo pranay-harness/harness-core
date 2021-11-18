@@ -10,7 +10,6 @@ import io.harness.ngaggregate.remote.NGAggregateClient;
 import io.harness.organization.remote.OrganizationClient;
 import io.harness.overviewdashboard.rbac.service.DashboardRBACService;
 import io.harness.remote.client.NGRestUtils;
-import io.harness.userng.remote.UserNGClient;
 
 import com.google.inject.Inject;
 import java.util.HashMap;
@@ -19,7 +18,6 @@ import java.util.Map;
 
 @OwnedBy(PL)
 public class DashboardRBACServiceImpl implements DashboardRBACService {
-  @Inject private UserNGClient userNGClient;
   @Inject private OrganizationClient organizationClient;
   @Inject private NGAggregateClient ngAggregateClient;
 

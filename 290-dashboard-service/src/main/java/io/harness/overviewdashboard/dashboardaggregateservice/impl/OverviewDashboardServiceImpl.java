@@ -21,6 +21,7 @@ import io.harness.dashboards.TimeBasedDeploymentInfo;
 import io.harness.ng.core.OrgProjectIdentifier;
 import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.ngaggregate.remote.NGAggregateClient;
 import io.harness.overviewdashboard.bean.OverviewDashboardRequestType;
 import io.harness.overviewdashboard.bean.RestCallRequest;
 import io.harness.overviewdashboard.bean.RestCallResponse;
@@ -52,7 +53,6 @@ import io.harness.overviewdashboard.remote.ParallelRestCallExecutor;
 import io.harness.pipeline.dashboards.PMSLandingDashboardResourceClient;
 import io.harness.pms.dashboards.LandingDashboardRequestPMS;
 import io.harness.pms.dashboards.PipelinesCount;
-import io.harness.userng.remote.UserNGClient;
 
 import com.google.inject.Inject;
 import dashboards.CDLandingDashboardResourceClient;
@@ -77,7 +77,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   CDLandingDashboardResourceClient cdLandingDashboardResourceClient;
   PMSLandingDashboardResourceClient pmsLandingDashboardResourceClient;
   ParallelRestCallExecutor parallelRestCallExecutor;
-  UserNGClient userNGClient;
+  NGAggregateClient ngAggregateClient;
 
   @Override
   public ExecutionResponse<TopProjectsPanel> getTopProjectsPanel(
@@ -514,7 +514,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
                                 .build());
     restCallRequestList.add(
         RestCallRequest.<ActiveProjectsCountDTO>builder()
-            .request(userNGClient.getAccessibleProjectsCount(accountIdentifier, userId, startInterval, endInterval))
+            .request(ngAggregateClient.getAccessibleProjectsCount(accountIdentifier, startInterval, endInterval))
             .requestType(OverviewDashboardRequestType.GET_PROJECTS_COUNT)
             .build());
     return restCallRequestList;
