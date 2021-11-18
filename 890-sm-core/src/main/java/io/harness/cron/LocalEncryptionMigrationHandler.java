@@ -56,11 +56,11 @@ public abstract class LocalEncryptionMigrationHandler implements Runnable {
                LOCAL_ENCRYPTION_MIGRATION_CRON_PREFIX + featureFlag + ":" + accountId,
                Duration.ofSeconds(LOCAL_ENCRYPTION_CRON_LOCK_EXPIRY_IN_SECONDS))) {
         if (lock == null) {
-          log.error("Unable to fetch lock for running local encryption migration for feature: {} for account : {}",
-              featureFlag, accountId);
+          log.error(getFeatureName().name() + ": Unable to fetch lock for running local encryption migration");
           return;
         }
 
+        log.info(getFeatureName().name() + ": Starting migration");
         performMigration(accountId);
       }
     });
@@ -81,6 +81,7 @@ public abstract class LocalEncryptionMigrationHandler implements Runnable {
     lastMigrationState.ifPresent(localEncryptionMigrationInfo
         -> pageRequest.addFilter(EncryptedDataKeys.createdAt, SearchFilter.Operator.GT,
             localEncryptionMigrationInfo.getLastMigratedRecordCreatedAtTimestamp()));
+    log.info(getFeatureName().name() + ": fetching encrypted records to migrate with page request : {}", pageRequest);
     return secretsDao.listSecrets(pageRequest);
   }
 
@@ -91,11 +92,11 @@ public abstract class LocalEncryptionMigrationHandler implements Runnable {
   protected void saveMigrationState(
       String accountId, String presentMigrationStateUuid, EncryptedData lastMigratedRecord) {
     if (lastMigratedRecord == null) {
-      log.info("No records migrated during this run");
+      log.info(getFeatureName().name() + ": No records migrated during this run");
       return;
     }
 
-    localEncryptionMigrationInfoRepository.save(
+    LocalEncryptionMigrationInfo localEncryptionMigrationInfo = localEncryptionMigrationInfoRepository.save(
         LocalEncryptionMigrationInfo.builder()
             .accountId(accountId)
             .uuid(presentMigrationStateUuid)
@@ -103,5 +104,6 @@ public abstract class LocalEncryptionMigrationHandler implements Runnable {
             .lastMigratedRecordId(lastMigratedRecord.getUuid())
             .mode(getFeatureName().name())
             .build());
+    log.info(getFeatureName().name() + ": migration state saved : {}", localEncryptionMigrationInfo);
   }
 }

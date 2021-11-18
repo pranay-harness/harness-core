@@ -15,8 +15,10 @@ import io.harness.security.encryption.EncryptedRecord;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@Slf4j
 @OwnedBy(HarnessTeam.PL)
 public class LocalAwsSdkEncryptionModeMigrationHandler extends LocalEncryptionMigrationHandler {
   private static final FeatureName featureFlag = FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE;
@@ -42,6 +44,7 @@ public class LocalAwsSdkEncryptionModeMigrationHandler extends LocalEncryptionMi
 
     List<EncryptedData> encryptedDataList = encryptedDataPageResponse.getResponse();
     for (EncryptedData encryptedData : encryptedDataList) {
+      log.info(getFeatureName().name() + ": Processing encrypted record : {}", encryptedData);
       UpdateOperations<EncryptedData> updateOperations = secretsDao.getUpdateOperations();
       if (encryptedData.getEncryptedMech() == null) {
         EncryptedRecord migratedRecord = localEncryptor.encryptSecret(
@@ -66,6 +69,7 @@ public class LocalAwsSdkEncryptionModeMigrationHandler extends LocalEncryptionMi
       }
 
       secretsDao.updateSecret(encryptedData, updateOperations);
+      log.info(getFeatureName().name() + ": Processed encrypted record with updates : {}", updateOperations);
       lastMigratedRecord = encryptedData;
     }
 

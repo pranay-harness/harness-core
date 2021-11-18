@@ -40,6 +40,7 @@ public class LocalMultiCryptoModeEncryptionMigrationHandler extends LocalEncrypt
         getEncryptedRecords(accountId, pageRequest, lastMigrationState);
     List<EncryptedData> encryptedDataList = encryptedDataPageResponse.getResponse();
     for (EncryptedData encryptedData : encryptedDataList) {
+      log.info(getFeatureName().name() + ": Processing encrypted record : {}", encryptedData);
       EncryptedRecord migratedRecord = localEncryptor.encryptSecret(
           accountId, new String(localEncryptor.fetchSecretValue(accountId, encryptedData, null)), null);
 
@@ -51,6 +52,7 @@ public class LocalMultiCryptoModeEncryptionMigrationHandler extends LocalEncrypt
                       encryptedData.getAdditionalMetadata().getValues()))
                   .build());
       secretsDao.updateSecret(encryptedData, updateOperations);
+      log.info(getFeatureName().name() + ": Processed encrypted record with updates : {}", updateOperations);
       lastMigratedRecord = encryptedData;
     }
 
