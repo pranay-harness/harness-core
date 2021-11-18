@@ -105,10 +105,6 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
     return new PageImpl<>(aggregates, permittedProjects.getPageable(), permittedProjects.getTotalElements());
   }
 
-  public List<ProjectDTO> listProjectDtO(String accountIdentifier, ProjectFilterDTO projectFilterDTO) {
-    return projectService.listPermittedProjects(accountIdentifier, projectFilterDTO);
-  }
-
   private ProjectAggregateDTO buildAggregateDTO(Project project) {
     Optional<Organization> organizationOptional =
         organizationService.get(project.getAccountIdentifier(), project.getOrgIdentifier());

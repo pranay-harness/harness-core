@@ -444,6 +444,43 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
+  public ActiveProjectsCountDTO permittedProjectsCount(
+      String accountIdentifier, ProjectFilterDTO projectFilterDTO, long startInterval, long endInterval) {
+    Criteria criteria = createProjectFilterCriteria(
+        Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier).and(ProjectKeys.deleted).is(FALSE),
+        projectFilterDTO);
+    List<Scope> projects = projectRepository.findAllProjects(criteria);
+    List<Scope> permittedProjects = scopeAccessHelper.getPermittedScopes(projects);
+
+    if (permittedProjects.isEmpty()) {
+      return ActiveProjectsCountDTO.builder().count(0).build();
+    }
+
+    criteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier);
+    Criteria[] subCriteria = permittedProjects.stream()
+                                 .map(project
+                                     -> Criteria.where(ProjectKeys.orgIdentifier)
+                                            .is(project.getOrgIdentifier())
+                                            .and(ProjectKeys.identifier)
+                                            .is(project.getProjectIdentifier()))
+                                 .toArray(Criteria[] ::new);
+    criteria.orOperator(subCriteria);
+    Criteria deletedFalseCriteria = Criteria.where(ProjectKeys.createdAt)
+                                        .gt(startInterval)
+                                        .lt(endInterval)
+                                        .andOperator(Criteria.where(ProjectKeys.deleted).is(false));
+    Criteria deletedTrueCriteria =
+        Criteria.where(ProjectKeys.createdAt)
+            .lt(startInterval)
+            .andOperator(new Criteria().andOperator(Criteria.where(ProjectKeys.deleted).is(true)),
+                Criteria.where(ProjectKeys.lastModifiedAt).gt(startInterval).lt(endInterval));
+    return ActiveProjectsCountDTO.builder()
+        .count(projectRepository.findAll(new Criteria().andOperator(criteria, deletedFalseCriteria)).size()
+            - projectRepository.findAll(criteria.andOperator(deletedTrueCriteria)).size())
+        .build();
+  }
+
+  @Override
   public Page<Project> list(Criteria criteria, Pageable pageable) {
     return projectRepository.findAll(criteria, pageable);
   }
