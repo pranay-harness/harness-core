@@ -30,6 +30,235 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "AddRuleYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/AddRuleYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "AddRule"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AddRuleYamlSpec": {
+      "type": "object",
+      "properties": {
+        "clauses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Clause"
+          }
+        },
+        "distribution": {
+          "$ref": "#/definitions/DistributionYamlSpec"
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "serve": {
+          "$ref": "#/definitions/Serve"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AddSegmentToVariationTargetMapYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/AddSegmentToVariationTargetMapYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "AddSegmentToVariationTargetMap"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AddSegmentToVariationTargetMapYamlSpec": {
+      "type": "object",
+      "required": [
+        "segments",
+        "variation"
+      ],
+      "properties": {
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AddTargetsToVariationTargetMapYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/AddTargetsToVariationTargetMapYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "AddTargetsToVariationTargetMap"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AddTargetsToVariationTargetMapYamlSpec": {
+      "type": "object",
+      "required": [
+        "targets",
+        "variation"
+      ],
+      "properties": {
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ApprovalStageConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StageInfoConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "execution"
+          ],
+          "properties": {
+            "execution": {
+              "$ref": "#/definitions/ExecutionElementConfig"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ApproverInputInfo": {
+      "type": "object",
+      "properties": {
+        "defaultValue": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Approvers": {
+      "type": "object",
+      "required": [
+        "disallowPipelineExecutor",
+        "minimumCount",
+        "userGroups"
+      ],
+      "properties": {
+        "disallowPipelineExecutor": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "minimumCount": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "format": "int32"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "userGroups": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string",
+              "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+              "minLength": 1
+            }
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "BarrierInfoConfig": {
       "type": "object",
       "required": [
@@ -44,6 +273,25 @@
           "type": "string"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BarrierStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "barrierRef"
+          ],
+          "properties": {
+            "barrierRef": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "BranchBuildSpec": {
@@ -146,6 +394,59 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "Clause": {
+      "type": "object",
+      "required": [
+        "attribute",
+        "id",
+        "negate",
+        "op",
+        "values"
+      ],
+      "properties": {
+        "attribute": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "negate": {
+          "type": "boolean"
+        },
+        "op": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ClauseYamlSpec": {
+      "type": "object",
+      "required": [
+        "op",
+        "values"
+      ],
+      "properties": {
+        "attribute": {
+          "type": "string"
+        },
+        "op": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "CodeBase": {
       "type": "object",
       "required": [
@@ -189,6 +490,32 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "Condition": {
+      "type": "object",
+      "required": [
+        "key",
+        "operator",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "operator": {
+          "type": "string",
+          "enum": [
+            "equals",
+            "not equals",
+            "in",
+            "not in"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ContainerResource": {
       "type": "object",
       "required": [
@@ -197,6 +524,105 @@
       "properties": {
         "limits": {
           "$ref": "#/definitions/Limits"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CriteriaSpec": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CriteriaSpecWrapper": {
+      "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Jexl",
+            "KeyValues"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Jexl"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/JexlCriteriaSpec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "KeyValues"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/KeyValuesCriteriaSpec"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Distribution": {
+      "type": "object",
+      "required": [
+        "bucketBy",
+        "variations"
+      ],
+      "properties": {
+        "bucketBy": {
+          "type": "string"
+        },
+        "variations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WeightedVariation"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DistributionYamlSpec": {
+      "type": "object",
+      "required": [
+        "bucketBy"
+      ],
+      "properties": {
+        "bucketBy": {
+          "type": "string"
+        },
+        "clauses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClauseYamlSpec"
+          }
+        },
+        "variations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VariationYamlSpec"
+          }
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -220,6 +646,21 @@
           },
           "maxItems": 2147483647,
           "minItems": 1
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ExecutionTarget": {
+      "type": "object",
+      "properties": {
+        "connectorRef": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "workingDirectory": {
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -273,6 +714,76 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "FeatureFlagStageConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StageInfoConfig"
+        },
+        {
+          "type": "object",
+          "properties": { }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "FlagConfigurationStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "environment",
+            "feature",
+            "instructions"
+          ],
+          "properties": {
+            "environment": {
+              "type": "string"
+            },
+            "feature": {
+              "type": "string"
+            },
+            "instructions": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/AddRuleYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/AddSegmentToVariationTargetMapYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/AddTargetsToVariationTargetMapYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/RemoveSegmentToVariationTargetMapYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/RemoveTargetsToVariationTargetMapYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/SetFeatureFlagStateYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/SetOffVariationYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/SetOnVariationYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/UpdateRuleYaml"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "FlowControlConfig": {
       "type": "object",
       "properties": {
@@ -283,6 +794,140 @@
           }
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HarnessApprovalStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "approvalMessage",
+            "approvers",
+            "includePipelineExecutionHistory"
+          ],
+          "properties": {
+            "approvalMessage": {
+              "type": "string"
+            },
+            "approverInputs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ApproverInputInfo"
+              }
+            },
+            "approvers": {
+              "$ref": "#/definitions/Approvers"
+            },
+            "includePipelineExecutionHistory": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HoldingScope": {
+      "type": "object",
+      "required": [
+        "nodeSetupId",
+        "scope"
+      ],
+      "properties": {
+        "nodeSetupId": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HttpHeaderConfig": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HttpStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "method",
+            "url"
+          ],
+          "properties": {
+            "assertion": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "headers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HttpHeaderConfig"
+              }
+            },
+            "method": {
+              "type": "string"
+            },
+            "outputVariables": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NumberNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/SecretNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/StringNGVariable"
+                  }
+                ]
+              }
+            },
+            "requestBody": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "IgnoreFailureActionConfig": {
@@ -321,6 +966,181 @@
           ]
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "JexlCriteriaSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CriteriaSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "expression"
+          ],
+          "properties": {
+            "expression": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "JiraApprovalStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "approvalCriteria",
+            "connectorRef",
+            "issueKey"
+          ],
+          "properties": {
+            "approvalCriteria": {
+              "$ref": "#/definitions/CriteriaSpecWrapper"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "issueKey": {
+              "type": "string"
+            },
+            "rejectionCriteria": {
+              "$ref": "#/definitions/CriteriaSpecWrapper"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "JiraCreateStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "issueType",
+            "projectKey"
+          ],
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/JiraField"
+              }
+            },
+            "issueType": {
+              "type": "string"
+            },
+            "projectKey": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "JiraField": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "JiraUpdateStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "issueKey"
+          ],
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/JiraField"
+              }
+            },
+            "issueKey": {
+              "type": "string"
+            },
+            "transitionTo": {
+              "$ref": "#/definitions/TransitionTo"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "JsonNode": {
@@ -401,6 +1221,38 @@
           "type": "boolean"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "KeyValuesCriteriaSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CriteriaSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "conditions"
+          ],
+          "properties": {
+            "conditions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Condition"
+              }
+            },
+            "matchAnyCondition": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "Limits": {
@@ -814,6 +1666,27 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "PatchInstruction": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "SetFeatureFlagState",
+            "SetOnVariation",
+            "SetOffVariation",
+            "AddRule",
+            "UpdateRule",
+            "AddTargetsToVariationTargetMap",
+            "RemoveTargetsToVariationTargetMap",
+            "AddSegmentToVariationTargetMap",
+            "RemoveSegmentsToVariationTargetMap"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "PipelineConfig": {
       "type": "object",
       "properties": {
@@ -1021,6 +1894,144 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "RemoveSegmentToVariationTargetMapYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/RemoveSegmentToVariationTargetMapYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "RemoveSegmentToVariationTargetMap"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RemoveSegmentToVariationTargetMapYamlSpec": {
+      "type": "object",
+      "required": [
+        "segments",
+        "variation"
+      ],
+      "properties": {
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RemoveTargetsToVariationTargetMapYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/RemoveTargetsToVariationTargetMapYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "RemoveTargetsToVariationTargetMap"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RemoveTargetsToVariationTargetMapYamlSpec": {
+      "type": "object",
+      "required": [
+        "targets",
+        "variation"
+      ],
+      "properties": {
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ResourceConstraintStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "acquireMode",
+            "holdingScope",
+            "name",
+            "permits",
+            "resourceUnit"
+          ],
+          "properties": {
+            "acquireMode": {
+              "type": "string",
+              "enum": [
+                "ENSURE",
+                "ACCUMULATE"
+              ]
+            },
+            "holdingScope": {
+              "$ref": "#/definitions/HoldingScope"
+            },
+            "name": {
+              "type": "string"
+            },
+            "permits": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "resourceUnit": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "RetryFailureActionConfig": {
       "allOf": [
         {
@@ -1106,6 +2117,292 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "Serve": {
+      "type": "object",
+      "properties": {
+        "distribution": {
+          "$ref": "#/definitions/Distribution"
+        },
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetFeatureFlagStateYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/SetFeatureFlagStateYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SetFeatureFlagState"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetFeatureFlagStateYamlSpec": {
+      "type": "object",
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetOffVariationYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/SetOffVariationYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SetOffVariation"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetOffVariationYamlSpec": {
+      "type": "object",
+      "required": [
+        "variation"
+      ],
+      "properties": {
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetOnVariationYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/SetOnVariationYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SetOnVariation"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetOnVariationYamlSpec": {
+      "type": "object",
+      "required": [
+        "variation"
+      ],
+      "properties": {
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ShellScriptBaseSource": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ShellScriptInlineSource": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ShellScriptBaseSource"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "script": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ShellScriptSourceWrapper": {
+      "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Inline"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ShellScriptInlineSource"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ShellScriptStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "onDelegate",
+            "shell",
+            "source"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "environmentVariables": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NumberNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/SecretNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/StringNGVariable"
+                  }
+                ]
+              }
+            },
+            "executionTarget": {
+              "$ref": "#/definitions/ExecutionTarget"
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "onDelegate": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "outputVariables": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NumberNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/SecretNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/StringNGVariable"
+                  }
+                ]
+              }
+            },
+            "shell": {
+              "type": "string",
+              "enum": [
+                "Bash",
+                "PowerShell"
+              ]
+            },
+            "source": {
+              "$ref": "#/definitions/ShellScriptSourceWrapper"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "StageElementConfig": {
       "type": "object",
       "required": [
@@ -1130,9 +2427,6 @@
         "name": {
           "type": "string",
           "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
-        },
-        "spec": {
-          "$ref": "#/definitions/StageInfoConfig"
         },
         "tags": {
           "type": "object",
@@ -1163,7 +2457,41 @@
           "$ref": "#/definitions/StageWhenCondition"
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Approval"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ApprovalStageConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "FeatureFlag"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/FeatureFlagStageConfig"
+              }
+            }
+          }
+        }
+      ]
     },
     "StageElementWrapperConfig": {
       "type": "object",
@@ -1179,6 +2507,7 @@
     },
     "StageInfoConfig": {
       "type": "object",
+      "discriminator": "type",
       "properties": {
         "execution": {
           "$ref": "#/definitions/ExecutionElementConfig"
@@ -1229,48 +2558,204 @@
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StepElementConfig": {
-      "type": "object",
-      "required": [
-        "identifier",
-        "name",
-        "type"
-      ],
-      "properties": {
-        "description": {
-          "type": "string"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "name",
+            "type"
+          ],
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "failureStrategies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FailureStrategyConfig"
+              }
+            },
+            "identifier": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
+            },
+            "spec": {
+              "$ref": "#/definitions/StepSpecType"
+            },
+            "timeout": {
+              "type": "string",
+              "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
+            },
+            "type": {
+              "type": "string"
+            },
+            "when": {
+              "$ref": "#/definitions/StepWhenCondition"
+            }
+          },
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "Barrier"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/BarrierStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "FlagConfiguration"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/FlagConfigurationStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "HarnessApproval"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/HarnessApprovalStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "Http"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/HttpStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "JiraApproval"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/JiraApprovalStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "JiraCreate"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/JiraCreateStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "JiraUpdate"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/JiraUpdateStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "ShellScript"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/ShellScriptStepInfo"
+                  }
+                }
+              }
+            }
+          ]
         },
-        "failureStrategies": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/FailureStrategyConfig"
-          }
-        },
-        "identifier": {
-          "type": "string",
-          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
-        },
-        "name": {
-          "type": "string",
-          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
-        },
-        "spec": {
-          "$ref": "#/definitions/StepSpecType"
-        },
-        "template": {
-          "$ref": "#/definitions/TemplateLinkConfig"
-        },
-        "timeout": {
-          "type": "string",
-          "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
-        },
-        "type": {
-          "type": "string"
-        },
-        "when": {
-          "$ref": "#/definitions/StepWhenCondition"
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "name"
+          ],
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "identifier": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
+            },
+            "template": {
+              "$ref": "#/definitions/TemplateLinkConfig"
+            }
+          },
+          "additionalProperties": false
         }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      ]
     },
     "StepGroupElementConfig": {
       "type": "object",
@@ -1331,6 +2816,7 @@
     },
     "StepSpecType": {
       "type": "object",
+      "discriminator": "type",
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StepWhenCondition": {
@@ -1420,6 +2906,110 @@
         "versionLabel": {
           "type": "string",
           "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TransitionTo": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "transitionName": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UpdateRuleYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/UpdateRuleYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "UpdateRule"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UpdateRuleYamlSpec": {
+      "type": "object",
+      "required": [
+        "bucketBy",
+        "ruleID"
+      ],
+      "properties": {
+        "bucketBy": {
+          "type": "string"
+        },
+        "ruleID": {
+          "type": "string"
+        },
+        "serve": {
+          "$ref": "#/definitions/Serve"
+        },
+        "variations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VariationYamlSpec"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VariationYamlSpec": {
+      "type": "object",
+      "required": [
+        "variation",
+        "weight"
+      ],
+      "properties": {
+        "variation": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "WeightedVariation": {
+      "type": "object",
+      "required": [
+        "variation",
+        "weight"
+      ],
+      "properties": {
+        "variation": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "integer",
+          "format": "int32"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
