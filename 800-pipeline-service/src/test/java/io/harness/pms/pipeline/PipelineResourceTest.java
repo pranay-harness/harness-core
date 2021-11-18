@@ -14,9 +14,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
-import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.RepresentationStrategy;
 import io.harness.category.element.UnitTests;
 import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
@@ -25,23 +23,17 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.JsonSchemaValidationException;
 import io.harness.git.model.ChangeType;
-import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.pms.contracts.governance.GovernanceMetadata;
-import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.governance.PipelineSaveResponse;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
-import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
-import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
-import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
-import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;
@@ -67,15 +59,11 @@ import org.springframework.data.domain.Sort;
 public class PipelineResourceTest extends CategoryTest {
   PipelineResource pipelineResource;
   @Mock PMSPipelineService pmsPipelineService;
-  @Mock PMSExecutionService pmsExecutionService;
   @Mock PMSYamlSchemaService pmsYamlSchemaService;
   @Mock NodeExecutionService nodeExecutionService;
   @Mock NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
-  @Mock AccessControlClient accessControlClient;
-  @Mock PmsGitSyncHelper pmsGitSyncHelper;
   @Mock PMSPipelineTemplateHelper pipelineTemplateHelper;
   @Mock GovernanceService mockGovernanceService;
-  @Mock PipelineExecutionSummaryDtoMapper pipelineExecutionSummaryDtoMapper;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -94,9 +82,8 @@ public class PipelineResourceTest extends CategoryTest {
   @Before
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
-    pipelineResource = new PipelineResource(pmsPipelineService, pmsExecutionService, pmsYamlSchemaService,
-        nodeExecutionService, accessControlClient, nodeExecutionToExecutioNodeMapper, pmsGitSyncHelper,
-        pipelineTemplateHelper, pipelineExecutionSummaryDtoMapper, mockGovernanceService);
+    pipelineResource = new PipelineResource(pmsPipelineService, pmsYamlSchemaService, nodeExecutionService,
+        nodeExecutionToExecutioNodeMapper, pipelineTemplateHelper, mockGovernanceService);
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "failure-strategy.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
@@ -355,92 +342,5 @@ public class PipelineResourceTest extends CategoryTest {
     assertThat(responseDTO.getVersion()).isEqualTo(1L);
     assertThat(responseDTO.getNumOfStages()).isEqualTo(1L);
     assertThat(responseDTO.getStageNames().get(0)).isEqualTo("qaStage");
-  }
-
-  @Test
-  @Owner(developers = SAMARTH)
-  @Category(UnitTests.class)
-  public void testGetListOfExecutions() {
-    Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
-    Page<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntities =
-        new PageImpl<>(Collections.singletonList(executionSummaryEntity), pageable, 1);
-    doReturn(pipelineExecutionSummaryEntities)
-        .when(pmsExecutionService)
-        .getPipelineExecutionSummaryEntity(any(), any());
-    doReturn(Optional.of(PipelineEntity.builder().build()))
-        .when(pmsPipelineService)
-        .get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
-    doReturn(PipelineExecutionSummaryDTO.builder()
-                 .pipelineIdentifier(PIPELINE_IDENTIFIER)
-                 .planExecutionId(PLAN_EXECUTION_ID)
-                 .build())
-        .when(pipelineExecutionSummaryDtoMapper)
-        .toDto(executionSummaryEntity, executionSummaryEntity.getEntityGitDetails());
-
-    Page<PipelineExecutionSummaryDTO> content =
-        pipelineResource
-            .getListOfExecutions(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, null, 0, 10, null, null, null, null,
-                null, false, GitEntityFindInfoDTO.builder().build())
-            .getData();
-    assertThat(content).isNotEmpty();
-    assertThat(content.getNumberOfElements()).isEqualTo(1);
-
-    PipelineExecutionSummaryDTO responseDTO = content.toList().get(0);
-    assertThat(responseDTO.getPipelineIdentifier()).isEqualTo(PIPELINE_IDENTIFIER);
-    assertThat(responseDTO.getPlanExecutionId()).isEqualTo(PLAN_EXECUTION_ID);
-    assertThat(responseDTO.getRunSequence()).isEqualTo(0);
-  }
-
-  @Test
-  @Owner(developers = SAMARTH)
-  @Category(UnitTests.class)
-  public void testGetExecutionDetail() {
-    doReturn(executionSummaryEntity)
-        .when(pmsExecutionService)
-        .getPipelineExecutionSummaryEntity(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, false);
-    doReturn(orchestrationGraph).when(pmsExecutionService).getOrchestrationGraph(STAGE_NODE_ID, PLAN_EXECUTION_ID);
-    doReturn(Optional.of(PipelineEntity.builder()
-                             .branch("branch")
-                             .yamlGitConfigRef("repo")
-                             .filePath("file.yaml")
-                             .rootFolder("root/.harness/")
-                             .build()))
-        .when(pmsPipelineService)
-        .getWithoutIsDeleted(anyString(), anyString(), anyString(), anyString());
-
-    doReturn(PipelineExecutionSummaryDTO.builder()
-                 .pipelineIdentifier(PIPELINE_IDENTIFIER)
-                 .planExecutionId(PLAN_EXECUTION_ID)
-                 .build())
-        .when(pipelineExecutionSummaryDtoMapper)
-        .toDto(executionSummaryEntity, executionSummaryEntity.getEntityGitDetails());
-
-    ResponseDTO<PipelineExecutionDetailDTO> executionDetails = pipelineResource.getExecutionDetail(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, STAGE_NODE_ID, PLAN_EXECUTION_ID);
-
-    assertThat(executionDetails.getData().getPipelineExecutionSummary().getPipelineIdentifier())
-        .isEqualTo(PIPELINE_IDENTIFIER);
-    assertThat(executionDetails.getData().getPipelineExecutionSummary().getPlanExecutionId())
-        .isEqualTo(PLAN_EXECUTION_ID);
-    assertThat(executionDetails.getData().getPipelineExecutionSummary().getRunSequence()).isEqualTo(0);
-    assertThat(executionDetails.getData().getExecutionGraph().getRootNodeId()).isEqualTo(STAGE_NODE_ID);
-    assertThat(executionDetails.getData().getExecutionGraph().getNodeMap().size()).isEqualTo(0);
-    assertThat(executionDetails.getData().getExecutionGraph().getRepresentationStrategy())
-        .isEqualTo(RepresentationStrategy.CAMELCASE);
-  }
-
-  @Test
-  @Owner(developers = SAMARTH)
-  @Category(UnitTests.class)
-  public void testGetExecutionDetailWithInvalidExecutionId() {
-    String invalidPlanExecutionId = "invalidId";
-    doThrow(InvalidRequestException.class)
-        .when(pmsExecutionService)
-        .getPipelineExecutionSummaryEntity(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, invalidPlanExecutionId, false);
-
-    assertThatThrownBy(()
-                           -> pipelineResource.getExecutionDetail(
-                               ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, STAGE_NODE_ID, invalidPlanExecutionId))
-        .isInstanceOf(InvalidRequestException.class);
   }
 }
