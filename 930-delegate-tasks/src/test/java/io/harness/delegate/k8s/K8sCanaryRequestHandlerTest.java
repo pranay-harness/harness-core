@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -37,8 +38,11 @@ import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
+import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.delegate.task.k8s.data.K8sCanaryDataException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -170,6 +174,43 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
         .updateDestinationRuleManifestFilesWithSubsets(kubernetesResources, kubernetesConfig, logCallback);
     verify(k8sCanaryBaseHandler, times(1))
         .updateVirtualServiceManifestFilesWithRoutes(kubernetesResources, kubernetesConfig, logCallback);
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testgetManifestOverrideFlies() {
+    String releaseName = "releaseName";
+    List<String> valuesYamlList = Arrays.asList("value1", "value2");
+    List<String> kustomizePatchesList = Arrays.asList("patch1", "patch2");
+    List<String> openShiftParamList = Arrays.asList("param1", "param2");
+    K8sCanaryDeployRequest canaryDeployRequest =
+        K8sCanaryDeployRequest.builder()
+            .releaseName(releaseName)
+            .kustomizePatchesList(kustomizePatchesList)
+            .manifestDelegateConfig(KustomizeManifestDelegateConfig.builder().build())
+            .useLatestKustomizeVersion(true)
+            .accountId(accountId)
+            .build();
+    assertThat(k8sCanaryRequestHandler.getManifestOverrideFlies(canaryDeployRequest).get(0)).isEqualTo("patch1");
+
+    canaryDeployRequest = K8sCanaryDeployRequest.builder()
+                              .releaseName(releaseName)
+                              .useLatestKustomizeVersion(true)
+                              .manifestDelegateConfig(K8sManifestDelegateConfig.builder().build())
+                              .valuesYamlList(valuesYamlList)
+                              .accountId(accountId)
+                              .build();
+    assertThat(k8sCanaryRequestHandler.getManifestOverrideFlies(canaryDeployRequest).get(0)).isEqualTo("value1");
+
+    canaryDeployRequest = K8sCanaryDeployRequest.builder()
+                              .releaseName(releaseName)
+                              .openshiftParamList(openShiftParamList)
+                              .manifestDelegateConfig(OpenshiftManifestDelegateConfig.builder().build())
+                              .useLatestKustomizeVersion(true)
+                              .accountId(accountId)
+                              .build();
+    assertThat(k8sCanaryRequestHandler.getManifestOverrideFlies(canaryDeployRequest).get(0)).isEqualTo("param1");
   }
 
   @Test

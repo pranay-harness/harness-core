@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.expression.Expression;
 
+import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
@@ -21,6 +22,7 @@ public class K8sDeleteRequest implements K8sDeployRequest {
   K8sTaskType taskType;
   Integer timeoutIntervalInMin;
   @Expression(ALLOW_SECRETS) List<String> valuesYamlList;
+  @Expression(ALLOW_SECRETS) List<String> kustomizePatchesList;
   K8sInfraDelegateConfig k8sInfraDelegateConfig;
   ManifestDelegateConfig manifestDelegateConfig;
   private String resources;
@@ -31,4 +33,9 @@ public class K8sDeleteRequest implements K8sDeployRequest {
   CommandUnitsProgress commandUnitsProgress;
   boolean useLatestKustomizeVersion;
   boolean useNewKubectlVersion;
+
+  @Override
+  public List<String> getOpenshiftParamList() {
+    return Collections.emptyList();
+  }
 }
