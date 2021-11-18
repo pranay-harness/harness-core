@@ -79,6 +79,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -129,11 +130,20 @@ public class ConnectorUtils {
   }
 
   public ConnectorDetails getConnectorDetails(NGAccess ngAccess, String connectorIdentifier) {
+    Instant startTime = Instant.now();
     RetryPolicy<Object> retryPolicy =
         getRetryPolicy(format("[Retrying failed call to fetch connector: [%s], attempt: {}", connectorIdentifier),
             format("Failed to fetch connector: [%s] after retrying {} times", connectorIdentifier));
 
-    return Failsafe.with(retryPolicy).get(() -> { return getConnectorDetailsInternal(ngAccess, connectorIdentifier); });
+    ConnectorDetails connectorDetails =
+        Failsafe.with(retryPolicy).get(() -> { return getConnectorDetailsInternal(ngAccess, connectorIdentifier); });
+
+    long elapsedTimeInSecs = Duration.between(startTime, Instant.now()).toMillis() / 1000;
+
+    log.info("Fetched connector details for connector ref successfully {} in {} seconds accountId {}, projectId {}",
+        connectorIdentifier, elapsedTimeInSecs, ngAccess.getAccountIdentifier(), ngAccess.getProjectIdentifier());
+
+    return connectorDetails;
   }
 
   private ConnectorDetails getConnectorDetailsInternal(NGAccess ngAccess, String connectorIdentifier)
