@@ -35,12 +35,24 @@ import io.harness.ng.core.api.AggregateAccountResourceService;
 import io.harness.ng.core.api.AggregateOrganizationService;
 import io.harness.ng.core.api.AggregateProjectService;
 import io.harness.ng.core.api.AggregateUserGroupService;
-import io.harness.ng.core.dto.*;
+import io.harness.ng.core.dto.AccountResourcesDTO;
+import io.harness.ng.core.dto.ActiveProjectsCountDTO;
+import io.harness.ng.core.dto.AggregateACLRequest;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
+import io.harness.ng.core.dto.OrganizationAggregateDTO;
+import io.harness.ng.core.dto.OrganizationFilterDTO;
+import io.harness.ng.core.dto.ProjectAggregateDTO;
+import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.ng.core.dto.ProjectFilterDTO;
+import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.dto.UserGroupAggregateDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.common.collect.ImmutableList;
@@ -125,6 +137,7 @@ public class NGAggregateResource {
   @GET
   @Path("all-projects")
   @ApiOperation(value = "Get ProjectDTO list", nickname = "getProjectDTOList")
+  @InternalApi
   public ResponseDTO<List<ProjectDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
@@ -135,9 +148,11 @@ public class NGAggregateResource {
     ProjectFilterDTO projectFilterDTO = getProjectFilterDTO(searchTerm, permittedOrgIds, hasModule, moduleType);
     return ResponseDTO.newResponse(projectService.listPermittedProjects(accountIdentifier, projectFilterDTO));
   }
+
   @GET
   @Path("projects-count")
-  @ApiOperation(value = "Get count of projects accessible to a user", nickname = "getAccessibleProjectsCount")
+  @ApiOperation(value = "Get total count of projects accessible to a user", nickname = "getPermittedProjectsCount")
+  @InternalApi
   public ResponseDTO<ActiveProjectsCountDTO> getAccessibleProjectsCount(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
@@ -149,7 +164,7 @@ public class NGAggregateResource {
     Set<String> permittedOrgIds = getPermittedOrganizations(accountIdentifier, orgIdentifier);
     ProjectFilterDTO projectFilterDTO = getProjectFilterDTO(searchTerm, permittedOrgIds, hasModule, moduleType);
     return ResponseDTO.newResponse(
-            projectService.permittedProjectsCount(accountIdentifier,projectFilterDTO,startInterval,endInterval));
+        projectService.permittedProjectsCount(accountIdentifier, projectFilterDTO, startInterval, endInterval));
   }
 
   private ProjectFilterDTO getProjectFilterDTO(

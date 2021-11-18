@@ -36,6 +36,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ngaggregate.remote.NGAggregateClient;
 import io.harness.overviewdashboard.bean.RestCallResponse;
 import io.harness.overviewdashboard.dtos.AccountInfo;
 import io.harness.overviewdashboard.dtos.ActiveServiceInfo;
@@ -63,7 +64,6 @@ import io.harness.overviewdashboard.remote.ParallelRestCallExecutor;
 import io.harness.pipeline.dashboards.PMSLandingDashboardResourceClient;
 import io.harness.pms.dashboards.PipelinesCount;
 import io.harness.rule.Owner;
-import io.harness.userng.remote.UserNGClient;
 
 import dashboards.CDLandingDashboardResourceClient;
 import java.util.ArrayList;
@@ -107,7 +107,7 @@ public class OverviewDashboardServiceImplTest {
   @InjectMocks OverviewDashboardServiceImpl overviewDashboardService;
   @Mock ParallelRestCallExecutor parallelRestCallExecutor;
   @Mock DashboardRBACServiceImpl dashboardRBACService;
-  @Mock UserNGClient userNGClient;
+  @Mock NGAggregateClient ngAggregateClient;
   @Mock CDLandingDashboardResourceClient cdLandingDashboardResourceClient;
   @Mock PMSLandingDashboardResourceClient pmsLandingDashboardResourceClient;
 
@@ -248,7 +248,7 @@ public class OverviewDashboardServiceImplTest {
         .thenReturn(requestEnvCount);
     when(pmsLandingDashboardResourceClient.getPipelinesCount(anyString(), eq(startTime1), eq(endTime1), any()))
         .thenReturn(requestPipelinesCount);
-    when(userNGClient.getAccessibleProjectsCount(anyString(), anyString(), eq(startTime1), eq(endTime1)))
+    when(ngAggregateClient.getAccessibleProjectsCount(anyString(), eq(startTime1), eq(endTime1)))
         .thenReturn(requestProjectsCount);
     when(parallelRestCallExecutor.executeRestCalls(anyList())).thenReturn(restCallResponseListForCountOverview1);
 

@@ -9,8 +9,6 @@ import static io.harness.enforcement.constants.FeatureRestrictionName.MULTIPLE_P
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
-import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_ORGANIZATION_PERMISSION;
-import static io.harness.ng.accesscontrol.PlatformResourceTypes.ORGANIZATION;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.ng.core.utils.NGUtils.validate;
@@ -30,7 +28,9 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort
 
 import io.harness.ModuleType;
 import io.harness.accesscontrol.AccountIdentifier;
-import io.harness.accesscontrol.clients.*;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.beans.Scope.ScopeKeys;
@@ -49,7 +49,6 @@ import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
-import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.events.ProjectCreateEvent;
@@ -90,7 +89,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import org.apache.commons.lang3.tuple.Pair;

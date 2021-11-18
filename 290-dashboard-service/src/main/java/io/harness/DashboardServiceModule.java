@@ -54,8 +54,8 @@ public class DashboardServiceModule extends AbstractModule {
       }
     });
     install(NGAggregateClientModule.getInstance(config.getNgManagerClientConfig(),
-            config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
-            AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
+        config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
+        AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
     install(CDLandingDashboardResourceClientModule.getInstance(config.getNgManagerClientConfig(),
         config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
         AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
