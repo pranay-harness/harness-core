@@ -48,7 +48,15 @@ public class ResourceGroupConfig {
     this.tags = tags == null ? new HashMap<>() : tags;
     this.resourceSelectors = resourceSelectors == null ? new ArrayList<>() : resourceSelectors;
     this.fullScopeSelected = fullScopeSelected;
-    this.nestedScopesSelected = nestedScopesSelected;
+    this.nestedScopesSelected = Boolean.TRUE.equals(nestedScopesSelected);
     this.allowedScopeLevels = allowedScopeLevels == null ? new HashSet<>() : allowedScopeLevels;
+  }
+
+  public boolean getNestedScopesSelected() {
+    return Boolean.TRUE.equals(this.nestedScopesSelected);
+  }
+
+  public void setNestedScopesSelected(Boolean nestedScopesSelected) {
+    this.nestedScopesSelected = Boolean.TRUE.equals(nestedScopesSelected);
   }
 }
