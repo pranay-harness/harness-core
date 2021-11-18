@@ -204,4 +204,12 @@ public class ReflectionUtils {
     field.setAccessible(true);
     field.set(obj, value);
   }
+
+  public static Method getMethod(Class clazz, String methodName) {
+    try {
+      return clazz.getMethod(methodName);
+    } catch (NoSuchMethodException e) {
+      throw new UnsupportedOperationException(String.format("No method found with name %s", methodName));
+    }
+  }
 }

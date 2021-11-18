@@ -152,6 +152,7 @@ BAZEL_MODULES="\
   //950-telemetry:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
+  //952-remote-observers:module \
   //952-scm-java-client:module \
   //953-events-api/src/main/proto:all \
   //953-events-api:module \
@@ -425,6 +426,7 @@ build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
 build_bazel_module 951-cg-git-sync
 build_bazel_module 951-ng-audit-commons
+build_bazel_module 952-remote-observers
 build_bazel_module 952-scm-java-client
 build_bazel_module 953-events-api
 build_bazel_module 953-git-sync-commons
