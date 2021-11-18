@@ -1,0 +1,23 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
+proto_library(
+    name = "952_remote_observers_proto",
+    srcs = ["observer.proto"],
+    visibility = ["//visibility:public"],
+)
+
+go_proto_library(
+    name = "952_remote_observers_go_proto",
+    importpath = "github.com/wings-software/portal/952-remote-observers/src/main/proto/io/harness/observer",
+    proto = ":952_remote_observers_proto",
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "observer",
+    embed = [":952_remote_observers_go_proto"],
+    importpath = "github.com/wings-software/portal/952-remote-observers/src/main/proto/io/harness/observer",
+    visibility = ["//visibility:public"],
+)
