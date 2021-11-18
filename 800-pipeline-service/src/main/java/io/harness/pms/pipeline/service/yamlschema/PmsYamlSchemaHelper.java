@@ -12,6 +12,7 @@ import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
@@ -72,7 +73,8 @@ public class PmsYamlSchemaHelper {
     Field typedField = io.harness.yaml.utils.YamlSchemaUtils.getTypedField(STEP_ELEMENT_CONFIG_CLASS);
     Set<Class<?>> cachedSubtypes = yamlSchemaSubtypes.get(typedField.getType());
     Set<SubtypeClassMap> mapOfSubtypes = io.harness.yaml.utils.YamlSchemaUtils.toSetOfSubtypeClassMap(cachedSubtypes);
-    mapOfSubtypes = YamlSchemaUtils.removeNewSchemaStepsSubtypes(mapOfSubtypes, newYamlSchemaSubtypesToRemove);
+    mapOfSubtypes =
+        YamlSchemaTransientHelper.removeNewSchemaStepsSubtypes(mapOfSubtypes, newYamlSchemaSubtypesToRemove);
     Set<FieldEnumData> fieldEnumData = getFieldEnumData(typedField, mapOfSubtypes);
     swaggerDefinitionsMetaInfoMap.put(
         STEP_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().fieldEnumData(fieldEnumData).build());

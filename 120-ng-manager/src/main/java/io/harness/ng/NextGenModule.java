@@ -376,9 +376,8 @@ public class NextGenModule extends AbstractModule {
   @Singleton
   public Map<Class<?>, Set<Class<?>>> newCdYamlSchemaSubtypes() {
     Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS);
-    Set<Class<? extends CdAbstractNode>> subTypesOfPmsAbstractStepNode =
-        reflections.getSubTypesOf(CdAbstractNode.class);
-    Set<Class<?>> newSchemaStepSet = new HashSet<>(subTypesOfPmsAbstractStepNode);
+    Set<Class<? extends CdAbstractNode>> subTypesOfCdAbstractStepNode = reflections.getSubTypesOf(CdAbstractNode.class);
+    Set<Class<?>> newSchemaStepSet = new HashSet<>(subTypesOfCdAbstractStepNode);
     return ImmutableMap.of(PmsAbstractStepNode.class, newSchemaStepSet);
   }
 

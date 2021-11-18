@@ -280,22 +280,6 @@ public class YamlSchemaUtils {
         && (clazz.getCanonicalName().startsWith("io.harness") || clazz.getCanonicalName().startsWith("software.wings"));
   }
 
-  public Set<SubtypeClassMap> removeNewSchemaStepsSubtypes(
-      Set<SubtypeClassMap> mapOfSubtypes, Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypes) {
-    Set<Class<?>> newSchemaSteps = new HashSet<>();
-    for (Set<Class<?>> classes : newYamlSchemaSubtypes.values()) {
-      for (Class<?> clazz : classes) {
-        if (YamlSchemaUtils.getTypedField(clazz) != null) {
-          newSchemaSteps.add(YamlSchemaUtils.getTypedField(clazz).getType());
-        }
-      }
-      newSchemaSteps.addAll(classes);
-    }
-    return mapOfSubtypes.stream()
-        .filter(o -> !newSchemaSteps.contains(o.getSubTypeClass()))
-        .collect(Collectors.toSet());
-  }
-
   public void addOneOfInExecutionWrapperConfig(
       JsonNode pipelineSchema, Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypesToBeAdded, String namespace) {
     String nameSpaceString = "";

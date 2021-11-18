@@ -33,6 +33,7 @@ import io.harness.project.remote.ProjectClient;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.utils.JsonPipelineUtils;
 import io.harness.yaml.utils.YamlSchemaUtils;
@@ -154,9 +155,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     ObjectNode mergedDefinitions = (ObjectNode) JsonNodeUtils.merge(tempMergedDefinitions, pipelineStepsV2Definitions);
 
     ObjectNode stageElementConfig = (ObjectNode) pipelineDefinitions.get(STAGE_ELEMENT_CONFIG);
-    // Create a YamlSchemaTransientHelper where all this will be done. Will remove after complete migration. Add why for
-    // each method.
-    JsonNodeUtils.deletePropertiesInJsonNode((ObjectNode) stageElementConfig.get(PROPERTIES_NODE), "spec");
+    YamlSchemaTransientHelper.deleteSpecNodeInStageElementConfig(stageElementConfig);
 
     PmsYamlSchemaHelper.flattenParallelElementConfig(pipelineDefinitions);
 

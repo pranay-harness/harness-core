@@ -15,6 +15,7 @@ import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
@@ -50,18 +51,18 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   private final YamlSchemaGenerator yamlSchemaGenerator;
 
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
-  private final Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypes;
-  private final Map<Class<?>, Set<Class<?>>> newCdYamlSchemaSubtypes;
+  private final Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypesToRemove;
+  private final Map<Class<?>, Set<Class<?>>> newCdYamlSchemaSubtypesToBeAdded;
   @Inject
   public CdYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
       @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
-      @Named("new-yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypes,
-      @Named("new-yaml-schema-subtypes-cd") Map<Class<?>, Set<Class<?>>> newCdYamlSchemaSubtypes) {
+      @Named("new-yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypesToRemove,
+      @Named("new-yaml-schema-subtypes-cd") Map<Class<?>, Set<Class<?>>> newCdYamlSchemaSubtypesToBeAdded) {
     this.yamlSchemaProvider = yamlSchemaProvider;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
-    this.newYamlSchemaSubtypes = newYamlSchemaSubtypes;
-    this.newCdYamlSchemaSubtypes = newCdYamlSchemaSubtypes;
+    this.newYamlSchemaSubtypesToRemove = newYamlSchemaSubtypesToRemove;
+    this.newCdYamlSchemaSubtypesToBeAdded = newCdYamlSchemaSubtypesToBeAdded;
   }
 
   @Override
@@ -69,7 +70,7 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
     JsonNode deploymentStageSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STAGE, orgIdentifier, projectIdentifier, scope);
     YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
-        deploymentStageSchema.get(DEFINITIONS_NODE), newCdYamlSchemaSubtypes, CD_NAMESPACE);
+        deploymentStageSchema.get(DEFINITIONS_NODE), newCdYamlSchemaSubtypesToBeAdded, CD_NAMESPACE);
     JsonNode deploymentStepsSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STEPS, orgIdentifier, projectIdentifier, scope);
 
@@ -121,7 +122,8 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
     String fieldName = YamlSchemaUtils.getJsonTypeInfo(typedField).property();
     Set<Class<?>> cachedSubtypes = yamlSchemaSubtypes.get(typedField.getType());
     Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.toSetOfSubtypeClassMap(cachedSubtypes);
-    mapOfSubtypes = YamlSchemaUtils.removeNewSchemaStepsSubtypes(mapOfSubtypes, newYamlSchemaSubtypes);
+    mapOfSubtypes =
+        YamlSchemaTransientHelper.removeNewSchemaStepsSubtypes(mapOfSubtypes, newYamlSchemaSubtypesToRemove);
     return ImmutableSet.of(
         FieldEnumData.builder()
             .fieldName(fieldName)
