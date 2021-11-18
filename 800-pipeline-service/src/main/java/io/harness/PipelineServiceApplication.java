@@ -64,6 +64,7 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.template.exception.NGTemplateResolveExceptionMapper;
 import io.harness.notification.module.NotificationClientModule;
@@ -703,6 +704,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {
+    environment.jersey().register(JerseyViolationExceptionMapperV2.class);
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(NGAccessDeniedExceptionMapper.class);
