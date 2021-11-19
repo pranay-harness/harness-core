@@ -36,6 +36,10 @@ public interface ProjectService {
    */
   Page<Project> listPermittedProjects(String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO);
 
+  List<ProjectDTO> listPermittedProjects(String accountIdentifier, ProjectFilterDTO projectFilterDTO);
+
+  ActiveProjectsCountDTO permittedProjectsCount(
+      String accountIdentifier, ProjectFilterDTO projectFilterDTO, long startInterval, long endInterval);
   /**
    * Use this method with caution, verify that the criteria and pageable sort is able to make use of the indexes.
    */

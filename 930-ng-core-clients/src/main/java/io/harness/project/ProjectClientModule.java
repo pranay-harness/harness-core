@@ -19,6 +19,7 @@ import com.google.inject.name.Names;
 
 @OwnedBy(PL)
 public class ProjectClientModule extends AbstractModule {
+  private static ProjectClientModule instance;
   private final ServiceHttpClientConfig projectManagerClientConfig;
   private final String serviceSecret;
   private final String clientId;
@@ -28,6 +29,15 @@ public class ProjectClientModule extends AbstractModule {
     this.projectManagerClientConfig = projectManagerClientConfig;
     this.serviceSecret = serviceSecret;
     this.clientId = clientId;
+  }
+
+  public static ProjectClientModule getInstance(
+      ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
+    if (instance == null) {
+      instance = new ProjectClientModule(serviceHttpClientConfig, serviceSecret, clientId);
+    }
+
+    return instance;
   }
 
   @Provides

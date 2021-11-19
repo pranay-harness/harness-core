@@ -3,6 +3,8 @@ package io.harness.overviewdashboard.remote;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.context.GlobalContext;
+import io.harness.manage.GlobalContextManager;
 import io.harness.overviewdashboard.bean.RestCallRequest;
 import io.harness.overviewdashboard.bean.RestCallResponse;
 import io.harness.remote.client.NGRestUtils;
@@ -31,8 +33,9 @@ public class ParallelRestCallExecutor {
             .collect(Collectors.joining(", ")));
 
     List<CompletableFuture<RestCallResponse>> allFutures = new ArrayList<>();
+    GlobalContext globalContext = GlobalContextManager.obtainGlobalContext();
     for (RestCallRequest restCallRequest : restCallRequests) {
-      allFutures.add(getFutureForAPICallRequest(restCallRequest));
+      allFutures.add(getFutureForAPICallRequest(restCallRequest, globalContext));
     }
     CompletableFuture.allOf(allFutures.toArray(new CompletableFuture[0]));
 
@@ -49,17 +52,22 @@ public class ParallelRestCallExecutor {
     return restCallResponses;
   }
 
-  <T> CompletableFuture<RestCallResponse<T>> getFutureForAPICallRequest(RestCallRequest<T> restCallRequest) {
-    return CompletableFuture.supplyAsync(() -> executeRestCall(restCallRequest));
+  <T> CompletableFuture<RestCallResponse<T>> getFutureForAPICallRequest(
+      RestCallRequest<T> restCallRequest, GlobalContext globalContext) {
+    return CompletableFuture.supplyAsync(() -> executeRestCall(restCallRequest, globalContext));
   }
 
-  <T> RestCallResponse<T> executeRestCall(RestCallRequest<T> restCallRequest) {
+  <T> RestCallResponse<T> executeRestCall(RestCallRequest<T> restCallRequest, GlobalContext globalContext) {
     final T response;
     try {
+      GlobalContextManager.set(globalContext);
       response = NGRestUtils.getResponse(restCallRequest.getRequest());
     } catch (Exception ex) {
+      GlobalContextManager.unset();
       log.error("Error occured while performing the rest request {}", restCallRequest.getRequestType(), ex);
       return RestCallResponse.<T>builder().ex(ex).callFailed(true).build();
+    } finally {
+      GlobalContextManager.unset();
     }
     return RestCallResponse.<T>builder().requestType(restCallRequest.getRequestType()).response(response).build();
   }
