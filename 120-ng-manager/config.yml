@@ -89,9 +89,6 @@ mongo:
   aliasDBName: ng-harness
   traceMode: DISABLED
 
-licenseConfig:
-  deployVariant: "SAAS"
-
 accountConfig:
   deploymentClusterName: ""
 
@@ -283,6 +280,7 @@ segmentConfiguration:
   enabled: false
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
+  certValidationRequired: false
 
 accessControlClient:
   enableAccessControl: false

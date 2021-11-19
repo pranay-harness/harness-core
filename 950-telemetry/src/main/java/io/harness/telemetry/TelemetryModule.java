@@ -1,7 +1,10 @@
 package io.harness.telemetry;
 
+import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.configuration.DeployVariant;
 import io.harness.govern.ProviderMethodInterceptor;
 import io.harness.telemetry.annotation.GroupEventInterceptor;
 import io.harness.telemetry.annotation.IdentifyEventInterceptor;
@@ -12,8 +15,12 @@ import io.harness.telemetry.annotation.SendTrackEvents;
 import io.harness.telemetry.annotation.TrackEventInterceptor;
 import io.harness.telemetry.segment.SegmentReporterImpl;
 import io.harness.telemetry.segment.SegmentSender;
+import io.harness.telemetry.segment.remote.RemoteSegmentClient;
+import io.harness.telemetry.segment.remote.RemoteSegmentClientFactory;
+import io.harness.telemetry.segment.remote.RemoteSegmentSender;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.google.inject.matcher.Matchers;
 
 @OwnedBy(HarnessTeam.GTM)
@@ -31,8 +38,14 @@ public class TelemetryModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(TelemetryReporter.class).to(SegmentReporterImpl.class);
-    bind(SegmentSender.class);
+    String deployVersion = System.getenv().get(DEPLOY_VERSION);
+    if (DeployVariant.isCommunity(deployVersion)) {
+      bind(TelemetryReporter.class).to(RemoteSegmentSender.class);
+      bind(RemoteSegmentClient.class).toProvider(RemoteSegmentClientFactory.class).in(Scopes.SINGLETON);
+    } else {
+      bind(TelemetryReporter.class).to(SegmentReporterImpl.class);
+      bind(SegmentSender.class);
+    }
 
     ProviderMethodInterceptor trackEventInterceptor =
         new ProviderMethodInterceptor(getProvider(TrackEventInterceptor.class));
