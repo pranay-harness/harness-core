@@ -40,6 +40,7 @@ func Test_SingleWrite(t *testing.T) {
 	now = func() time.Time { return tn }
 
 	log := zap.NewExample().Sugar()
+	logger.InitLogger(log)
 	db, mock, err := db.NewMockDB(log)
 	if err != nil {
 		t.Fatal(err)
@@ -61,12 +62,108 @@ func Test_SingleWrite(t *testing.T) {
 	assert.Nil(t, err, nil)
 }
 
+func Test_WriteTestExecutionSummary_Success(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	table := "tests"
+	account := "account"
+	org := "org"
+	project := "project"
+	pipeline := "pipeline"
+	build := "build"
+	stage := "stage"
+	step := "step"
+	commitLink := "https://github.com/wings-software/portal/pull/28659"
+
+	tn := time.Now()
+
+	oldNow := now
+	defer func() { now = oldNow }()
+	now = func() time.Time { return tn }
+
+	log := zap.NewExample().Sugar()
+	logger.InitLogger(log)
+	db, mock, err := db.NewMockDB(log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valueStrings := constructPsqlInsertStmt(1, 8)
+	stmt := fmt.Sprintf(
+		`
+				INSERT INTO %s
+				(account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, commit_link)
+				VALUES %s`, table, valueStrings)
+	stmt = regexp.QuoteMeta(stmt)
+	mock.ExpectExec(stmt).
+		WithArgs(tn, account, org, project,
+			pipeline, build, stage, step, commitLink).WillReturnResult(sqlmock.NewResult(0, 1))
+	tdb := &TimeScaleDb{Conn: db, ExecutionTable: table}
+	err = tdb.WriteTestExecutionSummary(ctx, account, org, project, pipeline, build, stage, step, commitLink)
+}
+
 func Test_Write_Batch(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
 	// Set write batch size of 2 and try to write 3 tests.
 	writeBatchSize = 2
+
+	table := "tests"
+	account := "account"
+	org := "org"
+	project := "project"
+	pipeline := "pipeline"
+	build := "build"
+	stage := "stage"
+	step := "step"
+	report := "junit"
+	repo := "repo"
+	sha := "sha"
+
+	tn := time.Now()
+
+	oldNow := now
+	defer func() { now = oldNow }()
+	now = func() time.Time { return tn }
+
+	log := zap.NewExample().Sugar()
+	db, mock, err := db.NewMockDB(log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valueStrings := constructPsqlInsertStmt(1, 21)
+	stmt := fmt.Sprintf(
+		`
+				INSERT INTO %s
+				(created_at, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, repo, commit_id,
+				name, suite_name, class_name, duration_ms, result, message, type, description, stdout, stderr)
+				VALUES %s`, table, valueStrings)
+	stmt = regexp.QuoteMeta(stmt)
+	// First batched statement
+	mock.ExpectExec(stmt).
+		WithArgs(tn, account, org, project, pipeline, build, stage, step, report, repo, sha, "test1", "suite1", "class1", 10, "passed", "msg1", "type1", "desc1", "out1", "err1",
+			tn, account, org, project, pipeline, build, stage, step, report, repo, sha, "test2", "suite2", "class2", 11, "failed", "msg2", "type2", "desc2", "out2", "err2").WillReturnResult(sqlmock.NewResult(0, 2))
+	// Leftover writes
+	mock.ExpectExec(stmt).
+		WithArgs(tn, account, org, project, pipeline, build, stage, step, report, repo, sha, "test3", "suite3", "class3", 12, "error", "msg3", "type3", "desc3", "out3", "err3").WillReturnResult(sqlmock.NewResult(0, 1))
+	test1 := &types.TestCase{Name: "test1", ClassName: "class1", SuiteName: "suite1",
+		SystemOut: "out1", SystemErr: "err1", DurationMs: 10,
+		Result: types.Result{Status: types.StatusPassed, Message: "msg1", Type: "type1", Desc: "desc1"}}
+	test2 := &types.TestCase{Name: "test2", ClassName: "class2", SuiteName: "suite2",
+		SystemOut: "out2", SystemErr: "err2", DurationMs: 11,
+		Result: types.Result{Status: types.StatusFailed, Message: "msg2", Type: "type2", Desc: "desc2"}}
+	test3 := &types.TestCase{Name: "test3", ClassName: "class3", SuiteName: "suite3",
+		SystemOut: "out3", SystemErr: "err3", DurationMs: 12,
+		Result: types.Result{Status: types.StatusError, Message: "msg3", Type: "type3", Desc: "desc3"}}
+	tdb := &TimeScaleDb{Conn: db, EvalTable: table}
+	err = tdb.Write(ctx, account, org, project, pipeline, build, stage, step, report, repo, sha, test1, test2, test3)
+	assert.Nil(t, err, nil)
+}
+
+func Test_Write_TestExecutionSummary(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
 
 	table := "tests"
 	account := "account"
