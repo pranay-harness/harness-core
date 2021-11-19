@@ -11,4 +11,5 @@ public interface TelemetryConfiguration {
   boolean isEnabled();
   String getUrl();
   String getApiKey();
+  boolean isCertValidationRequired();
 }

@@ -26,7 +26,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SignupException;
 import io.harness.exception.WingsException;
-import io.harness.licensing.LicenseConfig;
 import io.harness.licensing.services.LicenseService;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.user.UserInfo;
@@ -46,6 +45,7 @@ import io.harness.signup.services.impl.SignupServiceImpl;
 import io.harness.signup.validator.SignupValidator;
 import io.harness.telemetry.TelemetryReporter;
 import io.harness.user.remote.UserClient;
+import io.harness.version.VersionInfoManager;
 
 import com.google.inject.name.Named;
 import java.io.IOException;
@@ -74,8 +74,8 @@ public class SignupServiceImplTest extends CategoryTest {
   @Mock SignupNotificationHelper signupNotificationHelper;
   @Mock SignupVerificationTokenRepository verificationTokenRepository;
   @Mock @Named("NGSignupNotification") ExecutorService executorService;
-  @Mock LicenseConfig licenseConfig;
   @Mock LicenseService licenseService;
+  @Mock VersionInfoManager versionInfoManager;
 
   private static final String EMAIL = "test@test.com";
   private static final String INVALID_EMAIL = "test";
@@ -89,7 +89,7 @@ public class SignupServiceImplTest extends CategoryTest {
     initMocks(this);
     signupServiceImpl = new SignupServiceImpl(accountService, userClient, signupValidator, reCaptchaVerifier,
         telemetryReporter, signupNotificationHelper, verificationTokenRepository, executorService, accessControlClient,
-        licenseConfig, licenseService);
+        licenseService, versionInfoManager);
   }
 
   @Test

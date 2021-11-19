@@ -351,7 +351,9 @@ replace_key_value signupNotificationConfiguration.projectId "$SIGNUP_NOTIFICATIO
 replace_key_value signupNotificationConfiguration.bucketName "$SIGNUP_NOTIFICATION_GCS_BUCKET_NAME"
 
 replace_key_value segmentConfiguration.enabled "$SEGMENT_ENABLED"
+replace_key_value segmentConfiguration.url "$SEGMENT_URL"
 replace_key_value segmentConfiguration.apiKey "$SEGMENT_APIKEY"
+replace_key_value segmentConfiguration.certValidationRequired "$SEGMENT_VERIFY_CERT"
 
 replace_key_value accountConfig.deploymentClusterName "$DEPLOYMENT_CLUSTER_NAME"
 
@@ -379,4 +381,3 @@ replace_key_value ciManagerClientConfig.baseUrl "$CI_MANAGER_SERVICE_CLIENT_BASE
 replace_key_value scopeAccessCheckEnabled "${SCOPE_ACCESS_CHECK:-true}"
 
 replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"
-replace_key_value licenseConfig.deployVariant "$LICENSE_DEPLOY_VARIANT"

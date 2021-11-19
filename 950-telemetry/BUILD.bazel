@@ -10,12 +10,15 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//970-ng-commons:module",
         "//970-telemetry-beans:module",
         "//980-commons:module",
         "@maven//:com_google_inject_guice",
         "@maven//:com_segment_analytics_java_analytics",
         "@maven//:com_segment_analytics_java_analytics_core",
         "@maven//:com_segment_backo_backo",
+        "@maven//:io_github_resilience4j_resilience4j_core",
+        "@maven//:io_github_resilience4j_resilience4j_retry",
     ],
 )
 

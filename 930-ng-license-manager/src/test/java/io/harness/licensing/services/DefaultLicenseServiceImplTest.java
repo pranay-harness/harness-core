@@ -13,6 +13,7 @@ import static io.harness.licensing.LicenseTestConstant.DEFAULT_MODULE_TYPE;
 import static io.harness.licensing.services.DefaultLicenseServiceImpl.SUCCEED_EXTEND_TRIAL_OPERATION;
 import static io.harness.licensing.services.DefaultLicenseServiceImpl.SUCCEED_START_FREE_OPERATION;
 import static io.harness.licensing.services.DefaultLicenseServiceImpl.SUCCEED_START_TRIAL_OPERATION;
+import static io.harness.licensing.services.DefaultLicenseServiceImpl.TRIAL_ENDED;
 import static io.harness.rule.OwnerRule.NATHAN;
 import static io.harness.rule.OwnerRule.ZHUO;
 
@@ -362,7 +363,7 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
     assertThat(checkExpiryResultDTO.isShouldDelete()).isTrue();
     assertThat(checkExpiryResultDTO.getExpiryTime()).isEqualTo(0);
     verify(moduleLicenseRepository, times(1)).save(any());
-    verify(telemetryReporter, times(1)).sendTrackEvent(any(), any(), any(), any(), any(), any());
+    verify(telemetryReporter, times(1)).sendTrackEvent(eq(TRIAL_ENDED), eq("test"), any(), any(), any(), any());
   }
 
   @Test
