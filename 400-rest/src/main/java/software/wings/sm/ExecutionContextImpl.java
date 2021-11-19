@@ -461,13 +461,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         if (artifact != null) {
           list.add(artifact);
         } else {
-          if (artifactElement != null) {
-            throw new InvalidRequestException(
-                "The Artifact doesn't exist in the Database. Artifact Id: " + artifactElement.getUuid());
-          } else {
-            throw new InvalidRequestException(
-                "The Artifact doesn't exist in the Database. Not able to get Artifact Id");
-          }
+          throw new InvalidRequestException(
+              "The Artifact doesn't exist in the Database. Artifact Id: " + artifactElement.getUuid());
         }
       }
       return list;
@@ -478,7 +473,13 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       }
       List<Artifact> list = new ArrayList<>();
       for (ServiceArtifactVariableElement artifactVariableElement : artifactVariableElements) {
-        list.add(artifactService.get(artifactVariableElement.getUuid()));
+        Artifact artifact = artifactService.get(artifactVariableElement.getUuid());
+        if (artifact != null) {
+          list.add(artifact);
+        } else {
+          throw new InvalidRequestException(
+              "The Artifact doesn't exist in the Database. Artifact Id: " + artifactVariableElement.getUuid());
+        }
       }
       return list;
     }

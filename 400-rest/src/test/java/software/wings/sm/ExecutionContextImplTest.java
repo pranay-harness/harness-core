@@ -246,7 +246,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     assertThat(context.getArtifacts()).isNullOrEmpty();
   }
 
-  @Test
+  @Test(expected = InvalidRequestException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchArtifactsFromSweepingOutput() {
@@ -280,13 +280,9 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     context.pushContextElement(std);
 
     context.getArtifacts();
-    verify(artifactService).get(eq("u1"));
-    verify(artifactService).get(eq("u2"));
-    verify(artifactService).get(eq("u3"));
-    verify(artifactService).get(eq("u4"));
   }
 
-  @Test
+  @Test(expected = InvalidRequestException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchArtifactVariablesFromSweepingOutputFFOn() {
@@ -319,10 +315,6 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     injector.injectMembers(std);
     context.pushContextElement(std);
     context.getArtifacts();
-    verify(artifactService).get(eq("u1"));
-    verify(artifactService).get(eq("u2"));
-    verify(artifactService).get(eq("u3"));
-    verify(artifactService).get(eq("u4"));
   }
 
   @Test
