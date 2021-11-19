@@ -63,6 +63,7 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
+import io.harness.cdng.pipeline.executions.CDAccountExecutionMetadata;
 import io.harness.cdng.provision.terraform.TerraformApplyStepInfo;
 import io.harness.cdng.provision.terraform.TerraformPlanStepInfo;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
@@ -168,5 +169,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
 
     kryo.register(K8sExecutionPassThroughData.class, 12546);
     kryo.register(KustomizePatchesManifest.class, 12549);
+    kryo.register(CDAccountExecutionMetadata.class, 12550);
   }
 }
