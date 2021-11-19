@@ -143,6 +143,7 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
                        .origin(samlSettings.getOrigin())
                        .displayName(samlSettings.getDisplayName())
                        .authorizationEnabled(samlSettings.isAuthorizationEnabled())
+                       .entityIdentifier(samlSettings.getEntityIdentifier())
                        .build());
 
       } else if (ssoSetting.getType().equals(SSOType.OAUTH)) {
@@ -180,7 +181,7 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
     RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
     RequestBody logoutUrlPart = createPartFromString(logoutUrl);
-    RequestBody entityIdentifierPart = createPartFromString(logoutUrl);
+    RequestBody entityIdentifierPart = createPartFromString(entityIdentifier);
     return getResponse(managerClient.uploadSAMLMetadata(accountId, inputStream, displayNamePart,
         groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart, entityIdentifierPart));
   }
@@ -188,14 +189,15 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   @Override
   @FeatureRestrictionCheck(FeatureRestrictionName.SAML_SUPPORT)
   public SSOConfig updateSAMLMetadata(@NotNull @AccountIdentifier String accountId, MultipartBody.Part inputStream,
-      String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl) {
+      String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl,
+      String entityIdentifier) {
     RequestBody displayNamePart = createPartFromString(displayName);
     RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
     RequestBody logoutUrlPart = createPartFromString(logoutUrl);
-
-    return getResponse(managerClient.updateSAMLMetadata(
-        accountId, inputStream, displayNamePart, groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart));
+    RequestBody entityIdentifierPart = createPartFromString(entityIdentifier);
+    return getResponse(managerClient.updateSAMLMetadata(accountId, inputStream, displayNamePart,
+        groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart, entityIdentifierPart));
   }
 
   @Override
