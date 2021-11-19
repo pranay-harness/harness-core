@@ -44,8 +44,6 @@ RUN mkdir -m 777 -p client-tools/go-template/v0.4 \
     && curl -s -L -o client-tools/kustomize/v4.0.0/kustomize https://app.harness.io/public/shared/tools/kustomize/release/v4.0.0/bin/linux/amd64/kustomize \
     && mkdir -m 777 -p client-tools/scm/72f01538/linux/amd64 \
     && curl -s -L -o client-tools/scm/72f01538/linux/amd64/scm https://app.harness.io/public/shared/tools/scm/release/72f01538/bin/linux/amd64/scm \
-    && mkdir -m 777 -p client-tools/kubectl/v1.13.2/kubectl \
-    && curl -s -L -o client-tools/kubectl/v1.13.2/kubectl https://app.harness.io/public/shared/tools/kubectl/release/v1.13.2/bin/linux/amd64/kubectl \
     && chmod -R 755 /opt/harness-delegate
 
 
