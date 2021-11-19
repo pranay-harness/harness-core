@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType.INHERIT_FROM_DELEGATE;
 import static io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType.MANUAL_CREDENTIALS;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
@@ -19,6 +20,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.task.gcp.helpers.GkeClusterHelper;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
@@ -26,23 +28,35 @@ import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 
 @Singleton
+@Slf4j
 @OwnedBy(CDP)
 public class ContainerDeploymentDelegateBaseHelper {
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private GkeClusterHelper gkeClusterHelper;
+
+  public static final LoadingCache<String, Object> lockObjects =
+      CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build(CacheLoader.from(Object::new));
+  private static final String KUBE_CONFIG_DIR = "./repository/helm/.kube/";
 
   @NotNull
   public List<Pod> getExistingPodsByLabels(KubernetesConfig kubernetesConfig, Map<String, String> labels) {
@@ -142,6 +156,27 @@ public class ContainerDeploymentDelegateBaseHelper {
     if (gcpConnectorDTO.getCredential().getGcpCredentialType() == MANUAL_CREDENTIALS) {
       GcpManualDetailsDTO gcpCredentialSpecDTO = (GcpManualDetailsDTO) gcpConnectorDTO.getCredential().getConfig();
       secretDecryptionService.decrypt(gcpCredentialSpecDTO, encryptedDataDetails);
+    }
+  }
+
+  public String createKubeConfig(KubernetesConfig kubernetesConfig) {
+    try {
+      String configFileContent = kubernetesContainerService.getConfigFileContent(kubernetesConfig);
+      String md5Hash = DigestUtils.md5Hex(configFileContent);
+
+      synchronized (lockObjects.get(md5Hash)) {
+        String configFilePath = KUBE_CONFIG_DIR + md5Hash;
+        File file = new File(configFilePath);
+        if (!file.exists()) {
+          log.info("File doesn't exist. Creating file at path {}", configFilePath);
+          FileUtils.forceMkdir(file.getParentFile());
+          FileUtils.writeStringToFile(file, configFileContent, UTF_8);
+          log.info("Created file with size {}", file.length());
+        }
+        return file.getAbsolutePath();
+      }
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 }
