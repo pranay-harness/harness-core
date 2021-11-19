@@ -56,7 +56,6 @@ public class JiraHelperService {
   private static final String WORKFLOW_EXECUTION_ID = "workflow";
   private static final long JIRA_DELEGATE_TIMEOUT_MILLIS = 60 * 1000 * 5;
   @Inject private DelegateServiceImpl delegateService;
-  @Inject private DelegateTaskServiceClassicImpl delegateTaskServiceClassic;
   @Inject @Transient private transient SecretManager secretManager;
   @Inject SettingsService settingService;
   @Inject WorkflowExecutionService workflowExecutionService;
@@ -89,6 +88,7 @@ public class JiraHelperService {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
+                                    .tags(jiraConfig.getDelegateSelectors())
                                     .data(TaskData.builder()
                                               .async(false)
                                               .taskType(TaskType.JIRA.name())
@@ -229,25 +229,29 @@ public class JiraHelperService {
     jiraTaskParameters.setEncryptionDetails(
         secretManager.getEncryptionDetails(jiraConfig, appId, WORKFLOW_EXECUTION_ID));
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(accountId)
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
-                                    .data(TaskData.builder()
-                                              .async(false)
-                                              .taskType(TaskType.JIRA.name())
-                                              .parameters(new Object[] {jiraTaskParameters})
-                                              .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
-                                              .build())
-                                    .build();
-    DelegateResponseData responseData = delegateTaskServiceClassic.executeTask(delegateTask);
+    try {
+      DelegateTask delegateTask = DelegateTask.builder()
+                                      .accountId(accountId)
+                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
+                                      .data(TaskData.builder()
+                                                .async(false)
+                                                .taskType(TaskType.JIRA.name())
+                                                .parameters(new Object[] {jiraTaskParameters})
+                                                .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
+                                                .build())
+                                      .build();
+      DelegateResponseData responseData = delegateService.executeTask(delegateTask);
 
-    if (jiraTaskParameters.getJiraAction() == CHECK_APPROVAL && delegateTask != null) {
-      log.info("Delegate task Id = {}, for Polling Jira Approval for IssueId {}", delegateTask.getUuid(),
-          jiraTaskParameters.getIssueId());
-    }
-    if (responseData instanceof JiraExecutionData) {
-      return (JiraExecutionData) responseData;
-    } else {
+      if (jiraTaskParameters.getJiraAction() == CHECK_APPROVAL && delegateTask != null) {
+        log.info("Delegate task Id = {}, for Polling Jira Approval for IssueId {}", delegateTask.getUuid(),
+            jiraTaskParameters.getIssueId());
+      }
+      if (responseData instanceof JiraExecutionData) {
+        return (JiraExecutionData) responseData;
+      } else {
+        return JiraExecutionData.builder().errorMessage("Delegate task failed with an exception").build();
+      }
+    } catch (Exception exception) {
       return JiraExecutionData.builder().errorMessage("Delegate task failed with an exception").build();
     }
   }

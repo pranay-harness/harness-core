@@ -95,8 +95,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private boolean inlineSshCommand;
   private boolean executeOnDelegate;
   private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
-  private boolean
-      disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+  private boolean disableWinRMEnvVariables; // stop passing service variables as env variables
   private List<String> delegateSelectors;
 
   // new fields for multi artifact
@@ -391,8 +390,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private boolean inlineSshCommand;
     private boolean executeOnDelegate;
     private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
-    private boolean
-        disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+    private boolean disableWinRMEnvVariables; // stop passing service variables as env variables
     private List<String> delegateSelectors;
 
     // new fields for multi artifact

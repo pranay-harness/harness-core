@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	cgp "github.com/wings-software/portal/product/ci/addon/parser/cg"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,6 +21,7 @@ var err error
 
 func TestMain(m *testing.M) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+
 	mongoUri := os.Getenv("TEST_MONGO_URI_TI")
 	if mongoUri == "" {
 		os.Exit(0)
@@ -39,7 +41,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
@@ -94,7 +97,8 @@ func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
 }
 
 func TestMongoDb_MergeCgForNodes(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
@@ -144,7 +148,8 @@ func TestMongoDb_MergeCgForNodes(t *testing.T) {
 }
 
 func TestMongoDb_MergePartialCgForTestRelations(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
@@ -208,7 +213,8 @@ func TestMongoDb_MergePartialCgForTestRelations(t *testing.T) {
 }
 
 func TestMongoDb_UploadPartialCgForTestRelations(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
@@ -266,7 +272,8 @@ func TestMongoDb_UploadPartialCgForTestRelations(t *testing.T) {
 }
 
 func TestMongoDb_MergePartialCgForVisEdges(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropVisEdges(ctx)
 	defer dropVisEdges(ctx) // drop vis_edges after the test is completed as well
 
@@ -328,7 +335,8 @@ func TestMongoDb_MergePartialCgForVisEdges(t *testing.T) {
 }
 
 func TestMongoDb_UploadPartialCgForVisGraph(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropVisEdges(ctx)
 	defer dropVisEdges(ctx) // drop edges after the test is completed as well
 
@@ -385,7 +393,8 @@ func TestMongoDb_UploadPartialCgForVisGraph(t *testing.T) {
 
 // Change in a unsupported file (non java file) should select all the tests.
 func Test_GetTestsToRun_Unsupported_File(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
@@ -416,9 +425,48 @@ func Test_GetTestsToRun_Unsupported_File(t *testing.T) {
 	assert.Equal(t, resp.SrcCodeTests, 4)
 }
 
+// Change in a test file which is a helper method.
+func Test_GetTestsToRun_WithHelperTestMethods(t *testing.T) {
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
+	dropNodes(ctx)
+	dropRelations(ctx)
+	defer dropNodes(ctx)     // drop nodes after the test is completed as well
+	defer dropRelations(ctx) // drop relations after the test is completed as well
+
+	// Insert sources and tests
+	n1 := NewNode(1, 1, "test.helper", "m1", "param", "TestObjectHelper", "source", "", false,
+		getVCSInfo(), "acct", "org", "proj")
+	n2 := NewNode(2, 2, "test.actual", "m2", "param", "TestFile", "test", "", false,
+		getVCSInfo(), "acct", "org", "proj")
+	n3 := NewNode(3, 3, "test.other", "m2", "param", "TestFileOther", "test", "", false,
+		getVCSInfo(), "acct", "org", "proj")
+
+	n := []interface{}{n1, n2, n3}
+	db.Database.Collection(nodeColl).InsertMany(ctx, n)
+
+	// Add relation between them
+	r1 := NewRelation(1, []int{2}, getVCSInfo(), "acct", "org", "proj")
+	db.Database.Collection(relnsColl).InsertMany(ctx, []interface{}{r1})
+
+	chFiles := []types.File{{Name: "some/path/src/test/java/test/helper/TestObjectHelper.java", Status: types.FileModified}}
+
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct", false)
+	assert.Nil(t, err)
+	assert.Equal(t, resp.SelectAll, false)
+	assert.Equal(t, resp.TotalTests, 2)
+	assert.Equal(t, resp.SelectedTests, 1)
+	assert.Equal(t, resp.SrcCodeTests, 1)
+	assert.Equal(t, resp.Tests[0].Class, "TestObjectHelper")
+	assert.Equal(t, resp.Tests[0].Pkg, "test.helper")
+	assert.Equal(t, resp.Tests[1].Class, "TestFile")
+	assert.Equal(t, resp.Tests[1].Pkg, "test.actual")
+}
+
 // CG stored with different account and query with different account
 func Test_GetTestsToRun_DifferentAccount(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
@@ -472,7 +520,8 @@ and checks response.
 		a.xml should be ignored
 */
 func Test_GetTestsToRun_TiConfig_Added_Deleted(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
@@ -523,7 +572,8 @@ func Test_GetTestsToRun_TiConfig_Added_Deleted(t *testing.T) {
 }
 
 func Test_GetTestsToRun_WithNewTests(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
@@ -560,7 +610,8 @@ func Test_GetTestsToRun_WithNewTests(t *testing.T) {
 }
 
 func Test_GetTestsToRun_WithNewTests_SameIds(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
@@ -604,7 +655,8 @@ func Test_GetTestsToRun_WithNewTests_SameIds(t *testing.T) {
 }
 
 func Test_GetTestsToRun_WithResources_PartialSelection(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
@@ -645,7 +697,8 @@ func Test_GetTestsToRun_WithResources_PartialSelection(t *testing.T) {
 }
 
 func Test_GetTestsToRun_WithResources_FullSelection(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
@@ -690,7 +743,8 @@ func Test_GetTestsToRun_WithResources_FullSelection(t *testing.T) {
 	1 -> 2 -> 3 -> ..... -> 50        51 -> 52 -> ...... -> 100
 */
 func Test_VgSearch_LinearGraph(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	dropVisEdges(ctx)
@@ -826,7 +880,8 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 	Get the visualisation graph for a fully connected graph with x nodes
 //*/
 func Test_VgSearch_FullyConnected(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	dropVisEdges(ctx)
@@ -929,7 +984,8 @@ func Test_VgSearch_FullyConnected(t *testing.T) {
 //	1 -> 2  3 -> 4 5 -> 6 ...... 99 -> 100
 //*/
 func Test_VgSearch_DisconnectedGraph(t *testing.T) {
-	ctx := context.Background()
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ctx := logger.WithContext(context.Background(), log.Sugar())
 	dropNodes(ctx)
 	dropRelations(ctx)
 	dropVisEdges(ctx)

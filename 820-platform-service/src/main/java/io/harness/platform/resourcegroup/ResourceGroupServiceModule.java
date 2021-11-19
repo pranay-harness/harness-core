@@ -17,6 +17,7 @@ import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.govern.ProviderModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
@@ -48,11 +49,13 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.redisson.api.RedissonClient;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
@@ -164,24 +167,37 @@ public class ResourceGroupServiceModule extends AbstractModule {
   }
 
   @Provides
-  @Named(EventsFrameworkConstants.ENTITY_CRUD)
-  Producer getProducer() {
+  @Named("eventsFrameworkRedissonClient")
+  @Singleton
+  public RedissonClient getRedissonClient() {
     RedisConfig redisConfig = appConfig.getResoureGroupServiceConfig().getRedisConfig();
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
-      return NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME);
+      return null;
     }
-    return RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
-        EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, RESOUCE_GROUP_SERVICE.getServiceId());
+    return RedisUtils.getClient(redisConfig);
   }
 
   @Provides
   @Named(EventsFrameworkConstants.ENTITY_CRUD)
-  Consumer getConsumer() {
+  Producer getProducer(@Nullable @Named("eventsFrameworkRedissonClient") RedissonClient redissonClient) {
+    RedisConfig redisConfig = appConfig.getResoureGroupServiceConfig().getRedisConfig();
+    if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
+      return NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME);
+    }
+    return RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redissonClient,
+        EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, RESOUCE_GROUP_SERVICE.getServiceId(),
+        redisConfig.getEnvNamespace());
+  }
+
+  @Provides
+  @Named(EventsFrameworkConstants.ENTITY_CRUD)
+  Consumer getConsumer(@Nullable @Named("eventsFrameworkRedissonClient") RedissonClient redissonClient) {
     RedisConfig redisConfig = appConfig.getResoureGroupServiceConfig().getRedisConfig();
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
       return NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME);
     }
-    return RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, RESOURCE_GROUP_CONSUMER_GROUP, redisConfig,
-        EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME, EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE);
+    return RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, RESOURCE_GROUP_CONSUMER_GROUP, redissonClient,
+        EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME, EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE,
+        redisConfig.getEnvNamespace());
   }
 }

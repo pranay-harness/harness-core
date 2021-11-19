@@ -2,11 +2,13 @@ package io.harness.perpetualtask.datacollection.k8s;
 
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.KubernetesChangeEventMetadata;
+import io.harness.serializer.JsonUtils;
 
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1OwnerReference;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
@@ -55,6 +57,33 @@ public class ChangeIntelConfigMapHandler extends BaseChangeHandler<V1ConfigMap> 
       ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setAction(KubernetesChangeEventMetadata.Action.Add);
       sendEvent(accountId, eventDTO);
     }
+  }
+
+  @Override
+  void processAndSendUpdateEvent(V1ConfigMap oldResource, V1ConfigMap newResource, String oldYaml, String newYaml) {
+    // Temp solution to ignore spamming of config map events of type ingress
+    // TODO: find long term solution asap.: https://harness.atlassian.net/browse/CVNG-3687
+    String leaderKey = "control-plane.alpha.kubernetes.io/leader";
+    if (oldResource.getMetadata().getAnnotations() != null && newResource.getMetadata().getAnnotations() != null) {
+      String renewTokenKey = "renewTime";
+      String oldValue = oldResource.getMetadata().getAnnotations().get(leaderKey);
+      Map<String, Object> oldMap = JsonUtils.asMap(oldValue);
+      oldMap.remove(renewTokenKey);
+      oldResource.getMetadata().getAnnotations().put(leaderKey, JsonUtils.asJson(oldMap));
+
+      String newValue = newResource.getMetadata().getAnnotations().get(leaderKey);
+      Map<String, Object> newMap = JsonUtils.asMap(newValue);
+      newMap.remove(renewTokenKey);
+      newResource.getMetadata().getAnnotations().put(leaderKey, JsonUtils.asJson(newMap));
+
+      String updatedOldYaml = k8sHandlerUtils.yamlDump(oldResource);
+      String updatedNewYaml = k8sHandlerUtils.yamlDump(newResource);
+      if (!updatedNewYaml.equals(updatedOldYaml)) {
+        super.processAndSendUpdateEvent(oldResource, newResource, oldYaml, newYaml);
+      }
+      return;
+    }
+    super.processAndSendUpdateEvent(oldResource, newResource, oldYaml, newYaml);
   }
 
   @Override

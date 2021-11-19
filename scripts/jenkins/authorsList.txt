@@ -42,6 +42,7 @@ Bhavya Agrawal bhavya.agrawal@harness.io
 Brijesh Dhakar brijesh.dhakar@harness.io
 Christopher Clark christopher.clark@harness.io
 CI Bot bot@harness.io
+Conor Murray conor.murray@harness.io
 Dave Johnston dave.johnston@harness.io
 Deepak Chhikara deepak.chhikara@harness.io
 Deepak Patankar deepak.patankar@harness.io
@@ -200,3 +201,4 @@ markoharness marko.lukic@harness.io
 bharat bandhu goel bharat.goel@harness.io
 Bharat Goel bharat.goel@harness.io
 Alexandru Ciofu alexandru.ciofu@harness.io
+Slobodan Pavic slobodan.pavic@harness.io

@@ -22,11 +22,13 @@ import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import lombok.AllArgsConstructor;
+import org.redisson.api.RedissonClient;
 
 @OwnedBy(PL)
 @AllArgsConstructor
@@ -103,99 +105,108 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
+      RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
-          .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
-              EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redissonClient,
+              EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
-          .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, NG_MANAGER.getServiceId(), redisConfig,
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, NG_MANAGER.getServiceId(), redissonClient,
               EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE));
+              EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.NG_ACCOUNT_SETUP))
-          .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, "NG_ACCOUNT_SETUP_GROUP", redisConfig,
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, "NG_ACCOUNT_SETUP_GROUP", redissonClient,
               EventsFrameworkConstants.NG_ACCOUNT_SETUP_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.NG_ACCOUNT_SETUP_READ_BATCH_SIZE));
+              EventsFrameworkConstants.NG_ACCOUNT_SETUP_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
-          .toInstance(RedisConsumer.of(EventsFrameworkConstants.USERMEMBERSHIP, NG_MANAGER.getServiceId(), redisConfig,
-              EventsFrameworkConstants.USERMEMBERSHIP_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.USERMEMBERSHIP_READ_BATCH_SIZE));
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.USERMEMBERSHIP, NG_MANAGER.getServiceId(),
+              redissonClient, EventsFrameworkConstants.USERMEMBERSHIP_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.USERMEMBERSHIP_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
-          .toInstance(RedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redisConfig,
-              EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redissonClient,
+              EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
-          .toInstance(RedisConsumer.of(EventsFrameworkConstants.SETUP_USAGE, NG_MANAGER.getServiceId(), redisConfig,
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.SETUP_USAGE, NG_MANAGER.getServiceId(), redissonClient,
               EventsFrameworkConstants.SETUP_USAGE_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.SETUP_USAGE_READ_BATCH_SIZE));
+              EventsFrameworkConstants.SETUP_USAGE_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
-          .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
-              EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redissonClient,
+              EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
-          .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, NG_MANAGER.getServiceId(), redisConfig,
-              EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.ENTITY_ACTIVITY_READ_BATCH_SIZE));
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, NG_MANAGER.getServiceId(),
+              redissonClient, EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.ENTITY_ACTIVITY_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH, NG_MANAGER.getServiceId(),
-              redisConfig, EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_READ_BATCH_SIZE));
+              redissonClient, EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
       // todo(abhinav): move this to git sync manager if it is carved out.
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
-          .toInstance(RedisProducer.of(EventsFrameworkConstants.GIT_CONFIG_STREAM, redisConfig,
-              EventsFrameworkConstants.GIT_CONFIG_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.GIT_CONFIG_STREAM, redissonClient,
+              EventsFrameworkConstants.GIT_CONFIG_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
-          .toInstance(RedisProducer.of(EventsFrameworkConstants.USERMEMBERSHIP, redisConfig,
-              EventsFrameworkConstants.USER_MEMBERSHIP_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.USERMEMBERSHIP, redissonClient,
+              EventsFrameworkConstants.USER_MEMBERSHIP_TOPIC_SIZE, NG_MANAGER.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(WEBHOOK_EVENTS_STREAM))
-          .toInstance(RedisProducer.of(
-              WEBHOOK_EVENTS_STREAM, redisConfig, WEBHOOK_EVENTS_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(WEBHOOK_EVENTS_STREAM, redissonClient, WEBHOOK_EVENTS_STREAM_MAX_TOPIC_SIZE,
+              NG_MANAGER.getServiceId(), redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.POLLING_EVENTS_STREAM))
-          .toInstance(RedisProducer.of(EventsFrameworkConstants.POLLING_EVENTS_STREAM, redisConfig,
-              EventsFrameworkConstants.POLLING_EVENTS_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.POLLING_EVENTS_STREAM, redissonClient,
+              EventsFrameworkConstants.POLLING_EVENTS_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(GIT_PUSH_EVENT_STREAM))
-          .toInstance(RedisProducer.of(
-              GIT_PUSH_EVENT_STREAM, redisConfig, GIT_PUSH_EVENT_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(GIT_PUSH_EVENT_STREAM, redissonClient, GIT_PUSH_EVENT_STREAM_MAX_TOPIC_SIZE,
+              NG_MANAGER.getServiceId(), redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(GIT_PR_EVENT_STREAM))
-          .toInstance(RedisProducer.of(
-              GIT_PR_EVENT_STREAM, redisConfig, GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(GIT_PR_EVENT_STREAM, redissonClient, GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE,
+              NG_MANAGER.getServiceId(), redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION, NG_MANAGER.getServiceId(),
-              redisConfig, EventsFrameworkConstants.DEFAULT_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.DEFAULT_READ_BATCH_SIZE));
+              redissonClient, EventsFrameworkConstants.DEFAULT_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.DEFAULT_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(GIT_BRANCH_HOOK_EVENT_STREAM))
-          .toInstance(RedisProducer.of(GIT_BRANCH_HOOK_EVENT_STREAM, redisConfig,
-              GIT_BRANCH_HOOK_EVENT_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(GIT_BRANCH_HOOK_EVENT_STREAM, redissonClient,
+              GIT_BRANCH_HOOK_EVENT_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId(), redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(GIT_CONFIG_STREAM))
-          .toInstance(RedisConsumer.of(GIT_CONFIG_STREAM, NG_MANAGER.getServiceId(), redisConfig,
+          .toInstance(RedisConsumer.of(GIT_CONFIG_STREAM, NG_MANAGER.getServiceId(), redissonClient,
               EventsFrameworkConstants.GIT_CONFIG_STREAM_PROCESSING_TIME,
-              EventsFrameworkConstants.GIT_CONFIG_STREAM_READ_BATCH_SIZE));
+              EventsFrameworkConstants.GIT_CONFIG_STREAM_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(INSTANCE_STATS))
-          .toInstance(RedisProducer.of(
-              INSTANCE_STATS, redisConfig, EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(INSTANCE_STATS, redissonClient, EventsFrameworkConstants.DEFAULT_TOPIC_SIZE,
+              NG_MANAGER.getServiceId(), redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(INSTANCE_STATS))
-          .toInstance(RedisConsumer.of(INSTANCE_STATS, NG_MANAGER.getServiceId(), redisConfig,
-              EventsFrameworkConstants.DEFAULT_MAX_PROCESSING_TIME, EventsFrameworkConstants.DEFAULT_READ_BATCH_SIZE));
+          .toInstance(RedisConsumer.of(INSTANCE_STATS, NG_MANAGER.getServiceId(), redissonClient,
+              EventsFrameworkConstants.DEFAULT_MAX_PROCESSING_TIME, EventsFrameworkConstants.DEFAULT_READ_BATCH_SIZE,
+              redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.CD_DEPLOYMENT_EVENT))
-          .toInstance(RedisProducer.of(EventsFrameworkConstants.CD_DEPLOYMENT_EVENT, redisConfig,
-              EventsFrameworkConstants.CD_DEPLOYMENT_EVENT_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.CD_DEPLOYMENT_EVENT, redissonClient,
+              EventsFrameworkConstants.CD_DEPLOYMENT_EVENT_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId(),
+              redisConfig.getEnvNamespace()));
     }
   }
 }

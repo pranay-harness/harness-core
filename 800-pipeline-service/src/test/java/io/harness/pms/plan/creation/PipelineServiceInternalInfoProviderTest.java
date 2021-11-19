@@ -27,6 +27,7 @@ import io.harness.plancreator.steps.StepGroupPMSPlanCreator;
 import io.harness.plancreator.steps.internal.PMSStepPlanCreator;
 import io.harness.plancreator.steps.internal.PmsStepFilterJsonCreator;
 import io.harness.plancreator.steps.resourceconstraint.ResourceConstraintStepPlanCreator;
+import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.variables.PipelineVariableCreator;
 import io.harness.pms.sdk.core.pipeline.variables.StepGroupVariableCreator;
@@ -37,6 +38,7 @@ import io.harness.pms.variables.HTTPStepVariableCreator;
 import io.harness.rule.Owner;
 import io.harness.steps.shellscript.ShellScriptStepVariableCreator;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -120,6 +122,8 @@ public class PipelineServiceInternalInfoProviderTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetStepInfo() {
-    assertThat(pipelineServiceInternalInfoProvider.getStepInfo()).isEmpty();
+    List<StepInfo> steps = pipelineServiceInternalInfoProvider.getStepInfo();
+    assertThat(steps).isNotEmpty();
+    assertThat(steps).hasSize(1).extracting(StepInfo::getName).containsExactly("Flag Configuration");
   }
 }

@@ -38,11 +38,11 @@ public class SettingAttributeValidateConnectivityHandler implements Handler<Sett
   @Inject private SettingValidationService settingValidationService;
   @Inject private MorphiaPersistenceProvider<SettingAttribute> persistenceProvider;
 
-  public void registerIterators() {
+  public void registerIterators(int threadPoolSize) {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
             .name("SettingAttributeValidateConnectivity")
-            .poolSize(5)
+            .poolSize(threadPoolSize)
             .interval(Duration.ofMinutes(10))
             .build(),
         SettingAttributeValidateConnectivityHandler.class,

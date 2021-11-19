@@ -24,4 +24,5 @@ import lombok.experimental.SuperBuilder;
 public class RateLimitRestrictionMetadataDTO extends RestrictionMetadataDTO {
   private Long limit;
   private TimeUnit timeUnit;
+  private boolean allowedIfEqual;
 }

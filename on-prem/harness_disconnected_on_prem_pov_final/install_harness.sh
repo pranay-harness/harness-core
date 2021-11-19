@@ -471,7 +471,7 @@ function setupClientUtils() {
   echo "Copying kubectl go-template helm chartmuseum tf-config-inspect oc and scm"
 
   for platform in linux darwin; do
-    for kubectlversion in v1.13.2; do
+    for kubectlversion in v1.13.2 v1.19.2; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
       cp images/kubectl/${platform}/$kubectlversion/kubectl ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
     done
@@ -506,7 +506,7 @@ function setupClientUtils() {
       cp images/oc/${platform}/$ocversion/oc ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
     done
 
-    for scmVersion in 87448d72; do
+    for scmVersion in 90882846; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
       cp images/scm/${platform}/$scmVersion/scm ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
     done

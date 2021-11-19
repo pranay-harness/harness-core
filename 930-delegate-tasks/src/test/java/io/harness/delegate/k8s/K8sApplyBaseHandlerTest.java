@@ -71,23 +71,23 @@ public class K8sApplyBaseHandlerTest extends CategoryTest {
     doReturn(true)
         .when(k8sTaskHelperBase)
         .doStatusCheckForAllResources(
-            any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(namespace), eq(logCallback), eq(true));
+            any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(namespace), eq(logCallback), eq(true), eq(false));
     doReturn(true)
         .when(k8sTaskHelperBase)
         .doStatusCheckForAllCustomResources(any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(logCallback),
-            eq(true), eq(timeoutIntervalInMillis));
+            eq(true), eq(timeoutIntervalInMillis), eq(false));
     boolean result = baseHandler.steadyStateCheck(
-        false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config);
+        false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config, false);
     assertThat(result).isTrue();
 
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllResources(any(Kubectl.class), resourceIdCaptor.capture(), eq(delegateTaskParams),
-            eq(namespace), eq(logCallback), eq(true));
+            eq(namespace), eq(logCallback), eq(true), eq(false));
     List k8sResourceIds = resourceIdCaptor.getValue();
     assertThat(k8sResourceIds).containsExactly(deployment);
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllCustomResources(any(Kubectl.class), customResourceIdCaptor.capture(),
-            eq(delegateTaskParams), eq(logCallback), eq(true), eq(timeoutIntervalInMillis));
+            eq(delegateTaskParams), eq(logCallback), eq(true), eq(timeoutIntervalInMillis), eq(false));
     List customResourceIds = customResourceIdCaptor.getValue();
     assertThat(customResourceIds).isEmpty();
   }
@@ -107,24 +107,24 @@ public class K8sApplyBaseHandlerTest extends CategoryTest {
     ArgumentCaptor<List> customResourceIdCaptor = ArgumentCaptor.forClass(List.class);
     doReturn(true)
         .when(k8sTaskHelperBase)
-        .doStatusCheckForAllResources(
-            any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(namespace), eq(logCallback), eq(false));
+        .doStatusCheckForAllResources(any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(namespace),
+            eq(logCallback), eq(false), eq(false));
     doReturn(true)
         .when(k8sTaskHelperBase)
         .doStatusCheckForAllCustomResources(any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(logCallback),
-            eq(true), eq(timeoutIntervalInMillis));
+            eq(true), eq(timeoutIntervalInMillis), eq(false));
     boolean result = baseHandler.steadyStateCheck(
-        false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config);
+        false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config, false);
     assertThat(result).isTrue();
 
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllResources(any(Kubectl.class), resourceIdCaptor.capture(), eq(delegateTaskParams),
-            eq(namespace), eq(logCallback), eq(false));
+            eq(namespace), eq(logCallback), eq(false), eq(false));
     List k8sResourceIds = resourceIdCaptor.getValue();
     assertThat(k8sResourceIds).isEmpty();
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllCustomResources(any(Kubectl.class), customResourceIdCaptor.capture(),
-            eq(delegateTaskParams), eq(logCallback), eq(true), eq(timeoutIntervalInMillis));
+            eq(delegateTaskParams), eq(logCallback), eq(true), eq(timeoutIntervalInMillis), eq(false));
     List customResourceIds = customResourceIdCaptor.getValue();
     assertThat(customResourceIds).containsExactly(crdResource);
   }
@@ -150,24 +150,24 @@ public class K8sApplyBaseHandlerTest extends CategoryTest {
     ArgumentCaptor<List> customResourceIdCaptor = ArgumentCaptor.forClass(List.class);
     doReturn(true)
         .when(k8sTaskHelperBase)
-        .doStatusCheckForAllResources(
-            any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(namespace), eq(logCallback), eq(false));
+        .doStatusCheckForAllResources(any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(namespace),
+            eq(logCallback), eq(false), eq(false));
     doReturn(true)
         .when(k8sTaskHelperBase)
         .doStatusCheckForAllCustomResources(any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(logCallback),
-            eq(true), eq(timeoutIntervalInMillis));
+            eq(true), eq(timeoutIntervalInMillis), eq(false));
     boolean result = baseHandler.steadyStateCheck(
-        false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config);
+        false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config, false);
     assertThat(result).isTrue();
 
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllResources(any(Kubectl.class), resourceIdCaptor.capture(), eq(delegateTaskParams),
-            eq(namespace), eq(logCallback), eq(false));
+            eq(namespace), eq(logCallback), eq(false), eq(false));
     List k8sResourceIds = resourceIdCaptor.getValue();
     assertThat(k8sResourceIds).containsExactly(deployment);
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllCustomResources(any(Kubectl.class), customResourceIdCaptor.capture(),
-            eq(delegateTaskParams), eq(logCallback), eq(true), eq(timeoutIntervalInMillis));
+            eq(delegateTaskParams), eq(logCallback), eq(true), eq(timeoutIntervalInMillis), eq(false));
     List customResourceIds = customResourceIdCaptor.getValue();
     assertThat(customResourceIds).containsExactly(crdResource);
   }
@@ -193,24 +193,24 @@ public class K8sApplyBaseHandlerTest extends CategoryTest {
     ArgumentCaptor<List> customResourceIdCaptor = ArgumentCaptor.forClass(List.class);
     doReturn(false)
         .when(k8sTaskHelperBase)
-        .doStatusCheckForAllResources(
-            any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(namespace), eq(logCallback), eq(false));
+        .doStatusCheckForAllResources(any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(namespace),
+            eq(logCallback), eq(false), eq(false));
     doReturn(true)
         .when(k8sTaskHelperBase)
         .doStatusCheckForAllCustomResources(any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(logCallback),
-            eq(true), eq(timeoutIntervalInMillis));
+            eq(true), eq(timeoutIntervalInMillis), eq(false));
     boolean result = baseHandler.steadyStateCheck(
-        false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config);
+        false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config, false);
     assertThat(result).isFalse();
 
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllResources(any(Kubectl.class), resourceIdCaptor.capture(), eq(delegateTaskParams),
-            eq(namespace), eq(logCallback), eq(false));
+            eq(namespace), eq(logCallback), eq(false), eq(false));
     List k8sResourceIds = resourceIdCaptor.getValue();
     assertThat(k8sResourceIds).containsExactly(deployment);
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllCustomResources(any(Kubectl.class), customResourceIdCaptor.capture(),
-            eq(delegateTaskParams), eq(logCallback), eq(true), eq(timeoutIntervalInMillis));
+            eq(delegateTaskParams), eq(logCallback), eq(true), eq(timeoutIntervalInMillis), eq(false));
     List customResourceIds = customResourceIdCaptor.getValue();
     assertThat(customResourceIds).containsExactly(crdResource);
   }
@@ -236,24 +236,24 @@ public class K8sApplyBaseHandlerTest extends CategoryTest {
     ArgumentCaptor<List> customResourceIdCaptor = ArgumentCaptor.forClass(List.class);
     doReturn(true)
         .when(k8sTaskHelperBase)
-        .doStatusCheckForAllResources(
-            any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(namespace), eq(logCallback), eq(false));
+        .doStatusCheckForAllResources(any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(namespace),
+            eq(logCallback), eq(false), eq(false));
     doReturn(false)
         .when(k8sTaskHelperBase)
         .doStatusCheckForAllCustomResources(any(Kubectl.class), anyList(), eq(delegateTaskParams), eq(logCallback),
-            eq(true), eq(timeoutIntervalInMillis));
+            eq(true), eq(timeoutIntervalInMillis), eq(false));
     boolean result = baseHandler.steadyStateCheck(
-        false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config);
+        false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config, false);
     assertThat(result).isFalse();
 
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllResources(any(Kubectl.class), resourceIdCaptor.capture(), eq(delegateTaskParams),
-            eq(namespace), eq(logCallback), eq(false));
+            eq(namespace), eq(logCallback), eq(false), eq(false));
     List k8sResourceIds = resourceIdCaptor.getValue();
     assertThat(k8sResourceIds).containsExactly(deployment);
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllCustomResources(any(Kubectl.class), customResourceIdCaptor.capture(),
-            eq(delegateTaskParams), eq(logCallback), eq(true), eq(timeoutIntervalInMillis));
+            eq(delegateTaskParams), eq(logCallback), eq(true), eq(timeoutIntervalInMillis), eq(false));
     List customResourceIds = customResourceIdCaptor.getValue();
     assertThat(customResourceIds).containsExactly(crdResource);
   }
@@ -267,7 +267,7 @@ public class K8sApplyBaseHandlerTest extends CategoryTest {
     config.setCustomWorkloads(Collections.emptyList());
 
     boolean result = baseHandler.steadyStateCheck(
-        false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config);
+        false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config, false);
     assertThat(result).isTrue();
   }
 
@@ -288,8 +288,8 @@ public class K8sApplyBaseHandlerTest extends CategoryTest {
     config.setWorkloads(managedWorkloads);
     config.setCustomWorkloads(customWorkloads);
 
-    boolean result =
-        baseHandler.steadyStateCheck(true, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config);
+    boolean result = baseHandler.steadyStateCheck(
+        true, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, config, false);
     assertThat(result).isTrue();
   }
 

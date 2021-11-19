@@ -16,13 +16,15 @@ public class RateLimitRestriction extends Restriction implements LimitRestrictio
   Long limit;
   TimeUnit timeUnit;
   String clientName;
+  boolean allowedIfEqual;
   EnforcementSdkClient enforcementSdkClient;
 
-  public RateLimitRestriction(
-      RestrictionType restrictionType, long limit, TimeUnit timeUnit, EnforcementSdkClient enforcementSdkClient) {
+  public RateLimitRestriction(RestrictionType restrictionType, long limit, TimeUnit timeUnit, boolean allowedIfEqual,
+      EnforcementSdkClient enforcementSdkClient) {
     super(restrictionType);
     this.limit = limit;
     this.timeUnit = timeUnit;
+    this.allowedIfEqual = allowedIfEqual;
     this.enforcementSdkClient = enforcementSdkClient;
   }
 

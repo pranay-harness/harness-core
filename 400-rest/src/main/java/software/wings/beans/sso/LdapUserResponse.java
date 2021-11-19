@@ -25,6 +25,7 @@ public class LdapUserResponse {
   @NotBlank String dn;
   @NotBlank String email;
   @NotBlank String name;
+  String userId;
 
   /**
    * In harness User class, we always save the user email in lowercase letters. But the

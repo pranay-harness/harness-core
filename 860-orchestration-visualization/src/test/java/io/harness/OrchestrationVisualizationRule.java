@@ -21,6 +21,8 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.lock.DistributedLockImplementation;
+import io.harness.lock.PersistentLockModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.opaclient.OpaServiceClient;
@@ -45,6 +47,7 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.threading.ThreadPoolConfig;
 import io.harness.time.TimeModule;
 import io.harness.user.remote.UserClient;
 import io.harness.version.VersionModule;
@@ -153,6 +156,22 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
       }
     });
 
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      DistributedLockImplementation distributedLockImplementation() {
+        return DistributedLockImplementation.NOOP;
+      }
+
+      @Provides
+      @Named("lock")
+      @Singleton
+      RedisConfig redisConfig() {
+        return RedisConfig.builder().build();
+      }
+    });
+    modules.add(PersistentLockModule.getInstance());
+
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
@@ -199,7 +218,8 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
     modules.add(OrchestrationVisualizationModule.getInstance(
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
-            .build()));
+            .build(),
+        ThreadPoolConfig.builder().build()));
     return modules;
   }
 

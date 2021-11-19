@@ -1,0 +1,6 @@
+name: MessagesGroup
+identifier: messages_group
+labels:
+  - accountId
+  - clusterId
+  - messageType

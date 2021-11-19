@@ -41,6 +41,8 @@ function copy_cg_manager_jars(){
 
 	copy_common_files
 
+	java -jar rest-capsule.jar scan-classpath-metadata
+
 	cd ../..
 }
 
@@ -52,6 +54,7 @@ function copy_event_server_jars(){
 	cp ../../350-event-server/key.pem .
 	cp ../../350-event-server/cert.pem .
 	cp ../../350-event-server/event-service-config.yml .
+	cp ../../alpn-boot-8.1.13.v20181017.jar .
 	cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-openjdk Dockerfile
 	cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-gcr-openjdk Dockerfile-gcr
 	cp -r ../../dockerization/event-server/scripts/ .
@@ -76,8 +79,10 @@ function copy_ng_manager_jars(){
 	cp ../../dockerization/ng-manager/Dockerfile-ng-manager-jenkins-k8-openjdk ./Dockerfile
 	cp ../../dockerization/ng-manager/Dockerfile-ng-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 	cp -r ../../dockerization/ng-manager/scripts/ .
-	
+
 	copy_common_files
+
+	java -jar ng-manager-capsule.jar scan-classpath-metadata
 
 	cd ../..
 }

@@ -18,9 +18,7 @@ import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.resolver.GroupNotFoundException;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
-import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.utils.AmbianceTestUtils;
@@ -31,6 +29,7 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
@@ -38,6 +37,7 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
   private static final String STEP_SETUP_ID = generateUuid();
 
   @Inject private PmsSweepingOutputService pmsSweepingOutputService;
+  @Inject private MongoTemplate mongoTemplate;
 
   @Test
   @Owner(developers = PRASHANT)
@@ -76,14 +76,16 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     String testValueSection = "testSection";
     String testValueStep = "testStep";
 
-    pmsSweepingOutputService.consumeInternal(ambianceSection, outputName,
-        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueSection).build()), 2, null);
+    pmsSweepingOutputService.consumeInternal(ambianceSection, AmbianceUtils.obtainCurrentLevel(ambianceSection),
+        outputName, RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueSection).build()),
+        null);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
-    pmsSweepingOutputService.consumeInternal(ambianceStep, outputName,
-        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueStep).build()), 0, null);
+    pmsSweepingOutputService.consumeInternal(AmbianceUtils.clone(ambianceStep, 0),
+        AmbianceUtils.obtainCurrentLevel(ambianceSection), outputName,
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueStep).build()), null);
     validateResult(resolve(ambiancePhase, outputName), testValueStep);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
@@ -154,6 +156,26 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
   public void testFetchOutcomeInstanceByRuntimeId() {
     List<ExecutionSweepingOutputInstance> result = pmsSweepingOutputService.fetchOutcomeInstanceByRuntimeId("abc");
     assertThat(result.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestOutputInstancePopulation() {
+    Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
+    String outcomeName = "outcomeName";
+    DummySweepingOutput output = DummySweepingOutput.builder().test("test").build();
+    String outputInstanceId =
+        pmsSweepingOutputService.consume(ambiance, outcomeName, RecastOrchestrationUtils.toJson(output), "PHASE");
+
+    assertThat(outputInstanceId).isNotNull();
+    ExecutionSweepingOutputInstance instance =
+        mongoTemplate.findById(outputInstanceId, ExecutionSweepingOutputInstance.class);
+    assertThat(instance).isNotNull();
+    assertThat(instance.getProducedBy()).isEqualTo(AmbianceUtils.obtainCurrentLevel(ambiance));
+    assertThat(instance.getPlanExecutionId()).isEqualTo(AmbianceTestUtils.PLAN_EXECUTION_ID);
+    assertThat(instance.getName()).isEqualTo(outcomeName);
+    assertThat(instance.getGroupName()).isEqualTo("PHASE");
   }
 
   private Document resolve(Ambiance ambiance, String outputName) {

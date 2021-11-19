@@ -4,6 +4,9 @@ import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import io.harness.ModuleType;
 import io.harness.enforcement.beans.CustomRestrictionEvaluationDTO;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailListRequestDTO;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailRequestDTO;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailsDTO;
 import io.harness.enforcement.beans.internal.RestrictionMetadataMapRequestDTO;
 import io.harness.enforcement.beans.internal.RestrictionMetadataMapResponseDTO;
 import io.harness.enforcement.beans.metadata.AvailabilityRestrictionMetadataDTO;
@@ -72,7 +75,27 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
   }
 
   @Override
+  public boolean isAvailableWithIncrement(
+      FeatureRestrictionName featureRestrictionName, String accountIdentifier, long increment) {
+    try {
+      checkAvailabilityWithIncrement(featureRestrictionName, accountIdentifier, increment);
+    } catch (Exception e) {
+      log.error(String.format("Enforcement check on feature [%s] for account [%s] does not succeed",
+                    featureRestrictionName, accountIdentifier),
+          e);
+      return false;
+    }
+    return true;
+  }
+
+  @Override
   public void checkAvailability(FeatureRestrictionName featureRestrictionName, String accountIdentifier) {
+    checkAvailabilityWithIncrement(featureRestrictionName, accountIdentifier, 1);
+  }
+
+  @Override
+  public void checkAvailabilityWithIncrement(
+      FeatureRestrictionName featureRestrictionName, String accountIdentifier, long increment) {
     if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
       return;
     }
@@ -90,7 +113,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
     ModuleType moduleType = featureMetadataDTO.getModuleType();
     RestrictionMetadataDTO currentRestriction = featureMetadataDTO.getRestrictionMetadata().get(edition);
     try {
-      verifyRestriction(featureRestrictionName, accountIdentifier, moduleType, edition, currentRestriction);
+      verifyRestriction(featureRestrictionName, accountIdentifier, moduleType, edition, currentRestriction, increment);
     } catch (FeatureNotSupportedException e) {
       if (RestrictionType.AVAILABILITY.equals(currentRestriction.getRestrictionType())) {
         String message = (String) e.getParams().get(MESSAGE);
@@ -106,6 +129,57 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
       e.getParams().put(MESSAGE, newMessage);
       throw e;
     }
+  }
+
+  @Override
+  public boolean isRemoteFeatureAvailable(FeatureRestrictionName featureRestrictionName, String accountIdentifier) {
+    if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
+      return true;
+    }
+
+    try {
+      FeatureRestrictionDetailsDTO response = getResponse(enforcementClient.getFeatureRestrictionDetail(
+          FeatureRestrictionDetailRequestDTO.builder().name(featureRestrictionName).build(), accountIdentifier));
+      if (response != null && response.isAllowed()) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (InvalidRequestException e) {
+      log.error("Invalid request on check feature details", e);
+      return false;
+    } catch (UnexpectedException e) {
+      log.error("Not able to fetch feature details", e);
+      return true;
+    }
+  }
+
+  @Override
+  public Map<FeatureRestrictionName, Boolean> getAvailabilityForRemoteFeatures(
+      List<FeatureRestrictionName> featureRestrictionNames, String accountIdentifier) {
+    // initiate result
+    Map<FeatureRestrictionName, Boolean> result = new HashMap<>();
+    for (FeatureRestrictionName name : featureRestrictionNames) {
+      result.put(name, true);
+    }
+    if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
+      return result;
+    }
+
+    try {
+      List<FeatureRestrictionDetailsDTO> response = getResponse(enforcementClient.getFeatureRestrictionMap(
+          FeatureRestrictionDetailListRequestDTO.builder().names(featureRestrictionNames).build(), accountIdentifier));
+      for (FeatureRestrictionDetailsDTO dto : response) {
+        result.put(dto.getName(), dto.isAllowed());
+      }
+    } catch (InvalidRequestException e) {
+      log.error("Invalid request on check feature details", e);
+      result.forEach((k, v) -> v = false);
+      return result;
+    } catch (UnexpectedException e) {
+      log.error("Not able to fetch feature details", e);
+    }
+    return result;
   }
 
   @Override
@@ -136,7 +210,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
           ModuleType moduleType = featureMetadata.getModuleType();
           RestrictionMetadataDTO restrictionMetadataDTO = featureMetadata.getRestrictionMetadata().get(edition);
 
-          verifyRestriction(featureRestrictionName, accountIdentifier, moduleType, edition, restrictionMetadataDTO);
+          verifyRestriction(featureRestrictionName, accountIdentifier, moduleType, edition, restrictionMetadataDTO, 1);
         } catch (Exception e) {
           result.put(featureRestrictionName, false);
         }
@@ -187,12 +261,12 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
     }
   }
 
-  private boolean verifyExceedLimit(long limit, long count) {
-    return limit <= count;
+  private boolean verifyExceedLimit(long limit, long count, long increment) {
+    return limit < count + increment;
   }
 
   private void verifyRestriction(FeatureRestrictionName featureRestrictionName, String accountIdentifier,
-      ModuleType moduleType, Edition edition, RestrictionMetadataDTO currentRestriction) {
+      ModuleType moduleType, Edition edition, RestrictionMetadataDTO currentRestriction, long increment) {
     switch (currentRestriction.getRestrictionType()) {
       case AVAILABILITY:
         AvailabilityRestrictionMetadataDTO availabilityRestrictionMetadataDTO =
@@ -207,7 +281,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
         RestrictionUsageInterface staticUsage =
             enforcementSdkRegisterService.getRestrictionUsageInterface(featureRestrictionName);
         if (verifyExceedLimit(staticLimitRestrictionMetadataDTO.getLimit(),
-                staticUsage.getCurrentValue(accountIdentifier, staticLimitRestrictionMetadataDTO))) {
+                staticUsage.getCurrentValue(accountIdentifier, staticLimitRestrictionMetadataDTO), increment)) {
           throw new LimitExceededException(String.format(
               "Exceeded static limitation. Current Limit: %s", staticLimitRestrictionMetadataDTO.getLimit()));
         }
@@ -216,8 +290,8 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
         RateLimitRestrictionMetadataDTO rateLimitRestriction = (RateLimitRestrictionMetadataDTO) currentRestriction;
         RestrictionUsageInterface rateUsage =
             enforcementSdkRegisterService.getRestrictionUsageInterface(featureRestrictionName);
-        if (verifyExceedLimit(
-                rateLimitRestriction.getLimit(), rateUsage.getCurrentValue(accountIdentifier, rateLimitRestriction))) {
+        if (verifyExceedLimit(rateLimitRestriction.getLimit(),
+                rateUsage.getCurrentValue(accountIdentifier, rateLimitRestriction), increment)) {
           throw new LimitExceededException(
               String.format("Exceeded rate limitation. Current Limit: %s", rateLimitRestriction.getLimit()));
         }

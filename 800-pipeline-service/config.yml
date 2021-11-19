@@ -26,6 +26,30 @@ xxxxxxxx
     appenders: []
   maxThreads: 1024
 
+commonPoolConfig:
+  corePoolSize: ${COMMON_POOL_CORE_SIZE:-10}
+  maxPoolSize: ${COMMON_POOL_MAX_SIZE:-100}
+  idleTime: ${COMMON_POOL_IDLE_TIME:-500}
+  timeUnit: ${COMMON_POOL_IDLE_TIME_TIME_UNIT:-MILLISECONDS}
+
+orchestrationVisualizationThreadPoolConfig:
+  corePoolSize: ${ORCHESTRATION_VISUALIZATION_POOL_CORE_SIZE:-10}
+  maxPoolSize: ${ORCHESTRATION_VISUALIZATION_POOL_MAX_SIZE:-20}
+  idleTime: ${ORCHESTRATION_VISUALIZATION_POOL_IDLE_TIME:-10}
+  timeUnit: ${ORCHESTRATION_VISUALIZATION_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
+pmsSdkExecutionPoolConfig:
+  corePoolSize: ${PMS_SDK_EXECUTION_POOL_CORE_SIZE:-20}
+  maxPoolSize: ${PMS_SDK_EXECUTION_POOL_MAX_SIZE:-100}
+  idleTime: ${PMS_SDK_EXECUTION_POOL_IDLE_TIME:-120}
+  timeUnit: ${PMS_SDK_EXECUTION_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
+pmsSdkOrchestrationEventPoolConfig:
+  corePoolSize: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_CORE_SIZE:-10}
+  maxPoolSize: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_MAX_SIZE:-50}
+  idleTime: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME:-120}
+  timeUnit: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
 mongo:
   uri: mongodb://localhost:27017/pms-harness
   connectTimeout: 30000
@@ -167,15 +191,42 @@ logStreamingServiceConfig:
 
 opaServerConfig:
   baseUrl: http://localhost:3000
+  secret: secret
 
 iteratorsConfig:
-  approvalInstanceIteratorConfig:
+  webhook:
+    threadPoolCount: 2
+    enabled: true
+    targetIntervalInSeconds: 5
+  scheduledTrigger:
+    threadPoolCount: 2
+    enabled: true
+    targetIntervalInSeconds: 15
+  timeoutEngine:
+    threadPoolCount: 5
+    enabled: true
+    targetIntervalInSeconds: 10
+  barrier:
+    threadPoolCount: 2
     enabled: true
     targetIntervalInSeconds: 60
+  approvalInstance:
+    threadPoolCount: 2
+    enabled: true
+    targetIntervalInSeconds: 60
+  resourceRestraint:
+    threadPoolCount: 5
+    enabled: true
+    targetIntervalInSeconds: 60
+  interruptMonitor:
+    threadPoolCount: 1
+    enabled: true
+    targetIntervalInSeconds: 180
 
 orchestrationStepConfig:
   ffServerBaseUrl: http://127.0.0.1:3000/api/1.0
   ffServerApiKey: secret
+  ffServerSSLVerify: false
 
 shouldDeployWithGitSync: true
 
@@ -192,6 +243,23 @@ gitSdkConfiguration:
     authority: localhost
   scmConnectionConfig:
     url: localhost:8091
+
+redisLockConfig:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://redis1:26379"
+    - "redis://redis2:26379"
+    - "redis://redis3:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+  userName: ""
+  password: ""
+
+distributedLockImplementation: MONGO
 
 enableDashboardTimescale: false
 
@@ -218,7 +286,37 @@ cacheConfig:
 
 hostname: ${HOSTNAME:-localhost}
 
-basePathPrefix: ${BASE_PATH_PREFIX:-}
+basePathPrefix: ${BASE_PATH_PREFIX:-""}
+
+pipelineEventConsumersConfig:
+  interrupt:
+    threads: 1
+  orchestrationEvent:
+    threads: 1
+  facilitatorEvent:
+    threads: 1
+  nodeStart:
+    threads: 2
+  progress:
+    threads: 1
+  advise:
+    threads: 2
+  resume:
+    threads: 2
+  sdkResponse:
+    threads: 3
+  graphUpdate:
+    threads: 3
+  partialPlanResponse:
+    threads: 1
+  createPlan:
+    threads: 1
+  planNotify:
+    threads: 1
+  pmsNotify:
+    threads: 1
+  webhookEvent:
+    threads: 1
 
 delegatePollingConfig:
   syncDelay: 2000
@@ -232,3 +330,5 @@ segmentConfiguration:
 
 enforcementClientConfiguration:
   enforcementCheckEnabled: false
+
+

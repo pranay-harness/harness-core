@@ -49,6 +49,12 @@ public class K8sApplyBaseHandler {
   @VisibleForTesting
   public boolean prepare(
       LogCallback executionLogCallback, boolean skipSteadyStateCheck, K8sApplyHandlerConfig k8sApplyHandlerConfig) {
+    return prepare(executionLogCallback, skipSteadyStateCheck, k8sApplyHandlerConfig, false);
+  }
+
+  @VisibleForTesting
+  public boolean prepare(LogCallback executionLogCallback, boolean skipSteadyStateCheck,
+      K8sApplyHandlerConfig k8sApplyHandlerConfig, boolean isErrorFrameworkSupported) {
     try {
       executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"
           + k8sTaskHelperBase.getResourcesInTableFormat(k8sApplyHandlerConfig.getResources()));
@@ -67,6 +73,9 @@ public class K8sApplyBaseHandler {
         }
       }
     } catch (Exception e) {
+      if (isErrorFrameworkSupported) {
+        throw e;
+      }
       log.error("Exception:", e);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return false;
@@ -78,6 +87,13 @@ public class K8sApplyBaseHandler {
   public boolean steadyStateCheck(boolean skipSteadyStateCheck, String namespace,
       K8sDelegateTaskParams k8sDelegateTaskParams, long timeoutInMillis, LogCallback executionLogCallback,
       K8sApplyHandlerConfig k8sApplyHandlerConfig) throws Exception {
+    return steadyStateCheck(skipSteadyStateCheck, namespace, k8sDelegateTaskParams, timeoutInMillis,
+        executionLogCallback, k8sApplyHandlerConfig, false);
+  }
+
+  public boolean steadyStateCheck(boolean skipSteadyStateCheck, String namespace,
+      K8sDelegateTaskParams k8sDelegateTaskParams, long timeoutInMillis, LogCallback executionLogCallback,
+      K8sApplyHandlerConfig k8sApplyHandlerConfig, boolean isErrorFrameworkEnabled) throws Exception {
     if (isEmpty(k8sApplyHandlerConfig.getWorkloads()) && isEmpty(k8sApplyHandlerConfig.getCustomWorkloads())) {
       executionLogCallback.saveExecutionLog("Skipping Status Check since there is no Workload.", INFO, SUCCESS);
       return true;
@@ -94,11 +110,11 @@ public class K8sApplyBaseHandler {
 
     boolean success = k8sTaskHelperBase.doStatusCheckForAllResources(k8sApplyHandlerConfig.getClient(),
         kubernetesResourceIds, k8sDelegateTaskParams, namespace, executionLogCallback,
-        k8sApplyHandlerConfig.getCustomWorkloads().isEmpty());
+        k8sApplyHandlerConfig.getCustomWorkloads().isEmpty(), isErrorFrameworkEnabled);
 
     boolean customResourcesStatusSuccess = k8sTaskHelperBase.doStatusCheckForAllCustomResources(
         k8sApplyHandlerConfig.getClient(), k8sApplyHandlerConfig.getCustomWorkloads(), k8sDelegateTaskParams,
-        executionLogCallback, true, timeoutInMillis);
+        executionLogCallback, true, timeoutInMillis, isErrorFrameworkEnabled);
 
     return success && customResourcesStatusSuccess;
   }

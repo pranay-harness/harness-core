@@ -17,10 +17,9 @@ import io.harness.engine.outputs.SweepingOutputException;
 import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.data.output.PmsSweepingOutput;
-import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
@@ -141,18 +140,14 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
   }
 
   @Override
-  public String consumeInternal(Ambiance ambiance, String name, String value, int levelsToKeep, String groupName) {
-    if (levelsToKeep >= 0) {
-      ambiance = AmbianceUtils.clone(ambiance, levelsToKeep);
-    }
-
+  public String consumeInternal(Ambiance ambiance, Level producedBy, String name, String value, String groupName) {
     try {
       ExecutionSweepingOutputInstance instance =
           mongoTemplate.insert(ExecutionSweepingOutputInstance.builder()
                                    .uuid(generateUuid())
                                    .planExecutionId(ambiance.getPlanExecutionId())
                                    .stageExecutionId(ambiance.getStageExecutionId())
-                                   .producedBy(AmbianceUtils.obtainCurrentLevel(ambiance))
+                                   .producedBy(producedBy)
                                    .name(name)
                                    .valueOutput(PmsSweepingOutput.parse(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))

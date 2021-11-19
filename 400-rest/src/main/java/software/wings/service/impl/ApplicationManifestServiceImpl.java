@@ -17,7 +17,6 @@ import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
-import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.beans.appmanifest.StoreType.VALUES_YAML_FROM_HELM_REPO;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
@@ -44,6 +43,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.manifests.request.ManifestCollectionPTaskClientParams.ManifestCollectionPTaskClientParamsKeys;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -51,6 +51,8 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.observer.Subject;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.queue.QueuePublisher;
 
 import software.wings.api.DeploymentType;
@@ -1480,5 +1482,16 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Override
   public PageResponse<ApplicationManifest> list(PageRequest<ApplicationManifest> pageRequest) {
     return wingsPersistence.query(ApplicationManifest.class, pageRequest);
+  }
+
+  @Override
+  public boolean deletePerpetualTaskByAppManifest(String accountId, String appManifestId) {
+    Query<PerpetualTaskRecord> query =
+        wingsPersistence.createQuery(PerpetualTaskRecord.class)
+            .field(PerpetualTaskRecordKeys.accountId)
+            .equal(accountId)
+            .field(PerpetualTaskRecordKeys.clientContext + "." + ManifestCollectionPTaskClientParamsKeys.appManifestId)
+            .equal(appManifestId);
+    return wingsPersistence.delete(query);
   }
 }

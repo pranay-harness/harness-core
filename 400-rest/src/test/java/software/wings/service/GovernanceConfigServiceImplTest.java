@@ -1,10 +1,12 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,6 +39,8 @@ import io.harness.governance.CustomEnvFilter;
 import io.harness.governance.DeploymentFreezeInfo;
 import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
 import io.harness.governance.GovernanceFreezeConfig;
+import io.harness.governance.ServiceFilter;
+import io.harness.governance.ServiceFilter.ServiceFilterType;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.rule.Owner;
 
@@ -161,7 +165,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetFrozenAppEnvs() {
     TimeRange range = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 100_000_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+        "Asia/Calcutta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
                                           .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
@@ -212,7 +216,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetFrozenAllAppEnvs() {
     TimeRange range = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 100_000_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+        "Asia/Calcutta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
                                           .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
@@ -249,7 +253,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldGetOnlyApplicableAppEnvs() {
-    TimeRange range = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 2_000_000, "Asia/Kolkatta",
+    TimeRange range = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 2_000_000, "Asia/Calcutta",
         false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
@@ -293,7 +297,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnEmptyMapForNoAppSelections() {
     TimeRange range = new TimeRange(System.currentTimeMillis() + 18_00_000, System.currentTimeMillis() + 54_00_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+        "Asia/Calcutta", false, null, null, null, false);
 
     TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
         new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
@@ -336,7 +340,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldReturnEmptyMapForOutofTimeRange() {
-    TimeRange range = new TimeRange(100, 18_00_100, "Asia/Kolkatta", false, null, null, null, false);
+    TimeRange range = new TimeRange(100, 18_00_100, "Asia/Calcutta", false, null, null, null, false);
 
     ApplicationFilter appSelection3 =
         CustomAppFilter.builder()
@@ -369,7 +373,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetFrozenEnvsForApp() {
     TimeRange range = new TimeRange(System.currentTimeMillis() + 1, System.currentTimeMillis() + 54_00_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+        "Asia/Calcutta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
                                           .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
@@ -417,11 +421,88 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnEmptyMapWhenEnvIsFrozenForParticularService() {
+    TimeRange range = new TimeRange(System.currentTimeMillis() + 1, System.currentTimeMillis() + 54_00_000,
+        "Asia/Calcutta", false, null, null, null, false);
+
+    ApplicationFilter appSelection =
+        CustomAppFilter.builder()
+            .blackoutWindowFilterType(BlackoutWindowFilterType.CUSTOM)
+            .apps(Collections.singletonList(APP_ID))
+            .envSelection(new AllProdEnvFilter(EnvironmentFilterType.ALL_PROD))
+            .serviceSelection(new ServiceFilter(ServiceFilterType.CUSTOM, Collections.singletonList(SERVICE_ID)))
+            .build();
+
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig = new TimeRangeBasedFreezeConfig(true,
+        Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD), range, "shouldGetFrozenEnvsForApp",
+        null, true, asList(appSelection), Collections.singletonList("testUserGroup"), "uuid");
+
+    GovernanceConfig governanceConfig =
+        GovernanceConfig.builder()
+            .accountId(ACCOUNT_ID)
+            .timeRangeBasedFreezeConfigs(Collections.singletonList(timeRangeBasedFreezeConfig))
+            .build();
+
+    when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList(APP_ID, APP_ID + 2, APP_ID + 3));
+    when(environmentService.getEnvIdsByAppsAndType(anyList(), eq(EnvironmentType.PROD.name())))
+        .thenReturn(asList(ENV_ID, ENV_ID + 2));
+    governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+
+    Map<String, Set<String>> deploymentFreezeInfo =
+        governanceConfigService.getFrozenEnvIdsForApp(ACCOUNT_ID, APP_ID, governanceConfigService.get(ACCOUNT_ID));
+    assertThat(deploymentFreezeInfo).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnOnlyCompletelyFrozenEnv() {
+    TimeRange range = new TimeRange(System.currentTimeMillis() + 1, System.currentTimeMillis() + 54_00_000,
+        "Asia/Calcutta", false, null, null, null, false);
+
+    ApplicationFilter allProdForParticularService =
+        AllAppFilter.builder()
+            .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
+            .envSelection(new AllProdEnvFilter(EnvironmentFilterType.ALL_PROD))
+            .serviceSelection(new ServiceFilter(ServiceFilterType.CUSTOM, Collections.singletonList(SERVICE_ID)))
+            .build();
+
+    ApplicationFilter allNonProd = AllAppFilter.builder()
+                                       .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
+                                       .envSelection(new AllProdEnvFilter(EnvironmentFilterType.ALL_NON_PROD))
+                                       .serviceSelection(new ServiceFilter(ServiceFilterType.ALL, null))
+                                       .build();
+
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig = new TimeRangeBasedFreezeConfig(true,
+        Collections.emptyList(), Collections.emptyList(), range, "shouldGetFrozenEnvsForApp", null, true,
+        asList(allProdForParticularService, allNonProd), Collections.singletonList("testUserGroup"), "uuid");
+
+    GovernanceConfig governanceConfig =
+        GovernanceConfig.builder()
+            .accountId(ACCOUNT_ID)
+            .timeRangeBasedFreezeConfigs(Collections.singletonList(timeRangeBasedFreezeConfig))
+            .build();
+
+    when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList(APP_ID, APP_ID + 2, APP_ID + 3));
+    when(environmentService.getEnvIdsByAppsAndType(anyList(), eq(EnvironmentType.PROD.name())))
+        .thenReturn(asList(ENV_ID, ENV_ID + 2));
+    when(environmentService.getEnvIdsByAppsAndType(anyList(), eq(EnvironmentType.NON_PROD.name())))
+        .thenReturn(Collections.singletonList(ENV_ID + 3));
+    governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+
+    Map<String, Set<String>> deploymentFreezeInfo =
+        governanceConfigService.getFrozenEnvIdsForApp(ACCOUNT_ID, APP_ID + 2, governanceConfigService.get(ACCOUNT_ID));
+    assertThat(deploymentFreezeInfo.get(timeRangeBasedFreezeConfig.getUuid())).containsOnly(ENV_ID + 3);
+  }
+
+  @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldGetFrozenEnvsForOneBlockingWindow() {
     TimeRange range = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 18_000_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+        "Asia/Calcutta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
                                           .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
@@ -465,7 +546,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetOnlyApplicableEnvs() throws InterruptedException {
     TimeRange range = new TimeRange(System.currentTimeMillis() + 5000, System.currentTimeMillis() + 54_00_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+        "Asia/Calcutta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
                                           .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
@@ -509,7 +590,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnEmptyEnvForNoAppSelections() {
     TimeRange range = new TimeRange(System.currentTimeMillis() + 18_00_000, System.currentTimeMillis() + 54_00_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+        "Asia/Calcutta", false, null, null, null, false);
 
     TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
         new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
@@ -533,7 +614,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnEmptyMapForUnFrozenApp() {
     TimeRange range = new TimeRange(System.currentTimeMillis() + 18_00_000, System.currentTimeMillis() + 54_00_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+        "Asia/Calcutta", false, null, null, null, false);
 
     ApplicationFilter appSelection3 =
         CustomAppFilter.builder()
@@ -579,7 +660,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldReturnEmptyEnvForOutofTimeRange() {
-    TimeRange range = new TimeRange(100, 18_00_100, "Asia/Kolkatta", false, null, null, null, false);
+    TimeRange range = new TimeRange(100, 18_00_100, "Asia/Calcutta", false, null, null, null, false);
 
     ApplicationFilter appSelection3 =
         CustomAppFilter.builder()
@@ -611,7 +692,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetFreezeWindowsWithId() {
     TimeRange range = new TimeRange(System.currentTimeMillis() + 18_00_000, System.currentTimeMillis() + 54_00_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+        "Asia/Calcutta", false, null, null, null, false);
 
     GovernanceConfig governanceConfig =
         JsonUtils.readResourceFile("governance/governance_config.json", GovernanceConfig.class);
@@ -656,11 +737,11 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   public void shouldRecalculateNextIterations() {
     long currentTimeMillis = System.currentTimeMillis();
     TimeRange range = new TimeRange(currentTimeMillis + DAY_IN_MILLIS, currentTimeMillis + 2 * DAY_IN_MILLIS,
-        "Asia/Kolkatta", false, null, null, null, false);
+        "Asia/Calcutta", false, null, null, null, false);
     TimeRange range2 = new TimeRange(currentTimeMillis - DAY_IN_MILLIS, currentTimeMillis + DAY_IN_MILLIS,
-        "Asia/Kolkatta", false, null, null, null, false);
+        "Asia/Calcutta", false, null, null, null, false);
     TimeRange range3 = new TimeRange(currentTimeMillis + 2 * DAY_IN_MILLIS, currentTimeMillis + 3 * DAY_IN_MILLIS,
-        "Asia/Kolkatta", false, null, null, null, false);
+        "Asia/Calcutta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
                                           .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)

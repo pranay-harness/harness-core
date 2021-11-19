@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.encryption.AccessType.APP_ROLE;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.alert.AlertType.InvalidKMS;
 
 import static java.time.Duration.ofSeconds;
@@ -41,11 +41,11 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MorphiaPersistenceProvider<SecretManagerConfig> persistenceProvider;
 
-  public void registerIterators() {
+  public void registerIterators(int threadPoolSize) {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("VaultSecretManagerRenewalHandler")
-            .poolSize(5)
+            .poolSize(threadPoolSize)
             .interval(ofSeconds(5))
             .build(),
         SecretManagerConfig.class,

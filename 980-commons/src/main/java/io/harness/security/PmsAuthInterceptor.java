@@ -20,6 +20,6 @@ public class PmsAuthInterceptor implements Interceptor {
     String token = tokenGenerator.getServiceToken(jwtAuthSecret);
 
     Request request = chain.request();
-    return chain.proceed(request.newBuilder().header("Authorization", "Bearer " + token).build());
+    return chain.proceed(request.newBuilder().header("Authorization", "ApiKey " + token).build());
   }
 }

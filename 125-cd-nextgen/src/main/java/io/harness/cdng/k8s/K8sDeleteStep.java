@@ -90,7 +90,7 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implem
 
   @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
-      StepElementParameters stepParameters, List<String> valuesFileContents,
+      StepElementParameters stepParameters, List<String> manifestOverrideContents,
       K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream,
       UnitProgressData unitProgressData) {
     K8sDeleteStepParameters deleteStepParameters = (K8sDeleteStepParameters) stepParameters.getSpec();
@@ -116,8 +116,9 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implem
             .filePaths(
                 isManifestFiles ? deleteStepParameters.getDeleteResources().getSpec().getManifestPathsValue() : "")
             .valuesYamlList(k8sManifestOutcome != null
-                    ? k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents)
+                    ? k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, manifestOverrideContents)
                     : Collections.emptyList())
+            .kustomizePatchesList(k8sStepHelper.renderPatches(k8sManifestOutcome, ambiance, manifestOverrideContents))
             .taskType(K8sTaskType.DELETE)
             .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
@@ -127,6 +128,7 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implem
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .commandUnitsProgress(UnitProgressDataMapper.toCommandUnitsProgress(unitProgressData))
             .useLatestKustomizeVersion(k8sStepHelper.isUseLatestKustomizeVersion(accountId))
+            .useNewKubectlVersion(k8sStepHelper.isUseNewKubectlVersion(accountId))
             .build();
 
     k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
@@ -142,7 +144,7 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implem
 
   @Override
   public StepResponse finalizeExecutionWithSecurityContext(Ambiance ambiance, StepElementParameters stepParameters,
-      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) {
+      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
     if (passThroughData instanceof GitFetchResponsePassThroughData) {
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
     }

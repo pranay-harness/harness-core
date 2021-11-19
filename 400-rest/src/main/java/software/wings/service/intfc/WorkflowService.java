@@ -167,6 +167,8 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   List<Service> getResolvedServices(Workflow workflow, Map<String, String> workflowVariables);
 
+  List<String> getResolvedServiceIds(Workflow workflow, Map<String, String> workflowVariables);
+
   List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, Map<String, String> workflowVariables);
 
   List<InfrastructureDefinition> getResolvedInfraDefinitions(Workflow workflow, Map<String, String> workflowVariables);

@@ -42,7 +42,7 @@ public class AuditRetentionIteratorHandler implements MongoPersistenceIterator.H
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("AuditRetentionIteratorTask")
-            .poolSize(3)
+            .poolSize(2)
             .interval(ofMinutes(2))
             .build(),
         AuditSettings.class,

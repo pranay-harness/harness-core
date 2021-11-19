@@ -15,6 +15,7 @@ import io.harness.rule.Owner;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,20 +29,44 @@ public class StagesExpressionExtractorTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testReplaceExpressionsReferringToOtherStagesWithRuntimeInput() {
-    String pipelineYaml = getPipelineYaml();
-    String res1 = StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
-        pipelineYaml, Collections.singletonList("d1"));
-    assertThat(res1).isEqualTo(getPipelineYamlWithRuntimeInputs(Collections.singletonList("d1")));
-    String res2 = StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
-        pipelineYaml, Collections.singletonList("p_d1"));
-    assertThat(res2).isEqualTo(getPipelineYamlWithRuntimeInputs(Collections.singletonList("p_d1")));
-    String res3 = StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
-        pipelineYaml, Arrays.asList("d1", "a1"));
+  public void testReplaceExpressions() {
+    String pipelineYamlWithExpressions = "pipeline:\n"
+        + "  stages:\n"
+        + "  - stage:\n"
+        + "      identifier: \"s1\"\n"
+        + "      description: \"desc\"\n"
+        + "      name: \"s one\"\n"
+        + "  - stage:\n"
+        + "      identifier: \"s2\"\n"
+        + "      description: \"the description is <+pipeline.stages.s1.description>\"\n"
+        + "      name: \"<+pipeline.stages.s1.name>\"\n";
+    String pipelineYaml = "pipeline:\n"
+        + "  stages:\n"
+        + "  - stage:\n"
+        + "      identifier: \"s1\"\n"
+        + "      description: \"desc\"\n"
+        + "      name: \"s one\"\n"
+        + "  - stage:\n"
+        + "      identifier: \"s2\"\n"
+        + "      description: \"the description is desc value\"\n"
+        + "      name: \"name value\"\n";
+    String res1 = StagesExpressionExtractor.replaceExpressions(pipelineYamlWithExpressions, null);
+    assertThat(res1).isEqualTo(pipelineYamlWithExpressions);
+
+    Map<String, String> expressionValues = new HashMap<>();
+    expressionValues.put("<+pipeline.stages.s1.description>", "desc value");
+    expressionValues.put("<+pipeline.stages.s1.name>", "name value");
+    String res2 = StagesExpressionExtractor.replaceExpressions(pipelineYamlWithExpressions, expressionValues);
+    assertThat(res2).isEqualTo(pipelineYaml);
+
+    String res3 = StagesExpressionExtractor.replaceExpressions(pipelineYaml, expressionValues);
     assertThat(res3).isEqualTo(pipelineYaml);
-    String res4 = StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
-        pipelineYaml, Collections.singletonList("a1"));
-    assertThat(res4).isEqualTo(pipelineYaml);
+
+    expressionValues.put("pipeline.stages.s1.name", "name value");
+    assertThatThrownBy(() -> StagesExpressionExtractor.replaceExpressions(pipelineYaml, expressionValues))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "pipeline.stages.s1.name is not a syntactically valid pipeline expression. Is the expression surrounded by <+ >?");
   }
 
   @Test
@@ -217,42 +242,6 @@ public class StagesExpressionExtractorTest extends CategoryTest {
         + "        name: p d1\n"
         + "        type: Deployment\n"
         + "        field: <+pipeline.stages.a2.name>\n"
-        + "    - stage:\n"
-        + "        identifier: p_d2\n"
-        + "        name: p d2\n"
-        + "        type: Deployment\n"
-        + "        field: <+input>\n"
-        + "  - stage:\n"
-        + "      identifier: d1_again\n"
-        + "      name: d1 again\n"
-        + "      type: Deployment\n"
-        + "      field: <+that.other.field>\n";
-  }
-
-  private String getPipelineYamlWithRuntimeInputs(List<String> stages) {
-    return "pipeline:\n"
-        + "  stages:\n"
-        + "  - stage:\n"
-        + "     identifier: a1\n"
-        + "     name: a1\n"
-        + "     type: Approval\n"
-        + "     field: notAnExpression\n"
-        + "  - stage:\n"
-        + "     identifier: a2\n"
-        + "     name: a2\n"
-        + "     type: Approval\n"
-        + "     field: <+stage.name>\n"
-        + "  - stage:\n"
-        + "      identifier: d1\n"
-        + "      name: d1\n"
-        + "      type: Deployment\n"
-        + "      field: " + (stages.contains("d1") ? "<+input>" : "<+stages.a1.name>") + "\n"
-        + "  - parallel:\n"
-        + "    - stage:\n"
-        + "        identifier: p_d1\n"
-        + "        name: p d1\n"
-        + "        type: Deployment\n"
-        + "        field: " + (stages.contains("p_d1") ? "<+input>" : "<+pipeline.stages.a2.name>") + "\n"
         + "    - stage:\n"
         + "        identifier: p_d2\n"
         + "        name: p d2\n"

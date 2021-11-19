@@ -2,42 +2,42 @@
   {
     "startTime": 1610529540,
     "endTime": 1610529600,
-    "risk": "LOW",
+    "risk": "HEALTHY",
     "score": 0,
     "hostSummaries": [
       {
         "hostName": "harness-deployment-5f67d57589-4jc4c",
         "primary": true,
         "canary": false,
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5004
       },
       {
         "hostName": "harness-deployment-5f67d57589-gp4pd",
         "primary": true,
         "canary": false,
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5894
       },
       {
         "hostName": "harness-deployment-7445f86dbf-h8blt",
         "primary": true,
         "canary": false,
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.8394
       },
       {
         "hostName": "harness-deployment-canary-7445f86dbf-ml857",
         "primary": false,
         "canary": true,
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.6174
       },
       {
         "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
         "primary": false,
         "canary": true,
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5004
       }
     ],
@@ -45,12 +45,12 @@
       {
         "transactionName": "kubernetes.filesystem.usage_pct",
         "metricName": "K8 file system usage percentage",
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5004,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               0.7999999999999999,
@@ -68,7 +68,7 @@
           },
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               0.7999999999999999,
@@ -90,12 +90,12 @@
       {
         "transactionName": "kubernetes.memory.usage_pct",
         "metricName": "k8 memory usage percentage",
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5004,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               21.599999999999998,
@@ -113,7 +113,7 @@
           },
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               21.599999999999998,
@@ -135,12 +135,12 @@
       {
         "transactionName": "kubernetes.io.write_bytes",
         "metricName": "K8 IO write bytes",
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5004,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               80.00000000000002,
@@ -158,7 +158,7 @@
           },
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               80.00000000000002,
@@ -180,12 +180,12 @@
       {
         "transactionName": "Checkout",
         "metricName": "errors",
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.05000000000000001,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.31999999999999995,
             "controlData": [
               38.86666666666667,
@@ -203,7 +203,7 @@
           },
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.20000000000000004,
             "controlData": [
               38.86666666666667,

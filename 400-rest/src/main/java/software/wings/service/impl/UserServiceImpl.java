@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.beans.FeatureName.GTM_CD_ENABLED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
@@ -27,8 +26,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.app.ManagerCacheRegistrar.PRIMARY_CACHE_PREFIX;
 import static software.wings.app.ManagerCacheRegistrar.USER_CACHE;
 import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anApplicationRole;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.security.JWT_CATEGORY.INVITE_SECRET;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
@@ -491,9 +490,52 @@ public class UserServiceImpl implements UserService {
                                .licenseUnits(50)
                                .build());
 
-    if (!featureFlagService.isGlobalEnabled(GTM_CD_ENABLED) && "CD".equalsIgnoreCase(userInvite.getIntent())) {
-      account.setDefaultExperience(DefaultExperience.CG);
+    Account createdAccount = accountService.save(account, false);
+
+    if (!featureFlagService.isEnabled(FeatureName.CDNG_ENABLED, createdAccount.getUuid())
+        && "CD".equalsIgnoreCase(userInvite.getIntent())) {
+      createdAccount.setDefaultExperience(DefaultExperience.CG);
+
+      accountService.update(createdAccount);
     }
+
+    // create user
+    User user = User.Builder.anUser()
+                    .email(userInvite.getEmail())
+                    .name(createdAccount.getAccountName())
+                    .passwordHash(userInvite.getPasswordHash())
+                    .accountName(createdAccount.getAccountName())
+                    .companyName(createdAccount.getCompanyName())
+                    .accounts(Lists.newArrayList(createdAccount))
+                    .emailVerified(true)
+                    .defaultAccountId(createdAccount.getUuid())
+                    .utmInfo(userInvite.getUtmInfo())
+                    .build();
+    completeUserInviteForSignup(userInvite, createdAccount.getUuid());
+    return createNewUserAndSignIn(user, createdAccount.getUuid());
+  }
+
+  @Override
+  public User completeCommunitySignup(UserInvite userInvite) {
+    User existingUser = getUserByEmail(userInvite.getEmail());
+    if (existingUser != null) {
+      throw new UserRegistrationException(EXC_USER_ALREADY_REGISTERED, ErrorCode.USER_ALREADY_REGISTERED, USER);
+    }
+
+    // create account
+    String username = userInvite.getEmail().split("@")[0];
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(username)
+                          .withCompanyName(username)
+                          .withDefaultExperience(DefaultExperience.NG)
+                          .withCreatedFromNG(true)
+                          .withAppId(GLOBAL_APP_ID)
+                          .build();
+    account.setLicenseInfo(LicenseInfo.builder()
+                               .accountType(AccountType.COMMUNITY)
+                               .accountStatus(AccountStatus.ACTIVE)
+                               .licenseUnits(50)
+                               .build());
 
     Account createdAccount = accountService.save(account, false);
 
@@ -726,6 +768,7 @@ public class UserServiceImpl implements UserService {
     userSummary.setPasswordExpired(user.isPasswordExpired());
     userSummary.setImported(user.isImported());
     userSummary.setDisabled(user.isDisabled());
+    userSummary.setExternalUserId(user.getExternalUserId());
     return userSummary;
   }
 
@@ -930,6 +973,23 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public User getUserByUserId(String userId) {
+    User user = null;
+    if (isNotEmpty(userId)) {
+      user = wingsPersistence.createQuery(User.class).filter(UserKeys.externalUserId, userId).get();
+      loadSupportAccounts(user);
+      if (user != null && isEmpty(user.getAccounts())) {
+        user.setAccounts(newArrayList());
+      }
+      if (user != null && isEmpty(user.getPendingAccounts())) {
+        user.setPendingAccounts(newArrayList());
+      }
+    }
+
+    return user;
+  }
+
+  @Override
   public List<User> getUsersByEmail(List<String> emailIds, String accountId) {
     Query<User> query = wingsPersistence.createQuery(User.class).field(UserKeys.email).in(emailIds);
     query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
@@ -1002,8 +1062,11 @@ public class UserServiceImpl implements UserService {
     model.put(
         "subject", "You have been invited to the " + account.getCompanyName().toUpperCase() + " account at Harness");
     model.put("email", user.getEmail());
+    model.put("name", user.getEmail());
     model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
-    model.put("message", "You have been added to Harness Account: " + account.getAccountName());
+    model.put("message",
+        "You have been added to account " + account.getAccountName() + " on Harness Platform."
+            + " CLick below to Sign-in");
 
     SSOSettings ssoSettings = getSSOSettings(account);
     model.put("ssoUrl", checkGetDomainName(account, ssoSettings.getUrl()));
@@ -1234,6 +1297,10 @@ public class UserServiceImpl implements UserService {
     Account account = accountService.get(accountId);
 
     User user = getUserByEmail(userInvite.getEmail());
+    if (user == null) {
+      user = getUserByUserId(userInvite.getExternalUserId());
+    }
+
     boolean createNewUser = user == null;
     if (createNewUser) {
       user = anUser().build();
@@ -1269,6 +1336,7 @@ public class UserServiceImpl implements UserService {
     }
     user.setAppId(GLOBAL_APP_ID);
     user.setImported(userInvite.getImportedByScim());
+    user.setExternalUserId(userInvite.getExternalUserId());
 
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
@@ -1509,11 +1577,12 @@ public class UserServiceImpl implements UserService {
     model.put("name", sanitizeUserName(user.getName()));
     model.put("url", loginUrl);
     model.put("company", account.getCompanyName());
-    model.put(
-        "subject", "You have been assigned new user groups in " + account.getCompanyName().toUpperCase() + " account");
+    model.put("subject",
+        "You have been assigned new user groups in " + account.getCompanyName().toUpperCase() + " account."
+            + " Click below to Sign-in");
     model.put("email", user.getEmail());
     model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
-    model.put("message", "You have been assigned new user groups: " + String.join(",", userGroupNamesList));
+    model.put("message", "You have been added to following user group(s): " + String.join(",", userGroupNamesList));
     model.put("shouldMailContainTwoFactorInfo", Boolean.toString(false));
 
     // In case of username-password authentication mechanism, we don't need to add the SSO details in the email.
@@ -1754,6 +1823,9 @@ public class UserServiceImpl implements UserService {
     }
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
+    if (user.isTwoFactorAuthenticationEnabled()) {
+      totpAuthHandler.sendTwoFactorAuthenticationResetEmail(user);
+    }
     // Empty user group list because this user invite is from NG and the method adds user to CG user groups
     moveAccountFromPendingToConfirmed(user, account, Collections.emptyList(), true);
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), user);

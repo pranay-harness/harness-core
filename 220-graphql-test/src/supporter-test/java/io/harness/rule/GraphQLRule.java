@@ -40,6 +40,7 @@ import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.TestManagerKryoRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.springdata.SpringPersistenceTestModule;
+import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -62,6 +63,7 @@ import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.scheduler.LdapSyncJobConfig;
+import software.wings.security.authentication.totp.SimpleTotpModule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -178,6 +180,9 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
                                            .build());
     configuration.setLdapSyncJobConfig(
         LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
+    SegmentConfiguration segmentConfiguration =
+        SegmentConfiguration.builder().enabled(false).url("dummy_url").apiKey("dummy_key").build();
+    configuration.setSegmentConfiguration(segmentConfiguration);
     return configuration;
   }
 
@@ -281,6 +286,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
     modules.add(new WingsModule(configuration));
+    modules.add(new SimpleTotpModule());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());
     modules.add(new ManagerQueueModule());

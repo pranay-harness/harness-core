@@ -53,6 +53,9 @@ import org.reflections.scanners.ResourcesScanner;
 @OwnedBy(HarnessTeam.CV)
 public class MetricServiceImpl implements MetricService {
   public static final String GOOGLE_APPLICATION_CREDENTIALS = "GOOGLE_APPLICATION_CREDENTIALS";
+  // If "METRICS_TARGET_PROJECT_ID" env variable has a valid value, it identifies the GCP project ID to which the
+  // metrics will be published.
+  private static final String METRICS_TARGET_PROJECT_ID = "METRICS_TARGET_PROJECT_ID";
   private static boolean WILL_PUBLISH_METRICS;
   private static List<MetricConfiguration> METRIC_CONFIG_DEFINITIONS = new ArrayList<>();
   private static Map<String, MetricGroup> METRIC_GROUP_MAP = new HashMap<>();
@@ -124,13 +127,18 @@ public class MetricServiceImpl implements MetricService {
     try {
       if (isNotEmpty(System.getenv(GOOGLE_APPLICATION_CREDENTIALS))) {
         WILL_PUBLISH_METRICS = true;
-        StackdriverStatsConfiguration configuration =
+        StackdriverStatsConfiguration.Builder builder =
             StackdriverStatsConfiguration.builder()
                 .setExportInterval(Duration.fromMillis(TimeUnit.MINUTES.toMillis(1)))
-                .setDeadline(Duration.fromMillis(TimeUnit.MINUTES.toMillis(5)))
-                .build();
-
-        StackdriverStatsExporter.createAndRegister(configuration);
+                .setDeadline(Duration.fromMillis(TimeUnit.MINUTES.toMillis(5)));
+        String projectId = System.getenv(METRICS_TARGET_PROJECT_ID);
+        if (isNotEmpty(projectId)) {
+          log.info("Publishing metrics to the GCP project {}", projectId);
+          builder.setProjectId(projectId);
+        } else {
+          log.info("Publishing metrics to the default project");
+        }
+        StackdriverStatsExporter.createAndRegister(builder.build());
       }
     } catch (Exception ex) {
       log.error("Exception while trying to register stackdriver metrics exporter", ex);

@@ -22,15 +22,16 @@ import lombok.experimental.Wither;
 public class GitEntityInfo {
   String branch;
   String yamlGitConfigId;
-  @Setter String folderPath;
-  @Setter String filePath;
-  String commitMsg;
-  String lastObjectId; // required in case of update file
+  @Wither @Setter String folderPath;
+  @Wither @Setter String filePath;
+  @Wither String commitMsg;
+  @Wither String lastObjectId; // required in case of update file
   boolean isNewBranch;
   boolean isSyncFromGit;
   @Wither boolean findDefaultFromOtherRepos;
   String baseBranch;
   String commitId; // used for passing commitId in case of g2h.
+  Boolean isFullSyncFlow;
 
   public boolean isNull() {
     // todo @Abhinav Maybe we should use null in place of default

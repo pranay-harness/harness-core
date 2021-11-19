@@ -22,6 +22,7 @@ public class ModuleLicenseImpl implements ModuleLicenseInterface {
   public ModuleLicenseDTO generateFreeLicense(String accountId, ModuleType moduleType) {
     ModuleLicenseDTO trialLicense = clientMap.get(moduleType).createTrialLicense(Edition.FREE, accountId);
     trialLicense.setAccountIdentifier(accountId);
+    checkAndSetDefault(trialLicense, moduleType, Edition.FREE);
     return trialLicense;
   }
 
@@ -29,6 +30,7 @@ public class ModuleLicenseImpl implements ModuleLicenseInterface {
   public ModuleLicenseDTO generateCommunityLicense(String accountId, ModuleType moduleType) {
     ModuleLicenseDTO trialLicense = clientMap.get(moduleType).createTrialLicense(Edition.COMMUNITY, accountId);
     trialLicense.setAccountIdentifier(accountId);
+    checkAndSetDefault(trialLicense, moduleType, Edition.COMMUNITY);
     return trialLicense;
   }
 

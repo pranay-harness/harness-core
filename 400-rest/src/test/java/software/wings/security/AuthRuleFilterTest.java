@@ -15,6 +15,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_V
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ACCOUNT_DEFAULTS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
@@ -142,8 +143,8 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     UserThreadLocal.set(mockUser(true));
     when(authHandler.getAllAccountPermissions())
         .thenReturn(Sets.newHashSet(USER_PERMISSION_MANAGEMENT, ACCOUNT_MANAGEMENT, MANAGE_APPLICATIONS,
-            TEMPLATE_MANAGEMENT, USER_PERMISSION_READ, AUDIT_VIEWER, MANAGE_TAGS, CE_ADMIN, CE_VIEWER,
-            MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
+            TEMPLATE_MANAGEMENT, USER_PERMISSION_READ, AUDIT_VIEWER, MANAGE_TAGS, MANAGE_ACCOUNT_DEFAULTS, CE_ADMIN,
+            CE_VIEWER, MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
             MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
             MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,
             MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_SSH_AND_WINRM, MANAGE_RESTRICTED_ACCESS));

@@ -39,11 +39,11 @@ public class GitSyncEventConsumerService implements Managed {
 
   @Override
   public void stop() throws Exception {
-    gitBranchHookEventConsumerService.shutdown();
+    gitBranchHookEventConsumerService.shutdownNow();
     gitBranchHookEventConsumerService.awaitTermination(
         GIT_BRANCH_HOOK_EVENT_STREAM_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
 
-    gitPushEventConsumerService.shutdown();
+    gitPushEventConsumerService.shutdownNow();
     gitPushEventConsumerService.awaitTermination(
         GIT_PUSH_EVENT_STREAM_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
   }

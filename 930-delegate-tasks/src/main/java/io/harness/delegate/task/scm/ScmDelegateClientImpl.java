@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.service.scm.ScmDelegateClient;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Singleton;

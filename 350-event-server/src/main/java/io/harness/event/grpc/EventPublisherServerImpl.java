@@ -1,5 +1,6 @@
 package io.harness.event.grpc;
 
+import static io.harness.ccm.commons.constants.Constants.CLUSTER_ID_IDENTIFIER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -16,11 +17,16 @@ import io.harness.event.MessageProcessorType;
 import io.harness.event.PublishMessage;
 import io.harness.event.PublishRequest;
 import io.harness.event.PublishResponse;
+import io.harness.event.metrics.ClusterResourcesMetricsGroup;
+import io.harness.event.metrics.EventServiceMetricNames;
+import io.harness.event.metrics.MessagesMetricsGroupContext;
 import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.metrics.service.api.MetricService;
+import io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -40,14 +46,16 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
   private final HPersistence hPersistence;
   private final LastReceivedPublishedMessageRepository lastReceivedPublishedMessageRepository;
   private final MessageProcessorRegistry messageProcessorRegistry;
+  private final MetricService metricService;
 
   @Inject
   public EventPublisherServerImpl(HPersistence hPersistence,
       LastReceivedPublishedMessageRepository lastReceivedPublishedMessageRepository,
-      MessageProcessorRegistry messageProcessorRegistry) {
+      MessageProcessorRegistry messageProcessorRegistry, MetricService metricService) {
     this.hPersistence = hPersistence;
     this.lastReceivedPublishedMessageRepository = lastReceivedPublishedMessageRepository;
     this.messageProcessorRegistry = messageProcessorRegistry;
+    this.metricService = metricService;
   }
 
   @Override
@@ -97,10 +105,37 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
       } catch (Exception e) {
         log.warn("Error while processing messages", e);
       }
-
-      log.info("Published messages persisted");
+      log.info("Published messages persisted. withCategory:{}, withoutCategory:{}", withCategory.size(),
+          withoutCategory.size());
       responseObserver.onNext(PublishResponse.newBuilder().build());
       responseObserver.onCompleted();
+
+      withoutCategory.forEach(this::publishMetric);
+      withCategory.forEach(this::publishMetric);
+      request.getMessagesList().forEach(msg -> publishMetric(msg, accountId));
+    }
+  }
+
+  private void publishMetric(PublishedMessage msg) {
+    String accountId = msg.getAccountId();
+    String clusterId = msg.getAttributes().getOrDefault(CLUSTER_ID_IDENTIFIER, "MISSING_CLUSTER_ID");
+    String messageType = msg.getType();
+
+    try (MessagesMetricsGroupContext _ = new MessagesMetricsGroupContext(accountId, clusterId, messageType)) {
+      metricService.incCounter(EventServiceMetricNames.INCOMING_MESSAGE_COUNT);
+    }
+  }
+
+  private void publishMetric(PublishMessage msg, String accountId) {
+    final String SYNC_MSG_TYPE = "io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent";
+    if (AnyUtils.toFqcn(msg.getPayload()).equals(SYNC_MSG_TYPE)) {
+      String clusterId = msg.getAttributesMap().getOrDefault(CLUSTER_ID_IDENTIFIER, "MISSING_CLUSTER_ID");
+      try (ClusterResourcesMetricsGroup _ = new ClusterResourcesMetricsGroup(accountId, clusterId)) {
+        K8SClusterSyncEvent ev = AnyUtils.findClassAndUnpack(msg.getPayload());
+        metricService.recordMetric(EventServiceMetricNames.POD_COUNT, ev.getActivePodUidsMapMap().size());
+        metricService.recordMetric(EventServiceMetricNames.NODE_COUNT, ev.getActiveNodeUidsMapMap().size());
+        metricService.recordMetric(EventServiceMetricNames.PV_COUNT, ev.getActivePvUidsMapMap().size());
+      }
     }
   }
 

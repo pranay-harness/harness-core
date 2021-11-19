@@ -193,7 +193,7 @@ public class WorkflowExecutionControllerTest extends WingsBaseTest {
 
     when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(ENV_ID), captor.capture(), eq(null)))
         .thenThrow(new DeploymentFreezeException(ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, WingsException.USER,
-            ACCOUNT_ID, Collections.singletonList(FREEZE_WINDOW_ID), "FREEZE_NAME", false));
+            ACCOUNT_ID, Collections.singletonList(FREEZE_WINDOW_ID), "FREEZE_NAME", false, false));
     when(workflowService.fetchDeploymentMetadata(
              eq(APP_ID), eq(workflow), any(), eq(null), any(), eq(DeploymentMetadata.Include.ARTIFACT_SERVICE)))
         .thenReturn(DeploymentMetadata.builder().build());

@@ -75,6 +75,11 @@ public class Workflow
                  .field(WorkflowKeys.accountId)
                  .field(WorkflowKeys.orchestrationWorkflowType)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_name")
+                 .field(WorkflowKeys.accountId)
+                 .ascSortField(WorkflowKeys.name)
+                 .build())
         .build();
   }
   public static final String NAME_KEY = "name";
@@ -406,6 +411,12 @@ public class Workflow
   @Override
   public NGMigrationEntityType getMigrationEntityType() {
     return NGMigrationEntityType.WORKFLOW;
+  }
+
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
   }
 
   public static final class WorkflowBuilder {

@@ -231,7 +231,7 @@ public class GcpSecretsManagerServiceV2Impl extends AbstractSecretServiceImpl im
       String encryptedDataId = String.copyValueOf(currentConfig.getCredentials());
       EncryptedData secretData = wingsPersistence.get(EncryptedData.class, encryptedDataId);
       Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + gcpSecretsManagerConfig);
-      gcpSecretsManagerConfig.setCredentials(decryptLocal(secretData));
+      gcpSecretsManagerConfig.setCredentials(decryptUsingBaseAlgo(secretData));
     }
   }
 
@@ -332,7 +332,8 @@ public class GcpSecretsManagerServiceV2Impl extends AbstractSecretServiceImpl im
 
   private EncryptedData getEncryptedDataForSecretField(
       GcpSecretsManagerConfig gcpSecretsManagerConfig, char[] credentials) {
-    EncryptedData encryptedData = isNotEmpty(credentials) ? encryptLocal(credentials) : null;
+    EncryptedData encryptedData =
+        isNotEmpty(credentials) ? encryptUsingBaseAlgo(gcpSecretsManagerConfig.getAccountId(), credentials) : null;
     if (gcpSecretsManagerConfig != null && encryptedData != null) {
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
       query.criteria(EncryptedDataKeys.accountId)
@@ -343,6 +344,8 @@ public class GcpSecretsManagerServiceV2Impl extends AbstractSecretServiceImpl im
       if (savedEncryptedData != null) {
         savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
         savedEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
+        savedEncryptedData.setEncryptionType(encryptedData.getEncryptionType());
+        savedEncryptedData.setKmsId(encryptedData.getKmsId());
         encryptedData = savedEncryptedData;
       }
     }

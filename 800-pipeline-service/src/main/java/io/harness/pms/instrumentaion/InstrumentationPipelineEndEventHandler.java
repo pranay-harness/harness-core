@@ -58,7 +58,7 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
     List<NotificationRules> notificationRulesList =
-        notificationInstrumentationHelper.getNotificationRules(planExecutionId);
+        notificationInstrumentationHelper.getNotificationRules(planExecutionId, ambiance);
 
     Set<String> executedModules =
         OrchestrationObserverUtils.getExecutedModulesInPipeline(pipelineExecutionSummaryEntity);

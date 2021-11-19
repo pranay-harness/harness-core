@@ -2,11 +2,11 @@ package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.ROOT;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
@@ -20,8 +20,6 @@ import static org.springframework.data.mongodb.core.query.Update.update;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.exception.InvalidRequestException;
-import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
@@ -48,12 +46,14 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -122,30 +122,28 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         skip(pageable.getOffset()), limit(pageable.getPageSize()));
     List<GitSyncErrorAggregateByCommit> gitSyncErrorAggregateByCommitList =
         gitSyncErrorRepository.aggregate(aggregation, GitSyncErrorAggregateByCommit.class).getMappedResults();
+    long totalCount = gitSyncErrorRepository.count(criteria);
     List<GitSyncErrorAggregateByCommitDTO> gitSyncErrorAggregateByCommitDTOList =
         emptyIfNull(gitSyncErrorAggregateByCommitList)
             .stream()
             .map(GitSyncErrorMapper::toGitSyncErrorAggregateByCommitDTO)
-            .collect(Collectors.toList());
+            .collect(toList());
     Set<String> repoUrls = emptyIfNull(gitSyncErrorAggregateByCommitDTOList)
                                .stream()
                                .map(gitSyncErrorAggregateByCommitDTO
                                    -> gitSyncErrorAggregateByCommitDTO.getErrorsForSummaryView().get(0).getRepoUrl())
                                .collect(Collectors.toSet());
-    Map<String, String> repoIds = getRepoId(repoUrls, accountIdentifier, orgIdentifier, projectIdentifier);
-    gitSyncErrorAggregateByCommitDTOList.stream()
-        .map(gitSyncErrorAggregateByCommitDTO -> {
-          String repoUrl = gitSyncErrorAggregateByCommitDTO.getErrorsForSummaryView().get(0).getRepoUrl();
-          gitSyncErrorAggregateByCommitDTO.setRepoId(repoIds.get(repoUrl));
-          return gitSyncErrorAggregateByCommitDTO;
-        })
-        .collect(Collectors.toList());
+    Map<String, String> repoIds = getRepoIds(repoUrls, accountIdentifier, orgIdentifier, projectIdentifier);
+    gitSyncErrorAggregateByCommitDTOList.forEach(gitSyncErrorAggregateByCommitDTO -> {
+      String repoUrl = gitSyncErrorAggregateByCommitDTO.getErrorsForSummaryView().get(0).getRepoUrl();
+      gitSyncErrorAggregateByCommitDTO.setRepoId(repoIds.get(repoUrl));
+    });
     Page<GitSyncErrorAggregateByCommitDTO> page =
-        new PageImpl<>(gitSyncErrorAggregateByCommitDTOList, pageable, gitSyncErrorAggregateByCommitDTOList.size());
+        new PageImpl<>(gitSyncErrorAggregateByCommitDTOList, pageable, totalCount);
     return getNGPageResponse(page);
   }
 
-  private Map<String, String> getRepoId(Set<String> repoUrls, String accountId, String orgId, String projectId) {
+  private Map<String, String> getRepoIds(Set<String> repoUrls, String accountId, String orgId, String projectId) {
     return repoUrls.stream().collect(Collectors.toMap(repoUrl
         -> repoUrl,
         repoUrl -> yamlGitConfigService.getByProjectIdAndRepo(accountId, orgId, projectId, repoUrl).getIdentifier()));
@@ -163,7 +161,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
     Set<String> repoUrls = new HashSet<>();
     gitSyncErrorPage.forEach(gitSyncErrorDTO -> { repoUrls.add(gitSyncErrorDTO.getRepoUrl()); });
-    Map<String, String> repoIds = getRepoId(repoUrls, accountId, orgIdentifier, projectIdentifier);
+    Map<String, String> repoIds = getRepoIds(repoUrls, accountId, orgIdentifier, projectIdentifier);
     gitSyncErrorPage.forEach(
         gitSyncErrorDTO -> { gitSyncErrorDTO.setRepoId(repoIds.get(gitSyncErrorDTO.getRepoUrl())); });
     return getNGPageResponse(gitSyncErrorPage);
@@ -172,8 +170,27 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   private Criteria createGitToHarnessErrorFilterCriteria(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String searchTerm, String repoId, String branch) {
     // when no filter is chosen - take all repos and their default branches
+    Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(GitSyncErrorKeys.errorType)
+                            .is(GitSyncErrorType.GIT_TO_HARNESS);
+    Criteria repoBranchCriteria =
+        getRepoBranchCriteria(accountIdentifier, orgIdentifier, projectIdentifier, repoId, branch);
+    criteria.andOperator(repoBranchCriteria)
+        .and(GitSyncErrorKeys.createdAt)
+        .gt(OffsetDateTime.now().minusDays(30).toInstant().toEpochMilli());
+    if (isNotBlank(searchTerm)) {
+      criteria.orOperator(Criteria.where(GitSyncErrorKeys.gitCommitId).regex(searchTerm, "i"),
+          Criteria.where(GitSyncErrorKeys.completeFilePath).regex(searchTerm, "i"),
+          Criteria.where(GitSyncErrorKeys.entityType).regex(searchTerm, "i"));
+    }
+    return criteria;
+  }
+
+  Criteria getRepoBranchCriteria(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoIdentifier, String branch) {
     List<Pair<String, String>> repoBranchList = new ArrayList<>();
-    if (isEmpty(repoId)) {
+    if (StringUtils.isEmpty(repoIdentifier)) {
       List<YamlGitConfigDTO> yamlGitConfigDTOS =
           yamlGitConfigService.list(projectIdentifier, orgIdentifier, accountIdentifier);
       repoBranchList = emptyIfNull(yamlGitConfigDTOS)
@@ -186,31 +203,21 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                            .collect(Collectors.toList());
     } else { // when repo filter is applied
       YamlGitConfigDTO yamlGitConfigDTO =
-          yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoId);
-      branch = isEmpty(branch) ? yamlGitConfigDTO.getBranch() : branch;
+          yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoIdentifier);
+      branch = StringUtils.isEmpty(branch) ? yamlGitConfigDTO.getBranch() : branch;
       repoBranchList.add(Pair.of(yamlGitConfigDTO.getRepo(), branch));
     }
-
-    Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
-                            .is(accountIdentifier)
-                            .and(GitSyncErrorKeys.errorType)
-                            .is(GitSyncErrorType.GIT_TO_HARNESS);
-    Criteria repoBranchCriteria = new Criteria();
+    List<Criteria> criteriaList = new ArrayList<>();
     for (Pair<String, String> repoBranch : repoBranchList) {
-      repoBranchCriteria.orOperator(Criteria.where(GitSyncErrorKeys.repoUrl)
-                                        .is(repoBranch.getLeft())
-                                        .and(GitSyncErrorKeys.branchName)
-                                        .is(repoBranch.getRight()));
+      criteriaList.add(Criteria.where(GitSyncErrorKeys.repoUrl)
+                           .is(repoBranch.getLeft())
+                           .and(GitSyncErrorKeys.branchName)
+                           .is(repoBranch.getRight()));
     }
-    criteria.andOperator(repoBranchCriteria)
-        .and(GitSyncErrorKeys.createdAt)
-        .gt(OffsetDateTime.now().minusDays(30).toInstant().toEpochMilli());
-    if (isNotBlank(searchTerm)) {
-      criteria.orOperator(Criteria.where(GitSyncErrorKeys.gitCommitId).regex(searchTerm, "i"),
-          Criteria.where(GitSyncErrorKeys.completeFilePath).regex(searchTerm, "i"),
-          Criteria.where(GitSyncErrorKeys.entityType).regex(searchTerm, "i"));
+    if (criteriaList.isEmpty()) {
+      return new Criteria();
     }
-    return criteria;
+    return new Criteria().orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
   }
 
   @Override
@@ -234,68 +241,95 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     return getNGPageResponse(gitSyncErrorPage.map(GitSyncErrorMapper::toGitSyncErrorDTO));
   }
 
+  @Override
+  public GitSyncErrorDTO save(GitSyncErrorDTO gitSyncErrorDTO) {
+    return save(GitSyncErrorMapper.toGitSyncError(gitSyncErrorDTO, gitSyncErrorDTO.getAccountIdentifier()));
+  }
+
   private GitSyncErrorDTO save(GitSyncError gitSyncError) {
     try {
       validate(gitSyncError);
       GitSyncError savedError = gitSyncErrorRepository.save(gitSyncError);
       return GitSyncErrorMapper.toGitSyncErrorDTO(savedError);
     } catch (DuplicateKeyException ex) {
-      throw new InvalidRequestException("A git sync for this commitId and File already exists.");
+      log.info("A git sync error for this commitId and File already exists.", ex);
+      GitToHarnessErrorDetails additionalErrorDetails =
+          (GitToHarnessErrorDetails) gitSyncError.getAdditionalErrorDetails();
+      return getGitToHarnessError(gitSyncError.getAccountIdentifier(), additionalErrorDetails.getGitCommitId(),
+          gitSyncError.getRepoUrl(), gitSyncError.getBranchName(), gitSyncError.getCompleteFilePath())
+          .get();
     }
   }
 
   @Override
-  public GitSyncErrorDTO save(GitSyncErrorDTO gitSyncErrorDTO) {
-    return save(GitSyncErrorMapper.toGitSyncError(gitSyncErrorDTO, gitSyncErrorDTO.getAccountIdentifier()));
+  public List<GitSyncErrorDTO> saveAll(List<GitSyncErrorDTO> gitSyncErrorDTOList) {
+    List<GitSyncError> gitSyncErrors =
+        gitSyncErrorDTOList.stream()
+            .map(gitSyncErrorDTO
+                -> GitSyncErrorMapper.toGitSyncError(gitSyncErrorDTO, gitSyncErrorDTO.getAccountIdentifier()))
+            .collect(toList());
+    List<GitSyncError> gitSyncErrorsSaved = new ArrayList<>();
+    try {
+      gitSyncErrorRepository.saveAll(gitSyncErrors).iterator().forEachRemaining(gitSyncErrorsSaved::add);
+      return gitSyncErrorsSaved.stream().map(GitSyncErrorMapper::toGitSyncErrorDTO).collect(toList());
+    } catch (DuplicateKeyException ex) {
+      log.info("Git sync error already exist", ex);
+      return null;
+    }
+  }
+
+  @Override
+  public void markOverriddenErrors(String accountId, String repoUrl, String branchName, Set<String> filePaths) {
+    Criteria criteria = createActiveErrorsFilterCriteria(accountId, repoUrl, branchName, new ArrayList<>(filePaths));
+    Update update = update(GitSyncErrorKeys.status, GitSyncErrorStatus.OVERRIDDEN);
+    gitSyncErrorRepository.updateGitError(criteria, update);
+  }
+
+  @Override
+  public void markResolvedErrors(
+      String accountId, String repoUrl, String branchName, Set<String> filePaths, String commitId) {
+    Criteria criteria = createActiveErrorsFilterCriteria(accountId, repoUrl, branchName, new ArrayList<>(filePaths));
+    Update update =
+        update(GitSyncErrorKeys.status, GitSyncErrorStatus.RESOLVED).set(GitSyncErrorKeys.resolvedByCommitId, commitId);
+    gitSyncErrorRepository.updateGitError(criteria, update);
+  }
+
+  private Criteria createActiveErrorsFilterCriteria(
+      String accountId, String repoUrl, String branchName, List<String> filePaths) {
+    return Criteria.where(GitSyncErrorKeys.accountIdentifier)
+        .is(accountId)
+        .and(GitSyncErrorKeys.repoUrl)
+        .is(repoUrl)
+        .and(GitSyncErrorKeys.branchName)
+        .is(branchName)
+        .and(GitSyncErrorKeys.completeFilePath)
+        .in(filePaths)
+        .and(GitSyncErrorKeys.status)
+        .is(GitSyncErrorStatus.ACTIVE);
+  }
+
+  @Override
+  public Optional<GitSyncErrorDTO> getGitToHarnessError(
+      String accountId, String commitId, String repoUrl, String branchName, String filePath) {
+    Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
+                            .is(accountId)
+                            .and(GitSyncErrorKeys.gitCommitId)
+                            .is(commitId)
+                            .and(GitSyncErrorKeys.repoUrl)
+                            .is(repoUrl)
+                            .and(GitSyncErrorKeys.branchName)
+                            .is(branchName)
+                            .and(GitSyncErrorKeys.completeFilePath)
+                            .is(filePath);
+    GitSyncError error = gitSyncErrorRepository.find(criteria);
+    return Optional.ofNullable(GitSyncErrorMapper.toGitSyncErrorDTO(error));
   }
 
   private void markExpiredErrors() {
     Criteria criteria =
         Criteria.where(GitSyncErrorKeys.createdAt).lte(OffsetDateTime.now().minusDays(30).toInstant().toEpochMilli());
     Update update = update(GitSyncErrorKeys.status, GitSyncErrorStatus.EXPIRED);
-    gitSyncErrorRepository.upsertGitError(criteria, update);
-  }
-
-  @Override
-  public void upsertGitSyncErrors(
-      GitFileChange failedChange, String errorMessage, boolean fullSyncPath, YamlGitConfigDTO yamlGitConfig) {
-    upsertGitToHarnessError(failedChange, errorMessage, yamlGitConfig);
-  }
-
-  private void upsertGitToHarnessError(
-      GitFileChange failedGitFileChange, String errorMessage, YamlGitConfigDTO yamlGitConfig) {
-    log.info("Upsert git to harness sync issue for file: [{}]", failedGitFileChange.getFilePath());
-
-    /*GitToHarnessErrorDetails gitToHarnessErrorDetails = getGitToHarnessErrorDetails(failedGitFileChange);
-    final GitSyncError previousGitSyncError =
-        gitSyncErrorRepository.findByAccountIdentifierAndCompleteFilePathAndErrorType(
-            failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(), GitSyncErrorType.GIT_TO_HARNESS);
-    addPreviousCommitDetailsToErrorDetails(failedGitFileChange, gitToHarnessErrorDetails, previousGitSyncError);
-    gitSyncErrorRepository.upsertGitError(failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(),
-        GIT_TO_HARNESS, errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info",
-        false, failedGitFileChange.getChangeType(), gitToHarnessErrorDetails, yamlGitConfig.getGitConnectorRef(),
-        yamlGitConfig.getRepo(), yamlGitConfig.getBranch(),
-        GitFileLocationHelper.getRootPathSafely(failedGitFileChange.getFilePath()), yamlGitConfig.getIdentifier(),
-        yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getOrganizationIdentifier());*/
-  }
-
-  private GitToHarnessErrorDetails getGitToHarnessErrorDetails(GitFileChange failedGitFileChange) {
-    String failedCommitId = failedGitFileChange.getCommitId() != null ? failedGitFileChange.getCommitId() : "";
-    if (failedCommitId.equals("")) {
-      log.info("Unexpected behaviour: The git commitId is null for the git to harness error");
-    }
-    return GitToHarnessErrorDetails.builder()
-        .gitCommitId(failedCommitId)
-        .yamlContent(failedGitFileChange.getFileContent())
-        .commitMessage(failedGitFileChange.getCommitMessage())
-        .build();
-  }
-
-  @Override
-  public List<GitSyncError> getActiveGitToHarnessSyncErrors(String accountId, String gitConnectorId, String repoName,
-      String branchName, String rootFolder, long fromTimestamp) {
-    return null; // gitSyncErrorRepository.getActiveGitSyncError(
-                 // accountId, fromTimestamp, GIT_TO_HARNESS, gitConnectorId, repoName, branchName, rootFolder);
+    gitSyncErrorRepository.updateGitError(criteria, update);
   }
 
   @Override
@@ -317,6 +351,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                                                                 .orgIdentifier(orgIdentifier)
                                                                 .projectIdentifier(projectIdentifier)
                                                                 .build())
+                                    .createdAt(System.currentTimeMillis())
                                     .build();
     save(gitSyncError);
   }
@@ -336,22 +371,16 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoIdentifier, String branch) {
     Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
                             .is(accountIdentifier)
-                            .and(GitSyncErrorKeys.orgIdentifier)
-                            .is(orgIdentifier)
-                            .and(GitSyncErrorKeys.projectIdentifier)
-                            .is(projectIdentifier)
                             .and(GitSyncErrorKeys.errorType)
                             .in(GitSyncErrorType.FULL_SYNC, GitSyncErrorType.CONNECTIVITY_ISSUE);
-    if (!isEmpty(repoIdentifier)) {
-      YamlGitConfigDTO yamlGitConfigDTO =
-          yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoIdentifier);
-      if (yamlGitConfigDTO != null) {
-        criteria.and(GitSyncErrorKeys.repoUrl).is(yamlGitConfigDTO.getRepo());
-      }
-      if (!isEmpty(branch)) {
-        criteria.and(GitSyncErrorKeys.branchName).is(branch);
-      }
-    }
+    Criteria repoBranchCriteria =
+        getRepoBranchCriteria(accountIdentifier, orgIdentifier, projectIdentifier, repoIdentifier, branch);
+
+    criteria.andOperator(repoBranchCriteria);
+    criteria.and(GitSyncErrorKeys.status)
+        .is(GitSyncErrorStatus.ACTIVE)
+        .and(GitSyncErrorKeys.createdAt)
+        .gt(OffsetDateTime.now().minusDays(30).toInstant().toEpochMilli());
     return criteria;
   }
 

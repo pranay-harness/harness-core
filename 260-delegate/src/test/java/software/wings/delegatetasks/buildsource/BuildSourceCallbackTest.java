@@ -96,6 +96,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   @Before
   public void setupMocks() {
     ARTIFACT_STREAM_UNSTABLE.setCollectionStatus(UNSTABLE.name());
+    ARTIFACT_STREAM.setCollectionStatus(STABLE.name());
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(ARTIFACT_STREAM);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(ARTIFACT_STREAM_UNSTABLE);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM, BUILD_DETAILS_1)).thenReturn(ARTIFACT_1);
@@ -221,7 +222,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
     buildSourceCallback.notify(newHashMap("", buildSourceExecutionResponse));
     verify(executorService, never()).submit(any(Runnable.class));
     verify(artifactStreamService, times(1)).get(any());
-    verify(artifactStreamService, times(1)).updateFailedCronAttemptsAndLastIteration(any(), any(), anyInt());
+    verify(artifactStreamService, times(1)).updateFailedCronAttemptsAndLastIteration(any(), any(), anyInt(), eq(false));
     verify(artifactStreamService, times(1)).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID_1, UNSTABLE.name());
   }
 
@@ -233,7 +234,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
     buildSourceCallback.notify(newHashMap("", ErrorNotifyResponseData.builder().build()));
     verify(executorService, never()).submit(any(Runnable.class));
     verify(artifactStreamService, times(2)).get(any());
-    verify(artifactStreamService, times(1)).updateFailedCronAttemptsAndLastIteration(any(), any(), anyInt());
+    verify(artifactStreamService, times(1)).updateFailedCronAttemptsAndLastIteration(any(), any(), anyInt(), eq(false));
   }
 
   @Test
@@ -294,7 +295,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
     verify(executorService, never()).submit(any(Runnable.class));
 
     verify(artifactStreamService, times(1)).get(any());
-    verify(artifactStreamService, times(1)).updateFailedCronAttemptsAndLastIteration(any(), any(), anyInt());
+    verify(artifactStreamService, times(1)).updateFailedCronAttemptsAndLastIteration(any(), any(), anyInt(), eq(false));
     verify(artifactStreamService, times(1)).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID_1, STOPPED.name());
   }
 

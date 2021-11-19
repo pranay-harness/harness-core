@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
@@ -36,6 +37,7 @@ public class GitSyncConnectorHelper {
   ConnectorService connectorService;
   DecryptGitApiAccessHelper decryptGitApiAccessHelper;
   YamlGitConfigService yamlGitConfigService;
+  ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
 
   @Inject
   public GitSyncConnectorHelper(@Named("connectorDecoratorService") ConnectorService connectorService,
@@ -142,6 +144,36 @@ public class GitSyncConnectorHelper {
     if (apiAccess == null) {
       throw new InvalidRequestException(
           "The connector doesn't contain api access field which is required for the git sync ");
+    }
+  }
+
+  public ScmConnector getScmConnector(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorRef) {
+    IdentifierRef identifierRef =
+        IdentifierRefHelper.getIdentifierRef(connectorRef, accountIdentifier, orgIdentifier, projectIdentifier);
+    final ConnectorResponseDTO connectorResponseDTO =
+        connectorService
+            .get(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
+                identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())
+            .orElseThrow(()
+                             -> new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
+                                 identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
+                                 identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())));
+    return (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig();
+  }
+
+  public ScmConnector getDecryptedConnector(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorRef, String repoUrl) {
+    try {
+      ScmConnector connector = getScmConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorRef);
+      final ScmConnector scmConnector =
+          decryptGitApiAccessHelper.decryptScmApiAccess(connector, accountIdentifier, projectIdentifier, orgIdentifier);
+      scmConnector.setUrl(repoUrl);
+      return scmConnector;
+    } catch (Exception ex) {
+      throw new UnexpectedException(
+          String.format("The connector with the  id %s, accountId %s, orgId %s, projectId %s is not a scm connector",
+              connectorRef, accountIdentifier, orgIdentifier, projectIdentifier));
     }
   }
 }

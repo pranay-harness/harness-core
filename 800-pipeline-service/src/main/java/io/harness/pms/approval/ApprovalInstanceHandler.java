@@ -45,7 +45,7 @@ public class ApprovalInstanceHandler implements MongoPersistenceIterator.Handler
   }
 
   public void registerIterators() {
-    IteratorConfig iteratorConfig = iteratorsConfig.getApprovalInstanceIteratorConfig();
+    IteratorConfig iteratorConfig = iteratorsConfig.getApprovalInstanceConfig();
     if (iteratorConfig == null) {
       iteratorConfig = DEFAULT_ITERATOR_CONFIG;
     }
@@ -56,7 +56,7 @@ public class ApprovalInstanceHandler implements MongoPersistenceIterator.Handler
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("ApprovalInstanceHandler")
-            .poolSize(2)
+            .poolSize(iteratorConfig.getThreadPoolCount())
             .interval(ofSeconds(iteratorConfig.getTargetIntervalInSeconds()))
             .build(),
         ApprovalInstanceHandler.class,

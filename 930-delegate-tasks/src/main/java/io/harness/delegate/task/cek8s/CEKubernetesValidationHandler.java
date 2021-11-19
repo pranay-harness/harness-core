@@ -3,9 +3,9 @@ package io.harness.delegate.task.cek8s;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.k8Connector.CEK8sValidationParams;
-import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 
 import com.google.inject.Inject;

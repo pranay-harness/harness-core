@@ -32,7 +32,7 @@ public class BigQueryHelper {
     return format("%s.%s.%s.%s", projectId, dataSetId, INFORMATION_SCHEMA, view);
   }
 
-  public String getTableName(String cloudProvider) {
+  public static String getTableName(String cloudProvider) {
     switch (cloudProvider) {
       case "AWS":
         return AWS_RAW_TABLE;
@@ -45,7 +45,7 @@ public class BigQueryHelper {
     }
   }
 
-  private String getAzureRawTable() {
+  private static String getAzureRawTable() {
     LocalDateTime localNow = LocalDateTime.now();
     String currentData = localNow.atZone(ZoneId.of("UTC")).toString();
     String[] dateElements = currentData.split("-");
@@ -56,11 +56,11 @@ public class BigQueryHelper {
     return config.getGcpProjectId();
   }
 
-  public String getDataSetId(String accountId) {
+  public static String getDataSetId(String accountId) {
     return String.format(DATA_SET_NAME_TEMPLATE, modifyStringToComplyRegex(accountId));
   }
 
-  public String modifyStringToComplyRegex(String accountInfo) {
+  public static String modifyStringToComplyRegex(String accountInfo) {
     return accountInfo.toLowerCase().replaceAll("[^a-z0-9]", "_");
   }
 }

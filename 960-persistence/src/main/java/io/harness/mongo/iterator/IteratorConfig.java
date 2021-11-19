@@ -11,5 +11,6 @@ import lombok.Value;
 @Builder
 public class IteratorConfig {
   boolean enabled;
+  int threadPoolCount;
   long targetIntervalInSeconds;
 }

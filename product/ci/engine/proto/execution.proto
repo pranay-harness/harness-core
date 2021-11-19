@@ -69,6 +69,7 @@ message PluginStep {
   repeated string entrypoint = 4;
   map<string, string> environment = 5;
   string artifact_file_path = 6;  // file path to store generated artifact file
+  repeated Report reports = 7;
 }
 
 message SaveCacheStep {

@@ -19,6 +19,7 @@ import io.harness.connector.services.ConnectorFilterService;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.services.NGConnectorSecretManagerService;
+import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.filter.FilterType;
@@ -58,6 +59,8 @@ public class ConnectorModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, ConnectionValidator.class);
     MapBinder<String, ConnectorValidationParamsProvider> connectorValidationProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ConnectorValidationParamsProvider.class);
+    MapBinder<String, ConnectorValidationHandler> connectorValidationHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, ConnectorValidationHandler.class);
 
     for (ConnectorType connectorType : ConnectorType.values()) {
       connectorValidatorMapBinder.addBinding(connectorType.getDisplayName())
@@ -68,6 +71,8 @@ public class ConnectorModule extends AbstractModule {
           .to(ConnectorRegistryFactory.getConnectorEntityToDTOMapper(connectorType));
       connectorValidationProviderMapBinder.addBinding(connectorType.getDisplayName())
           .to(ConnectorRegistryFactory.getConnectorValidationParamsProvider(connectorType));
+      connectorValidationHandlerMapBinder.addBinding(connectorType.getDisplayName())
+          .to(ConnectorRegistryFactory.getConnectorValidationHandler(connectorType));
     }
     bind(ConnectorService.class)
         .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))

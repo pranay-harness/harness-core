@@ -19,7 +19,6 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
 import io.harness.ng.core.EntityDetail;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -124,7 +123,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
     TerraformStepConfigurationParameters configuration = parameters.getConfiguration();
     TerraformExecutionDataParameters spec = configuration.getSpec();
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder();
-    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     builder.accountId(accountId);
     String entityId = helper.generateFullIdentifier(
         ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance);
@@ -162,7 +161,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
     log.info("Running Obtain Inherited Task for the Destroy Step");
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder().taskType(TFTaskType.DESTROY);
     builder.terraformCommandUnit(TerraformCommandUnit.Destroy);
-    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     builder.accountId(accountId);
     String provisionerIdentifier = ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier());
     String entityId = helper.generateFullIdentifier(provisionerIdentifier, ambiance);
@@ -201,7 +200,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
     log.info("Getting the Last Apply Task for the Destroy Step");
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder().taskType(TFTaskType.DESTROY);
     builder.terraformCommandUnit(TerraformCommandUnit.Destroy);
-    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     builder.accountId(accountId);
     String entityId = helper.generateFullIdentifier(
         ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance);

@@ -2,6 +2,7 @@ package io.harness.template.events;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.PRABU;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -9,6 +10,7 @@ import static junit.framework.TestCase.assertNull;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -24,7 +26,10 @@ import io.harness.audit.client.api.AuditClientService;
 import io.harness.category.element.UnitTests;
 import io.harness.context.GlobalContext;
 import io.harness.encryption.Scope;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.entity_crud.EntityChangeDTO;
+import io.harness.eventsframework.producer.Message;
 import io.harness.outbox.OutboxEvent;
 import io.harness.rule.Owner;
 import io.harness.security.SourcePrincipalContextData;
@@ -65,7 +70,7 @@ public class TemplateOutboxEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
-  public void testCreate() throws JsonProcessingException {
+  public void testCreate() throws JsonProcessingException, IOException, ClassNotFoundException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String projectIdentifier = randomAlphabetic(10);
@@ -104,6 +109,12 @@ public class TemplateOutboxEventHandlerTest extends CategoryTest {
     templateOutboxEventHandler.handle(outboxEvent);
     verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any(), any());
 
+    final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(messageArgumentCaptor.capture());
+
+    assertRedisEvent(messageArgumentCaptor.getAllValues().get(0), EventsFrameworkMetadataConstants.CREATE_ACTION,
+        identifier, projectIdentifier, orgIdentifier, accountIdentifier);
+
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
     assertAuditEntry(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier, templateVersionLabel, auditEntry, outboxEvent);
@@ -115,7 +126,7 @@ public class TemplateOutboxEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
-  public void testUpdate() throws JsonProcessingException {
+  public void testUpdate() throws JsonProcessingException, IOException, ClassNotFoundException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String projectIdentifier = randomAlphabetic(10);
@@ -161,6 +172,12 @@ public class TemplateOutboxEventHandlerTest extends CategoryTest {
     templateOutboxEventHandler.handle(outboxEvent);
     verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any(), any());
 
+    final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(messageArgumentCaptor.capture());
+
+    assertRedisEvent(messageArgumentCaptor.getAllValues().get(0), EventsFrameworkMetadataConstants.UPDATE_ACTION,
+        identifier, projectIdentifier, orgIdentifier, accountIdentifier);
+
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
     assertAuditEntry(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier, templateVersionLabel, auditEntry, outboxEvent);
@@ -172,7 +189,7 @@ public class TemplateOutboxEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
-  public void testDelete() throws JsonProcessingException {
+  public void testDelete() throws JsonProcessingException, IOException, ClassNotFoundException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String projectIdentifier = randomAlphabetic(10);
@@ -211,6 +228,12 @@ public class TemplateOutboxEventHandlerTest extends CategoryTest {
     templateOutboxEventHandler.handle(outboxEvent);
     verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any(), any());
 
+    final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(messageArgumentCaptor.capture());
+
+    assertRedisEvent(messageArgumentCaptor.getAllValues().get(0), EventsFrameworkMetadataConstants.DELETE_ACTION,
+        identifier, projectIdentifier, orgIdentifier, accountIdentifier);
+
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
     assertAuditEntry(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier, templateVersionLabel, auditEntry, outboxEvent);
@@ -230,5 +253,126 @@ public class TemplateOutboxEventHandlerTest extends CategoryTest {
     assertEquals(templateVersionLabel, auditEntry.getResource().getLabels().get("versionLabel"));
     assertEquals(ModuleType.TEMPLATESERVICE, auditEntry.getModule());
     assertEquals(outboxEvent.getCreatedAt().longValue(), auditEntry.getTimestamp());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testUpdateScope() throws JsonProcessingException, ClassNotFoundException, IOException {
+    String accountIdentifier = randomAlphabetic(10);
+    String orgIdentifier = randomAlphabetic(10);
+    String projectIdentifier = randomAlphabetic(10);
+    String identifier = randomAlphabetic(10);
+    String templateVersionLabel = randomAlphabetic(10);
+
+    TemplateEntity oldTemplateEntity = TemplateEntity.builder()
+                                           .name(randomAlphabetic(10))
+                                           .identifier(identifier)
+                                           .versionLabel(templateVersionLabel)
+                                           .accountId(accountIdentifier)
+                                           .orgIdentifier(orgIdentifier)
+                                           .templateScope(Scope.PROJECT)
+                                           .yaml(oldYaml)
+                                           .build();
+    TemplateEntity newTemplateEntity = TemplateEntity.builder()
+                                           .name(randomAlphabetic(10))
+                                           .identifier(identifier)
+                                           .versionLabel(templateVersionLabel)
+                                           .accountId(accountIdentifier)
+                                           .orgIdentifier(orgIdentifier)
+                                           .templateScope(Scope.ORG)
+                                           .yaml(newYaml)
+                                           .build();
+
+    TemplateUpdateEvent updateEvent = new TemplateUpdateEvent(accountIdentifier, orgIdentifier, projectIdentifier,
+        newTemplateEntity, oldTemplateEntity, "", TemplateUpdateEventType.TEMPLATE_CHANGE_SCOPE_EVENT);
+    String eventData = objectMapper.writeValueAsString(updateEvent);
+    GlobalContext globalContext = new GlobalContext();
+    Principal principal =
+        new UserPrincipal(randomAlphabetic(10), randomAlphabetic(10), randomAlphabetic(10), randomAlphabetic(10));
+    SourcePrincipalContextData sourcePrincipalContextData =
+        SourcePrincipalContextData.builder().principal(principal).build();
+    globalContext.upsertGlobalContextRecord(sourcePrincipalContextData);
+
+    OutboxEvent outboxEvent = OutboxEvent.builder()
+                                  .resource(updateEvent.getResource())
+                                  .resourceScope(updateEvent.getResourceScope())
+                                  .eventType(TemplateOutboxEvents.TEMPLATE_VERSION_UPDATED)
+                                  .blocked(false)
+                                  .globalContext(globalContext)
+                                  .createdAt(Long.valueOf(randomNumeric(6)))
+                                  .eventData(eventData)
+                                  .id(randomAlphabetic(10))
+                                  .build();
+    final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
+    when(auditClientService.publishAudit(any(), any(), any())).thenReturn(true);
+    templateOutboxEventHandler.handle(outboxEvent);
+    verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any(), any());
+
+    final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(2)).send(messageArgumentCaptor.capture());
+
+    assertRedisEvent(messageArgumentCaptor.getAllValues().get(0), EventsFrameworkMetadataConstants.DELETE_ACTION,
+        identifier, projectIdentifier, orgIdentifier, accountIdentifier);
+    assertRedisEvent(messageArgumentCaptor.getAllValues().get(1), EventsFrameworkMetadataConstants.CREATE_ACTION,
+        identifier, null, orgIdentifier, accountIdentifier);
+
+    AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
+    assertAuditEntry(accountIdentifier, orgIdentifier, null, identifier, templateVersionLabel, auditEntry, outboxEvent);
+    assertEquals(Action.UPDATE, auditEntry.getAction());
+    assertEquals(newYaml, auditEntry.getNewYaml());
+    assertEquals(oldYaml, auditEntry.getOldYaml());
+  }
+
+  private void assertRedisEvent(Message message, String action, String identifier, String projectIdentifier,
+      String orgIdentifier, String accountIdentifier) throws ClassNotFoundException, IOException {
+    assertEquals(message.getMetadataOrThrow(EventsFrameworkMetadataConstants.ENTITY_TYPE), "TEMPLATE");
+    assertEquals(message.getMetadataOrThrow(EventsFrameworkMetadataConstants.ACTION), action);
+    assertNotNull(message.getData());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testPublishEvent() throws JsonProcessingException {
+    String accountIdentifier = randomAlphabetic(10);
+    String orgIdentifier = randomAlphabetic(10);
+    String projectIdentifier = randomAlphabetic(10);
+    String identifier = randomAlphabetic(10);
+    String templateVersionLabel = randomAlphabetic(10);
+
+    TemplateEntity templateEntity = TemplateEntity.builder()
+                                        .name(randomAlphabetic(10))
+                                        .identifier(identifier)
+                                        .versionLabel(templateVersionLabel)
+                                        .accountId(accountIdentifier)
+                                        .orgIdentifier(orgIdentifier)
+                                        .templateScope(Scope.PROJECT)
+                                        .yaml(oldYaml)
+                                        .build();
+
+    TemplateCreateEvent createEvent =
+        new TemplateCreateEvent(accountIdentifier, orgIdentifier, projectIdentifier, templateEntity, "");
+    GlobalContext globalContext = new GlobalContext();
+    String eventData = objectMapper.writeValueAsString(createEvent);
+    OutboxEvent outboxEvent = OutboxEvent.builder()
+                                  .resource(createEvent.getResource())
+                                  .resourceScope(createEvent.getResourceScope())
+                                  .eventType(TemplateOutboxEvents.TEMPLATE_VERSION_UPDATED)
+                                  .blocked(false)
+                                  .globalContext(globalContext)
+                                  .createdAt(Long.valueOf(randomNumeric(6)))
+                                  .eventData(eventData)
+                                  .id(randomAlphabetic(10))
+                                  .build();
+
+    ArgumentCaptor<EntityChangeDTO> entityChangeDTOArgumentCaptor = ArgumentCaptor.forClass(EntityChangeDTO.class);
+    templateOutboxEventHandler.publishEvent(outboxEvent, EventsFrameworkMetadataConstants.UPDATE_ACTION);
+    verify(templateOutboxEventHandler)
+        .publishEvent(anyString(), anyString(), anyString(), entityChangeDTOArgumentCaptor.capture());
+    assertEquals(entityChangeDTOArgumentCaptor.getValue().getIdentifier().getValue(), identifier);
+    assertEquals(entityChangeDTOArgumentCaptor.getValue().getProjectIdentifier().getValue(), projectIdentifier);
+    assertEquals(entityChangeDTOArgumentCaptor.getValue().getOrgIdentifier().getValue(), orgIdentifier);
+    assertEquals(entityChangeDTOArgumentCaptor.getValue().getAccountIdentifier().getValue(), accountIdentifier);
   }
 }

@@ -56,6 +56,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -4431,5 +4432,66 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(query, times(3)).filter(any(), any());
     verify(updateOperations, times(2)).set(any(), any());
     verify(alertService, times(1)).deleteByArtifactStream(APP_ID, ARTIFACT_STREAM_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotCreatePerpetualTaskWhenCollectionDisabled() {
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .build();
+
+    dockerArtifactStream.setCollectionEnabled(false);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, ACCOUNT_ID)).thenReturn(true);
+    ArtifactStream savedArtifactStream = createArtifactStream(dockerArtifactStream);
+    assertThat(savedArtifactStream).isNotNull();
+    verify(subject, never()).fireInform(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotDeletePerpetualTaskWhenCollectionDisabled() {
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .build();
+
+    dockerArtifactStream.setCollectionEnabled(false);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, ACCOUNT_ID)).thenReturn(true);
+    ArtifactStream savedArtifactStream = createArtifactStream(dockerArtifactStream);
+    assertThat(savedArtifactStream).isNotNull();
+    verify(subject, never()).fireInform(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldDeletePerpetualTaskWhenCollectionUpdatedToDisabled() {
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .uuid(ARTIFACT_STREAM_ID)
+                                                    .build();
+
+    dockerArtifactStream.setCollectionEnabled(false);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, ACCOUNT_ID)).thenReturn(true);
+    createArtifactStream(dockerArtifactStream);
+    artifactStreamService.update(dockerArtifactStream, false);
+    verify(subject).fireInform(any(), eq(dockerArtifactStream));
   }
 }

@@ -10,12 +10,18 @@ import static io.harness.logging.LogLevel.ERROR;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionMessages;
+import io.harness.exception.KubernetesTaskException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.k8s.K8sConstants;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.HarnessAnnotations;
@@ -25,6 +31,7 @@ import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
+import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.LogCallback;
@@ -48,7 +55,8 @@ public class K8sCanaryBaseHandler {
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
 
   public boolean prepareForCanary(K8sCanaryHandlerConfig canaryHandlerConfig,
-      K8sDelegateTaskParams k8sDelegateTaskParams, Boolean skipVersioning, LogCallback logCallback) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, Boolean skipVersioning, LogCallback logCallback,
+      boolean isErrorFrameworkEnabled) throws Exception {
     if (isNotTrue(skipVersioning)) {
       markVersionedResources(canaryHandlerConfig.getResources());
     }
@@ -60,14 +68,28 @@ public class K8sCanaryBaseHandler {
 
     if (workloads.size() != 1) {
       if (workloads.isEmpty()) {
-        logCallback.saveExecutionLog(
-            "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Canary workflow type.",
-            ERROR, FAILURE);
+        logCallback.saveExecutionLog("\n" + KubernetesExceptionExplanation.CANARY_NO_WORKLOADS_FOUND, ERROR, FAILURE);
+        if (isErrorFrameworkEnabled) {
+          throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.CANARY_NO_WORKLOADS_FOUND,
+              KubernetesExceptionExplanation.CANARY_NO_WORKLOADS_FOUND,
+              new KubernetesTaskException(KubernetesExceptionMessages.NO_WORKLOADS_FOUND));
+        }
       } else {
         logCallback.saveExecutionLog(
             "\nMore than one workloads found in the Manifests. Canary deploy supports only one workload. Others should be marked with annotation "
                 + HarnessAnnotations.directApply + ": true",
             ERROR, FAILURE);
+
+        if (isErrorFrameworkEnabled) {
+          String workloadsPrintableList = workloads.stream()
+                                              .map(KubernetesResource::getResourceId)
+                                              .map(KubernetesResourceId::kindNameRef)
+                                              .collect(Collectors.joining(", "));
+          throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.CANARY_MULTIPLE_WORKLOADS,
+              format(
+                  KubernetesExceptionExplanation.CANARY_MULTIPLE_WORKLOADS, workloads.size(), workloadsPrintableList),
+              new KubernetesTaskException(KubernetesExceptionMessages.MULTIPLE_WORKLOADS));
+        }
       }
       return false;
     }

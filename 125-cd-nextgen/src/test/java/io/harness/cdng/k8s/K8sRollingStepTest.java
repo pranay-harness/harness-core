@@ -200,7 +200,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testFinalizeExecutionException() {
+  public void testFinalizeExecutionException() throws Exception {
     final StepElementParameters stepElementParameters = StepElementParameters.builder().build();
     final Exception thrownException = new GeneralException("Something went wrong");
     final K8sExecutionPassThroughData executionPassThroughData = K8sExecutionPassThroughData.builder().build();
@@ -248,7 +248,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
   @Test
   @Owner(developers = ACHYUTH)
   @Category(UnitTests.class)
-  public void myTest() {
+  public void testFinalizeExecutionWithSecurityContext() throws Exception {
     K8sRollingStepParameters stepParameters = new K8sRollingStepParameters();
     final StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
 

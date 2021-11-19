@@ -26,6 +26,7 @@ public class KubernetesChangeSource extends ChangeSource {
     @Override
     public void setUpdateOperations(UpdateOperations<KubernetesChangeSource> updateOperations,
         KubernetesChangeSource harnessKubernetesChangeSource) {
+      setCommonOperations(updateOperations, harnessKubernetesChangeSource);
       /* NO-OP should not update fields here */
     }
   }

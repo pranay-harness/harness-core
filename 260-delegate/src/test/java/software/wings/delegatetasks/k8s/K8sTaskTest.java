@@ -68,7 +68,7 @@ public class K8sTaskTest extends WingsBaseTest {
     k8sClusterConfig = K8sClusterConfig.builder().build();
     k8sTaskParameters =
         new K8sTaskParameters(ACCOUNT_ID, APP_ID, COMMAND_NAME, ACTIVITY_ID, k8sClusterConfig, WORKFLOW_EXECUTION_ID,
-            RELEASE_NAME, TIMEOUT_INTERVAL, K8sTaskType.INSTANCE_SYNC, HelmVersion.V2, null, false, false);
+            RELEASE_NAME, TIMEOUT_INTERVAL, K8sTaskType.INSTANCE_SYNC, HelmVersion.V2, null, false, false, true);
   }
 
   @Test

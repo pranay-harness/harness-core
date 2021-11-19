@@ -20,6 +20,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.apiclient.ApiClientFactoryImpl;
@@ -51,6 +53,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.zeroturnaround.exec.ProcessResult;
 
+@OwnedBy(HarnessTeam.CDP)
 public class KubernetesContainerServiceTest extends CategoryTest {
   private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder().namespace("default").build();
 
@@ -143,7 +146,7 @@ public class KubernetesContainerServiceTest extends CategoryTest {
     final Kubectl client = Kubectl.client("kubectl", "kubeconfig");
     Kubectl mockClient = Mockito.spy(client);
     GetCommand mockGetCommand = Mockito.spy(client.get());
-    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient();
+    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient(anyBoolean());
     doReturn(mockGetCommand).when(mockClient).get();
     doReturn(new ProcessResult(1, null))
         .when(mockGetCommand)
@@ -151,20 +154,20 @@ public class KubernetesContainerServiceTest extends CategoryTest {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("harness").build();
 
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> kubernetesContainerService.validate(kubernetesConfig));
+        .isThrownBy(() -> kubernetesContainerService.validate(kubernetesConfig, true));
   }
 
   private void validateIfCanGetDeployments() throws Exception {
     final Kubectl client = Kubectl.client("kubectl", "kubeconfig");
     Kubectl mockClient = Mockito.spy(client);
     GetCommand mockGetCommand = Mockito.spy(client.get());
-    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient();
+    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient(anyBoolean());
     doReturn(mockGetCommand).when(mockClient).get();
     List<String> executeCommands = new ArrayList<>();
     setupGetCommand(mockGetCommand, executeCommands, Kind.Deployment);
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("harness").build();
 
-    kubernetesContainerService.validate(kubernetesConfig);
+    kubernetesContainerService.validate(kubernetesConfig, true);
 
     assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get StatefulSet --namespace=harness");
     assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get ReplicaSet --namespace=harness");
@@ -176,13 +179,13 @@ public class KubernetesContainerServiceTest extends CategoryTest {
     final Kubectl client = Kubectl.client("kubectl", "kubeconfig");
     Kubectl mockClient = Mockito.spy(client);
     GetCommand mockGetCommand = Mockito.spy(client.get());
-    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient();
+    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient(anyBoolean());
     doReturn(mockGetCommand).when(mockClient).get();
     List<String> executeCommands = new ArrayList<>();
     setupGetCommand(mockGetCommand, executeCommands, Kind.DaemonSet);
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("harness").build();
 
-    kubernetesContainerService.validate(kubernetesConfig);
+    kubernetesContainerService.validate(kubernetesConfig, true);
 
     assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get StatefulSet --namespace=harness");
     assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get ReplicaSet --namespace=harness");
@@ -193,13 +196,13 @@ public class KubernetesContainerServiceTest extends CategoryTest {
     final Kubectl client = Kubectl.client("kubectl", "kubeconfig");
     Kubectl mockClient = Mockito.spy(client);
     GetCommand mockGetCommand = Mockito.spy(client.get());
-    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient();
+    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient(anyBoolean());
     doReturn(mockGetCommand).when(mockClient).get();
     List<String> executeCommands = new ArrayList<>();
     setupGetCommand(mockGetCommand, executeCommands, Kind.StatefulSet);
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("harness").build();
 
-    kubernetesContainerService.validate(kubernetesConfig);
+    kubernetesContainerService.validate(kubernetesConfig, true);
 
     assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get StatefulSet --namespace=harness");
     assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get ReplicaSet --namespace=harness");
@@ -209,7 +212,7 @@ public class KubernetesContainerServiceTest extends CategoryTest {
     final Kubectl client = Kubectl.client("kubectl", "kubeconfig");
     Kubectl mockClient = Mockito.spy(client);
     GetCommand mockGetCommand = Mockito.spy(client.get());
-    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient();
+    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient(anyBoolean());
     doReturn(mockGetCommand).when(mockClient).get();
     List<String> executeCommands = new ArrayList<>();
     setupGetCommand(mockGetCommand, executeCommands, Kind.ReplicaSet);
@@ -218,7 +221,7 @@ public class KubernetesContainerServiceTest extends CategoryTest {
         .execute(anyString(), any(OutputStream.class), any(OutputStream.class), anyBoolean());
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("harness").build();
 
-    kubernetesContainerService.validate(kubernetesConfig);
+    kubernetesContainerService.validate(kubernetesConfig, true);
 
     assertThat(mockGetCommand.command())
         .isEqualTo("kubectl --kubeconfig=kubeconfig get ReplicaSet --namespace=harness");

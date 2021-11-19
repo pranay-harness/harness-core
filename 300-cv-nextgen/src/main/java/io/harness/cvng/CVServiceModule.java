@@ -1,5 +1,6 @@
 package io.harness.cvng;
 
+import static io.harness.cvng.beans.change.ChangeSourceType.HARNESS_CD;
 import static io.harness.cvng.cdng.services.impl.CVNGNotifyEventListener.CVNG_ORCHESTRATION;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -10,7 +11,6 @@ import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.concurrent.HTimeLimiter;
 import io.harness.cvng.activity.entities.Activity.ActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityUpdatableEntity;
-import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.HarnessCDCurrentGenActivity.HarnessCDCurrentGenActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.InfrastructureActivity.InfrastructureActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityUpdatableEntity;
@@ -18,6 +18,7 @@ import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityUpda
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.ActivityUpdateHandler;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
+import io.harness.cvng.activity.services.impl.DeploymentActivityUpdateHandler;
 import io.harness.cvng.activity.services.impl.KubernetesClusterActivityUpdateHandler;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.source.services.impl.KubernetesActivitySourceServiceImpl;
@@ -52,7 +53,6 @@ import io.harness.cvng.analysis.services.impl.VerificationJobInstanceAnalysisSer
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.change.ChangeSourceType;
-import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.cdng.services.api.CVNGStepService;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.cdng.services.api.VerifyStepDemoService;
@@ -65,6 +65,8 @@ import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.DatadogLogCVConfig.DatadogLogCVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig.DatadogMetricCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.PrometheusCVConfig.PrometheusUpdatableEntity;
 import io.harness.cvng.core.entities.SplunkCVConfig.SplunkCVConfigUpdatableEntity;
@@ -83,21 +85,19 @@ import io.harness.cvng.core.jobs.ProjectChangeEventMessageProcessor;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.cvng.core.services.api.CVNGLogService;
 import io.harness.cvng.core.services.api.CVNGYamlSchemaService;
 import io.harness.cvng.core.services.api.ChangeEventService;
-import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.DataSourceConnectivityChecker;
+import io.harness.cvng.core.services.api.DatadogService;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
@@ -110,11 +110,12 @@ import io.harness.cvng.core.services.api.SumoLogicService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
+import io.harness.cvng.core.services.api.demo.CVNGDemoDataIndexService;
+import io.harness.cvng.core.services.api.demo.CVNGDemoPerpetualTaskService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
-import io.harness.cvng.core.services.impl.AppDynamicsCVConfigTransformer;
 import io.harness.cvng.core.services.impl.AppDynamicsDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.AppDynamicsServiceImpl;
 import io.harness.cvng.core.services.impl.CVConfigServiceImpl;
@@ -122,8 +123,8 @@ import io.harness.cvng.core.services.impl.CVNGLogServiceImpl;
 import io.harness.cvng.core.services.impl.CVNGYamlSchemaServiceImpl;
 import io.harness.cvng.core.services.impl.ChangeEventServiceImpl;
 import io.harness.cvng.core.services.impl.ChangeSourceUpdateHandler;
-import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
+import io.harness.cvng.core.services.impl.DatadogServiceImpl;
 import io.harness.cvng.core.services.impl.DefaultDeleteEntityByHandler;
 import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.FeatureFlagServiceImpl;
@@ -149,7 +150,10 @@ import io.harness.cvng.core.services.impl.SumoLogicServiceImpl;
 import io.harness.cvng.core.services.impl.TimeSeriesRecordServiceImpl;
 import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
 import io.harness.cvng.core.services.impl.WebhookServiceImpl;
+import io.harness.cvng.core.services.impl.demo.CVNGDemoDataIndexServiceImpl;
+import io.harness.cvng.core.services.impl.demo.CVNGDemoPerpetualTaskServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.ChangeSourceServiceImpl;
+import io.harness.cvng.core.services.impl.monitoredService.DatadogLogDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.monitoredService.HealthSourceServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.MonitoredServiceServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.ServiceDependencyServiceImpl;
@@ -167,6 +171,8 @@ import io.harness.cvng.core.transformer.changeSource.KubernetesChangeSourceSpecT
 import io.harness.cvng.core.transformer.changeSource.PagerDutyChangeSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.AppDynamicsHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
+import io.harness.cvng.core.utils.monitoredService.DatadogLogHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.DatadogMetricHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.NewRelicHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.PrometheusHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.SplunkHealthSourceSpecTransformer;
@@ -184,20 +190,42 @@ import io.harness.cvng.dashboard.services.impl.ServiceDependencyGraphServiceImpl
 import io.harness.cvng.dashboard.services.impl.TimeSeriesDashboardServiceImpl;
 import io.harness.cvng.migration.impl.CVNGMigrationServiceImpl;
 import io.harness.cvng.migration.service.CVNGMigrationService;
-import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
-import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
-import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
-import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
-import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob.BlueGreenVerificationUpdatableEntity;
-import io.harness.cvng.verificationjob.entities.CanaryVerificationJob.CanaryVerificationUpdatableEntity;
-import io.harness.cvng.verificationjob.entities.HealthVerificationJob.HealthVerificationUpdatableEntity;
-import io.harness.cvng.verificationjob.entities.TestVerificationJob.TestVerificationUpdatableEntity;
-import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobUpdatableEntity;
+import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator.RatioServiceLevelIndicatorUpdatableEntity;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorUpdatableEntity;
+import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator.ThresholdServiceLevelIndicatorUpdatableEntity;
+import io.harness.cvng.servicelevelobjective.services.ServiceLevelIndicatorService;
+import io.harness.cvng.servicelevelobjective.services.ServiceLevelObjectiveService;
+import io.harness.cvng.servicelevelobjective.services.UserJourneyService;
+import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelIndicatorServiceImpl;
+import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelObjectiveServiceImpl;
+import io.harness.cvng.servicelevelobjective.services.impl.UserJourneyServiceImpl;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.RatioServiceLevelIndicatorTransformer;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorEntityAndDTOTransformer;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorTransformer;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ThresholdServiceLevelIndicatorTransformer;
+import io.harness.cvng.statemachine.beans.AnalysisState.StateType;
+import io.harness.cvng.statemachine.services.api.ActivityVerificationStateExecutor;
+import io.harness.cvng.statemachine.services.api.AnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.AnalysisStateMachineService;
+import io.harness.cvng.statemachine.services.api.CanaryTimeSeriesAnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.DeploymentLogAnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.DeploymentLogClusterStateExecutor;
+import io.harness.cvng.statemachine.services.api.OrchestrationService;
+import io.harness.cvng.statemachine.services.api.PreDeploymentLogClusterStateExecutor;
+import io.harness.cvng.statemachine.services.api.ServiceGuardLogAnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.ServiceGuardLogClusterStateExecutor;
+import io.harness.cvng.statemachine.services.api.ServiceGuardTimeSeriesAnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.ServiceGuardTrendAnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.api.TestTimeSeriesAnalysisStateExecutor;
+import io.harness.cvng.statemachine.services.impl.AnalysisStateMachineServiceImpl;
+import io.harness.cvng.statemachine.services.impl.OrchestrationServiceImpl;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServiceImpl;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoPersistence;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
@@ -293,72 +321,48 @@ public class CVServiceModule extends AbstractModule {
     bind(DataCollectionTaskService.class).to(DataCollectionTaskServiceImpl.class);
     bind(VerificationManagerService.class).to(VerificationManagerServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
-    bind(DSConfigService.class).to(DSConfigServiceImpl.class);
     bind(MetricPackService.class).to(MetricPackServiceImpl.class);
     bind(HeatMapService.class).to(HeatMapServiceImpl.class);
-    bind(DSConfigService.class).to(DSConfigServiceImpl.class);
     bind(MetricPackService.class).to(MetricPackServiceImpl.class);
     bind(SplunkService.class).to(SplunkServiceImpl.class);
     bind(CVConfigService.class).to(CVConfigServiceImpl.class);
     bind(DeletedCVConfigService.class).to(DeletedCVConfigServiceImpl.class);
-    bind(VerificationJobUpdatableEntity.class)
-        .annotatedWith(Names.named(VerificationJobType.HEALTH.name()))
-        .to(HealthVerificationUpdatableEntity.class);
-    bind(VerificationJobUpdatableEntity.class)
-        .annotatedWith(Names.named(VerificationJobType.TEST.name()))
-        .to(TestVerificationUpdatableEntity.class);
-    bind(VerificationJobUpdatableEntity.class)
-        .annotatedWith(Names.named(VerificationJobType.BLUE_GREEN.name()))
-        .to(BlueGreenVerificationUpdatableEntity.class);
-    bind(VerificationJobUpdatableEntity.class)
-        .annotatedWith(Names.named(VerificationJobType.CANARY.name()))
-        .to(CanaryVerificationUpdatableEntity.class);
-
-    bind(CVConfigToHealthSourceTransformer.class)
-        .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
+    MapBinder<DataSourceType, CVConfigToHealthSourceTransformer> dataSourceTypeToHealthSourceTransformerMapBinder =
+        MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigToHealthSourceTransformer.class);
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
         .to(AppDynamicsHealthSourceSpecTransformer.class);
-
-    bind(CVConfigToHealthSourceTransformer.class)
-        .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.NEW_RELIC)
         .to(NewRelicHealthSourceSpecTransformer.class);
-
-    bind(CVConfigToHealthSourceTransformer.class)
-        .annotatedWith(Names.named(DataSourceType.STACKDRIVER_LOG.name()))
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
         .to(StackdriverLogHealthSourceSpecTransformer.class);
-
-    bind(CVConfigToHealthSourceTransformer.class)
-        .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.SPLUNK)
         .to(SplunkHealthSourceSpecTransformer.class);
-
-    bind(CVConfigToHealthSourceTransformer.class)
-        .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.PROMETHEUS)
         .to(PrometheusHealthSourceSpecTransformer.class);
-
-    bind(CVConfigToHealthSourceTransformer.class)
-        .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.STACKDRIVER)
         .to(StackdriverMetricHealthSourceSpecTransformer.class);
-
-    bind(CVConfigTransformer.class)
-        .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
-        .to(AppDynamicsCVConfigTransformer.class);
-    bind(DataCollectionInfoMapper.class)
-        .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.DATADOG_METRICS)
+        .to(DatadogMetricHealthSourceSpecTransformer.class);
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.DATADOG_LOG)
+        .to(DatadogLogHealthSourceSpecTransformer.class);
+    MapBinder<DataSourceType, DataCollectionInfoMapper> dataSourceTypeDataCollectionInfoMapperMapBinder =
+        MapBinder.newMapBinder(binder(), DataSourceType.class, DataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
         .to(AppDynamicsDataCollectionInfoMapper.class);
-    bind(DataCollectionInfoMapper.class)
-        .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
-        .to(SplunkDataCollectionInfoMapper.class);
-    bind(DataCollectionInfoMapper.class)
-        .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
-        .to(StackdriverDataCollectionInfoMapper.class);
-    bind(DataCollectionInfoMapper.class)
-        .annotatedWith(Names.named(DataSourceType.STACKDRIVER_LOG.name()))
-        .to(StackdriverLogDataCollectionInfoMapper.class);
-    bind(DataCollectionInfoMapper.class)
-        .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
+    dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.NEW_RELIC)
         .to(NewRelicDataCollectionInfoMapper.class);
-    bind(DataCollectionInfoMapper.class)
-        .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
+    dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
+        .to(StackdriverLogDataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.SPLUNK)
+        .to(SplunkDataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.PROMETHEUS)
         .to(PrometheusDataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.STACKDRIVER)
+        .to(StackdriverDataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.DATADOG_METRICS)
+        .to(DatadogLogDataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.DATADOG_LOG)
+        .to(DatadogLogDataCollectionInfoMapper.class);
 
     bind(MetricPackService.class).to(MetricPackServiceImpl.class);
     bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
@@ -380,10 +384,10 @@ public class CVServiceModule extends AbstractModule {
     bind(HealthVerificationHeatMapService.class).to(HealthVerificationHeatMapServiceImpl.class);
     bind(AnalysisService.class).to(AnalysisServiceImpl.class);
     bind(OnboardingService.class).to(OnboardingServiceImpl.class);
-    bindTheMonitoringSourceImportStatusCreators();
     bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
     bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     bind(StackdriverService.class).to(StackdriverServiceImpl.class);
+    bind(DatadogService.class).to(DatadogServiceImpl.class);
     bind(RedisConfig.class)
         .annotatedWith(Names.named("lock"))
         .toInstance(verificationConfiguration.getEventsFrameworkConfiguration().getRedisConfig());
@@ -417,10 +421,10 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.APP_DYNAMICS).to(AppDynamicsService.class);
     dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkService.class);
     dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackdriverService.class);
-    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.KUBERNETES).to(KubernetesActivitySourceService.class);
 
     MapBinder<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder =
         MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigUpdatableEntity.class);
+
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
         .to(AppDynamicsCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.NEW_RELIC).to(NewRelicCVConfigUpdatableEntity.class);
@@ -429,6 +433,13 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
         .to(StackdriverLogCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
+
+    MapBinder<SLIMetricType, ServiceLevelIndicatorUpdatableEntity> serviceLevelIndicatorMapBinder =
+        MapBinder.newMapBinder(binder(), SLIMetricType.class, ServiceLevelIndicatorUpdatableEntity.class);
+    serviceLevelIndicatorMapBinder.addBinding(SLIMetricType.RATIO).to(RatioServiceLevelIndicatorUpdatableEntity.class);
+    serviceLevelIndicatorMapBinder.addBinding(SLIMetricType.THRESHOLD)
+        .to(ThresholdServiceLevelIndicatorUpdatableEntity.class);
+    bindDataSourceConnectivityChecker();
     // We have not used FeatureFlag module as it depends on stream and we don't have reliable way to tracking
     // if something goes wrong in feature flags stream
     // We are dependent on source of truth (Manager) for this.
@@ -446,36 +457,26 @@ public class CVServiceModule extends AbstractModule {
     bind(CVNGStepService.class).to(CVNGStepServiceImpl.class);
     bind(PagerDutyService.class).to(PagerDutyServiceImpl.class);
     bind(WebhookService.class).to(WebhookServiceImpl.class);
-    MapBinder<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeTypeSourceMapBinder =
-        MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSource.UpdatableChangeSourceEntity.class);
-    changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CD)
-        .to(HarnessCDChangeSource.UpdatableCDNGChangeSourceEntity.class);
-    changeTypeSourceMapBinder.addBinding(ChangeSourceType.PAGER_DUTY)
-        .to(PagerDutyChangeSource.UpdatablePagerDutyChangeSourceEntity.class);
-    changeTypeSourceMapBinder.addBinding(ChangeSourceType.KUBERNETES)
-        .to(KubernetesChangeSource.UpdatableKubernetesChangeSourceEntity.class);
-    changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CD_CURRENT_GEN)
-        .to(HarnessCDCurrentGenChangeSource.UpdatableHarnessCDCurrentGenChangeSourceEntity.class);
-
+    bind(CVNGDemoPerpetualTaskService.class).to(CVNGDemoPerpetualTaskServiceImpl.class);
+    bind(CVNGDemoDataIndexService.class).to(CVNGDemoDataIndexServiceImpl.class);
+    bindChangeSourceUpdatedEntity();
     bind(ChangeSourceService.class).to(ChangeSourceServiceImpl.class);
     bind(ChangeSourceEntityAndDTOTransformer.class);
-    bind(ChangeSourceSpecTransformer.class)
-        .annotatedWith(Names.named(ChangeSourceType.HARNESS_CD.name()))
+    MapBinder<ChangeSourceType, ChangeSourceSpecTransformer> changeSourceTypeChangeSourceSpecTransformerMapBinder =
+        MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSourceSpecTransformer.class);
+    changeSourceTypeChangeSourceSpecTransformerMapBinder.addBinding(ChangeSourceType.HARNESS_CD)
         .to(HarnessCDChangeSourceSpecTransformer.class);
-    bind(ChangeSourceSpecTransformer.class)
-        .annotatedWith(Names.named(ChangeSourceType.PAGER_DUTY.name()))
+    changeSourceTypeChangeSourceSpecTransformerMapBinder.addBinding(ChangeSourceType.PAGER_DUTY)
         .to(PagerDutyChangeSourceSpecTransformer.class);
-    bind(ChangeSourceSpecTransformer.class)
-        .annotatedWith(Names.named(ChangeSourceType.KUBERNETES.name()))
+    changeSourceTypeChangeSourceSpecTransformerMapBinder.addBinding(ChangeSourceType.KUBERNETES)
         .to(KubernetesChangeSourceSpecTransformer.class);
-    bind(ChangeSourceSpecTransformer.class)
-        .annotatedWith(Names.named(ChangeSourceType.HARNESS_CD_CURRENT_GEN.name()))
+    changeSourceTypeChangeSourceSpecTransformerMapBinder.addBinding(ChangeSourceType.HARNESS_CD_CURRENT_GEN)
         .to(HarnessCDCurrentGenChangeSourceSpecTransformer.class);
+
+    bindAnalysisStateExecutor();
 
     MapBinder<ActivityType, ActivityUpdatableEntity> activityTypeActivityUpdatableEntityMapBinder =
         MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdatableEntity.class);
-    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.HARNESS_CD)
-        .to(HarnessCDActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.PAGER_DUTY)
         .to(PagerDutyActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.DEPLOYMENT)
@@ -497,14 +498,28 @@ public class CVServiceModule extends AbstractModule {
     MapBinder<ActivityType, ActivityUpdateHandler> activityUpdateHandlerMapBinder =
         MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdateHandler.class);
     activityUpdateHandlerMapBinder.addBinding(ActivityType.KUBERNETES).to(KubernetesClusterActivityUpdateHandler.class);
+    activityUpdateHandlerMapBinder.addBinding(ActivityType.DEPLOYMENT).to(DeploymentActivityUpdateHandler.class);
 
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);
 
+    bind(ServiceLevelObjectiveService.class).to(ServiceLevelObjectiveServiceImpl.class);
+    bind(UserJourneyService.class).to(UserJourneyServiceImpl.class);
+    bind(ServiceLevelIndicatorService.class).to(ServiceLevelIndicatorServiceImpl.class);
+    bind(ServiceLevelIndicatorEntityAndDTOTransformer.class);
+    MapBinder<SLIMetricType, ServiceLevelIndicatorTransformer> serviceLevelIndicatorTransformerMapBinder =
+        MapBinder.newMapBinder(binder(), SLIMetricType.class, ServiceLevelIndicatorTransformer.class);
+    serviceLevelIndicatorTransformerMapBinder.addBinding(SLIMetricType.RATIO)
+        .to(RatioServiceLevelIndicatorTransformer.class)
+        .in(Scopes.SINGLETON);
+    serviceLevelIndicatorTransformerMapBinder.addBinding(SLIMetricType.THRESHOLD)
+        .to(ThresholdServiceLevelIndicatorTransformer.class)
+        .in(Scopes.SINGLETON);
+
     bind(LearningEngineDevService.class).to(LearningEngineDevServiceImpl.class);
     MapBinder<ChangeSourceType, ChangeEventMetaDataTransformer> changeTypeMetaDataTransformerMapBinder =
         MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeEventMetaDataTransformer.class);
-    changeTypeMetaDataTransformerMapBinder.addBinding(ChangeSourceType.HARNESS_CD)
+    changeTypeMetaDataTransformerMapBinder.addBinding(HARNESS_CD)
         .to(HarnessCDChangeEventTransformer.class)
         .in(Scopes.SINGLETON);
     changeTypeMetaDataTransformerMapBinder.addBinding(ChangeSourceType.KUBERNETES)
@@ -518,25 +533,76 @@ public class CVServiceModule extends AbstractModule {
         .in(Scopes.SINGLETON);
   }
 
-  private void bindTheMonitoringSourceImportStatusCreators() {
-    bind(MonitoringSourceImportStatusCreator.class)
-        .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
-        .to(AppDynamicsService.class);
-    bind(MonitoringSourceImportStatusCreator.class)
-        .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
-        .to(StackdriverService.class);
-    bind(MonitoringSourceImportStatusCreator.class)
-        .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
-        .to(SplunkService.class);
-    bind(MonitoringSourceImportStatusCreator.class)
-        .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
-        .to(NewRelicService.class);
+  private void bindChangeSourceUpdatedEntity() {
+    MapBinder<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeTypeSourceMapBinder =
+        MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSource.UpdatableChangeSourceEntity.class);
+    changeTypeSourceMapBinder.addBinding(HARNESS_CD).to(HarnessCDChangeSource.UpdatableCDNGChangeSourceEntity.class);
+    changeTypeSourceMapBinder.addBinding(ChangeSourceType.PAGER_DUTY)
+        .to(PagerDutyChangeSource.UpdatablePagerDutyChangeSourceEntity.class);
+    changeTypeSourceMapBinder.addBinding(ChangeSourceType.KUBERNETES)
+        .to(KubernetesChangeSource.UpdatableKubernetesChangeSourceEntity.class);
+    changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CD_CURRENT_GEN)
+        .to(HarnessCDCurrentGenChangeSource.UpdatableHarnessCDCurrentGenChangeSourceEntity.class);
+  }
+
+  private void bindAnalysisStateExecutor() {
+    MapBinder<StateType, AnalysisStateExecutor> stateTypeAnalysisStateExecutorMap =
+        MapBinder.newMapBinder(binder(), StateType.class, AnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.ACTIVITY_VERIFICATION)
+        .to(ActivityVerificationStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.CANARY_TIME_SERIES)
+        .to(CanaryTimeSeriesAnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.DEPLOYMENT_LOG_ANALYSIS)
+        .to(DeploymentLogAnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.SERVICE_GUARD_LOG_ANALYSIS)
+        .to(ServiceGuardLogAnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.SERVICE_GUARD_TIME_SERIES)
+        .to(ServiceGuardTimeSeriesAnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.TEST_TIME_SERIES)
+        .to(TestTimeSeriesAnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.DEPLOYMENT_LOG_CLUSTER)
+        .to(DeploymentLogClusterStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.PRE_DEPLOYMENT_LOG_CLUSTER)
+        .to(PreDeploymentLogClusterStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.SERVICE_GUARD_LOG_CLUSTER)
+        .to(ServiceGuardLogClusterStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.SERVICE_GUARD_TREND_ANALYSIS)
+        .to(ServiceGuardTrendAnalysisStateExecutor.class);
+  }
+
+  private void bindDataSourceConnectivityChecker() {
+    MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =
+        MapBinder.newMapBinder(binder(), DataSourceType.class, DataSourceConnectivityChecker.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.APP_DYNAMICS).to(AppDynamicsService.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkService.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackdriverService.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.DATADOG_METRICS).to(DatadogService.class);
+
+    MapBinder<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder =
+        MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
+        .to(AppDynamicsCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.NEW_RELIC).to(NewRelicCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.PROMETHEUS).to(PrometheusUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackDriverCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
+        .to(StackdriverLogCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_METRICS)
+        .to(DatadogMetricCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_LOG).to(DatadogLogCVConfigUpdatableEntity.class);
   }
 
   @Provides
   @Singleton
   public AsyncWaitEngine asyncWaitEngine(WaitNotifyEngine waitNotifyEngine) {
     return new AsyncWaitEngineImpl(waitNotifyEngine, CVNG_ORCHESTRATION);
+  }
+
+  @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return verificationConfiguration.getDistributedLockImplementation();
   }
 
   @Provides

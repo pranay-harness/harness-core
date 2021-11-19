@@ -10,5 +10,4 @@ import lombok.Getter;
 @Builder
 public class DelegateTaskEventsResponse {
   List<DelegateTaskEvent> delegateTaskEvents;
-  boolean processTaskEventsAsync;
 }

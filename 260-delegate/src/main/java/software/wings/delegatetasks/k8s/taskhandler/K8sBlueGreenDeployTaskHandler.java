@@ -264,7 +264,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     }
 
     return k8sTaskHelperBase.dryRunManifests(k8sBlueGreenHandlerConfig.getClient(),
-        k8sBlueGreenHandlerConfig.getResources(), k8sDelegateTaskParams, executionLogCallback);
+        k8sBlueGreenHandlerConfig.getResources(), k8sDelegateTaskParams, executionLogCallback,
+        k8sBlueGreenDeployTaskParameters.isUseNewKubectlVersion());
   }
 
   @VisibleForTesting

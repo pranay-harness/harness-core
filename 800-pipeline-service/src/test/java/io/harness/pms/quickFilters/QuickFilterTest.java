@@ -57,7 +57,7 @@ public class QuickFilterTest extends CategoryTest {
   public void testFormCriteriaQuickFilters() {
     // testing pipelineIdentifier,status and myDeployments values
     Criteria form = pmsExecutionServiceImpl.formCriteria(accountId, orgId, projId, pipelineId, null, null, moduleName,
-        searchTerm, Arrays.asList(ExecutionStatus.FAILED, ExecutionStatus.ABORTED), true, false, null);
+        searchTerm, Arrays.asList(ExecutionStatus.FAILED, ExecutionStatus.ABORTED), true, false, null, true);
 
     // status
     assertThat(form.getCriteriaObject().get("status").toString()).isEqualTo("Document{{$in=[FAILED, ABORTED]}}");
@@ -74,7 +74,7 @@ public class QuickFilterTest extends CategoryTest {
 
     // making myDeployments = false
     Criteria allDeploymentsForm = pmsExecutionServiceImpl.formCriteria(accountId, orgId, projId, pipelineId, null, null,
-        moduleName, searchTerm, Collections.singletonList(ExecutionStatus.FAILED), false, false, null);
+        moduleName, searchTerm, Collections.singletonList(ExecutionStatus.FAILED), false, false, null, true);
     // allDeployment -> myDeployments = false
     assertThat(allDeploymentsForm.getCriteriaObject().containsKey("executionTriggerInfo.triggeredBy")).isEqualTo(false);
     assertThat(allDeploymentsForm.getCriteriaObject().containsKey("executionTriggerInfo.triggerType")).isEqualTo(false);
@@ -89,7 +89,7 @@ public class QuickFilterTest extends CategoryTest {
         PipelineExecutionFilterPropertiesDTO.builder()
             .status(Arrays.asList(ExecutionStatus.ABORTED, ExecutionStatus.PAUSED))
             .build(),
-        null, null, Arrays.asList(ExecutionStatus.FAILED, ExecutionStatus.ABORTED), false, false, null);
+        null, null, Arrays.asList(ExecutionStatus.FAILED, ExecutionStatus.ABORTED), false, false, null, true);
 
     // status
     assertThat(form.getCriteriaObject().get("status").toString()).isEqualTo("Document{{$in=[FAILED, ABORTED]}}");
@@ -106,7 +106,7 @@ public class QuickFilterTest extends CategoryTest {
         PipelineExecutionFilterPropertiesDTO.builder()
             .status(Collections.singletonList(ExecutionStatus.ABORTED))
             .build(),
-        null, null, null, true, false, null);
+        null, null, null, true, false, null, true);
     String documentString = "[Document{{status=Document{{$in=[ABORTED]}}}}, Document{{}}, Document{{}}, Document{{}}]";
     assertThat(form.getCriteriaObject().get("$and").toString()).isEqualTo(documentString);
 
@@ -117,7 +117,7 @@ public class QuickFilterTest extends CategoryTest {
                 PipelineExecutionFilterPropertiesDTO.builder()
                     .status(Collections.singletonList(ExecutionStatus.ABORTED))
                     .build(),
-                moduleName, searchTerm, null, true, false, null))
+                moduleName, searchTerm, null, true, false, null, true))
         .isInstanceOf(InvalidRequestException.class);
 
     // giving random name to filterIdentifier and filterProperties as null
@@ -125,7 +125,7 @@ public class QuickFilterTest extends CategoryTest {
     when(filterService.get(accountId, orgId, projId, randomFilterIdentifier, PIPELINEEXECUTION)).thenReturn(null);
     assertThatThrownBy(()
                            -> pmsExecutionServiceImpl.formCriteria(accountId, orgId, projId, pipelineId,
-                               randomFilterIdentifier, null, moduleName, searchTerm, null, true, false, null))
+                               randomFilterIdentifier, null, moduleName, searchTerm, null, true, false, null, true))
         .isInstanceOf(InvalidRequestException.class);
   }
 }

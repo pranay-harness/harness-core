@@ -137,9 +137,11 @@ public class Constraint {
       final int usedPermits = getUsedPermits(consumers);
       State state = calculateConsumerState(consumers, permits, usedPermits);
 
-      if (context != null && Boolean.TRUE.equals(context.get("RESOURCE_CONSTRAINT_MAX_QUEUE"))
-          && consumers.size() > MAX_CONSUMERS_WAITING_FOR_RESOURCE) {
-        state = REJECTED;
+      if (context != null && Boolean.TRUE.equals(context.get("RESOURCE_CONSTRAINT_MAX_QUEUE"))) {
+        long blockedConsumerCount = consumers.stream().filter(consumer -> consumer.getState().equals(BLOCKED)).count();
+        if (blockedConsumerCount >= MAX_CONSUMERS_WAITING_FOR_RESOURCE) {
+          state = REJECTED;
+        }
       }
 
       final Consumer consumer =

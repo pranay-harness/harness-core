@@ -5,7 +5,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.DeploymentActivity;
-import io.harness.cvng.activity.entities.HarnessCDActivity;
 import io.harness.cvng.activity.entities.HarnessCDCurrentGenActivity;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
@@ -38,6 +37,8 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVNGLog;
 import io.harness.cvng.core.entities.DataCollectionTask;
+import io.harness.cvng.core.entities.DatadogLogCVConfig;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
 import io.harness.cvng.core.entities.HostRecord;
@@ -64,9 +65,16 @@ import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDCurrentGenChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
+import io.harness.cvng.core.entities.demo.CVNGDemoDataIndex;
+import io.harness.cvng.core.entities.demo.CVNGDemoPerpetualTask;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.migration.beans.CVNGSchema;
+import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
+import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.entities.UserJourney;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob;
@@ -80,6 +88,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
+
 @OwnedBy(HarnessTeam.CV)
 public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
   @Override
@@ -155,12 +164,13 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(Comparable.class);
     set.add(PrometheusCVConfig.class);
     set.add(StackdriverLogCVConfig.class);
+    set.add(DatadogMetricCVConfig.class);
+    set.add(DatadogLogCVConfig.class);
     set.add(MonitoredService.class);
     set.add(HarnessCDChangeSource.class);
     set.add(ChangeSource.class);
     set.add(ServiceDependency.class);
     set.add(PagerDutyChangeSource.class);
-    set.add(HarnessCDActivity.class);
     set.add(KubernetesChangeSource.class);
     set.add(KubernetesClusterActivity.class);
     set.add(Webhook.class);
@@ -168,6 +178,13 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(PagerDutyActivity.class);
     set.add(HarnessCDCurrentGenChangeSource.class);
     set.add(HarnessCDCurrentGenActivity.class);
+    set.add(ServiceLevelObjective.class);
+    set.add(UserJourney.class);
+    set.add(CVNGDemoDataIndex.class);
+    set.add(CVNGDemoPerpetualTask.class);
+    set.add(ServiceLevelIndicator.class);
+    set.add(RatioServiceLevelIndicator.class);
+    set.add(ThresholdServiceLevelIndicator.class);
   }
 
   @Override

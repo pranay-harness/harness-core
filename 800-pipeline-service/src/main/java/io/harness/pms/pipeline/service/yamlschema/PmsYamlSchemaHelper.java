@@ -31,7 +31,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.lang.reflect.Field;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -64,14 +63,9 @@ public class PmsYamlSchemaHelper {
     Field typedField = io.harness.yaml.utils.YamlSchemaUtils.getTypedField(STEP_ELEMENT_CONFIG_CLASS);
     Set<Class<?>> cachedSubtypes = yamlSchemaSubtypes.get(typedField.getType());
     Set<SubtypeClassMap> mapOfSubtypes = io.harness.yaml.utils.YamlSchemaUtils.toSetOfSubtypeClassMap(cachedSubtypes);
-    Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
-    classFieldSubtypeData.add(io.harness.yaml.utils.YamlSchemaUtils.getFieldSubtypeData(typedField, mapOfSubtypes));
     Set<FieldEnumData> fieldEnumData = getFieldEnumData(typedField, mapOfSubtypes);
-    swaggerDefinitionsMetaInfoMap.put(STEP_ELEMENT_CONFIG,
-        SwaggerDefinitionsMetaInfo.builder()
-            .fieldEnumData(fieldEnumData)
-            .subtypeClassMap(classFieldSubtypeData)
-            .build());
+    swaggerDefinitionsMetaInfoMap.put(
+        STEP_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().fieldEnumData(fieldEnumData).build());
     yamlSchemaGenerator.convertSwaggerToJsonSchema(
         swaggerDefinitionsMetaInfoMap, mapper, STEP_ELEMENT_CONFIG, jsonNode);
   }

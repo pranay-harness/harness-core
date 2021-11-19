@@ -23,6 +23,24 @@ xxxxxxxx
     appenders: []
   maxThreads: 1024
 
+commonPoolConfig:
+  corePoolSize: ${COMMON_POOL_CORE_SIZE:-20}
+  maxPoolSize: ${COMMON_POOL_MAX_SIZE:-1000}
+  idleTime: ${COMMON_POOL_IDLE_TIME:-500}
+  timeUnit: ${COMMON_POOL_IDLE_TIME_TIME_UNIT:-MILLISECONDS}
+
+pmsSdkExecutionPoolConfig:
+  corePoolSize: ${PMS_SDK_EXECUTION_POOL_CORE_SIZE:-20}
+  maxPoolSize: ${PMS_SDK_EXECUTION_POOL_MAX_SIZE:-100}
+  idleTime: ${PMS_SDK_EXECUTION_POOL_IDLE_TIME:-120}
+  timeUnit: ${PMS_SDK_EXECUTION_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
+pmsSdkOrchestrationEventPoolConfig:
+  corePoolSize: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_CORE_SIZE:-10}
+  maxPoolSize: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_MAX_SIZE:-50}
+  idleTime: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME:-120}
+  timeUnit: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
 nextGen:
   managerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   userVerificationSecret: dyBvaWVmbGRrYyB6aHpjeHZvaWxzamt6ZGN6c2RhZmh5dBrebhmnjryRe54rX43W3565ytgbsDvnjws5
@@ -30,6 +48,7 @@ nextGen:
   pipelineServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
   jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
+  ciManagerSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 enableAudit: false
 
@@ -70,8 +89,19 @@ mongo:
   aliasDBName: ng-harness
   traceMode: DISABLED
 
+licenseConfig:
+  deployVariant: "SAAS"
+
 accountConfig:
   deploymentClusterName: ""
+
+ngIteratorsConfig:
+  ngVaultSecretManagerRenewalIteratorConfig:
+    threadPoolSize: ${NG_VAULT_ITERATOR_THREAD_POOL_SIZE:-5}
+  webhookEventProcessingServiceIteratorConfig:
+    threadPoolSize: ${WEBHOOK_EVENT_PROCESSING_SERVICE_THREAD_SIZE:-20}
+  gitFullSyncEntityIteratorConfig:
+    threadPoolSize: ${GIT_FULLSYNC_ENTITY_ITERATOR_THREAD_POOL_SIZE:-5}
 
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:
@@ -100,6 +130,11 @@ ngManagerClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
+ciManagerClientConfig:
+  baseUrl: http://localhost:7171/ci/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
 pipelineServiceClientConfig:
   baseUrl: http://localhost:12001/api/
   connectTimeOutSeconds: 15
@@ -107,6 +142,11 @@ pipelineServiceClientConfig:
 
 auditClientConfig:
   baseUrl: http://localhost:9005/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+ceNextGenClientConfig:
+  baseUrl: http://localhost:7340/api/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
@@ -264,6 +304,9 @@ accessControlAdminClient:
   mockAccessControlService: true
 
 gitGrpcClientConfigs:
+  cf:
+    target: localhost:11001
+    authority: localhost
   pms:
     target: localhost:14001
     authority: localhost
@@ -348,3 +391,4 @@ enforcementClientConfiguration:
 
 opaServerConfig:
   baseUrl: http://localhost:3000
+  secret: secret

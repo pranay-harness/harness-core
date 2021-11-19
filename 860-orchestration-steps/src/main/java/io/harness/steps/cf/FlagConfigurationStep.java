@@ -4,12 +4,14 @@ import static java.lang.String.format;
 import static org.joda.time.Minutes.minutes;
 
 import io.harness.OrchestrationStepConfig;
+import io.harness.OrchestrationStepTypes;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CFApi;
 import io.harness.cf.openapi.ApiException;
 import io.harness.cf.openapi.model.PatchInstruction;
 import io.harness.cf.openapi.model.PatchOperation;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logging.UnitProgress;
@@ -28,7 +30,6 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.security.JWTTokenServiceUtils;
-import io.harness.steps.OrchestrationStepTypes;
 import io.harness.steps.StepUtils;
 import io.harness.steps.cf.AddRuleYaml.AddRuleYamlSpec;
 import io.harness.steps.cf.AddSegmentToVariationTargetMapYaml.AddSegmentToVariationTargetMapYamlSpec;
@@ -57,7 +58,11 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
                                                .setType(OrchestrationStepTypes.FLAG_CONFIGURATION)
                                                .setStepCategory(StepCategory.STEP)
                                                .build();
+  public static final String STEP_NAME = "Flag Configuration";
+  public static final String STEP_CATEGORY = "FeatureFlag";
+
   private static final String INFRASTRUCTURE_COMMAND_UNIT = "Execute";
+
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Inject @Named("cfPipelineAPI") private CFApi cfApi;
   @Inject OrchestrationStepConfig config;
@@ -97,7 +102,13 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
 
       List<PatchInstruction> instructions = new ArrayList<>();
 
-      for (io.harness.steps.cf.PatchInstruction patchInstruction : flagConfigurationStepParameters.getInstructions()) {
+      // Check that the parameter field is not null.  Error if it is.
+      if (ParameterField.isNull(flagConfigurationStepParameters.getInstructions())) {
+        throw new InvalidRequestException("the flag instructions are null");
+      }
+
+      for (io.harness.steps.cf.PatchInstruction patchInstruction :
+          flagConfigurationStepParameters.getInstructions().getValue()) {
         if (patchInstruction.getType().equals(Type.SET_FEATURE_FLAG_STATE)) {
           SetFeatureFlagStateYamlSpec spec = ((SetFeatureFlagStateYaml) patchInstruction).getSpec();
           PatchInstruction instruction =
@@ -190,10 +201,11 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
           LogLevel.INFO, CommandExecutionStatus.SUCCESS);
 
     } catch (ApiException e) {
-      log.error(format("error updating flag because %s", e.getResponseBody()));
+      log.error(format("API error while updating flag because %s : response [%s] code: %d", e.getMessage(),
+          e.getResponseBody(), e.getCode()));
       return StepResponse.builder()
           .status(Status.ERRORED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(e.getResponseBody()).build())
+          .failureInfo(FailureInfo.newBuilder().setErrorMessage(e.getMessage()).build())
           .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
                                                           .setUnitName(INFRASTRUCTURE_COMMAND_UNIT)
                                                           .setStatus(UnitStatus.FAILURE)
@@ -256,7 +268,7 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
 
   private PatchInstruction addRule(AddRuleYamlSpec rule, String accountID, String orgID, String projectID,
       String featureID, String environmentID, String ruleID) {
-    Integer priority = 0;
+    Integer priority = 1;
     if (ParameterField.isNull(rule.getPriority()) != true) {
       priority = rule.getPriority().getValue();
     }

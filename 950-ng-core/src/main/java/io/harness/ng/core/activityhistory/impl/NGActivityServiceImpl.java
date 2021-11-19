@@ -68,11 +68,8 @@ public class NGActivityServiceImpl implements NGActivityService {
         accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, start, end);
     ProjectionOperation projectionOperation = getProjectionOperationForProjectingSuccessfulAndFailedChecks();
     MatchOperation matchStage = Aggregation.match(connectivityCheckCriteria);
-    GroupOperation groupByID = group()
-                                   .sum(IS_SUCCESSFUL_CONNECTIVITY_CHECK_ACTIVITY)
-                                   .as(ConnectivityCheckSummaryKeys.successCount)
-                                   .sum(IS_FAILED_CONNECTIVITY_CHECK_ACTIVITY)
-                                   .as(ConnectivityCheckSummaryKeys.failureCount);
+    GroupOperation groupByID =
+        group().sum(IS_FAILED_CONNECTIVITY_CHECK_ACTIVITY).as(ConnectivityCheckSummaryKeys.failureCount);
     Aggregation aggregation = Aggregation.newAggregation(matchStage, projectionOperation, groupByID);
     ConnectivityCheckSummaryDTO connectivityCheckSummaryDTO =
         activityRepository.aggregate(aggregation, ConnectivityCheckSummaryDTO.class).getUniqueMappedResult();

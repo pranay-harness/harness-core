@@ -7,6 +7,7 @@ import io.harness.validation.OneOfField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(GitConfigConstants.HTTP)
 @OneOfField(fields = {"username", "usernameRef"})
+@Schema(name = "GitAuthentication",
+    description = "This contains details of the Generic Git authentication information used via HTTP connections")
 public class GitHTTPAuthenticationDTO extends GitAuthenticationDTO {
   String username;
   @SecretReference @ApiModelProperty(dataType = "string") SecretRefData usernameRef;

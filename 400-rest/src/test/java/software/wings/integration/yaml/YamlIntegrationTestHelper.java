@@ -5,7 +5,7 @@ import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.govern.Switch.unhandled;
 
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;

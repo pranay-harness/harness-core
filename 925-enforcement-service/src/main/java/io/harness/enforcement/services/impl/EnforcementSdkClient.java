@@ -13,12 +13,12 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface EnforcementSdkClient {
-  @PUT("/enforcement/client/usage/{featureRestrictionName}")
+  @PUT("enforcement/client/usage/{featureRestrictionName}")
   Call<ResponseDTO<FeatureRestrictionUsageDTO>> getRestrictionUsage(
       @Path("featureRestrictionName") FeatureRestrictionName featureRestrictionName,
       @Query("accountIdentifier") String accountIdentifier, @Body RestrictionMetadataDTO restrictionMetadataDTO);
 
-  @PUT("/enforcement/client/custom/{featureRestrictionName}")
+  @PUT("enforcement/client/custom/{featureRestrictionName}")
   Call<ResponseDTO<Boolean>> evaluateCustomFeatureRestriction(
       @Path("featureRestrictionName") FeatureRestrictionName featureRestrictionName,
       @Query("accountIdentifier") String accountIdentifier,

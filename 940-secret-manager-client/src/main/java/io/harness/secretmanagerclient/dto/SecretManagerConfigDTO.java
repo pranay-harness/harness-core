@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,6 +34,8 @@ import lombok.experimental.SuperBuilder;
       @Type(name = "AZURE_VAULT", value = AzureKeyVaultConfigDTO.class)
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(
+    name = "SecretManagerConfig", description = "This is the view of the SecretManagerConfig entity defined in Harness")
 public abstract class SecretManagerConfigDTO {
   private String name;
   private String accountIdentifier;

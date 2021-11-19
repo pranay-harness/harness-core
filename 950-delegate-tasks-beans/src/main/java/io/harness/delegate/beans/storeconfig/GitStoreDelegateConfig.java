@@ -24,9 +24,11 @@ public class GitStoreDelegateConfig implements StoreDelegateConfig {
 
   ScmConnector gitConfigDTO;
   List<EncryptedDataDetail> encryptedDataDetails;
+  List<EncryptedDataDetail> apiAuthEncryptedDataDetails;
   SSHKeySpecDTO sshKeySpecDTO;
   String manifestType;
   String manifestId;
+  private boolean optimizedFilesFetch;
 
   @Override
   public StoreDelegateConfigType getType() {

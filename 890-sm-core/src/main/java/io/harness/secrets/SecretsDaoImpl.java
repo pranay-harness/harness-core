@@ -213,4 +213,14 @@ public class SecretsDaoImpl implements SecretsDao {
         .equal(null)
         .fetch();
   }
+
+  @Override
+  public void updateSecret(EncryptedData encryptedData, UpdateOperations<EncryptedData> updateOperations) {
+    hPersistence.update(encryptedData, updateOperations);
+  }
+
+  @Override
+  public UpdateOperations<EncryptedData> getUpdateOperations() {
+    return hPersistence.createUpdateOperations(EncryptedData.class);
+  }
 }

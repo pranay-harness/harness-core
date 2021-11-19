@@ -17,13 +17,15 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PL)
 public interface GitSyncErrorRepositoryCustom {
-  <C> AggregationResults aggregate(Aggregation aggregation, Class<C> castClass);
+  <C> AggregationResults<C> aggregate(Aggregation aggregation, Class<C> castClass);
 
   DeleteResult deleteByIds(List<String> ids);
 
-  UpdateResult upsertGitError(Criteria criteria, Update update);
+  UpdateResult updateGitError(Criteria criteria, Update update);
 
   Page<GitSyncError> findAll(Criteria criteria, Pageable pageable);
+
+  GitSyncError find(Criteria criteria);
 
   long count(Criteria criteria);
 }

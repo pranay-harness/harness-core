@@ -63,6 +63,8 @@ then
      ;;
      "GIT") export HARNESS_TEAM="CDP"
      ;;
+     "LWG") export HARNESS_TEAM="LWG"
+     ;;
   esac
 fi
 

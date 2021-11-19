@@ -23,6 +23,7 @@ public class PipelineUpdateEvent implements Event {
   private String projectIdentifier;
   private PipelineEntity newPipeline;
   private PipelineEntity oldPipeline;
+
   public PipelineUpdateEvent(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       PipelineEntity newPipeline, PipelineEntity oldPipeline) {
     this.accountIdentifier = accountIdentifier;

@@ -2,7 +2,7 @@ package software.wings.beans.sso;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessModule;
@@ -26,6 +26,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -56,7 +57,7 @@ public abstract class SSOSettings extends Base implements AccountAccess {
   }
 
   @NotNull protected SSOType type;
-  @NotEmpty protected String displayName;
+  @NotBlank protected String displayName;
   @NotEmpty protected String url;
   private Long nextIteration;
   @FdIndex List<Long> nextIterations = new ArrayList<>();

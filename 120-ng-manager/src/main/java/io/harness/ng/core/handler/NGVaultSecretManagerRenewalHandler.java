@@ -43,16 +43,16 @@ public class NGVaultSecretManagerRenewalHandler implements Handler<VaultConnecto
     this.vaultService = vaultService;
   }
 
-  public void registerIterators() {
+  public void registerIterators(int threadPoolSize) {
     SpringFilterExpander filterExpander = getFilterQuery();
-    registerIteratorWithFactory(filterExpander);
+    registerIteratorWithFactory(threadPoolSize, filterExpander);
   }
 
-  private void registerIteratorWithFactory(@NotNull SpringFilterExpander filterExpander) {
+  private void registerIteratorWithFactory(int threadPoolSize, @NotNull SpringFilterExpander filterExpander) {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name(this.getClass().getName())
-            .poolSize(5)
+            .poolSize(threadPoolSize)
             .interval(ofSeconds(5))
             .build(),
         VaultConnector.class,

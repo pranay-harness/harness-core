@@ -1,17 +1,23 @@
 package io.harness.delegate.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACASIAN;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
@@ -24,6 +30,8 @@ import io.harness.delegate.task.k8s.K8sCanaryDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
@@ -32,6 +40,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
+import io.kubernetes.client.openapi.ApiException;
 import java.io.IOException;
 import java.util.List;
 import lombok.AccessLevel;
@@ -61,6 +70,7 @@ public class K8sCanaryDeleteRequestHandlerTest extends CategoryTest {
   final String noInProgressReleaseHistory = "no-inprogress-history";
   final String canaryReleaseHistory = "canary-release-history";
   final String canaryFailedReleaseHistory = "canary-failed-release-history";
+  final String canaryExceptionReleaseHistory = "canary-exception-release-history";
   final KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
   final K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
   final CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
@@ -85,6 +95,12 @@ public class K8sCanaryDeleteRequestHandlerTest extends CategoryTest {
     doReturn(K8sTestHelper.readResourceFileContent(K8sTestHelper.RELEASE_HISTORY_FAILED_CANARY))
         .when(k8sTaskHelperBase)
         .getReleaseHistoryData(kubernetesConfig, canaryFailedReleaseHistory);
+
+    ApiException apiException = new ApiException("Failed to get configmap");
+    InvalidRequestException exception =
+        new InvalidRequestException("Failed to read release history", apiException, USER);
+    doThrow(exception).when(k8sTaskHelperBase).getReleaseHistoryData(kubernetesConfig, canaryExceptionReleaseHistory);
+
     doReturn(logCallback)
         .when(k8sTaskHelperBase)
         .getLogCallback(eq(logStreamingTaskClient), anyString(), anyBoolean(), eq(commandUnitsProgress));
@@ -205,5 +221,28 @@ public class K8sCanaryDeleteRequestHandlerTest extends CategoryTest {
     verify(k8sTaskHelperBase, never())
         .delete(any(Kubectl.class), eq(delegateTaskParams), anyListOf(KubernetesResourceId.class), eq(logCallback),
             eq(true));
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void deleteFromReleaseHistoryException() throws Exception {
+    K8sCanaryDeleteRequest deleteRequest = K8sCanaryDeleteRequest.builder()
+                                               .releaseName(canaryExceptionReleaseHistory)
+                                               .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
+                                               .build();
+
+    assertThatThrownBy(()
+                           -> requestHandler.executeTaskInternal(
+                               deleteRequest, delegateTaskParams, logStreamingTaskClient, commandUnitsProgress))
+        .matches(throwable -> {
+          assertThat(throwable).isInstanceOf(InvalidRequestException.class);
+          ApiException apiException = ExceptionUtils.cause(ApiException.class, throwable);
+          assertThat(apiException).hasMessageContaining("Failed to get configmap");
+          return true;
+        });
+
+    verify(k8sTaskHelperBase, times(0))
+        .delete(any(Kubectl.class), eq(delegateTaskParams), anyList(), eq(logCallback), eq(true));
   }
 }

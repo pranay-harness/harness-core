@@ -35,6 +35,7 @@ public class WingsExceptionMapperV2 implements ExceptionMapper<WingsException> {
     ErrorCode errorCode = exception.getCode() != null ? exception.getCode() : ErrorCode.UNKNOWN_ERROR;
     ErrorDTO errorBody = ErrorDTO.newError(Status.ERROR, errorCode, null);
     errorBody.setResponseMessages(responseMessages);
+    errorBody.setMetadata(exception.getMetadata());
 
     if (!responseMessages.isEmpty()) {
       errorBody.setMessage(responseMessages.get(0).getMessage());

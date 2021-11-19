@@ -37,7 +37,7 @@ public abstract class LogCVConfig extends CVConfig {
 
   public TimeRange getBaseline() {
     Preconditions.checkState(this.getCreatedAt() != 0, "CreatedAt needs to be set to get the baseline");
-    Instant endTime = DateTimeUtils.roundDownTo5MinBoundary(Instant.ofEpochMilli(this.getCreatedAt()));
+    Instant endTime = DateTimeUtils.roundDownTo5MinBoundary(getFirstTimeDataCollectionStartTime());
     return TimeRange.builder().endTime(endTime).startTime(endTime.minus(30, ChronoUnit.MINUTES)).build();
   }
   @Override

@@ -11,6 +11,7 @@ import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoConfig;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.remote.ManagerAuthConfig;
@@ -53,6 +54,8 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+  @JsonProperty("distributedLockImplementation")
+  private DistributedLockImplementation distributedLockImplementation = DistributedLockImplementation.MONGO;
 
   private String portalUrl;
   /**

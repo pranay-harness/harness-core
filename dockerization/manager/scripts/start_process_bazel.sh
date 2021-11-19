@@ -35,7 +35,11 @@ fi
 if [[ "${ENABLE_G1GC}" == "true" ]]; then
     export GC_PARAMS=" -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=40 -XX:MaxGCPauseMillis=1000 -Dfile.encoding=UTF-8"
 else
-    export GC_PARAMS=" -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8"
+    if [[ "${ENABLE_SERIALGC}" == "true" ]]; then
+        export GC_PARAMS=" -XX:+UseSerialGC -Dfile.encoding=UTF-8"
+    else
+        export GC_PARAMS=" -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8"
+    fi
 fi
 
 export JAVA_OPTS="-Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/heapdump -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc $GC_PARAMS $JAVA_ADVANCED_FLAGS"

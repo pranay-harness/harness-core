@@ -1,11 +1,14 @@
 package software.wings.service.impl.yaml.handler.governance;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.governance.CustomAppFilter;
 import io.harness.governance.CustomEnvFilter;
 import io.harness.governance.EnvironmentFilter;
 import io.harness.governance.EnvironmentFilterYaml;
+import io.harness.governance.ServiceFilter;
 
 import software.wings.beans.Application;
 import software.wings.beans.yaml.ChangeContext;
@@ -16,8 +19,10 @@ import software.wings.service.intfc.AppService;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<CustomAppFilter.Yaml, CustomAppFilter> {
@@ -27,18 +32,24 @@ public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<Cus
 
   @Override
   public CustomAppFilter.Yaml toYaml(CustomAppFilter bean, String accountId) {
-    List<String> appNames = appService.getAppsByIds(new HashSet<String>(bean.getApps()))
-                                .stream()
-                                .map(Application::getName)
-                                .collect(Collectors.toList());
+    Map<String, String> appIdName = appService.getAppsByIds(new HashSet<String>(bean.getApps()))
+                                        .stream()
+                                        .collect(Collectors.toMap(Application::getUuid, Application::getName));
+
+    // Preserve the order of applications
+    List<String> orderedAppNames = bean.getApps().stream().map(appIdName::get).collect(Collectors.toList());
 
     EnvironmentFilterYamlHandler environmentFilterYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.ENV_FILTER, bean.getEnvSelection().getFilterType().name());
+    ServiceFilterYamlHandler serviceFilterYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.SERVICE_FILTER);
 
     // envSelection is made a List to make Yaml cleanup work YamlUtils.cleanUpDoubleExclamationLines
     return CustomAppFilter.Yaml.builder()
-        .apps(appNames)
+        .apps(orderedAppNames)
         .envSelection(Arrays.asList(environmentFilterYamlHandler.toYaml(bean.getEnvSelection(), accountId)))
+        .serviceSelection(bean.getServiceSelection() == null
+                ? null
+                : Collections.singletonList(serviceFilterYamlHandler.toYaml(bean.getServiceSelection(), accountId)))
         .filterType(bean.getFilterType())
         .build();
   }
@@ -63,6 +74,7 @@ public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<Cus
     CustomAppFilter.Yaml yaml = changeContext.getYaml();
 
     EnvironmentFilterYamlHandler environmentFilterYamlHandler;
+    ServiceFilterYamlHandler serviceFilterYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.SERVICE_FILTER);
     List<String> appIds = getAppIds(accountId, yaml.getApps());
 
     // // envSelection is made a List to make Yaml cleanup work YamlUtils.cleanUpDoubleExclamationLines
@@ -81,9 +93,19 @@ public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<Cus
       environmentFilters.add(environmentFilterYamlHandler.upsertFromYaml(clonedContext, changeSetContext));
     }
 
+    List<ServiceFilter> serviceFilters = new ArrayList<>();
+    if (isNotEmpty(yaml.getServiceSelection())) {
+      for (ServiceFilter.Yaml entry : yaml.getServiceSelection()) {
+        ChangeContext clonedContext = cloneFileChangeContext(changeContext, entry).build();
+        clonedContext.getEntityIdMap().put("appId", appIds.get(0));
+        serviceFilters.add(serviceFilterYamlHandler.upsertFromYaml(clonedContext, changeSetContext));
+      }
+    }
+
     bean.setApps(appIds);
     bean.setFilterType(yaml.getFilterType());
     bean.setEnvSelection(environmentFilters.get(0));
+    bean.setServiceSelection(isNotEmpty(serviceFilters) ? serviceFilters.get(0) : null);
   }
 
   private List<String> getAppIds(String accountId, List<String> appNames) {

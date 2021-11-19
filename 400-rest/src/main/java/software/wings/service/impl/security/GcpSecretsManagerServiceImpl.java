@@ -339,7 +339,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       String encryptedDataId = String.copyValueOf(currentConfig.getCredentials());
       EncryptedData secretData = wingsPersistence.get(EncryptedData.class, encryptedDataId);
       Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + secretManagerConfig);
-      secretManagerConfig.setCredentials(decryptLocal(secretData));
+      secretManagerConfig.setCredentials(decryptUsingBaseAlgo(secretData));
     }
   }
 }

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.observers.NodeStatusUpdateHandler;
 import io.harness.engine.observers.NodeUpdateInfo;
+import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -34,6 +35,9 @@ public class NodeStatusUpdateHandlerFactory {
       default:
         // Do not do this for other statuses as there multiple queries
         // Till Now only handling these will figure out a better way to do this
+        if (StatusUtils.isFinalStatus(nodeStatusUpdateInfo.getStatus())) {
+          return terminalStepStatusUpdate;
+        }
         return null;
     }
   }

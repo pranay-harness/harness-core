@@ -146,5 +146,12 @@ public class PmsGitSyncHelperTest extends PmsCommonsTestBase {
     String yamlGitConfigRef = pipelineRepoID;
     String filePath = "file.yml";
     String rootFolder = ".harness";
+    String yaml = null;
+    boolean isEntityInvalid = false;
+
+    @Override
+    public String getInvalidYamlString() {
+      return yaml;
+    }
   }
 }

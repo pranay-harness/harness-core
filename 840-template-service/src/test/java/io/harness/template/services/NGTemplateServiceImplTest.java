@@ -16,11 +16,11 @@ import io.harness.filter.service.FilterService;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.ng.core.template.TemplateEntityType;
+import io.harness.ng.core.template.TemplateListType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.repositories.NGTemplateRepository;
 import io.harness.rule.Owner;
 import io.harness.springdata.TransactionHelper;
-import io.harness.template.beans.TemplateListType;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
@@ -475,5 +475,14 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
     assertThat(templateEntities.getContent()).isNotNull();
     assertThat(templateEntities.getContent().size()).isEqualTo(1);
     assertThat(templateEntities.getContent().get(0).getIdentifier()).isEqualTo("DifferentIdentifier");
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testGetActualComments() {
+    // Testing comments if git sync is not enabled.
+    String comments = templateService.getActualComments(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "COMMENTS");
+    assertThat(comments).isEqualTo("COMMENTS");
   }
 }

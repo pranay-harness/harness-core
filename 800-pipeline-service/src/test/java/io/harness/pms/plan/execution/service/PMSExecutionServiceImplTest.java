@@ -99,7 +99,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
   @Category(UnitTests.class)
   public void testFormCriteria() {
     Criteria form = pmsExecutionService.formCriteria(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER,
-        null, null, null, null, null, false, !PIPELINE_DELETED, null);
+        null, null, null, null, null, false, !PIPELINE_DELETED, null, true);
 
     assertThat(form.getCriteriaObject().get("accountId").toString().contentEquals(ACCOUNT_ID)).isEqualTo(true);
     assertThat(form.getCriteriaObject().get("orgIdentifier").toString().contentEquals(ORG_IDENTIFIER)).isEqualTo(true);
@@ -110,6 +110,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
     assertThat(form.getCriteriaObject().containsKey("status")).isEqualTo(false);
     assertThat(form.getCriteriaObject().get("pipelineDeleted")).isNotEqualTo(true);
     assertThat(form.getCriteriaObject().containsKey("executionTriggerInfo")).isEqualTo(false);
+    assertThat(form.getCriteriaObject().get("isLatestExecution")).isNotEqualTo(false);
   }
 
   @Test

@@ -81,6 +81,7 @@ public abstract class ArtifactStream
         .add(CompoundMongoIndex.builder()
                  .name("artifactStream_cleanup")
                  .field(ArtifactStreamKeys.artifactStreamType)
+                 .field(ArtifactStreamKeys.collectionEnabled)
                  .field(ArtifactStreamKeys.nextCleanupIteration)
                  .build())
         .add(CompoundMongoIndex.builder()
@@ -182,6 +183,10 @@ public abstract class ArtifactStream
     return !this.sourceName.equals(artifactStream.getSourceName());
   }
 
+  public boolean artifactCollectionEnabledFromDisabled(ArtifactStream artifactStream) {
+    return Boolean.FALSE.equals(collectionEnabled) && !Boolean.FALSE.equals(artifactStream.getCollectionEnabled());
+  }
+
   public boolean artifactServerChanged(ArtifactStream artifactStream) {
     if (settingId == null) {
       if (artifactStream.getSettingId() == null) {
@@ -244,6 +249,12 @@ public abstract class ArtifactStream
   @Override
   public NGMigrationEntityType getMigrationEntityType() {
     return NGMigrationEntityType.ARTIFACT_STREAM;
+  }
+
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
   }
 
   @Data

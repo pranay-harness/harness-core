@@ -21,8 +21,10 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.pipeline.yaml.BasicPipeline;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.google.inject.Inject;
@@ -42,6 +44,7 @@ public class NotificationHelper {
   @Inject PlanExecutionService planExecutionService;
   @Inject PipelineServiceConfiguration pipelineServiceConfiguration;
   @Inject PlanExecutionMetadataService planExecutionMetadataService;
+  @Inject PmsEngineExpressionService pmsEngineExpressionService;
 
   public Optional<PipelineEventType> getEventTypeForStage(NodeExecution nodeExecution) {
     if (!OrchestrationUtils.isStageNode(nodeExecution)) {
@@ -70,7 +73,7 @@ public class NotificationHelper {
     }
     List<NotificationRules> notificationRules = null;
     try {
-      notificationRules = getNotificationRulesFromYaml(yaml);
+      notificationRules = getNotificationRulesFromYaml(yaml, ambiance);
     } catch (IOException exception) {
       log.error("Unable to parse yaml to get notification objects", exception);
     }
@@ -98,7 +101,7 @@ public class NotificationHelper {
       List<PipelineEvent> pipelineEvents = notificationRules.getPipelineEvents();
       boolean shouldSendNotification = shouldSendNotification(pipelineEvents, pipelineEventType, identifier);
       if (shouldSendNotification) {
-        NotificationChannelWrapper wrapper = notificationRules.getNotificationChannelWrapper();
+        NotificationChannelWrapper wrapper = notificationRules.getNotificationChannelWrapper().getValue();
         String templateId = getNotificationTemplate(pipelineEventType.getLevel(), wrapper.getType());
         NotificationChannel channel = wrapper.getNotificationChannel().toNotificationChannel(
             accountIdentifier, orgIdentifier, projectIdentifier, templateId, notificationContent);
@@ -135,9 +138,12 @@ public class NotificationHelper {
     return false;
   }
 
-  List<NotificationRules> getNotificationRulesFromYaml(String yaml) throws IOException {
+  List<NotificationRules> getNotificationRulesFromYaml(String yaml, Ambiance ambiance) throws IOException {
     BasicPipeline basicPipeline = YamlUtils.read(yaml, BasicPipeline.class);
-    return basicPipeline.getNotificationRules();
+    return RecastOrchestrationUtils.fromJson(
+        (String) pmsEngineExpressionService.resolve(
+            ambiance, RecastOrchestrationUtils.toJson(basicPipeline.getNotificationRules()), true),
+        List.class);
   }
 
   public String generateUrl(Ambiance ambiance) {

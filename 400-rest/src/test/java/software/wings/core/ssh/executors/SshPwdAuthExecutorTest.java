@@ -35,6 +35,8 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import io.harness.shell.BaseScriptExecutor;
 import io.harness.shell.ExecutorType;
 import io.harness.shell.ScriptSshExecutor;
@@ -47,6 +49,7 @@ import software.wings.rules.SshRule;
 import software.wings.service.intfc.security.SSHVaultService;
 
 import com.google.common.io.CharStreams;
+import com.google.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -106,6 +109,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Mock private DelegateFileManager fileService;
   @Mock private LogCallback logCallback;
   @Mock private SSHVaultService sshVaultService;
+  @Inject ScmSecret scmSecret;
 
   /**
    * Sets the up.
@@ -114,6 +118,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
+    sshRule.setPassword(scmSecret.decryptToString(new SecretName("ssh_rule_password")));
     configBuilder = aSshSessionConfig()
                         .withAppId("APP_ID")
                         .withExecutionId(generateUuid())

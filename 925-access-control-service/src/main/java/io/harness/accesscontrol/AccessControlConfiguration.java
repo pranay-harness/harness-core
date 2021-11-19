@@ -82,6 +82,8 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
   @JsonProperty("serviceAccountClient") private ServiceAccountClientConfiguration serviceAccountClientConfiguration;
   @JsonProperty("enforcementClientConfiguration") private EnforcementClientConfiguration enforcementClientConfiguration;
+  @JsonProperty("hostname") private String hostname;
+  @JsonProperty("basePathPrefix") private String basePathPrefix;
 
   public boolean isAuthEnabled() {
     return this.enableAuth;

@@ -5,15 +5,16 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
+import io.harness.cvng.core.utils.ServiceEnvKey;
 import io.harness.cvng.dashboard.beans.ServiceDependencyGraphDTO;
 import io.harness.cvng.dashboard.beans.ServiceDependencyGraphDTO.Edge;
 import io.harness.cvng.dashboard.beans.ServiceDependencyGraphDTO.ServiceSummaryDetails;
-import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.ServiceDependencyGraphService;
 
@@ -24,8 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,15 +38,14 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
 
   @Override
   public ServiceDependencyGraphDTO getDependencyGraph(@NonNull ProjectParams projectParams,
-      @Nullable String serviceIdentifier, @Nullable String environmentIdentifier) {
+      @Nullable String serviceIdentifier, @Nullable String environmentIdentifier,
+      @NonNull boolean servicesAtRiskFilter) {
     List<MonitoredService> monitoredServices =
         monitoredServiceService.list(projectParams, serviceIdentifier, environmentIdentifier);
     Set<String> identifiers =
         monitoredServices.stream().map(MonitoredService::getIdentifier).collect(Collectors.toSet());
     List<ServiceDependency> serviceDependencies =
         serviceDependencyService.getServiceDependencies(projectParams, new ArrayList<>(identifiers));
-
-    List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(projectParams, serviceIdentifier, environmentIdentifier);
 
     // Get nodes for dependent services
     serviceDependencies.forEach(
@@ -59,32 +57,48 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
     Set<String> environmentIdentifiers =
         monitoredServices.stream().map(MonitoredService::getEnvironmentIdentifier).collect(Collectors.toSet());
 
-    return constructGraph(monitoredServices, serviceDependencies, heatMaps,
-        nextGenService.getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers)),
+    Map<ServiceEnvKey, RiskData> latestHealthScores = heatMapService.getLatestHealthScore(
+        projectParams, new ArrayList<>(serviceIdentifiers), new ArrayList<>(environmentIdentifiers));
+
+    ServiceDependencyGraphDTO serviceDependencyGraphDTO = constructGraph(monitoredServices, serviceDependencies,
+        latestHealthScores, nextGenService.getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers)),
         nextGenService.getEnvironmentIdNameMap(projectParams, new ArrayList<>(environmentIdentifiers)));
+
+    if (servicesAtRiskFilter) {
+      List<ServiceSummaryDetails> unHealthyServiceSummaryDetails =
+          serviceDependencyGraphDTO.getNodes()
+              .stream()
+              .filter(x -> x.getRiskData().getHealthScore() != null && x.getRiskData().getHealthScore() <= 25)
+              .collect(Collectors.toList());
+      Map<String, ServiceSummaryDetails> serviceSummaryDetailsMap = unHealthyServiceSummaryDetails.stream().collect(
+          Collectors.toMap(ServiceSummaryDetails::getIdentifierRef, x -> x));
+      List<Edge> unHealthyEdges = serviceDependencyGraphDTO.getEdges()
+                                      .stream()
+                                      .filter(x
+                                          -> serviceSummaryDetailsMap.containsKey(x.getFrom())
+                                              && serviceSummaryDetailsMap.containsKey(x.getTo()))
+                                      .collect(Collectors.toList());
+      serviceDependencyGraphDTO.setNodes(unHealthyServiceSummaryDetails);
+      serviceDependencyGraphDTO.setEdges(unHealthyEdges);
+    }
+
+    return serviceDependencyGraphDTO;
   }
 
   private ServiceDependencyGraphDTO constructGraph(List<MonitoredService> monitoredServices,
-      List<ServiceDependency> serviceDependencies, List<HeatMap> heatMaps, Map<String, String> serviceIdNameMap,
-      Map<String, String> environmentIdNameMap) {
-    Map<GraphKey, MonitoredService> monitoredServiceMap = monitoredServices.stream().collect(
-        Collectors.toMap(x -> new GraphKey(x.getServiceIdentifier(), x.getEnvironmentIdentifier()), x -> x));
-    Map<GraphKey, List<HeatMap>> heatMapMap = heatMaps.stream().collect(
-        Collectors.groupingBy(x -> new GraphKey(x.getServiceIdentifier(), x.getEnvIdentifier())));
+      List<ServiceDependency> serviceDependencies, Map<ServiceEnvKey, RiskData> latestHealthScores,
+      Map<String, String> serviceIdNameMap, Map<String, String> environmentIdNameMap) {
+    Map<ServiceEnvKey, MonitoredService> monitoredServiceMap = monitoredServices.stream().collect(Collectors.toMap(x
+        -> ServiceEnvKey.builder()
+               .serviceIdentifier(x.getServiceIdentifier())
+               .envIdentifier(x.getEnvironmentIdentifier())
+               .build(),
+        x -> x));
 
     List<ServiceSummaryDetails> nodes = new ArrayList<>();
     monitoredServiceMap.forEach((key, value) -> {
-      double riskScore = -1;
       String serviceName = null;
       String environmentName = null;
-
-      if (heatMapMap.containsKey(key)) {
-        List<HeatMap> serviceRisks = heatMapMap.get(key);
-        riskScore = serviceRisks.stream()
-                        .mapToDouble(x -> x.getHeatMapRisks().iterator().next().getRiskScore())
-                        .max()
-                        .orElse(-1.0);
-      }
 
       if (serviceIdNameMap.containsKey(value.getServiceIdentifier())) {
         serviceName = serviceIdNameMap.get(value.getServiceIdentifier());
@@ -92,15 +106,20 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
       if (environmentIdNameMap.containsKey(value.getServiceIdentifier())) {
         environmentName = environmentIdNameMap.get(value.getServiceIdentifier());
       }
-      Risk risk = Risk.getRiskFromRiskScore(riskScore);
+      RiskData riskData = RiskData.builder().riskStatus(Risk.NO_DATA).build();
+      if (latestHealthScores.containsKey(key)) {
+        riskData = latestHealthScores.get(key);
+      }
+
       nodes.add(ServiceSummaryDetails.builder()
                     .identifierRef(value.getIdentifier())
                     .serviceRef(value.getServiceIdentifier())
                     .serviceName(serviceName)
                     .environmentRef(value.getEnvironmentIdentifier())
                     .environmentName(environmentName)
-                    .riskScore(riskScore)
-                    .riskLevel(risk)
+                    .riskData(riskData)
+                    .riskLevel(riskData.getRiskStatus())
+                    .type(value.getType())
                     .build());
     });
 
@@ -109,12 +128,5 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
             .map(x -> new Edge(x.getFromMonitoredServiceIdentifier(), x.getToMonitoredServiceIdentifier()))
             .collect(Collectors.toSet());
     return ServiceDependencyGraphDTO.builder().nodes(nodes).edges(new ArrayList<>(edges)).build();
-  }
-
-  @AllArgsConstructor
-  @EqualsAndHashCode
-  private static class GraphKey {
-    private final String serviceIdentifier;
-    private final String envIdentifier;
   }
 }

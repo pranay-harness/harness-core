@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
+import static io.harness.beans.FeatureName.ENABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -418,7 +418,7 @@ public class EcsStateHelperTest extends CategoryTest {
     doReturn(false)
         .doReturn(true)
         .when(featureFlagService)
-        .isEnabled(eq(DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC), anyString());
+        .isNotEnabled(eq(ENABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC), anyString());
     Map<String, String> serviceVars = newHashMap("sk", "sv");
     Map<String, String> safeDisplayVars = newHashMap("dk", "dv");
     doReturn(serviceVars).when(mockContext).getServiceVariables();
@@ -430,7 +430,6 @@ public class EcsStateHelperTest extends CategoryTest {
     assertThat(holder.getSafeDisplayServiceVariables().size()).isEqualTo(1);
     assertThat(holder.getSafeDisplayServiceVariables().get("dk")).isEqualTo("dv");
 
-    // DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC = true
     holder = helper.renderEcsSetupContextVariables(mockContext);
     assertThat(holder.getServiceVariables()).isEmpty();
     assertThat(holder.getSafeDisplayServiceVariables()).isEmpty();

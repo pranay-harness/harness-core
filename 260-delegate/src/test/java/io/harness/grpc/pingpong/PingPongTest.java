@@ -21,6 +21,8 @@ import io.harness.rule.Owner;
 import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.security.TokenGenerator;
 
+import software.wings.service.impl.DelegateConnectionDao;
+
 import io.grpc.Channel;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -48,8 +50,10 @@ public class PingPongTest extends CategoryTest implements MockableTestMixin {
 
   @Before
   public void setUp() throws Exception {
+    DelegateConnectionDao delegateConnectionDao;
     mockClientLogger = mock(Logger.class);
     mockServerLogger = mock(Logger.class);
+    delegateConnectionDao = mock(DelegateConnectionDao.class);
     setStaticFieldValue(PingPongClient.class, "log", mockClientLogger);
     setStaticFieldValue(PingPongService.class, "log", mockServerLogger);
     setStaticFieldValue(DelegateAgentServiceImpl.class, "delegateId", "DELEGATE_ID");
@@ -63,7 +67,7 @@ public class PingPongTest extends CategoryTest implements MockableTestMixin {
     pingPongClient = new PingPongClient(pingPongServiceBlockingStub, "VERSION");
     server = InProcessServerBuilder.forName(serverName)
                  .directExecutor()
-                 .addService(new PingPongService())
+                 .addService(new PingPongService(delegateConnectionDao))
                  .intercept(new DelegateAuthServerInterceptor(mock(DelegateTokenAuthenticator.class)))
                  .build()
                  .start();
@@ -86,7 +90,7 @@ public class PingPongTest extends CategoryTest implements MockableTestMixin {
   public void shouldLogPingSuccessOnServer() throws Exception {
     pingPongClient.runOneIteration();
     val captor = ArgumentCaptor.forClass(String.class);
-    verify(mockServerLogger).info(captor.capture(), any(), any(), any());
+    verify(mockServerLogger).info(captor.capture(), any(), any(), any(), any());
     assertThat(captor.getValue()).matches("Ping at .* received .*");
   }
 

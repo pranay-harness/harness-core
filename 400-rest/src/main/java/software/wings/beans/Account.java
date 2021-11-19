@@ -3,7 +3,7 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.DelegateConfiguration.DelegateConfigurationKeys;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
 
 import io.harness.annotation.HarnessEntity;

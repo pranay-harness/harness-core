@@ -3,6 +3,7 @@ package io.harness.cvng.client;
 import io.harness.security.ServiceTokenGenerator;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
 
 /**
  * Guice Module for initializing Verification Manager client.
@@ -20,6 +21,7 @@ public class VerificationManagerClientModule extends AbstractModule {
     ServiceTokenGenerator tokenGenerator = new ServiceTokenGenerator();
     bind(ServiceTokenGenerator.class).toInstance(tokenGenerator);
     bind(VerificationManagerClient.class)
-        .toProvider(new VerificationManagerClientFactory(managerBaseUrl, tokenGenerator));
+        .toProvider(new VerificationManagerClientFactory(managerBaseUrl, tokenGenerator))
+        .in(Singleton.class);
   }
 }

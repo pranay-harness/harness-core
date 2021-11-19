@@ -26,14 +26,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.ArtifactServerException;
 import io.harness.logging.LoggingInitializer;
 import io.harness.rule.Owner;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 
+import software.wings.WingsBaseTest;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.model.JobProperty;
@@ -45,6 +47,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FakeTimeLimiter;
+import com.google.inject.Inject;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.FolderJob;
 import com.offbytwo.jenkins.model.Job;
@@ -72,11 +75,12 @@ import org.junit.experimental.categories.Category;
  * The Class JenkinsTest.
  */
 @OwnedBy(CDC)
-public class JenkinsTest extends CategoryTest {
+public class JenkinsTest extends WingsBaseTest {
   private static final String JENKINS_URL = "http://localhost:%s/";
   private static final String USERNAME = "wingsbuild";
-  private static final String PASSWORD = "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2";
+  private static String PASSWORD = "password";
 
+  @Inject ScmSecret scmSecret;
   @Rule
   public WireMockRule wireMockRule = new WireMockRule(WireMockConfiguration.wireMockConfig()
                                                           .usingFilesUnderClasspath("400-rest/src/test/resources")
@@ -89,6 +93,7 @@ public class JenkinsTest extends CategoryTest {
   @Before
   public void setup() throws URISyntaxException {
     rootUrl = String.format(JENKINS_URL, wireMockRule.port());
+    PASSWORD = scmSecret.decryptToString(new SecretName("jenkins_password"));
     jenkins = new JenkinsImpl(rootUrl, USERNAME, PASSWORD.toCharArray());
     LoggingInitializer.initializeLogging();
     on(jenkins).set("timeLimiter", new FakeTimeLimiter());

@@ -2,6 +2,8 @@ package io.harness.serializer;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.reflection.HarnessReflections;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.JavaType;
@@ -33,7 +35,7 @@ public class JsonSubtypeResolver extends SubtypeResolver {
           .build(new CacheLoader<Class<?>, List<NamedType>>() {
             @Override
             public List<NamedType> load(Class<?> key) {
-              Reflections reflections = new Reflections("software.wings", "io.harness");
+              Reflections reflections = HarnessReflections.get();
               return reflections.getSubTypesOf(key)
                   .stream()
                   .filter(subClass -> subClass.isAnnotationPresent(JsonTypeName.class))

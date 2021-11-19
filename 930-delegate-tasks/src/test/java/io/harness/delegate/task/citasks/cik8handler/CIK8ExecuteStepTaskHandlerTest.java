@@ -6,7 +6,7 @@ import static junit.framework.TestCase.assertEquals;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ci.CIK8ExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8ExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;

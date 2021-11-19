@@ -22,7 +22,7 @@
       },
       "name":"freezer",
       "description":"Holiday production freeze",
-      "applicable":true,
+      "applicable":false,
       "appSelections":[
         {
           "filterType":"CUSTOM",
@@ -48,7 +48,8 @@
         "aaOLwzRsTMOoSlDrjstIHQ",
         "BH5_gD_VRDaWcSCsnZKSug"
       ],
-      "uuid":"FREEZE_ID"
+      "uuid":"FREEZE_ID",
+      "freezeWindowState":"INACTIVE"
     }
   ],
   "enableNextIterations":false,

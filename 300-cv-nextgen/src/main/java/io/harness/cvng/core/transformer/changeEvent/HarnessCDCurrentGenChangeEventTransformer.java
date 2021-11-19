@@ -34,6 +34,7 @@ public class HarnessCDCurrentGenChangeEventTransformer
         .name(metaData.getName())
         .artifactType(metaData.getArtifactType())
         .artifactName(metaData.getArtifactName())
+        .status(metaData.getStatus())
         .build();
   }
 
@@ -51,6 +52,7 @@ public class HarnessCDCurrentGenChangeEventTransformer
         .name(activity.getName())
         .artifactType(activity.getArtifactType())
         .artifactName(activity.getArtifactName())
+        .status(activity.getStatus())
         .build();
   }
 }

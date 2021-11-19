@@ -6,6 +6,8 @@ import static io.harness.security.encryption.SecretManagerType.CUSTOM;
 import static io.harness.security.encryption.SecretManagerType.KMS;
 import static io.harness.security.encryption.SecretManagerType.VAULT;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -25,7 +27,9 @@ import io.harness.security.encryption.EncryptionConfig;
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import org.apache.commons.lang3.NotImplementedException;
 
+@OwnedBy(HarnessTeam.PL)
 public class FetchSecretTask extends AbstractDelegateRunnableTask {
   @Inject private VaultEncryptorsRegistry vaultEncryptorsRegistry;
   @Inject private KmsEncryptorsRegistry kmsEncryptorsRegistry;
@@ -38,15 +42,12 @@ public class FetchSecretTask extends AbstractDelegateRunnableTask {
 
   @Override
   public DelegateResponseData run(Object[] parameters) {
-    return run((FetchSecretTaskParameters) parameters[0]);
+    throw new NotImplementedException("not implemented");
   }
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    return run((FetchSecretTaskParameters) parameters);
-  }
-
-  private FetchSecretTaskResponse run(FetchSecretTaskParameters fetchSecretTaskParameters) {
+    FetchSecretTaskParameters fetchSecretTaskParameters = (FetchSecretTaskParameters) parameters;
     EncryptionConfig config = fetchSecretTaskParameters.getEncryptionConfig();
     EncryptedRecord record = fetchSecretTaskParameters.getEncryptedRecord();
     if (KMS == config.getType()) {

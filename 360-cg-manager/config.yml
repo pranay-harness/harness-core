@@ -26,6 +26,12 @@ xxxxxxxx
         threshold: ERROR
   maxThreads: 1024
 
+commonPoolConfig:
+  corePoolSize: ${COMMON_POOL_CORE_SIZE:-20}
+  maxPoolSize: ${COMMON_POOL_MAX_SIZE:-1000}
+  idleTime: ${COMMON_POOL_IDLE_TIME:-500}
+  timeUnit: ${COMMON_POOL_IDLE_TIME_TIME_UNIT:-MILLISECONDS}
+
 auditConfig:
   storeRequestPayload: false
   storeResponsePayload: false
@@ -35,7 +41,7 @@ backgroundScheduler:
   schedulerName: automation_background_scheduler
   instanceId: automation_background
   tablePrefix: quartz
-  threadCount: 25
+  threadCount: ${CRONS_THREAD_COUNT:-25}
   clustered: true #backgroundScheduler
   #mongoUri: mongodb://localhost:27017/background_scheduler
 
@@ -45,7 +51,7 @@ serviceScheduler:
   #instanceId: automation_service
   instanceId: automation_background
   tablePrefix: quartz
-  threadCount: 25
+  threadCount: ${CRONS_THREAD_COUNT:-25}
   enabled: true
   #mongoUri: mongodb://localhost:27017/service_scheduler
 
@@ -96,6 +102,11 @@ marketoConfig:
 
 segmentConfig:
   enabled: false #segmentConfigEnable
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
+
+segmentConfiguration:
+  enabled: false
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
 
@@ -291,6 +302,7 @@ events-mongo:
   indexManagerMode: AUTO
 
 searchEnabled: false
+graphQLEnabled: true
 
 elasticsearch:
   uri: http://localhost:9200
@@ -304,10 +316,11 @@ delegateMetadataUrl: file:///local-storage/wingsdelegates/delegatelocal.txt
 
 apiUrl: "https://localhost:9090"
 deployMode: KUBERNETES
+deployVariant: SAAS
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: 87448d72
+scmVersion: 72f01538
 
 ngAuthUIEnabled: false
 
@@ -334,6 +347,14 @@ portal:
   optionalDelegateTaskRejectAtLimit: 10000
   importantDelegateTaskRejectAtLimit: 50000
   criticalDelegateTaskRejectAtLimit: 100000
+
+totp:
+  secOpsEmail: secops.fake.email@mailnator.com
+  incorrectAttemptsUntilSecOpsNotified: 1000
+  limit:
+    count: 10
+    duration: 5
+    durationUnit: MINUTES
 
 cacheConfig:
   cacheBackend: HAZELCAST
@@ -626,9 +647,49 @@ auditClientConfig:
 
 enableAudit: false
 
+eventListenersCountConfig:
+  deploymentEventListenerCount: ${DEPLOYMENT_EVENT_LISTENER_COUNT:-2}
+  instanceEventListenerCount: ${INSTANCE_EVENT_LISTENER_COUNT:-2}
+  deploymentTimeSeriesEventListenerCount: ${DEPLOYMENT_TIME_SERIES_EVENT_LISTENER_COUNT:-2}
+  executionEventListenerCount: ${EXECUTION_EVENT_LISTENER_COUNT:-3}
+  generalNotifyEventListenerCount: ${GENERAL_NOTIFY_EVENT_LISTENER_COUNT:-5}
+  orchestrationNotifyEventListenerCount: ${ORCHESTRATION_NOTIFY_EVENT_LISTENER_COUNT:-5}
+
+iteratorsConfig:
+  resourceConstraintBackupIteratorConfig:
+    threadPoolSize: ${RESOURCE_CONSTRAINT_BACKUP_ITERATOR_THREAD_COUNT:-10}
+  delegateCapabilitiesRecordIteratorConfig:
+    threadPoolSize: ${DELEGATE_CAPABILITIES_RECORD_ITERATOR_THREAD_COUNT:-5}
+  settingAttributeValidateConnectivityIteratorConfig:
+    threadPoolSize: ${SETTING_ATTRIBUTE_VALIDATE_CONNECTIVITY_ITERATOR_THREAD_COUNT:-5}
+  instanceSyncIteratorConfig:
+    threadPoolSize: ${INSTANCE_SYNC_ITERATOR_THREAD_COUNT:-10}
+  artifactCollectionIteratorConfig:
+    threadPoolSize: ${ARTIFACT_COLLECTION_ITERATOR_THREAD_COUNT:-25}
+  eventDeliveryIteratorConfig:
+    threadPoolSize: ${EVENT_DELIVERY_ITERATOR_THREAD_COUNT:-25}
+  workflowExecutionMonitorIteratorConfig:
+    threadPoolSize: ${WORKFLOW_EXECUTION_MONITOR_ITERATOR_THREAD_COUNT:-5}
+  blockingCapabilityPermissionsRecordHandlerIteratorConfig:
+    threadPoolSize: ${BLOCKING_CAPABILITY_PERMISSIONS_RECORD_ITERATOR_THREAD_COUNT:-5}
+  vaultSecretManagerRenewalIteratorConfig:
+    threadPoolSize: ${VAULT_SECRET_MANAGER_ITERATOR_THREAD_COUNT:-5}
+  delegateTaskExpiryCheckIteratorConfig:
+    threadPoolSize: ${DELEGATE_TASK_EXPIRY_CHECK_ITERATOR_THREAD_COUNT:-5}
+  perpetualTaskRebalanceIteratorConfig:
+    threadPoolSize: ${PERPETUAL_TASK_REBALANCE_ITERATOR_THREAD_COUNT:-5}
+  perpetualTaskAssignmentIteratorConfig:
+    threadPoolSize: ${PERPETUAL_TASK_ASSIGNMENT_ITERATOR_THREAD_COUNT:-5}
+
 disableDelegateMgmtInManager: false
+
+secretsConfiguration:
+  secretResolutionEnabled: false
+  gcpSecretManagerProject: harness-playground
 
 ldapSyncJobConfig:
   poolSize: 3
   syncInterval: 15
   defaultCronExpression: "0 0/15 * 1/1 * ? *"
+
+useGlobalKMSAsBaseAlgo: false

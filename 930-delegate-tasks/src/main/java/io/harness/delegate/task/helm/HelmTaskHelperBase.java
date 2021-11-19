@@ -312,7 +312,7 @@ public class HelmTaskHelperBase {
       if (processResult.hasOutput()) {
         builder.append(" Details: ").append(processResult.outputUTF8());
       }
-      throw new InvalidRequestException(builder.toString(), USER);
+      throw new HelmClientException(builder.toString(), HelmCliCommandType.FETCH);
     }
   }
 

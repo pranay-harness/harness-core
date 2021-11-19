@@ -8,19 +8,24 @@ import static java.lang.String.format;
 import io.harness.ModuleType;
 import io.harness.account.services.AccountService;
 import io.harness.beans.EmbeddedUser;
+import io.harness.cache.HarnessCacheManager;
 import io.harness.ccm.license.CeLicenseInfoDTO;
 import io.harness.ccm.license.remote.CeLicenseClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.licensing.Edition;
+import io.harness.licensing.EditionAction;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
+import io.harness.licensing.beans.EditionActionDTO;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
 import io.harness.licensing.beans.summary.LicensesWithSummaryDTO;
+import io.harness.licensing.checks.LicenseComplianceResolver;
 import io.harness.licensing.entities.modules.ModuleLicense;
+import io.harness.licensing.helpers.ModuleLicenseHelper;
 import io.harness.licensing.helpers.ModuleLicenseSummaryHelper;
 import io.harness.licensing.interfaces.ModuleLicenseInterface;
 import io.harness.licensing.mappers.LicenseObjectConverter;
@@ -36,20 +41,23 @@ import io.harness.telemetry.TelemetryReporter;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+import javax.cache.Cache;
+import javax.cache.configuration.Factory;
+import javax.cache.expiry.AccessedExpiryPolicy;
+import javax.cache.expiry.Duration;
+import javax.cache.expiry.ExpiryPolicy;
 import javax.ws.rs.NotFoundException;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class DefaultLicenseServiceImpl implements LicenseService {
   private final ModuleLicenseRepository moduleLicenseRepository;
@@ -58,12 +66,33 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   private final AccountService accountService;
   private final TelemetryReporter telemetryReporter;
   private final CeLicenseClient ceLicenseClient;
+  private final LicenseComplianceResolver licenseComplianceResolver;
+  private final HarnessCacheManager cacheManager;
+  private Cache<String, List> cache;
 
   static final String FAILED_OPERATION = "START_TRIAL_ATTEMPT_FAILED";
   static final String SUCCEED_START_FREE_OPERATION = "FREE_PLAN";
   static final String SUCCEED_START_TRIAL_OPERATION = "NEW_TRIAL";
   static final String SUCCEED_EXTEND_TRIAL_OPERATION = "EXTEND_TRIAL";
   static final String TRIAL_ENDED = "TRIAL_ENDED";
+
+  @Inject
+  public DefaultLicenseServiceImpl(ModuleLicenseRepository moduleLicenseRepository,
+      LicenseObjectConverter licenseObjectConverter, ModuleLicenseInterface licenseInterface,
+      AccountService accountService, TelemetryReporter telemetryReporter, CeLicenseClient ceLicenseClient,
+      LicenseComplianceResolver licenseComplianceResolver, HarnessCacheManager cacheManager) {
+    this.moduleLicenseRepository = moduleLicenseRepository;
+    this.licenseObjectConverter = licenseObjectConverter;
+    this.licenseInterface = licenseInterface;
+    this.accountService = accountService;
+    this.telemetryReporter = telemetryReporter;
+    this.ceLicenseClient = ceLicenseClient;
+    this.licenseComplianceResolver = licenseComplianceResolver;
+    this.cacheManager = cacheManager;
+
+    Factory<ExpiryPolicy> expiryPolicyFactory = AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES);
+    cache = cacheManager.getCache("NGLicense", String.class, List.class, expiryPolicyFactory);
+  }
 
   @Override
   @Deprecated
@@ -80,26 +109,21 @@ public class DefaultLicenseServiceImpl implements LicenseService {
 
   @Override
   public List<ModuleLicenseDTO> getModuleLicenses(String accountIdentifier, ModuleType moduleType) {
-    List<ModuleLicense> licenses =
-        moduleLicenseRepository.findByAccountIdentifierAndModuleType(accountIdentifier, moduleType);
-    return licenses.stream().map(licenseObjectConverter::<ModuleLicenseDTO>toDTO).collect(Collectors.toList());
+    return getModuleLicensesByAccountIdAndModuleType(accountIdentifier, moduleType);
   }
 
   @Override
   public AccountLicenseDTO getAccountLicense(String accountIdentifier) {
-    List<ModuleLicense> licenses = moduleLicenseRepository.findByAccountIdentifier(accountIdentifier);
     AccountLicenseDTO dto = AccountLicenseDTO.builder().accountId(accountIdentifier).build();
-    Map<ModuleType, ModuleLicenseDTO> licenseDTOMap =
-        licenses.stream()
-            .map(licenseObjectConverter::<ModuleLicenseDTO>toDTO)
-            .collect(Collectors.toMap(ModuleLicenseDTO::getModuleType, l -> l, (existing, replacement) -> existing));
-    dto.setModuleLicenses(licenseDTOMap);
+    Map<ModuleType, List<ModuleLicenseDTO>> allModuleLicenses = new HashMap<>();
+    for (ModuleType moduleType : ModuleType.values()) {
+      if (moduleType.isInternal()) {
+        continue;
+      }
 
-    // For new structure
-    Map<ModuleType, List<ModuleLicenseDTO>> allModuleLicenses =
-        licenses.stream()
-            .map(licenseObjectConverter::<ModuleLicenseDTO>toDTO)
-            .collect(Collectors.groupingBy(ModuleLicenseDTO::getModuleType));
+      List<ModuleLicenseDTO> moduleLicenses = getModuleLicenses(accountIdentifier, moduleType);
+      allModuleLicenses.put(moduleType, moduleLicenses);
+    }
     dto.setAllModuleLicenses(allModuleLicenses);
     return dto;
   }
@@ -117,10 +141,12 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   @Override
   public ModuleLicenseDTO createModuleLicense(ModuleLicenseDTO moduleLicense) {
     ModuleLicense license = licenseObjectConverter.toEntity(moduleLicense);
+
     // Validate entity
     ModuleLicense savedEntity;
     try {
-      savedEntity = moduleLicenseRepository.save(license);
+      license.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
+      savedEntity = saveLicense(license);
       // Send telemetry
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException("ModuleLicense already exists");
@@ -141,10 +167,10 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     }
 
     ModuleLicense existedLicense = existingEntityOptional.get();
-    license.setId(existedLicense.getId());
-    license.setAccountIdentifier(existedLicense.getAccountIdentifier());
-    license.setModuleType(existedLicense.getModuleType());
-    ModuleLicense updatedLicense = moduleLicenseRepository.save(license);
+    ModuleLicense updateLicense = ModuleLicenseHelper.compareAndUpdate(existedLicense, license);
+
+    updateLicense.setLastUpdatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
+    ModuleLicense updatedLicense = saveLicense(updateLicense);
 
     log.info("Updated license for module [{}] in account [{}]", updatedLicense.getModuleType(),
         updatedLicense.getAccountIdentifier());
@@ -160,17 +186,11 @@ public class DefaultLicenseServiceImpl implements LicenseService {
       throw new InvalidRequestException(String.format("Account [%s] doesn't exists", accountIdentifier));
     }
 
-    List<ModuleLicense> existing =
-        moduleLicenseRepository.findByAccountIdentifierAndModuleType(accountIdentifier, moduleType);
-    if (!existing.isEmpty()) {
-      String cause = format("Account [%s] already have licenses for moduleType [%s]", accountIdentifier, moduleType);
-      sendFailedTelemetryEvents(accountIdentifier, moduleType, null, Edition.FREE, cause);
-      throw new InvalidRequestException(cause);
-    }
-
     ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
     trialLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
-    ModuleLicense savedEntity = moduleLicenseRepository.save(trialLicense);
+
+    licenseComplianceResolver.preCheck(trialLicense, EditionAction.START_FREE);
+    ModuleLicense savedEntity = saveLicense(trialLicense);
     sendSucceedTelemetryEvents(SUCCEED_START_FREE_OPERATION, savedEntity, accountIdentifier);
 
     log.info("Free license for module [{}] is started in account [{}]", moduleType, accountIdentifier);
@@ -197,7 +217,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
 
     ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
     trialLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
-    ModuleLicense savedEntity = moduleLicenseRepository.save(trialLicense);
+    ModuleLicense savedEntity = saveLicense(trialLicense);
 
     log.info("Free license for module [{}] is started in account [{}]", moduleType, accountIdentifier);
 
@@ -208,7 +228,6 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   @Override
   public ModuleLicenseDTO startTrialLicense(String accountIdentifier, StartTrialDTO startTrialRequestDTO) {
     Edition edition = startTrialRequestDTO.getEdition();
-    LicenseType licenseType = LicenseType.TRIAL;
     ModuleLicenseDTO trialLicenseDTO =
         licenseInterface.generateTrialLicense(edition, accountIdentifier, startTrialRequestDTO.getModuleType());
 
@@ -217,18 +236,11 @@ public class DefaultLicenseServiceImpl implements LicenseService {
       throw new InvalidRequestException(String.format("Account [%s] doesn't exists", accountIdentifier));
     }
 
-    List<ModuleLicense> existing = moduleLicenseRepository.findByAccountIdentifierAndModuleType(
-        accountIdentifier, startTrialRequestDTO.getModuleType());
-    if (!existing.isEmpty()) {
-      String cause = format("Account [%s] already have licenses for moduleType [%s]", accountIdentifier,
-          startTrialRequestDTO.getModuleType());
-      sendFailedTelemetryEvents(accountIdentifier, startTrialRequestDTO.getModuleType(), licenseType, edition, cause);
-      throw new InvalidRequestException(cause);
-    }
-
     ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
     trialLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
-    ModuleLicense savedEntity = moduleLicenseRepository.save(trialLicense);
+
+    licenseComplianceResolver.preCheck(trialLicense, EditionAction.START_TRIAL);
+    ModuleLicense savedEntity = saveLicense(trialLicense);
     sendSucceedTelemetryEvents(SUCCEED_START_TRIAL_OPERATION, savedEntity, accountIdentifier);
 
     log.info("Trial license for module [{}] is started in account [{}]", startTrialRequestDTO.getModuleType(),
@@ -241,31 +253,19 @@ public class DefaultLicenseServiceImpl implements LicenseService {
 
   @Override
   public ModuleLicenseDTO extendTrialLicense(String accountIdentifier, StartTrialDTO startTrialRequestDTO) {
-    LicenseType licenseType = LicenseType.TRIAL;
     ModuleType moduleType = startTrialRequestDTO.getModuleType();
 
     List<ModuleLicense> existing =
         moduleLicenseRepository.findByAccountIdentifierAndModuleType(accountIdentifier, moduleType);
 
-    if (existing.isEmpty()) {
-      String cause =
-          format("Trial license for moduleType [%s] hasn't started in account [%s]", moduleType, accountIdentifier);
-      log.error(cause);
-      sendFailedTelemetryEvents(accountIdentifier, moduleType, licenseType, null, cause);
-      throw new InvalidRequestException(cause);
-    }
-
-    if (isNotEligibleToExtend(existing)) {
-      String cause = format("Can not extend trial for account [%s]. Please contact sales.", accountIdentifier);
-      sendFailedTelemetryEvents(accountIdentifier, moduleType, licenseType, null, cause);
-      throw new InvalidRequestException(cause);
-    }
-
     ModuleLicense existingModuleLicense = existing.get(0);
 
-    ModuleLicenseDTO trialLicense =
+    ModuleLicenseDTO trialLicenseDTO =
         licenseInterface.generateTrialLicense(existingModuleLicense.getEdition(), accountIdentifier, moduleType);
-    ModuleLicense savedEntity = moduleLicenseRepository.save(licenseObjectConverter.toEntity(trialLicense));
+
+    ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
+    licenseComplianceResolver.preCheck(trialLicense, EditionAction.EXTEND_TRIAL);
+    ModuleLicense savedEntity = saveLicense(trialLicense);
 
     sendSucceedTelemetryEvents(SUCCEED_EXTEND_TRIAL_OPERATION, savedEntity, accountIdentifier);
     syncLicenseChangeToCGForCE(savedEntity);
@@ -292,7 +292,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
         if (moduleLicense.isActive()) {
           // In case need to expire license
           moduleLicense.setStatus(LicenseStatus.EXPIRED);
-          moduleLicenseRepository.save(moduleLicense);
+          saveLicense(moduleLicense);
 
           if (LicenseType.TRIAL.equals(moduleLicense.getLicenseType())) {
             sendTrialEndEvents(moduleLicense, moduleLicense.getCreatedBy());
@@ -347,6 +347,40 @@ public class DefaultLicenseServiceImpl implements LicenseService {
       return Edition.FREE;
     }
     return highestEditionLicense.get().getEdition();
+  }
+
+  @Override
+  public Map<Edition, Set<EditionActionDTO>> getEditionActions(String accountIdentifier, ModuleType moduleType) {
+    Map<Edition, Set<EditionAction>> editionStates =
+        licenseComplianceResolver.getEditionStates(moduleType, accountIdentifier);
+
+    Map<Edition, Set<EditionActionDTO>> result = new HashMap<>();
+    for (Map.Entry<Edition, Set<EditionAction>> entry : editionStates.entrySet()) {
+      Set<EditionActionDTO> dtos =
+          entry.getValue().stream().map(e -> toEditionActionDTO(e)).collect(Collectors.toSet());
+      result.put(entry.getKey(), dtos);
+    }
+    return result;
+  }
+
+  @Override
+  public Map<ModuleType, Long> getLastUpdatedAtMap(String accountIdentifier) {
+    Map<ModuleType, Long> lastUpdatedAtMap = new HashMap<>();
+    for (ModuleType moduleType : ModuleType.values()) {
+      if (moduleType.isInternal()) {
+        continue;
+      }
+
+      List<ModuleLicenseDTO> moduleLicenses = getModuleLicenses(accountIdentifier, moduleType);
+      ModuleLicenseDTO mostRecentUpdatedLicense = ModuleLicenseHelper.getMostRecentUpdatedLicense(moduleLicenses);
+      lastUpdatedAtMap.put(
+          moduleType, mostRecentUpdatedLicense == null ? 0 : mostRecentUpdatedLicense.getLastModifiedAt());
+    }
+    return lastUpdatedAtMap;
+  }
+
+  private EditionActionDTO toEditionActionDTO(EditionAction editionAction) {
+    return EditionActionDTO.builder().action(editionAction).reason(editionAction.getReason()).build();
   }
 
   private void sendSucceedTelemetryEvents(String eventName, ModuleLicense moduleLicense, String accountIdentifier) {
@@ -408,7 +442,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   private void sendTrialEndEvents(ModuleLicense moduleLicense, EmbeddedUser user) {
     HashMap<String, Object> properties = new HashMap<>();
     String email = "unknown";
-    if (user != null) {
+    if (user != null && user.getEmail() != null) {
       email = user.getEmail();
     }
     properties.put("email", email);
@@ -438,8 +472,9 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     }
 
     ModuleLicense moduleLicense = moduleLicenses.get(0);
-    Duration duration = Duration.ofMillis(Instant.now().toEpochMilli() - moduleLicense.getExpiryTime());
-    return duration.toMillis() <= 0 || duration.toDays() > 14 || LicenseType.PAID.equals(moduleLicense.getLicenseType())
+    boolean trialLicenseUnderExtendPeriod =
+        ModuleLicenseHelper.isTrialLicenseUnderExtendPeriod(moduleLicense.getExpiryTime());
+    return !trialLicenseUnderExtendPeriod || LicenseType.PAID.equals(moduleLicense.getLicenseType())
         || Edition.FREE.equals(moduleLicense.getEdition());
   }
 
@@ -467,5 +502,53 @@ public class DefaultLicenseServiceImpl implements LicenseService {
         log.error("Unable to sync license info in CG CCM", e);
       }
     }
+  }
+
+  private ModuleLicense saveLicense(ModuleLicense moduleLicense) {
+    ModuleLicense savedLicense = moduleLicenseRepository.save(moduleLicense);
+    evictCache(moduleLicense.getAccountIdentifier(), moduleLicense.getModuleType());
+    return savedLicense;
+  }
+
+  private List<ModuleLicenseDTO> getModuleLicensesByAccountIdAndModuleType(
+      String accountIdentifier, ModuleType moduleType) {
+    if (checkExistInCache(accountIdentifier, moduleType)) {
+      try {
+        return getFromCache(accountIdentifier, moduleType);
+      } catch (Exception e) {
+        log.error("Unable to get license data from cache", e);
+      }
+    }
+
+    List<ModuleLicense> licenses =
+        moduleLicenseRepository.findByAccountIdentifierAndModuleType(accountIdentifier, moduleType);
+    List<ModuleLicenseDTO> result =
+        licenses.stream().map(licenseObjectConverter::<ModuleLicenseDTO>toDTO).collect(Collectors.toList());
+    setToCache(accountIdentifier, moduleType, result);
+    return result;
+  }
+
+  private List<ModuleLicenseDTO> getFromCache(String accountIdentifier, ModuleType moduleType) {
+    String key = generateCacheKey(accountIdentifier, moduleType);
+    return (List<ModuleLicenseDTO>) cache.get(key);
+  }
+
+  private boolean checkExistInCache(String accountIdentifier, ModuleType moduleType) {
+    String key = generateCacheKey(accountIdentifier, moduleType);
+    return cache.containsKey(key);
+  }
+
+  private void setToCache(String accountIdentifier, ModuleType moduleType, List<ModuleLicenseDTO> licenses) {
+    String key = generateCacheKey(accountIdentifier, moduleType);
+    cache.put(key, licenses);
+  }
+
+  private void evictCache(String accountIdentifier, ModuleType moduleType) {
+    String key = generateCacheKey(accountIdentifier, moduleType);
+    cache.remove(key);
+  }
+
+  private String generateCacheKey(String accountIdentifier, ModuleType moduleType) {
+    return String.format("%s:%s", accountIdentifier, moduleType.name());
   }
 }

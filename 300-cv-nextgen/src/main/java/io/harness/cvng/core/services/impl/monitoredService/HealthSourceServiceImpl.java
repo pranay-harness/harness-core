@@ -1,29 +1,33 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
+import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
 import io.harness.exception.DuplicateFieldException;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class HealthSourceServiceImpl implements HealthSourceService {
-  @Inject Injector injector;
+  @Inject private Map<DataSourceType, CVConfigToHealthSourceTransformer> dataSourceTypeToHealthSourceTransformerMap;
   @Inject private CVConfigService cvConfigService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private MetricPackService metricPackService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public void create(String accountId, String orgIdentifier, String projectIdentifier, String environmentRef,
@@ -33,13 +37,23 @@ public class HealthSourceServiceImpl implements HealthSourceService {
           orgIdentifier, projectIdentifier, environmentRef, serviceRef,
           HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()),
           healthSource.getName(), Collections.emptyList(), metricPackService);
-      cvConfigUpdateResult.getAdded().forEach(cvConfig -> cvConfig.setEnabled(enabled));
+      boolean isDemoEnabledForAnyCVConfig = false;
+      for (CVConfig cvConfig : cvConfigUpdateResult.getAdded()) {
+        cvConfig.setEnabled(enabled);
+        if (cvConfig.isEligibleForDemo()
+            && featureFlagService.isFeatureFlagEnabled(accountId, "CVNG_MONITORED_SERVICE_DEMO")) {
+          isDemoEnabledForAnyCVConfig = true;
+          cvConfig.setDemo(true);
+        }
+      }
+
       cvConfigService.save(cvConfigUpdateResult.getAdded());
       // Creating MonitoringSourcePerpetualTasks for now irrespective of enable/disable status.
       // We need to rethink how these tasks are created, batched and managed together.
       monitoringSourcePerpetualTaskService.createTask(accountId, orgIdentifier, projectIdentifier,
           healthSource.getSpec().getConnectorRef(),
-          HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()));
+          HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()),
+          isDemoEnabledForAnyCVConfig);
     });
   }
 
@@ -113,7 +127,7 @@ public class HealthSourceServiceImpl implements HealthSourceService {
             HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, identifier), orgIdentifier,
             projectIdentifier));
 
-    HealthSource healthSource = HealthSourceDTO.toHealthSource(cvConfigs, injector);
+    HealthSource healthSource = HealthSourceDTO.toHealthSource(cvConfigs, dataSourceTypeToHealthSourceTransformerMap);
     healthSource.setIdentifier(identifier);
     return healthSource;
   }

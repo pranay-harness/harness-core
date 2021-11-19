@@ -12,7 +12,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 
 import io.harness.delegate.beans.ci.CICleanupTaskParams;
-import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.task.citasks.CICleanupTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.k8java.CIK8JavaClientHandler;

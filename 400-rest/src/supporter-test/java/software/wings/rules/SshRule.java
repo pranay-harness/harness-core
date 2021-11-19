@@ -27,7 +27,7 @@ public class SshRule implements MethodRule {
   private SshServer sshd;
   private TemporaryFolder temporaryFolder;
   private String username = System.getProperty("user.name");
-  private String password = "Wings@123";
+  private String password = "password";
   private Path keyPath;
 
   /**
@@ -97,6 +97,9 @@ public class SshRule implements MethodRule {
    */
   public void setPassword(String password) {
     this.password = password;
+    sshd.setPasswordAuthenticator(
+        (username, pwd,
+            session) -> StringUtils.equals(this.username, username) && StringUtils.equals(this.password, pwd));
   }
 
   /**

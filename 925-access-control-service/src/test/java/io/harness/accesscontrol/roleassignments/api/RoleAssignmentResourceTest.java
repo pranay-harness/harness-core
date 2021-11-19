@@ -335,7 +335,7 @@ public class RoleAssignmentResourceTest extends AccessControlTestBase {
                                 .build();
     RoleFilter roleFilterClone = (RoleFilter) NGObjectMapperHelper.clone(roleFilter);
     when(roleService.list(maxPageRequest, roleFilter)).thenReturn(getEmptyPageResponse(maxPageRequest));
-    when(resourceGroupService.list(new ArrayList<>(), scope.toString())).thenReturn(new ArrayList<>());
+    when(resourceGroupService.list(new ArrayList<>(), scope.toString(), NO_FILTER)).thenReturn(new ArrayList<>());
 
     ResponseDTO<RoleAssignmentAggregateResponseDTO> responseDTO =
         roleAssignmentResource.getAggregated(harnessScopeParams, roleAssignmentFilterDTO);
@@ -347,7 +347,7 @@ public class RoleAssignmentResourceTest extends AccessControlTestBase {
     verify(accessControlClient, times(3)).hasAccess(any(ResourceScope.class), any(), any());
     verify(roleAssignmentService, times(1)).list(eq(maxPageRequest), roleAssignmentFilterArgumentCaptor.capture());
     verify(roleService, times(1)).list(maxPageRequest, roleFilterClone);
-    verify(resourceGroupService, times(1)).list(new ArrayList<>(), scopeClone.toString());
+    verify(resourceGroupService, times(1)).list(new ArrayList<>(), scopeClone.toString(), NO_FILTER);
     RoleAssignmentFilter roleAssignmentFilter = roleAssignmentFilterArgumentCaptor.getValue();
     assertFilter(roleAssignmentFilterDTOClone, roleAssignmentFilterDTOClone.getPrincipalTypeFilter(),
         roleAssignmentFilterDTOClone.getPrincipalFilter(), roleAssignmentFilter);
@@ -357,7 +357,7 @@ public class RoleAssignmentResourceTest extends AccessControlTestBase {
       RoleAssignmentFilterDTO roleAssignmentFilterDTO) {
     testGetFilterMissingViewPrincipalPermissionsInternal(roleAssignmentFilterDTO);
     verify(roleService, times(0)).list(any(), any());
-    verify(resourceGroupService, times(0)).list(any(List.class), any());
+    verify(resourceGroupService, times(0)).list(any(List.class), any(), any());
   }
 
   @Test
@@ -457,7 +457,7 @@ public class RoleAssignmentResourceTest extends AccessControlTestBase {
     if (!scopePresent) {
       doNothing().when(harnessScopeService).sync(scope);
     }
-    when(resourceGroupService.get(roleAssignmentDTO.getResourceGroupIdentifier(), scope.toString()))
+    when(resourceGroupService.get(roleAssignmentDTO.getResourceGroupIdentifier(), scope.toString(), NO_FILTER))
         .thenReturn(resourceGroupPresent ? Optional.of(ResourceGroup.builder().build()) : Optional.empty());
     if (!resourceGroupPresent) {
       doNothing().when(harnessResourceGroupService).sync(roleAssignmentDTO.getResourceGroupIdentifier(), scope);
@@ -518,7 +518,7 @@ public class RoleAssignmentResourceTest extends AccessControlTestBase {
     if (!scopePresent) {
       verify(harnessScopeService, times(invocations)).sync(any());
     }
-    verify(resourceGroupService, times(invocations)).get(any(), any());
+    verify(resourceGroupService, times(invocations)).get(any(), any(), any());
     if (!resourceGroupPresent) {
       verify(harnessResourceGroupService, times(invocations)).sync(any(), any());
     }

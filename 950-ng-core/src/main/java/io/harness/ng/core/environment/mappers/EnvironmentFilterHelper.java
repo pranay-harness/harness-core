@@ -44,6 +44,8 @@ public class EnvironmentFilterHelper {
     update.set(EnvironmentKeys.deleted, false);
     update.set(EnvironmentKeys.tags, environment.getTags());
     update.set(EnvironmentKeys.color, environment.getColor());
+    update.setOnInsert(EnvironmentKeys.createdAt, System.currentTimeMillis());
+    update.set(EnvironmentKeys.lastModifiedAt, System.currentTimeMillis());
     return update;
   }
 

@@ -22,6 +22,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
+import io.harness.gitsync.sdk.EntityValidityDetails;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
@@ -59,6 +60,8 @@ public class ConnectorMapper {
     connector.setTags(TagMapper.convertToList(connectorInfo.getTags()));
     connector.setDescription(connectorInfo.getDescription());
     connector.setType(connectorInfo.getConnectorType());
+    connector.setEntityInvalid(false);
+    connector.setYaml(null);
     connector.setCategories(Arrays.asList(ConnectorRegistryFactory.getConnectorCategory(connector.getType())));
     if (connectorInfo.getConnectorConfig() instanceof DelegateSelectable) {
       Set<String> delegateSelectors = ((DelegateSelectable) connectorInfo.getConnectorConfig()).getDelegateSelectors();
@@ -66,8 +69,8 @@ public class ConnectorMapper {
     }
 
     if (connectorInfo.getConnectorConfig() instanceof ManagerExecutable) {
-      Boolean executeOnManager = ((ManagerExecutable) connectorInfo.getConnectorConfig()).getExecuteOnManager();
-      connector.setExecuteOnManager(executeOnManager);
+      Boolean executeOnDelegate = ((ManagerExecutable) connectorInfo.getConnectorConfig()).getExecuteOnDelegate();
+      connector.setExecuteOnDelegate(executeOnDelegate);
     }
     return connector;
   }
@@ -97,6 +100,10 @@ public class ConnectorMapper {
         .harnessManaged(isHarnessManaged(connector))
         .activityDetails(getConnectorActivity(connector.getActivityDetails(), timeWhenConnectorIsLastUpdated))
         .gitDetails(entityGitDetails)
+        .entityValidityDetails(EntityValidityDetails.builder()
+                                   .valid(!connector.isEntityInvalid())
+                                   .invalidYaml(connector.getYaml())
+                                   .build())
         .build();
   }
 
@@ -176,8 +183,8 @@ public class ConnectorMapper {
     }
 
     if (connectorDTO instanceof ManagerExecutable) {
-      final Boolean executeOnManager = Optional.ofNullable(connector.getExecuteOnManager()).orElse(false);
-      ((ManagerExecutable) connectorDTO).setExecuteOnManager(executeOnManager);
+      final Boolean executeOnDelegate = Optional.ofNullable(connector.getExecuteOnDelegate()).orElse(true);
+      ((ManagerExecutable) connectorDTO).setExecuteOnDelegate(executeOnDelegate);
     }
     return connectorDTO;
   }

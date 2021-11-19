@@ -77,6 +77,7 @@ public class UserResourceNG {
   private final SignupService signupService;
   private final TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   private final AccountService accountService;
+  private static final String COMMUNITY_ACCOUNT_EXISTS = "A community account already exists";
   private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
 
   @POST
@@ -105,6 +106,36 @@ public class UserResourceNG {
     }
 
     User createdUser = userService.completeNewSignupInvite(userInviteInDB);
+    UserInfo userInfo = convertUserToNgUser(createdUser);
+    userInfo.setIntent(userInviteInDB.getIntent());
+
+    if (isNotEmpty(userInviteInDB.getSignupAction())) {
+      userInfo.setSignupAction(userInviteInDB.getSignupAction());
+    }
+
+    if (isNotEmpty(userInviteInDB.getEdition())) {
+      userInfo.setEdition(userInviteInDB.getEdition());
+    }
+
+    if (isNotEmpty(userInviteInDB.getBillingFrequency())) {
+      userInfo.setBillingFrequency(userInviteInDB.getBillingFrequency());
+    }
+
+    return new RestResponse<>(userInfo);
+  }
+
+  @POST
+  @Path("/signup-invite/community")
+  public RestResponse<UserInfo> createCommunityUserAndCompleteSignup(SignupInviteDTO request) {
+    if (!accountService.listAllAccountsWithoutTheGlobalAccount().isEmpty()) {
+      throw new InvalidRequestException(COMMUNITY_ACCOUNT_EXISTS);
+    }
+
+    userService.createNewSignupInvite(request);
+
+    UserInvite userInviteInDB = signupService.getUserInviteByEmail(request.getEmail());
+
+    User createdUser = userService.completeCommunitySignup(userInviteInDB);
     UserInfo userInfo = convertUserToNgUser(createdUser);
     userInfo.setIntent(userInviteInDB.getIntent());
 

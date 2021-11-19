@@ -9,12 +9,14 @@ import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.AnomaliesSummaryDTO;
+import io.harness.cvng.core.beans.monitoredService.CountServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
@@ -37,6 +39,7 @@ import io.swagger.annotations.ApiParam;
 import java.time.Instant;
 import java.util.List;
 import javax.validation.Valid;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -174,9 +177,15 @@ public class MonitoredServiceResource {
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier, @QueryParam("offset") @NotNull Integer offset,
-      @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter) {
+      @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter,
+      @NotNull @QueryParam("servicesAtRiskFilter") @ApiParam(defaultValue = "false") boolean servicesAtRiskFilter) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
     return ResponseDTO.newResponse(monitoredServiceService.list(
-        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, offset, pageSize, filter));
+        projectParams, environmentIdentifier, offset, pageSize, filter, servicesAtRiskFilter));
   }
 
   @GET
@@ -213,6 +222,24 @@ public class MonitoredServiceResource {
                                       .build();
     return ResponseDTO.newResponse(
         monitoredServiceService.getList(projectParams, environmentIdentifier, offset, pageSize, filter));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/all/time-series-health-sources")
+  @ApiOperation(value = "get all of monitored service data with time series health sources ",
+      nickname = "getAllMonitoredServicesWithTimeSeriesHealthSources")
+  public ResponseDTO<List<MonitoredServiceWithHealthSources>>
+  getAllMonitoredServicesWithHealthSources(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return ResponseDTO.newResponse(monitoredServiceService.getAllWithTimeSeriesHealthSources(projectParams));
   }
 
   @GET
@@ -256,7 +283,8 @@ public class MonitoredServiceResource {
                                                             .serviceIdentifier(serviceIdentifier)
                                                             .environmentIdentifier(environmentIdentifier)
                                                             .build();
-    return ResponseDTO.newResponse(monitoredServiceService.getCurrentScore(serviceEnvironmentParams));
+    return ResponseDTO.newResponse(
+        monitoredServiceService.getCurrentAndDependentServicesScore(serviceEnvironmentParams));
   }
 
   @DELETE
@@ -396,5 +424,35 @@ public class MonitoredServiceResource {
                                           .endTime(Instant.ofEpochMilli(endTime))
                                           .build();
     return new RestResponse<>(monitoredServiceService.getAnomaliesSummary(projectParams, identifier, timeRangeParams));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/count-of-services")
+  @ApiOperation(value = "get count of types of services like Monitored Service, Services at Risk ",
+      nickname = "getCountOfServices")
+  public CountServiceDTO
+  getCountOfServices(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("environmentIdentifier") String environmentIdentifier, @QueryParam("filter") String filter) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return monitoredServiceService.getCountOfServices(projectParams, environmentIdentifier, filter);
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/service-details")
+  @ApiOperation(value = "get details of a monitored service present in the Service Dependency Graph",
+      nickname = "getMonitoredServiceDetails")
+  public MonitoredServiceListItemDTO
+  getMonitoredServiceDetails(@BeanParam ServiceEnvironmentParams serviceEnvironmentParams) {
+    return monitoredServiceService.getMonitoredServiceDetails(serviceEnvironmentParams);
   }
 }

@@ -12,6 +12,7 @@ import io.harness.beans.steps.outcome.IntegrationStageOutcome;
 import io.harness.beans.steps.outcome.IntegrationStageOutcome.IntegrationStageOutcomeBuilder;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.steps.common.StageElementParameters;
@@ -57,7 +58,11 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
   @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, StageElementParameters stepParameters, StepInputPackage inputPackage) {
-    log.info("Executing integration stage with params [{}]", stepParameters);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
+    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
+
+    log.info("Executing integration stage with params accountId {} projectId {} [{}]", accountId, projectIdentifier,
+        stepParameters);
 
     IntegrationStageStepParametersPMS integrationStageStepParametersPMS =
         (IntegrationStageStepParametersPMS) stepParameters.getSpecConfig();
@@ -67,6 +72,15 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
     if (infrastructure == null) {
       throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
+
+    StageDetails stageDetails =
+        StageDetails.builder()
+            .stageID(stepParameters.getIdentifier())
+            .stageRuntimeID(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
+            .buildStatusUpdateParameter(integrationStageStepParametersPMS.getBuildStatusUpdateParameter())
+            .accountId(AmbianceUtils.getAccountId(ambiance))
+            .build();
+
     K8PodDetails k8PodDetails = K8PodDetails.builder()
                                     .stageID(stepParameters.getIdentifier())
                                     .accountId(AmbianceUtils.getAccountId(ambiance))
@@ -74,6 +88,9 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
 
     executionSweepingOutputResolver.consume(
         ambiance, ContextElement.podDetails, k8PodDetails, StepOutcomeGroup.STAGE.name());
+
+    executionSweepingOutputResolver.consume(
+        ambiance, ContextElement.stageDetails, stageDetails, StepOutcomeGroup.STAGE.name());
 
     final String executionNodeId = integrationStageStepParametersPMS.getChildNodeID();
     return ChildExecutableResponse.newBuilder().setChildNodeId(executionNodeId).build();

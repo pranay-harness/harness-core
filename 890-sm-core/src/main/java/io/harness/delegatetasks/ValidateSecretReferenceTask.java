@@ -1,10 +1,12 @@
 package io.harness.delegatetasks;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.security.encryption.SecretManagerType.CUSTOM;
 import static io.harness.security.encryption.SecretManagerType.VAULT;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretText;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -23,7 +25,9 @@ import io.harness.security.encryption.EncryptionConfig;
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import org.apache.commons.lang3.NotImplementedException;
 
+@OwnedBy(PL)
 public class ValidateSecretReferenceTask extends AbstractDelegateRunnableTask {
   @Inject VaultEncryptorsRegistry vaultEncryptorsRegistry;
   @Inject CustomEncryptorsRegistry customEncryptorsRegistry;
@@ -36,21 +40,19 @@ public class ValidateSecretReferenceTask extends AbstractDelegateRunnableTask {
 
   @Override
   public DelegateResponseData run(Object[] parameters) {
-    return run((ValidateSecretReferenceTaskParameters) parameters[0]);
+    throw new NotImplementedException("not implemented");
   }
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    return run((ValidateSecretReferenceTaskParameters) parameters);
-  }
-
-  private ValidateSecretReferenceTaskResponse run(ValidateSecretReferenceTaskParameters parameters) {
-    EncryptionConfig encryptionConfig = parameters.getEncryptionConfig();
+    ValidateSecretReferenceTaskParameters validateSecretReferenceTaskParameters =
+        (ValidateSecretReferenceTaskParameters) parameters;
+    EncryptionConfig encryptionConfig = validateSecretReferenceTaskParameters.getEncryptionConfig();
 
     if (encryptionConfig.getType() == VAULT) {
-      return runVaultTask(parameters);
+      return runVaultTask(validateSecretReferenceTaskParameters);
     } else if (encryptionConfig.getType() == CUSTOM) {
-      return runCustomTask(parameters);
+      return runCustomTask(validateSecretReferenceTaskParameters);
     }
 
     throw new SecretManagementDelegateException(SECRET_MANAGEMENT_ERROR,

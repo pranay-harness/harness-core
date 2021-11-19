@@ -4,8 +4,8 @@ import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;

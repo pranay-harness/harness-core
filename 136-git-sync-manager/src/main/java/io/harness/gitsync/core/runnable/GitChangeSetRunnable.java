@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.gitsync.common.beans.YamlChangeSet.MAX_RETRY_COUNT_EXCEEDED_CODE;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 
@@ -70,12 +71,12 @@ public class GitChangeSetRunnable implements Runnable {
   @Override
   public void run() {
     final Stopwatch stopwatch = Stopwatch.createStarted();
-    //    log.info("Started job to pick changesets for processing");
-
     try {
       if (!shouldRun()) {
-        log.info("Not continuing with GitChangeSetRunnable job");
-        Thread.sleep(300);
+        if (shouldPrintStatusLogs()) {
+          lastTimestampForStatusLogPrint.set(System.currentTimeMillis());
+          log.info("Not continuing with GitChangeSetRunnable job");
+        }
         return;
       }
 
@@ -89,6 +90,9 @@ public class GitChangeSetRunnable implements Runnable {
       }
 
       try (ProcessTimeLogContext ignore4 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
+        if (!yamlChangeSets.isEmpty()) {
+          log.info("Successfully handled {} change sets", yamlChangeSets.size());
+        }
       }
 
     } catch (WingsException exception) {
@@ -111,11 +115,20 @@ public class GitChangeSetRunnable implements Runnable {
     final String accountId = yamlChangeSet.getAccountId();
     try (AccountLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = createLogContextForChangeSet(yamlChangeSet)) {
-      log.info("GIT_YAML_LOG_ENTRY: Processing  changeSetId: [{}]", yamlChangeSet.getChangesetId());
-      yamlChangeSetLifeCycleHandlerService.handleChangeSet(yamlChangeSet);
+      log.info("Processing changeSetId: [{}]", yamlChangeSet.getChangesetId());
+      if (changeSetReachedMaxRetries(yamlChangeSet)) {
+        yamlChangeSetService.markSkippedWithMessageCode(
+            yamlChangeSet.getAccountId(), yamlChangeSet.getChangesetId(), MAX_RETRY_COUNT_EXCEEDED_CODE);
+      } else {
+        yamlChangeSetLifeCycleHandlerService.handleChangeSet(yamlChangeSet);
+      }
     } catch (UnsupportedOperationException ex) {
       log.error("Couldn't process change set : {}", yamlChangeSet, ex);
     }
+  }
+
+  private boolean changeSetReachedMaxRetries(YamlChangeSetDTO yamlChangeSet) {
+    return yamlChangeSet.getRetryCount() >= MAX_RETRY_FOR_CHANGESET;
   }
 
   private List<YamlChangeSetDTO> getYamlChangeSetsPerQueueKey() {
@@ -176,7 +189,6 @@ public class GitChangeSetRunnable implements Runnable {
 
   private void handleStuckChangeSets() {
     if (shouldPerformStuckJobCheck()) {
-      log.info("handling stuck change sets");
       lastTimestampForStuckJobCheck.set(System.currentTimeMillis());
       gitChangeSetRunnableHelper.handleOldQueuedChangeSets(yamlChangeSetService);
       handleStuckRunningChangesets();
@@ -218,7 +230,7 @@ public class GitChangeSetRunnable implements Runnable {
       Map<String, List<YamlChangeSetDTO>> accountIdToStuckChangeSets =
           stuckChangeSets.stream().collect(Collectors.groupingBy(YamlChangeSetDTO::getAccountId));
 
-      // Mark these yamlChagneSets as Queued.
+      // Mark these yamlChangeSets as Queued.
       accountIdToStuckChangeSets.forEach(this::retryOrSkipStuckChangeSets);
     }
   }
@@ -228,7 +240,6 @@ public class GitChangeSetRunnable implements Runnable {
     yamlChangeSetService.updateStatusAndIncrementRetryCountForYamlChangeSets(
         accountId, YamlChangeSetStatus.QUEUED, runningStatusList, yamlChangeSetIds);
     log.info("Retrying stuck changesets: [{}]", yamlChangeSetIds);
-
     yamlChangeSetService.markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(accountId, MAX_RETRY_FOR_CHANGESET);
   }
 
@@ -273,7 +284,6 @@ public class GitChangeSetRunnable implements Runnable {
 
   private void handleChangeSetWithMaxRetry() {
     if (shouldPerformMaxRetriedJobCheck()) {
-      log.info("handling max retried queued change sets");
       lastTimestampForQueuedJobCheck.set(System.currentTimeMillis());
       skipChangeSetsWithMaxRetries();
       log.info("Successfully handled max retried stuck queued change sets");

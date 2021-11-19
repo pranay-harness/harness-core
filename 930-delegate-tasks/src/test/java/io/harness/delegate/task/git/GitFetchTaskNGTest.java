@@ -15,13 +15,14 @@ import static org.mockito.Mockito.doThrow;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.service.git.NGGitService;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
-import io.harness.delegate.git.NGGitService;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -156,16 +157,17 @@ public class GitFetchTaskNGTest {
         .fetchFilesByPath(
             any(GitStoreDelegateConfig.class), anyString(), any(SshSessionConfig.class), any(GitConfigDTO.class));
 
-    GitFetchResponse response = gitFetchTaskNG.run(taskParameters);
-    assertThat(response.getTaskStatus()).isEqualTo(TaskStatus.FAILURE);
+    assertThatThrownBy(() -> gitFetchTaskNG.run(taskParameters))
+        .isInstanceOf(TaskNGDataException.class)
+        .hasCauseInstanceOf(InvalidRequestException.class);
   }
 
   @Test
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testTaskRunInvalidRequest() {
-    GitFetchResponse response = gitFetchTaskNG.run(GitFetchRequest.builder().build());
-    assertThat(response.getTaskStatus()).isEqualTo(TaskStatus.FAILURE);
+    assertThatThrownBy(() -> gitFetchTaskNG.run(GitFetchRequest.builder().build()))
+        .isInstanceOf(TaskNGDataException.class);
   }
 
   @Test
@@ -173,7 +175,7 @@ public class GitFetchTaskNGTest {
   @Category(UnitTests.class)
   public void testTaskRunGivenWingsException() {
     doThrow(new WingsException(TEST_INPUT_ID)).when(executorService).submit(any(Runnable.class));
-    GitFetchResponse response = gitFetchTaskNG.run(taskParameters);
-    assertThat(response.getTaskStatus()).isEqualTo(TaskStatus.FAILURE);
+    assertThatThrownBy(() -> gitFetchTaskNG.run(GitFetchRequest.builder().build()))
+        .isInstanceOf(TaskNGDataException.class);
   }
 }

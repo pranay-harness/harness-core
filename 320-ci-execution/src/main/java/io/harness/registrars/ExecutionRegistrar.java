@@ -9,8 +9,8 @@ import io.harness.states.CleanupStep;
 import io.harness.states.DockerStep;
 import io.harness.states.ECRStep;
 import io.harness.states.GCRStep;
+import io.harness.states.InitializeTaskStep;
 import io.harness.states.IntegrationStageStepPMS;
-import io.harness.states.LiteEngineTaskStep;
 import io.harness.states.PluginStep;
 import io.harness.states.RestoreCacheGCSStep;
 import io.harness.states.RestoreCacheS3Step;
@@ -34,7 +34,7 @@ public class ExecutionRegistrar {
   public Map<StepType, Class<? extends Step>> getEngineSteps() {
     Map<StepType, Class<? extends Step>> engineSteps = new HashMap<>();
 
-    engineSteps.put(LiteEngineTaskStep.STEP_TYPE, LiteEngineTaskStep.class);
+    engineSteps.put(InitializeTaskStep.STEP_TYPE, InitializeTaskStep.class);
     engineSteps.put(CleanupStep.STEP_TYPE, CleanupStep.class);
     engineSteps.put(RunStep.STEP_TYPE, RunStep.class);
     engineSteps.put(PluginStep.STEP_TYPE, PluginStep.class);

@@ -7,7 +7,7 @@ import static io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder.SEC
 
 import static org.mockito.Mockito.mock;
 
-import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8InitializeTaskParams;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.CIK8PodParams;
@@ -64,7 +64,7 @@ public class CIK8BuildTaskHandlerTestHelper {
   private static String volume1 = "volume1";
   private static final int timeout = 100;
 
-  public static CIK8BuildTaskParams buildGitSecretErrorTaskParams() {
+  public static CIK8InitializeTaskParams buildGitSecretErrorTaskParams() {
     List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
     CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
                                                            .name(podName)
@@ -72,10 +72,10 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                            .gitConnector(ConnectorDetails.builder().build())
                                                            .containerParamsList(containerParamsList)
                                                            .build();
-    return CIK8BuildTaskParams.builder().cik8PodParams(cik8PodParams).podMaxWaitUntilReadySecs(timeout).build();
+    return CIK8InitializeTaskParams.builder().cik8PodParams(cik8PodParams).podMaxWaitUntilReadySecs(timeout).build();
   }
 
-  public static CIK8BuildTaskParams buildImageSecretErrorTaskParams() {
+  public static CIK8InitializeTaskParams buildImageSecretErrorTaskParams() {
     ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
     ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
 
@@ -97,10 +97,10 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                            .containerParamsList(containerParamsList)
                                                            .build();
 
-    return CIK8BuildTaskParams.builder().cik8PodParams(cik8PodParams).podMaxWaitUntilReadySecs(timeout).build();
+    return CIK8InitializeTaskParams.builder().cik8PodParams(cik8PodParams).podMaxWaitUntilReadySecs(timeout).build();
   }
 
-  public static CIK8BuildTaskParams buildPodCreateErrorTaskParams() {
+  public static CIK8InitializeTaskParams buildPodCreateErrorTaskParams() {
     ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
     ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
 
@@ -122,14 +122,14 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                            .containerParamsList(containerParamsList)
                                                            .build();
 
-    return CIK8BuildTaskParams.builder()
+    return CIK8InitializeTaskParams.builder()
         .k8sConnector(ConnectorDetails.builder().build())
         .cik8PodParams(cik8PodParams)
         .podMaxWaitUntilReadySecs(timeout)
         .build();
   }
 
-  public static CIK8BuildTaskParams buildTaskParams() {
+  public static CIK8InitializeTaskParams buildTaskParams() {
     ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
     ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
 
@@ -161,7 +161,7 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                            .containerParamsList(containerParamsList)
                                                            .build();
 
-    return CIK8BuildTaskParams.builder()
+    return CIK8InitializeTaskParams.builder()
         .k8sConnector(getK8sConnector())
         .cik8PodParams(cik8PodParams)
         .podMaxWaitUntilReadySecs(timeout)
@@ -188,7 +188,7 @@ public class CIK8BuildTaskHandlerTestHelper {
         .build();
   }
 
-  public static CIK8BuildTaskParams buildTaskParamsWithPodSvc() {
+  public static CIK8InitializeTaskParams buildTaskParamsWithPodSvc() {
     List<EncryptedDataDetail> encryptionDetails = mock(List.class);
     ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
     ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
@@ -236,7 +236,7 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                     .cik8PodParams(cik8PodParams1)
                                                     .build();
 
-    return CIK8BuildTaskParams.builder()
+    return CIK8InitializeTaskParams.builder()
         .k8sConnector(getK8sConnector())
         .cik8PodParams(cik8PodParams)
         .servicePodParams(Arrays.asList(cik8ServicePodParams))
@@ -244,7 +244,7 @@ public class CIK8BuildTaskHandlerTestHelper {
         .build();
   }
 
-  public static CIK8BuildTaskParams buildTaskParamsWithPVC() {
+  public static CIK8InitializeTaskParams buildTaskParamsWithPVC() {
     ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
     ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
 
@@ -280,7 +280,7 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                                                            .build()))
                                                            .build();
 
-    return CIK8BuildTaskParams.builder()
+    return CIK8InitializeTaskParams.builder()
         .k8sConnector(ConnectorDetails.builder().build())
         .cik8PodParams(cik8PodParams)
         .podMaxWaitUntilReadySecs(timeout)

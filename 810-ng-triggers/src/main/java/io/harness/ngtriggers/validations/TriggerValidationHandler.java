@@ -14,6 +14,7 @@ import io.harness.ngtriggers.validations.impl.ManifestTriggerValidator;
 import io.harness.ngtriggers.validations.impl.PipelineRefValidator;
 import io.harness.ngtriggers.validations.impl.TriggerIdentifierRefValidator;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
@@ -49,7 +50,8 @@ public class TriggerValidationHandler {
     return validationResult;
   }
 
-  private List<TriggerValidator> getApplicableValidators(TriggerDetails triggerDetails) {
+  @VisibleForTesting
+  List<TriggerValidator> getApplicableValidators(TriggerDetails triggerDetails) {
     List<TriggerValidator> validators = new ArrayList<>();
     NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
     validators.add(triggerIdentifierRefValidator);

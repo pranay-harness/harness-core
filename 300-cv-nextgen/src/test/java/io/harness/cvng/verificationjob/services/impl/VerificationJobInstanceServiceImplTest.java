@@ -371,7 +371,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     cvConfigService.save(cvConfig1);
     String verificationJobInstanceId =
         createVerificationJobInstance("identifier", "env", ExecutionStatus.RUNNING, CANARY).getUuid();
-    verificationTaskService.create(accountId, cvConfig1.getUuid(), verificationJobInstanceId, cvConfig1.getType());
+    verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfig1.getUuid(), verificationJobInstanceId, cvConfig1.getType());
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     AnalysisProgressLog progressLog =
@@ -450,7 +451,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
                        .total(1)
                        .progress(1)
                        .startTime(verificationJobInstance.getStartTime().toEpochMilli())
-                       .risk(Risk.MEDIUM)
+                       .risk(Risk.OBSERVE)
                        .notStarted(0)
                        .durationMs(Duration.ofMinutes(15).toMillis())
                        .remainingTimeMs(1200000)
@@ -1091,7 +1092,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     Optional<Risk> riskScore =
         verificationJobInstanceAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceIds.get(0));
     assertThat(riskScore).isPresent();
-    assertThat(riskScore.get()).isEqualTo(Risk.HIGH);
+    assertThat(riskScore.get()).isEqualTo(Risk.NEED_ATTENTION);
   }
 
   private VerificationJobDTO newCanaryVerificationJobDTO() {
@@ -1154,7 +1155,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
+    verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
     return verificationJobInstance;
   }
 
@@ -1184,7 +1186,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .cvConfigMap(Collections.singletonMap(cvConfigId, cvConfig))
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
+    verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
     return verificationJobInstance;
   }
 
@@ -1204,7 +1207,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .cvConfigMap(Collections.singletonMap(cvConfigId, cvConfig))
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
+    verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
     return verificationJobInstance;
   }
 
@@ -1226,7 +1230,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .verificationStatus(verificationStatus)
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
+    verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
     return verificationJobInstance;
   }
 

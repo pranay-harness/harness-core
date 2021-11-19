@@ -1,5 +1,7 @@
 package io.harness.pms.plan.execution.beans;
 
+import static java.time.Duration.ofDays;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.ChangeDataCapture;
@@ -7,10 +9,12 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.dto.FailureInfoDTO;
+import io.harness.engine.executions.retry.RetryExecutionMetadata;
 import io.harness.execution.StagesExecutionMetadata;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -30,6 +34,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +76,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
     handler = "PipelineExecutionSummaryEntityServiceAndInfra")
 @StoreIn(DbAliases.PMS)
 public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+  public static final Duration TTL = ofDays(183);
+  public static final long TTL_MONTHS = 6;
+
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
 
   @NotEmpty int runSequence;
@@ -107,6 +117,28 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   Long startTs;
   Long endTs;
 
+  @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
+
+  // TODO: removing these getters after 6 months (13/10/21)
+  public Boolean isLatestExecution() {
+    if (isLatestExecution == null) {
+      return true;
+    }
+    return isLatestExecution;
+  }
+
+  public RetryExecutionMetadata getRetryExecutionMetadata() {
+    if (retryExecutionMetadata == null) {
+      return RetryExecutionMetadata.builder()
+          .parentExecutionId(planExecutionId)
+          .rootExecutionId(planExecutionId)
+          .build();
+    }
+    return retryExecutionMetadata;
+  }
+
+  RetryExecutionMetadata retryExecutionMetadata;
+  Boolean isLatestExecution;
   @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;
   @Setter @NonFinal @Version Long version;
@@ -158,6 +190,18 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
                  .field(PlanExecutionSummaryKeys.executedModules)
                  .field(PlanExecutionSummaryKeys.startTs)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_createdAt_modules_idx")
+                 .field(PlanExecutionSummaryKeys.modules)
+                 .field(PlanExecutionSummaryKeys.projectIdentifier)
+                 .field(PlanExecutionSummaryKeys.orgIdentifier)
+                 .field(PlanExecutionSummaryKeys.accountId)
+                 .field(PlanExecutionSummaryKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("root_execution_id")
+                 .field(PlanExecutionSummaryKeys.rootExecutionId)
+                 .build())
         .build();
   }
 
@@ -167,5 +211,9 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
         + "triggerType";
     public String triggeredBy = PlanExecutionSummaryKeys.executionTriggerInfo + "."
         + "triggeredBy";
+    public String rootExecutionId = PlanExecutionSummaryKeys.retryExecutionMetadata + "."
+        + "rootExecutionId";
+    public String parentExecutionId = PlanExecutionSummaryKeys.retryExecutionMetadata + "."
+        + "parentExecutionId";
   }
 }

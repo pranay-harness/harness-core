@@ -688,6 +688,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void handleCreateNextTask_forFirstTaskAndMetricsConfig() {
     AppDynamicsCVConfig cvConfig = getCVConfig();
+    cvConfig.setCreatedAt(1);
     dataCollectionTaskService.handleCreateNextTask(cvConfig);
     DataCollectionTask savedTask = hPersistence.createQuery(DataCollectionTask.class)
                                        .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
@@ -931,8 +932,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
     verificationJobInstance.setUuid(((TestVerificationJob) verificationJob).getBaselineVerificationJobInstanceId());
 
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
+    verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
     return verificationJobInstance;
   }
   private VerificationJobDTO newVerificationJobDTO() {

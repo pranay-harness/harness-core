@@ -84,5 +84,4 @@ pipeline:
                 approvers:
                   minimumCount: 1
                   disallowPipelineExecutor: false
-                  userGroups: "<+input>"
                 approverInputs: []

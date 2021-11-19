@@ -27,8 +27,11 @@ import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.ngmigration.NGMigrationEntity;
+import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.yaml.BaseEntityYaml;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +57,8 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "environments", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @TargetModule(HarnessModule._957_CG_BEANS)
-public class Environment extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
+public class Environment
+    extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess, NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -68,10 +72,13 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
                  .field(EnvironmentKeys.accountId)
                  .descSortField(EnvironmentKeys.createdAt)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_name")
+                 .field(EnvironmentKeys.accountId)
+                 .ascSortField(EnvironmentKeys.name)
+                 .build())
         .build();
   }
-
-  public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
 
   @NotEmpty @EntityName @Trimmed private String name;
   private String description;
@@ -259,6 +266,18 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
     Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description, environmentType.name()));
     return keywords;
+  }
+
+  @JsonIgnore
+  @Override
+  public NGMigrationEntityType getMigrationEntityType() {
+    return NGMigrationEntityType.ENVIRONMENT;
+  }
+
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
   }
 
   /**

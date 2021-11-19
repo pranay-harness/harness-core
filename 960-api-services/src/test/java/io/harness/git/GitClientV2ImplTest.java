@@ -1,5 +1,6 @@
 package io.harness.git;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.git.model.ChangeType.ADD;
 import static io.harness.git.model.ChangeType.DELETE;
 import static io.harness.git.model.ChangeType.RENAME;
@@ -23,10 +24,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.YamlException;
+import io.harness.exception.runtime.JGitRuntimeException;
 import io.harness.git.model.CommitAndPushRequest;
 import io.harness.git.model.CommitAndPushResult;
 import io.harness.git.model.CommitResult;
@@ -83,6 +86,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Slf4j
+@OwnedBy(CDP)
 public class GitClientV2ImplTest extends CategoryTest {
   private static final String USERNAME = "USERNAME";
   private static final String PASSWORD = "PASSWORD";
@@ -353,7 +357,7 @@ public class GitClientV2ImplTest extends CategoryTest {
     doNothing().when(gitClientHelper).createDirStructureForFileDownload(any());
     doReturn(repoPath).when(gitClientHelper).getFileDownloadRepoDirectory(any());
 
-    assertThatThrownBy(() -> gitClient.fetchFilesByPath(request)).isInstanceOf(YamlException.class);
+    assertThatThrownBy(() -> gitClient.fetchFilesByPath(request)).isInstanceOf(JGitRuntimeException.class);
   }
 
   @Test

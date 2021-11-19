@@ -44,11 +44,11 @@ public class WebhookEventProcessingServiceImpl
   @Inject WebhookEventRepository webhookEventRepository;
 
   @Override
-  public void registerIterators() {
+  public void registerIterators(int threadPoolSize) {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("WebhookEventProcessor")
-            .poolSize(5)
+            .poolSize(threadPoolSize)
             .interval(ofSeconds(5))
             .build(),
         WebhookEventProcessingService.class,

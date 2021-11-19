@@ -16,7 +16,7 @@ import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.beans.entities.TIServiceConfig;
-import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
+import io.harness.delegate.beans.ci.CIInitializeTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -95,9 +95,9 @@ public class BuildSetupUtilsTest extends CIExecutionTestBase {
     when(tiServiceUtils.getTIServiceToken(any())).thenReturn("token");
     when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
-        .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").stageID("stage").build());
+        .thenReturn(K8PodDetails.builder().stageID("stage").build());
 
-    CIBuildSetupTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
+    CIInitializeTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), ambiance, taskIds, "test",
         logKeys);
     assertThat(buildSetupTaskParams).isNotNull();
@@ -141,9 +141,9 @@ public class BuildSetupUtilsTest extends CIExecutionTestBase {
     when(tiServiceUtils.getTIServiceToken(any())).thenReturn("token");
     when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
-        .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").stageID("stage").build());
+        .thenReturn(K8PodDetails.builder().stageID("stage").build());
 
-    CIBuildSetupTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
+    CIInitializeTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackIdReponameSet(), ambiance,
         taskIds, "test", logKeys);
     assertThat(buildSetupTaskParams).isNotNull();

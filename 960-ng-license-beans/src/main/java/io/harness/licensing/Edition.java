@@ -3,6 +3,7 @@ package io.harness.licensing;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,5 +22,9 @@ public enum Edition {
       }
     }
     return editions;
+  }
+
+  public static List<Edition> getSaasEditions() {
+    return Lists.newArrayList(FREE, TEAM, ENTERPRISE);
   }
 }

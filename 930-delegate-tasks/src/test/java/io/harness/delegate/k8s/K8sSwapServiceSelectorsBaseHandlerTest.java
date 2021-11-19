@@ -1,8 +1,11 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.PUNEET;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
@@ -11,6 +14,13 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionMessages;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.ExplanationException;
+import io.harness.exception.HintException;
+import io.harness.exception.KubernetesTaskException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
@@ -48,7 +58,7 @@ public class K8sSwapServiceSelectorsBaseHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
-  public void smokeTest() {
+  public void shouldSwapServicesIfErrorFrameworkNotSupported() {
     Service service1 = createService("service1", ImmutableMap.of("label", "A"));
     Service service2 = createService("service2", ImmutableMap.of("label", "B"));
 
@@ -76,5 +86,116 @@ public class K8sSwapServiceSelectorsBaseHandlerTest extends CategoryTest {
     Service updatedService2 = serviceArgumentCaptor.getAllValues().get(1);
     assertThat(updatedService2.getMetadata().getName()).isEqualTo("service2");
     assertThat(updatedService2.getSpec().getSelector().get("label")).isEqualTo("A");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldSwapServicesIfErrorFrameworkSupported() {
+    Service service1 = createService("service1", ImmutableMap.of("label", "A"));
+    Service service2 = createService("service2", ImmutableMap.of("label", "B"));
+
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName())))
+        .thenReturn(service1);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service2.getMetadata().getName())))
+        .thenReturn(service2);
+    when(kubernetesContainerService.createOrReplaceService(any(), any()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[1]);
+
+    k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(null, "service1", "service2", logCallback, true);
+
+    ArgumentCaptor<Service> serviceArgumentCaptor = ArgumentCaptor.forClass(Service.class);
+
+    verify(kubernetesContainerService, times(2)).getServiceFabric8(any(), any());
+
+    verify(kubernetesContainerService, times(2)).createOrReplaceService(eq(null), serviceArgumentCaptor.capture());
+
+    Service updatedService1 = serviceArgumentCaptor.getAllValues().get(0);
+    assertThat(updatedService1.getMetadata().getName()).isEqualTo("service1");
+    assertThat(updatedService1.getSpec().getSelector().get("label")).isEqualTo("B");
+
+    Service updatedService2 = serviceArgumentCaptor.getAllValues().get(1);
+    assertThat(updatedService2.getMetadata().getName()).isEqualTo("service2");
+    assertThat(updatedService2.getSpec().getSelector().get("label")).isEqualTo("A");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionIfPrimaryNotFound() {
+    Service service1 = createService("service1", ImmutableMap.of("label", "A"));
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName()))).thenReturn(null);
+
+    assertThatThrownBy(
+        () -> k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(null, "service1", "service2", logCallback, true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.BG_SWAP_SERVICES_SERVICE_NOT_FOUND);
+          assertThat(explanation)
+              .hasMessageContaining(
+                  format(KubernetesExceptionExplanation.BG_SWAP_SERVICES_SERVICE_NOT_FOUND, "service1"));
+          assertThat(taskException)
+              .hasMessageContaining(
+                  format(KubernetesExceptionMessages.BG_SWAP_SERVICES_FAILED, "service1", "service2"));
+          return true;
+        });
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldReturnFalseWhenErrorFrameworkDisabledIfPrimaryNotFound() {
+    Service service1 = createService("service1", ImmutableMap.of("label", "A"));
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName()))).thenReturn(null);
+
+    boolean success =
+        k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(null, "service1", "service2", logCallback);
+    assertThat(success).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionIfStageNotFound() {
+    Service service1 = createService("service1", ImmutableMap.of("label", "A"));
+    Service service2 = createService("service2", ImmutableMap.of("label", "B"));
+
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName())))
+        .thenReturn(service1);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service2.getMetadata().getName()))).thenReturn(null);
+
+    assertThatThrownBy(
+        () -> k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(null, "service1", "service2", logCallback, true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.BG_SWAP_SERVICES_SERVICE_NOT_FOUND);
+          assertThat(explanation)
+              .hasMessageContaining(
+                  format(KubernetesExceptionExplanation.BG_SWAP_SERVICES_SERVICE_NOT_FOUND, "service2"));
+          assertThat(taskException)
+              .hasMessageContaining(
+                  format(KubernetesExceptionMessages.BG_SWAP_SERVICES_FAILED, "service1", "service2"));
+          return true;
+        });
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldReturnFalseWhenErrorFrameworkDisabledIfStageNotFound() {
+    Service service1 = createService("service1", ImmutableMap.of("label", "A"));
+    Service service2 = createService("service2", ImmutableMap.of("label", "B"));
+
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName())))
+        .thenReturn(service1);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service2.getMetadata().getName()))).thenReturn(null);
+
+    boolean success =
+        k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(null, "service1", "service2", logCallback);
+    assertThat(success).isFalse();
   }
 }

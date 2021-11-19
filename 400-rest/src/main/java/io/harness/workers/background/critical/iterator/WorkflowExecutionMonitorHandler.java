@@ -70,10 +70,10 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
   private static final Duration INACTIVITY_TIMEOUT = Duration.ofMinutes(3);
   private static final Duration EXPIRE_THRESHOLD = Duration.ofMinutes(10);
 
-  public void registerIterators() {
+  public void registerIterators(int threadPoolSize) {
     PumpExecutorOptions options = PumpExecutorOptions.builder()
                                       .interval(Duration.ofSeconds(10))
-                                      .poolSize(5)
+                                      .poolSize(threadPoolSize)
                                       .name("WorkflowExecutionMonitor")
                                       .build();
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(options, WorkflowExecution.class,

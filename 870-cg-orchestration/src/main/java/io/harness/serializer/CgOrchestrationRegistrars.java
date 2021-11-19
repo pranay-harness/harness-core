@@ -30,6 +30,7 @@ public class CgOrchestrationRegistrars {
           .addAll(WaitEngineRegistrars.kryoRegistrars)
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationDelayRegistrars.kryoRegistrars)
+          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           .add(CgOrchestrationKryoRegister.class)
           .add(CgOrchestrationBeansKryoRegistrar.class)
           .add(CommonEntitiesKryoRegistrar.class)
@@ -37,6 +38,7 @@ public class CgOrchestrationRegistrars {
           .add(DelegateServiceBeansKryoRegistrar.class)
           .add(DelegateAgentBeansKryoRegister.class)
           .add(WatcherBeansKryoRegister.class)
+          .addAll(DelegateTaskRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -51,6 +53,7 @@ public class CgOrchestrationRegistrars {
           .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)
           .addAll(EventsFrameworkRegistrars.morphiaRegistrars)
           .add(CgOrchestrationBeansMorphiaRegistrar.class)
+          .addAll(DelegateTaskRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

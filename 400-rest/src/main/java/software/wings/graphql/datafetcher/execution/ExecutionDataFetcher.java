@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.CreatedByType;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -21,6 +22,7 @@ import software.wings.graphql.schema.type.QLWorkflowExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutionBuilder;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.WorkflowExecutionService;
 
 import com.google.inject.Inject;
 import lombok.AccessLevel;
@@ -35,6 +37,7 @@ public class ExecutionDataFetcher extends AbstractObjectDataFetcher<QLExecution,
   @Inject protected WingsPersistence persistence;
   @Inject private WorkflowExecutionController workflowExecutionController;
   @Inject private PipelineExecutionController pipelineExecutionController;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -52,6 +55,9 @@ public class ExecutionDataFetcher extends AbstractObjectDataFetcher<QLExecution,
     }
 
     if (execution.getWorkflowType() == WorkflowType.PIPELINE) {
+      if (execution.getCreatedByType() != CreatedByType.USER) {
+        workflowExecutionService.refreshPipelineExecution(execution);
+      }
       final QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
       pipelineExecutionController.populatePipelineExecution(execution, builder);
       return builder.build();

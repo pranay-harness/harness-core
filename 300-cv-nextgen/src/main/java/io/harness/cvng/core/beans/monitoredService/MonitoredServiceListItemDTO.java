@@ -3,6 +3,7 @@ package io.harness.cvng.core.beans.monitoredService;
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 
+import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,6 +23,7 @@ public class MonitoredServiceListItemDTO {
   MonitoredServiceType type;
   boolean healthMonitoringEnabled;
   RiskData currentHealthScore;
+  List<RiskData> dependentHealthScore;
   HistoricalTrend historicalTrend;
   ChangeSummaryDTO changeSummary;
   Map<String, String> tags;

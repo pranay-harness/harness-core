@@ -11,6 +11,7 @@ import static io.harness.persistence.HQuery.excludeValidate;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
@@ -82,16 +83,18 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   private final WingsPersistence wingsPersistence;
   private final DeploymentService deploymentService;
   private final CEMetadataRecordDao ceMetadataRecordDao;
+  private ClusterRecordDao clusterRecordDao;
 
   private static final String EXC_MSG_USER_DOESNT_EXIST = "User does not exist";
 
   @Inject
   public CloudToHarnessMappingServiceImpl(HPersistence persistence, WingsPersistence wingsPersistence,
-      DeploymentService deploymentService, CEMetadataRecordDao ceMetadataRecordDao) {
+      DeploymentService deploymentService, CEMetadataRecordDao ceMetadataRecordDao, ClusterRecordDao clusterRecordDao) {
     this.persistence = persistence;
     this.wingsPersistence = wingsPersistence;
     this.deploymentService = deploymentService;
     this.ceMetadataRecordDao = ceMetadataRecordDao;
+    this.clusterRecordDao = clusterRecordDao;
   }
 
   @Override
@@ -374,6 +377,11 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
       log.info("Entity Id could not be converted : ", e);
       return entityId;
     }
+  }
+
+  @Override
+  public ClusterRecord getClusterRecord(String clusterId) {
+    return clusterRecordDao.get(clusterId);
   }
 
   private String getClusterName(String entityId) {

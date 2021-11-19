@@ -76,7 +76,7 @@ public class NGActivityResource {
   }
 
   @POST
-  @ApiOperation(value = "Saves the activity", nickname = "postActivity")
+  @ApiOperation(value = "Saves the activity", nickname = "postActivity", hidden = true)
   public ResponseDTO<NGActivityDTO> save(NGActivityDTO activityHistory) {
     return ResponseDTO.newResponse(activityHistoryService.save(activityHistory));
   }

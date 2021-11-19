@@ -61,6 +61,7 @@ public class DelegateConnection implements PersistentEntity, UuidAware, AccountA
   private String version;
   private String location;
   private long lastHeartbeat;
+  private long lastGrpcHeartbeat;
   private boolean disconnected;
 
   @JsonIgnore @SchemaIgnore @FdTtlIndex private Date validUntil;

@@ -408,7 +408,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     deleteDirectoryAndItsContentIfExists(outputTemporaryDir.toString());
   }
 
-  @Test(expected = InvalidRequestException.class)
+  @Test(expected = HelmClientException.class)
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testDownloadChartFileFailed() throws Exception {

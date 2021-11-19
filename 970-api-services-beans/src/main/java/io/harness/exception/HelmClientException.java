@@ -16,27 +16,27 @@ public class HelmClientException extends WingsException {
   @Getter private final HelmCliCommandType helmCliCommandType;
 
   public HelmClientException(String message, @NotNull HelmCliCommandType helmCliCommandType) {
-    super(message, null, GENERAL_ERROR, Level.ERROR, null, null);
+    super(message, null, GENERAL_ERROR, Level.ERROR, null, EnumSet.of(FailureType.APPLICATION_ERROR));
     this.helmCliCommandType = helmCliCommandType;
     super.param("message", message);
   }
 
   public HelmClientException(String message, Throwable cause, @NotNull HelmCliCommandType helmCliCommandType) {
-    super(message, cause, GENERAL_ERROR, Level.ERROR, null, null);
+    super(message, cause, GENERAL_ERROR, Level.ERROR, null, EnumSet.of(FailureType.APPLICATION_ERROR));
     this.helmCliCommandType = helmCliCommandType;
     super.param("message", message);
   }
 
   public HelmClientException(
       String message, EnumSet<ReportTarget> reportTargets, @NotNull HelmCliCommandType helmCliCommandType) {
-    super(message, null, GENERAL_ERROR, Level.ERROR, reportTargets, null);
+    super(message, null, GENERAL_ERROR, Level.ERROR, reportTargets, EnumSet.of(FailureType.APPLICATION_ERROR));
     this.helmCliCommandType = helmCliCommandType;
     super.param("message", message);
   }
 
   public HelmClientException(String message, EnumSet<ReportTarget> reportTargets, Throwable t,
       @NotNull HelmCliCommandType helmCliCommandType) {
-    super(message, t, GENERAL_ERROR, Level.ERROR, reportTargets, null);
+    super(message, t, GENERAL_ERROR, Level.ERROR, reportTargets, EnumSet.of(FailureType.APPLICATION_ERROR));
     this.helmCliCommandType = helmCliCommandType;
     super.param("message", message);
   }

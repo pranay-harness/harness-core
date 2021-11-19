@@ -29,7 +29,7 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public <C> AggregationResults aggregate(Aggregation aggregation, Class<C> castClass) {
+  public <C> AggregationResults<C> aggregate(Aggregation aggregation, Class<C> castClass) {
     return mongoTemplate.aggregate(aggregation, "gitSyncErrorNG", castClass);
   }
 
@@ -40,8 +40,8 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
   }
 
   @Override
-  public UpdateResult upsertGitError(Criteria criteria, Update update) {
-    return mongoTemplate.upsert(query(criteria), update, GitSyncError.class);
+  public UpdateResult updateGitError(Criteria criteria, Update update) {
+    return mongoTemplate.updateMulti(query(criteria), update, GitSyncError.class);
   }
 
   @Override
@@ -53,6 +53,11 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
   }
 
   @Override
+  public GitSyncError find(Criteria criteria) {
+    Query query = query(criteria);
+    return mongoTemplate.findOne(query, GitSyncError.class);
+  }
+
   public long count(Criteria criteria) {
     return mongoTemplate.count(query(criteria), GitSyncError.class);
   }

@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -24,6 +25,7 @@ import lombok.experimental.FieldNameConstants;
 @EqualsAndHashCode
 @FieldNameConstants(innerTypeName = "RoleDTOKeys")
 @ApiModel(value = RoleDTO.MODEL_NAME)
+@Schema(name = RoleDTO.MODEL_NAME)
 public class RoleDTO {
   public static final String MODEL_NAME = "Role";
 

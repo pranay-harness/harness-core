@@ -19,6 +19,7 @@ import io.harness.WaitEngineTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.maintenance.MaintenanceGuard;
+import io.harness.mongo.iterator.IteratorConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueConsumer.Filter;
@@ -234,7 +235,8 @@ public class WaitNotifyEngineTest extends WaitEngineTestBase {
     List<String> correlationIds = Arrays.asList(uuid1, uuid2);
 
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      timeoutEngine.registerIterators();
+      timeoutEngine.registerIterators(
+          IteratorConfig.builder().enabled(true).threadPoolCount(5).targetIntervalInSeconds(60).build());
       String waitInstanceId = waitNotifyEngine.waitForAllOnInList(
           TEST_PUBLISHER, new TestNotifyCallback(), correlationIds, Duration.ofSeconds(3));
       WaitInstance waitInstance =

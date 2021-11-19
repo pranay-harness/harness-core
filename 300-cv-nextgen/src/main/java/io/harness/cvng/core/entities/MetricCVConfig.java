@@ -35,7 +35,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 public abstract class MetricCVConfig extends CVConfig {
   private MetricPack metricPack;
   public TimeRange getFirstTimeDataCollectionTimeRange() {
-    Instant endTime = DateTimeUtils.roundDownTo5MinBoundary(Instant.ofEpochMilli(this.getCreatedAt()));
+    Instant endTime = DateTimeUtils.roundDownTo5MinBoundary(getFirstTimeDataCollectionStartTime());
     return TimeRange.builder()
         .startTime(endTime.minus(TIMESERIES_SERVICE_GUARD_DATA_LENGTH, ChronoUnit.MINUTES))
         .endTime(endTime)

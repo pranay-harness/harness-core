@@ -19,6 +19,7 @@ import com.codahale.metrics.health.HealthCheck;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -45,8 +46,11 @@ public class HealthResource {
   @GET
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "get health for Access Control service", nickname = "getAccessControlHealthStatus")
-  public ResponseDTO<String> get() throws Exception {
+  @ApiOperation(
+      value = "get health for Access Control service", nickname = "getAccessControlHealthStatus", hidden = true)
+  @Operation(hidden = true)
+  public ResponseDTO<String>
+  get() throws Exception {
     if (getMaintenanceFlag()) {
       log.info("In maintenance mode. Throwing exception to prevent traffic.");
       throw NoResultFoundException.newBuilder()

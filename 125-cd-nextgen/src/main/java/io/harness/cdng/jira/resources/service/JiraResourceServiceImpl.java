@@ -2,11 +2,11 @@ package io.harness.cdng.jira.resources.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
+import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
-import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.common.NGTaskType;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -38,6 +38,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @OwnedBy(CDC)
@@ -163,14 +164,16 @@ public class JiraResourceServiceImpl implements JiraResourceService {
 
   private DelegateTaskRequest createDelegateTaskRequest(
       BaseNGAccess baseNGAccess, JiraTaskNGParameters taskNGParameters) {
+    final Map<String, String> ngTaskSetupAbstractionsWithOwner = getNGTaskSetupAbstractionsWithOwner(
+        baseNGAccess.getAccountIdentifier(), baseNGAccess.getOrgIdentifier(), baseNGAccess.getProjectIdentifier());
+
     return DelegateTaskRequest.builder()
         .accountId(baseNGAccess.getAccountIdentifier())
         .taskType(NGTaskType.JIRA_TASK_NG.name())
         .taskParameters(taskNGParameters)
         .taskSelectors(taskNGParameters.getDelegateSelectors())
         .executionTimeout(TIMEOUT)
-        .taskSetupAbstraction(SetupAbstractionKeys.orgIdentifier, baseNGAccess.getOrgIdentifier())
-        .taskSetupAbstraction(SetupAbstractionKeys.projectIdentifier, baseNGAccess.getProjectIdentifier())
+        .taskSetupAbstractions(ngTaskSetupAbstractionsWithOwner)
         .build();
   }
 }

@@ -13,7 +13,7 @@ import io.harness.pms.pipeline.service.PipelineEnforcementService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -30,8 +30,8 @@ public class PlanCreationValidator implements CreationValidator<PlanCreationBlob
     if (EmptyPredicate.isEmpty(finalResponse.getStartingNodeId())) {
       throw new InvalidRequestException("Unable to find out starting node");
     }
-    List<StepType> stepTypes =
-        finalResponse.getNodesMap().values().stream().map(PlanNodeProto::getStepType).collect(Collectors.toList());
-    pipelineEnforcementService.checkStepRestrictionAndThrow(accountId, stepTypes);
+    Set<StepType> stepTypes =
+        finalResponse.getNodesMap().values().stream().map(PlanNodeProto::getStepType).collect(Collectors.toSet());
+    pipelineEnforcementService.validatePipelineExecutionRestriction(accountId, stepTypes);
   }
 }

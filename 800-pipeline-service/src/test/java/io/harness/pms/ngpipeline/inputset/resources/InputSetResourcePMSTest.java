@@ -287,25 +287,26 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
   public void testGetTemplateFromPipeline() {
-    doReturn(inputSetYaml)
+    doReturn(InputSetTemplateResponseDTOPMS.builder().inputSetTemplateYaml(inputSetYaml).build())
         .when(validateAndMergeHelper)
-        .getPipelineTemplate(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, Collections.emptyList());
+        .getInputSetTemplateResponseDTO(
+            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, Collections.emptyList());
     ResponseDTO<InputSetTemplateResponseDTOPMS> inputSetTemplateResponseDTO =
         inputSetResourcePMS.getTemplateFromPipeline(
             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, null);
     assertEquals(inputSetTemplateResponseDTO.getStatus(), Status.SUCCESS);
     assertEquals(inputSetTemplateResponseDTO.getData().getInputSetTemplateYaml(), inputSetYaml);
 
-    doReturn(inputSetYaml)
+    doReturn(InputSetTemplateResponseDTOPMS.builder().inputSetTemplateYaml(inputSetYaml).build())
         .when(validateAndMergeHelper)
-        .getPipelineTemplate(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, stages);
+        .getInputSetTemplateResponseDTO(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, stages);
     inputSetTemplateResponseDTO =
         inputSetResourcePMS.getTemplateFromPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER,
             null, InputSetTemplateRequestDTO.builder().stageIdentifiers(stages).build());
     assertEquals(inputSetTemplateResponseDTO.getStatus(), Status.SUCCESS);
     assertEquals(inputSetTemplateResponseDTO.getData().getInputSetTemplateYaml(), inputSetYaml);
     verify(validateAndMergeHelper, times(1))
-        .getPipelineTemplate(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, stages);
+        .getInputSetTemplateResponseDTO(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, stages);
   }
 
   @Test

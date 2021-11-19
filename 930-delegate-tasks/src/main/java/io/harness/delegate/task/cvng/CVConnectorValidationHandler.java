@@ -5,13 +5,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.RuntimeParameters;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorValidationParams;
 import io.harness.delegate.beans.cvng.ConnectorValidationInfo;
-import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.security.encryption.SecretDecryptionService;
 

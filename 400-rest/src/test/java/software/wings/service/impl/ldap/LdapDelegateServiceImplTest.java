@@ -2,7 +2,6 @@ package software.wings.service.impl.ldap;
 
 import static io.harness.rule.OwnerRule.VIKAS;
 
-import static software.wings.helpers.ext.ldap.LdapConstants.GROUP_MEMBERS_EXCEEDED;
 import static software.wings.helpers.ext.ldap.LdapConstants.GROUP_SIZE_ATTR;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,7 +30,6 @@ public class LdapDelegateServiceImplTest extends WingsBaseTest {
   static final String NAME_OF_GROUP = "admin@harness.io";
   static final String GROUP_DN = "Admin User DN";
   static final String GROUP_SIZE_BELOW_LIMIT = "1000";
-  static final String GROUP_SIZE_ABOVE_LIMIT = "1501";
   static final String NAME = "name";
 
   @Mock LdapEntry ldapEntry;
@@ -72,22 +70,5 @@ public class LdapDelegateServiceImplTest extends WingsBaseTest {
     assertThat(ldapGroupResponse.getTotalMembers()).isEqualTo(Integer.parseInt(GROUP_SIZE_BELOW_LIMIT));
     assertThat(ldapGroupResponse.isSelectable()).isTrue();
     assertThat(ldapGroupResponse.getMessage()).isEmpty();
-  }
-
-  @Test
-  @Owner(developers = VIKAS)
-  @Category(UnitTests.class)
-  public void testBuildLdapGroupResponse_withGroupSizeAboveLimit() {
-    when(groupLdapAttribute.getStringValue()).thenReturn(GROUP_SIZE_ABOVE_LIMIT);
-    LdapDelegateServiceImpl ldapDelegateService = new LdapDelegateServiceImpl();
-    LdapGroupResponse ldapGroupResponse = ldapDelegateService.buildLdapGroupResponse(ldapEntry, ldapGroupConfig);
-    assertThat(ldapGroupResponse).isNotNull();
-    assertThat(ldapGroupResponse.getDescription()).isEqualTo(DESCRIPTION_OF_GROUP);
-    assertThat(ldapGroupResponse.getDn()).isEqualTo(GROUP_DN);
-    assertThat(ldapGroupResponse.getName()).isEqualTo(NAME_OF_GROUP);
-    assertThat(ldapGroupResponse.getName()).isEqualTo(NAME_OF_GROUP);
-    assertThat(ldapGroupResponse.getTotalMembers()).isEqualTo(Integer.parseInt(GROUP_SIZE_ABOVE_LIMIT));
-    assertThat(ldapGroupResponse.isSelectable()).isFalse();
-    assertThat(ldapGroupResponse.getMessage()).isEqualTo(GROUP_MEMBERS_EXCEEDED);
   }
 }

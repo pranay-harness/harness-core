@@ -95,6 +95,7 @@ type ArtifactoryConnector implements Connector {
   id: String
   name: String
   description: String
+  delegateSelectors: [String]
   createdAt: DateTime
   createdBy: User
 }
@@ -204,6 +205,7 @@ type JiraConnector implements Connector {
   id: String
   name: String
   description: String
+  delegateSelectors: [String]
   createdAt: DateTime
   createdBy: User
 }
@@ -225,6 +227,7 @@ type NexusConnector implements Connector {
   id: String
   name: String
   description: String
+  delegateSelectors: [String]
   createdAt: DateTime
   createdBy: User
 }
@@ -239,6 +242,7 @@ type ServiceNowConnector implements Connector {
   id: String
   name: String
   description: String
+  delegateSelectors: [String]
   createdAt: DateTime
   createdBy: User
 }

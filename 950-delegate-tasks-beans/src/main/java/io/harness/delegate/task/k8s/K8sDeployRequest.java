@@ -36,10 +36,14 @@ public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDem
   K8sTaskType getTaskType();
   String getCommandName();
   K8sInfraDelegateConfig getK8sInfraDelegateConfig();
+  List<String> getValuesYamlList();
+  List<String> getKustomizePatchesList();
+  List<String> getOpenshiftParamList();
   ManifestDelegateConfig getManifestDelegateConfig();
   Integer getTimeoutIntervalInMin();
   CommandUnitsProgress getCommandUnitsProgress();
   boolean isUseLatestKustomizeVersion();
+  boolean isUseNewKubectlVersion();
 
   @Override
   default List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

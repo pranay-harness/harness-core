@@ -11,8 +11,65 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface EnforcementClientService {
+  /**
+   * Check if available for next feature consume
+   * @param featureRestrictionName
+   * @param accountIdentifier
+   * @return true if available, otherwise false
+   */
   boolean isAvailable(FeatureRestrictionName featureRestrictionName, String accountIdentifier);
+
+  /**
+   * Check if available for next feature consume, increment only works for Rate/Static restriction type
+   * @param featureRestrictionName
+   * @param accountIdentifier
+   * @param increment
+   * @return
+   */
+  boolean isAvailableWithIncrement(
+      FeatureRestrictionName featureRestrictionName, String accountIdentifier, long increment);
+  /**
+   * Check availability for next feature consume
+   * @param featureRestrictionName
+   * @param accountIdentifier
+   * @return
+   *
+   * @exception throw FeatureNotSupportedException, LimitExceededException when not available
+   */
   void checkAvailability(FeatureRestrictionName featureRestrictionName, String accountIdentifier);
+
+  /**
+   * Check availability for next feature consume, increment only works for Rate/Static restriction type
+   * @param featureRestrictionName
+   * @param accountIdentifier
+   * @param increment
+   */
+  void checkAvailabilityWithIncrement(
+      FeatureRestrictionName featureRestrictionName, String accountIdentifier, long increment);
+
+  /**
+   * Used only in case checking for feature restriction status in other microservices.
+   * @param featureRestrictionName
+   * @param accountIdentifier
+   * @return
+   */
+  boolean isRemoteFeatureAvailable(FeatureRestrictionName featureRestrictionName, String accountIdentifier);
+
+  /**
+   * Used only in case checking for list of feature restriction status in other microservices.
+   * @param featureRestrictionNames
+   * @param accountIdentifier
+   * @return
+   */
+  Map<FeatureRestrictionName, Boolean> getAvailabilityForRemoteFeatures(
+      List<FeatureRestrictionName> featureRestrictionNames, String accountIdentifier);
+
+  /**
+   * Get a list of availability
+   * @param featureRestrictionNames
+   * @param accountIdentifier
+   * @return
+   */
   Map<FeatureRestrictionName, Boolean> getAvailabilityMap(
       Set<FeatureRestrictionName> featureRestrictionNames, String accountIdentifier);
   Optional<RestrictionMetadataDTO> getRestrictionMetadata(FeatureRestrictionName featureRestrictionName,

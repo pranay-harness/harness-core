@@ -18,6 +18,8 @@ import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1ConfigMapBuilder;
 import io.kubernetes.client.openapi.models.V1OwnerReferenceBuilder;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -96,6 +98,18 @@ public class ChangeIntelConfigMapHandlerTest extends ChangeIntelHandlerTestBase 
   @Test
   @Owner(developers = OwnerRule.PRAVEEN)
   @Category({UnitTests.class})
+  public void testOnUpdate_updateRenewTime() {
+    V1ConfigMap configMap = buildConfigMap();
+    V1ConfigMap configMapNew = buildConfigMap();
+    configMapNew.getMetadata().getAnnotations().put("control-plane.alpha.kubernetes.io/leader",
+        "{\"holderIdentity\":\"nginx-ingress-controller-fd6c8f756-6p46w\",\"leaseDurationSeconds\":30,\"acquireTime\":\"2021-10-09T16:38:45Z\",\"renewTime\":\"2021-10-19T06:04:36Z\",\"leaderTransitions\":272}");
+    handler.onUpdate(configMap, configMapNew);
+    verify(cvNextGenServiceClient, times(0)).saveChangeEvent(anyString(), any());
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.PRAVEEN)
+  @Category({UnitTests.class})
   public void testOnDelete() {
     V1ConfigMap configMap = buildConfigMap();
     handler.onDelete(configMap, false);
@@ -120,8 +134,12 @@ public class ChangeIntelConfigMapHandlerTest extends ChangeIntelHandlerTestBase 
   }
 
   private V1ConfigMap buildConfigMap() {
+    Map<String, String> annotationMap = new HashMap<>();
+    annotationMap.put("control-plane.alpha.kubernetes.io/leader",
+        "{\"holderIdentity\":\"nginx-ingress-controller-fd6c8f756-6p46w\",\"leaseDurationSeconds\":30,\"acquireTime\":\"2021-10-09T16:38:45Z\",\"renewTime\":\"2021-10-19T06:04:26Z\",\"leaderTransitions\":272}");
     return new V1ConfigMapBuilder()
         .withNewMetadata()
+        .withAnnotations(annotationMap)
         .withName("test-name")
         .withNamespace("test-namespace")
         .withNewCreationTimestamp(Instant.now().toEpochMilli())

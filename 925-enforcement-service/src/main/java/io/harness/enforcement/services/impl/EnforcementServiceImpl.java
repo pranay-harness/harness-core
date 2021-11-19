@@ -36,6 +36,9 @@ public class EnforcementServiceImpl implements EnforcementService {
   private final io.harness.enforcement.handlers.RestrictionHandlerFactory restrictionHandlerFactory;
   private final LicenseService licenseService;
 
+  private static final AvailabilityRestriction DISABLED_RESTRICTION =
+      new AvailabilityRestriction(RestrictionType.AVAILABILITY, false);
+
   @Inject
   public EnforcementServiceImpl(LicenseService licenseService, RestrictionHandlerFactory restrictionHandlerFactory) {
     featureRestrictionMap = new HashMap<>();
@@ -123,6 +126,22 @@ public class EnforcementServiceImpl implements EnforcementService {
   }
 
   @Override
+  public List<FeatureRestrictionDetailsDTO> getFeatureDetails(
+      List<FeatureRestrictionName> featureRestrictionNames, String accountIdentifier) {
+    List<FeatureRestrictionDetailsDTO> result = new ArrayList<>();
+
+    for (FeatureRestrictionName name : featureRestrictionNames) {
+      if (!isFeatureRestrictionDefined(name)) {
+        throw new InvalidRequestException(String.format("Feature [%s] is not defined", name));
+      }
+      FeatureRestriction featureRestriction = featureRestrictionMap.get(name);
+      Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
+      result.add(toFeatureDetailsDTO(accountIdentifier, featureRestriction, edition));
+    }
+    return result;
+  }
+
+  @Override
   public List<FeatureRestrictionDetailsDTO> getEnabledFeatureDetails(String accountIdentifier) {
     List<FeatureRestrictionDetailsDTO> result = new ArrayList<>();
     // check all valid module type features(CD,CCM,FF,CI,CORE)
@@ -141,7 +160,7 @@ public class EnforcementServiceImpl implements EnforcementService {
 
       for (FeatureRestriction featureRestriction : featureRestrictionMap.values()) {
         if (featureRestriction.getModuleType().equals(moduleType)) {
-          Restriction restriction = featureRestriction.getRestrictions().get(edition);
+          Restriction restriction = getRestriction(featureRestriction, edition);
           if (isEnabledFeature(restriction)) {
             result.add(toFeatureDetailsDTO(accountIdentifier, featureRestriction, edition));
           }
@@ -222,7 +241,7 @@ public class EnforcementServiceImpl implements EnforcementService {
   private Restriction getRestriction(FeatureRestriction feature, Edition edition) {
     Restriction restriction = feature.getRestrictions().get(edition);
     if (restriction == null) {
-      throw new FeatureNotSupportedException("Invalid feature definition");
+      return DISABLED_RESTRICTION;
     }
     return restriction;
   }

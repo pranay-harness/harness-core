@@ -39,7 +39,6 @@ import io.harness.cvng.analysis.services.api.LogClusterService;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.LogCVConfig;
-import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -101,7 +100,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                            .build();
 
     if (input.getEndTime().isAfter(cvConfig.getBaseline().getStartTime())
-        && input.getEndTime().isBefore(cvConfig.getBaseline().getEndTime())) {
+        && input.getEndTime().compareTo(cvConfig.getBaseline().getEndTime()) <= 0) {
       task.setBaselineWindow(true);
     }
     task.setAnalysisType(LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS);
@@ -124,11 +123,12 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   private LogAnalysisLearningEngineTask createLogCanaryAnalysisLearningEngineTask(AnalysisInput input) {
     String taskId = generateUuid();
-    VerificationTask verificationTask = verificationTaskService.get(input.getVerificationTaskId());
+    String verificationJobInstanceId =
+        verificationTaskService.getVerificationJobInstanceId(input.getVerificationTaskId());
     Optional<TimeRange> preDeploymentTimeRange =
-        verificationJobInstanceService.getPreDeploymentTimeRange(verificationTask.getVerificationJobInstanceId());
+        verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstanceId);
     VerificationJobInstance verificationJobInstance =
-        verificationJobInstanceService.getVerificationJobInstance(verificationTask.getVerificationJobInstanceId());
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     LogAnalysisLearningEngineTask task = null;
     if (preDeploymentTimeRange.isPresent()) {
       task = CanaryLogAnalysisLearningEngineTask.builder()

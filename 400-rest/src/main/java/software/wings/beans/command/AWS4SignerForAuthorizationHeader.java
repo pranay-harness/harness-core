@@ -1,10 +1,12 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Singleton;
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDC)
 public class AWS4SignerForAuthorizationHeader {
   private static final String ISO_8601_BASIC_FORMAT = "yyyyMMdd'T'HHmmss'Z'";
   private static final String DATE_STRING_FORMAT = "yyyyMMdd";

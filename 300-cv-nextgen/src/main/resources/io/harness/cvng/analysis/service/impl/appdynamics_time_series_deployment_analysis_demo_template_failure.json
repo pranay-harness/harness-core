@@ -2,42 +2,42 @@
   {
     "startTime": 1610529540,
     "endTime": 1610529600,
-    "risk": "HIGH",
+    "risk": "UNHEALTHY",
     "score": 0.9,
     "hostSummaries": [
       {
         "hostName": "harness-deployment-5f67d57589-4jc4c",
         "primary": true,
         "canary": false,
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5004
       },
       {
         "hostName": "harness-deployment-5f67d57589-gp4pd",
         "primary": true,
         "canary": false,
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5894
       },
       {
         "hostName": "harness-deployment-7445f86dbf-h8blt",
         "primary": true,
         "canary": false,
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.8394
       },
       {
         "hostName": "harness-deployment-canary-7445f86dbf-ml857",
         "primary": false,
         "canary": true,
-        "risk": "HIGH",
+        "risk": "UNHEALTHY",
         "score": 0.9174
       },
       {
         "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
         "primary": false,
         "canary": true,
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5004
       }
     ],
@@ -45,12 +45,12 @@
       {
         "transactionName": "/todolist/register",
         "metricName": "Average Response Time (ms)",
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5004,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               0.7999999999999999,
@@ -68,7 +68,7 @@
           },
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               0.7999999999999999,
@@ -90,12 +90,12 @@
       {
         "transactionName": "/todolist/register",
         "metricName": "Calls per Minute",
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5004,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               21.599999999999998,
@@ -113,7 +113,7 @@
           },
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               21.599999999999998,
@@ -135,12 +135,12 @@
       {
         "transactionName": "/todolist/requestLogin",
         "metricName": "Average Response Time (ms)",
-        "risk": "MEDIUM",
+        "risk": "NEED_ATTENTION",
         "score": 0.7004,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "HIGH",
+            "risk": "UNHEALTHY",
             "score": 0.9004,
             "controlData": [
               0.8000000000000002,
@@ -158,7 +158,7 @@
           },
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               0.8000000000000002,
@@ -180,12 +180,12 @@
       {
         "transactionName": "/todolist/requestLogin",
         "metricName": "Calls per Minute",
-        "risk": "HIGH",
+        "risk": "UNHEALTHY",
         "score": 0.9004,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               22.53333333333333,
@@ -203,7 +203,7 @@
           },
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "HIGH",
+            "risk": "UNHEALTHY",
             "score": 0.8004,
             "controlData": [
               22.53333333333333,
@@ -225,12 +225,12 @@
       {
         "transactionName": "/todolist/inside",
         "metricName": "Average Response Time (ms)",
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5004,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               0,
@@ -248,7 +248,7 @@
           },
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               0,
@@ -270,12 +270,12 @@
       {
         "transactionName": "/todolist/inside",
         "metricName": "Calls per Minute",
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.5004,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               126.66666666666667,
@@ -293,7 +293,7 @@
           },
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5894,
             "controlData": [
               126.66666666666667,
@@ -315,12 +315,12 @@
       {
         "transactionName": "/todolist/inside",
         "metricName": "Errors per Minute",
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.05000000000000001,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.403,
             "controlData": [
               38.666666666666664,
@@ -338,7 +338,7 @@
           },
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.20000000000000004,
             "controlData": [
               38.666666666666664,
@@ -360,12 +360,12 @@
       {
         "transactionName": "/todolist/exception",
         "metricName": "Average Response Time (ms)",
-        "risk": "HIGH",
+        "risk": "UNHEALTHY",
         "score": 0.8004,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "HIGH",
+            "risk": "UNHEALTHY",
             "score": 0.9174,
             "controlData": [
               100.9333333333334,
@@ -383,7 +383,7 @@
           },
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "MEDIUM",
+            "risk": "NEED_ATTENTION",
             "score": 0.7004,
             "controlData": [
               150.9333333333334,
@@ -405,12 +405,12 @@
       {
         "transactionName": "/todolist/exception",
         "metricName": "Calls per Minute",
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               38.86666666666667,
@@ -428,7 +428,7 @@
           },
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.5004,
             "controlData": [
               38.86666666666667,
@@ -450,12 +450,12 @@
       {
         "transactionName": "/todolist/exception",
         "metricName": "Errors per Minute",
-        "risk": "LOW",
+        "risk": "HEALTHY",
         "score": 0.05000000000000001,
         "hostData": [
           {
             "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.31999999999999995,
             "controlData": [
               38.86666666666667,
@@ -473,7 +473,7 @@
           },
           {
             "hostName": "harness-deployment-canary-7445f86dbf-ml857",
-            "risk": "LOW",
+            "risk": "HEALTHY",
             "score": 0.20000000000000004,
             "controlData": [
               38.86666666666667,

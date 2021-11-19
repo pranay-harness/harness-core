@@ -48,6 +48,10 @@ import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuilder;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.DatadogLogCVConfig;
+import io.harness.cvng.core.entities.DatadogLogCVConfig.DatadogLogCVConfigBuilder;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig.DatadogMetricCVConfigBuilder;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigBuilder;
@@ -71,6 +75,16 @@ import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
+import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
+import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
+import io.harness.cvng.servicelevelobjective.beans.UserJourneyDTO;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
+import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -93,6 +107,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -110,17 +125,9 @@ public class BuilderFactory {
   public static final String CONNECTOR_IDENTIFIER = "connectorIdentifier";
   @Getter @Setter(AccessLevel.PRIVATE) private Clock clock;
   @Getter @Setter(AccessLevel.PRIVATE) private Context context;
-  public static class BuilderFactoryBuilder {
-    public BuilderFactory build() {
-      BuilderFactory builder = unsafeBuild();
-      if (builder.clock == null) {
-        builder.setClock(Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC));
-      }
-      if (builder.getContext() == null) {
-        builder.setContext(Context.defaultContext());
-      }
-      return builder;
-    }
+
+  public static BuilderFactory getDefault() {
+    return BuilderFactory.builder().build();
   }
 
   public CVNGStepTaskBuilder cvngStepTaskBuilder() {
@@ -171,11 +178,13 @@ public class BuilderFactory {
         .environmentRef(context.getEnvIdentifier())
         .dependencies(Sets.newHashSet(ServiceDependencyDTO.builder().monitoredServiceIdentifier("service1").build(),
             ServiceDependencyDTO.builder().monitoredServiceIdentifier("service2").build()))
-        .sources(MonitoredServiceDTO.Sources.builder()
-                     .healthSources(Arrays.asList(createHealthSource()).stream().collect(Collectors.toSet()))
-                     .changeSources(Sets.newHashSet(getPagerDutyChangeSourceDTOBuilder().build(),
-                         getHarnessCDChangeSourceDTOBuilder().build(), getKubernetesChangeSourceDTOBuilder().build()))
-                     .build());
+        .sources(
+            MonitoredServiceDTO.Sources.builder()
+                .healthSources(
+                    Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
+                .changeSources(Sets.newHashSet(getPagerDutyChangeSourceDTOBuilder().build(),
+                    getHarnessCDChangeSourceDTOBuilder().build(), getKubernetesChangeSourceDTOBuilder().build()))
+                .build());
   }
 
   public HeatMapBuilder heatMapBuilder() {
@@ -210,23 +219,23 @@ public class BuilderFactory {
         .heatMapRisks(heatMapRisks);
   }
 
-  private HealthSource createHealthSource() {
+  public HealthSource createHealthSource(CVMonitoringCategory cvMonitoringCategory) {
     return HealthSource.builder()
         .identifier("healthSourceIdentifier")
         .name("health source name")
         .type(MonitoredServiceDataSourceType.APP_DYNAMICS)
-        .spec(createHealthSourceSpec())
+        .spec(createHealthSourceSpec(cvMonitoringCategory))
         .build();
   }
 
-  private HealthSourceSpec createHealthSourceSpec() {
+  public HealthSourceSpec createHealthSourceSpec(CVMonitoringCategory cvMonitoringCategory) {
     return AppDynamicsHealthSourceSpec.builder()
         .applicationName("appApplicationName")
         .tierName("tier")
         .connectorRef(CONNECTOR_IDENTIFIER)
         .feature("Application Monitoring")
         .metricPacks(new HashSet<MetricPackDTO>() {
-          { add(MetricPackDTO.builder().identifier(CVMonitoringCategory.ERRORS).build()); }
+          { add(MetricPackDTO.builder().identifier(cvMonitoringCategory).build()); }
         })
         .build();
   }
@@ -276,6 +285,23 @@ public class BuilderFactory {
         .productName(generateUuid());
   }
 
+  public DatadogLogCVConfigBuilder datadogLogCVConfigBuilder() {
+    return DatadogLogCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .queryName(randomAlphabetic(10))
+        .query(randomAlphabetic(10))
+        .serviceInstanceIdentifier(randomAlphabetic(10))
+        .identifier(generateUuid())
+        .monitoringSourceName(generateUuid())
+        .connectorIdentifier("DatadogLogConnector")
+        .category(CVMonitoringCategory.PERFORMANCE)
+        .productName(generateUuid());
+  }
+
   public NewRelicCVConfigBuilder newRelicCVConfigBuilder() {
     return NewRelicCVConfig.builder()
         .accountId(context.getAccountId())
@@ -304,6 +330,19 @@ public class BuilderFactory {
         .serviceIdentifier(context.getServiceIdentifier())
         .envIdentifier(context.getEnvIdentifier())
         .connectorIdentifier("connectorRef")
+        .dashboardName("dashboardName")
+        .category(CVMonitoringCategory.PERFORMANCE);
+  }
+
+  public DatadogMetricCVConfigBuilder datadogMetricCVConfigBuilder() {
+    return DatadogMetricCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .connectorIdentifier("connectorRef")
+        .dashboardId("dashboardId")
         .dashboardName("dashboardName")
         .category(CVMonitoringCategory.PERFORMANCE);
   }
@@ -420,7 +459,9 @@ public class BuilderFactory {
         .planExecutionId("executionId")
         .artifactType("artifactType")
         .artifactTag("artifactTag")
-        .deploymentStatus("status")
+        .activityName(generateUuid())
+        .deploymentStatus(generateUuid())
+        .verificationJobInstanceIds(Arrays.asList(generateUuid()))
         .activityEndTime(clock.instant())
         .activityStartTime(clock.instant());
   }
@@ -453,7 +494,7 @@ public class BuilderFactory {
         .environmentIdentifier(context.getEnvIdentifier())
         .eventTime(clock.instant())
         .changeSourceIdentifier("changeSourceID")
-        .type(ChangeSourceType.HARNESS_CD.getActivityType())
+        .type(ChangeSourceType.PAGER_DUTY.getActivityType())
         .pagerDutyUrl("https://myurl.com/pagerduty/token")
         .eventId("eventId")
         .activityName("New pager duty incident")
@@ -561,6 +602,43 @@ public class BuilderFactory {
         .type(changeSourceType);
   }
 
+  public ServiceLevelObjectiveDTO getServiceLevelObjectiveDTOBuilder() {
+    return ServiceLevelObjectiveDTO.builder()
+        .identifier("sloIdentifier")
+        .name("sloName")
+        .tags(new HashMap<String, String>() {
+          {
+            put("tag1", "value1");
+            put("tag2", "");
+          }
+        })
+        .description("slo description")
+        .target(SLOTarget.builder()
+                    .type(SLOTargetType.ROLLING)
+                    .sloTargetPercentage(80.0)
+                    .spec(RollingSLOTargetSpec.builder().periodLength("30D").build())
+                    .build())
+        .serviceLevelIndicators(Collections.singletonList(getServiceLevelIndicatorDTOBuilder()))
+        .healthSourceRef("healthSourceIdentifier")
+        .monitoredServiceRef(context.serviceIdentifier + "_" + context.getEnvIdentifier())
+        .userJourneyRef("userJourney")
+        .build();
+  }
+
+  public UserJourneyDTO getUserJourneyDTOBuilder() {
+    return UserJourneyDTO.builder().identifier("userJourney").name("userJourney").build();
+  }
+
+  public ServiceLevelIndicatorDTO getServiceLevelIndicatorDTOBuilder() {
+    return ServiceLevelIndicatorDTO.builder()
+        .type(ServiceLevelIndicatorType.LATENCY)
+        .spec(ServiceLevelIndicatorSpec.builder()
+                  .type(SLIMetricType.RATIO)
+                  .spec(RatioSLIMetricSpec.builder().eventType("Good").metric1("metric1").metric2("metric2").build())
+                  .build())
+        .build();
+  }
+
   private VerificationJob getVerificationJob() {
     TestVerificationJob testVerificationJob = new TestVerificationJob();
     testVerificationJob.setAccountId(context.getAccountId());
@@ -577,8 +655,17 @@ public class BuilderFactory {
     return testVerificationJob;
   }
 
-  public static BuilderFactory getDefault() {
-    return BuilderFactory.builder().build();
+  public static class BuilderFactoryBuilder {
+    public BuilderFactory build() {
+      BuilderFactory builder = unsafeBuild();
+      if (builder.clock == null) {
+        builder.setClock(Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC));
+      }
+      if (builder.getContext() == null) {
+        builder.setContext(Context.defaultContext());
+      }
+      return builder;
+    }
   }
 
   @Value

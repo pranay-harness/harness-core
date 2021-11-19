@@ -270,7 +270,8 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
     assertThat(tags.size()).isEqualTo(4);
     assertThat(tags)
         .extracting(NameValuePair::getName, NameValuePair::getValue)
-        .containsExactly(tuple("foo", ""), tuple("env", ""), tuple("company", "foobar"), tuple("$HOME/my app/", ""));
+        .containsExactly(
+            tuple("foo", ""), tuple("env", "unresolved"), tuple("company", "foobar"), tuple("$HOME/my app/", ""));
   }
 
   private HarnessTagLink constructHarnessTagLink(String key, String value) {

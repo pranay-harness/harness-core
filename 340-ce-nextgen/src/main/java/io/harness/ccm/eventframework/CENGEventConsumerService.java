@@ -29,7 +29,7 @@ public class CENGEventConsumerService implements Managed {
 
   @Override
   public void stop() throws InterruptedException {
-    entityCRUDConsumerService.shutdown();
+    entityCRUDConsumerService.shutdownNow();
     entityCRUDConsumerService.awaitTermination(ENTITY_CRUD_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
   }
 }

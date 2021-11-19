@@ -85,6 +85,11 @@ public class Service extends Base
                  .field(ServiceKeys.accountId)
                  .field(ServiceKeys.deploymentType)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_name")
+                 .field(ServiceKeys.accountId)
+                 .ascSortField(ServiceKeys.name)
+                 .build())
         .build();
   }
   public static final String GLOBAL_SERVICE_NAME_FOR_YAML = "__all_service__";
@@ -209,6 +214,12 @@ public class Service extends Base
   @Override
   public NGMigrationEntityType getMigrationEntityType() {
     return NGMigrationEntityType.SERVICE;
+  }
+
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
   }
 
   @Data

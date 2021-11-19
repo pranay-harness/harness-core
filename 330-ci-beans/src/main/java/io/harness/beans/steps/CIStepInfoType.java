@@ -14,7 +14,7 @@ public enum CIStepInfoType {
   RUN(CI_LITE_ENGINE, "Run"),
   PLUGIN(CI_LITE_ENGINE, "Plugin"),
   GIT_CLONE(CI_LITE_ENGINE, "GitClone"),
-  LITE_ENGINE_TASK(CI_LITE_ENGINE, "liteEngineTask"),
+  INITIALIZE_TASK(CI_LITE_ENGINE, "liteEngineTask"),
   RUN_TESTS(CI_LITE_ENGINE, "RunTests"),
   ECR(CI_LITE_ENGINE, "BuildAndPushECR"),
   GCR(CI_LITE_ENGINE, "BuildAndPushGCR"),

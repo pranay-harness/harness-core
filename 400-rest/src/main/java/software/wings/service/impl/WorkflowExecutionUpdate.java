@@ -98,6 +98,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   private static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");
+  private static final String UNRESOLVED = "unresolved";
 
   private String appId;
   private String workflowExecutionId;
@@ -536,8 +537,9 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         String tagValue = context.renderExpression(harnessTagLink.getValue());
         // if value can't be evaluated, set it to ""
         if (tagValue == null || tagValue.equals("null")
-            || (harnessTagLink.getValue().startsWith("${") && harnessTagLink.getValue().equals(tagValue))) {
-          tagValue = "";
+            || (harnessTagLink.getValue().startsWith("${") && harnessTagLink.getValue().equals(tagValue))
+            || wingsVariablePattern.matcher(tagValue).find()) {
+          tagValue = UNRESOLVED;
         }
         resolvedTags.add(NameValuePair.builder().name(tagKey).value(tagValue).build());
       }
@@ -552,9 +554,9 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                                            .filter(WorkflowExecutionKeys.appId, appId)
                                            .filter(WorkflowExecutionKeys.uuid, workflowExecutionId);
       UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-                                                          .addToSet(WorkflowExecutionKeys.tags, resolvedTags);
+                                                          .set(WorkflowExecutionKeys.tags, resolvedTags);
       wingsPersistence.findAndModify(query, updateOps, callbackFindAndModifyOptions);
-      log.info(format("[%d] tags added to workflow execution: [%s]", resolvedTags.size(), workflowExecutionId));
+      log.info(format("[%d] tags updated for workflow execution: [%s]", resolvedTags.size(), workflowExecutionId));
     }
   }
 

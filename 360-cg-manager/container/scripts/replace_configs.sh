@@ -346,6 +346,19 @@ if [[ "" != "$SEGMENT_APIKEY" ]]; then
   yq write -i $CONFIG_FILE segmentConfig.apiKey "$SEGMENT_APIKEY"
 fi
 
+#segmentConfiguration is for telemetry framework
+if [[ "" != "$SEGMENT_ENABLED_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.enabled "$SEGMENT_ENABLED_NG"
+fi
+
+if [[ "" != "$SEGMENT_URL_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.url "$SEGMENT_URL_NG"
+fi
+
+if [[ "" != "$SEGMENT_APIKEY_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.apiKey "$SEGMENT_APIKEY_NG"
+fi
+
 if [[ "" != "$SALESFORCE_USERNAME" ]]; then
   yq write -i $CONFIG_FILE salesforceConfig.userName "$SALESFORCE_USERNAME"
 fi
@@ -604,6 +617,10 @@ fi
 
 if [[ "$SEARCH_ENABLED" == "true" ]]; then
   yq write -i $CONFIG_FILE searchEnabled true
+fi
+
+if [[ "$GRAPHQL_ENABLED" == "false" ]]; then
+  yq write -i $CONFIG_FILE graphQLEnabled false
 fi
 
 if [[ "$MONGO_DEBUGGING_ENABLED" == "true" ]]; then
@@ -873,12 +890,14 @@ replace_key_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL
 replace_key_value eventsFramework.redis.masterName $EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME
 replace_key_value eventsFramework.redis.userName $EVENTS_FRAMEWORK_REDIS_USERNAME
 replace_key_value eventsFramework.redis.password $EVENTS_FRAMEWORK_REDIS_PASSWORD
+replace_key_value eventsFramework.redis.nettyThreads $EVENTS_FRAMEWORK_NETTY_THREADS
 replace_key_value eventsFramework.redis.sslConfig.enabled $EVENTS_FRAMEWORK_REDIS_SSL_ENABLED
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
 replace_key_value ngAuthUIEnabled "$HARNESS_ENABLE_NG_AUTH_UI_PLACEHOLDER"
 replace_key_value portal.gatewayPathPrefix "$GATEWAY_PATH_PREFIX"
 replace_key_value portal.zendeskBaseUrl "$ZENDESK_BASE_URL"
+replace_key_value deployVariant "$DEPLOY_VERSION"
 
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
@@ -892,6 +911,14 @@ if [[ "" != "$DISABLE_DELEGATE_MGMT_IN_MANAGER" ]]; then
   yq write -i $CONFIG_FILE disableDelegateMgmtInManager "$DISABLE_DELEGATE_MGMT_IN_MANAGER"
 fi
 
+if [[ "" != "$GCP_SECRET_MANAGER_PROJECT" ]]; then
+  yq write -i $CONFIG_FILE secretConfiguration.gcpSecretManagerProject "$GCP_SECRET_MANAGER_PROJECT"
+fi
+
+if [[ "" != "$RESOLVE_SECRETS" ]]; then
+  yq write -i $CONFIG_FILE secretConfiguration.secretResolutionEnabled "$RESOLVE_SECRETS"
+fi
+
 if [[ "" != "$LDAP_GROUP_SYNC_INTERVAL" ]]; then
   yq write -i $CONFIG_FILE ldapSyncJobConfig.syncInterval "$LDAP_GROUP_SYNC_INTERVAL"
 fi
@@ -902,4 +929,16 @@ fi
 
 if [[ "" != "$LDAP_GROUP_SYNC_DEFAULT_CRON" ]]; then
   yq write -i $CONFIG_FILE ldapSyncJobConfig.defaultCronExpression "$LDAP_GROUP_SYNC_DEFAULT_CRON"
+fi
+
+if [[ "" != "$USE_GLOBAL_KMS_AS_BASE_ALGO" ]]; then
+  yq write -i $CONFIG_FILE useGlobalKMSAsBaseAlgo "$USE_GLOBAL_KMS_AS_BASE_ALGO"
+fi
+
+if [[ "" != "$SECOPS_EMAIL" ]]; then
+ yq write -i config.yml totp.secOpsEmail "$SECOPS_EMAIL"
+fi
+
+if [[ "" != "$INCORRECT_ATTEMPTS_UNTIL_SECOPS_NOTIFIED" ]]; then
+ yq write -i config.yml totp.incorrectAttemptsUntilSecOpsNotified "$INCORRECT_ATTEMPTS_UNTIL_SECOPS_NOTIFIED"
 fi

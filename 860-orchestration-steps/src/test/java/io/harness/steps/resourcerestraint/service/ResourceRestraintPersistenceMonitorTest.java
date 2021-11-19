@@ -20,6 +20,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.mongo.iterator.IteratorConfig;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
 import io.harness.rule.Owner;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
@@ -48,7 +49,8 @@ public class ResourceRestraintPersistenceMonitorTest extends OrchestrationStepsT
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
-    persistenceMonitor.registerIterators();
+    persistenceMonitor.registerIterators(
+        IteratorConfig.builder().enabled(true).targetIntervalInSeconds(60).threadPoolCount(2).build());
     verify(persistenceIteratorFactory, times(1))
         .createPumpIteratorWithDedicatedThreadPool(any(PersistenceIteratorFactory.PumpExecutorOptions.class),
             eq(ResourceRestraintPersistenceMonitor.class), any(MongoPersistenceIteratorBuilder.class));

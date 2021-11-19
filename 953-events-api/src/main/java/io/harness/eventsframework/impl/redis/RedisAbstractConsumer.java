@@ -40,20 +40,34 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
   public RedisAbstractConsumer(
       String topicName, String groupName, @NotNull RedisConfig redisConfig, Duration maxProcessingTime, int batchSize) {
     super(topicName, groupName);
-    initConsumerGroup(topicName, redisConfig, maxProcessingTime, batchSize);
+    RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
+    initConsumerGroup(topicName, redissonClient, maxProcessingTime, batchSize, redisConfig.getEnvNamespace());
+  }
+
+  public RedisAbstractConsumer(String topicName, String groupName, @NotNull RedissonClient redissonClient,
+      Duration maxProcessingTime, int batchSize, String envNamespace) {
+    super(topicName, groupName);
+    initConsumerGroup(topicName, redissonClient, maxProcessingTime, batchSize, envNamespace);
   }
 
   public RedisAbstractConsumer(String topicName, String groupName, String consumerName, RedisConfig redisConfig,
       Duration maxProcessingTime, int batchSize) {
     super(topicName, groupName, consumerName);
-    initConsumerGroup(topicName, redisConfig, maxProcessingTime, batchSize);
+    RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
+    initConsumerGroup(topicName, redissonClient, maxProcessingTime, batchSize, redisConfig.getEnvNamespace());
   }
 
-  private void initConsumerGroup(String topicName, RedisConfig redisConfig, Duration maxProcessingTime, int batchSize) {
-    this.redissonClient = RedisUtils.getClient(redisConfig);
-    this.stream = RedisUtils.getStream(getTopicName(), redissonClient, redisConfig.getEnvNamespace());
-    this.deadLetterQueue =
-        RedisUtils.getDeadLetterStream(getTopicName(), redissonClient, redisConfig.getEnvNamespace());
+  public RedisAbstractConsumer(String topicName, String groupName, String consumerName,
+      @NotNull RedissonClient redissonClient, Duration maxProcessingTime, int batchSize, String envNamespace) {
+    super(topicName, groupName, consumerName);
+    initConsumerGroup(topicName, redissonClient, maxProcessingTime, batchSize, envNamespace);
+  }
+
+  private void initConsumerGroup(
+      String topicName, RedissonClient redissonClient, Duration maxProcessingTime, int batchSize, String envNamespace) {
+    this.redissonClient = redissonClient;
+    this.stream = RedisUtils.getStream(getTopicName(), redissonClient, envNamespace);
+    this.deadLetterQueue = RedisUtils.getDeadLetterStream(getTopicName(), redissonClient, envNamespace);
     this.maxProcessingTime = maxProcessingTime;
     this.batchSize = batchSize;
     RetryConfig retryConfig =

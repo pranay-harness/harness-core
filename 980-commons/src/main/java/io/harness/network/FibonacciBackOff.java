@@ -53,7 +53,11 @@ public final class FibonacciBackOff {
   }
 
   private static void handleFailure(int attempt, IOException e) {
-    log.error("error while executing", e);
+    if (attempt == 0) {
+      log.error("Error while executing, on attempt {} ", attempt + 1, e);
+    } else {
+      log.warn("Error while executing, on attempt {}, please refer attempt 1 for stacktrace", attempt + 1);
+    }
     sleep(Duration.ofSeconds(FIBONACCI[attempt]));
   }
 

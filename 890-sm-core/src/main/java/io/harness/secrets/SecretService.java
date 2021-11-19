@@ -35,7 +35,7 @@ public interface SecretService {
   boolean migrateSecrets(
       @NotEmpty String accountId, @NotNull SecretManagerConfig fromConfig, @NotNull SecretManagerConfig toConfig);
   void migrateSecret(@NotNull MigrateSecretTask migrateSecretTask);
-  char[] fetchSecretValue(@NotEmpty String accountId, @NotEmpty String secretId);
+  char[] fetchSecretValue(@NotNull EncryptedData encryptedData);
   Optional<EncryptedData> getSecretById(@NotEmpty String accountId, @NotEmpty String secretRecordId);
   Optional<EncryptedData> getSecretById(
       @NotEmpty String accountId, @NotEmpty String secretRecordId, @NotEmpty String appId, String envId);

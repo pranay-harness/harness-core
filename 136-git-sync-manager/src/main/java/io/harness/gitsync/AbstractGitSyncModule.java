@@ -8,10 +8,12 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
+import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
+import org.redisson.api.RedissonClient;
 
 @OwnedBy(HarnessTeam.DX)
 public abstract class AbstractGitSyncModule extends AbstractModule {
@@ -28,16 +30,17 @@ public abstract class AbstractGitSyncModule extends AbstractModule {
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
       // TODO check for group name
+      RedissonClient redissonClient = RedisUtils.getClient(getRedisConfig());
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM))
-          .toInstance(RedisConsumer.of(EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM, NG_MANAGER, getRedisConfig(),
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM, NG_MANAGER, redissonClient,
               EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM_BATCH_SIZE));
+              EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM_BATCH_SIZE, getRedisConfig().getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM, NG_MANAGER,
-              getRedisConfig(), EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM_BATCH_SIZE));
+              redissonClient, EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM_BATCH_SIZE, getRedisConfig().getEnvNamespace()));
     }
   }
 

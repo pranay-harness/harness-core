@@ -7,6 +7,6 @@ import io.harness.ng.webhook.entities.WebhookEvent;
 
 @OwnedBy(PIPELINE)
 public interface WebhookEventProcessingService {
-  void registerIterators();
+  void registerIterators(int threadPoolSize);
   void handle(WebhookEvent event);
 }

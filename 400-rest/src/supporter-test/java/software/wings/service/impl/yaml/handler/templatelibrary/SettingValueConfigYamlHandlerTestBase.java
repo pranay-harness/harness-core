@@ -46,8 +46,8 @@ public abstract class SettingValueConfigYamlHandlerTestBase extends YamlHandlerT
   public static final String accountName = "accountName";
   public static final String userName = "username";
   public static final String password = "password";
-  public static final String token = "5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11";
-  public static final String apiKey = "5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11";
+  public static final String token = "token";
+  public static final String apiKey = "key";
   public static final String acessId = "accessId";
   public static final String accesskey = "accesskey";
 

@@ -51,21 +51,24 @@ public class EnvironmentFilterHelperTest extends CategoryTest {
     Update updateOperations = EnvironmentFilterHelper.getUpdateOperations(environment);
     Set<String> stringSet = ((Document) updateOperations.getUpdateObject().get("$set")).keySet();
     PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(Environment.class);
-    Set<String> excludedFields = new HashSet<>(Arrays.asList(EnvironmentKeys.id, EnvironmentKeys.createdAt,
-        EnvironmentKeys.lastModifiedAt, EnvironmentKeys.version, "class"));
+    Set<String> excludedFields =
+        new HashSet<>(Arrays.asList(EnvironmentKeys.id, EnvironmentKeys.createdAt, EnvironmentKeys.version, "class"));
 
     for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
       boolean shouldExist =
           stringSet.contains(propertyDescriptor.getName()) || excludedFields.contains(propertyDescriptor.getName());
       assertThat(shouldExist).isTrue();
     }
+
+    Set<String> setOnInsert = ((Document) updateOperations.getUpdateObject().get("$setOnInsert")).keySet();
+    assertThat(setOnInsert).hasSize(1);
+    assertThat(setOnInsert).contains(EnvironmentKeys.createdAt);
   }
 
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetUpdateOperationsForDelete() {
-    Environment environment = Environment.builder().build();
     Update updateOperations = EnvironmentFilterHelper.getUpdateOperationsForDelete();
     Set<String> stringSet = ((Document) updateOperations.getUpdateObject().get("$set")).keySet();
     PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(Environment.class);

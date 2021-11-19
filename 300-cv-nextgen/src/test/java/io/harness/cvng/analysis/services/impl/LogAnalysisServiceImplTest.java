@@ -3,6 +3,7 @@ package io.harness.cvng.analysis.services.impl;
 import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,6 +44,7 @@ import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.LogCVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -130,6 +132,24 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
     assertThat(Duration.between(task.getAnalysisStartTime(), input.getStartTime())).isZero();
     assertThat(Duration.between(task.getAnalysisEndTime(), input.getEndTime())).isZero();
     assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS.name());
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testScheduleLogAnalysisTask_baselineWindowIsSetProperly() {
+    LogCVConfig cvConfig = (LogCVConfig) cvConfigService.get(cvConfigId);
+    AnalysisInput input = AnalysisInput.builder()
+                              .verificationTaskId(verificationTaskId)
+                              .startTime(cvConfig.getBaseline().getEndTime().minus(5, ChronoUnit.MINUTES))
+                              .endTime(cvConfig.getBaseline().getEndTime())
+                              .build();
+
+    String taskId = logAnalysisService.scheduleServiceGuardLogAnalysisTask(input);
+    assertThat(taskId).isNotNull();
+    ServiceGuardLogAnalysisTask learningEngineTask =
+        (ServiceGuardLogAnalysisTask) learningEngineTaskService.get(taskId);
+    assertThat(learningEngineTask.isBaselineWindow()).isEqualTo(true);
   }
 
   @Test
@@ -330,8 +350,8 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
   public void testScheduleDeploymentLogAnalysisTask_testVerificationWithNullBaseline() {
     VerificationJobInstance verificationJobInstance = newVerificationJobInstance();
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     AnalysisInput input = AnalysisInput.builder()
                               .verificationTaskId(verificationTaskId)
                               .startTime(instant.plus(5, ChronoUnit.MINUTES))
@@ -363,10 +383,10 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
     ((TestVerificationJob) verificationJobInstance.getResolvedJob())
         .setBaselineVerificationJobInstanceId(baselineJobInstanceId);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String baselineVerificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, baselineJobInstanceId, APP_DYNAMICS);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String baselineVerificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, baselineJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     AnalysisInput input = AnalysisInput.builder()
                               .verificationTaskId(verificationTaskId)
                               .startTime(instant.plus(5, ChronoUnit.MINUTES))

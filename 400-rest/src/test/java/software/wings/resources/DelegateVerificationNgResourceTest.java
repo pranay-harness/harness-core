@@ -10,6 +10,10 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateHeartbeatDetails;
 import io.harness.delegate.beans.DelegateInitializationDetails;
@@ -25,11 +29,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateVerificationNgResourceTest extends CategoryTest {
   private static final String TEST_ACCOUNT_ID = "testAccountId";
   private static final String TEST_ORG_ID = generateUuid();
   private static final String TEST_PROJECT_ID = generateUuid();
-  private static final String TEST_SESSION_ID = "testSessionId";
   private static final String TEST_DELEGATE_ID = "testDelegateId";
   private static final String TEST_DELEGATE_NAME = "testDelegateName";
   private static final long TEST_PROFILE_EXECUTION_TIME = System.currentTimeMillis();

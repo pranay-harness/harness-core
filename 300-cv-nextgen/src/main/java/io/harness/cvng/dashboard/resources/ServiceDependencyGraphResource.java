@@ -36,7 +36,9 @@ public class ServiceDependencyGraphResource {
       @QueryParam("orgIdentifier") @ApiParam(required = true) @NotNull final String orgIdentifier,
       @QueryParam("projectIdentifier") @ApiParam(required = true) @NotNull final String projectIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier,
-      @QueryParam("envIdentifier") String envIdentifier, @QueryParam("serviceIdentifier") String serviceIdentifier) {
+      @QueryParam("envIdentifier") String envIdentifier, @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @QueryParam("servicesAtRiskFilter") @ApiParam(
+          defaultValue = "false") @NotNull final boolean servicesAtRiskFilter) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
                                       .orgIdentifier(orgIdentifier)
@@ -45,7 +47,7 @@ public class ServiceDependencyGraphResource {
     if (environmentIdentifier == null) {
       environmentIdentifier = envIdentifier;
     }
-    return new RestResponse<>(
-        serviceDependencyGraphService.getDependencyGraph(projectParams, serviceIdentifier, environmentIdentifier));
+    return new RestResponse<>(serviceDependencyGraphService.getDependencyGraph(
+        projectParams, serviceIdentifier, environmentIdentifier, servicesAtRiskFilter));
   }
 }

@@ -15,6 +15,7 @@ java_library(
         "//878-pipeline-service-utilities:module",
         "//889-yaml-commons:module",
         "//940-notification-client:module",
+        "//950-telemetry:module",
         "//955-delegate-beans:module",
         "//960-continuous-features:module",
         "//960-notification-beans:module",

@@ -69,9 +69,9 @@ public class WebhookServiceImpl implements WebhookService {
                                                .urgency(payload.getEvent().getData().getUrgency())
                                                .htmlUrl(payload.getEvent().getData().getHtmlUrl())
                                                .build();
-    if (isNotEmpty(payload.getEvent().getData().getAssignments())) {
-      eventMetaData.setAssignment(payload.getEvent().getData().getAssignments().get(0).getSummary());
-      eventMetaData.setAssignmentUrl(payload.getEvent().getData().getAssignments().get(0).getHtmlUrl());
+    if (isNotEmpty(payload.getEvent().getData().getAssignees())) {
+      eventMetaData.setAssignment(payload.getEvent().getData().getAssignees().get(0).getSummary());
+      eventMetaData.setAssignmentUrl(payload.getEvent().getData().getAssignees().get(0).getHtmlUrl());
     }
     if (payload.getEvent().getData().getEscalationPolicy() != null) {
       eventMetaData.setEscalationPolicy(payload.getEvent().getData().getEscalationPolicy().getSummary());

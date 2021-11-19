@@ -22,9 +22,9 @@ import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.mapper.TagMapper;
+import io.harness.ng.core.template.TemplateListType;
 import io.harness.springdata.SpringDataMongoUtils;
-import io.harness.template.beans.TemplateFilterPropertiesDTO;
-import io.harness.template.beans.TemplateListType;
+import io.harness.template.TemplateFilterPropertiesDTO;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.gitsync.TemplateGitSyncBranchContextGuard;
@@ -55,27 +55,17 @@ public class NGTemplateServiceHelper {
     Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));
   }
 
-  public TemplateGitSyncBranchContextGuard getTemplateGitContext(
+  public TemplateGitSyncBranchContextGuard getTemplateGitContextForGivenTemplate(
       TemplateEntity template, GitEntityInfo gitEntityInfo, String commitMsg) {
-    boolean defaultFromOtherRepo = false;
-    String branch = "";
-    String yamlGitConfigId = "";
+    GitEntityInfo gitEntityInfoForGivenTemplate = null;
     if (gitEntityInfo != null) {
-      defaultFromOtherRepo = gitEntityInfo.isFindDefaultFromOtherRepos();
-      branch = gitEntityInfo.getBranch();
-      yamlGitConfigId = gitEntityInfo.getYamlGitConfigId();
+      gitEntityInfoForGivenTemplate = gitEntityInfo.withCommitMsg(commitMsg)
+                                          .withFilePath(template.getFilePath())
+                                          .withFolderPath(template.getRootFolder())
+                                          .withLastObjectId(template.getObjectIdOfYaml());
     }
-    GitSyncBranchContext branchContext = GitSyncBranchContext.builder()
-                                             .gitBranchInfo(GitEntityInfo.builder()
-                                                                .branch(branch)
-                                                                .yamlGitConfigId(yamlGitConfigId)
-                                                                .findDefaultFromOtherRepos(defaultFromOtherRepo)
-                                                                .filePath(template.getFilePath())
-                                                                .folderPath(template.getRootFolder())
-                                                                .lastObjectId(template.getObjectIdOfYaml())
-                                                                .commitMsg(commitMsg)
-                                                                .build())
-                                             .build();
+    GitSyncBranchContext branchContext =
+        GitSyncBranchContext.builder().gitBranchInfo(gitEntityInfoForGivenTemplate).build();
     return new TemplateGitSyncBranchContextGuard(branchContext, false);
   }
 

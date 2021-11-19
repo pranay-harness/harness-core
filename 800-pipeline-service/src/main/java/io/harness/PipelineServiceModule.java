@@ -5,7 +5,6 @@ import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.AuthorizationServiceHeader.TEMPLATE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
-import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
@@ -63,7 +62,6 @@ import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
 import io.harness.pms.event.entitycrud.PipelineEntityCRUDStreamListener;
 import io.harness.pms.event.entitycrud.ProjectEntityCrudStreamListener;
 import io.harness.pms.event.pollingevent.PollingEventStreamListener;
-import io.harness.pms.event.webhookevent.WebhookEventStreamListener;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.jira.JiraStepHelperServiceImpl;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
@@ -223,7 +221,8 @@ public class PipelineServiceModule extends AbstractModule {
             .useFeatureFlagService(true)
             .build()));
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
-    install(OrchestrationVisualizationModule.getInstance(configuration.getEventsFrameworkConfiguration()));
+    install(OrchestrationVisualizationModule.getInstance(configuration.getEventsFrameworkConfiguration(),
+        configuration.getOrchestrationVisualizationThreadPoolConfig()));
     install(PrimaryVersionManagerModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
         configuration.getManagerTarget(), configuration.getManagerAuthority(), true));
@@ -261,7 +260,8 @@ public class PipelineServiceModule extends AbstractModule {
     install(new EntitySetupUsageClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new LogStreamingModule(configuration.getLogStreamingServiceConfig().getBaseUrl()));
-    install(new OpaClientModule(configuration.getOpaServerConfig().getBaseUrl(), configuration.getJwtAuthSecret()));
+    install(new OpaClientModule(
+        configuration.getOpaServerConfig().getBaseUrl(), configuration.getOpaServerConfig().getSecret()));
     install(
         new AuditClientModule(this.configuration.getAuditClientConfig(), this.configuration.getManagerServiceSecret(),
             PIPELINE_SERVICE.getServiceId(), this.configuration.isEnableAudit()));
@@ -349,7 +349,6 @@ public class PipelineServiceModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(PIPELINE_ENTITY + ENTITY_CRUD))
         .to(PipelineEntityCRUDStreamListener.class);
-    bind(MessageListener.class).annotatedWith(Names.named(WEBHOOK_EVENTS_STREAM)).to(WebhookEventStreamListener.class);
 
     bind(MessageListener.class)
         .annotatedWith(Names.named(PROJECT_ENTITY + ENTITY_CRUD))
@@ -449,14 +448,15 @@ public class PipelineServiceModule extends AbstractModule {
   @Provides
   @Singleton
   DistributedLockImplementation distributedLockImplementation() {
-    return MONGO;
+    return configuration.getDistributedLockImplementation() == null ? MONGO
+                                                                    : configuration.getDistributedLockImplementation();
   }
 
   @Provides
   @Named("lock")
   @Singleton
   RedisConfig redisConfig() {
-    return RedisConfig.builder().build();
+    return configuration.getRedisLockConfig();
   }
 
   @Provides
@@ -471,7 +471,10 @@ public class PipelineServiceModule extends AbstractModule {
   @Named("yaml-schema-mapper")
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapper() {
-    return Jackson.newObjectMapper();
+    ObjectMapper objectMapper = Jackson.newObjectMapper();
+
+    PipelineServiceApplication.configureObjectMapper(objectMapper);
+    return objectMapper;
   }
 
   @Provides

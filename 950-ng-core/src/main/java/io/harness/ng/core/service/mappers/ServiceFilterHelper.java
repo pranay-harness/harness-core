@@ -43,6 +43,8 @@ public class ServiceFilterHelper {
     update.set(ServiceEntityKeys.description, serviceEntity.getDescription());
     update.set(ServiceEntityKeys.tags, serviceEntity.getTags());
     update.set(ServiceEntityKeys.deleted, false);
+    update.setOnInsert(ServiceEntityKeys.createdAt, System.currentTimeMillis());
+    update.set(ServiceEntityKeys.lastModifiedAt, System.currentTimeMillis());
     return update;
   }
 

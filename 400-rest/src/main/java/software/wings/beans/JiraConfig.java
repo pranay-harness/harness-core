@@ -3,6 +3,8 @@ package software.wings.beans;
 import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -31,6 +33,7 @@ import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(HarnessTeam.CDC)
 @JsonTypeName("JIRA")
 @Data
 @Builder
@@ -38,6 +41,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode(callSuper = false)
 public class JiraConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   public enum JiraSetupType { JIRA_CLOUD, JIRA_SERVER }
+
   private static final CharSequence JIRA_CLOUD_DOMAINNAME = ".atlassian.net";
 
   @Attributes(title = "Base URL", required = true) @NotEmpty private String baseUrl;
@@ -54,17 +58,21 @@ public class JiraConfig extends SettingValue implements EncryptableSetting, Exec
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
   @SchemaIgnore @NotEmpty private String accountId;
 
+  private List<String> delegateSelectors;
+
   public JiraConfig() {
     super(SettingVariableTypes.JIRA.name());
   }
 
-  public JiraConfig(String baseUrl, String username, char[] password, String encryptedPassword, String accountId) {
+  public JiraConfig(String baseUrl, String username, char[] password, String encryptedPassword, String accountId,
+      List<String> delegateSelectors) {
     this();
     this.baseUrl = baseUrl;
     this.username = username;
     this.password = Arrays.copyOf(password, password.length);
     this.encryptedPassword = encryptedPassword;
     this.accountId = accountId;
+    this.delegateSelectors = delegateSelectors;
   }
 
   private JiraSetupType getSetupType() {
@@ -88,14 +96,16 @@ public class JiraConfig extends SettingValue implements EncryptableSetting, Exec
     private String baseUrl;
     private String username;
     private String password = ENCRYPTED_VALUE_STR;
+    private List<String> delegateSelectors;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String baseUrl, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions) {
+        List<String> delegateSelectors, UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.baseUrl = baseUrl;
       this.username = username;
       this.password = password;
+      this.delegateSelectors = delegateSelectors;
     }
   }
 

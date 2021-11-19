@@ -56,7 +56,7 @@ public class ResourceConstraintBackupHandlerTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
-    resourceConstraintBackupHandler.registerIterators();
+    resourceConstraintBackupHandler.registerIterators(10);
     verify(mockPersistenceIteratorFactory, times(1))
         .createPumpIteratorWithDedicatedThreadPool(any(PumpExecutorOptions.class),
             eq(ResourceConstraintBackupHandler.class), any(MongoPersistenceIteratorBuilder.class));

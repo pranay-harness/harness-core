@@ -57,6 +57,8 @@ public abstract class AbstractGitSdkEntityHandler<B extends GitSyncableEntity, Y
                            .folderPath(fullSyncChangeSet.getFolderPath())
                            .filePath(fullSyncChangeSet.getFilePath())
                            .yamlGitConfigId(fullSyncChangeSet.getYamlGitConfigIdentifier())
+                           .isFullSyncFlow(true)
+                           .commitMsg(fullSyncChangeSet.getCommitMessage())
                            .build())
         .build();
   }

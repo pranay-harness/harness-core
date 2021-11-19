@@ -23,6 +23,7 @@ import software.wings.beans.utm.UtmInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
+import software.wings.security.authentication.totp.RateLimitProtection;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -69,6 +70,7 @@ public class User extends Base implements Principal {
   public static final String ROLES_KEY = "roles";
 
   @NotEmpty @FdIndex private String name;
+  @FdIndex private String externalUserId;
 
   private String givenName;
 
@@ -122,6 +124,8 @@ public class User extends Base implements Principal {
   private boolean imported;
 
   private UserLockoutInfo userLockoutInfo = new UserLockoutInfo();
+
+  @Getter private RateLimitProtection rateLimitProtection;
 
   @JsonIgnore private long passwordChangedAt;
 
@@ -269,6 +273,14 @@ public class User extends Base implements Principal {
    */
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public String getExternalUserId() {
+    return externalUserId;
+  }
+
+  public void setExternalUserId(String externalUserId) {
+    this.externalUserId = externalUserId;
   }
 
   /**
@@ -753,7 +765,9 @@ public class User extends Base implements Principal {
     private boolean userLocked;
     private boolean imported;
     private UtmInfo utmInfo;
+    private RateLimitProtection rateLimitProtection;
     private UserRequestContext userRequestContext;
+    private String externalUserId;
 
     private Builder() {}
 
@@ -776,6 +790,11 @@ public class User extends Base implements Principal {
       return this;
     }
 
+    public Builder externalUserId(String externalUserId) {
+      this.externalUserId = externalUserId;
+      return this;
+    }
+
     public Builder givenName(String givenName) {
       this.givenName = givenName;
       return this;
@@ -793,6 +812,11 @@ public class User extends Base implements Principal {
 
     public Builder userRequestContext(UserRequestContext userRequestContext) {
       this.userRequestContext = userRequestContext;
+      return this;
+    }
+
+    public Builder rateLimitProtection(RateLimitProtection rateLimitProtection) {
+      this.rateLimitProtection = rateLimitProtection;
       return this;
     }
 
@@ -940,6 +964,7 @@ public class User extends Base implements Principal {
       return anUser()
           .name(name)
           .email(email)
+          .externalUserId(externalUserId)
           .passwordHash(passwordHash)
           .companyName(companyName)
           .roles(roles)
@@ -967,6 +992,7 @@ public class User extends Base implements Principal {
           .twoFactorJwtToken(twoFactorJwtToken)
           .passwordExpired(passwordExpired)
           .oauthProvider(oauthProvider)
+          .rateLimitProtection(rateLimitProtection)
           .utmInfo(utmInfo)
           .imported(imported);
     }
@@ -975,6 +1001,7 @@ public class User extends Base implements Principal {
       User user = new User();
       user.setName(name);
       user.setEmail(email);
+      user.setExternalUserId(externalUserId);
       user.setPasswordHash(passwordHash);
       user.setCompanyName(companyName);
       user.setAccountName(accountName);
@@ -1008,6 +1035,8 @@ public class User extends Base implements Principal {
       user.setGivenName(givenName);
       user.setFamilyName(familyName);
       user.setUserRequestContext(userRequestContext);
+
+      user.rateLimitProtection = rateLimitProtection;
 
       return user;
     }

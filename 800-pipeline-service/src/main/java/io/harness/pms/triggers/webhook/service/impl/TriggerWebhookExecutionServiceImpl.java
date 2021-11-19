@@ -13,6 +13,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.mongo.iterator.IteratorConfig;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
@@ -50,13 +51,12 @@ public class TriggerWebhookExecutionServiceImpl
   @Inject private NGTriggerService ngTriggerService;
   @Inject private TriggerEventHistoryRepository triggerEventHistoryRepository;
 
-  @Override
-  public void registerIterators() {
+  public void registerIterators(IteratorConfig iteratorConfig) {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("WebhookEventProcessor")
-            .poolSize(2)
-            .interval(ofSeconds(5))
+            .poolSize(iteratorConfig.getThreadPoolCount())
+            .interval(ofSeconds(iteratorConfig.getTargetIntervalInSeconds()))
             .build(),
         TriggerWebhookExecutionService.class,
         MongoPersistenceIterator.<TriggerWebhookEvent, SpringFilterExpander>builder()

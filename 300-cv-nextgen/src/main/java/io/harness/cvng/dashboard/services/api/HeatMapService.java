@@ -6,18 +6,16 @@ import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.utils.ServiceEnvKey;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.beans.RiskSummaryPopoverDTO;
-import io.harness.cvng.dashboard.entities.HeatMap;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
-import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import org.apache.commons.lang3.tuple.Pair;
@@ -41,14 +39,20 @@ public interface HeatMapService {
   RiskSummaryPopoverDTO getRiskSummaryPopover(String accountId, String orgIdentifier, String projectIdentifier,
       Instant endTime, String serviceIdentifier, CVMonitoringCategory category);
 
-  List<HeatMap> getLatestHeatMaps(
-      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier);
+  Map<ServiceEnvKey, RiskData> getLatestHealthScore(@NonNull ProjectParams projectParams,
+      @NonNull List<String> serviceIdentifiers, @NonNull List<String> envIdentifiers);
 
   List<HistoricalTrend> getHistoricalTrend(String accountId, String orgIdentifier, String projectIdentifier,
       List<Pair<String, String>> serviceEnvIdentifiers, int hours);
 
-  List<RiskData> getLatestRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
-      List<Pair<String, String>> serviceEnvIdentifiers, Duration bufferTime);
+  List<RiskData> getLatestRiskScoreForAllServicesList(String accountId, String orgIdentifier, String projectIdentifier,
+      List<Pair<String, String>> serviceEnvIdentifiers);
+
+  Map<ServiceEnvKey, RiskData> getLatestRiskScoreByServiceMap(
+      ProjectParams projectParams, List<Pair<String, String>> serviceEnvIdentifiers);
+
+  List<RiskData> getLatestRiskScoreForLimitedServicesList(String accountId, String orgIdentifier,
+      String projectIdentifier, List<Pair<String, String>> serviceEnvIdentifiers);
 
   HistoricalTrend getOverAllHealthScore(ProjectParams projectParams, String serviceIdentifier,
       String environmentIdentifier, DurationDTO duration, Instant endTime);

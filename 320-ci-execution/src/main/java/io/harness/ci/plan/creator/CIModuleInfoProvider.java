@@ -14,7 +14,7 @@ import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.serializer.RunTimeInputHandler;
-import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.ci.pipeline.executions.beans.CIBuildAuthor;
@@ -44,7 +44,7 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.pms.sdk.execution.beans.StageModuleInfo;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.states.LiteEngineTaskStep;
+import io.harness.states.InitializeTaskStep;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.util.WebhookTriggerProcessorUtils;
 import io.harness.yaml.extended.ci.codebase.Build;
@@ -55,11 +55,15 @@ import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -85,42 +89,46 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     String triggerRepoName = null;
     String url = null;
     CIBuildAuthor author = null;
+    Boolean isPrivateRepo = false;
     List<CIBuildCommit> triggerCommits = null;
     ExecutionTriggerInfo executionTriggerInfo = event.getAmbiance().getMetadata().getTriggerInfo();
     Ambiance ambiance = event.getAmbiance();
     BaseNGAccess baseNGAccess = retrieveBaseNGAccess(ambiance);
     try {
       StepElementParameters stepElementParameters = (StepElementParameters) event.getResolvedStepParameters();
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
+      InitializeStepInfo initializeStepInfo = (InitializeStepInfo) stepElementParameters.getSpec();
 
-      if (liteEngineTaskStepInfo == null) {
+      if (initializeStepInfo == null) {
         return null;
       }
 
       ParameterField<Build> buildParameterField = null;
-      if (liteEngineTaskStepInfo.getCiCodebase() != null) {
-        buildParameterField = liteEngineTaskStepInfo.getCiCodebase().getBuild();
+      if (initializeStepInfo.getCiCodebase() != null) {
+        buildParameterField = initializeStepInfo.getCiCodebase().getBuild();
 
-        if (liteEngineTaskStepInfo.getCiCodebase().getRepoName() != null) {
-          repoName = liteEngineTaskStepInfo.getCiCodebase().getRepoName();
+        if (initializeStepInfo.getCiCodebase().getRepoName() != null) {
+          repoName = initializeStepInfo.getCiCodebase().getRepoName();
         }
-        if (liteEngineTaskStepInfo.getCiCodebase().getConnectorRef() != null) {
+        if (initializeStepInfo.getCiCodebase().getConnectorRef() != null) {
           try {
-            ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(
-                baseNGAccess, liteEngineTaskStepInfo.getCiCodebase().getConnectorRef());
+            ConnectorDetails connectorDetails =
+                connectorUtils.getConnectorDetails(baseNGAccess, initializeStepInfo.getCiCodebase().getConnectorRef());
             if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
-              url = IntegrationStageUtils.getGitURLFromConnector(
-                  connectorDetails, liteEngineTaskStepInfo.getCiCodebase());
+              url = IntegrationStageUtils.getGitURLFromConnector(connectorDetails, initializeStepInfo.getCiCodebase());
+            }
+            if (url == null) {
+              url = connectorUtils.retrieveURL(connectorDetails);
             }
             if (repoName == null) {
-              repoName = getGitRepo(connectorUtils.retrieveURL(connectorDetails));
+              repoName = getGitRepo(url);
             }
+
           } catch (Exception exception) {
             log.warn("Failed to retrieve repo");
           }
         }
       }
-
+      isPrivateRepo = isPrivateRepo(url);
       Build build = RunTimeInputHandler.resolveBuild(buildParameterField);
       if (build != null) {
         buildType = build.getType().toString();
@@ -177,6 +185,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
             .prNumber(prNumber)
             .repoName(repoName)
             .ciExecutionInfoDTO(ciWebhookInfoDTO)
+            .isPrivateRepo(isPrivateRepo)
             .build();
       }
     }
@@ -204,6 +213,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         .tag(tag)
         .repoName(repoName)
         .ciExecutionInfoDTO(getCiExecutionInfoDTO(codebaseSweepingOutput, author, prNumber, triggerCommits))
+        .isPrivateRepo(isPrivateRepo)
         .build();
   }
 
@@ -315,7 +325,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
 
   // StepType
   private boolean isLiteEngineNode(StepType stepType) {
-    return Objects.equals(stepType.getType(), LiteEngineTaskStep.STEP_TYPE.getType());
+    return Objects.equals(stepType.getType(), InitializeTaskStep.STEP_TYPE.getType());
   }
 
   private BaseNGAccess retrieveBaseNGAccess(Ambiance ambiance) {
@@ -328,5 +338,20 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .build();
+  }
+
+  private boolean isPrivateRepo(String urlString) {
+    try {
+      URL url = new URL(urlString);
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("GET");
+      connection.setConnectTimeout(5000);
+      connection.connect();
+      int code = connection.getResponseCode();
+      return !Response.Status.Family.familyOf(code).equals(Response.Status.Family.SUCCESSFUL);
+    } catch (IOException e) {
+      log.warn("Failed to get repo info, assuming private. url", e);
+      return true;
+    }
   }
 }

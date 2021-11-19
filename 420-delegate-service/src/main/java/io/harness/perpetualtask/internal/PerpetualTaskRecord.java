@@ -62,6 +62,11 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
                  .field(PerpetualTaskRecordKeys.state)
                  .field(PerpetualTaskRecordKeys.rebalanceIteration)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("assignerIterator_1")
+                 .field(PerpetualTaskRecordKeys.state)
+                 .field(PerpetualTaskRecordKeys.assignerIterations)
+                 .build())
         .build();
   }
 

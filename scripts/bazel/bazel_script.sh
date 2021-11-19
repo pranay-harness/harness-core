@@ -50,7 +50,7 @@ if [ "${RUN_PMDS}" == "true" ]; then
 fi
 
 BAZEL_MODULES="\
-  //100-ng-migration:module \
+  //100-migrator:module \
   //270-verification:module \
   //280-batch-processing:module \
   //290-dashboard-service:module \
@@ -116,6 +116,7 @@ BAZEL_MODULES="\
   //925-enforcement-service:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
+  //932-connector-task:module \
   //935-analyser-service:module \
   //937-persistence-tracer:module \
   //940-feature-flag:module \
@@ -151,6 +152,7 @@ BAZEL_MODULES="\
   //950-telemetry:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
+  //952-remote-observers:module \
   //952-scm-java-client:module \
   //953-events-api/src/main/proto:all \
   //953-events-api:module \
@@ -402,6 +404,7 @@ build_bazel_module 920-delegate-agent-beans
 build_bazel_module 920-delegate-service-beans
 build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
+build_bazel_module 932-connector-task
 build_bazel_module 940-feature-flag
 build_bazel_module 940-ng-audit-service
 build_bazel_module 940-resource-group-beans
@@ -423,6 +426,7 @@ build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
 build_bazel_module 951-cg-git-sync
 build_bazel_module 951-ng-audit-commons
+build_bazel_module 952-remote-observers
 build_bazel_module 952-scm-java-client
 build_bazel_module 953-events-api
 build_bazel_module 953-git-sync-commons

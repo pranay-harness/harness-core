@@ -25,7 +25,6 @@ import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
-import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.DummyOrchestrationOutcome;
 
@@ -41,14 +40,15 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
+  @Inject private MongoTemplate mongoTemplate;
   @Mock private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject @InjectMocks @Spy private PmsOutcomeServiceImpl pmsOutcomeService;
 
   @Test
-  @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestSaveAndFind() {
@@ -74,7 +74,25 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
   }
 
   @Test
-  @RealMongo
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestOutcomeInstancePopulation() {
+    Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
+    String outcomeName = "outcomeName";
+    Outcome outcome = DummyOrchestrationOutcome.builder().test("test").build();
+    String outComeInstanceId =
+        pmsOutcomeService.consume(ambiance, outcomeName, RecastOrchestrationUtils.toJson(outcome), "PHASE");
+
+    assertThat(outComeInstanceId).isNotNull();
+    OutcomeInstance instance = mongoTemplate.findById(outComeInstanceId, OutcomeInstance.class);
+    assertThat(instance).isNotNull();
+    assertThat(instance.getProducedBy()).isEqualTo(AmbianceUtils.obtainCurrentLevel(ambiance));
+    assertThat(instance.getPlanExecutionId()).isEqualTo(AmbianceTestUtils.PLAN_EXECUTION_ID);
+    assertThat(instance.getName()).isEqualTo(outcomeName);
+    assertThat(instance.getGroupName()).isEqualTo("PHASE");
+  }
+
+  @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestSaveAndFindForNull() {
@@ -88,7 +106,6 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldFetchAllOutcomesByRuntimeId() {
@@ -108,7 +125,6 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldFetchOutcomes() {
@@ -131,7 +147,6 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldFetchOutcome() {
@@ -148,7 +163,6 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldResolveOptional() {
@@ -173,7 +187,6 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldResolveInternalWhenOutcomeIsNotFound() {
@@ -188,7 +201,6 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldResolveOptionalWithDots() {

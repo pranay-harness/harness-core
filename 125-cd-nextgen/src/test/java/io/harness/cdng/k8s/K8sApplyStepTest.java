@@ -136,7 +136,7 @@ public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
   @Test
   @Owner(developers = ACHYUTH)
   @Category(UnitTests.class)
-  public void testFinalizeExecutionWithSecurityContext() {
+  public void testFinalizeExecutionWithSecurityContext() throws Exception {
     StepElementParameters stepElementParameters =
         StepElementParameters.builder()
             .spec(K8sApplyStepParameters.infoBuilder()

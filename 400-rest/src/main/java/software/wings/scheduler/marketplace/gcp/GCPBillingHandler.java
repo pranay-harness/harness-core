@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
-  private static final int POOL_SIZE = 5;
+  private static final int POOL_SIZE = 2;
 
   @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;

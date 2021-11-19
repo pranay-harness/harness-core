@@ -71,7 +71,7 @@ public class PMSPipelineServiceStepHelper {
             ffEnabledStepInfoList.stream()
                 .filter(stepInfo -> EmptyPredicate.isNotEmpty(stepInfo.getFeatureRestrictionName()))
                 .map(StepInfo::getFeatureRestrictionName)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toSet()));
     for (StepInfo stepType : ffEnabledStepInfoList) {
       addToTopLevel(stepCategory, stepType, featureRestrictionNameBooleanMap);
     }
@@ -148,7 +148,6 @@ public class PMSPipelineServiceStepHelper {
       stepCategory.addStepCategory(moduleCategory);
       addStepsToStepCategory(moduleCategory, commonStepInfo.getCommonSteps(""), accountId);
     }
-    stepCategory.addStepCategory(calculateStepsForCategory(LIBRARY, commonStepInfo.getCommonSteps(null), accountId));
 
     return stepCategory;
   }

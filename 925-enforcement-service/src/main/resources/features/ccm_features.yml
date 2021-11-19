@@ -1,0 +1,35 @@
+moduleType: CE
+clients:
+  - name: cenextgen
+    clientConfig: ceNextGenClientConfig
+    secretConfig: nextGenConfig.ngManagerServiceSecret
+  - name: ngmanager
+    clientConfig: ngManagerClientConfig
+    secretConfig: nextGenConfig.ngManagerServiceSecret
+features:
+  - name: PERSPECTIVES
+    description: Availability & limiting number of custom perspectives
+    restrictions:
+      FREE:
+        restrictionType: STATIC_LIMIT
+        limit: 20
+        clientName: cenextgen
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+  - name: CCM_K8S_CLUSTERS
+    description: Availability & limiting number of CCM K8s Clusters
+    restrictions:
+      FREE:
+        restrictionType: STATIC_LIMIT
+        limit: 2
+        clientName: ngmanager
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true

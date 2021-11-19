@@ -12,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
@@ -19,6 +20,7 @@ import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogParams.DelegateSelectionLogParamsBuilder;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
 import io.harness.delegate.beans.ProfileScopingRulesDetails;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
@@ -71,6 +73,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   @Inject private HPersistence persistence;
   @Inject private DelegateService delegateService;
   @Inject private DelegateCache delegateCache;
+  @Inject private FeatureFlagService featureFlagService;
 
   private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";
   private static final String DISCONNECTED = "Disconnected";
@@ -121,6 +124,11 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   @Override
   public void save(BatchDelegateSelectionLog batch) {
     if (batch == null || batch.getDelegateSelectionLogs().isEmpty()) {
+      return;
+    }
+
+    final String accountId = batch.getTaskMetadata().getAccountId();
+    if (featureFlagService.isEnabled(FeatureName.DELEGATE_SELECTION_LOGS_DISABLED, accountId)) {
       return;
     }
 

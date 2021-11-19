@@ -47,6 +47,7 @@ import software.wings.audit.ResourceType;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
+import software.wings.beans.CGConstants;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -394,7 +395,7 @@ public class EntityHelper {
       entityName = configFile.getRelativeFilePath();
       appId = configFile.getAppId();
       String envId = configFile.getEnvId();
-      if (Environment.GLOBAL_ENV_ID.equals(envId)) {
+      if (CGConstants.GLOBAL_ENV_ID.equals(envId)) {
         EntityType entityTypeForFile = configFile.getEntityType();
         affectedResourceId = configFile.getEntityId();
         // Config file defined in service
@@ -442,7 +443,7 @@ public class EntityHelper {
         // We need this appId for Yaml handling
         appId = settingAttribute.getAppId();
       } else {
-        appId = Application.GLOBAL_APP_ID;
+        appId = CGConstants.GLOBAL_APP_ID;
       }
       affectedResourceId = settingAttribute.getUuid();
       affectedResourceName = settingAttribute.getName();
@@ -512,7 +513,7 @@ public class EntityHelper {
       entityName = variable.getName();
       appId = variable.getAppId();
       String envId = variable.getEnvId();
-      if (Environment.GLOBAL_ENV_ID.equals(envId)) {
+      if (CGConstants.GLOBAL_ENV_ID.equals(envId)) {
         EntityType entityTypeForVariable = variable.getEntityType();
         if (EntityType.SERVICE == entityTypeForVariable) {
           affectedResourceId = variable.getEntityId();
@@ -573,7 +574,7 @@ public class EntityHelper {
     } else if (entity instanceof GovernanceConfig) {
       GovernanceConfig config = (GovernanceConfig) entity;
       entityType = ResourceType.DEPLOYMENT_FREEZE.name();
-      appId = Application.GLOBAL_APP_ID;
+      appId = CGConstants.GLOBAL_APP_ID;
       affectedResourceId = config.getUuid();
       affectedResourceType = entityType;
       affectedResourceOperation = type.name();
@@ -581,7 +582,7 @@ public class EntityHelper {
       PipelineGovernanceConfig config = (PipelineGovernanceConfig) entity;
       entityType = EntityType.PIPELINE_GOVERNANCE_STANDARD.name();
       entityName = config.getName();
-      appId = Application.GLOBAL_APP_ID;
+      appId = CGConstants.GLOBAL_APP_ID;
       affectedResourceId = config.getUuid();
       affectedResourceType = entityType;
       affectedResourceName = config.getName();
@@ -590,7 +591,7 @@ public class EntityHelper {
       HarnessTag harnessTag = (HarnessTag) entity;
       entityType = ResourceType.TAG.name();
       entityName = harnessTag.getKey();
-      appId = Application.GLOBAL_APP_ID;
+      appId = CGConstants.GLOBAL_APP_ID;
       affectedResourceId = harnessTag.getUuid();
       affectedResourceName = ResourceType.TAG.name();
       affectedResourceType = ResourceType.TAG.name();
@@ -599,7 +600,7 @@ public class EntityHelper {
       DashboardSettings dashboardSettings = (DashboardSettings) entity;
       entityType = ResourceType.CUSTOM_DASHBOARD.name();
       entityName = dashboardSettings.getName();
-      appId = Application.GLOBAL_APP_ID;
+      appId = CGConstants.GLOBAL_APP_ID;
       affectedResourceId = dashboardSettings.getUuid();
       affectedResourceName = ResourceType.CUSTOM_DASHBOARD.name();
       affectedResourceType = ResourceType.CUSTOM_DASHBOARD.name();
@@ -608,7 +609,7 @@ public class EntityHelper {
       SecretManagerConfig secretManagerConfig = (SecretManagerConfig) entity;
       entityType = ResourceType.SECRET_MANAGER.name();
       entityName = secretManagerConfig.getName();
-      appId = Application.GLOBAL_APP_ID;
+      appId = CGConstants.GLOBAL_APP_ID;
       affectedResourceId = secretManagerConfig.getUuid();
       affectedResourceName = ResourceType.SECRET_MANAGER.name();
       affectedResourceType = ResourceType.SECRET_MANAGER.name();
@@ -619,7 +620,7 @@ public class EntityHelper {
       entityName = format("Name of class: [%s]", entity.getClass().getSimpleName());
     }
 
-    if (isNotEmpty(appId) && !Application.GLOBAL_APP_ID.equals(appId)) {
+    if (isNotEmpty(appId) && !CGConstants.GLOBAL_APP_ID.equals(appId)) {
       appName = getApplicationName(appId);
     }
 

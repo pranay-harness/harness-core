@@ -23,6 +23,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("podCleanupDetails")
 @OwnedBy(CI)
 @RecasterAlias("io.harness.beans.sweepingoutputs.PodCleanupDetails")
+@Deprecated
 public class PodCleanupDetails implements ExecutionSweepingOutput {
   List<String> cleanUpContainerNames;
   Infrastructure infrastructure;

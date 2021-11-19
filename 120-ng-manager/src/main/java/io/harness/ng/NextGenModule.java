@@ -28,6 +28,7 @@ import static java.lang.Boolean.TRUE;
 import io.harness.AccessControlClientModule;
 import io.harness.GitopsModule;
 import io.harness.Microservice;
+import io.harness.NgIteratorsConfig;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
@@ -77,6 +78,8 @@ import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.licensing.AbstractLicenseModule;
+import io.harness.licensing.LicenseConfig;
 import io.harness.licensing.LicenseModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
@@ -92,10 +95,6 @@ import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.accesscontrol.user.AggregateUserServiceImpl;
 import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
-import io.harness.ng.cdOverview.service.CDLandingDashboardService;
-import io.harness.ng.cdOverview.service.CDLandingDashboardServiceImpl;
-import io.harness.ng.cdOverview.service.CDOverviewDashboardService;
-import io.harness.ng.cdOverview.service.CDOverviewDashboardServiceImpl;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.DelegateServiceModule;
@@ -150,6 +149,10 @@ import io.harness.ng.core.user.service.impl.UserEntityCrudStreamListener;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.feedback.services.FeedbackService;
 import io.harness.ng.feedback.services.impls.FeedbackServiceImpl;
+import io.harness.ng.overview.service.CDLandingDashboardService;
+import io.harness.ng.overview.service.CDLandingDashboardServiceImpl;
+import io.harness.ng.overview.service.CDOverviewDashboardService;
+import io.harness.ng.overview.service.CDOverviewDashboardServiceImpl;
 import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
 import io.harness.ng.serviceaccounts.service.impl.ServiceAccountServiceImpl;
 import io.harness.ng.userprofile.commons.SCMType;
@@ -208,6 +211,8 @@ import io.harness.timescaledb.metrics.HExecuteListener;
 import io.harness.token.TokenClientModule;
 import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.user.UserClientModule;
+import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
+import io.harness.utils.featureflaghelper.NGFeatureFlagHelperServiceImpl;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
@@ -309,6 +314,12 @@ public class NextGenModule extends AbstractModule {
   @Singleton
   RedisConfig redisLockConfig() {
     return appConfig.getRedisLockConfig();
+  }
+
+  @Provides
+  @Singleton
+  NgIteratorsConfig ngIteratorsConfig() {
+    return appConfig.getNgIteratorsConfig();
   }
 
   private DelegateCallbackToken getDelegateCallbackToken(
@@ -572,6 +583,13 @@ public class NextGenModule extends AbstractModule {
         return appConfig.getAccountConfig();
       }
     });
+
+    install(new AbstractLicenseModule() {
+      @Override
+      public LicenseConfig licenseConfiguration() {
+        return appConfig.getLicenseConfig();
+      }
+    });
     install(LicenseModule.getInstance());
     bind(AggregateUserService.class).to(AggregateUserServiceImpl.class);
     registerOutboxEventHandlers();
@@ -621,6 +639,8 @@ public class NextGenModule extends AbstractModule {
 
     registerEventsFrameworkMessageListeners();
     registerEncryptors();
+
+    bind(FeatureFlagHelperService.class).to(NGFeatureFlagHelperServiceImpl.class);
   }
 
   void registerEncryptors() {

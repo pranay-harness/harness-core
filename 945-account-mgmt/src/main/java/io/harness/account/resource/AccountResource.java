@@ -27,6 +27,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -84,7 +85,8 @@ public class AccountResource {
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.ACCOUNT, permission = VIEW_ACCOUNT_PERMISSION)
   public ResponseDTO<AccountDTO>
-  get(@PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier) {
+  get(@Parameter(description = "Account id to get an account.") @PathParam(
+      "accountIdentifier") @AccountIdentifier String accountIdentifier) {
     AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.getAccountDTO(accountIdentifier));
 
     accountDTO.setCluster(accountConfig.getDeploymentClusterName());
@@ -103,7 +105,8 @@ public class AccountResource {
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.ACCOUNT, permission = EDIT_ACCOUNT_PERMISSION)
   public ResponseDTO<AccountDTO>
-  updateAccountName(@PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier, AccountDTO dto) {
+  updateAccountName(@Parameter(description = "Account id to update an account name.") @PathParam("accountIdentifier")
+                    @AccountIdentifier String accountIdentifier, AccountDTO dto) {
     AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.updateAccountName(accountIdentifier, dto));
 
     return ResponseDTO.newResponse(accountDTO);
@@ -120,7 +123,8 @@ public class AccountResource {
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.ACCOUNT, permission = EDIT_ACCOUNT_PERMISSION)
   public ResponseDTO<AccountDTO>
-  updateDefaultExperience(@PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier, AccountDTO dto) {
+  updateDefaultExperience(@Parameter(description = "Account id to update the default experience.")
+                          @PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier, AccountDTO dto) {
     AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.updateDefaultExperience(accountIdentifier, dto));
 
     return ResponseDTO.newResponse(accountDTO);

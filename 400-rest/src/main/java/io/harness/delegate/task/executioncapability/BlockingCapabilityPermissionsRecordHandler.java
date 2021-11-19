@@ -62,10 +62,10 @@ public class BlockingCapabilityPermissionsRecordHandler
 
   PersistenceIterator<CapabilityTaskSelectionDetails> capSubjectPermissionIterator;
 
-  public void registerIterators() {
+  public void registerIterators(int threadPoolSize) {
     PumpExecutorOptions options = PumpExecutorOptions.builder()
                                       .interval(Duration.ofSeconds(CAPABILITIES_CHECK_INTERVAL_IN_SECONDS))
-                                      .poolSize(5)
+                                      .poolSize(threadPoolSize)
                                       .name("BlockingCapabilityPermissionsRecordHandler")
                                       .build();
 

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
@@ -12,5 +13,5 @@ import lombok.Value;
 @Value
 @Builder
 public class ServicesDashboardInfo {
-  List<ServiceDashboardInfo> serviceDashboardInfoList;
+  @Builder.Default List<ServiceDashboardInfo> serviceDashboardInfoList = new ArrayList<>();
 }

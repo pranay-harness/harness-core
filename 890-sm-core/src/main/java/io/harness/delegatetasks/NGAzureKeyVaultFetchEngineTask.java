@@ -29,6 +29,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @OwnedBy(PL)
 @Slf4j
@@ -41,16 +42,13 @@ public class NGAzureKeyVaultFetchEngineTask extends AbstractDelegateRunnableTask
 
   @Override
   public DelegateResponseData run(Object[] parameters) {
-    return run((NGAzureKeyVaultFetchEngineTaskParameters) parameters[0]);
+    throw new NotImplementedException("not implemented");
   }
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    return run((NGAzureKeyVaultFetchEngineTaskParameters) parameters);
-  }
-
-  private NGAzureKeyVaultFetchEngineResponse run(
-      NGAzureKeyVaultFetchEngineTaskParameters azureKeyVaultFetchEngineTaskParameters) {
+    NGAzureKeyVaultFetchEngineTaskParameters azureKeyVaultFetchEngineTaskParameters =
+        (NGAzureKeyVaultFetchEngineTaskParameters) parameters;
     List<String> secretEngines;
     try {
       secretEngines = listVaultsInternal(azureKeyVaultFetchEngineTaskParameters.getAzureKeyVaultConnectorDTO());

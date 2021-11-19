@@ -49,7 +49,7 @@ public class SettingAttributeValidateConnectivityHandlerTest extends WingsBaseTe
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldRegisterIterators() {
-    settingAttributeValidateConnectivityHandler.registerIterators();
+    settingAttributeValidateConnectivityHandler.registerIterators(5);
     verify(persistenceIteratorFactory)
         .createPumpIteratorWithDedicatedThreadPool(any(), eq(SettingAttributeValidateConnectivityHandler.class), any());
   }

@@ -10,10 +10,12 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
+import org.redisson.api.RedissonClient;
 
 public class PmsSdkCoreEventsFrameworkModule extends AbstractModule {
   private static PmsSdkCoreEventsFrameworkModule instance;
@@ -44,14 +46,17 @@ public class PmsSdkCoreEventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(PARTIAL_PLAN_RESPONSE_EVENT_PRODUCER))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
     } else {
+      RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
       bind(Producer.class)
           .annotatedWith(Names.named(SDK_RESPONSE_EVENT_PRODUCER))
-          .toInstance(RedisProducer.of(PIPELINE_SDK_RESPONSE_EVENT_TOPIC, redisConfig,
-              EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE, serviceName));
+          .toInstance(RedisProducer.of(PIPELINE_SDK_RESPONSE_EVENT_TOPIC, redissonClient,
+              EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE, serviceName,
+              redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(PARTIAL_PLAN_RESPONSE_EVENT_PRODUCER))
-          .toInstance(RedisProducer.of(PIPELINE_PARTIAL_PLAN_RESPONSE, redisConfig,
-              EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE, serviceName));
+          .toInstance(RedisProducer.of(PIPELINE_PARTIAL_PLAN_RESPONSE, redissonClient,
+              EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE, serviceName,
+              redisConfig.getEnvNamespace()));
     }
   }
 }

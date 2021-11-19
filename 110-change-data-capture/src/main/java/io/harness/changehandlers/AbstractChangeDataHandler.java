@@ -56,6 +56,13 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
     return true;
   }
 
+  public static String escapeSql(String str) {
+    if (str == null) {
+      return null;
+    }
+    return str.replace("'", "''");
+  }
+
   public boolean dbOperation(String query) {
     boolean successfulOperation = false;
     log.info("In dbOperation, Query: {}", query);
@@ -116,7 +123,7 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
 
     if (!columnValueMappingForInsert.isEmpty()) {
       for (Map.Entry<String, String> entry : columnValueMappingForInsert.entrySet()) {
-        insertSQLBuilder.append(String.format("'%s',", entry.getValue()));
+        insertSQLBuilder.append(String.format("'%s',", escapeSql(entry.getValue())));
       }
     }
 
@@ -175,7 +182,8 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
 
     if (!columnValueMappingForSet.isEmpty()) {
       for (Map.Entry<String, String> entry : columnValueMappingForSet.entrySet()) {
-        updateQueryBuilder.append(String.format("%s=%s,", entry.getKey(), String.format("'%s'", entry.getValue())));
+        updateQueryBuilder.append(
+            String.format("%s=%s,", entry.getKey(), String.format("'%s'", escapeSql(entry.getValue()))));
       }
     }
 
@@ -208,7 +216,8 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
 
     if (!columnValueMappingForCondition.isEmpty()) {
       for (Map.Entry<String, String> entry : columnValueMappingForCondition.entrySet()) {
-        deleteSQLBuilder.append(String.format("%s=%s AND ", entry.getKey(), String.format("'%s'", entry.getValue())));
+        deleteSQLBuilder.append(
+            String.format("%s=%s AND ", entry.getKey(), String.format("'%s'", escapeSql(entry.getValue()))));
       }
     }
 

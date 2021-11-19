@@ -7,6 +7,7 @@ import io.harness.encryption.SecretReference;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName(KubernetesConfigConstants.CLIENT_KEY_CERT)
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(HarnessTeam.CDP)
+@Schema(name = "KubernetesClientKeyCert", description = "This contains kubernetes client key certificate details")
 public class KubernetesClientKeyCertDTO extends KubernetesAuthCredentialDTO {
   @ApiModelProperty(dataType = "string") @SecretReference SecretRefData caCertRef;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData clientCertRef;

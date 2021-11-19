@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.defaults;
 
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;

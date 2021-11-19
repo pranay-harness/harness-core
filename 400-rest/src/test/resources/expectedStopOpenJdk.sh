@@ -60,7 +60,7 @@ if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`; then
   stopped=0
   while [ "$i" -le 30 ]; do
     if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`; then
-      pgrep -f "\-Dwatchersourcedir=$DIR" | xargs kill
+      pkill -f "\-Dwatchersourcedir=$DIR"
       if [ "$i" -gt 0 ]; then
         sleep 1
       fi
@@ -73,12 +73,12 @@ if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`; then
   done
   if [ "$stopped" -eq 0 ]; then
     echo "Unable to stop watcher in 30 seconds. Trying to force it ..."
-    pgrep -f "\-Dwatchersourcedir=$DIR" | xargs kill -9
+    pkill -9 -f "\-Dwatchersourcedir=$DIR"
     sleep 10
     if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`; then
       echo "Unable to stop watcher in 40 seconds. See process details ..."
       echo
-      pgrep -f "\-Dwatchersourcedir=$DIR" | xargs ps aux
+      pgrep -f "\-Dwatchersourcedir=$DIR" | xargs ps up
       echo
     else
       echo "Watcher stopped"
@@ -92,7 +92,7 @@ if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`; then
   i=0
   while [ "$i" -le 30 ]; do
     if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`; then
-      pgrep -f "\-Ddelegatesourcedir=$DIR" | xargs kill
+      pkill -f "\-Ddelegatesourcedir=$DIR"
       if [ "$i" -gt 0 ]; then
         sleep 1
       fi
@@ -104,12 +104,12 @@ if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`; then
     fi
   done
   echo "Unable to stop delegate in 30 seconds. Trying to force it ..."
-  pgrep -f "\-Ddelegatesourcedir=$DIR" | xargs kill -9
+  pkill -9 -f "\-Ddelegatesourcedir=$DIR"
   sleep 10
   if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`; then
     echo "Unable to stop delegate in 40 seconds. See process details ..."
     echo
-    pgrep -f "\-Ddelegatesourcedir=$DIR" | xargs ps aux
+    pgrep -f "\-Ddelegatesourcedir=$DIR" | xargs ps up
     echo
     exit 1
   else

@@ -23,6 +23,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -35,6 +36,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -49,6 +51,7 @@ import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -154,6 +157,9 @@ public class K8sScaleTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExecuteSkipSteadyStateCheck() {
     ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(any()))
+        .thenReturn(DirectKubernetesInfrastructureMapping.builder().build());
+    when(featureFlagService.isEnabled(eq(FeatureName.NEW_KUBECTL_VERSION), any())).thenReturn(false);
     when(executionContext.renderExpression(anyString())).thenReturn("1");
     k8sScale.setSkipSteadyStateCheck(true);
     when(k8sStateHelper.fetchK8sElement(any(ExecutionContext.class))).thenReturn(K8sElement.builder().build());
@@ -173,6 +179,9 @@ public class K8sScaleTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExecute() {
     ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(any()))
+        .thenReturn(DirectKubernetesInfrastructureMapping.builder().build());
+    when(featureFlagService.isEnabled(eq(FeatureName.NEW_KUBECTL_VERSION), any())).thenReturn(false);
     when(executionContext.renderExpression(anyString())).thenReturn("1");
     when(k8sStateHelper.fetchK8sElement(any(ExecutionContext.class))).thenReturn(K8sElement.builder().build());
     doReturn(RELEASE_NAME).when(k8sScale).fetchReleaseName(any(), any());

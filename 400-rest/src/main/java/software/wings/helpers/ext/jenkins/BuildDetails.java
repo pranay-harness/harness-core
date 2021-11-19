@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.jenkins;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.CDC)
 @TargetModule(HarnessModule._960_API_SERVICES)
 public class BuildDetails {
   @UtilityClass
@@ -19,6 +22,7 @@ public class BuildDetails {
     public static final String image = "image";
     public static final String tag = "tag";
   }
+
   private String number;
   private String revision;
   private String description;
@@ -44,10 +48,12 @@ public class BuildDetails {
     }
 
     private String displayName;
+
     public String getDisplayName() {
       return displayName;
     }
   }
+
   public String getBuildDisplayName() {
     return buildDisplayName;
   }
@@ -83,7 +89,6 @@ public class BuildDetails {
   /**
    * Gets number.
    *
-
    * @return the number
    */
   public String getNumber() {

@@ -8,6 +8,7 @@ import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getOcCommandPrefix;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.k8s.K8sConstants.ocRolloutUndoCommand;
+import static io.harness.k8s.kubectl.AbstractExecutable.getPrintableCommand;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
@@ -27,6 +28,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.k8s.beans.K8sRollingRollbackHandlerConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionMessages;
+import io.harness.exception.ExplanationException;
+import io.harness.exception.KubernetesTaskException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutUndoCommand;
 import io.harness.k8s.kubectl.Utils;
@@ -65,8 +72,8 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 public class K8sRollingRollbackBaseHandler {
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
 
-  public boolean init(K8sRollingRollbackHandlerConfig rollbackHandlerConfig, String releaseName,
-      LogCallback logCallback) throws IOException {
+  public void init(K8sRollingRollbackHandlerConfig rollbackHandlerConfig, String releaseName, LogCallback logCallback)
+      throws IOException {
     String releaseHistoryData =
         k8sTaskHelperBase.getReleaseHistoryData(rollbackHandlerConfig.getKubernetesConfig(), releaseName);
 
@@ -84,8 +91,6 @@ public class K8sRollingRollbackBaseHandler {
     }
 
     logCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-
-    return true;
   }
 
   public void steadyStateCheck(K8sRollingRollbackHandlerConfig rollbackHandlerConfig,
@@ -129,7 +134,7 @@ public class K8sRollingRollbackBaseHandler {
   // parameter resourcesRecreated must be empty if FF PRUNE_KUBERNETES_RESOURCES is disabled
   public boolean rollback(K8sRollingRollbackHandlerConfig rollbackHandlerConfig,
       K8sDelegateTaskParams k8sDelegateTaskParams, Integer releaseNumber, LogCallback logCallback,
-      Set<KubernetesResourceId> resourcesRecreated) throws Exception {
+      Set<KubernetesResourceId> resourcesRecreated, boolean isErrorFrameworkEnabled) throws Exception {
     Release release = rollbackHandlerConfig.getRelease();
     ReleaseHistory releaseHistory = rollbackHandlerConfig.getReleaseHistory();
     if (release == null) {
@@ -193,7 +198,8 @@ public class K8sRollingRollbackBaseHandler {
     }
     rollbackHandlerConfig.setPreviousManagedWorkloads(previousManagedWorkloads);
 
-    boolean success = rollback(rollbackHandlerConfig, k8sDelegateTaskParams, logCallback, resourcesRecreated);
+    boolean success = rollback(
+        rollbackHandlerConfig, k8sDelegateTaskParams, logCallback, resourcesRecreated, isErrorFrameworkEnabled);
     if (!success) {
       logCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
       return false;
@@ -233,8 +239,9 @@ public class K8sRollingRollbackBaseHandler {
 
   private boolean rollback(K8sRollingRollbackHandlerConfig rollbackHandlerConfig,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback logCallback,
-      Set<KubernetesResourceId> resourcesRecreated) throws Exception {
+      Set<KubernetesResourceId> resourcesRecreated, boolean isErrorFrameworkEnabled) throws Exception {
     boolean success = true;
+    Exception customResourcesApplyException = null;
     Release release = rollbackHandlerConfig.getRelease();
     Kubectl client = rollbackHandlerConfig.getClient();
     Release previousRollbackEligibleRelease = rollbackHandlerConfig.getPreviousRollbackEligibleRelease();
@@ -260,8 +267,13 @@ public class K8sRollingRollbackBaseHandler {
       }
       logCallback.saveExecutionLog("\nRolling back custom resource by applying previous release manifests "
           + k8sTaskHelperBase.getResourcesInTableFormat(previousCustomManagedWorkloads));
-      success = k8sTaskHelperBase.applyManifests(
-          client, previousCustomManagedWorkloads, k8sDelegateTaskParams, logCallback, false);
+      try {
+        success = k8sTaskHelperBase.applyManifests(
+            client, previousCustomManagedWorkloads, k8sDelegateTaskParams, logCallback, false, isErrorFrameworkEnabled);
+      } catch (Exception e) {
+        customResourcesApplyException = e;
+        success = false;
+      }
     }
 
     logCallback.saveExecutionLog("\nRolling back to release " + previousRollbackEligibleRelease.getNumber());
@@ -274,11 +286,12 @@ public class K8sRollingRollbackBaseHandler {
       ProcessResult result;
 
       KubernetesResourceId resourceId = kubernetesResourceIdRevision.getWorkload();
+      String printableCommand;
       if (Kind.DeploymentConfig.name().equals(resourceId.getKind())) {
         String rolloutUndoCommand = getRolloutUndoCommandForDeploymentConfig(k8sDelegateTaskParams,
             kubernetesResourceIdRevision.getWorkload(), kubernetesResourceIdRevision.getRevision());
 
-        String printableCommand = rolloutUndoCommand.substring(rolloutUndoCommand.indexOf("oc --kubeconfig"));
+        printableCommand = rolloutUndoCommand.substring(rolloutUndoCommand.indexOf("oc --kubeconfig"));
         logCallback.saveExecutionLog(printableCommand + "\n");
 
         try (LogOutputStream logOutputStream = getExecutionLogOutputStream(logCallback, INFO);
@@ -294,6 +307,7 @@ public class K8sRollingRollbackBaseHandler {
                 .resource(kubernetesResourceIdRevision.getWorkload().kindNameRef())
                 .namespace(kubernetesResourceIdRevision.getWorkload().getNamespace())
                 .toRevision(kubernetesResourceIdRevision.getRevision());
+        printableCommand = getPrintableCommand(rolloutUndoCommand.command());
 
         result = runK8sExecutable(k8sDelegateTaskParams, logCallback, rolloutUndoCommand);
       }
@@ -304,8 +318,28 @@ public class K8sRollingRollbackBaseHandler {
             kubernetesResourceIdRevision.getWorkload().getNamespace(), kubernetesResourceIdRevision.getRevision(),
             result.getOutput()));
 
+        if (isErrorFrameworkEnabled) {
+          String explanation = result.hasOutput()
+              ? format(KubernetesExceptionExplanation.ROLLBACK_CLI_FAILED_OUTPUT, printableCommand,
+                  result.getExitValue(), result.outputUTF8())
+              : format(KubernetesExceptionExplanation.ROLLBACK_CLI_FAILED, printableCommand, result.getExitValue());
+          throw NestedExceptionUtils.hintWithExplanationException(
+              format(KubernetesExceptionHints.ROLLBACK_CLI_FAILED,
+                  kubernetesResourceIdRevision.getWorkload().kindNameRef()),
+              explanation,
+              new KubernetesTaskException(format(KubernetesExceptionMessages.ROLLBACK_CLI_FAILED,
+                  kubernetesResourceIdRevision.getWorkload().kindNameRef(),
+                  kubernetesResourceIdRevision.getWorkload().getNamespace(),
+                  kubernetesResourceIdRevision.getRevision())));
+        }
+
         return false;
       }
+    }
+
+    if (customResourcesApplyException != null) {
+      throw new ExplanationException(
+          KubernetesExceptionExplanation.ROLLBACK_CR_APPLY_FAILED, customResourcesApplyException);
     }
 
     return success;

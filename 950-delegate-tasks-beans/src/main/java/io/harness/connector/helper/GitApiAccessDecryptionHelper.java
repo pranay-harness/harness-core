@@ -5,9 +5,12 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessSpecDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.exception.InvalidRequestException;
 
@@ -74,5 +77,39 @@ public class GitApiAccessDecryptionHelper {
       throw new InvalidRequestException("The given connector doesn't have api access field set");
     }
     return gitlabConnectorDTO.getApiAccess().getSpec();
+  }
+
+  public void setAPIAccessDecryptableEntity(ScmConnector scmConnector, DecryptableEntity decryptableEntity) {
+    if (scmConnector instanceof GithubConnectorDTO) {
+      setAPIAccessDecryptableEntity((GithubConnectorDTO) scmConnector, decryptableEntity);
+    } else if (scmConnector instanceof BitbucketConnectorDTO) {
+      setAPIAccessDecryptableEntity((BitbucketConnectorDTO) scmConnector, decryptableEntity);
+    } else if (scmConnector instanceof GitlabConnectorDTO) {
+      setAPIAccessDecryptableEntity((GitlabConnectorDTO) scmConnector, decryptableEntity);
+    }
+  }
+
+  public void setAPIAccessDecryptableEntity(
+      GithubConnectorDTO githubConnectorDTO, DecryptableEntity decryptableEntity) {
+    if (githubConnectorDTO == null || githubConnectorDTO.getApiAccess() == null) {
+      throw new InvalidRequestException("The given connector doesn't have api access field set");
+    }
+    githubConnectorDTO.getApiAccess().setSpec((GithubApiAccessSpecDTO) decryptableEntity);
+  }
+
+  public void setAPIAccessDecryptableEntity(
+      BitbucketConnectorDTO bitbucketConnectorDTO, DecryptableEntity decryptableEntity) {
+    if (bitbucketConnectorDTO == null || bitbucketConnectorDTO.getApiAccess() == null) {
+      throw new InvalidRequestException("The given connector doesn't have api access field set");
+    }
+    bitbucketConnectorDTO.getApiAccess().setSpec((BitbucketApiAccessSpecDTO) decryptableEntity);
+  }
+
+  public void setAPIAccessDecryptableEntity(
+      GitlabConnectorDTO gitlabConnectorDTO, DecryptableEntity decryptableEntity) {
+    if (gitlabConnectorDTO == null || gitlabConnectorDTO.getApiAccess() == null) {
+      throw new InvalidRequestException("The given connector doesn't have api access field set");
+    }
+    gitlabConnectorDTO.getApiAccess().setSpec((GitlabApiAccessSpecDTO) decryptableEntity);
   }
 }

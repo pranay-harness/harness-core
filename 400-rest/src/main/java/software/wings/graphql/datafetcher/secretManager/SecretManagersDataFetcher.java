@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.secretManager;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -10,6 +11,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
@@ -43,8 +45,10 @@ public class SecretManagersDataFetcher
   @AuthRule(permissionType = LOGGED_IN)
   protected QLSecretManagerConnection fetchConnection(List<QLSecretManagerFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<SecretManagerConfig> query = populateFilters(wingsPersistence, filters, SecretManagerConfig.class, true);
+    Query<SecretManagerConfig> query = populateFilters(wingsPersistence, filters, SecretManagerConfig.class, false);
     query.field(SecretManagerConfigKeys.ngMetadata).equal(null);
+    query.or(query.criteria(SettingAttributeKeys.accountId).equal(getAccountId()),
+        query.criteria(SettingAttributeKeys.accountId).equal(GLOBAL_ACCOUNT_ID));
     query.order(Sort.descending(SecretManagerConfigKeys.createdAt));
     QLSecretManagerConnectionBuilder connectionBuilder = QLSecretManagerConnection.builder();
     connectionBuilder.pageInfo(dataFetcherUtils.populate(pageQueryParameters, query, secretManager -> {

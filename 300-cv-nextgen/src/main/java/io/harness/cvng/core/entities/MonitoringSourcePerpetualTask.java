@@ -63,6 +63,8 @@ public final class MonitoringSourcePerpetualTask
   private String perpetualTaskId;
   private String dataCollectionWorkerId;
 
+  private boolean isDemo;
+
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (MonitoringSourcePerpetualTaskKeys.dataCollectionTaskIteration.equals(fieldName)) {

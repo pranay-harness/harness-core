@@ -1,5 +1,7 @@
 package io.harness.repositories.instance;
 
+import static io.harness.entities.Instance.InstanceKeysAdditional;
+
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 
@@ -16,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndReplaceOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -61,10 +64,14 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
   }
 
   @Override
-  public List<Instance> getInstancesDeployedAfter(String accountIdentifier, long startTimestamp) {
-    Criteria criteria = Criteria.where(InstanceKeys.accountIdentifier).is(accountIdentifier);
-    Criteria filterLastDeployedAt = Criteria.where(InstanceKeys.lastDeployedAt).gte(startTimestamp);
-    criteria = criteria.andOperator(filterLastDeployedAt);
+  public List<Instance> getInstancesModifiedInInterval(
+      String accountIdentifier, long startTimestamp, long endTimeStamp) {
+    Criteria criteria = Criteria.where(InstanceKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(InstanceKeys.lastModifiedAt)
+                            .gte(startTimestamp)
+                            .lte(endTimeStamp);
+
     Query query = new Query().addCriteria(criteria);
     return mongoTemplate.find(query, Instance.class);
   }
@@ -87,6 +94,19 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
         getCriteriaForActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs);
 
     Query query = new Query().addCriteria(criteria);
+    return mongoTemplate.find(query, Instance.class);
+  }
+
+  @Override
+  public List<Instance> getActiveInstancesByInstanceInfo(
+      String accountIdentifier, String instanceInfoNamespace, String instanceInfoPodName) {
+    Criteria criteria = Criteria.where(InstanceKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(InstanceKeysAdditional.instanceInfoPodName)
+                            .is(instanceInfoPodName)
+                            .and(InstanceKeysAdditional.instanceInfoNamespace)
+                            .is(instanceInfoNamespace);
+    Query query = new Query().addCriteria(criteria).with(Sort.by(Sort.Direction.DESC, InstanceKeys.createdAt));
     return mongoTemplate.find(query, Instance.class);
   }
 

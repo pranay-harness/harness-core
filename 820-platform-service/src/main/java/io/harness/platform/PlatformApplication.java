@@ -6,6 +6,7 @@ import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.platform.PlatformConfiguration.getPlatformServiceCombinedResourceClasses;
+import static io.harness.platform.PlatformConfiguration.getResourceGroupServiceResourceClasses;
 import static io.harness.platform.audit.AuditServiceSetup.AUDIT_SERVICE;
 import static io.harness.platform.notification.NotificationServiceSetup.NOTIFICATION_SERVICE;
 import static io.harness.platform.resourcegroup.ResourceGroupServiceSetup.RESOURCE_GROUP_SERVICE;
@@ -23,7 +24,6 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.notification.eventbackbone.MessageConsumer;
 import io.harness.notification.exception.NotificationExceptionMapper;
 import io.harness.platform.audit.AuditServiceModule;
 import io.harness.platform.audit.AuditServiceSetup;
@@ -57,16 +57,27 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.servers.Server;
 import java.lang.annotation.Annotation;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -104,10 +115,11 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     bootstrap.addBundle(new SwaggerBundle<PlatformConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(PlatformConfiguration appConfig) {
-        return getSwaggerConfiguration();
+        return getSwaggerConfiguration(appConfig);
       }
     });
     bootstrap.addCommand(new InspectCommand<>(this));
+    bootstrap.addCommand(new ScanClasspathMetadataCommand());
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -120,8 +132,10 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
 
   @Override
   public void run(PlatformConfiguration appConfig, Environment environment) {
-    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
-        20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(appConfig.getCommonPoolConfig().getCorePoolSize(),
+        appConfig.getCommonPoolConfig().getMaxPoolSize(), appConfig.getCommonPoolConfig().getIdleTime(),
+        appConfig.getCommonPoolConfig().getTimeUnit(),
+        new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting Platform Application ...");
     MaintenanceController.forceMaintenance(true);
     GodInjector godInjector = new GodInjector();
@@ -147,6 +161,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     registerJerseyFeatures(environment);
     registerAuthFilters(appConfig, environment, godInjector);
     registerRequestContextFilter(environment);
+    registerOasResource(appConfig, environment, godInjector.get(PLATFORM_SERVICE));
 
     new NotificationServiceSetup().setup(
         appConfig.getNotificationServiceConfig(), environment, godInjector.get(NOTIFICATION_SERVICE));
@@ -165,8 +180,12 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     }
 
     MaintenanceController.forceMaintenance(false);
+  }
 
-    new Thread(godInjector.get(NOTIFICATION_SERVICE).getInstance(MessageConsumer.class)).start();
+  private void registerOasResource(PlatformConfiguration appConfig, Environment environment, Injector injector) {
+    OpenApiResource openApiResource = injector.getInstance(OpenApiResource.class);
+    openApiResource.setOpenApiConfiguration(getOasConfig(appConfig));
+    environment.jersey().register(openApiResource);
   }
 
   private void blockingMigrations(Injector injector) {
@@ -202,6 +221,35 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
   }
 
+  private OpenAPIConfiguration getOasConfig(PlatformConfiguration appConfig) {
+    OpenAPI oas = new OpenAPI();
+    Info info =
+        new Info()
+            .title("CD NextGen API Reference")
+            .description(
+                "This is the Open Api Spec 3 for the Platform Service. This is under active development. Beware of the breaking change with respect to the generated code stub")
+            .termsOfService("https://harness.io/terms-of-use/")
+            .version("3.0")
+            .contact(new Contact().email("contact@harness.io"));
+    oas.info(info);
+    URL baseurl = null;
+    try {
+      baseurl = new URL("https", appConfig.getHostname(), appConfig.getBasePathPrefix());
+      Server server = new Server();
+      server.setUrl(baseurl.toString());
+      oas.servers(Collections.singletonList(server));
+    } catch (MalformedURLException e) {
+      log.error("failed to set baseurl for server, {}/{}", appConfig.hostname, appConfig.getBasePathPrefix());
+    }
+    final Set<String> resourceClasses =
+        getOAS3ResourceClassesOnly().stream().map(Class::getCanonicalName).collect(toSet());
+    return new SwaggerConfiguration()
+        .openAPI(oas)
+        .prettyPrint(true)
+        .resourceClasses(resourceClasses)
+        .scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsAnnotationScanner");
+  }
+
   private void registerJerseyProviders(Environment environment) {
     environment.jersey().register(NotificationExceptionMapper.class);
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
@@ -210,11 +258,13 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     environment.jersey().register(GenericExceptionMapperV2.class);
   }
 
-  public SwaggerBundleConfiguration getSwaggerConfiguration() {
+  public SwaggerBundleConfiguration getSwaggerConfiguration(PlatformConfiguration appConfig) {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-    String resourcePackage = String.join(",", getUniquePackages(getPlatformServiceCombinedResourceClasses()));
+    String resourcePackage = String.join(",", getUniquePackages(getPlatformServiceCombinedResourceClasses(appConfig)));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
+    defaultSwaggerBundleConfiguration.setHost(appConfig.hostname);
+    defaultSwaggerBundleConfiguration.setUriPrefix(appConfig.basePathPrefix);
     defaultSwaggerBundleConfiguration.setVersion("1.0");
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost("{{host}}");
@@ -261,6 +311,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
                 || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger")
                 || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
                     "api/swagger.json")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/openapi.json")
                 || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
                     "api/swagger.yaml"));
   }
@@ -276,5 +327,12 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
 
   private static Set<String> getUniquePackages(Collection<Class<?>> classes) {
     return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
+  }
+
+  public static Collection<Class<?>> getOAS3ResourceClassesOnly() {
+    return getResourceGroupServiceResourceClasses()
+        .stream()
+        .filter(x -> x.isAnnotationPresent(Tag.class))
+        .collect(Collectors.toList());
   }
 }

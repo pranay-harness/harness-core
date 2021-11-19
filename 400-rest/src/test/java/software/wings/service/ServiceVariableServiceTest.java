@@ -11,10 +11,10 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.INDER;
-import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.TMACARI;
+import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -36,6 +36,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -84,6 +85,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.validation.ConstraintViolationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -612,8 +614,8 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     serviceVariableService.save(variable, false);
   }
 
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = MILOS)
+  @Test
+  @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotSaveServiceVariableWithDashInName() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -629,7 +631,9 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
     when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
-    serviceVariableService.save(variable, false);
+    assertThatThrownBy(() -> serviceVariableService.save(variable, false))
+        .isInstanceOf(ConstraintViolationException.class)
+        .hasMessageContaining("Service Variable name can only have a-z, A-Z, 0-9 and _");
   }
 
   @Test(expected = InvalidRequestException.class)
