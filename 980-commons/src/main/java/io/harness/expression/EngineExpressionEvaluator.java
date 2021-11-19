@@ -150,8 +150,10 @@ public class EngineExpressionEvaluator {
    * @param o the object to resolve
    * @return the resolved object (this can be the same object or a new one)
    */
+  // TODO(archit):Replace skipUnresolvedExpressionsCheck with enum to get unresolved variable value to be replaced with
+  // like empty string, null or original expression.
   public Object resolve(Object o, boolean skipUnresolvedExpressionsCheck) {
-    return ExpressionEvaluatorUtils.updateExpressions(o, new ResolveFunctorImpl(this, skipUnresolvedExpressionsCheck));
+    return ExpressionEvaluatorUtils.updateExpressions(o, new ResolveFunctorImpl(this, true));
   }
 
   public PartialEvaluateResult partialResolve(Object o) {
@@ -161,7 +163,7 @@ public class EngineExpressionEvaluator {
   }
 
   public String renderExpression(String expression) {
-    return renderExpression(expression, false);
+    return renderExpression(expression, true);
   }
 
   public String renderExpression(String expression, boolean skipUnresolvedExpressionsCheck) {
@@ -169,7 +171,7 @@ public class EngineExpressionEvaluator {
   }
 
   public String renderExpression(String expression, Map<String, Object> ctx) {
-    return renderExpression(expression, ctx, false);
+    return renderExpression(expression, ctx, true);
   }
 
   public String renderExpression(String expression, Map<String, Object> ctx, boolean skipUnresolvedExpressionsCheck) {
@@ -206,9 +208,6 @@ public class EngineExpressionEvaluator {
     checkDepth(depth, expression);
     EvaluateExpressionResolver resolver = new EvaluateExpressionResolver(this, ctx, depth);
     String finalExpression = runStringReplacer(expression, resolver);
-    if (EmptyPredicate.isNotEmpty(resolver.getUnresolvedExpressions())) {
-      throw new UnresolvedExpressionsException(new ArrayList<>(resolver.getUnresolvedExpressions()));
-    }
     return evaluateInternal(finalExpression, ctx);
   }
 
@@ -240,7 +239,7 @@ public class EngineExpressionEvaluator {
       finalExpression = runStringReplacer(finalExpression, new HarnessInternalRenderExpressionResolver(partialCtx));
       return PartialEvaluateResult.createPartialResult(finalExpression, partialCtx);
     } else {
-      return PartialEvaluateResult.createCompleteResult(renderExpressionInternal(expression, ctx, false, depth));
+      return PartialEvaluateResult.createCompleteResult(renderExpressionInternal(expression, ctx, true, depth));
     }
   }
 
@@ -536,6 +535,11 @@ public class EngineExpressionEvaluator {
       try {
         Object value = engineExpressionEvaluator.evaluateExpressionBlock(expression, ctx, depth);
         if (value == null) {
+          // check if expression coming from property accessed within an existing object
+          String[] split = expression.split("\\.");
+          if (split.length > 0 && ctx.has(split[0])) {
+            return String.valueOf(value);
+          }
           String finalExpression = createExpression(expression);
           unresolvedExpressions.add(finalExpression);
           return finalExpression;
@@ -569,10 +573,11 @@ public class EngineExpressionEvaluator {
     public String resolve(String expression) {
       try {
         Object value = engineExpressionEvaluator.evaluateExpressionBlock(expression, ctx, depth - 1);
+        // In case of unresolved expression, identified by null value, we are not returning early but storing the
+        // context map with null value.
         if (value == null) {
           String finalExpression = createExpression(expression);
           unresolvedExpressions.add(finalExpression);
-          return finalExpression;
         }
 
         String name = prefix + ++varIndex + suffix;

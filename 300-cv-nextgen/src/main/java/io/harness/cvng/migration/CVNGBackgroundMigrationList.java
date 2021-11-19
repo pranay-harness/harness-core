@@ -12,6 +12,7 @@ import io.harness.cvng.migration.list.CleanupDeprecatedDocuments;
 import io.harness.cvng.migration.list.CreateDefaultVerificationJobsMigration;
 import io.harness.cvng.migration.list.DeleteInvalidOrchestratorsMigration;
 import io.harness.cvng.migration.list.DeleteOrchestratorWithInvalidVerificationTaskId;
+import io.harness.cvng.migration.list.DeleteSLISLOMigration;
 import io.harness.cvng.migration.list.EnableExistingCVConfigs;
 import io.harness.cvng.migration.list.FixOrchestratorStatusMigration;
 import io.harness.cvng.migration.list.FixRuntimeParamInCanaryBlueGreenVerificationJob;
@@ -64,6 +65,7 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(22, MigrateSetupEvents.class))
         .add(Pair.of(23, CleanUpMonitoringSourcePerpetualTask.class))
         .add(Pair.of(24, DeleteOrchestratorWithInvalidVerificationTaskId.class))
+        .add(Pair.of(25, DeleteSLISLOMigration.class))
         .build();
   }
 }

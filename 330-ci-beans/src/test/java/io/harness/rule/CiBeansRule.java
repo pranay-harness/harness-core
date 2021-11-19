@@ -19,6 +19,7 @@ import io.harness.testing.ComponentTestsModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.utils.NGObjectMapperHelper;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
@@ -125,7 +126,9 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       @Named("yaml-schema-mapper")
       @Singleton
       public ObjectMapper getYamlSchemaObjectMapper() {
-        return Jackson.newObjectMapper();
+        ObjectMapper objectMapper = Jackson.newObjectMapper();
+        NGObjectMapperHelper.configureNGObjectMapper(objectMapper);
+        return objectMapper;
       }
 
       @Provides

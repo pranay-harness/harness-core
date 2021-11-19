@@ -7,6 +7,8 @@ import io.harness.ccm.billing.GcpResourceManagerService;
 import io.harness.ccm.billing.GcpResourceManagerServiceImpl;
 import io.harness.ccm.billing.GcpServiceAccountService;
 import io.harness.ccm.billing.GcpServiceAccountServiceImpl;
+import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.config.CEGcpServiceAccountService;
 import io.harness.ccm.config.CEGcpServiceAccountServiceImpl;
 import io.harness.ccm.config.GcpBillingAccountService;
@@ -32,6 +34,8 @@ import com.google.inject.AbstractModule;
 public class CESetupServiceModule extends AbstractModule {
   private static volatile CESetupServiceModule instance;
 
+  private CESetupServiceModule() {}
+
   public static CESetupServiceModule getInstance() {
     if (instance == null) {
       instance = new CESetupServiceModule();
@@ -45,6 +49,7 @@ public class CESetupServiceModule extends AbstractModule {
     bind(AwsEKSHelperService.class).to(AwsEKSHelperServiceImpl.class);
     bind(AWSOrganizationHelperService.class).to(AWSOrganizationHelperServiceImpl.class);
     bind(AWSAccountService.class).to(AWSAccountServiceImpl.class);
+    bind(BigQueryService.class).to(BigQueryServiceImpl.class);
     bind(GcpBillingAccountService.class).to(GcpBillingAccountServiceImpl.class);
     bind(AWSCEConfigValidationService.class).to(AWSCEConfigValidationServiceImpl.class);
     bind(GcpOrganizationService.class).to(GcpOrganizationServiceImpl.class);

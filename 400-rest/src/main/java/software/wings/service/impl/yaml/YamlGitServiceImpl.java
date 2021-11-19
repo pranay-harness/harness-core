@@ -13,7 +13,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.EntityType.ACCOUNT;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.GitCommit.GIT_COMMIT_ALL_STATUS_LIST;

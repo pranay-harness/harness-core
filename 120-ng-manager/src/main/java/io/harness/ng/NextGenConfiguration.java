@@ -18,7 +18,6 @@ import io.harness.file.FileServiceConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
-import io.harness.licensing.LicenseConfig;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
@@ -123,7 +122,6 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("accountConfig") private AccountConfig accountConfig;
-  @JsonProperty("licenseConfig") private LicenseConfig licenseConfig;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfiguration logStreamingServiceConfig;
   private OpaServiceConfiguration opaServerConfig;
   @JsonProperty("gitSyncServerConfig") private GrpcServerConfig gitSyncGrpcServerConfig;

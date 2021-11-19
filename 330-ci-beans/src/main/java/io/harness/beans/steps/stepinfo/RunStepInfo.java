@@ -122,6 +122,6 @@ public class RunStepInfo implements CIStepInfo, WithConnectorRef {
 
   @Override
   public boolean skipUnresolvedExpressionsCheck() {
-    return false;
+    return true;
   }
 }

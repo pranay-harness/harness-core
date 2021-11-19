@@ -17,5 +17,7 @@ public interface EnforcementService {
   List<FeatureRestrictionMetadataDTO> getAllFeatureRestrictionMetadata();
   FeatureRestrictionDetailsDTO getFeatureDetail(
       FeatureRestrictionName featureRestrictionName, String accountIdentifier);
+  List<FeatureRestrictionDetailsDTO> getFeatureDetails(
+      List<FeatureRestrictionName> featureRestrictionNames, String accountIdentifier);
   List<FeatureRestrictionDetailsDTO> getEnabledFeatureDetails(String accountIdentifier);
 }

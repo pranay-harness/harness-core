@@ -2,7 +2,7 @@ package software.wings.beans.command;
 
 import static io.harness.rule.OwnerRule.YOGESH;
 
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 

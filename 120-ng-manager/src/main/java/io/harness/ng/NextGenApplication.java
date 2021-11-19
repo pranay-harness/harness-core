@@ -49,6 +49,9 @@ import io.harness.enforcement.client.example.ExampleStaticLimitUsageImpl;
 import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.enforcement.executions.DeploymentRestrictionUsageImpl;
+import io.harness.enforcement.executions.DeploymentsPerMonthRestrictionUsageImpl;
+import io.harness.enforcement.executions.InitialDeploymentRestrictionUsageImpl;
 import io.harness.enforcement.services.FeatureRestrictionLoader;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.gitsync.AbstractGitSyncModule;
@@ -241,6 +244,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   public void initialize(Bootstrap<NextGenConfiguration> bootstrap) {
     initializeLogging();
     bootstrap.addCommand(new InspectCommand<>(this));
+    bootstrap.addCommand(new ScanClasspathMetadataCommand());
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -332,10 +336,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
-    intializeGitSync(injector, appConfig);
-    if (appConfig.getShouldDeployWithGitSync()) {
-      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
-    }
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
@@ -362,6 +362,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     initializeEnforcementService(injector, appConfig);
     initializeEnforcementSdk(injector);
 
+    if (appConfig.getShouldDeployWithGitSync()) {
+      intializeGitSync(injector);
+      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
+    }
     registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
   }
@@ -448,15 +452,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.jersey().register(new JsonProcessingExceptionMapper(true));
   }
 
-  private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {
-    if (nextGenConfiguration.getShouldDeployWithGitSync()) {
-      log.info("Initializing gRPC server for git sync...");
-      ServiceManager serviceManager =
-          injector.getInstance(Key.get(ServiceManager.class, Names.named("git-sync"))).startAsync();
-      serviceManager.awaitHealthy();
-      Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-      log.info("Git Sync SDK registration complete.");
-    }
+  private void intializeGitSync(Injector injector) {
+    log.info("Initializing gRPC server for git sync...");
+    ServiceManager serviceManager =
+        injector.getInstance(Key.get(ServiceManager.class, Names.named("git-sync"))).startAsync();
+    serviceManager.awaitHealthy();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+    log.info("Git Sync SDK registration complete.");
   }
 
   public void registerIterators(NgIteratorsConfig ngIteratorsConfig, Injector injector) {
@@ -774,6 +776,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                     .put(FeatureRestrictionName.MULTIPLE_ORGANIZATIONS, OrgRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.SERVICES, ServiceRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.CCM_K8S_CLUSTERS, CloudCostK8sConnectorRestrictionsUsageImpl.class)
+                    .put(FeatureRestrictionName.DEPLOYMENTS_PER_MONTH, DeploymentsPerMonthRestrictionUsageImpl.class)
+                    .put(FeatureRestrictionName.INITIAL_DEPLOYMENTS, InitialDeploymentRestrictionUsageImpl.class)
                     .build())
             .build();
     CustomRestrictionRegisterConfiguration customConfig =
@@ -781,6 +785,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
             .customRestrictionMap(
                 ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
                     .put(FeatureRestrictionName.TEST4, ExampleCustomImpl.class)
+                    .put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class)
                     .build())
             .build();
 

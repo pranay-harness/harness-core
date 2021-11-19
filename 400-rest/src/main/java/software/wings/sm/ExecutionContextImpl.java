@@ -16,7 +16,7 @@ import static io.harness.k8s.KubernetesConvention.getNormalizedInfraMappingIdLab
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;

@@ -121,6 +121,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.redis.RedisConfig;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.secret.ConfigSecretUtils;
 import io.harness.secrets.SecretMigrationEventListener;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.CurrentGenRegistrars;
@@ -202,6 +203,7 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.security.authentication.totp.TotpModule;
 import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
@@ -355,6 +357,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     initializeLogging();
     log.info("bootstrapping ...");
     bootstrap.addCommand(new InspectCommand<>(this));
+    bootstrap.addCommand(new ScanClasspathMetadataCommand());
 
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
@@ -398,6 +401,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     log.info("Starting app ...");
     log.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
+
+    ConfigSecretUtils.resolveSecrets(configuration.getSecretsConfiguration(), configuration);
 
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
         configuration.getCommonPoolConfig().getCorePoolSize(), configuration.getCommonPoolConfig().getMaxPoolSize(),
@@ -532,15 +537,19 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
 
     injector.getInstance(EventsModuleHelper.class).initialize();
+    registerDatadogPublisherIfEnabled(configuration);
+
+    initializeGrpcServer(injector);
+
+    log.info("Leaving startup maintenance mode");
+    MaintenanceController.resetForceMaintenance();
+  }
+
+  private void initializeGrpcServer(Injector injector) {
     log.info("Initializing gRPC server...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
     serviceManager.awaitHealthy();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-
-    registerDatadogPublisherIfEnabled(configuration);
-
-    log.info("Leaving startup maintenance mode");
-    MaintenanceController.resetForceMaintenance();
   }
 
   private void registerQueryTracer(Injector injector) {
@@ -638,6 +647,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new CapabilityModule());
     modules.add(MigrationModule.getInstance());
     modules.add(new WingsModule(configuration));
+    modules.add(new TotpModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

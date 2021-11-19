@@ -36,7 +36,9 @@ import io.harness.mongo.MongoConfig;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.scheduler.SchedulerConfig;
+import io.harness.secret.SecretsConfiguration;
 import io.harness.stream.AtmosphereBroadcaster;
+import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ThreadPoolConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
@@ -58,6 +60,7 @@ import software.wings.security.authentication.oauth.GithubConfig;
 import software.wings.security.authentication.oauth.GitlabConfig;
 import software.wings.security.authentication.oauth.GoogleConfig;
 import software.wings.security.authentication.oauth.LinkedinConfig;
+import software.wings.security.authentication.totp.TotpConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
@@ -147,6 +150,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("ceSetUpConfig") private CESetUpConfig ceSetUpConfig;
   @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
+  @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
   @JsonProperty("salesforceConfig") private SalesforceConfig salesforceConfig = SalesforceConfig.builder().build();
   @JsonProperty("datadogConfig") private DatadogConfig datadogConfig;
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
@@ -198,9 +202,11 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("dmsSecret") private String dmsSecret;
   @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
   private boolean disableDelegateMgmtInManager;
+  @JsonProperty("secretsConfiguration") private SecretsConfiguration secretsConfiguration;
   @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;
   @JsonProperty("eventListenersCountConfig") private EventListenersCountConfig eventListenersCountConfig;
   @JsonProperty(value = "useGlobalKMSAsBaseAlgo", defaultValue = "false") private boolean useGlobalKMSAsBaseAlgo;
+  @JsonProperty("totp") private TotpConfig totpConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

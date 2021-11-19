@@ -8,6 +8,8 @@ import io.harness.beans.NGInstanceUnitType;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.expression.Expression;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.Value;
@@ -30,4 +32,19 @@ public class K8sScaleRequest implements K8sDeployRequest {
   CommandUnitsProgress commandUnitsProgress;
   boolean useLatestKustomizeVersion;
   boolean useNewKubectlVersion;
+
+  @Override
+  public List<String> getValuesYamlList() {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<String> getKustomizePatchesList() {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<String> getOpenshiftParamList() {
+    return Collections.emptyList();
+  }
 }

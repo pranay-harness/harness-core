@@ -23,14 +23,13 @@ public class DelegateGroupDetails {
   private String delegateGroupIdentifier;
   private String delegateType;
   private String groupName;
-  private String groupHostName;
   private String delegateDescription;
   private String delegateConfigurationId;
-  private DelegateSizeDetails sizeDetails;
   private Map<String, SelectorType> groupImplicitSelectors;
   private Set<String> groupCustomSelectors;
   private DelegateInsightsDetails delegateInsightsDetails;
   private long lastHeartBeat;
+  private String connectivityStatus;
   private boolean activelyConnected;
   private List<DelegateGroupListing.DelegateInner> delegateInstanceDetails;
 }

@@ -57,7 +57,7 @@ public class PlanNode implements Node {
   // Config
   boolean skipExpressionChain;
   @Builder.Default SkipType skipGraphType = SkipType.NOOP;
-  boolean skipUnresolvedExpressionsCheck;
+  @Builder.Default boolean skipUnresolvedExpressionsCheck = true;
 
   public static PlanNode fromPlanNodeProto(PlanNodeProto planNodeProto) {
     if (planNodeProto == null) {

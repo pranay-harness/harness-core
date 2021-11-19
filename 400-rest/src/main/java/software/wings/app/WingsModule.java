@@ -27,7 +27,6 @@ import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
-import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingService;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingServiceImpl;
@@ -194,6 +193,8 @@ import io.harness.service.EventService;
 import io.harness.service.EventServiceImpl;
 import io.harness.service.impl.DelegateTokenServiceImpl;
 import io.harness.service.intfc.DelegateTokenService;
+import io.harness.telemetry.AbstractTelemetryModule;
+import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
@@ -897,6 +898,13 @@ public class WingsModule extends AbstractModule implements ServersModule {
             .build(),
         MANAGER.getServiceId()));
 
+    install(new AbstractTelemetryModule() {
+      @Override
+      public TelemetryConfiguration telemetryConfiguration() {
+        return configuration.getSegmentConfiguration();
+      }
+    });
+
     bind(MainConfiguration.class).toInstance(configuration);
     bind(PortalConfig.class).toInstance(configuration.getPortal());
     // RetryOnException Binding start
@@ -1289,7 +1297,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .annotatedWith(Names.named("TimeScaleDBConfig"))
         .toInstance(configuration.getTimeScaleDBConfig() != null ? configuration.getTimeScaleDBConfig()
                                                                  : TimeScaleDBConfig.builder().build());
-    bind(BigQueryService.class).to(BigQueryServiceImpl.class);
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
     }
@@ -1329,7 +1336,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     // End of deployment trigger dependencies
 
     install(new PerpetualTaskServiceModule());
-    install(new CESetupServiceModule());
+    install(CESetupServiceModule.getInstance());
     install(new CVNextGenCommonsServiceModule());
     try {
       install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),

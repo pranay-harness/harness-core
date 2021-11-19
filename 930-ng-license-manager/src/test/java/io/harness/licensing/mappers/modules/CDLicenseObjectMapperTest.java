@@ -77,13 +77,4 @@ public class CDLicenseObjectMapperTest extends CategoryTest {
     ModuleLicense result = objectMapper.toEntity(serviceInstancesModuleLicenseDTO);
     assertThat(result).isEqualTo(serviceInstancesModuleLicense);
   }
-
-  @Test
-  @Owner(developers = ZHUO)
-  @Category(UnitTests.class)
-  public void testEntityToDTOWithNullCDLicenseType() {
-    CDModuleLicense nullTypeLicense = CDModuleLicense.builder().workloads(DEFAULT_MAX_WORK_LOAD).build();
-    ModuleLicenseDTO result = objectMapper.toDTO(nullTypeLicense);
-    assertThat(result).isEqualTo(servicesModuleLicenseDTO);
-  }
 }

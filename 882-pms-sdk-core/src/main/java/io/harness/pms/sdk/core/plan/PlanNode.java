@@ -48,5 +48,5 @@ public class PlanNode {
   // Config
   boolean skipExpressionChain;
   @Builder.Default SkipType skipGraphType = SkipType.NOOP;
-  boolean skipUnresolvedExpressionsCheck;
+  @Builder.Default boolean skipUnresolvedExpressionsCheck = true;
 }

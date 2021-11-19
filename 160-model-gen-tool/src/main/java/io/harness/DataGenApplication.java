@@ -39,6 +39,7 @@ import io.harness.service.intfc.DelegateTokenService;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.StreamModule;
+import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 
@@ -56,6 +57,7 @@ import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.licensing.LicenseService;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.security.authentication.totp.TotpModule;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.intfc.AccountService;
@@ -116,6 +118,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     MaintenanceController.forceMaintenance(true);
 
     configuration.setSegmentConfig(SegmentConfig.builder().enabled(false).build());
+    configuration.setSegmentConfiguration(SegmentConfiguration.builder().enabled(false).build());
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
 
     List<Module> modules = new ArrayList<>();
@@ -201,6 +204,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new AlertModule());
     modules.add(new CapabilityModule());
     modules.add(new WingsModule(configuration));
+    modules.add(new TotpModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

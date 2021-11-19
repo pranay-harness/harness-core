@@ -3,9 +3,9 @@ package io.serializer.registrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.CommonsRegistrars;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.kryo.NGCommonsKryoRegistrar;
 
 import com.google.common.collect.ImmutableSet;
-import io.serializer.kryo.NGCommonsKryoRegistrar;
 import io.serializer.morphia.NGCommonsMorphiaRegistrar;
 import lombok.experimental.UtilityClass;
 

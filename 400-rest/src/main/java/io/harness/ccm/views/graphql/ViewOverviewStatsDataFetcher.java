@@ -6,7 +6,7 @@ import static io.harness.persistence.HQuery.excludeValidate;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.ccm.views.graphql.QLViewOverviewStatsData.QLViewOverviewStatsDataBuilder;
 import io.harness.persistence.HPersistence;

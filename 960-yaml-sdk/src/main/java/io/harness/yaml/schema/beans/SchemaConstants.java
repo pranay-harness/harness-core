@@ -32,4 +32,5 @@ public class SchemaConstants {
   public static final String PATTERN_NODE = "pattern";
   public static final String MIN_LENGTH_NODE = "minLength";
   public static final String RUNTIME_INPUT_PATTERN = "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$";
+  public static final String SPEC_NODE = "spec";
 }

@@ -20,7 +20,7 @@ import retrofit2.http.Query;
 public interface ResourceGroupClient {
   String RESOURCE_GROUP_API = "resourcegroup";
 
-  @GET(RESOURCE_GROUP_API + "/{identifier}")
+  @GET(RESOURCE_GROUP_API + "/internal/{identifier}")
   Call<ResponseDTO<ResourceGroupResponse>> getResourceGroup(
       @Path(value = NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,

@@ -15,7 +15,7 @@ services:
       - WATCHER_STORAGE_URL=http://localhost:8888
       - WATCHER_CHECK_LOCATION=watcherci.txt
       - REMOTE_WATCHER_URL_CDN=http://localhost:9500/builds
-      - DELEGATE_STORAGE_URL=http://localhost:9500
+      - DELEGATE_STORAGE_URL=http://localhost:8888
       - DELEGATE_CHECK_LOCATION=delegateci.txt
       - DEPLOY_MODE=DOCKER
       - DELEGATE_NAME=harness-delegate
@@ -27,6 +27,6 @@ services:
       - DELEGATE_ORG_IDENTIFIER=9S5HMP0xROugl3_QgO62rQO
       - DELEGATE_PROJECT_IDENTIFIER=9S5HMP0xROugl3_QgO62rQP
       - PROXY_MANAGER=true
-      - USE_CDN=true
+      - USE_CDN=false
       - CDN_URL=http://localhost:9500
       - VERSION_CHECK_DISABLED=false

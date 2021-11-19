@@ -32,6 +32,12 @@ commonPoolConfig:
   idleTime: ${COMMON_POOL_IDLE_TIME:-500}
   timeUnit: ${COMMON_POOL_IDLE_TIME_TIME_UNIT:-MILLISECONDS}
 
+orchestrationVisualizationThreadPoolConfig:
+  corePoolSize: ${ORCHESTRATION_VISUALIZATION_POOL_CORE_SIZE:-10}
+  maxPoolSize: ${ORCHESTRATION_VISUALIZATION_POOL_MAX_SIZE:-20}
+  idleTime: ${ORCHESTRATION_VISUALIZATION_POOL_IDLE_TIME:-10}
+  timeUnit: ${ORCHESTRATION_VISUALIZATION_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
 pmsSdkExecutionPoolConfig:
   corePoolSize: ${PMS_SDK_EXECUTION_POOL_CORE_SIZE:-20}
   maxPoolSize: ${PMS_SDK_EXECUTION_POOL_MAX_SIZE:-100}
@@ -220,6 +226,7 @@ iteratorsConfig:
 orchestrationStepConfig:
   ffServerBaseUrl: http://127.0.0.1:3000/api/1.0
   ffServerApiKey: secret
+  ffServerSSLVerify: false
 
 shouldDeployWithGitSync: true
 
@@ -307,6 +314,8 @@ pipelineEventConsumersConfig:
   planNotify:
     threads: 1
   pmsNotify:
+    threads: 1
+  webhookEvent:
     threads: 1
 
 delegatePollingConfig:

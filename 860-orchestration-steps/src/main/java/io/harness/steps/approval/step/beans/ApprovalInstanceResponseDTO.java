@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -19,6 +20,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("ApprovalInstanceResponse")
+@Schema(name = "ApprovalInstanceResponse", description = "This contains details of Approval Instance response")
 public class ApprovalInstanceResponseDTO {
   @NotEmpty String id;
 

@@ -1,5 +1,6 @@
 package io.harness.resourcegroup.framework.remote.resource;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.resourcegroup.ResourceGroupPermissions.DELETE_RESOURCEGROUP_PERMISSION;
 import static io.harness.resourcegroup.ResourceGroupPermissions.EDIT_RESOURCEGROUP_PERMISSION;
 import static io.harness.resourcegroup.ResourceGroupPermissions.VIEW_RESOURCEGROUP_PERMISSION;
@@ -29,6 +30,7 @@ import io.harness.resourcegroup.remote.dto.ManagedFilter;
 import io.harness.resourcegroup.remote.dto.ResourceGroupFilterDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.common.collect.Sets;
@@ -37,6 +39,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -57,6 +60,7 @@ import lombok.AllArgsConstructor;
 @Path("resourcegroup")
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
+@Tag(name = "Harness Resource Group", description = "This contains APIs related to Harness Resource Group")
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
@@ -82,6 +86,22 @@ public class HarnessResourceGroupResource {
         Resource.of(RESOURCE_GROUP, identifier), VIEW_RESOURCEGROUP_PERMISSION);
     Optional<ResourceGroupResponse> resourceGroupResponseOpt = resourceGroupService.get(
         Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier, ManagedFilter.NO_FILTER);
+    return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
+  }
+
+  @GET
+  @Path("internal/{identifier}")
+  @ApiOperation(
+      value = "Get a resource group by identifier internal", nickname = "getResourceGroupInternal", hidden = true)
+  @InternalApi
+  public ResponseDTO<ResourceGroupResponse>
+  getInternal(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    Optional<ResourceGroupResponse> resourceGroupResponseOpt =
+        resourceGroupService.get(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier,
+            isEmpty(accountIdentifier) ? ManagedFilter.ONLY_MANAGED : ManagedFilter.NO_FILTER);
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
   }
 
