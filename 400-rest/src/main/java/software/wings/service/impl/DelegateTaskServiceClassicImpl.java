@@ -423,17 +423,25 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         convertToExecutionCapability(task);
 
         Set<String> eligibleListOfDelegates = assignDelegateService.getEligibleDelegatesToExecuteTask(task, batch);
-      /*  if (eligibleListOfDelegates.isEmpty()) {
+        if (eligibleListOfDelegates.isEmpty()) {
           delegateSelectionLogsService.logNoEligibleDelegatesToExecuteTask(batch, task.getAccountId());
           handleTaskFailureResponse(task, NO_ELIGIBLE_DELEGATE.toString());
           return;
-        }*/
+        }
         // save eligible delegate ids as part of task (will be used for rebroadcasting)
         task.setEligibleToExecuteDelegateIdSet(eligibleListOfDelegates);
 
+        List<String> connectedEligibleDelegates =
+                assignDelegateService.getConnectedDelegateList(eligibleListOfDelegates, task.getAccountId(), batch);
+
+        if (!task.getData().isAsync() &&  connectedEligibleDelegates.isEmpty()) {
+          handleTaskFailureResponse(task, NO_ELIGIBLE_DELEGATE.toString());
+          return;
+        }
+
         // filter only connected ones from list
 
-        List<String> connectedEligibleDelegates =
+      /*  List<String> connectedEligibleDelegates =
             assignDelegateService.getConnectedDelegateList(eligibleListOfDelegates, task.getAccountId(), batch);
 
         if (!task.getData().isAsync() &&  connectedEligibleDelegates.isEmpty()) {
@@ -447,12 +455,12 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         // REMOVE below check after confirming
         if (isNotBlank(task.getMustExecuteOnDelegateId())) {
           task.setPreAssignedDelegateId(task.getMustExecuteOnDelegateId());
-        }
+        }*/
 
         // Ensure that broadcast happens at least 5 seconds from current time for async tasks
-        if (task.getData().isAsync()) {
+       /* if (task.getData().isAsync()) {
           task.setNextBroadcast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
-        }
+        }*/
 
         checkTaskRankRateLimit(task.getRank());
 
@@ -984,9 +992,9 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-        if (delegateId != null && delegateId.equals(delegateTask.getMustExecuteOnDelegateId())) {
+        /*if (delegateId != null && delegateId.equals(delegateTask.getMustExecuteOnDelegateId())) {
           return assignTask(delegateId, taskId, delegateTask);
-        }
+        }*/
         if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
           setValidationStarted(delegateId, delegateTask);
           return resolvePreAssignmentExpressions(delegateTask, SecretManagerMode.APPLY);

@@ -42,7 +42,7 @@ public class DelegateTaskBroadcastHelper {
   private Integer[] syncIntervals = new Integer[] {0, 5, 60, 120, 240, 300};
 
   // with every broadcast interval , broadcast only max number of delegates at a time for sync/async task
-  private Integer[] maxNumberOfDelegatesToBroadcast = new Integer[] {5, 10, 15, 20, 40, 100};
+  private Integer[] maxNumberOfDelegatesToBroadcast = new Integer[] {1, 2, 3, 5, 8, 10};
 
   public void broadcastNewDelegateTaskAsync(DelegateTask task) {
     executorService.submit(() -> {

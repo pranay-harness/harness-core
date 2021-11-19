@@ -258,11 +258,11 @@ public class DelegateQueueTask implements Runnable {
                 .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask));
 
         // unset and track already tried delegates
-        if (delegateTask.getPreAssignedDelegateId() != null && delegateTask.getBroadcastCount() > 0) {
+       /* if (delegateTask.getPreAssignedDelegateId() != null && delegateTask.getBroadcastCount() > 0) {
           // add previously broadcast delegate ids to alreadyTriedDelegates
           //delegateTask.getAlreadyTriedDelegates().add(delegateTask.getPreAssignedDelegateId());
           updateOperations.unset(DelegateTaskKeys.preAssignedDelegateId);
-        }
+        }*/
 
         Set<String> eligibleDelegatesList = delegateTask.getEligibleToExecuteDelegateIdSet();
         //clear already tried delegates if all eligible delegates
@@ -277,12 +277,11 @@ public class DelegateQueueTask implements Runnable {
 
 
 
-        //setUnset(updateOperations, DelegateTaskKeys.broadcastToDelegateList, broadcastList);
 
 
 
       //add to already tried list
-        //delegateTask.getAlreadyTriedDelegates().addAll(broadcastList);
+        delegateTask.getAlreadyTriedDelegates().addAll(broadcastList);
 
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
