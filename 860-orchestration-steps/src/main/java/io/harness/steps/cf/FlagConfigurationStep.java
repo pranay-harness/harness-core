@@ -11,6 +11,7 @@ import io.harness.cf.CFApi;
 import io.harness.cf.openapi.ApiException;
 import io.harness.cf.openapi.model.PatchInstruction;
 import io.harness.cf.openapi.model.PatchOperation;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logging.UnitProgress;
@@ -101,7 +102,13 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
 
       List<PatchInstruction> instructions = new ArrayList<>();
 
-      for (io.harness.steps.cf.PatchInstruction patchInstruction : flagConfigurationStepParameters.getInstructions()) {
+      // Check that the parameter field is not null.  Error if it is.
+      if (ParameterField.isNull(flagConfigurationStepParameters.getInstructions())) {
+        throw new InvalidRequestException("the flag instructions are null");
+      }
+
+      for (io.harness.steps.cf.PatchInstruction patchInstruction :
+          flagConfigurationStepParameters.getInstructions().getValue()) {
         if (patchInstruction.getType().equals(Type.SET_FEATURE_FLAG_STATE)) {
           SetFeatureFlagStateYamlSpec spec = ((SetFeatureFlagStateYaml) patchInstruction).getSpec();
           PatchInstruction instruction =
