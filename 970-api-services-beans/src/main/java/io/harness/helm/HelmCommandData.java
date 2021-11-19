@@ -19,9 +19,6 @@ import lombok.Data;
 public class HelmCommandData {
   private boolean isRepoConfigNull;
   @Default private boolean isHelmCmdFlagsNull = true;
-  private String chartUrl;
-  private String chartVersion;
-  private String chartName;
   private String workingDir;
   private String commandFlags;
   private String kubeConfigLocation;
@@ -37,4 +34,8 @@ public class HelmCommandData {
   private long timeOutInMillis;
   // field below unique to HelmRollbackCommandRequest
   private Integer rollBackVersion;
+  // these 3 fields are relevant only for CG
+  private String chartUrl;
+  private String chartVersion;
+  private String chartName;
 }
