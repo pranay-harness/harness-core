@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -42,6 +41,9 @@ public class DelegateTaskBroadcastHelper {
   // afterwards}
   private Integer[] syncIntervals = new Integer[] {0, 5, 60, 120, 240, 300};
 
+  // with every broadcast interval , broadcast only max number of delegates at a time for sync/async task
+  private Integer[] maxNumberOfDelegatesToBroadcast = new Integer[] {5, 10, 15, 20, 40, 100};
+
   public void broadcastNewDelegateTaskAsync(DelegateTask task) {
     executorService.submit(() -> {
       try {
@@ -57,10 +59,6 @@ public class DelegateTaskBroadcastHelper {
       return;
     }
 
-    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegateTask.getAccountId())
-        && isBlank(delegateTask.getPreAssignedDelegateId())) {
-      return;
-    }
 
     DelegateTaskBroadcast delegateTaskBroadcast = DelegateTaskBroadcast.builder()
                                                       .version(delegateTask.getVersion())
@@ -69,7 +67,7 @@ public class DelegateTaskBroadcastHelper {
                                                       .async(delegateTask.getData().isAsync())
                                                       .preAssignedDelegateId(delegateTask.getPreAssignedDelegateId())
                                                       .alreadyTriedDelegates(delegateTask.getAlreadyTriedDelegates())
-                                                      .broadcastToDelegatesList(delegateTask.getRebroadcastToList())
+                                                      .broadcastToDelegatesList(delegateTask.getBroadcastToDelegateList())
                                                       .build();
 
     Broadcaster broadcaster = broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true);
@@ -97,5 +95,12 @@ public class DelegateTaskBroadcastHelper {
     }
 
     return System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(delta);
+  }
+
+  public int getMaxBroadcastCount(DelegateTask delegateTask) {
+    int nextBroadcastCount = delegateTask.getBroadcastCount() + 1;
+    return (nextBroadcastCount < maxNumberOfDelegatesToBroadcast.length)
+        ? maxNumberOfDelegatesToBroadcast[nextBroadcastCount]
+        : maxNumberOfDelegatesToBroadcast[nextBroadcastCount - 1];
   }
 }

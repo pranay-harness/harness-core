@@ -423,19 +423,20 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         convertToExecutionCapability(task);
 
         Set<String> eligibleListOfDelegates = assignDelegateService.getEligibleDelegatesToExecuteTask(task, batch);
-        if (eligibleListOfDelegates.isEmpty()) {
+      /*  if (eligibleListOfDelegates.isEmpty()) {
           delegateSelectionLogsService.logNoEligibleDelegatesToExecuteTask(batch, task.getAccountId());
           handleTaskFailureResponse(task, NO_ELIGIBLE_DELEGATE.toString());
           return;
-        }
+        }*/
         // save eligible delegate ids as part of task (will be used for rebroadcasting)
-        task.getEligibleToExecuteDelegateIdSet().addAll(eligibleListOfDelegates);
+        task.setEligibleToExecuteDelegateIdSet(eligibleListOfDelegates);
 
         // filter only connected ones from list
+
         List<String> connectedEligibleDelegates =
             assignDelegateService.getConnectedDelegateList(eligibleListOfDelegates, task.getAccountId(), batch);
 
-        if (connectedEligibleDelegates.isEmpty()) {
+        if (!task.getData().isAsync() &&  connectedEligibleDelegates.isEmpty()) {
           handleTaskFailureResponse(task, NO_ELIGIBLE_DELEGATE.toString());
           return;
         }
@@ -477,81 +478,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     delegateTaskService.handleResponse(task, taskQuery, response);
   }
 
-  public String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates) {
-    try (TaskLogContext ignore = new TaskLogContext(task.getUuid(), OVERRIDE_ERROR);
-         AccountLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
-      if (!featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, task.getAccountId())) {
-        // Old way with rebroadcasting
-        return assignDelegateService.pickFirstAttemptDelegate(task);
-      }
-
-      BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
-      List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId(), batch);
-      delegateSelectionLogsService.save(batch);
-
-      if (isEmpty(task.getExecutionCapabilities())) {
-        return pickDelegateForTaskWithoutAnyAgentCapabilities(task, activeDelegates);
-      }
-
-      // get all agent capabilities and convert to CR
-      List<ExecutionCapability> agentCapabilities =
-          task.getExecutionCapabilities()
-              .stream()
-              .filter(capability -> EvaluationMode.AGENT == capability.evaluationMode())
-              .collect(toList());
-
-      if (isEmpty(agentCapabilities)) {
-        return pickDelegateForTaskWithoutAnyAgentCapabilities(task, activeDelegates);
-      }
-
-      List<CapabilityRequirement> capabilityRequirements =
-          createCapabilityRequirementInstances(task.getAccountId(), agentCapabilities);
-
-      // get delegates capable to execute the task. Retry to cover case when there are no known delegates capable to do
-      // the task and we are waiting for immediate capabilities validation
-      Set<String> capableDelegateIds =
-          capabilityService.getCapableDelegateIds(task.getAccountId(), capabilityRequirements);
-      int i = 1;
-      while (capableDelegateIds.isEmpty() && i <= 10) {
-        sleep(ofSeconds(1));
-        capableDelegateIds = capabilityService.getCapableDelegateIds(task.getAccountId(), capabilityRequirements);
-        i++;
-      }
-
-      boolean ignoreAlreadyTriedDelegates =
-          alreadyTriedDelegates == null || alreadyTriedDelegates.containsAll(capableDelegateIds);
-
-      // Filter delegate to try different ones when rebroadcasting, but allow all eventually when all are exhausted
-      Set<String> validDelegateIds =
-          capableDelegateIds.stream()
-              .filter(delegateId -> ignoreAlreadyTriedDelegates || !alreadyTriedDelegates.contains(delegateId))
-              .collect(Collectors.toSet());
-
-      // pick one, check still in scope and assign if ok or delete permission record and try another one
-      for (String delegateId : validDelegateIds) {
-        boolean assignableDelegate = true;
-        for (CapabilityRequirement capabilityRequirement : capabilityRequirements) {
-          if (!isDelegateStillInScope(task.getAccountId(), delegateId, capabilityRequirement.getUuid())) {
-            capabilityService.deleteCapabilitySubjectPermission(
-                task.getAccountId(), delegateId, capabilityRequirement.getUuid());
-            assignableDelegate = false;
-            break;
-          }
-        }
-
-        if (assignableDelegate && activeDelegates.contains(delegateId)) {
-          log.info("Setting preAssignedDelegate to {}.", delegateId);
-          return delegateId;
-        }
-      }
-
-      // No in scope delegates, capable of doing the task
-      return null;
-    } catch (Exception ex) {
-      log.error("Unexpected error occurred while obtaining capable delegate Ids", ex);
-      return null;
-    }
-  }
 
   @VisibleForTesting
   public String pickDelegateForTaskWithoutAnyAgentCapabilities(DelegateTask task, List<String> activeDelegates) {

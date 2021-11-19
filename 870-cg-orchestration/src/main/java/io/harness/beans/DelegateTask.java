@@ -22,12 +22,7 @@ import io.harness.persistence.UuidAware;
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -155,7 +150,7 @@ public class DelegateTask
   private long expiry;
 
   private Set<String> eligibleToExecuteDelegateIdSet;
-  @Transient private List<String> rebroadcastToList;
+  @Transient private Set<String> broadcastToDelegateList;
 
   @FdTtlIndex @Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
 

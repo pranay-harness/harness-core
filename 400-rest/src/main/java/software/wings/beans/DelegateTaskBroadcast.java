@@ -18,5 +18,5 @@ public class DelegateTaskBroadcast {
   private boolean async;
   private String preAssignedDelegateId;
   private Set<String> alreadyTriedDelegates;
-  private List<String> broadcastToDelegatesList;
+  private Set<String> broadcastToDelegatesList;;
 }

@@ -173,7 +173,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private DelegateSyncServiceImpl delegateSyncService;
   @InjectMocks @Inject private DelegateTaskServiceImpl delegateTaskService;
 
-  @Mock private AssignDelegateService assignDelegateService;
+  @InjectMocks @Inject private AssignDelegateService assignDelegateService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
   @Mock private SettingsService settingsService;
   @Mock private FeatureFlagService featureFlagService;

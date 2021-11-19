@@ -4,7 +4,6 @@ import static io.harness.beans.DelegateTask.Status.ABORTED;
 import static io.harness.beans.DelegateTask.Status.PARKED;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
-import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
@@ -52,7 +51,10 @@ import com.google.inject.Inject;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FindOptions;
@@ -248,6 +250,7 @@ public class DelegateQueueTask implements Runnable {
                                         .filter(DelegateTaskKeys.uuid, delegateTask.getUuid())
                                         .filter(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount());
 
+
         UpdateOperations<DelegateTask> updateOperations =
             persistence.createUpdateOperations(DelegateTask.class)
                 .set(DelegateTaskKeys.lastBroadcastAt, now)
@@ -257,20 +260,36 @@ public class DelegateQueueTask implements Runnable {
         // unset and track already tried delegates
         if (delegateTask.getPreAssignedDelegateId() != null && delegateTask.getBroadcastCount() > 0) {
           // add previously broadcast delegate ids to alreadyTriedDelegates
-          delegateTask.getAlreadyTriedDelegates().add(delegateTask.getPreAssignedDelegateId());
+          //delegateTask.getAlreadyTriedDelegates().add(delegateTask.getPreAssignedDelegateId());
           updateOperations.unset(DelegateTaskKeys.preAssignedDelegateId);
         }
 
         Set<String> eligibleDelegatesList = delegateTask.getEligibleToExecuteDelegateIdSet();
+        //clear already tried delegates if all eligible delegates
+       /* if (eligibleDelegatesList.size() == delegateTask.getAlreadyTriedDelegates().size()) {
+            delegateTask.getAlreadyTriedDelegates().clear();
+        }*/
+
         List<String> connectedEligibleDelegatesList =
             assignDelegateService.getConnectedDelegateList(eligibleDelegatesList, delegateTask.getAccountId(), null);
-        delegateTask.getRebroadcastToList().addAll(connectedEligibleDelegatesList);
+
+        Set<String> broadcastList = connectedEligibleDelegatesList.stream().limit(broadcastHelper.getMaxBroadcastCount(delegateTask)).collect(Collectors.toSet());
+
+
+
+        //setUnset(updateOperations, DelegateTaskKeys.broadcastToDelegateList, broadcastList);
+
+
+
+      //add to already tried list
+        //delegateTask.getAlreadyTriedDelegates().addAll(broadcastList);
 
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {
           continue;
         }
+        delegateTask.setBroadcastToDelegateList(broadcastList);
 
         try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR);

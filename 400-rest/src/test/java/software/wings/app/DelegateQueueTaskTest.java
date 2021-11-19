@@ -156,7 +156,7 @@ public class DelegateQueueTaskTest extends WingsBaseTest {
     when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(true);
     when(featureFlagService.isNotEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(false);
     when(broadcastHelper.findNextBroadcastTimeForTask(any(DelegateTask.class))).thenReturn(nextBroadcastTime);
-    when(delegateService.obtainCapableDelegateId(any(DelegateTask.class), any(Set.class))).thenReturn(secondDelegateId);
+    //when(delegateService.obtainCapableDelegateId(any(DelegateTask.class), any(Set.class))).thenReturn(secondDelegateId);
 
     delegateQueueTask.rebroadcastUnassignedTasks();
 
