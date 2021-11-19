@@ -103,7 +103,9 @@ public class ServiceTimescaleChangeHandler implements ChangeHandler {
     columnValueMapping.put("created_at", service.getCreatedAt());
 
     // created_by
-    columnValueMapping.put("created_by", service.getCreatedBy().getName());
+    if (service.getCreatedBy() != null) {
+      columnValueMapping.put("created_by", service.getCreatedBy().getName());
+    }
 
     // name
     columnValueMapping.put("name", service.getName());
