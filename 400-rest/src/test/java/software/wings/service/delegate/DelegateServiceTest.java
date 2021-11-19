@@ -3478,6 +3478,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey(TOKEN_VALUE).withUuid(ACCOUNT_ID).build());
 
+    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
+
     DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
                                             .orgIdentifier("9S5HMP0xROugl3_QgO62rQO")
                                             .projectIdentifier("9S5HMP0xROugl3_QgO62rQP")
