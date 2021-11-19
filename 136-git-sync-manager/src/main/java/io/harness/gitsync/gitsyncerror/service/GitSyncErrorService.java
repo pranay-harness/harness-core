@@ -3,7 +3,6 @@ package io.harness.gitsync.gitsyncerror.service;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorCountDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
@@ -39,8 +38,8 @@ public interface GitSyncErrorService {
 
   boolean deleteGitSyncErrors(List<String> errorIds, String accountId);
 
-  void recordConnectivityError(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      GitSyncErrorType gitSyncErrorType, String repoUrl, String branch, String errorMessage);
+  void recordConnectivityError(String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoUrl,
+      String branch, String errorMessage);
 
   PageResponse<GitSyncErrorDTO> listConnectivityErrors(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String repoIdentifier, String branch, PageRequest pageRequest);

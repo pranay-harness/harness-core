@@ -1,6 +1,7 @@
 package io.harness.exception;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.BHAVYA;
 import static io.harness.rule.OwnerRule.GEORGE;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,5 +36,14 @@ public class ExceptionUtilsTest extends CategoryTest {
     assertThat(ExceptionUtils.cause(ErrorCode.SCM_NOT_FOUND_ERROR, invalidRequestException)).isNull();
 
     assertThat(ExceptionUtils.cause(ErrorCode.IMAGE_TAG_NOT_FOUND, new Exception())).isNull();
+  }
+
+  @Test
+  @Owner(developers = BHAVYA)
+  @Category(UnitTests.class)
+  public void testCause_2() {
+    final InvalidRequestException invalidRequestException =
+        new InvalidRequestException("abcd", new InvalidTagException("xyz", null));
+    assertThat(ExceptionUtils.cause(InvalidRequestException.class, invalidRequestException)).isNotNull();
   }
 }

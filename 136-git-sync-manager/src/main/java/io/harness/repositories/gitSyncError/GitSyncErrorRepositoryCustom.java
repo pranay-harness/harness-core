@@ -21,11 +21,13 @@ public interface GitSyncErrorRepositoryCustom {
 
   DeleteResult deleteByIds(List<String> ids);
 
-  UpdateResult updateGitError(Criteria criteria, Update update);
+  UpdateResult updateError(Criteria criteria, Update update);
 
   Page<GitSyncError> findAll(Criteria criteria, Pageable pageable);
 
   GitSyncError find(Criteria criteria);
 
   long count(Criteria criteria);
+
+  UpdateResult upsert(Criteria criteria, Update update);
 }
