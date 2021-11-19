@@ -207,7 +207,7 @@ cp ../../820-platform-service/cert.pem .
 cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/platform-service/Dockerfile-platform-service-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/platform-service/Dockerfile-platform-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
-cp -r ../../dockerization/platform-service/scripts/ .
+cp -r ../../dockerization/platform-service/scripts .
 cp ../../protocol.info .
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
@@ -215,6 +215,7 @@ if [ ! -z ${PURPOSE} ]
 then
     echo ${PURPOSE} > purpose.txt
 fi
+java -jar platform-service-capsule.jar scan-classpath-metadata
 
 cd ../..
 
@@ -239,6 +240,7 @@ if [ ! -z ${PURPOSE} ]
 then
     echo ${PURPOSE} > purpose.txt
 fi
+java -jar pipeline-service-capsule.jar scan-classpath-metadata
 
 cd ../..
 

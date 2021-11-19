@@ -242,6 +242,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   public void initialize(Bootstrap<PipelineServiceConfiguration> bootstrap) {
     initializeLogging();
     bootstrap.addCommand(new InspectCommand<>(this));
+    bootstrap.addCommand(new ScanClasspathMetadataCommand());
 
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
