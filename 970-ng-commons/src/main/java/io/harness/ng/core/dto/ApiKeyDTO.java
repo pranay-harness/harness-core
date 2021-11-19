@@ -23,7 +23,7 @@ public class ApiKeyDTO {
   @ApiModelProperty(required = true) @NotBlank private String name;
   @Size(max = 1024) String description;
   @Size(max = 128) Map<String, String> tags;
-  @ApiModelProperty(required = true) @NotBlank private ApiKeyType apiKeyType;
+  @ApiModelProperty(required = true) private ApiKeyType apiKeyType;
   @ApiModelProperty(required = true) @NotBlank private String parentIdentifier;
   private Long defaultTimeToExpireToken;
 
