@@ -843,38 +843,19 @@
               "type": "string"
             },
             "instructions": {
-              "type": "array",
-              "items": {
-                "oneOf": [
-                  {
-                    "$ref": "#/definitions/AddRuleYaml"
-                  },
-                  {
-                    "$ref": "#/definitions/AddSegmentToVariationTargetMapYaml"
-                  },
-                  {
-                    "$ref": "#/definitions/AddTargetsToVariationTargetMapYaml"
-                  },
-                  {
-                    "$ref": "#/definitions/RemoveSegmentToVariationTargetMapYaml"
-                  },
-                  {
-                    "$ref": "#/definitions/RemoveTargetsToVariationTargetMapYaml"
-                  },
-                  {
-                    "$ref": "#/definitions/SetFeatureFlagStateYaml"
-                  },
-                  {
-                    "$ref": "#/definitions/SetOffVariationYaml"
-                  },
-                  {
-                    "$ref": "#/definitions/SetOnVariationYaml"
-                  },
-                  {
-                    "$ref": "#/definitions/UpdateRuleYaml"
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/PatchInstruction"
                   }
-                ]
-              }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
             }
           }
         }
