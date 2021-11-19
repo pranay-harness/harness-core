@@ -9,6 +9,7 @@ import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -31,6 +32,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Schema(name = "DockerConnector", description = "This contains details of Docker Connector")
 public class DockerConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @NotNull @NotBlank String dockerRegistryUrl;
   @NotNull DockerRegistryProviderType providerType;
