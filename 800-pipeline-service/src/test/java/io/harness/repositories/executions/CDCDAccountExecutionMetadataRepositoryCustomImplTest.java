@@ -23,7 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class AccountExecutionMetadataRepositoryCustomImplTest extends PipelineServiceTestBase {
+public class CDCDAccountExecutionMetadataRepositoryCustomImplTest extends PipelineServiceTestBase {
   private static final String ACCOUNT_ID = "accountId";
 
   @Inject PersistentLocker persistentLocker;

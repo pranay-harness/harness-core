@@ -37,7 +37,7 @@ public class PipelineStatusUpdateEventHandlerTest extends PipelineServiceTestBas
   @Before
   public void setUp() throws Exception {
     pipelineStatusUpdateEventHandler = new PipelineStatusUpdateEventHandler(
-        planExecutionService, pmsExecutionSummaryRepository, accountExecutionMetadataRepository);
+        planExecutionService, pmsExecutionSummaryRepository, accountExecutionMetadataRepository, null);
   }
 
   @Test

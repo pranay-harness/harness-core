@@ -25,7 +25,6 @@ import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.enforcement.executions.BuildRestrictionUsageImpl;
 import io.harness.enforcement.executions.CIMonthlyBuildImpl;
 import io.harness.enforcement.executions.CITotalBuildImpl;
-import io.harness.enforcement.executions.DeploymentRestrictionUsageImpl;
 import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
@@ -763,7 +762,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         CustomRestrictionRegisterConfiguration.builder()
             .customRestrictionMap(
                 ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
-                    .put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class)
                     .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
                     .build())
             .build();
