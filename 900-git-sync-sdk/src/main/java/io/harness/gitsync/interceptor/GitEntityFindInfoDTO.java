@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.GitSyncApiConstants;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,7 +22,11 @@ import lombok.experimental.FieldNameConstants;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GitEntityFindInfoDTO {
-  @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch;
-  @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String yamlGitConfigId;
-  @QueryParam(GitSyncApiConstants.DEFAULT_FROM_OTHER_REPO) Boolean defaultFromOtherRepo;
+  @PathParam(GitSyncApiConstants.BRANCH_PARAM_MESSAGE) @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch;
+  @PathParam(GitSyncApiConstants.REPOID_PARAM_MESSAGE)
+  @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY)
+  String yamlGitConfigId;
+  @PathParam("if true, return all the default entities")
+  @QueryParam(GitSyncApiConstants.DEFAULT_FROM_OTHER_REPO)
+  Boolean defaultFromOtherRepo;
 }
