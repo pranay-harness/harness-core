@@ -1,6 +1,7 @@
 package io.harness.batch.processing.connectors;
 
-import com.google.inject.Singleton;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
@@ -14,16 +15,16 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.filter.FilterType;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.RestCallToNGManagerClientUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+
 import software.wings.beans.Account;
 
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 @Singleton
@@ -44,20 +45,20 @@ public class ConnectorsHealthUpdateService {
         try {
           processConnector(connector, account.getUuid());
         } catch (Exception e) {
-          log.error("Exception processing Connector id: {} for account id: {}", connectorInfo.getIdentifier(), account.getUuid(), e);
+          log.error("Exception processing Connector id: {} for account id: {}", connectorInfo.getIdentifier(),
+              account.getUuid(), e);
         }
       }
     }
-    return;
   }
 
   public void processConnector(ConnectorResponseDTO connector, String accountId) {
-    log.info("connector.getConnector().getIdentifier(): {}, accountId: {}", connector.getConnector().getIdentifier(), accountId);
+    log.info("connector.getConnector().getIdentifier(): {}, accountId: {}", connector.getConnector().getIdentifier(),
+        accountId);
     ConnectorValidationResult connectorValidationResult =
         RestCallToNGManagerClientUtils.execute(connectorResourceClient.testConnectionInternal(
-                connector.getConnector().getIdentifier(), accountId, null, null));
+            connector.getConnector().getIdentifier(), accountId, null, null));
     log.info("connectorValidationResult {}", connectorValidationResult);
-    return;
   }
 
   public List<ConnectorResponseDTO> getNextGenConnectorResponses(String accountId) {

@@ -1,8 +1,7 @@
 package io.harness.ccm.remote.resources;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
-import com.google.inject.Inject;
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.connectors.AbstractCEConnectorValidator;
@@ -13,17 +12,18 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
+
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-
-import static io.harness.annotations.dev.HarnessTeam.CE;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Api("testconnection")
 @Path("/testconnection")

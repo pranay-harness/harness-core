@@ -57,7 +57,6 @@ public class CENGMongoIndexesTest extends CENGTestBase {
     try (InputStream in = getClass().getResourceAsStream("/mongo/indexes.txt")) {
       expectedIndexes = IOUtils.readLines(in, "UTF-8");
     }
-
     assertThat(indexes).isEqualTo(expectedIndexes);
   }
 }

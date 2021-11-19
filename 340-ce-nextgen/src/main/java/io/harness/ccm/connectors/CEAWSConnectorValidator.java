@@ -57,7 +57,7 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
 
   @Inject AwsClient awsClient;
   @Inject CENextGenConfiguration configuration;
-  @Inject CEConnectorsUtil ceConnectorsUtil;
+  @Inject CEConnectorsHelper ceConnectorsHelper;
 
   @Override
   public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier) {
@@ -147,8 +147,8 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
     // Check for data at destination only when 24 hrs have elapsed since connector last modified at
     long now = Instant.now().toEpochMilli() - 1 * 24 * 60 * 60 * 1000;
     if (connectorResponseDTO.getLastModifiedAt() < now) {
-      if (!ceConnectorsUtil.isDataSyncCheck(
-              accountIdentifier, connectorIdentifier, ConnectorType.CE_AWS, ceConnectorsUtil.JOB_TYPE_CLOUDFUNCTION)) {
+      if (!ceConnectorsHelper.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.CE_AWS,
+              ceConnectorsHelper.JOB_TYPE_CLOUDFUNCTION)) {
         // Data not available in unified table. Possibly an issue with CFs
         // Check if Batch sync job has finished for this
         /*

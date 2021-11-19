@@ -2,6 +2,7 @@ package io.harness.serializer;
 
 import io.harness.ccm.serializer.CECommonsRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.morphia.ConnectorMorphiaClassesRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
@@ -20,6 +21,7 @@ public class CENextGenModuleRegistrars {
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .add(CENextGenMorphiaRegistrars.class)
+          .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .addAll(DelegateTaskRegistrars.morphiaRegistrars)
           .addAll(CECommonsRegistrars.morphiaRegistrars)
           .addAll(DelegateServiceDriverRegistrars.morphiaRegistrars)

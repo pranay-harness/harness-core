@@ -39,7 +39,7 @@ import org.springframework.stereotype.Service;
 @OwnedBy(HarnessTeam.CE)
 public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractCEConnectorValidator {
   @Inject CENextGenConfiguration configuration;
-  @Inject CEConnectorsUtil ceConnectorsUtil;
+  @Inject CEConnectorsHelper ceConnectorsHelper;
 
   public static final String GCP_CREDENTIALS_PATH = "CE_GCP_CREDENTIALS_PATH";
   public static final String GCP_BILLING_EXPORT_V_1 = "gcp_billing_export_v1";
@@ -64,8 +64,8 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
         // 4. Check for data at destination only when 24 hrs have elapsed since connector last modified at
         long now = Instant.now().toEpochMilli() - 1 * 24 * 60 * 60 * 1000;
         if (connectorResponseDTO.getLastModifiedAt() < now) {
-          if (!ceConnectorsUtil.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.GCP_CLOUD_COST,
-                  ceConnectorsUtil.JOB_TYPE_CLOUDFUNCTION)) {
+          if (!ceConnectorsHelper.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.GCP_CLOUD_COST,
+                  ceConnectorsHelper.JOB_TYPE_CLOUDFUNCTION)) {
             // Data not available in unified table.
             // Check if Batch sync job has finished for this
             /*

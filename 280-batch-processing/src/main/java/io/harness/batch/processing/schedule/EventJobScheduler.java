@@ -276,7 +276,7 @@ public class EventJobScheduler {
   @Scheduled(cron = "${scheduler-jobs-config.connectorHealthUpdateJobCron}")
   public void runNGConnectorsHealthUpdateJob() {
     try {
-      if (!batchMainConfig.getConnectorHealthUpdateJobConfig().isEnabled()){
+      if (!batchMainConfig.getConnectorHealthUpdateJobConfig().isEnabled()) {
         log.info("connectorHealthUpdateJob is disabled in config");
         return;
       }

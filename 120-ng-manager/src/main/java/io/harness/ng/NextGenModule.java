@@ -481,7 +481,6 @@ public class NextGenModule extends AbstractModule {
     install(new SignupModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId(),
         appConfig.getSignupNotificationConfiguration(), appConfig.getAccessControlClientConfiguration()));
-    install(ConnectorModule.getInstance());
     install(GitopsModule.getInstance());
     install(new GitSyncModule());
     install(JooqModule.getInstance());
@@ -524,6 +523,7 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new CENextGenResourceClientModule(this.appConfig.getCeNextGenClientConfig(),
         this.appConfig.getNextGenConfig().getCeNextGenServiceSecret(), CE_NEXT_GEN.getServiceId()));
+    install(ConnectorModule.getInstance(appConfig.getNextGenConfig(), appConfig.getCeNextGenClientConfig()));
     install(new ProviderModule() {
       @Provides
       @Singleton

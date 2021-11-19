@@ -8,5 +8,5 @@ import lombok.Data;
 @Builder
 @Singleton
 public class ConnectorHealthUpdateJobConfig {
-    private boolean enabled;
+  private boolean enabled;
 }

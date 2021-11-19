@@ -11,10 +11,10 @@ import java.util.Map;
 
 @OwnedBy(CV)
 public class ConnectorAllowedFieldValues {
-  public static Map<ConnectorType, FieldValues> TYPE_TO_FIELDS = new HashMap<ConnectorType, FieldValues>() {
+  public static Map<ConnectorType, io.harness.connector.utils.FieldValues> TYPE_TO_FIELDS = new HashMap<ConnectorType, io.harness.connector.utils.FieldValues>() {
     {
       put(ConnectorType.NEW_RELIC,
-          FieldValues.builder()
+          io.harness.connector.utils.FieldValues.builder()
               .fieldValue(
                   "url", Arrays.asList("https://insights-api.newrelic.com/", "https://insights-api.eu.newrelic.com/"))
               .build());
