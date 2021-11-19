@@ -33,15 +33,14 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureMonitorClient;
 import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.context.AzureWebClientContext;
+import io.harness.azure.impl.AzureLogStreamer;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.azure.model.WebAppHostingOS;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.exception.InvalidRequestException;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
-import io.harness.logging.LogLevel;
 
 import software.wings.delegatetasks.azure.AzureServiceCallBack;
 import software.wings.delegatetasks.azure.AzureTimeLimiter;
@@ -192,7 +191,7 @@ public class AzureAppServiceDeploymentService {
     LogCallback containerLogCallback =
         logStreamingTaskClient.obtainLogCallback(UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS);
     preDeploymentData.setDeploymentProgressMarker(AppServiceDeploymentProgress.UPDATE_SLOT_CONTAINER_SETTINGS.name());
-
+    startLogStream(containerLogCallback, azureWebClientContext, slotName, true);
     containerLogCallback.saveExecutionLog(format("Start updating Container settings for slot - [%s]", slotName));
     try {
       deleteDeploymentSlotContainerSettings(azureWebClientContext, slotName, containerLogCallback);
@@ -332,22 +331,31 @@ public class AzureAppServiceDeploymentService {
     slotSwapLogCallback.saveExecutionLog("Swapping slots done successfully", INFO, SUCCESS);
   }
 
+  // TODO: Stream logging shouldn't be triggered before starting slot.
+  // Addional investigation is needed to figure out why logs can't be streamed at this time
+  private void startLogStream(LogCallback logCallback, AzureWebClientContext azureWebClientContext, String slotName,
+      boolean isContainerDeployment) {
+    try {
+      ExecutorService executorService = Executors.newFixedThreadPool(1);
+      executorService.submit(
+          new AzureLogStreamer(azureWebClientContext, azureWebClient, slotName, logCallback, isContainerDeployment));
+      executorService.shutdown();
+    } catch (Exception ex) {
+      logCallback.saveExecutionLog(String.format("Failed to stream Azure logs - [%s]", ex.getMessage()), ERROR);
+    }
+  }
+
   private void deployArtifactFile(AzureAppServicePackageDeploymentContext context) {
     String slotName = context.getSlotName();
     ILogStreamingTaskClient logStreamingTaskClient = context.getLogStreamingTaskClient();
-    LogCallback logCallback = logStreamingTaskClient.obtainLogCallback("DEPLOY_ARTIFACT_FILE");
+    LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS);
 
-    try {
-      logCallback.saveExecutionLog("Start deploying artifact file");
-      uploadStartupScript(context.getAzureWebClientContext(), slotName, context.getStartupCommand(), logCallback);
-      Completable deployment = deployPackage(context.getAzureWebClientContext(), slotName, context.getArtifactFile(),
-          context.getArtifactType(), logCallback);
-      deployment.await(context.getSteadyStateTimeoutInMin(), TimeUnit.MINUTES);
-      logCallback.saveExecutionLog("Deployment done", LogLevel.INFO, SUCCESS);
-    } catch (Exception ex) {
-      logCallback.saveExecutionLog("Failed to deploy artifact file", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
-      throw ex;
-    }
+    logCallback.saveExecutionLog("Start deploying artifact file");
+    uploadStartupScript(context.getAzureWebClientContext(), slotName, context.getStartupCommand(), logCallback);
+    startLogStream(logCallback, context.getAzureWebClientContext(), slotName, false);
+    Completable deployment = deployPackage(context.getAzureWebClientContext(), slotName, context.getArtifactFile(),
+        context.getArtifactType(), logCallback);
+    deployment.await(context.getSteadyStateTimeoutInMin(), TimeUnit.MINUTES);
   }
 
   private void uploadStartupScript(

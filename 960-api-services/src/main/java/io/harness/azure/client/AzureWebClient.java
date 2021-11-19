@@ -372,10 +372,18 @@ public interface AzureWebClient {
    *
    * @param context
    * @param slotName
-   * @param file
    * @return
    */
-  InputStream streamDeploymentLogs(AzureWebClientContext context, String slotName, File file);
+  InputStream streamDeploymentLogs(AzureWebClientContext context, String slotName);
+
+  /**
+   * Stream deployment logs on slot asynchronously.
+   *
+   * @param context
+   * @param slotName
+   * @return
+   */
+  Observable<String> streamDeploymentLogsAsync(AzureWebClientContext context, String slotName);
 
   /**
    * Update slot configuration with app command line script.

@@ -684,17 +684,24 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     return deploymentSlot.warDeployAsync(file);
   }
 
-  public InputStream streamDeploymentLogs(AzureWebClientContext context, final String slotName, final File file) {
+  public InputStream streamDeploymentLogs(AzureWebClientContext context, final String slotName) {
     if (isBlank(slotName)) {
       throw new IllegalArgumentException(SLOT_NAME_BLANK_VALIDATION_MSG);
-    }
-    if (file == null) {
-      throw new IllegalArgumentException(FILE_BLANK_ERROR_MSG);
     }
 
     log.debug("Start streaming deployment log on slot, slotName: {}, context: {}", slotName, context);
     DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
     return deploymentSlot.streamDeploymentLogs();
+  }
+
+  public Observable<String> streamDeploymentLogsAsync(AzureWebClientContext context, final String slotName) {
+    if (isBlank(slotName)) {
+      throw new IllegalArgumentException(SLOT_NAME_BLANK_VALIDATION_MSG);
+    }
+
+    log.debug("Start streaming deployment log on slot, slotName: {}, context: {}", slotName, context);
+    DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
+    return deploymentSlot.streamDeploymentLogsAsync();
   }
 
   public SiteConfigResourceInner updateSlotConfigurationWithAppCommandLineScript(
