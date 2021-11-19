@@ -94,7 +94,7 @@ public class LdapSearch implements LdapValidator {
 
     log.info("LdapSearchRequest : [{}]", request);
 
-    if (searchFilter.contains("groupOfNames")) {
+    if (StringUtils.isNotBlank(searchFilter) && searchFilter.toLowerCase().contains("group")) {
       try (Connection connection = connectionFactory.getConnection()) {
         connection.open();
         SearchOperation search = new SearchOperation(connection);
