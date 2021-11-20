@@ -26,10 +26,8 @@ public class SwaggerBundleConfigurationFactory {
           @Override
           public Set<Class<?>> classes() {
             ConfigurationBuilder config = new ConfigurationBuilder();
-            Set<String> acceptablePackages = new HashSet<String>();
-
+            Set<String> acceptablePackages = new HashSet<>();
             boolean allowAllPackages = false;
-
             final FilterBuilder filter = new FilterBuilder();
             if (getResourcePackage() != null && !"".equals(getResourcePackage())) {
               String[] parts = getResourcePackage().split(",");
@@ -43,7 +41,6 @@ public class SwaggerBundleConfigurationFactory {
             } else {
               allowAllPackages = true;
             }
-
             config.setExpandSuperTypes(getExpandSuperTypes());
             config.filterInputsBy(filter);
             config.setScanners(new ResourcesScanner(), new TypeAnnotationsScanner(), new SubTypesScanner());
@@ -55,7 +52,7 @@ public class SwaggerBundleConfigurationFactory {
              * and the implementing class has Swagger annotations
              */
 
-            Set<Class<?>> output = new HashSet<Class<?>>();
+            Set<Class<?>> output = new HashSet<>();
             for (Class<?> cls : classes) {
               if (allowAllPackages) {
                 output.add(cls);
