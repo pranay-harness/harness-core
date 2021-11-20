@@ -43,6 +43,7 @@ import com.google.common.collect.Lists;
 import io.dropwizard.Configuration;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.swagger.jaxrs.config.BeanConfig;
+import io.swagger.jaxrs.config.SwaggerContextService;
 import io.swagger.models.Contact;
 import java.time.Duration;
 import java.time.Instant;
@@ -179,6 +180,7 @@ public class NextGenConfiguration extends Configuration {
               "Resource package needs to be specified for Swagger to correctly detect annotated resources");
         }
 
+        String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
         final BeanConfig config = new BeanConfig() {
           @Override
           public Set<Class<?>> classes() {
@@ -229,6 +231,21 @@ public class NextGenConfiguration extends Configuration {
               }
             }
             return output;
+          }
+
+          @Override
+          public void setScan(boolean shouldScan) {
+            new SwaggerContextService()
+                .withConfigId(this.getConfigId())
+                .withScannerId(this.getScannerId())
+                .withContextId(this.getContextId())
+                .withServletConfig(this.servletConfig)
+                .withSwaggerConfig(this)
+                .withScanner(this)
+                .withBasePath(getBasePath())
+                .withPathBasedConfig(isUsePathBasedConfig())
+                .initConfig()
+                .initScanner();
           }
         };
         config.setTitle(getTitle());

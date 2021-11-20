@@ -11,7 +11,6 @@ import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPub
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.HARNESS_RESOURCE_CLASSES;
-import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
