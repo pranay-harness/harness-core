@@ -45,8 +45,6 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.SwaggerContextService;
 import io.swagger.models.Contact;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -293,7 +291,6 @@ public class NextGenConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Instant start = Instant.now();
     Reflections reflections = new Reflections(CORE_PACKAGE, CONNECTOR_PACKAGE, GITOPS_PROVIDER_RESOURCE_PACKAGE,
         GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE, OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE,
         SIGNUP_PACKAGE, MOCKSERVER_PACKAGE, ACCOUNT_PACKAGE, LICENSE_PACKAGE, POLLING_PACKAGE, ENFORCEMENT_PACKAGE,
@@ -302,12 +299,7 @@ public class NextGenConfiguration extends Configuration {
         WEBHOOK_PACKAGE, ENVIRONMENT_PACKAGE, USERPROFILE_PACKAGE, JIRA_PACKAGE, EXECUTION_PACKAGE, ENTITYSETUP_PACKAGE,
         SCHEMA_PACKAGE, DELEGATE_PACKAGE, ACCESS_CONTROL_PACKAGE, FEEDBACK_PACKAGE, INSTANCE_SYNC_PACKAGE,
         INVITE_PACKAGE, USER_PACKAGE, INSTANCE_NG_PACKAGE);
-    Collection<Class<?>> classes = reflections.getTypesAnnotatedWith(Path.class);
-    Instant finish = Instant.now();
-    long timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Getting resources by reflection started at {}, took {} milliseconds and ended at {}.", start, timeElapsed,
-        finish);
-    return classes;
+    return reflections.getTypesAnnotatedWith(Path.class);
   }
 
   private static Set<String> getUniquePackages(Collection<Class<?>> classes) {

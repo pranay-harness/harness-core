@@ -193,8 +193,6 @@ import java.lang.annotation.Annotation;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.SecureRandom;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -244,42 +242,19 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   @Override
   public void initialize(Bootstrap<NextGenConfiguration> bootstrap) {
-    Instant start = Instant.now();
     initializeLogging();
-    Instant finish = Instant.now();
-    long timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Initializing logging started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-    System.out.println("Initializing logging started at " + start + "took " + timeElapsed
-        + " milliseconds and ended at " + finish + ".");
-
     bootstrap.addCommand(new InspectCommand<>(this));
     bootstrap.addCommand(new ScanClasspathMetadataCommand());
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
-    start = Instant.now();
     configureObjectMapper(bootstrap.getObjectMapper());
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "Configure object mapper started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-    System.out.println("Configure object mapper started at " + start + "took " + timeElapsed
-        + " milliseconds and ended at " + finish + ".");
-
-    start = Instant.now();
     bootstrap.addBundle(new SwaggerBundle<NextGenConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(NextGenConfiguration appConfig) {
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    System.out.println("Configure swagger bundle started at " + start + "took " + timeElapsed
-        + " milliseconds and ended at " + finish + ".");
-    log.info(
-        "Configure swagger bundle started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
     bootstrap.setMetricRegistry(metricRegistry);
   }
 
@@ -291,7 +266,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   @Override
   public void run(NextGenConfiguration appConfig, Environment environment) {
     log.info("Starting Next Gen Application ...");
-    Instant start = Instant.now();
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(appConfig.getCommonPoolConfig().getCorePoolSize(),
         appConfig.getCommonPoolConfig().getMaxPoolSize(), appConfig.getCommonPoolConfig().getIdleTime(),
         appConfig.getCommonPoolConfig().getTimeUnit(),
@@ -354,211 +328,42 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(appConfig);
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
     modules.add(PipelineServiceUtilityModule.getInstance());
-
     CacheModule cacheModule = new CacheModule(appConfig.getCacheConfig());
     modules.add(cacheModule);
-    Instant finish = Instant.now();
-    long timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Adding modules started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     Injector injector = Guice.createInjector(modules);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Creating injector started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
 
     // Will create collections and Indexes
-    start = Instant.now();
     injector.getInstance(HPersistence.class);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Index Manager started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerCorsFilter(appConfig, environment);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "CORS filter registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerResources(environment, injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Resource registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerJerseyProviders(environment, injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Jersey provider registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed,
-        finish);
-
-    start = Instant.now();
     registerJerseyFeatures(environment);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Jersey features registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed,
-        finish);
-
-    start = Instant.now();
     registerCharsetResponseFilter(environment, injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Charset Response Filter registration started at {}, took {} milliseconds and ended at {}.", start,
-        timeElapsed, finish);
-
-    start = Instant.now();
     registerCorrelationFilter(environment, injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Correlation Filter registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed,
-        finish);
-
-    start = Instant.now();
     registerEtagFilter(environment, injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "Etag Filter registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerScheduleJobs(injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "Scheduled Jobs registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerWaitEnginePublishers(injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Wait Engine publishers registration started at {}, took {} milliseconds and ended at {}.", start,
-        timeElapsed, finish);
-
-    start = Instant.now();
     registerAuthFilters(appConfig, environment, injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "Auth Filter registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerScopeAccessCheckFilter(appConfig, environment, injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Scope access check filter registration started at {}, took {} milliseconds and ended at {}.", start,
-        timeElapsed, finish);
-
-    start = Instant.now();
     registerRequestContextFilter(environment);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Request context filter registration started at {}, took {} milliseconds and ended at {}.", start,
-        timeElapsed, finish);
-
-    start = Instant.now();
     registerPipelineSDK(appConfig, injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "Pipeline SDK registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerYamlSdk(injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("YAML SDK registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerHealthCheck(environment, injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "Health Check registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerIterators(appConfig.getNgIteratorsConfig(), injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Iterators registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerJobs(injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Jobs registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerQueueListeners(injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "Queue Listener registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerPmsSdkEvents(injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "PMS SDK Events registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     initializeMonitoring(appConfig, injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "Monitoring registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerObservers(injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Observers registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerOasResource(appConfig, environment, injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "Oas resource registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerManagedBeans(environment, injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "Managed beans registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     initializeEnforcementService(injector, appConfig);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Enforcement service registration started at {}, took {} milliseconds and ended at {}.", start,
-        timeElapsed, finish);
-
-    start = Instant.now();
     initializeEnforcementSdk(injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Enforcement sdk registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed,
-        finish);
-
-    start = Instant.now();
     if (appConfig.getShouldDeployWithGitSync()) {
       intializeGitSync(injector);
       GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
     }
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info(
-        "Git Sync initialization started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
-
-    start = Instant.now();
     registerMigrations(injector);
-    finish = Instant.now();
-    timeElapsed = Duration.between(start, finish).toMillis();
-    log.info("Migration registration started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
 
     MaintenanceController.forceMaintenance(false);
   }
@@ -803,18 +608,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private void registerResources(Environment environment, Injector injector) {
     for (Class<?> resource : HARNESS_RESOURCE_CLASSES) {
       if (Resource.isAcceptable(resource)) {
-        Instant start = Instant.now();
-        Object resourceObject = injector.getInstance(resource);
-        Instant finish = Instant.now();
-        long timeElapsed = Duration.between(start, finish).toMillis();
-        log.info("Injecting resource {} started at {}, took {} milliseconds and ended at {}.",
-            resourceObject.getClass(), start, timeElapsed, finish);
-        start = Instant.now();
-        environment.jersey().register(resourceObject);
-        finish = Instant.now();
-        timeElapsed = Duration.between(start, finish).toMillis();
-        log.info("Registering resource {} to jersey started at {}, took {} milliseconds and ended at {}.",
-            resourceObject.getClass(), start, timeElapsed, finish);
+        environment.jersey().register(injector.getInstance(resource));
       }
     }
     environment.jersey().register(injector.getInstance(VersionInfoResource.class));
@@ -998,6 +792,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   public static Collection<Class<?>> getOAS3ResourceClassesOnly() {
-    return getResourceClasses().stream().filter(x -> x.isAnnotationPresent(Tag.class)).collect(Collectors.toList());
+    return HARNESS_RESOURCE_CLASSES.stream().filter(x -> x.isAnnotationPresent(Tag.class)).collect(Collectors.toList());
   }
 }
