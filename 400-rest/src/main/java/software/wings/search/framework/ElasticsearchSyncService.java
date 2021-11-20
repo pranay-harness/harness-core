@@ -29,10 +29,11 @@ public class ElasticsearchSyncService implements Managed {
   private final ExecutorService executorService =
       Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("search-main-thread").build());
   private Future elasticsearchSyncJobFuture;
+  private final String deployMode = System.getenv().get("DEPLOY_MODE");
 
   @Override
   public void start() {
-    if (featureFlagService.isGlobalEnabled(FeatureName.SEARCH)) {
+    if (!"ONPREM".equals(deployMode)) {
       elasticsearchSyncJobFuture = executorService.submit(elasticSearchSyncJob);
     }
   }
