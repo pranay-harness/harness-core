@@ -112,7 +112,7 @@ public class DelegateQueueTaskTest extends WingsBaseTest {
                                     .build();
     delegateTask.setBroadcastCount(1);
     delegateTask.setNextBroadcast(System.currentTimeMillis() - 10000);
-    delegateTask.setPreAssignedDelegateId("delegateId");
+    //delegateTask.setPreAssignedDelegateId("delegateId");
     persistence.save(delegateTask);
 
     when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(false);
@@ -128,7 +128,7 @@ public class DelegateQueueTaskTest extends WingsBaseTest {
     assertThat(broadcastedDelegateTask).isNotNull();
     assertThat(broadcastedDelegateTask.getBroadcastCount()).isEqualTo(2);
     assertThat(broadcastedDelegateTask.getNextBroadcast()).isGreaterThan(System.currentTimeMillis());
-    assertThat(broadcastedDelegateTask.getPreAssignedDelegateId()).isNull();
+
   }
 
   @Test
@@ -150,7 +150,7 @@ public class DelegateQueueTaskTest extends WingsBaseTest {
                                     .build();
     delegateTask.setBroadcastCount(1);
     delegateTask.setNextBroadcast(System.currentTimeMillis() - 10000);
-    delegateTask.setPreAssignedDelegateId(firstDelegateId);
+    //delegateTask.setPreAssignedDelegateId(firstDelegateId);
     persistence.save(delegateTask);
 
     when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(true);
@@ -167,8 +167,7 @@ public class DelegateQueueTaskTest extends WingsBaseTest {
     assertThat(broadcastedDelegateTask).isNotNull();
     assertThat(broadcastedDelegateTask.getBroadcastCount()).isEqualTo(2);
     assertThat(broadcastedDelegateTask.getNextBroadcast()).isGreaterThan(System.currentTimeMillis());
-    assertThat(broadcastedDelegateTask.getPreAssignedDelegateId()).isEqualTo(secondDelegateId);
-    assertThat(broadcastedDelegateTask.getAlreadyTriedDelegates()).hasSize(1);
-    assertThat(broadcastedDelegateTask.getAlreadyTriedDelegates()).containsExactly(firstDelegateId);
+    //assertThat(broadcastedDelegateTask.getAlreadyTriedDelegates()).hasSize(1);
+    //assertThat(broadcastedDelegateTask.getAlreadyTriedDelegates()).containsExactly(firstDelegateId);
   }
 }

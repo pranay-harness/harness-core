@@ -45,7 +45,7 @@ public interface AssignDelegateService {
 
   boolean noInstalledDelegates(String accountId);
 
-  Set<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch);
+  List<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch);
 
-  List<String> getConnectedDelegateList(Set<String> delegatesList, String accountId, BatchDelegateSelectionLog batch);
+  List<String> getConnectedDelegateList(List<String> delegatesList, String accountId, BatchDelegateSelectionLog batch);
 }

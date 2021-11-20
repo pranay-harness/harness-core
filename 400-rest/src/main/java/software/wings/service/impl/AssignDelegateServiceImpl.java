@@ -847,19 +847,19 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   }
 
   @Override
-  public Set<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch) {
-    Set<String> eligibleDelegateIds = new HashSet<>();
+  public List<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch) {
+    List<String> eligibleDelegateIds = new ArrayList<>();
     try {
       List<Delegate> accountDelegates = getAccountDelegates(task.getAccountId());
       if (isEmpty(accountDelegates)) {
         return eligibleDelegateIds;
       }
-      Set<String> assignableDelegateIds = accountDelegates.stream()
+      List<String> assignableDelegateIds = accountDelegates.stream()
                                               .filter(delegate
                                                   -> delegate.getStatus() != DelegateInstanceStatus.DELETED
                                                       && canAssign(batch, delegate.getUuid(), task))
                                               .map(Delegate::getUuid)
-                                              .collect(Collectors.toSet());
+                                              .collect(Collectors.toList());
 
       List<String> criteria = fetchCriteria(task);
       if (isEmpty(criteria)) {
@@ -888,8 +888,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
   @Override
   public List<String> getConnectedDelegateList(
-      Set<String> delegatesList, String accountId, BatchDelegateSelectionLog batch) {
-    if (isEmpty(delegatesList)){
+      List<String> delegatesList, String accountId, BatchDelegateSelectionLog batch) {
+    if (isEmpty(delegatesList)) {
       return Collections.emptyList();
     }
     List<String> connectedDelegates = retrieveActiveDelegates(accountId, batch);
@@ -1037,8 +1037,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
               .unset(DelegateTaskKeys.validatingDelegateIds)
               .unset(DelegateTaskKeys.validationCompleteDelegateIds)
               .set(DelegateTaskKeys.broadcastCount, 1)
-              .set(DelegateTaskKeys.status, QUEUED)
-              .addToSet(DelegateTaskKeys.alreadyTriedDelegates, retryDelegate.getDelegateId()));
+              .set(DelegateTaskKeys.status, QUEUED));
 
       return RetryDelegate.builder().retryPossible(true).build();
     } else {

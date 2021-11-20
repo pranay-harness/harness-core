@@ -172,18 +172,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -422,45 +411,23 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         generateCapabilitiesForTaskIfFeatureEnabled(task);
         convertToExecutionCapability(task);
 
-        Set<String> eligibleListOfDelegates = assignDelegateService.getEligibleDelegatesToExecuteTask(task, batch);
+        List<String> eligibleListOfDelegates = assignDelegateService.getEligibleDelegatesToExecuteTask(task, batch).stream().collect(Collectors.toList());
         if (eligibleListOfDelegates.isEmpty()) {
           delegateSelectionLogsService.logNoEligibleDelegatesToExecuteTask(batch, task.getAccountId());
           handleTaskFailureResponse(task, NO_ELIGIBLE_DELEGATE.toString());
           return;
         }
         // save eligible delegate ids as part of task (will be used for rebroadcasting)
-        task.setEligibleToExecuteDelegateIdSet(eligibleListOfDelegates);
-
-        List<String> connectedEligibleDelegates =
-                assignDelegateService.getConnectedDelegateList(eligibleListOfDelegates, task.getAccountId(), batch);
-
-        if (!task.getData().isAsync() &&  connectedEligibleDelegates.isEmpty()) {
-          handleTaskFailureResponse(task, NO_ELIGIBLE_DELEGATE.toString());
-          return;
-        }
+        task.setEligibleToExecuteDelegateIdSet(new LinkedList<>(eligibleListOfDelegates));
 
         // filter only connected ones from list
-
-      /*  List<String> connectedEligibleDelegates =
+        List<String> connectedEligibleDelegates =
             assignDelegateService.getConnectedDelegateList(eligibleListOfDelegates, task.getAccountId(), batch);
 
-        if (!task.getData().isAsync() &&  connectedEligibleDelegates.isEmpty()) {
+        if (!task.getData().isAsync() && connectedEligibleDelegates.isEmpty()) {
           handleTaskFailureResponse(task, NO_ELIGIBLE_DELEGATE.toString());
           return;
         }
-        // pick random one from list and set as "preAssignedDelegate" for broadcasting
-        task.setPreAssignedDelegateId(
-            connectedEligibleDelegates.get(random.nextInt(connectedEligibleDelegates.size())));
-
-        // REMOVE below check after confirming
-        if (isNotBlank(task.getMustExecuteOnDelegateId())) {
-          task.setPreAssignedDelegateId(task.getMustExecuteOnDelegateId());
-        }*/
-
-        // Ensure that broadcast happens at least 5 seconds from current time for async tasks
-       /* if (task.getData().isAsync()) {
-          task.setNextBroadcast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
-        }*/
 
         checkTaskRankRateLimit(task.getRank());
 
@@ -484,38 +451,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                                         .accountId(task.getAccountId())
                                         .build();
     delegateTaskService.handleResponse(task, taskQuery, response);
-  }
-
-
-  @VisibleForTesting
-  public String pickDelegateForTaskWithoutAnyAgentCapabilities(DelegateTask task, List<String> activeDelegates) {
-    if (isEmpty(activeDelegates)) {
-      log.warn("No active delegates found to execute the task.");
-      return null;
-    }
-
-    boolean ignoreAlreadyTriedDelegates =
-        task.getAlreadyTriedDelegates() == null || task.getAlreadyTriedDelegates().containsAll(activeDelegates);
-
-    // Filter delegate to try different ones when rebroadcasting, but allow all eventually when all are exhausted
-    Set<String> validDelegateIds =
-        activeDelegates.stream()
-            .filter(delegateId -> ignoreAlreadyTriedDelegates || !task.getAlreadyTriedDelegates().contains(delegateId))
-            .collect(Collectors.toSet());
-
-    for (String delegateId : validDelegateIds) {
-      BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
-      boolean canAssign = assignDelegateService.canAssign(batch, delegateId, task);
-      delegateSelectionLogsService.save(batch);
-
-      if (canAssign) {
-        log.info("Setting preAssignedDelegate for task without agent capabilities to {}.", delegateId);
-        return delegateId;
-      }
-    }
-
-    log.warn("No assignable active delegates found to execute the task.");
-    return null;
   }
 
   @VisibleForTesting
@@ -1517,10 +1452,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
             .doesNotExist()
             .field(DelegateTaskKeys.expiry)
             .greaterThan(currentTimeMillis());
-
-    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
-      delegateTaskQuery.filter(DelegateTaskKeys.preAssignedDelegateId, delegateId);
-    }
 
     return delegateTaskQuery.asKeyList()
         .stream()

@@ -65,8 +65,6 @@ public class DelegateTaskBroadcastHelper {
                                                       .accountId(delegateTask.getAccountId())
                                                       .taskId(delegateTask.getUuid())
                                                       .async(delegateTask.getData().isAsync())
-                                                      .preAssignedDelegateId(delegateTask.getPreAssignedDelegateId())
-                                                      .alreadyTriedDelegates(delegateTask.getAlreadyTriedDelegates())
                                                       .broadcastToDelegatesList(delegateTask.getBroadcastToDelegateList())
                                                       .build();
 

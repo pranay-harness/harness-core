@@ -149,8 +149,8 @@ public class DelegateTask
 
   private long expiry;
 
-  private Set<String> eligibleToExecuteDelegateIdSet;
-  @Transient private Set<String> broadcastToDelegateList;
+  private LinkedList<String> eligibleToExecuteDelegateIdSet;
+  @Transient private List<String> broadcastToDelegateList;
 
   @FdTtlIndex @Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
 

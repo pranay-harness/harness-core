@@ -40,6 +40,7 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.beans.TaskType;
 import software.wings.core.managerConfiguration.ConfigurationController;
+import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
@@ -81,6 +82,7 @@ public class DelegateQueueTask implements Runnable {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
   @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  @Inject private DelegateConnectionDao delegateConnectionDao;
 
   @Override
   public void run() {
@@ -257,31 +259,19 @@ public class DelegateQueueTask implements Runnable {
                 .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
                 .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask));
 
-        // unset and track already tried delegates
-       /* if (delegateTask.getPreAssignedDelegateId() != null && delegateTask.getBroadcastCount() > 0) {
-          // add previously broadcast delegate ids to alreadyTriedDelegates
-          //delegateTask.getAlreadyTriedDelegates().add(delegateTask.getPreAssignedDelegateId());
-          updateOperations.unset(DelegateTaskKeys.preAssignedDelegateId);
-        }*/
 
-        Set<String> eligibleDelegatesList = delegateTask.getEligibleToExecuteDelegateIdSet();
-        //clear already tried delegates if all eligible delegates
-       /* if (eligibleDelegatesList.size() == delegateTask.getAlreadyTriedDelegates().size()) {
-            delegateTask.getAlreadyTriedDelegates().clear();
-        }*/
-
-        List<String> connectedEligibleDelegatesList =
-            assignDelegateService.getConnectedDelegateList(eligibleDelegatesList, delegateTask.getAccountId(), null);
-
-        Set<String> broadcastList = connectedEligibleDelegatesList.stream().limit(broadcastHelper.getMaxBroadcastCount(delegateTask)).collect(Collectors.toSet());
-
-
-
-
-
-
-      //add to already tried list
-        delegateTask.getAlreadyTriedDelegates().addAll(broadcastList);
+        LinkedList<String> eligibleDelegatesList = delegateTask.getEligibleToExecuteDelegateIdSet();
+        List<String> broadcastList = new ArrayList<>();
+        Iterator<String> delegateIdIterator = eligibleDelegatesList.iterator();
+        int maxLimit = Math.min(eligibleDelegatesList.size()-1,broadcastHelper.getMaxBroadcastCount(delegateTask));
+        while (delegateIdIterator.hasNext() && maxLimit > 0) {
+          String delegateId = eligibleDelegatesList.removeFirst();
+          if (delegateService.checkDelegateConnected(delegateTask.getAccountId(), delegateId)) {
+            broadcastList.add(delegateId);
+            maxLimit--;
+          }
+          eligibleDelegatesList.addLast(delegateId);
+        }
 
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
@@ -303,46 +293,10 @@ public class DelegateQueueTask implements Runnable {
     }
   }
 
-  private boolean handleTaskWithForceExecution(DelegateTask task) {
-    BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
-    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId(), batch);
-
-    for (String delegateId : activeDelegates) {
-      boolean canAssign = assignDelegateService.canAssign(batch, delegateId, task);
-      if (canAssign) {
-        task.setPreAssignedDelegateId(delegateId);
-        break;
-      }
-    }
-
-    // If unable to assign any delegate for the task, then we expire it
-    if (task.getPreAssignedDelegateId() == null) {
-      return false;
-    }
-
-    delegateSelectionLogsService.save(batch);
-
-    Query<DelegateTask> filterQuery = persistence.createQuery(DelegateTask.class, excludeAuthority)
-                                          .filter(DelegateTaskKeys.accountId, task.getAccountId())
-                                          .filter(DelegateTaskKeys.uuid, task.getUuid())
-                                          .filter(DelegateTaskKeys.status, QUEUED);
-
-    UpdateOperations<DelegateTask> updateOperations =
-        persistence.createUpdateOperations(DelegateTask.class)
-            .set(DelegateTaskKeys.nextBroadcast, 0)
-            .set(DelegateTaskKeys.expiry, currentTimeMillis() + task.fetchExtraTimeoutForForceExecution())
-            .set(DelegateTaskKeys.preAssignedDelegateId, task.getPreAssignedDelegateId())
-            .set(DelegateTaskKeys.mustExecuteOnDelegateId, task.getPreAssignedDelegateId())
-            .set(DelegateTaskKeys.forceExecute, false);
-
-    persistence.findAndModify(filterQuery, updateOperations, HPersistence.returnNewOptions);
-
-    log.info("Setting task for force execution : {}", task);
-
-    return true;
-  }
 
   private boolean shouldExpireTask(DelegateTask task) {
-    return !task.isForceExecute() || !handleTaskWithForceExecution(task);
+    return !task.isForceExecute();
   }
+
+
 }

@@ -53,10 +53,6 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
         return abort(message);
       }
 
-      if (isNotEmpty(broadcast.getAlreadyTriedDelegates())
-          && broadcast.getAlreadyTriedDelegates().contains(delegateId)) {
-        return abort(message);
-      }
 
       if (!delegateService.filter(broadcast.getAccountId(), delegateId)) {
         return abort(message);
