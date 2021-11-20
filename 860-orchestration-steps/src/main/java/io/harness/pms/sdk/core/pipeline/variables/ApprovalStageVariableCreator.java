@@ -1,7 +1,5 @@
-package io.harness.cdng.creator.variables;
+package io.harness.pms.sdk.core.pipeline.variables;
 
-import io.harness.cdng.visitor.YamlTypes;
-import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.sdk.core.variables.AbstractStageVariableCreator;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationContext;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
@@ -13,24 +11,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class DeploymentStageVariableCreator extends AbstractStageVariableCreator {
+public class ApprovalStageVariableCreator extends AbstractStageVariableCreator {
   @Override
   public LinkedHashMap<String, VariableCreationResponse> createVariablesForChildrenNodes(
       VariableCreationContext ctx, YamlField config) {
     LinkedHashMap<String, VariableCreationResponse> responseMap = new LinkedHashMap<>();
-    YamlField serviceField =
-        config.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YamlTypes.SERVICE_CONFIG);
-    if (VariableCreatorHelper.isNotYamlFieldEmpty(serviceField)) {
-      VariableCreationResponse serviceVariableResponse = ServiceVariableCreator.createVariableResponse(serviceField);
-      responseMap.put(serviceField.getNode().getUuid(), serviceVariableResponse);
-    }
-
-    YamlField infraField =
-        config.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
-    if (VariableCreatorHelper.isNotYamlFieldEmpty(infraField)) {
-      VariableCreationResponse infraVariableResponse = InfraVariableCreator.createVariableResponse(infraField);
-      responseMap.put(infraField.getNode().getUuid(), infraVariableResponse);
-    }
 
     YamlField executionField =
         config.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YAMLFieldNameConstants.EXECUTION);
@@ -44,6 +29,6 @@ public class DeploymentStageVariableCreator extends AbstractStageVariableCreator
 
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap(YAMLFieldNameConstants.STAGE, Collections.singleton("Deployment"));
+    return Collections.singletonMap(YAMLFieldNameConstants.STAGE, Collections.singleton("Approval"));
   }
 }
