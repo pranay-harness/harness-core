@@ -1,0 +1,8 @@
+Var validationURL = concat(Env:baseUrl, Env:validationPath)
+Var request = new Request(url=Var:validationURL, header=Env:commonHeaders, options=Env:commonOptions, body=Env:validationBody)
+print Var:request
+Var response = sync-call(Var:request)
+print Var:response
+
+Var returnVal = "true"
+return Var:returnVal
