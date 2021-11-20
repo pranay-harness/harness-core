@@ -33,9 +33,7 @@ public class ElasticsearchSyncService implements Managed {
 
   @Override
   public void start() {
-    if (!"ONPREM".equals(deployMode)) {
-      elasticsearchSyncJobFuture = executorService.submit(elasticSearchSyncJob);
-    }
+    elasticsearchSyncJobFuture = executorService.submit(elasticSearchSyncJob);
   }
 
   @Override
