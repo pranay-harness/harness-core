@@ -8,8 +8,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.eventsframework.NgEventLogContext;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.FullSyncEventRequest;
 import io.harness.gitsync.core.fullsync.FullSyncAccumulatorService;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.event.MessageListener;
@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FullSyncMessageListener implements MessageListener {
   private final FullSyncAccumulatorService fullSyncTriggerService;
   private final AccountClient accountClient;
+
   @Override
   public boolean handleMessage(Message message) {
     final String messageId = message.getId();
@@ -41,22 +42,16 @@ public class FullSyncMessageListener implements MessageListener {
               accountClient.isFeatureFlagEnabled(FeatureName.NG_GIT_FULL_SYNC.name(), accountId))) {
         return true;
       }
-      if (!metadataMap.containsKey(GitSyncConfigChangeEventConstants.CONFIG_SWITCH_TYPE)) {
-        log.error("Cannot find message metadata map for config change event hence ignoring.");
-        return true;
-      }
-      final String configSwitchType = metadataMap.get(GitSyncConfigChangeEventConstants.CONFIG_SWITCH_TYPE);
-      if (GitSyncConfigSwitchType.ENABLED.name().equals(configSwitchType)) {
-        final EntityScopeInfo entityScopeInfo = getEntityScopeInfo(message);
-        fullSyncTriggerService.triggerFullSync(entityScopeInfo, messageId);
-      }
+
+      final FullSyncEventRequest fullSyncEventRequest = getFullSyncEventRequest(message);
+      fullSyncTriggerService.triggerFullSync(fullSyncEventRequest, messageId);
       return true;
     }
   }
 
-  private EntityScopeInfo getEntityScopeInfo(Message message) {
+  private FullSyncEventRequest getFullSyncEventRequest(Message message) {
     try {
-      return EntityScopeInfo.parseFrom(message.getMessage().getData());
+      return FullSyncEventRequest.parseFrom(message.getMessage().getData());
     } catch (InvalidProtocolBufferException e) {
       throw new InvalidRequestException("Unable to parse entity scope info", e);
     }
