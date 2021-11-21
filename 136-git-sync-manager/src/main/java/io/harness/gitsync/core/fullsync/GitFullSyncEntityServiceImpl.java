@@ -25,17 +25,28 @@ public class GitFullSyncEntityServiceImpl implements GitFullSyncEntityService {
 
   @Override
   public void markQueuedOrFailed(
-      String messageId, String accountId, long currentRetryCount, long maxRetryCount, String errorMsg) {
+      String uuid, String accountId, long currentRetryCount, long maxRetryCount, String errorMsg) {
     if (currentRetryCount + 1 < maxRetryCount) {
-      incrementRetryCountAndMarkQueued(messageId, accountId, errorMsg);
+      incrementRetryCountAndMarkQueued(uuid, accountId, errorMsg);
     } else {
-      markFailed(messageId, accountId, errorMsg);
+      markFailed(uuid, accountId, errorMsg);
     }
   }
 
-  private void markFailed(String messageId, String accountId, String errorMsg) {
+  @Override
+  public void markSuccessful(String uuid, String accountId) {
     Criteria criteria = new Criteria();
-    criteria.and(GitFullSyncEntityInfoKeys.messageId).is(messageId);
+    criteria.and(GitFullSyncEntityInfoKeys.uuid).is(uuid);
+    criteria.and(GitFullSyncEntityInfoKeys.accountIdentifier).is(accountId);
+    Update update = new Update();
+    update.set(GitFullSyncEntityInfoKeys.syncStatus, GitFullSyncEntityInfo.SyncStatus.PUSHED);
+    update.push(GitFullSyncEntityInfoKeys.errorMessage, null);
+    fullSyncRepository.update(criteria, update);
+  }
+
+  private void markFailed(String uuid, String accountId, String errorMsg) {
+    Criteria criteria = new Criteria();
+    criteria.and(GitFullSyncEntityInfoKeys.uuid).is(uuid);
     criteria.and(GitFullSyncEntityInfoKeys.accountIdentifier).is(accountId);
     Update update = new Update();
     update.set(GitFullSyncEntityInfoKeys.syncStatus, GitFullSyncEntityInfo.SyncStatus.FAILED);
@@ -43,9 +54,9 @@ public class GitFullSyncEntityServiceImpl implements GitFullSyncEntityService {
     fullSyncRepository.update(criteria, update);
   }
 
-  private void incrementRetryCountAndMarkQueued(String messageId, String accountId, String errorMsg) {
+  private void incrementRetryCountAndMarkQueued(String uuid, String accountId, String errorMsg) {
     Criteria criteria = new Criteria();
-    criteria.and(GitFullSyncEntityInfoKeys.messageId).is(messageId);
+    criteria.and(GitFullSyncEntityInfoKeys.uuid).is(uuid);
     criteria.and(GitFullSyncEntityInfoKeys.accountIdentifier).is(accountId);
     Update update = new Update();
     update.set(GitFullSyncEntityInfoKeys.syncStatus, GitFullSyncEntityInfo.SyncStatus.QUEUED);

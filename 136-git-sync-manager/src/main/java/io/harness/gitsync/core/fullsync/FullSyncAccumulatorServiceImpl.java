@@ -6,12 +6,17 @@ import static io.harness.gitsync.core.beans.GitFullSyncEntityInfo.SyncStatus.QUE
 
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.gitsync.GitPRCreateRequest;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.gitsync.FileChange;
 import io.harness.gitsync.FileChanges;
+import io.harness.gitsync.FullSyncEventRequest;
 import io.harness.gitsync.FullSyncServiceGrpc.FullSyncServiceBlockingStub;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.common.helper.GitSyncGrpcClientUtils;
+import io.harness.gitsync.common.service.ScmOrchestratorService;
+import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
 
@@ -31,14 +36,17 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
   private final Map<Microservice, FullSyncServiceBlockingStub> fullSyncServiceBlockingStubMap;
   private final EntityDetailProtoToRestMapper entityDetailProtoToRestMapper;
   private final GitFullSyncEntityService gitFullSyncEntityService;
+  private final ScmOrchestratorService scmOrchestratorService;
+  private final YamlGitConfigService yamlGitConfigService;
 
   @Override
-  public void triggerFullSync(EntityScopeInfo entityScopeInfo, String messageId) {
-    final ScopeDetails scopeDetails = getScopeDetails(entityScopeInfo, messageId);
+  public void triggerFullSync(FullSyncEventRequest fullSyncEventRequest, String messageId) {
+    final EntityScopeInfo gitConfigScope = fullSyncEventRequest.getGitConfigScope();
+    final ScopeDetails scopeDetails = getScopeDetails(gitConfigScope, messageId);
     fullSyncServiceBlockingStubMap.forEach((microservice, fullSyncServiceBlockingStub) -> {
       FileChanges entitiesForFullSync = null;
       try {
-        // todo(abhinav): add retry
+        // todo(abhinav): add retryInputSetReferenceProtoDTO
         entitiesForFullSync = GitSyncGrpcClientUtils.retryAndProcessException(
             fullSyncServiceBlockingStub::getEntitiesForFullSync, scopeDetails);
       } catch (Exception e) {
@@ -46,9 +54,29 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
         return;
       }
       emptyIfNull(entitiesForFullSync.getFileChangesList()).forEach(entityForFullSync -> {
-        saveFullSyncEntityInfo(entityScopeInfo, messageId, microservice, entityForFullSync);
+        saveFullSyncEntityInfo(gitConfigScope, messageId, microservice, entityForFullSync);
       });
     });
+
+    String projectIdentifier = gitConfigScope.getProjectId().getValue();
+    String orgIdentifier = gitConfigScope.getOrgId().getValue();
+    if (fullSyncEventRequest.getCreatePr()) {
+      YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(
+          projectIdentifier, orgIdentifier, gitConfigScope.getAccountId(), gitConfigScope.getIdentifier());
+      String title = "Full Sync for the project {}" + gitConfigScope.getProjectId();
+      GitPRCreateRequest createPRRequest = GitPRCreateRequest.builder()
+                                               .accountIdentifier(gitConfigScope.getAccountId())
+                                               .orgIdentifier(orgIdentifier)
+                                               .projectIdentifier(projectIdentifier)
+                                               .yamlGitConfigRef(gitConfigScope.getIdentifier())
+                                               .title(title)
+                                               .sourceBranch(fullSyncEventRequest.getBranch())
+                                               .targetBranch(fullSyncEventRequest.getTargetBranch())
+                                               .build();
+      scmOrchestratorService.processScmRequestUsingConnectorSettings(scmClientFacilitatorService
+          -> scmClientFacilitatorService.createPullRequest(createPRRequest),
+          projectIdentifier, orgIdentifier, gitConfigScope.getAccountId(), yamlGitConfigDTO.getGitConnectorRef());
+    }
   }
 
   private void saveFullSyncEntityInfo(
