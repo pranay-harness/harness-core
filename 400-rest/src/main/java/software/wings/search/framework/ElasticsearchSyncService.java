@@ -32,9 +32,7 @@ public class ElasticsearchSyncService implements Managed {
 
   @Override
   public void start() {
-    if (featureFlagService.isGlobalEnabled(FeatureName.SEARCH)) {
-      elasticsearchSyncJobFuture = executorService.submit(elasticSearchSyncJob);
-    }
+    elasticsearchSyncJobFuture = executorService.submit(elasticSearchSyncJob);
   }
 
   @Override
