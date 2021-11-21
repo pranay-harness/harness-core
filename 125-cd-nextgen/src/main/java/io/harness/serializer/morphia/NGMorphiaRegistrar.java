@@ -25,6 +25,7 @@ import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import io.harness.pipeline.CIAccountExecutionMetadata;
 import io.harness.polling.bean.PollingDocument;
 
 import java.util.Set;
@@ -41,6 +42,7 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TerraformConfig.class);
     set.add(PollingDocument.class);
     set.add(CDAccountExecutionMetadata.class);
+    set.add(CIAccountExecutionMetadata.class);
   }
 
   @Override
