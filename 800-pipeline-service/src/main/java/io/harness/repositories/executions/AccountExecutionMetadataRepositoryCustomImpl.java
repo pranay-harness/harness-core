@@ -31,7 +31,6 @@ import org.springframework.data.mongodb.core.query.Query;
 @OwnedBy(PIPELINE)
 public class AccountExecutionMetadataRepositoryCustomImpl implements AccountExecutionMetadataRepositoryCustom {
   private static final String LOCK_NAME_PREFIX = "ACCOUNT_EXECUTION_INFO_";
-  private static final String PRIVATE_REPO_BUILD_CI = "ci_private_build";
   private final MongoTemplate mongoTemplate;
   private final PersistentLocker persistentLocker;
 
@@ -56,10 +55,6 @@ public class AccountExecutionMetadataRepositoryCustomImpl implements AccountExec
           moduleToExecutionCount.put(module, 1L);
 
           // create monthly build for given module
-          if (module.equalsIgnoreCase(PRIVATE_REPO_BUILD_CI)) {
-            // skip monthly build if the count have not reached 2500
-            continue;
-          }
           LocalDate startDate = Instant.ofEpochMilli(startTS).atZone(ZoneId.systemDefault()).toLocalDate();
           Map<String, Long> countPerMonth = new HashMap<>();
           countPerMonth.put(YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), 1L);
@@ -79,12 +74,6 @@ public class AccountExecutionMetadataRepositoryCustomImpl implements AccountExec
         // increase total count for given module
         long currentCount = accountExecutionMetadata.getModuleToExecutionCount().getOrDefault(module, 0L);
         accountExecutionMetadata.getModuleToExecutionCount().put(module, currentCount + 1);
-        if (module.equalsIgnoreCase(PRIVATE_REPO_BUILD_CI)) {
-          if (currentCount <= 2500) {
-            // skip monthly build if the count have not reached 2500
-            continue;
-          }
-        }
 
         // Increase count per month
         AccountExecutionInfo accountExecutionInfo;
