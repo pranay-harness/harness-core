@@ -2,7 +2,6 @@ package io.harness.enforcement;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.pipeline.executions.CDAccountExecutionMetadata;
 import io.harness.enforcement.beans.metadata.RateLimitRestrictionMetadataDTO;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.pipeline.CIAccountExecutionMetadata;
