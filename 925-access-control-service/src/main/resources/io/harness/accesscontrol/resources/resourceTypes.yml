@@ -48,3 +48,5 @@ resourceTypes:
     permissionKey: dashboards
   - identifier: TEMPLATE
     permissionKey: template
+  - identifier: GOVERNANCE
+    permissionKey: governance

@@ -558,3 +558,17 @@ permissions:
     - account
     - organization
     - project
+  - identifier: pm_governance_create_edit
+    name: Create or edit Policies and Policy Sets
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: pm_governance_delete
+    name: Delete Policies and Policy Sets
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project

@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 12
+version: 13
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -69,6 +69,8 @@ roles:
         - core_template_delete
         - core_template_edit
         - core_template_view
+        - pm_governance_create_edit
+        - pm_governance_delete
       allowedScopeLevels:
         - project
       managed: true
@@ -284,6 +286,16 @@ roles:
         - ff_targetgroup_view
         - ff_target_view
         - ff_environment_apiKeyView
+      managed: true
+      allowedScopeLevels:
+        - account
+        - organization
+        - project
+    - identifier: _governance_manage_role
+      name: Governance Manage Role
+      description: Can edit and view existing policies and policy sets
+      permissions:
+        - pm_governance_create_edit
       managed: true
       allowedScopeLevels:
         - account
