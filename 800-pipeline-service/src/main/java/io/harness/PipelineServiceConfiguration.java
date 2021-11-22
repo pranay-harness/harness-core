@@ -1,6 +1,7 @@
 package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.swagger.SwaggerBundleConfigurationFactory.buildSwaggerBundleConfiguration;
 
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
@@ -61,6 +62,7 @@ public class PipelineServiceConfiguration extends Configuration {
   public static final String NG_TRIGGER_RESOURCE_PACKAGE = "io.harness.ngtriggers";
   public static final String FILTER_PACKAGE = "io.harness.filter";
   public static final String ENFORCEMENT_PACKAGE = "io.harness.enforcement";
+  public static final Collection<Class<?>> HARNESS_RESOURCE_CLASSES = getResourceClasses();
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -136,8 +138,9 @@ public class PipelineServiceConfiguration extends Configuration {
   }
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
-    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-    String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
+    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration =
+        buildSwaggerBundleConfiguration(HARNESS_RESOURCE_CLASSES);
+    String resourcePackage = String.join(",", getUniquePackages(HARNESS_RESOURCE_CLASSES));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost(hostname);
@@ -182,8 +185,7 @@ public class PipelineServiceConfiguration extends Configuration {
   }
 
   public static Set<String> getUniquePackagesContainingOpenApiResources() {
-    return getResourceClasses()
-        .stream()
+    return HARNESS_RESOURCE_CLASSES.stream()
         .filter(x -> x.isAnnotationPresent(Tag.class))
         .map(aClass -> aClass.getPackage().getName())
         .collect(toSet());
