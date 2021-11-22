@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 CONFIG_FILE=/opt/harness/config.yml
 
+write_mongo_hosts_and_ports() {
+  IFS=',' read -ra HOST_AND_PORT <<< "$2"
+  for INDEX in "${!HOST_AND_PORT[@]}"; do
+    HOST=$(cut -d: -f 1 <<< "${HOST_AND_PORT[$INDEX]}")
+    PORT=$(cut -d: -f 2 <<< "${HOST_AND_PORT[$INDEX]}")
+    yq write -i $CONFIG_FILE $1.hosts[$INDEX].host "$HOST"
+    yq write -i $CONFIG_FILE $1.hosts[$INDEX].port "$PORT"
+  done
+}
+
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq delete -i $CONFIG_FILE logging.appenders[0]
   yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
@@ -13,6 +23,15 @@ yq delete -i $CONFIG_FILE connectors[0]
 
 if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE harness-mongo.uri "$MONGO_URI"
+fi
+
+if [[ "" != "$MONGO_USERNAME" ]]; then
+  yq delete -i $CONFIG_FILE harness-mongo.uri
+  yq write -i $CONFIG_FILE harness-mongo.username "$MONGO_USERNAME"
+  yq write -i $CONFIG_FILE harness-mongo.password "$MONGO_PASSWORD"
+  yq write -i $CONFIG_FILE harness-mongo.database "$MONGO_DATABASE"
+  write_mongo_hosts_and_ports harness-mongo "$MONGO_HOSTS_AND_PORTS"
+  yq write -i $CONFIG_FILE harness-mongo.params.retryWrites "${MONGO_RETRYWRITES:-true}"
 fi
 
 if [[ "" != "$MONGO_TAG_NAME" ]]; then
@@ -35,12 +54,39 @@ if [[ "" != "$EVENTS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE events-mongo.uri "$EVENTS_MONGO_URI"
 fi
 
+if [[ "" != "$EVENTS_MONGO_USERNAME" ]]; then
+  yq delete -i $CONFIG_FILE events-mongo.uri
+  yq write -i $CONFIG_FILE events-mongo.username "$EVENTS_MONGO_USERNAME"
+  yq write -i $CONFIG_FILE events-mongo.password "$EVENTS_MONGO_PASSWORD"
+  yq write -i $CONFIG_FILE events-mongo.database "$EVENTS_MONGO_DATABASE"
+  write_mongo_hosts_and_ports events-mongo "$EVENTS_MONGO_HOSTS_AND_PORTS"
+  yq write -i $CONFIG_FILE events-mongo.params.retryWrites "${EVENTS_MONGO_RETRYWRITES:-true}"
+fi
+
 if [[ "" != "$PMS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE pms-harness.uri "$PMS_MONGO_URI"
 fi
 
+if [[ "" != "$PMS_MONGO_USERNAME" ]]; then
+  yq delete -i $CONFIG_FILE pms-harness.uri
+  yq write -i $CONFIG_FILE pms-harness.username "$PMS_MONGO_USERNAME"
+  yq write -i $CONFIG_FILE pms-harness.password "$PMS_MONGO_PASSWORD"
+  yq write -i $CONFIG_FILE pms-harness.database "$PMS_MONGO_DATABASE"
+  write_mongo_hosts_and_ports pms-harness "$PMS_MONGO_HOSTS_AND_PORTS"
+  yq write -i $CONFIG_FILE pms-harness.params.retryWrites "${PMS_MONGO_RETRYWRITES:-true}"
+fi
+
 if [[ "" != "$CDC_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE cdc-mongo.uri "$CDC_MONGO_URI"
+fi
+
+if [[ "" != "$CDC_MONGO_USERNAME" ]]; then
+  yq delete -i $CONFIG_FILE cdc-mongo.uri
+  yq write -i $CONFIG_FILE cdc-mongo.username "$CDC_MONGO_USERNAME"
+  yq write -i $CONFIG_FILE cdc-mongo.password "$CDC_MONGO_PASSWORD"
+  yq write -i $CONFIG_FILE cdc-mongo.database "$CDC_MONGO_DATABASE"
+  write_mongo_hosts_and_ports cdc-mongo "$CDC_MONGO_HOSTS_AND_PORTS"
+  yq write -i $CONFIG_FILE cdc-mongo.params.retryWrites "${CDC_MONGO_RETRYWRITES:-true}"
 fi
 
 if [[ "" != "$TIMESCALEDB_URI" ]]; then
@@ -61,4 +107,13 @@ fi
 
 if [[ "" != "$NG_HARNESS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE ng-harness.uri  "$NG_HARNESS_MONGO_URI"
+fi
+
+if [[ "" != "$NG_HARNESS_MONGO_USERNAME" ]]; then
+  yq delete -i $CONFIG_FILE ng-harness.uri
+  yq write -i $CONFIG_FILE ng-harness.username "$NG_HARNESS_MONGO_USERNAME"
+  yq write -i $CONFIG_FILE ng-harness.password "$NG_HARNESS_MONGO_PASSWORD"
+  yq write -i $CONFIG_FILE ng-harness.database "$NG_HARNESS_MONGO_DATABASE"
+  write_mongo_hosts_and_ports ng-harness "$NG_HARNESS_MONGO_HOSTS_AND_PORTS"
+  yq write -i $CONFIG_FILE ng-harness.params.retryWrites "${NG_HARNESS_MONGO_RETRYWRITES:-true}"
 fi
