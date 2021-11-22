@@ -2,10 +2,10 @@ package io.harness.enforcement;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ci.pipeline.executions.CIAccountExecutionMetadata;
+import io.harness.ci.repositories.CIAccountExecutionMetadataRepository;
 import io.harness.enforcement.beans.metadata.StaticLimitRestrictionMetadataDTO;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
-import io.harness.pipeline.CIAccountExecutionMetadata;
-import io.harness.repositories.CIAccountExecutionMetadataRepository;
 
 import com.google.inject.Inject;
 import java.util.Optional;

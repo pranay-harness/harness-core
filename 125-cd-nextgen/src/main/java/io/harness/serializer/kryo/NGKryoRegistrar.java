@@ -78,7 +78,6 @@ import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
 import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
-import io.harness.pipeline.CIAccountExecutionMetadata;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -171,6 +170,5 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sExecutionPassThroughData.class, 12546);
     kryo.register(KustomizePatchesManifest.class, 12549);
     kryo.register(CDAccountExecutionMetadata.class, 12550);
-    kryo.register(CIAccountExecutionMetadata.class, 12551);
   }
 }

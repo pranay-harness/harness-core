@@ -1,4 +1,4 @@
-package io.harness.repositories;
+package io.harness.ci.repositories;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

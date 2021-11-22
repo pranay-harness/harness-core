@@ -5,7 +5,7 @@ import static io.harness.pms.contracts.execution.events.OrchestrationEventType.O
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pipeline.CIPipelineEndEventHandler;
+import io.harness.ci.pipeline.executions.CIPipelineEndEventHandler;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 

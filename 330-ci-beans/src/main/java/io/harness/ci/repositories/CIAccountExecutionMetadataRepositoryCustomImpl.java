@@ -1,13 +1,12 @@
-package io.harness.repositories;
+package io.harness.ci.repositories;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.pipeline.executions.CDAccountExecutionMetadata;
+import io.harness.ci.pipeline.executions.CIAccountExecutionMetadata;
 import io.harness.exception.InvalidRequestException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
-import io.harness.pipeline.CIAccountExecutionMetadata;
 import io.harness.pms.plan.execution.AccountExecutionInfo;
 
 import com.google.inject.Inject;
@@ -60,22 +59,26 @@ public class CIAccountExecutionMetadataRepositoryCustomImpl implements CIAccount
       accountExecutionMetadata.setExecutionCount(currentCount + 1);
       // Increase count per month
       if (currentCount > 2500) {
-        AccountExecutionInfo accountExecutionInfo;
-        if (accountExecutionMetadata.getAccountExecutionInfo() != null) {
-          accountExecutionInfo = accountExecutionMetadata.getAccountExecutionInfo();
-        } else {
-          accountExecutionInfo = AccountExecutionInfo.builder().build();
-          accountExecutionMetadata.setAccountExecutionInfo(accountExecutionInfo);
-        }
-        LocalDate startDate = Instant.ofEpochMilli(startTS).atZone(ZoneId.systemDefault()).toLocalDate();
-        Long countOfMonth = accountExecutionInfo.getCountPerMonth().getOrDefault(
-            YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), 0L);
-        countOfMonth = countOfMonth + 1;
-        accountExecutionInfo.getCountPerMonth().put(
-            YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), countOfMonth);
-        accountExecutionMetadata.setAccountExecutionInfo(accountExecutionInfo);
+        updateCIMonthlyBuilds(accountExecutionMetadata, startTS);
       }
       mongoTemplate.save(accountExecutionMetadata);
     }
+  }
+
+  private void updateCIMonthlyBuilds(CIAccountExecutionMetadata accountExecutionMetadata, Long startTS) {
+    AccountExecutionInfo accountExecutionInfo;
+    if (accountExecutionMetadata.getAccountExecutionInfo() != null) {
+      accountExecutionInfo = accountExecutionMetadata.getAccountExecutionInfo();
+    } else {
+      accountExecutionInfo = AccountExecutionInfo.builder().build();
+      accountExecutionMetadata.setAccountExecutionInfo(accountExecutionInfo);
+    }
+    LocalDate startDate = Instant.ofEpochMilli(startTS).atZone(ZoneId.systemDefault()).toLocalDate();
+    Long countOfMonth = accountExecutionInfo.getCountPerMonth().getOrDefault(
+        YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), 0L);
+    countOfMonth = countOfMonth + 1;
+    accountExecutionInfo.getCountPerMonth().put(
+        YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), countOfMonth);
+    accountExecutionMetadata.setAccountExecutionInfo(accountExecutionInfo);
   }
 }

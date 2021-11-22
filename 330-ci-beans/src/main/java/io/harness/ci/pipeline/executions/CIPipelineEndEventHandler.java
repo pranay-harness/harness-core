@@ -1,13 +1,13 @@
-package io.harness.pipeline;
+package io.harness.ci.pipeline.executions;
 
 import io.harness.ModuleType;
+import io.harness.ci.repositories.CIAccountExecutionMetadataRepository;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.pipeline.observer.OrchestrationObserverUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.repositories.CIAccountExecutionMetadataRepository;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 
 import com.google.inject.Inject;

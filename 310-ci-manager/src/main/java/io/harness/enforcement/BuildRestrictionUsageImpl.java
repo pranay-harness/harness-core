@@ -2,11 +2,11 @@ package io.harness.enforcement;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ci.pipeline.executions.CIAccountExecutionMetadata;
+import io.harness.ci.repositories.CIAccountExecutionMetadataRepository;
 import io.harness.enforcement.beans.CustomRestrictionEvaluationDTO;
 import io.harness.enforcement.client.custom.CustomRestrictionInterface;
 import io.harness.licensing.Edition;
-import io.harness.pipeline.CIAccountExecutionMetadata;
-import io.harness.repositories.CIAccountExecutionMetadataRepository;
 
 import com.google.inject.Inject;
 import java.time.Instant;
