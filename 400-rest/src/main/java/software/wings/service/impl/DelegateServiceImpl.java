@@ -101,6 +101,8 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSizeDetails;
+import io.harness.delegate.beans.DelegateTokenDetails;
+import io.harness.delegate.beans.DelegateTokenStatus;
 import io.harness.delegate.beans.DelegateType;
 import io.harness.delegate.beans.DuplicateDelegateException;
 import io.harness.delegate.beans.FileBucket;
@@ -147,6 +149,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateInsightsService;
+import io.harness.service.intfc.DelegateNgTokenService;
 import io.harness.service.intfc.DelegateProfileObserver;
 import io.harness.service.intfc.DelegateSetupService;
 import io.harness.service.intfc.DelegateSyncService;
@@ -379,6 +382,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private OutboxService outboxService;
   @Inject private DelegateServiceClassicGrpcClient delegateServiceClassicGrpcClient;
   @Inject private TelemetryReporter telemetryReporter;
+  @Inject private DelegateNgTokenService delegateNgTokenService;
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -575,89 +579,43 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public DelegateSetupDetails validateKubernetesYamlUsingNgToken(
+      String accountId, DelegateSetupDetails delegateSetupDetails) {
+    validateKubernetesSetupDetails(accountId, delegateSetupDetails);
+    validateDelegateToken(accountId, delegateSetupDetails);
+    return delegateSetupDetails;
+  }
+
+  @Override
+  public void validateDockerSetupDetailsUsingNgToken(
+      String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType) {
+    validateDockerSetupDetails(accountId, delegateSetupDetails, delegateType);
+    validateDelegateToken(accountId, delegateSetupDetails);
+  }
+
+  private void validateDelegateToken(String accountId, DelegateSetupDetails delegateSetupDetails) {
+    if (isEmpty(delegateSetupDetails.getTokenName())) {
+      throw new InvalidRequestException("Token name must be specified.", USER);
+    }
+    DelegateTokenDetails delegateTokenDetails = delegateNgTokenService.getDelegateToken(accountId,
+        DelegateEntityOwnerHelper.buildOwner(
+            delegateSetupDetails.getOrgIdentifier(), delegateSetupDetails.getProjectIdentifier()),
+        delegateSetupDetails.getTokenName());
+    if (delegateTokenDetails == null) {
+      throw new InvalidRequestException("Provided token does not exist.", USER);
+    }
+    if (!DelegateTokenStatus.ACTIVE.equals(delegateTokenDetails.getStatus())) {
+      throw new InvalidRequestException("Provided token is not valid.", USER);
+    }
+  }
+
+  @Override
   public File generateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails, String managerHost,
       String verificationServiceUrl, MediaType fileFormat) throws IOException {
     validateKubernetesSetupDetails(accountId, delegateSetupDetails);
 
-    File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".tar");
-
-    try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(kubernetesDelegateFile))) {
-      out.putArchiveEntry(new TarArchiveEntry(KUBERNETES_DELEGATE + "/"));
-      out.closeArchiveEntry();
-
-      String version;
-      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
-        List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
-        version = delegateVersions.get(delegateVersions.size() - 1);
-      } else {
-        version = EMPTY_VERSION;
-      }
-
-      boolean isCiEnabled = accountService.isNextGenEnabled(accountId);
-
-      DelegateSizeDetails sizeDetails = fetchAvailableSizes()
-                                            .stream()
-                                            .filter(size -> size.getSize() == delegateSetupDetails.getSize())
-                                            .findFirst()
-                                            .orElse(null);
-
-      upsertDelegateGroup(delegateSetupDetails.getName(), accountId, delegateSetupDetails);
-
-      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
-          ScriptRuntimeParamMapInquiry.builder()
-              .accountId(accountId)
-              .version(version)
-              .managerHost(managerHost)
-              .verificationHost(verificationServiceUrl)
-              .delegateName(delegateSetupDetails.getName())
-              .delegateType(KUBERNETES)
-              .ciEnabled(isCiEnabled)
-              .delegateOrgIdentifier(delegateSetupDetails.getOrgIdentifier())
-              .delegateProjectIdentifier(delegateSetupDetails.getProjectIdentifier())
-              .delegateDescription(delegateSetupDetails.getDescription())
-              .delegateSize(sizeDetails.getSize().name())
-              .delegateTaskLimit(sizeDetails.getTaskLimit() / sizeDetails.getReplicas())
-              .delegateReplicas(sizeDetails.getReplicas())
-              .delegateRam(sizeDetails.getRam() / sizeDetails.getReplicas())
-              .delegateCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
-              .delegateRequestsRam(sizeDetails.getRam() / sizeDetails.getReplicas())
-              .delegateRequestsCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
-              .delegateTags(
-                  isNotEmpty(delegateSetupDetails.getTags()) ? String.join(",", delegateSetupDetails.getTags()) : "")
-              .delegateNamespace(delegateSetupDetails.getK8sConfigDetails().getNamespace())
-              .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
-              .build());
-
-      File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
-      String templateName = obtainK8sTemplateNameFromConfig(delegateSetupDetails.getK8sConfigDetails());
-      saveProcessedTemplate(scriptParams, yaml, templateName);
-      yaml = new File(yaml.getAbsolutePath());
-
-      if (fileFormat != null && fileFormat.equals(MediaType.TEXT_PLAIN_TYPE)) {
-        return yaml;
-      }
-
-      TarArchiveEntry yamlTarArchiveEntry =
-          new TarArchiveEntry(yaml, KUBERNETES_DELEGATE + "/" + HARNESS_DELEGATE + YAML);
-      out.putArchiveEntry(yamlTarArchiveEntry);
-      try (FileInputStream fis = new FileInputStream(yaml)) {
-        IOUtils.copy(fis, out);
-      }
-      out.closeArchiveEntry();
-
-      addReadmeFile(out);
-
-      out.flush();
-      out.finish();
-    }
-
-    File gzipKubernetesDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
-    compressGzipFile(kubernetesDelegateFile, gzipKubernetesDelegateFile);
-    HashMap<String, Object> properties = new HashMap<>();
-    properties.put("NG", true);
-    properties.put("Type", KUBERNETES);
-    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL);
-    return gzipKubernetesDelegateFile;
+    return generateKubernetesYamlFile(
+        accountId, delegateSetupDetails, managerHost, verificationServiceUrl, fileFormat, false);
   }
 
   private String obtainK8sTemplateNameFromConfig(K8sConfigDetails k8sConfigDetails) {
@@ -1234,6 +1192,11 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
+    return getJarAndScriptRunTimeParamMap(inquiry, false);
+  }
+
+  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
+      ScriptRuntimeParamMapInquiry inquiry, boolean useNgToken) {
     String latestVersion = null;
     String jarRelativePath;
     String delegateJarDownloadUrl = null;
@@ -1319,7 +1282,14 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       String accountSecret = account.getAccountKey();
-      if (isNotBlank(inquiry.getDelegateTokenName())) {
+      if (useNgToken) {
+        if (isNotBlank(inquiry.getDelegateTokenName())) {
+          accountSecret = delegateNgTokenService.getDelegateTokenValue(inquiry.getAccountId(),
+              DelegateEntityOwnerHelper.buildOwner(
+                  inquiry.getDelegateOrgIdentifier(), inquiry.getDelegateProjectIdentifier()),
+              inquiry.getDelegateTokenName());
+        }
+      } else if (isNotBlank(inquiry.getDelegateTokenName())) {
         accountSecret = delegateTokenService.getTokenValue(inquiry.getAccountId(), inquiry.getDelegateTokenName());
       }
 
@@ -3802,7 +3772,22 @@ public class DelegateServiceImpl implements DelegateService {
     File composeYaml = File.createTempFile(HARNESS_NG_DELEGATE + "-docker-compose", YAML);
 
     ImmutableMap<String, String> scriptParams = getScriptParametersForTemplate(
-        managerHost, verificationServiceUrl, accountId, delegateSetupDetails.getName(), delegateSetupDetails);
+        managerHost, verificationServiceUrl, accountId, delegateSetupDetails.getName(), delegateSetupDetails, false);
+
+    saveProcessedTemplate(scriptParams, composeYaml, HARNESS_NG_DELEGATE + "-docker-compose.yaml.ftl");
+
+    return composeYaml;
+  }
+
+  @Override
+  public File downloadNgDockerUsingToken(String managerHost, String verificationServiceUrl, String accountId,
+      DelegateSetupDetails delegateSetupDetails) throws IOException {
+    validateDockerSetupDetailsUsingNgToken(accountId, delegateSetupDetails, DOCKER);
+
+    File composeYaml = File.createTempFile(HARNESS_NG_DELEGATE + "-docker-compose", YAML);
+
+    ImmutableMap<String, String> scriptParams = getScriptParametersForTemplate(
+        managerHost, verificationServiceUrl, accountId, delegateSetupDetails.getName(), delegateSetupDetails, true);
 
     saveProcessedTemplate(scriptParams, composeYaml, HARNESS_NG_DELEGATE + "-docker-compose.yaml.ftl");
 
@@ -3816,8 +3801,100 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateGroup.getUuid();
   }
 
+  @Override
+  public File generateKubernetesYamlUsingNgToken(String accountId, DelegateSetupDetails delegateSetupDetails,
+      String managerHost, String verificationServiceUrl, MediaType fileFormat) throws IOException {
+    validateKubernetesYamlUsingNgToken(accountId, delegateSetupDetails);
+    return generateKubernetesYamlFile(
+        accountId, delegateSetupDetails, managerHost, verificationServiceUrl, fileFormat, true);
+  }
+
+  private File generateKubernetesYamlFile(String accountId, DelegateSetupDetails delegateSetupDetails,
+      String managerHost, String verificationServiceUrl, MediaType fileFormat, boolean useNgToken) throws IOException {
+    File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".tar");
+
+    try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(kubernetesDelegateFile))) {
+      out.putArchiveEntry(new TarArchiveEntry(KUBERNETES_DELEGATE + "/"));
+      out.closeArchiveEntry();
+
+      String version;
+      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
+        List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
+        version = delegateVersions.get(delegateVersions.size() - 1);
+      } else {
+        version = EMPTY_VERSION;
+      }
+
+      boolean isCiEnabled = accountService.isNextGenEnabled(accountId);
+
+      DelegateSizeDetails sizeDetails = fetchAvailableSizes()
+                                            .stream()
+                                            .filter(size -> size.getSize() == delegateSetupDetails.getSize())
+                                            .findFirst()
+                                            .orElse(null);
+
+      upsertDelegateGroup(delegateSetupDetails.getName(), accountId, delegateSetupDetails);
+
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+          ScriptRuntimeParamMapInquiry.builder()
+              .accountId(accountId)
+              .version(version)
+              .managerHost(managerHost)
+              .verificationHost(verificationServiceUrl)
+              .delegateName(delegateSetupDetails.getName())
+              .delegateType(KUBERNETES)
+              .ciEnabled(isCiEnabled)
+              .delegateOrgIdentifier(delegateSetupDetails.getOrgIdentifier())
+              .delegateProjectIdentifier(delegateSetupDetails.getProjectIdentifier())
+              .delegateDescription(delegateSetupDetails.getDescription())
+              .delegateSize(sizeDetails.getSize().name())
+              .delegateTaskLimit(sizeDetails.getTaskLimit() / sizeDetails.getReplicas())
+              .delegateReplicas(sizeDetails.getReplicas())
+              .delegateRam(sizeDetails.getRam() / sizeDetails.getReplicas())
+              .delegateCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
+              .delegateRequestsRam(sizeDetails.getRam() / sizeDetails.getReplicas())
+              .delegateRequestsCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
+              .delegateTags(
+                  isNotEmpty(delegateSetupDetails.getTags()) ? String.join(",", delegateSetupDetails.getTags()) : "")
+              .delegateNamespace(delegateSetupDetails.getK8sConfigDetails().getNamespace())
+              .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+              .build(),
+          useNgToken);
+
+      File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
+      String templateName = obtainK8sTemplateNameFromConfig(delegateSetupDetails.getK8sConfigDetails());
+      saveProcessedTemplate(scriptParams, yaml, templateName);
+      yaml = new File(yaml.getAbsolutePath());
+
+      if (fileFormat != null && fileFormat.equals(MediaType.TEXT_PLAIN_TYPE)) {
+        return yaml;
+      }
+
+      TarArchiveEntry yamlTarArchiveEntry =
+          new TarArchiveEntry(yaml, KUBERNETES_DELEGATE + "/" + HARNESS_DELEGATE + YAML);
+      out.putArchiveEntry(yamlTarArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(yaml)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+
+      addReadmeFile(out);
+
+      out.flush();
+      out.finish();
+    }
+
+    File gzipKubernetesDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
+    compressGzipFile(kubernetesDelegateFile, gzipKubernetesDelegateFile);
+    HashMap<String, Object> properties = new HashMap<>();
+    properties.put("NG", true);
+    properties.put("Type", KUBERNETES);
+    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL);
+    return gzipKubernetesDelegateFile;
+  }
+
   private ImmutableMap<String, String> getScriptParametersForTemplate(String managerHost, String verificationServiceUrl,
-      String accountId, String delegateName, DelegateSetupDetails delegateSetupDetails) {
+      String accountId, String delegateName, DelegateSetupDetails delegateSetupDetails, boolean useNgToken) {
     String version;
     if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
       List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
@@ -3851,7 +3928,7 @@ public class DelegateServiceImpl implements DelegateService {
             .ceEnabled(false)
             .build();
 
-    ImmutableMap<String, String> paramMap = getJarAndScriptRunTimeParamMap(scriptRuntimeParamMapInquiry);
+    ImmutableMap<String, String> paramMap = getJarAndScriptRunTimeParamMap(scriptRuntimeParamMapInquiry, useNgToken);
 
     if (isEmpty(paramMap)) {
       throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
