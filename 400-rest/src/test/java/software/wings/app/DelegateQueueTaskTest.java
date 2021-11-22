@@ -1,7 +1,6 @@
 package software.wings.app;
 
 import static io.harness.beans.DelegateTask.Status.PARKED;
-import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
@@ -29,7 +28,6 @@ import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
-import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -115,8 +113,6 @@ public class DelegateQueueTaskTest extends WingsBaseTest {
     delegateTask.setPreAssignedDelegateId("delegateId");
     persistence.save(delegateTask);
 
-    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(false);
-    when(featureFlagService.isNotEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(true);
     when(broadcastHelper.findNextBroadcastTimeForTask(any(DelegateTask.class))).thenReturn(nextBroadcastTime);
 
     delegateQueueTask.rebroadcastUnassignedTasks();
@@ -129,46 +125,5 @@ public class DelegateQueueTaskTest extends WingsBaseTest {
     assertThat(broadcastedDelegateTask.getBroadcastCount()).isEqualTo(2);
     assertThat(broadcastedDelegateTask.getNextBroadcast()).isGreaterThan(System.currentTimeMillis());
     assertThat(broadcastedDelegateTask.getPreAssignedDelegateId()).isNull();
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void testRebroadcastUnassignedTasksWithCapabilitiesFFEnabled() {
-    String accountId = generateUuid();
-    String firstDelegateId = generateUuid();
-    String secondDelegateId = generateUuid();
-
-    long nextBroadcastTime = System.currentTimeMillis() + 120000;
-
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(accountId)
-                                    .version(versionInfoManager.getVersionInfo().getVersion())
-                                    .status(Status.QUEUED)
-                                    .expiry(System.currentTimeMillis() + 60000)
-                                    .data(TaskData.builder().taskType(TaskType.HTTP.name()).build())
-                                    .build();
-    delegateTask.setBroadcastCount(1);
-    delegateTask.setNextBroadcast(System.currentTimeMillis() - 10000);
-    delegateTask.setPreAssignedDelegateId(firstDelegateId);
-    persistence.save(delegateTask);
-
-    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(true);
-    when(featureFlagService.isNotEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(false);
-    when(broadcastHelper.findNextBroadcastTimeForTask(any(DelegateTask.class))).thenReturn(nextBroadcastTime);
-    when(delegateService.obtainCapableDelegateId(any(DelegateTask.class), any(Set.class))).thenReturn(secondDelegateId);
-
-    delegateQueueTask.rebroadcastUnassignedTasks();
-
-    ArgumentCaptor<DelegateTask> argumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(broadcastHelper).rebroadcastDelegateTask(argumentCaptor.capture());
-
-    DelegateTask broadcastedDelegateTask = argumentCaptor.getValue();
-    assertThat(broadcastedDelegateTask).isNotNull();
-    assertThat(broadcastedDelegateTask.getBroadcastCount()).isEqualTo(2);
-    assertThat(broadcastedDelegateTask.getNextBroadcast()).isGreaterThan(System.currentTimeMillis());
-    assertThat(broadcastedDelegateTask.getPreAssignedDelegateId()).isEqualTo(secondDelegateId);
-    assertThat(broadcastedDelegateTask.getAlreadyTriedDelegates()).hasSize(1);
-    assertThat(broadcastedDelegateTask.getAlreadyTriedDelegates()).containsExactly(firstDelegateId);
   }
 }
