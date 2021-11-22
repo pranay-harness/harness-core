@@ -24,7 +24,7 @@ import lombok.experimental.FieldDefaults;
 public class TelemetryDataDTO {
   private SegmentEventType eventType;
   private Map<String, String> properties;
-  private GroupPayloadDTO groupPayloadDTO;
-  private IdentifyPayloadDTO identifyPayloadDTO;
-  private TrackPayloadDTO trackPayloadDTO;
+  private GroupPayloadDTO groupPayload;
+  private IdentifyPayloadDTO identifyPayload;
+  private TrackPayloadDTO trackPayload;
 }
