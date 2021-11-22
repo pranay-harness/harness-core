@@ -143,9 +143,6 @@ public class DelegateTask
   private String preAssignedDelegateId;
   private Set<String> alreadyTriedDelegates;
 
-  // Intended to be used for targeting a delegate for the purpose of delegate profile script execution
-  private String mustExecuteOnDelegateId;
-
   private Long lastBroadcastAt;
   private int broadcastCount;
   private long nextBroadcast;

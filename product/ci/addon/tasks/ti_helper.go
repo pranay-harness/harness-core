@@ -89,8 +89,9 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 		return err
 	}
 	defer client.CloseConn()
-	repo, _ := external.GetRepo() // Add repo if it exists, otherwise keep it empty
-	sha, _ := external.GetSha()   // Add sha if it exists, otherwise keep it empty
+	repo, _ := external.GetRepo()             // Add repo if it exists, otherwise keep it empty
+	sha, _ := external.GetSha()               // Add sha if it exists, otherwise keep it empty
+	commitLink, _ := external.GetCommitLink() // Add commit link if it exists, otherwise keep it empty
 	for _, report := range reports {
 		var rep testreports.TestReporter
 		var err error
@@ -122,7 +123,7 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 		for _, t := range tests {
 			curr = append(curr, t)
 			if len(curr)%batchSize == 0 {
-				in := &pb.WriteTestsRequest{StepId: stepID, Tests: curr, Repo: repo, Sha: sha}
+				in := &pb.WriteTestsRequest{StepId: stepID, Tests: curr, Repo: repo, Sha: sha, CommitLink: commitLink}
 				if serr := stream.Send(in); serr != nil {
 					log.Errorw("write tests RPC failed", zap.Error(serr))
 				}
@@ -130,7 +131,7 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 			}
 		}
 		if len(curr) > 0 {
-			in := &pb.WriteTestsRequest{StepId: stepID, Tests: curr, Repo: repo, Sha: sha}
+			in := &pb.WriteTestsRequest{StepId: stepID, Tests: curr, Repo: repo, Sha: sha, CommitLink: commitLink}
 			if serr := stream.Send(in); serr != nil {
 				log.Errorw("write tests RPC failed", zap.Error(serr))
 			}

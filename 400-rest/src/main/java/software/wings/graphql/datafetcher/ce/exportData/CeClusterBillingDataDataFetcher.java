@@ -69,6 +69,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
   @Inject QLBillingStatsHelper statsHelper;
   @Inject K8sWorkloadDao dao;
   @Inject CeAccountExpirationChecker accountChecker;
+  @Inject CEExportDataNodeAndPodDetailsHelper nodeAndPodDetailsHelper;
   private static final int LIMIT_THRESHOLD = 1000;
   private static final String SELECT = "select";
   private static final String DEFAULT_SELECTED_LABEL = "-";
@@ -137,6 +138,12 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
 
     // adding filters to exclude unallocated cost rows
     addFiltersToExcludeUnallocatedRows(filters, groupByEntityList);
+
+    // checking if node/pod query
+    if (nodeAndPodDetailsHelper.isNodeAndPodQuery(groupByEntityList)) {
+      return nodeAndPodDetailsHelper.getNodeAndPodData(
+          accountId, aggregateFunction, filters, groupByList, sortCriteria, limit, offset, skipRoundOff);
+    }
 
     queryData = queryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, groupByTime,
         sortCriteria, limit, offset, selectedFields);

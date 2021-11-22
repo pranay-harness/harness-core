@@ -1,6 +1,5 @@
 package software.wings.service.delegate;
 
-import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.Delegate.DelegateBuilder;
 import static io.harness.rule.OwnerRule.ARPIT;
@@ -23,7 +22,6 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.annotations.dev.BreakDependencyOn;
@@ -610,64 +608,6 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     assertThat(savedDelegateProfile.getSelectors().size()).isEqualTo(2);
     assertThat(savedDelegateProfile.getSelectors()).isEqualTo(profileSelectors);
     assertThat(savedDelegateProfile.getIdentifier()).isEqualTo(profileIdentifier);
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void testShouldUpdateDelegateProfileSelectors() {
-    String uuid = generateUuid();
-    String accountId = generateUuid();
-    List<String> profileSelectors =
-        Arrays.asList("testProfileSelector1", "testProfileSelector2", "testProfileSelector3");
-
-    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(true);
-
-    DelegateProfile delegateProfile = DelegateProfile.builder()
-                                          .uuid(uuid)
-                                          .accountId(accountId)
-                                          .startupScript("script")
-                                          .approvalRequired(false)
-                                          .selectors(profileSelectors)
-                                          .build();
-
-    persistence.save(delegateProfile);
-
-    List<String> profileSelectorsUpdated =
-        Arrays.asList("updatedProfileSelector1", "updatedProfileSelector2", "testProfileSelector3");
-
-    delegateProfileService.updateDelegateProfileSelectors(uuid, accountId, profileSelectorsUpdated);
-
-    DelegateProfile retrievedDelegateProfile = persistence.createQuery(DelegateProfile.class)
-                                                   .filter(DelegateProfileKeys.uuid, delegateProfile.getUuid())
-                                                   .get();
-
-    assertThat(retrievedDelegateProfile).isNotNull();
-    assertThat(retrievedDelegateProfile.getSelectors()).hasSize(3);
-    assertThat(retrievedDelegateProfile.getSelectors())
-        .containsExactly("updatedProfileSelector1", "updatedProfileSelector2", "testProfileSelector3");
-
-    verify(delegateProfileSubject).fireInform(any(), eq(accountId), eq(delegateProfile.getUuid()));
-  }
-
-  @Test
-  @Owner(developers = SANJA)
-  @Category(UnitTests.class)
-  public void testUpdateShouldUpdateScopingRules() {
-    DelegateProfile delegateProfile =
-        createDelegateProfileBuilder().startupScript("script").approvalRequired(false).build();
-
-    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegateProfile.getAccountId())).thenReturn(true);
-
-    persistence.save(delegateProfile);
-
-    DelegateProfileScopingRule rule = DelegateProfileScopingRule.builder().description("test").build();
-    DelegateProfile updatedDelegateProfile = delegateProfileService.updateScopingRules(
-        delegateProfile.getAccountId(), delegateProfile.getUuid(), Collections.singletonList(rule));
-
-    assertThat(updatedDelegateProfile.getScopingRules()).containsExactly(rule);
-
-    verify(delegateProfileSubject).fireInform(any(), eq(delegateProfile.getAccountId()), eq(delegateProfile.getUuid()));
   }
 
   @Test
