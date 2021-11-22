@@ -16,11 +16,16 @@ import io.harness.ci.serializer.RunStepProtobufSerializer;
 import io.harness.ci.serializer.RunTestsStepProtobufSerializer;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
+import io.harness.threading.ThreadPool;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @OwnedBy(HarnessTeam.CI)
 public class CIExecutionServiceModule extends AbstractModule {
@@ -43,6 +48,10 @@ public class CIExecutionServiceModule extends AbstractModule {
                                                 .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                                 .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
                                                 .build()));
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("ciEventHandlerExecutor"))
+        .toInstance(ThreadPool.create(
+            20, 300, 5, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("Event-Handler-%d").build()));
     install(NGPipelineCommonsModule.getInstance());
     this.bind(CIExecutionServiceConfig.class).toInstance(this.ciExecutionServiceConfig);
     bind(InitializeStepInfoBuilder.class).to(K8InitializeStepInfoBuilder.class);

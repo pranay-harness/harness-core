@@ -114,4 +114,14 @@ public class ExceptionUtils {
     }
     return null;
   }
+
+  public static WingsException cause(WingsException ex, Throwable exception) {
+    while (exception != null) {
+      if (exception instanceof WingsException && exception.getCause().getClass().equals(ex)) {
+        return (WingsException) exception.getCause();
+      }
+      exception = exception.getCause();
+    }
+    return null;
+  }
 }

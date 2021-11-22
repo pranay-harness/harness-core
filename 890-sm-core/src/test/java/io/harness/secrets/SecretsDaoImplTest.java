@@ -6,12 +6,14 @@ import static io.harness.SecretTestUtils.getParameterizedSecretText;
 import static io.harness.SecretTestUtils.getReferencedSecretText;
 import static io.harness.SecretTestUtils.getSecretFile;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
+import static io.harness.rule.OwnerRule.MOHIT_GARG;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.SMCoreTestBase;
 import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUpdateData;
@@ -22,6 +24,7 @@ import io.harness.persistence.HIterator;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecord;
+import io.harness.security.encryption.EncryptionType;
 
 import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingVariableTypes;
@@ -32,6 +35,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mongodb.morphia.query.UpdateOperations;
 
 public class SecretsDaoImplTest extends SMCoreTestBase {
   @Inject private SecretsDaoImpl secretsDao;
@@ -295,5 +299,29 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
       iterator.forEach(entity -> countWhenFalse.getAndSet(countWhenFalse.get() + 1));
     }
     assertThat(countWhenFalse.get()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testUpdateSecret() {
+    EncryptedData encryptedData = getSecretFile();
+    secretsDao.saveSecret(encryptedData);
+    String encryptionKey = encryptedData.getEncryptionKey();
+    Optional<EncryptedData> encryptedDataOptional =
+        secretsDao.getSecretById(encryptedData.getAccountId(), encryptedData.getUuid());
+    assertThat(encryptedDataOptional.get().getEncryptionKey()).isEqualTo(encryptionKey);
+    assertThat(encryptedDataOptional.get().getEncryptionType()).isEqualTo(EncryptionType.KMS);
+
+    UpdateOperations<EncryptedData> updateOperations = secretsDao.getUpdateOperations();
+    String sampleEncryptionKey = "SampleEncryptionKey";
+    EncryptionType sampleEncryptionType = EncryptionType.CUSTOM;
+    updateOperations.set(EncryptedDataKeys.encryptionKey, sampleEncryptionKey)
+        .set(EncryptedDataKeys.encryptionType, sampleEncryptionType);
+    secretsDao.updateSecret(encryptedDataOptional.get(), updateOperations);
+
+    encryptedDataOptional = secretsDao.getSecretById(encryptedData.getAccountId(), encryptedData.getUuid());
+    assertThat(encryptedDataOptional.get().getEncryptionKey()).isEqualTo(sampleEncryptionKey);
+    assertThat(encryptedDataOptional.get().getEncryptionType()).isEqualTo(EncryptionType.CUSTOM);
   }
 }

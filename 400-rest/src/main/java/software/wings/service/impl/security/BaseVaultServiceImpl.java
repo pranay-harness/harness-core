@@ -7,8 +7,8 @@ import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.BaseVaultConfig.BaseVaultConfigKeys;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.settings.SettingVariableTypes.VAULT;
 
 import static java.time.Duration.ofMillis;

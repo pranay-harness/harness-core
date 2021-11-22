@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.gitsync.sdk.EntityValidityDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -22,4 +23,5 @@ public class PMSPipelineResponseDTO {
   private String yamlPipeline;
   @JsonIgnore Long version;
   EntityGitDetails gitDetails;
+  EntityValidityDetails entityValidityDetails;
 }

@@ -2,7 +2,7 @@ package io.harness.generator.artifactstream;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.GeneratorUtils;

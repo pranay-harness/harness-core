@@ -11,6 +11,10 @@ replace_key_value () {
   fi
 }
 
+if [[ "" != "$SERVER_MAX_THREADS" ]]; then
+  yq write -i $CONFIG_FILE server.maxThreads "$SERVER_MAX_THREADS"
+fi
+
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
@@ -389,5 +393,6 @@ replace_key_value pipelineEventConsumersConfig.partialPlanResponse.threads "$PAR
 replace_key_value pipelineEventConsumersConfig.createPlan.threads "$CREATE_PLAN_EVENT_CONSUMER_THREAD_COUNT"
 replace_key_value pipelineEventConsumersConfig.planNotify.threads "$PLAN_NOTIFY_EVENT_CONSUMER_THREAD_COUNT"
 replace_key_value pipelineEventConsumersConfig.pmsNotify.threads "$PMS_NOTIFY_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.webhookEvent.threads "$PMS_WEBHOOK_EVENT_CONSUMER_THREAD_COUNT"
 
 replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"

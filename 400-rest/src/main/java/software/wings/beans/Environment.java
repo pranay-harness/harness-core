@@ -80,8 +80,6 @@ public class Environment
         .build();
   }
 
-  public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
-
   @NotEmpty @EntityName @Trimmed private String name;
   private String description;
   private String configMapYaml;

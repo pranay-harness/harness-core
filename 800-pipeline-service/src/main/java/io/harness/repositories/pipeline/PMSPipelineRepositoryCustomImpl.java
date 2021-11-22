@@ -91,6 +91,20 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   }
 
   @Override
+  public Optional<PipelineEntity> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
+    return gitAwarePersistence.findOne(Criteria.where(PipelineEntityKeys.identifier)
+                                           .is(pipelineIdentifier)
+                                           .and(PipelineEntityKeys.projectIdentifier)
+                                           .is(projectIdentifier)
+                                           .and(PipelineEntityKeys.orgIdentifier)
+                                           .is(orgIdentifier)
+                                           .and(PipelineEntityKeys.accountId)
+                                           .is(accountId),
+        projectIdentifier, orgIdentifier, accountId, PipelineEntity.class);
+  }
+
+  @Override
   public PipelineEntity updatePipelineYaml(PipelineEntity pipelineToUpdate, PipelineEntity oldPipelineEntity,
       PipelineConfig yamlDTO, ChangeType changeType) {
     Supplier<OutboxEvent> supplier = null;

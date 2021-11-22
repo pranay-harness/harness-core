@@ -29,13 +29,10 @@ message EntityInfos {
 }
 message EntityInfo {
   string yaml = 1;
-  io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum entity_type = 2;
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entity_detail = 2;
   string file_path = 3;
   string yaml_git_config_id = 4;
   google.protobuf.StringValue last_object_id = 5;
-  string orgIdentifier = 6;
-  string projectIdentifier = 7;
-  string identifier = 8;
 }
 
 message MarkEntityInvalidResponse {

@@ -26,6 +26,12 @@ xxxxxxxx
         threshold: ERROR
   maxThreads: 1024
 
+commonPoolConfig:
+  corePoolSize: ${COMMON_POOL_CORE_SIZE:-20}
+  maxPoolSize: ${COMMON_POOL_MAX_SIZE:-1000}
+  idleTime: ${COMMON_POOL_IDLE_TIME:-500}
+  timeUnit: ${COMMON_POOL_IDLE_TIME_TIME_UNIT:-MILLISECONDS}
+
 auditConfig:
   storeRequestPayload: false
   storeResponsePayload: false
@@ -96,6 +102,11 @@ marketoConfig:
 
 segmentConfig:
   enabled: false #segmentConfigEnable
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
+
+segmentConfiguration:
+  enabled: false
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
 
@@ -291,6 +302,7 @@ events-mongo:
   indexManagerMode: AUTO
 
 searchEnabled: false
+graphQLEnabled: true
 
 elasticsearch:
   uri: http://localhost:9200
@@ -335,6 +347,14 @@ portal:
   optionalDelegateTaskRejectAtLimit: 10000
   importantDelegateTaskRejectAtLimit: 50000
   criticalDelegateTaskRejectAtLimit: 100000
+
+totp:
+  secOpsEmail: secops.fake.email@mailnator.com
+  incorrectAttemptsUntilSecOpsNotified: 1000
+  limit:
+    count: 10
+    duration: 5
+    durationUnit: MINUTES
 
 cacheConfig:
   cacheBackend: HAZELCAST
@@ -662,6 +682,10 @@ iteratorsConfig:
     threadPoolSize: ${PERPETUAL_TASK_ASSIGNMENT_ITERATOR_THREAD_COUNT:-5}
 
 disableDelegateMgmtInManager: false
+
+secretsConfiguration:
+  secretResolutionEnabled: false
+  gcpSecretManagerProject: harness-playground
 
 ldapSyncJobConfig:
   poolSize: 3

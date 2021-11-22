@@ -17,7 +17,7 @@ services:
       - REMOTE_WATCHER_URL_CDN=${remoteWatcherUrlCdn}
       - DELEGATE_STORAGE_URL=${delegateStorageUrl}
       - DELEGATE_CHECK_LOCATION=${delegateCheckLocation}
-      - DEPLOY_MODE=DOCKER
+      - DEPLOY_MODE=${deployMode}
       - DELEGATE_NAME=${delegateName}
       - NEXT_GEN=true
       - DELEGATE_DESCRIPTION=${delegateDescription}

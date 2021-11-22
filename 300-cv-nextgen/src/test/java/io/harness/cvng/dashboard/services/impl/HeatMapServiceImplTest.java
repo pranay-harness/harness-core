@@ -6,10 +6,10 @@ import static io.harness.cvng.core.utils.DateTimeUtils.roundDownToMinBoundary;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIFTEEN_MINUTES;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIVE_MIN;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.THIRTY_MINUTES;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
+import static io.harness.rule.OwnerRule.KAPIL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 
@@ -27,16 +27,14 @@ import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.core.beans.AppDynamicsDSConfig;
-import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.DSConfigService;
+import io.harness.cvng.core.utils.ServiceEnvKey;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
@@ -93,16 +91,13 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
   private String envIdentifier;
   private String accountId;
   private String orgIdentifier;
-  private String cvConfigId;
   private CVConfig cvConfig;
   @Inject private HPersistence hPersistence;
-  @Inject private DSConfigService dsConfigService;
   @Mock private CVConfigService cvConfigService;
   @Mock private NextGenService nextGenService;
   @Mock private AnalysisService analysisService;
   private Clock clock;
   private BuilderFactory builderFactory;
-  private Duration bufferTimeForLatestHealthScore;
 
   @Before
   public void setUp() throws Exception {
@@ -112,28 +107,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     orgIdentifier = builderFactory.getContext().getOrgIdentifier();
     serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
     envIdentifier = builderFactory.getContext().getEnvIdentifier();
-    cvConfigId = generateUuid();
-    AppDynamicsDSConfig dsConfig = new AppDynamicsDSConfig();
-    dsConfig.setProjectIdentifier(projectIdentifier);
-    dsConfig.setAccountId(accountId);
-    dsConfig.setConnectorIdentifier(generateUuid());
-    dsConfig.setProductName(generateUuid());
-    dsConfig.setIdentifier(generateUuid());
-    dsConfig.setOrgIdentifier(generateUuid());
-    dsConfig.setMonitoringSourceName(generateUuid());
-    dsConfig.setAppConfigs(Lists.newArrayList(
-        AppdynamicsAppConfig.builder()
-            .applicationName(generateUuid())
-            .envIdentifier(envIdentifier)
-            .metricPacks(Sets.newHashSet(MetricPack.builder().category(CVMonitoringCategory.PERFORMANCE).build()))
-            .serviceMappings(Sets.newHashSet(AppDynamicsDSConfig.ServiceMapping.builder()
-                                                 .serviceIdentifier(serviceIdentifier)
-                                                 .tierName(generateUuid())
-                                                 .build()))
-            .build()));
-
     cvConfig = new AppDynamicsCVConfig();
-    dsConfigService.create(dsConfig);
     clock = Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC);
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
@@ -146,8 +120,6 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     when(cvConfigService.getConfigsOfProductionEnvironments(
              anyString(), anyString(), anyString(), anyString(), anyString(), any()))
         .thenReturn(Arrays.asList(cvConfig));
-
-    bufferTimeForLatestHealthScore = Duration.ofMinutes(5);
   }
 
   @Test
@@ -1368,6 +1340,29 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     assertHealthScore(historicalTrend.getHealthScores().get(0), 52);
     assertHealthScore(historicalTrend.getHealthScores().get(47), 52);
     assertHealthScore(historicalTrend.getHealthScores().get(46), 61);
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScoreByServiceMap() {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    HeatMap heatMap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.80, 0.75);
+    hPersistence.save(heatMap);
+    Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap = heatMapService.getLatestRiskScoreByServiceMap(
+        projectParams, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
+    ServiceEnvKey serviceEnvKey =
+        ServiceEnvKey.builder().serviceIdentifier(serviceIdentifier).envIdentifier(envIdentifier).build();
+
+    assertThat(latestRiskScoreByServiceMap.keySet().size()).isEqualTo(1);
+    assertThat(latestRiskScoreByServiceMap.get(serviceEnvKey).getHealthScore()).isEqualTo(25);
+    assertThat(latestRiskScoreByServiceMap.get(serviceEnvKey).getRiskStatus()).isEqualTo(Risk.NEED_ATTENTION);
   }
 
   private void assertHealthScore(RiskData riskData, int val) {

@@ -2,7 +2,7 @@ package software.wings.service.impl.instance.licensing;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;

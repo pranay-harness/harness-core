@@ -2,10 +2,12 @@ package io.harness.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.GlobalContext;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 
@@ -31,6 +33,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "outboxEvents", noClassnameStored = true)
 @Document("outboxEvents")
 @TypeAlias("outboxEvents")
+@StoreIn(DbAliases.NG_MANAGER)
+@StoreIn(DbAliases.PMS)
+@StoreIn(DbAliases.TEMPLATE)
+@StoreIn(DbAliases.CIMANAGER)
 public class OutboxEvent {
   @Id @org.mongodb.morphia.annotations.Id String id;
 

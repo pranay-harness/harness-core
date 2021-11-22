@@ -1,6 +1,7 @@
 package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.swagger.SwaggerBundleConfigurationFactory.buildSwaggerBundleConfiguration;
 
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
@@ -21,6 +22,7 @@ import io.harness.opaclient.OpaServiceConfiguration;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.telemetry.segment.SegmentConfiguration;
+import io.harness.threading.ThreadPoolConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.yaml.schema.client.config.YamlSchemaClientConfig;
 
@@ -37,6 +39,7 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -59,9 +62,15 @@ public class PipelineServiceConfiguration extends Configuration {
   public static final String NG_TRIGGER_RESOURCE_PACKAGE = "io.harness.ngtriggers";
   public static final String FILTER_PACKAGE = "io.harness.filter";
   public static final String ENFORCEMENT_PACKAGE = "io.harness.enforcement";
+  public static final Collection<Class<?>> HARNESS_RESOURCE_CLASSES = getResourceClasses();
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
+  @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
+  @JsonProperty("orchestrationVisualizationThreadPoolConfig")
+  private ThreadPoolConfig orchestrationVisualizationThreadPoolConfig;
+  @JsonProperty("pmsSdkExecutionPoolConfig") private ThreadPoolConfig pmsSdkExecutionPoolConfig;
+  @JsonProperty("pmsSdkOrchestrationEventPoolConfig") private ThreadPoolConfig pmsSdkOrchestrationEventPoolConfig;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("grpcClientConfigs") private Map<String, GrpcClientConfig> grpcClientConfigs;
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
@@ -129,8 +138,9 @@ public class PipelineServiceConfiguration extends Configuration {
   }
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
-    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-    String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
+    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration =
+        buildSwaggerBundleConfiguration(HARNESS_RESOURCE_CLASSES);
+    String resourcePackage = String.join(",", getUniquePackages(HARNESS_RESOURCE_CLASSES));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost(hostname);
@@ -174,7 +184,10 @@ public class PipelineServiceConfiguration extends Configuration {
     return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }
 
-  public static Set<String> getUniquePackagesContainingResources() {
-    return getResourceClasses().stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
+  public static Set<String> getUniquePackagesContainingOpenApiResources() {
+    return HARNESS_RESOURCE_CLASSES.stream()
+        .filter(x -> x.isAnnotationPresent(Tag.class))
+        .map(aClass -> aClass.getPackage().getName())
+        .collect(toSet());
   }
 }

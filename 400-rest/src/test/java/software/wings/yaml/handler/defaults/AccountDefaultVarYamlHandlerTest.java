@@ -2,8 +2,8 @@ package software.wings.yaml.handler.defaults;
 
 import static io.harness.rule.OwnerRule.RAMA;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static java.util.Arrays.asList;

@@ -72,11 +72,21 @@ public class GitChangeSetMapper {
     }
     EntityReference entityReference = null;
     if (changeType == ChangeType.DELETE) {
-      final EntityDetailProtoDTO entityDetailDTO = getEntityDetailFromGitEntitiesCollection(
-          accountId, fileContent.getPath(), yamlGitConfigDTOs.get(0).getRepo(), branchName, builder);
-      builder.setEntityRefForDeletion(entityDetailDTO);
-      builder.setEntityType(entityDetailDTO.getType());
-      entityReference = entityDetailProtoToRestMapper.createEntityDetailDTO(entityDetailDTO).getEntityRef();
+      final Optional<EntityDetailProtoDTO> entityDetailDtoOptional = getEntityDetailFromGitEntitiesCollection(
+          accountId, fileContent.getPath(), yamlGitConfigDTOs.get(0).getRepo(), branchName);
+      if (entityDetailDtoOptional.isPresent()) {
+        EntityDetailProtoDTO entityDetailDTO = entityDetailDtoOptional.get();
+        builder.setEntityRefForDeletion(entityDetailDTO);
+        builder.setEntityType(entityDetailDTO.getType());
+        entityReference = entityDetailProtoToRestMapper.createEntityDetailDTO(entityDetailDTO).getEntityRef();
+      } else {
+        log.error("No git sync entity exists for the file path %s, in repoUrl %s and branch %s", fileContent.getPath(),
+            yamlGitConfigDTOs.get(0).getRepo(), branchName);
+        return ChangeSetWithYamlStatusDTO.builder()
+            .changeSet(builder.build())
+            .yamlInputErrorType(ChangeSetWithYamlStatusDTO.YamlInputErrorType.ENTITY_NOT_FOUND)
+            .build();
+      }
     } else {
       try {
         EntityType entityType = GitSyncUtils.getEntityTypeFromYaml(fileContent.getContent());
@@ -94,13 +104,17 @@ public class GitChangeSetMapper {
         fileContent, accountId, yamlGitConfigDTOs, builder, changeType, entityReference);
   }
 
-  private EntityDetailProtoDTO getEntityDetailFromGitEntitiesCollection(
-      String accountId, String path, String repo, String branchName, ChangeSet.Builder builder) {
-    GitSyncEntityDTO gitSyncEntityDTO = gitEntityService.get(accountId, path, repo, branchName);
+  private Optional<EntityDetailProtoDTO> getEntityDetailFromGitEntitiesCollection(
+      String accountId, String path, String repo, String branchName) {
+    Optional<GitSyncEntityDTO> gitSyncEntityDtoOptional = gitEntityService.get(accountId, path, repo, branchName);
+    if (!gitSyncEntityDtoOptional.isPresent()) {
+      return Optional.empty();
+    }
+    GitSyncEntityDTO gitSyncEntityDTO = gitSyncEntityDtoOptional.get();
     final EntityReference entityReference = gitSyncEntityDTO.getEntityReference();
     final EntityDetail entityDetail =
         EntityDetail.builder().entityRef(entityReference).type(gitSyncEntityDTO.getEntityType()).build();
-    return entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail);
+    return Optional.of(entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail));
   }
 
   private ChangeSetWithYamlStatusDTO setYamlGitConfigInfoInChangeset(GitFileChangeDTO fileContent, String accountId,

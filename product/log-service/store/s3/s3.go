@@ -91,7 +91,9 @@ func (s *Store) DownloadLink(ctx context.Context, key string, expire time.Durati
 // Upload uploads the log stream from Reader r to the
 // S3 datastore.
 func (s *Store) Upload(ctx context.Context, key string, r io.Reader) error {
-	uploader := s3manager.NewUploader(s.session)
+	uploader := s3manager.NewUploader(s.session, func(u *s3manager.Uploader) {
+		u.PartSize = 32 * 1024 * 1024 // 32MB per part
+	})
 	keyWithPrefix := path.Join("/", s.prefix, key)
 	input := &s3manager.UploadInput{
 		ACL:    aws.String(s.acl),

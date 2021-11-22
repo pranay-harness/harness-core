@@ -240,8 +240,8 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testRecordConnectivityIssue() {
-    gitSyncErrorService.recordConnectivityError(accountId, orgId, projectId, GitSyncErrorType.CONNECTIVITY_ISSUE,
-        repoUrl, branch, "Unable to connect to git provider");
+    gitSyncErrorService.recordConnectivityError(
+        accountId, orgId, projectId, repoUrl, branch, "Unable to connect to git provider");
     when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
     PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
@@ -254,14 +254,14 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testListGitSyncErrors() {
-    gitSyncErrorService.recordConnectivityError(accountId, orgId, projectId, GitSyncErrorType.CONNECTIVITY_ISSUE,
-        repoUrl, branch, "Unable to connect to git provider");
+    gitSyncErrorService.recordConnectivityError(
+        accountId, orgId, projectId, repoUrl, branch, "Unable to connect to git provider");
 
     gitSyncErrorService.recordConnectivityError(
-        accountId, orgId, projectId, GitSyncErrorType.FULL_SYNC, repoUrl, branch, "Unable to connect to git provider");
+        accountId, orgId, projectId, repoUrl, branch, "Unable to connect to git provider");
 
-    gitSyncErrorService.recordConnectivityError(accountId, orgId, projectId, GitSyncErrorType.FULL_SYNC, "repoUrl1",
-        branch, "Unable to connect to git provider");
+    gitSyncErrorService.recordConnectivityError(
+        accountId, orgId, projectId, "repoUrl1", branch, "Something went wrong, Please contact Harness Support.");
 
     when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
@@ -269,12 +269,12 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
     PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
         accountId, orgId, projectId, repoId, branch, new PageRequest(0, 10, new ArrayList<>()));
     assertThat(gitSyncErrorList.getContent()).isNotEmpty();
-    assertThat(gitSyncErrorList.getContent()).hasSize(2);
+    assertThat(gitSyncErrorList.getContent()).hasSize(1);
 
     gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
         accountId, orgId, projectId, null, null, new PageRequest(0, 10, new ArrayList<>()));
     assertThat(gitSyncErrorList.getContent()).isNotEmpty();
-    assertThat(gitSyncErrorList.getContent()).hasSize(3);
+    assertThat(gitSyncErrorList.getContent()).hasSize(2);
   }
 
   @Test
@@ -294,8 +294,8 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testListConnectivityErrorsForDefaultBranchesOfAllRepos() {
-    gitSyncErrorService.recordConnectivityError(accountId, orgId, projectId, GitSyncErrorType.CONNECTIVITY_ISSUE,
-        repoUrl, branch, "Unable to connect to git provider");
+    gitSyncErrorService.recordConnectivityError(
+        accountId, orgId, projectId, repoUrl, branch, "Unable to connect to git provider");
     when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
     PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(

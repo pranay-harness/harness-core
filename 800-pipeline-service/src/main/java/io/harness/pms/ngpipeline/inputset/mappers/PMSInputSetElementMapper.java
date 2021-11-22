@@ -96,7 +96,7 @@ public class PMSInputSetElementMapper {
         .tags(TagMapper.convertToMap(entity.getTags()))
         .version(entity.getVersion())
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
-        .isInvalid(entity.getIsInvalid())
+        .isOutdated(entity.getIsInvalid())
         .build();
   }
 
@@ -121,11 +121,12 @@ public class PMSInputSetElementMapper {
         .isErrorResponse(isError)
         .invalidInputSetReferences(invalidReferences)
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
-        .isInvalid(entity.getIsInvalid())
+        .isOutdated(entity.getIsInvalid())
         .build();
   }
 
-  public InputSetSummaryResponseDTOPMS toInputSetSummaryResponseDTOPMS(InputSetEntity entity) {
+  public InputSetSummaryResponseDTOPMS toInputSetSummaryResponseDTOPMS(InputSetEntity entity,
+      InputSetErrorWrapperDTOPMS inputSetErrorDetails, Map<String, String> overlaySetErrorDetails) {
     return InputSetSummaryResponseDTOPMS.builder()
         .identifier(entity.getIdentifier())
         .name(entity.getName())
@@ -135,6 +136,11 @@ public class PMSInputSetElementMapper {
         .tags(TagMapper.convertToMap(entity.getTags()))
         .version(entity.getVersion())
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
+        .createdAt(entity.getCreatedAt())
+        .lastUpdatedAt(entity.getLastUpdatedAt())
+        .isOutdated(entity.getIsInvalid())
+        .inputSetErrorDetails(inputSetErrorDetails)
+        .overlaySetErrorDetails(overlaySetErrorDetails)
         .build();
   }
 }

@@ -35,7 +35,9 @@ public class NextGenRegistrars {
           .addAll(NGFileServiceRegistrars.kryoRegistrars)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .addAll(NGCommonsRegistrars.kryoRegistrars)
+          .addAll(LicenseManagerRegistrars.kryoRegistrars)
           .add(PipelineServiceUtilKryoRegistrar.class)
+          .addAll(DelegateTaskRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -62,6 +64,7 @@ public class NextGenRegistrars {
           .add(NGMorphiaRegistrars.class)
           .add(FeedbackMorphiaRegistrars.class)
           .addAll(InstanceRegistrars.morphiaRegistrars)
+          .addAll(DelegateTaskRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =

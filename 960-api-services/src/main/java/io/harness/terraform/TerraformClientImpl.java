@@ -12,7 +12,7 @@ import io.harness.cli.CliHelper;
 import io.harness.cli.CliResponse;
 import io.harness.cli.LogCallbackOutputStream;
 import io.harness.exception.TerraformCommandExecutionException;
-import io.harness.exception.WingsException;
+import io.harness.exception.runtime.TerraformCliRuntimeException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.PlanJsonLogOutputStream;
@@ -183,9 +183,9 @@ public class TerraformClientImpl implements TerraformClient {
     CliResponse response = cliHelper.executeCliCommand(
         command, timeoutInMillis, envVariables, scriptDirectory, executionLogCallBack, loggingCommand, logOutputStream);
     if (response != null && response.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
-      throw new TerraformCommandExecutionException(
-          format("Failed to execute terraform Command %s : Reason: %s", command, response.getError()),
-          WingsException.SRE);
+      throw new TerraformCliRuntimeException(
+          format("Failed to execute terraform Command %s : Reason: %s", command, response.getError()), command,
+          response.getError());
     }
     return response;
   }

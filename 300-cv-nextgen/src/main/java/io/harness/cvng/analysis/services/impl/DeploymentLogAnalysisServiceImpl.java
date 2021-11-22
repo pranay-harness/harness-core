@@ -203,8 +203,8 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
           verificationJobInstanceId, deploymentLogAnalysisFilter.getHealthSourceIdentifiers());
       verificationTaskIds =
           verificationTaskIds.stream()
-              .filter(verificationTaskId
-                  -> cvConfigIds.contains(verificationTaskService.get(verificationTaskId).getCvConfigId()))
+              .filter(
+                  verificationTaskId -> cvConfigIds.contains(verificationTaskService.getCVConfigId(verificationTaskId)))
               .collect(Collectors.toSet());
     }
 

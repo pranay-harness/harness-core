@@ -20,9 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 public class GitSyncSdkInitHelper {
   public static void initGitSyncSdk(Injector injector, Environment environment, GitSyncSdkConfiguration config) {
     String serviceName = config.getMicroservice().name();
-    initializeServiceManager(injector, serviceName);
     registerInterceptor(environment);
     registerEventConsumer(injector, environment);
+    initializeServiceManager(injector, serviceName);
   }
 
   private static void registerEventConsumer(Injector injector, Environment environment) {

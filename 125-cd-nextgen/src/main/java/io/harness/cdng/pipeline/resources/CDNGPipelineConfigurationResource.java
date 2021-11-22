@@ -18,6 +18,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -78,8 +79,8 @@ public class CDNGPipelineConfigurationResource {
         ApiResponse(responseCode = "default", description = "Returns execution strategy yaml")
       })
   public ResponseDTO<String>
-  getProvisionerExecutionStrategyYaml(@NotNull @QueryParam("provisionerType") ProvisionerType provisionerType)
-      throws IOException {
+  getProvisionerExecutionStrategyYaml(@Parameter(description = "Provisioner type to fetch yaml snippet") @NotNull
+      @QueryParam("provisionerType") ProvisionerType provisionerType) throws IOException {
     return ResponseDTO.newResponse(
         cdngPipelineConfigurationHelper.getProvisionerExecutionStrategyYaml(provisionerType));
   }
