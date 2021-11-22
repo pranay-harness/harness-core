@@ -98,8 +98,7 @@ public class ApplicationSearchEntitySyncTest extends AbstractFunctionalTest {
   }
 
   private boolean isSearchDisabled() {
-    return !featureFlagService.isGlobalEnabled(FeatureName.SEARCH)
-        || !featureFlagService.isEnabled(FeatureName.SEARCH_REQUEST, getAccount().getUuid())
+    return !featureFlagService.isEnabled(FeatureName.SEARCH_REQUEST, getAccount().getUuid())
         || !mainConfiguration.isSearchEnabled();
   }
 }
