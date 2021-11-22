@@ -79,7 +79,6 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.EncryptedData;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilityRequirement;
@@ -652,34 +651,6 @@ public class DelegateServiceTest extends WingsBaseTest {
         .send(Channel.DELEGATES,
             anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
     verify(capabilityService, never()).getAllCapabilityRequirements(accountId);
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldAddAndInvokeRegenerateCapabilityPermissions() {
-    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
-    String accountId = generateUuid();
-    Delegate delegate = createDelegateBuilder().build();
-    delegate.setAccountId(accountId);
-    delegate.setUuid(generateUuid());
-
-    DelegateProfile delegateProfile =
-        createDelegateProfileBuilder().accountId(delegate.getAccountId()).uuid(generateUuid()).build();
-    delegate.setDelegateProfileId(delegateProfile.getUuid());
-
-    when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
-
-    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
-
-    delegate = delegateService.add(delegate);
-
-    assertThat(persistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
-    verify(eventEmitter)
-        .send(Channel.DELEGATES,
-            anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
-    verify(capabilityService).getAllCapabilityRequirements(accountId);
-    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
   }
 
   @Test
@@ -1442,28 +1413,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, ConnectionMode.POLLING);
     verify(mockConnectionDao).findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION);
     FieldUtils.writeField(delegateService, "delegateConnectionDao", delegateConnectionDao, true);
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldRegisterHeartbeatWithPreviousDisconnection() throws IllegalAccessException {
-    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
-    DelegateConnection previousDelegateConnection = mock(DelegateConnection.class);
-    when(previousDelegateConnection.isDisconnected()).thenReturn(true);
-    DelegateConnectionDao mockConnectionDao = mock(DelegateConnectionDao.class);
-    when(mockConnectionDao.upsertCurrentConnection(any(), any(), any(), any(), any()))
-        .thenReturn(previousDelegateConnection);
-    FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
-    String delegateConnectionId = generateTimeBasedUuid();
-    DelegateConnectionHeartbeat heartbeat =
-        DelegateConnectionHeartbeat.builder().version(VERSION).delegateConnectionId(delegateConnectionId).build();
-
-    delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, null);
-
-    verify(subject).fireInform(any(), eq(ACCOUNT_ID), eq(DELEGATE_ID));
-    FieldUtils.writeField(delegateService, "delegateConnectionDao", delegateConnectionDao, true);
-    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
   }
 
   @Test
