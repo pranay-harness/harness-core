@@ -24,12 +24,11 @@ import io.harness.cvng.beans.change.KubernetesChangeEventMetadata.Action;
 import io.harness.cvng.beans.change.KubernetesChangeEventMetadata.KubernetesResourceType;
 import io.harness.cvng.beans.change.PagerDutyEventMetaData;
 import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.builderfactory.BuilderFactoryModule;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.cdng.beans.CVNGStepInfo.CVNGStepInfoBuilder;
 import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
-import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskBuilder;
-import io.harness.cvng.cdng.entities.CVNGStepTask.Status;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO.ChangeSourceDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
@@ -111,6 +110,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -122,6 +122,15 @@ import lombok.Value;
 @Data
 @Builder(buildMethodName = "unsafeBuild")
 public class BuilderFactory {
+  private static final BuilderFactoryModule BUILDER_FACTORY_MODULE;
+  static {
+    BUILDER_FACTORY_MODULE = new BuilderFactoryModule();
+  }
+  private final Map<Class<?>, Object> builderMap = new ConcurrentHashMap<>();
+  public <T> T getBuilder(Class<T> clazz) {
+    return (T) BUILDER_FACTORY_MODULE.getInstance(clazz).create(this);
+  }
+
   public static final String CONNECTOR_IDENTIFIER = "connectorIdentifier";
   @Getter @Setter(AccessLevel.PRIVATE) private Clock clock;
   @Getter @Setter(AccessLevel.PRIVATE) private Context context;
@@ -131,11 +140,7 @@ public class BuilderFactory {
   }
 
   public CVNGStepTaskBuilder cvngStepTaskBuilder() {
-    return CVNGStepTask.builder()
-        .accountId(context.getAccountId())
-        .activityId(generateUuid())
-        .status(Status.IN_PROGRESS)
-        .callbackId(generateUuid());
+    return this.getBuilder(CVNGStepTaskBuilder.class);
   }
 
   public ServiceResponseDTOBuilder serviceResponseDTOBuilder() {
