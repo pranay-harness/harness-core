@@ -95,6 +95,11 @@ def create_dataset_and_tables(jsonData):
             print_("%s table does not exists, creating table..." % table_ref)
             createTable(client, table_ref)
         else:
+            # Remove these after some time.
+            if table_ref == aws_cur_table_ref:
+                alter_awscur_table(jsonData)
+            elif table_ref == unified_table_ref:
+                alter_unified_table(jsonData)
             print_("%s table exists" % table_ref)
 
 
@@ -375,3 +380,35 @@ def ingest_data_to_costagg(jsonData):
         priority=bigquery.QueryPriority.BATCH
     )
     run_batch_query(client, query, job_config, timeout=120)
+
+def alter_unified_table(jsonData):
+    print_("Altering unifiedTable Table")
+    ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
+    query = "ALTER TABLE `%s.unifiedTable` \
+        ADD COLUMN IF NOT EXISTS awsBillingEntity STRING;" % ds
+
+    try:
+        print_(query)
+        query_job = client.query(query)
+        query_job.result()
+    except Exception as e:
+        # Error Running Alter Query
+        print_(e)
+    else:
+        print_("Finished Altering unifiedTable Table")
+
+def alter_awscur_table(jsonData):
+    print_("Altering awscur Table")
+    ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
+    query = "ALTER TABLE `%s.awscur_%s` \
+        ADD COLUMN IF NOT EXISTS billingEntity STRING;" % (ds, jsonData["awsCurTableSuffix"])
+
+    try:
+        print_(query)
+        query_job = client.query(query)
+        query_job.result()
+    except Exception as e:
+        # Error Running Alter Query
+        print_(e)
+    else:
+        print_("Finished Altering awscur Table")
