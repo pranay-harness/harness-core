@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -973,10 +972,6 @@ public class DelegateServiceImpl implements DelegateService {
       }
     }
 
-    if (updatedDelegate != null && featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegate.getAccountId())) {
-      regenerateCapabilityPermissions(delegate.getAccountId(), delegate.getUuid());
-    }
-
     return updatedDelegate;
   }
 
@@ -1001,10 +996,6 @@ public class DelegateServiceImpl implements DelegateService {
       if (currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
         alertService.delegateEligibilityUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
       }
-    }
-
-    if (updatedDelegate != null && featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegate.getAccountId())) {
-      regenerateCapabilityPermissions(delegate.getAccountId(), delegate.getUuid());
     }
 
     return updatedDelegate;
@@ -2010,10 +2001,6 @@ public class DelegateServiceImpl implements DelegateService {
 
     updateWithTokenAndSeqNumIfEcsDelegate(delegate, savedDelegate);
     eventPublishHelper.publishInstalledDelegateEvent(delegate.getAccountId(), delegate.getUuid());
-
-    if (savedDelegate != null && featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, savedDelegate.getAccountId())) {
-      regenerateCapabilityPermissions(savedDelegate.getAccountId(), savedDelegate.getUuid());
-    }
 
     try {
       if (savedDelegate.isCeEnabled()) {
@@ -3033,9 +3020,6 @@ public class DelegateServiceImpl implements DelegateService {
           log.error("Delegate restarted");
         }
       }
-    } else if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)
-        && previousDelegateConnection.isDisconnected()) {
-      subject.fireInform(DelegateObxxxxxxxx:onReconnected, accountId, delegateId);
     }
   }
 
