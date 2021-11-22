@@ -1,3 +1,9 @@
 package io.harness.telemetry;
 
-public enum SegmentEventType { TRACK, GROUP, IDENTIFY }
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public enum SegmentEventType {
+  @JsonProperty("track") TRACK,
+  @JsonProperty("group") GROUP,
+  @JsonProperty("identify") IDENTIFY
+}
