@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.app.impl.CIManagerTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.lock.PersistentLocker;
 import io.harness.lock.mongo.AcquiredDistributedLock;
 import io.harness.rule.Owner;
@@ -22,7 +22,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
 @OwnedBy(CI)
-public class CIAccountExecutionMetadataRepositoryCustomImplTest extends CIManagerTestBase {
+public class CIAccountExecutionMetadataRepositoryCustomImplTest extends CIExecutionTestBase {
   private static final String ACCOUNT_ID = "accountId";
   @Inject PersistentLocker persistentLocker;
   @Inject CIAccountExecutionMetadataRepository accountExecutionMetadataRepository;
