@@ -286,6 +286,11 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldSaveDelegateTaskWithoutPreAssignedDelegateIdSetToMustExecuteOn() {
     String delegateId = generateUuid();
     String taskId = generateUuid();
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+            any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+            .thenReturn(new HashSet<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+            .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
 
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(false);
@@ -335,6 +340,12 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldAcquireDelegateTaskWhitelistedDelegateAndFFisOFF() {
     Delegate delegate = createDelegateBuilder().build();
     doReturn(delegate).when(delegateCache).get(ACCOUNT_ID, delegate.getUuid(), false);
+
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+            any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+            .thenReturn(new HashSet<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+            .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
 
     DelegateTask delegateTask = getDelegateTask();
     doReturn(delegateTask)
