@@ -85,7 +85,6 @@ import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
-import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.logstreaming.LogStreamingServiceConfig;
@@ -147,7 +146,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -914,65 +912,6 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
             eq(task.getSetupAbstractions()), captor.capture(), eq(assignableDelegateIds));
     List<SelectorCapability> selectorCapabilities = captor.getValue();
     assertThat(selectorCapabilities).hasSize(1);
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void testPickDelegateForTaskWithoutAnyAgentCapabilities() {
-    String accountId = generateUuid();
-    String delegateId = generateUuid();
-    DelegateTask task = DelegateTask.builder().build();
-
-    // Test no active delegates case
-    assertThat(delegateTaskServiceClassic.pickDelegateForTaskWithoutAnyAgentCapabilities(task, null)).isNull();
-
-    // Test assignable delegate with ignore already tried case
-    BatchDelegateSelectionLog selectionLogBatch = BatchDelegateSelectionLog.builder().build();
-    when(delegateSelectionLogsService.createBatch(task)).thenReturn(selectionLogBatch);
-    when(assignDelegateService.canAssign(eq(selectionLogBatch), anyString(), eq(task))).thenReturn(true);
-
-    assertThat(delegateTaskServiceClassic.pickDelegateForTaskWithoutAnyAgentCapabilities(
-                   task, Collections.singletonList(delegateId)))
-        .isEqualTo(delegateId);
-    verify(delegateSelectionLogsService).createBatch(task);
-    verify(delegateSelectionLogsService).save(selectionLogBatch);
-
-    task.setAlreadyTriedDelegates(Stream.of(delegateId).collect(Collectors.toSet()));
-    assertThat(delegateTaskServiceClassic.pickDelegateForTaskWithoutAnyAgentCapabilities(
-                   task, Collections.singletonList(delegateId)))
-        .isEqualTo(delegateId);
-    verify(delegateSelectionLogsService, times(2)).createBatch(task);
-    verify(delegateSelectionLogsService, times(2)).save(selectionLogBatch);
-
-    // Test assignable delegate without ignoring already tried case
-    String delegateId2 = generateUuid();
-    assertThat(delegateTaskServiceClassic.pickDelegateForTaskWithoutAnyAgentCapabilities(
-                   task, Arrays.asList(delegateId, delegateId2)))
-        .isEqualTo(delegateId2);
-    verify(delegateSelectionLogsService, times(3)).createBatch(task);
-    verify(delegateSelectionLogsService, times(3)).save(selectionLogBatch);
-
-    // Test out of scope case
-    when(assignDelegateService.canAssign(eq(selectionLogBatch), anyString(), eq(task))).thenReturn(false);
-    assertThat(delegateTaskServiceClassic.pickDelegateForTaskWithoutAnyAgentCapabilities(
-                   task, Arrays.asList(delegateId, delegateId2)))
-        .isNull();
-    verify(delegateSelectionLogsService, times(4)).createBatch(task);
-    verify(delegateSelectionLogsService, times(4)).save(selectionLogBatch);
-  }
-
-  private CapabilityCheckDetails buildCapabilityCheckDetails(String accountId, String delegateId, String capabilityId) {
-    return CapabilityCheckDetails.builder()
-        .accountId(accountId)
-        .delegateId(delegateId)
-        .capabilityId(capabilityId)
-        .capabilityType(CapabilityType.HTTP)
-        .capabilityParameters(
-            CapabilityParameters.newBuilder()
-                .setHttpConnectionParameters(HttpConnectionParameters.newBuilder().setUrl("https://google.com"))
-                .build())
-        .build();
   }
 
   private CapabilityRequirement buildCapabilityRequirement() {

@@ -24,7 +24,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -123,9 +122,6 @@ import software.wings.beans.GitValidationParameters;
 import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.NoActiveDelegatesAlert;
-import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.common.AuditHelper;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.cv.RateLimitExceededException;
@@ -182,7 +178,6 @@ import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -374,8 +369,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
-      processDelegateTask(task, QUEUED);
       log.info("Processing sync task {}", task.getUuid());
+      processDelegateTask(task, QUEUED);
     }
   }
 
@@ -417,6 +412,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         List<String> eligibleListOfDelegates = assignDelegateService.getEligibleDelegatesToExecuteTask(task, batch);
 
         if (eligibleListOfDelegates.isEmpty()) {
+          log.info("No eligible delegates to execute {}", task.getUuid());
           delegateSelectionLogsService.logNoEligibleDelegatesToExecuteTask(batch, task.getAccountId());
           handleTaskFailureResponse(task, NO_ELIGIBLE_DELEGATE.toString());
           return;
@@ -429,7 +425,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
             assignDelegateService.getConnectedDelegateList(eligibleListOfDelegates, task.getAccountId(), batch);
 
         if (!task.getData().isAsync() && connectedEligibleDelegates.isEmpty()) {
-          log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(NO_ELIGIBLE_DELEGATE, task));
+          log.info("No Connected eligible delegates to execute sync task {}", task.getUuid());
           if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
             throw new NoInstalledDelegatesException();
           } else {
@@ -448,6 +444,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                              .build());
         delegateSelectionLogsService.save(batch);
         persistence.save(task);
+        log.info("Task {} marked as {} ", task.getUuid(), taskStatus);
       } catch (Exception exception) {
         handleTaskFailureResponse(task, exception.getMessage());
       }
@@ -463,38 +460,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                                         .responseCode(ResponseCode.FAILED)
                                         .accountId(task.getAccountId())
                                         .build();
+    log.info("Task {} marked as failed ", task.getUuid());
     delegateTaskService.handleResponse(task, taskQuery, response);
-  }
-
-  @VisibleForTesting
-  public String pickDelegateForTaskWithoutAnyAgentCapabilities(DelegateTask task, List<String> activeDelegates) {
-    if (isEmpty(activeDelegates)) {
-      log.warn("No active delegates found to execute the task.");
-      return null;
-    }
-
-    boolean ignoreAlreadyTriedDelegates =
-        task.getAlreadyTriedDelegates() == null || task.getAlreadyTriedDelegates().containsAll(activeDelegates);
-
-    // Filter delegate to try different ones when rebroadcasting, but allow all eventually when all are exhausted
-    Set<String> validDelegateIds =
-        activeDelegates.stream()
-            .filter(delegateId -> ignoreAlreadyTriedDelegates || !task.getAlreadyTriedDelegates().contains(delegateId))
-            .collect(Collectors.toSet());
-
-    for (String delegateId : validDelegateIds) {
-      BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
-      boolean canAssign = assignDelegateService.canAssign(batch, delegateId, task);
-      delegateSelectionLogsService.save(batch);
-
-      if (canAssign) {
-        log.info("Setting preAssignedDelegate for task without agent capabilities to {}.", delegateId);
-        return delegateId;
-      }
-    }
-
-    log.warn("No assignable active delegates found to execute the task.");
-    return null;
   }
 
   @VisibleForTesting
@@ -726,46 +693,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       default:
         noop();
     }
-  }
-
-  private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {
-    if (task == null) {
-      log.warn("Delegate task is null");
-      throw new InvalidArgumentsException(Pair.of("args", "Delegate task is null"));
-    }
-    if (task.getAccountId() == null) {
-      log.warn("Delegate task has null account ID");
-      throw new InvalidArgumentsException(Pair.of("args", "Delegate task has null account ID"));
-    }
-
-    BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
-
-    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId(), batch);
-
-    List<String> eligibleDelegates = activeDelegates.stream()
-                                         .filter(delegateId -> assignDelegateService.canAssign(batch, delegateId, task))
-                                         .collect(toList());
-
-    delegateSelectionLogsService.save(batch);
-
-    if (activeDelegates.isEmpty()) {
-      if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
-        log.info("No installed delegates found for the account. Task id: {}", task.getUuid());
-        alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoInstalledDelegates,
-            NoInstalledDelegatesAlert.builder().accountId(task.getAccountId()).build());
-      } else {
-        log.info("No delegates are active for the account. Task id: {}", task.getUuid());
-        alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoActiveDelegates,
-            NoActiveDelegatesAlert.builder().accountId(task.getAccountId()).build());
-      }
-    } else if (eligibleDelegates.isEmpty()) {
-      log.warn("{} delegates active but no delegates are eligible to execute task with id: {}", activeDelegates.size(),
-          task.getUuid());
-    }
-
-    log.info("{} delegates {} eligible to execute task with id: {}", eligibleDelegates.size(), eligibleDelegates,
-        task.getUuid());
-    return eligibleDelegates;
   }
 
   @Override
