@@ -94,69 +94,10 @@ public class LdapSearch implements LdapValidator {
 
     log.info("LdapSearchRequest : [{}]", request);
 
-    if (StringUtils.isNotBlank(searchFilter) && searchFilter.toLowerCase().contains("group")) {
-      try (Connection connection = connectionFactory.getConnection()) {
-        connection.open();
-        SearchOperation search = new SearchOperation(connection);
-        return search.execute(request).getResult();
-      }
-    } else {
-      Hashtable<String, Object> env = new Hashtable<>();
-
-      env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-      env.put(Context.PROVIDER_URL, ((DefaultConnectionFactory) connectionFactory).getConnectionConfig().getLdapUrl());
-      env.put(Context.SECURITY_PRINCIPAL, bindDn);
-      env.put(Context.SECURITY_CREDENTIALS, bindCredential);
-      env.put(Context.SECURITY_AUTHENTICATION, "simple");
-
-      try {
-        LdapContext ctx = new InitialLdapContext(env, null);
-
-        byte[] cookie = null;
-        ctx.setRequestControls(new Control[] {new PagedResultsControl(pageSize, Control.NONCRITICAL)});
-        int total;
-        Collection<LdapEntry> entries = new ArrayList<>();
-        do {
-          NamingEnumeration results = ctx.search(baseDN, searchFilter, new SearchControls());
-
-          while (results != null && results.hasMore()) {
-            javax.naming.directory.SearchResult entry = (javax.naming.directory.SearchResult) results.next();
-
-            List<LdapAttribute> ldapAttributeList = new ArrayList<>();
-            ldapAttributeList.add(new LdapAttribute("cn", (String) entry.getAttributes().get("cn").get()));
-            ldapAttributeList.add(new LdapAttribute("mail", (String) entry.getAttributes().get("mail").get()));
-            ldapAttributeList.add(new LdapAttribute("uid", (String) entry.getAttributes().get("uid").get()));
-
-            String dn = "dn=uid" + entry.getAttributes().get("uid").get() + baseDN;
-            LdapEntry ldapEntry = new LdapEntry(dn, ldapAttributeList);
-            entries.add(ldapEntry);
-          }
-
-          Control[] controls = ctx.getResponseControls();
-          if (controls != null) {
-            for (Control control : controls) {
-              if (control instanceof PagedResultsResponseControl) {
-                PagedResultsResponseControl prrc = (PagedResultsResponseControl) control;
-                total = prrc.getResultSize();
-                if (total != 0) {
-                  log.info("Total number of members found are {} with query {}", total, searchFilter);
-                } else {
-                  log.info("No members found with query {}", searchFilter);
-                }
-                cookie = prrc.getCookie();
-              }
-            }
-          } else {
-            log.info("No controls were sent from the server");
-          }
-          ctx.setRequestControls(new Control[] {new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
-        } while (cookie != null);
-        ctx.close();
-        return new SearchResult(entries);
-      } catch (Exception e) {
-        log.info("Error querying to ldap server", e);
-      }
-      return null;
+    try (Connection connection = connectionFactory.getConnection()) {
+      connection.open();
+      SearchOperation search = new SearchOperation(connection);
+      return search.execute(request).getResult();
     }
   }
 
