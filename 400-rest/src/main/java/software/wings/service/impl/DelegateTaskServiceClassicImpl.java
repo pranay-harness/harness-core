@@ -377,7 +377,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       processDelegateTask(task, QUEUED);
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
 
-
       log.info("Processing sync task {}", task.getUuid());
       broadcastHelper.rebroadcastDelegateTask(task);
     }
@@ -418,7 +417,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         generateCapabilitiesForTaskIfFeatureEnabled(task);
         convertToExecutionCapability(task);
 
-        Set<String> eligibleListOfDelegates = assignDelegateService.getEligibleDelegatesToExecuteTask(task, batch);
+        List<String> eligibleListOfDelegates = assignDelegateService.getEligibleDelegatesToExecuteTask(task, batch);
 
         if (eligibleListOfDelegates.isEmpty()) {
           delegateSelectionLogsService.logNoEligibleDelegatesToExecuteTask(batch, task.getAccountId());
@@ -430,15 +429,15 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
         // filter only connected ones from list
         List<String> connectedEligibleDelegates =
-            assignDelegateService.getConnectedDelegateList(new ArrayList<>(eligibleListOfDelegates), task.getAccountId(), batch);
+            assignDelegateService.getConnectedDelegateList(eligibleListOfDelegates, task.getAccountId(), batch);
 
         if (!task.getData().isAsync() && connectedEligibleDelegates.isEmpty()) {
-            log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(NO_ELIGIBLE_DELEGATE, task));
-            if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
-              throw new NoInstalledDelegatesException();
-            } else {
-              throw new NoAvailableDelegatesException();
-            }
+          log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(NO_ELIGIBLE_DELEGATE, task));
+          if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
+            throw new NoInstalledDelegatesException();
+          } else {
+            throw new NoAvailableDelegatesException();
+          }
         }
 
         checkTaskRankRateLimit(task.getRank());
@@ -464,7 +463,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                                         .build();
     delegateTaskService.handleResponse(task, taskQuery, response);
   }
-
 
   @VisibleForTesting
   public String pickDelegateForTaskWithoutAnyAgentCapabilities(DelegateTask task, List<String> activeDelegates) {

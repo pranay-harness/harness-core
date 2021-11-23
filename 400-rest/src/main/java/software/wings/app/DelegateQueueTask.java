@@ -49,12 +49,10 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
@@ -251,15 +249,9 @@ public class DelegateQueueTask implements Runnable {
                                         .filter(DelegateTaskKeys.uuid, delegateTask.getUuid())
                                         .filter(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount());
 
-        UpdateOperations<DelegateTask> updateOperations =
-            persistence.createUpdateOperations(DelegateTask.class)
-                .set(DelegateTaskKeys.lastBroadcastAt, now)
-                .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
-                .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask));
-
         LinkedList<String> eligibleDelegatesList = delegateTask.getEligibleToExecuteDelegateIds();
         // add connected eligible delegates to broadcast list. Also rotate the eligibleDelegatesList list
-        Set<String> broadcastList = new HashSet<>();
+        List<String> broadcastList = new ArrayList<>();
         int broadcastLimit = Math.min(eligibleDelegatesList.size(), broadcastHelper.getMaxBroadcastCount(delegateTask));
         Iterator<String> delegateIdIterator = eligibleDelegatesList.iterator();
         while (delegateIdIterator.hasNext() && broadcastLimit > 0) {
@@ -270,6 +262,12 @@ public class DelegateQueueTask implements Runnable {
           }
           eligibleDelegatesList.addLast(delegateId);
         }
+        UpdateOperations<DelegateTask> updateOperations =
+            persistence.createUpdateOperations(DelegateTask.class)
+                .set(DelegateTaskKeys.lastBroadcastAt, now)
+                .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
+                .set(DelegateTaskKeys.eligibleToExecuteDelegateIds, eligibleDelegatesList)
+                .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask));
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {

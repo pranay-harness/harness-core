@@ -211,19 +211,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   public void logProfileScopeRuleNotMatched(@Nullable final BatchDelegateSelectionLog batch, final String accountId,
       final String delegateId, final String delegateProfileId, final Set<String> scopingRulesDescriptions) {
     final String message = "Delegate profile scoping rules not matched";
-    final DelegateSelectionLogMetadata metadata =
-        DelegateSelectionLogMetadata.builder()
-            .profileScopingRulesMetadata(ProfileScopingRulesMetadata.builder()
-                                             .profileId(delegateProfileId)
-                                             .scopingRulesDescriptions(scopingRulesDescriptions)
-                                             .build())
-            .build();
-
-    final Map<String, DelegateSelectionLogMetadata> delegateMetadata = new HashMap<>();
-    delegateMetadata.put(delegateId, metadata);
-
-    logBatch(batch, accountId, Sets.newHashSet(delegateId), delegateMetadata, message, REJECTED,
-        PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID);
+    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, REJECTED, PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID);
   }
 
   @Override

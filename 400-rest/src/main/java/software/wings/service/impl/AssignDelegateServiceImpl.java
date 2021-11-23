@@ -371,7 +371,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         return true;
       }
     }
-
     delegateSelectionLogsService.logProfileScopeRuleNotMatched(
         batch, delegate.getAccountId(), delegate.getUuid(), delegateProfile.getUuid(), failedRulesDescriptions);
 
@@ -836,19 +835,19 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   }
 
   @Override
-  public Set<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch) {
-    Set<String> eligibleDelegateIds = new HashSet<>();
+  public List<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch) {
+    List<String> eligibleDelegateIds = new ArrayList<>();
     try {
       List<Delegate> accountDelegates = getAccountDelegates(task.getAccountId());
       if (isEmpty(accountDelegates)) {
         return eligibleDelegateIds;
       }
-      Set<String> assignableDelegateIds = accountDelegates.stream()
+      List<String> assignableDelegateIds = accountDelegates.stream()
                                               .filter(delegate
                                                   -> delegate.getStatus() != DelegateInstanceStatus.DELETED
                                                       && canAssign(batch, delegate.getUuid(), task))
                                               .map(Delegate::getUuid)
-                                              .collect(Collectors.toSet());
+                                              .collect(Collectors.toList());
 
       List<String> criteria = fetchCriteria(task);
       if (isEmpty(criteria)) {
