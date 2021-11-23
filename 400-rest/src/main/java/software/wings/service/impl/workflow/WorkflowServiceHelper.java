@@ -944,7 +944,7 @@ public class WorkflowServiceHelper {
 
     if (orchestrationWorkflowType == BLUE_GREEN) {
       Map<String, Object> defaultDataSwitchRoutes = newHashMap();
-      defaultDataSwitchRoutes.put("downsizeOldVMSS", true);
+      defaultDataSwitchRoutes.put("downsizeOldVMSSS", true);
       phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_VMSS_SWITCH_ROUTES, AZURE_VMSS_SWITCH_ROUTES)
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
