@@ -260,8 +260,7 @@ public class DelegateQueueTask implements Runnable {
         LinkedList<String> eligibleDelegatesList = delegateTask.getEligibleToExecuteDelegateIds();
         // add connected eligible delegates to broadcast list. Also rotate the eligibleDelegatesList list
         Set<String> broadcastList = new HashSet<>();
-        int broadcastLimit =
-            Math.min(eligibleDelegatesList.size(), broadcastHelper.getMaxBroadcastCount(delegateTask));
+        int broadcastLimit = Math.min(eligibleDelegatesList.size(), broadcastHelper.getMaxBroadcastCount(delegateTask));
         Iterator<String> delegateIdIterator = eligibleDelegatesList.iterator();
         while (delegateIdIterator.hasNext() && broadcastLimit > 0) {
           String delegateId = eligibleDelegatesList.removeFirst();
@@ -271,12 +270,6 @@ public class DelegateQueueTask implements Runnable {
           }
           eligibleDelegatesList.addLast(delegateId);
         }
-        /* String accountId = delegateTask.getAccountId();
-         broadcastList = eligibleDelegatesList.stream()
-                 .findAny().filter(delegateId -> delegateService.checkDelegateConnected(accountId, delegateId))
-                             .limit(maxLimit)
-                             .collect(Collectors.toList());*/
-
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {

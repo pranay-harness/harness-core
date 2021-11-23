@@ -17,16 +17,14 @@ import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.rule.OwnerRule.VLAD;
 import static io.harness.rule.OwnerRule.VUK;
 
+import static java.util.Collections.singletonList;
+import static org.mockito.Matchers.*;
 import static software.wings.utils.Utils.uuidToIdentifier;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -34,6 +32,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
@@ -114,10 +113,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.atmosphere.cpr.Broadcaster;
@@ -222,6 +218,11 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldExecuteTask() {
     Delegate delegate = createDelegateBuilder().build();
     persistence.save(delegate);
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+            any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+            .thenReturn(new HashSet<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+            .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     DelegateTask delegateTask = getDelegateTask();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().build();
     when(delegateSelectionLogsService.createBatch(delegateTask)).thenReturn(batch);
@@ -247,6 +248,10 @@ public class DelegateServiceImplTest extends WingsBaseTest {
       new Thread(delegateSyncService).start();
     });
     thread.start();
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+            any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+            .thenReturn(new HashSet<>(singletonList(DELEGATE_ID)));
+
     DelegateResponseData responseData = delegateTaskServiceClassic.executeTask(delegateTask);
     assertThat(responseData).isInstanceOf(HttpStateExecutionResponse.class);
     HttpStateExecutionResponse httpResponse = (HttpStateExecutionResponse) responseData;
@@ -285,6 +290,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(false);
     delegateTask.setUuid(taskId);
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+            any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+            .thenReturn(new HashSet<>(singletonList(DELEGATE_ID)));
 
     delegateTaskServiceClassic.processDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(persistence.get(DelegateTask.class, taskId).getPreAssignedDelegateId()).isNotEqualTo(delegateId);
