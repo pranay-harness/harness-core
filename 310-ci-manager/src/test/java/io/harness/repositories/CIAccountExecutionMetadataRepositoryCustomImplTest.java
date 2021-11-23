@@ -1,4 +1,4 @@
-package ci.pipeline.repositories;
+package io.harness.repositories;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.rule.OwnerRule.JAMIE;
@@ -7,11 +7,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.impl.CIManagerTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.lock.PersistentLocker;
 import io.harness.lock.mongo.AcquiredDistributedLock;
-import io.harness.repositories.CIAccountExecutionMetadataRepository;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 
@@ -23,7 +22,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
 @OwnedBy(CI)
-public class CIAccountExecutionMetadataRepositoryCustomImplTest extends CIExecutionTestBase {
+public class CIAccountExecutionMetadataRepositoryCustomImplTest extends CIManagerTestBase {
   private static final String ACCOUNT_ID = "accountId";
   @Inject PersistentLocker persistentLocker;
   @Inject CIAccountExecutionMetadataRepository accountExecutionMetadataRepository;

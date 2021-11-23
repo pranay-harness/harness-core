@@ -4,7 +4,6 @@ import io.harness.ci.plan.creator.execution.CIPipelineModuleInfo;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.repositories.CIAccountExecutionMetadataRepository;
 
