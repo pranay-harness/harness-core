@@ -1,4 +1,4 @@
-package io.harness.ci.pipeline.executions;
+package ci.pipeline.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 

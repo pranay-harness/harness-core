@@ -1,7 +1,6 @@
-package io.harness.ci.repositories;
+package io.harness.repositories;
 
-import io.harness.ci.pipeline.executions.CIAccountExecutionMetadata;
-
+import ci.pipeline.execution.CIAccountExecutionMetadata;
 import java.util.Optional;
 import org.springframework.data.repository.PagingAndSortingRepository;
 

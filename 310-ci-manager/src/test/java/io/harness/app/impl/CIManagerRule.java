@@ -15,6 +15,7 @@ import io.harness.app.ScmConnectionConfig;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
+import io.harness.ci.app.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
@@ -48,7 +49,6 @@ import io.harness.threading.ExecutorModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
-import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;

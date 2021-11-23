@@ -1,14 +1,14 @@
-package ci.pipeline.execution;
+package io.harness.ci.app.pipeline.execution;
 
 import static io.harness.pms.contracts.execution.events.OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE;
 import static io.harness.pms.contracts.execution.events.OrchestrationEventType.ORCHESTRATION_END;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ci.pipeline.executions.CIPipelineEndEventHandler;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 
+import ci.pipeline.execution.PipelineExecutionUpdateEventHandler;
 import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.Map;

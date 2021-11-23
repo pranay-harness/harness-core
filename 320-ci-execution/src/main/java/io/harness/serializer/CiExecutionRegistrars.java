@@ -3,6 +3,8 @@ package io.harness.serializer;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.CIExecutionKryoRegistrar;
+import io.harness.serializer.morphia.CIExecutionMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -22,6 +24,7 @@ public class CiExecutionRegistrars {
           .addAll(ApiServicesRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
+          .add(CIExecutionKryoRegistrar.class)
           .add(PipelineServiceUtilKryoRegistrar.class)
           .build();
 
@@ -34,6 +37,7 @@ public class CiExecutionRegistrars {
           .addAll(ApiServicesRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
+          .add(CIExecutionMorphiaRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

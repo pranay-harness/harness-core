@@ -13,6 +13,7 @@ import io.harness.PipelineServiceUtilityModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheModule;
 import io.harness.ci.app.InspectCommand;
+import io.harness.ci.app.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import io.harness.ci.plan.creator.CIModuleInfoProvider;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
 import io.harness.ci.plan.creator.filter.CIFilterCreationResponseMerger;
@@ -85,7 +86,6 @@ import io.harness.yaml.YamlSdkInitHelper;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
-import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

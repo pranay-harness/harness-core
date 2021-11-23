@@ -67,7 +67,6 @@ import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml.K8sDirectInfraYamlSpec;
 import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
 import io.harness.ci.beans.entities.BuildNumberDetails;
-import io.harness.ci.pipeline.executions.CIAccountExecutionMetadata;
 import io.harness.ci.stdvars.BuildStandardVariables;
 import io.harness.ci.stdvars.GitVariables;
 import io.harness.serializer.KryoRegistrar;
@@ -154,6 +153,5 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsVmStageInfraDetails.class, 100098);
     kryo.register(StageInfraDetails.class, 100099);
     kryo.register(K8StageInfraDetails.class, 100100);
-    kryo.register(CIAccountExecutionMetadata.class, 100101);
   }
 }
