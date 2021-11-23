@@ -14,6 +14,7 @@ import software.wings.service.intfc.AssignDelegateService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,9 @@ public class DelegateTaskBroadcastHelper {
   // afterwards}
   private Integer[] syncIntervals = new Integer[] {0, 5, 60, 120, 240, 300};
 
+  // with every broadcast interval , broadcast only max number of delegates at a time for sync/async task
+  private Integer[] maxNumberOfDelegatesToBroadcast = new Integer[] {1, 2, 3, 5, 8, 10};
+
   public void broadcastNewDelegateTaskAsync(DelegateTask task) {
     executorService.submit(() -> {
       try {
@@ -59,7 +63,7 @@ public class DelegateTaskBroadcastHelper {
                                                       .accountId(delegateTask.getAccountId())
                                                       .taskId(delegateTask.getUuid())
                                                       .async(delegateTask.getData().isAsync())
-                                                      .preAssignedDelegateId(delegateTask.getPreAssignedDelegateId())
+                                                      .broadcastToDelegatesIds(delegateTask.getBroadcastToDelegateIds())
                                                       .build();
 
     Broadcaster broadcaster = broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true);
@@ -87,5 +91,12 @@ public class DelegateTaskBroadcastHelper {
     }
 
     return System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(delta);
+  }
+
+  public int getMaxBroadcastCount(DelegateTask delegateTask) {
+    int nextBroadcastCount = delegateTask.getBroadcastCount() + 1;
+    return (nextBroadcastCount < maxNumberOfDelegatesToBroadcast.length)
+        ? maxNumberOfDelegatesToBroadcast[nextBroadcastCount]
+        : maxNumberOfDelegatesToBroadcast[nextBroadcastCount - 1];
   }
 }

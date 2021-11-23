@@ -259,7 +259,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Sync() {
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(false);
-    delegateTaskServiceClassic.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
+    delegateTaskServiceClassic.processDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(delegateTask.getBroadcastCount()).isZero();
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
   }
@@ -270,7 +270,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Async() {
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(true);
-    delegateTaskServiceClassic.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
+    delegateTaskServiceClassic.processDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(delegateTask.getBroadcastCount()).isZero();
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
   }
@@ -286,7 +286,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateTask.getData().setAsync(false);
     delegateTask.setUuid(taskId);
 
-    delegateTaskServiceClassic.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
+    delegateTaskServiceClassic.processDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(persistence.get(DelegateTask.class, taskId).getPreAssignedDelegateId()).isNotEqualTo(delegateId);
   }
 

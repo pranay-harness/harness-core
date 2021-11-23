@@ -71,13 +71,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -842,9 +836,66 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   }
 
   @Override
+  public Set<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch) {
+    Set<String> eligibleDelegateIds = new HashSet<>();
+    try {
+      List<Delegate> accountDelegates = getAccountDelegates(task.getAccountId());
+      if (isEmpty(accountDelegates)) {
+        return eligibleDelegateIds;
+      }
+      Set<String> assignableDelegateIds = accountDelegates.stream()
+                                              .filter(delegate
+                                                  -> delegate.getStatus() != DelegateInstanceStatus.DELETED
+                                                      && canAssign(batch, delegate.getUuid(), task))
+                                              .map(Delegate::getUuid)
+                                              .collect(Collectors.toSet());
+
+      List<String> criteria = fetchCriteria(task);
+      if (isEmpty(criteria)) {
+        return assignableDelegateIds;
+      }
+
+      for (String delegateId : assignableDelegateIds) {
+        boolean matching = true;
+        for (String criterion : criteria) {
+          Optional<DelegateConnectionResult> result =
+              delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criterion));
+          if (!result.isPresent() || !result.get().isValidated()) {
+            matching = false;
+            break;
+          }
+        }
+        if (matching) {
+          eligibleDelegateIds.add(delegateId);
+        }
+      }
+    } catch (Exception e) {
+      log.error("Error checking for eligible or whitelisted delegates", e);
+    }
+    return eligibleDelegateIds;
+  }
+
+  @Override
+  public List<String> getConnectedDelegateList(List<String> delegatesList, String accountId, BatchDelegateSelectionLog batch) {
+    if (isEmpty(delegatesList)){
+      return delegatesList;
+    }
+    List<String> connectedDelegates = retrieveActiveDelegates(accountId, batch);
+    return delegatesList.stream().filter(connectedDelegates::contains).collect(Collectors.toList());
+  }
+
+  @Override
   public List<Delegate> getAccountDelegates(String accountId) {
     try {
-      return accountDelegatesCache.get(accountId);
+      List<Delegate> accountDelegates = accountDelegatesCache.get(accountId);
+      if (accountDelegates.isEmpty()) {
+        /* Cache invalidation was added here in order to cover the edge case, when there are no delegates in db for
+         * the given account, so that the cache has an opportunity to refresh on a next invocation, instead of waiting
+         * for the whole cache validity period to pass and returning empty list.
+         * */
+        accountDelegatesCache.invalidate(accountId);
+      }
+      return accountDelegates;
     } catch (ExecutionException | InvalidCacheLoadException ex) {
       log.error("Unexpected error occurred while fetching delegates from cache.", ex);
       return emptyList();

@@ -3685,7 +3685,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     }
 
     final DelegateTask delegateTask = delegateTaskBuilder.build();
-    delegateService.saveDelegateTask(delegateTask, status);
+    delegateTaskServiceClassic.processDelegateTask(delegateTask, status);
     return delegateTask;
   }
 

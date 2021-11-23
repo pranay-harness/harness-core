@@ -136,8 +136,6 @@ public interface DelegateService extends OwnedByAccount {
 
   List<String> obtainDelegateIdsUsingName(String accountId, String delegateName);
 
-  void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
-
   boolean filter(String accountId, String delegateId);
 
   Delegate updateHeartbeatForDelegateWithPollingEnabled(Delegate delegate);

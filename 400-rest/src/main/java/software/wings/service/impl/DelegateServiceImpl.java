@@ -63,7 +63,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
-import io.harness.beans.DelegateTask.Status;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -2688,11 +2687,6 @@ public class DelegateServiceImpl implements DelegateService {
       log.error("Could not get delegates from DB.", e);
       return null;
     }
-  }
-
-  @Override
-  public void saveDelegateTask(DelegateTask task, Status status) {
-    delegateTaskServiceClassic.saveDelegateTask(task, status);
   }
 
   @VisibleForTesting

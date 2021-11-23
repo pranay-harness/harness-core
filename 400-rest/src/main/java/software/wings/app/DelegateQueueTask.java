@@ -31,7 +31,6 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
-import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
@@ -50,8 +49,12 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
@@ -254,16 +257,32 @@ public class DelegateQueueTask implements Runnable {
                 .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
                 .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask));
 
-        // Old way with rebroadcasting
-        if (delegateTask.getPreAssignedDelegateId() != null && delegateTask.getBroadcastCount() > 0) {
-          updateOperations.unset(DelegateTaskKeys.preAssignedDelegateId);
+        LinkedList<String> eligibleDelegatesList = delegateTask.getEligibleToExecuteDelegateIds();
+        // add connected eligible delegates to broadcast list. Also rotate the eligibleDelegatesList list
+        Set<String> broadcastList = new HashSet<>();
+        int broadcastLimit =
+            Math.min(eligibleDelegatesList.size(), broadcastHelper.getMaxBroadcastCount(delegateTask));
+        Iterator<String> delegateIdIterator = eligibleDelegatesList.iterator();
+        while (delegateIdIterator.hasNext() && broadcastLimit > 0) {
+          String delegateId = eligibleDelegatesList.removeFirst();
+          if (delegateService.checkDelegateConnected(delegateTask.getAccountId(), delegateId)) {
+            broadcastList.add(delegateId);
+            broadcastLimit--;
+          }
+          eligibleDelegatesList.addLast(delegateId);
         }
+        /* String accountId = delegateTask.getAccountId();
+         broadcastList = eligibleDelegatesList.stream()
+                 .findAny().filter(delegateId -> delegateService.checkDelegateConnected(accountId, delegateId))
+                             .limit(maxLimit)
+                             .collect(Collectors.toList());*/
 
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {
           continue;
         }
+        delegateTask.setBroadcastToDelegateIds(broadcastList);
 
         try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR);
@@ -278,45 +297,7 @@ public class DelegateQueueTask implements Runnable {
     }
   }
 
-  private boolean handleTaskWithForceExecution(DelegateTask task) {
-    BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
-    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId(), batch);
-
-    for (String delegateId : activeDelegates) {
-      boolean canAssign = assignDelegateService.canAssign(batch, delegateId, task);
-      if (canAssign) {
-        task.setPreAssignedDelegateId(delegateId);
-        break;
-      }
-    }
-
-    // If unable to assign any delegate for the task, then we expire it
-    if (task.getPreAssignedDelegateId() == null) {
-      return false;
-    }
-
-    delegateSelectionLogsService.save(batch);
-
-    Query<DelegateTask> filterQuery = persistence.createQuery(DelegateTask.class, excludeAuthority)
-                                          .filter(DelegateTaskKeys.accountId, task.getAccountId())
-                                          .filter(DelegateTaskKeys.uuid, task.getUuid())
-                                          .filter(DelegateTaskKeys.status, QUEUED);
-
-    UpdateOperations<DelegateTask> updateOperations =
-        persistence.createUpdateOperations(DelegateTask.class)
-            .set(DelegateTaskKeys.nextBroadcast, 0)
-            .set(DelegateTaskKeys.expiry, currentTimeMillis() + task.fetchExtraTimeoutForForceExecution())
-            .set(DelegateTaskKeys.preAssignedDelegateId, task.getPreAssignedDelegateId())
-            .set(DelegateTaskKeys.forceExecute, false);
-
-    persistence.findAndModify(filterQuery, updateOperations, HPersistence.returnNewOptions);
-
-    log.info("Setting task for force execution : {}", task);
-
-    return true;
-  }
-
   private boolean shouldExpireTask(DelegateTask task) {
-    return !task.isForceExecute() || !handleTaskWithForceExecution(task);
+    return !task.isForceExecute();
   }
 }
