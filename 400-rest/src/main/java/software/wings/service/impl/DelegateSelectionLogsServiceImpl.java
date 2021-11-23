@@ -128,15 +128,6 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     if (batch == null || batch.getDelegateSelectionLogs().isEmpty()) {
       return;
     }
-
-   /* final String accountId = batch.getTaskMetadata().getAccountId();
-    if (featureFlagService.isEnabled(FeatureName.DELEGATE_SELECTION_LOGS_DISABLED, accountId)) {
-      return;
-    }
-
-    batch.getTaskMetadata().setSetupAbstractions(
-        processSetupAbstractions(batch.getTaskMetadata().getSetupAbstractions()));
-*/
     try {
       persistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
     } catch (Exception exception) {
