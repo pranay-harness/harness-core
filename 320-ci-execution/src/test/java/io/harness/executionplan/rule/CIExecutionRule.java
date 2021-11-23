@@ -15,7 +15,6 @@ import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
 import io.harness.callback.DelegateCallbackToken;
-import io.harness.ci.app.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
@@ -47,6 +46,7 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 
+import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.google.common.base.Suppliers;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;

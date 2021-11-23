@@ -1,4 +1,4 @@
-package io.harness.ci.app.pipeline.execution;
+package ci.pipeline.execution;
 
 import io.harness.ci.plan.creator.execution.CIPipelineModuleInfo;
 import io.harness.pms.execution.utils.AmbianceUtils;
