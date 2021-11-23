@@ -10,6 +10,7 @@ import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.JELENA;
 import static io.harness.rule.OwnerRule.SAINATH;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TMACARI;
@@ -111,6 +112,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsDeployRollbackDataFetchRequest;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
+import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
@@ -538,6 +540,61 @@ public class EcsStateHelperTest extends CategoryTest {
     assertThat(delegateTask.getWaitId()).isEqualTo(ACTIVITY_ID);
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD)).isEqualTo(ENV_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
+        .isEqualTo(INFRA_MAPPING_ID);
+  }
+
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void testCreateAndQueueDelegateTaskForEcsRunTaskDeploy() {
+    final String accountId = "accountId";
+    final String appUuid = "appUuid";
+    final String appAppId = "appAppId";
+    final String envUuid = "envUuid";
+    final String ecsRunTaskFamilyName = "runTaskFamilyName";
+    final String activityId = "activityId";
+    EcsRunTaskDataBag bag = EcsRunTaskDataBag.builder()
+                                .applicationAccountId(accountId)
+                                .applicationUuid(appUuid)
+                                .applicationAppId(appAppId)
+                                .envUuid(envUuid)
+                                .awsConfig(AwsConfig.builder().build())
+                                .listTaskDefinitionJson(new ArrayList<String>())
+                                .ecsRunTaskFamilyName(ecsRunTaskFamilyName)
+                                .serviceSteadyStateTimeout(10L)
+                                .skipSteadyStateCheck(true)
+                                .build();
+
+    InfrastructureMappingService infrastructureMappingService = mock(InfrastructureMappingService.class);
+    doReturn(anEcsInfrastructureMapping()
+                 .withUuid(INFRA_MAPPING_ID)
+                 .withClusterName(CLUSTER_NAME)
+                 .withRegion("us-east-1")
+                 .withVpcId("vpc-id")
+                 .withAssignPublicIp(true)
+                 .withLaunchType("Ec2")
+                 .build())
+        .when(infrastructureMappingService)
+        .get(any(), any());
+    DelegateService mockDelegateService = mock(DelegateService.class);
+    SecretManager mockSecretManager = mock(SecretManager.class);
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).build()).when(mockContext).fetchRequiredEnvironment();
+
+    helper.createAndQueueDelegateTaskForEcsRunTaskDeploy(bag, infrastructureMappingService, mockSecretManager,
+        anApplication().uuid(APP_ID).name(APP_NAME).build(), mockContext, EcsRunTaskDeployRequest.builder().build(),
+        activityId, mockDelegateService, false);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(mockDelegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    assertThat(delegateTask).isNotNull();
+    assertThat(delegateTask.getData().getParameters()).isNotNull();
+    assertThat(2).isEqualTo(delegateTask.getData().getParameters().length);
+    assertThat(delegateTask.getData().getParameters()[0] instanceof EcsRunTaskDeployRequest).isTrue();
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(appUuid);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD)).isEqualTo(envUuid);
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
         .isEqualTo(INFRA_MAPPING_ID);
   }
