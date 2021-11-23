@@ -129,17 +129,16 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
       return;
     }
 
-    final String accountId = batch.getTaskMetadata().getAccountId();
+   /* final String accountId = batch.getTaskMetadata().getAccountId();
     if (featureFlagService.isEnabled(FeatureName.DELEGATE_SELECTION_LOGS_DISABLED, accountId)) {
       return;
     }
 
     batch.getTaskMetadata().setSetupAbstractions(
         processSetupAbstractions(batch.getTaskMetadata().getSetupAbstractions()));
-
+*/
     try {
       persistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
-      persistence.insertIgnoringDuplicateKeys(batch.getTaskMetadata());
     } catch (Exception exception) {
       log.error("Error while saving into Database ", exception);
     }
@@ -156,11 +155,6 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
     return BatchDelegateSelectionLog.builder()
         .taskId(task.getUuid())
-        .taskMetadata(DelegateSelectionLogTaskMetadata.builder()
-                          .taskId(task.getUuid())
-                          .accountId(task.getAccountId())
-                          .setupAbstractions(task.getSetupAbstractions())
-                          .build())
         .isTaskNg(isTaskNg)
         .build();
   }

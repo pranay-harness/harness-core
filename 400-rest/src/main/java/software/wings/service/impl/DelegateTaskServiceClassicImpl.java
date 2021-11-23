@@ -102,6 +102,7 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.selection.log.BatchDelegateSelectionLog;
+import io.harness.selection.log.DelegateSelectionLogTaskMetadata;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateCallbackRegistry;
@@ -375,10 +376,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       processDelegateTask(task, QUEUED);
-      List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
-
       log.info("Processing sync task {}", task.getUuid());
-      broadcastHelper.rebroadcastDelegateTask(task);
+      //broadcastHelper.rebroadcastDelegateTask(task);
     }
   }
 
@@ -427,23 +426,20 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         // save eligible delegate ids as part of task (will be used for rebroadcasting)
         task.setEligibleToExecuteDelegateIds(new LinkedList<>(eligibleListOfDelegates));
 
-        // filter only connected ones from list
-        List<String> connectedEligibleDelegates =
-            assignDelegateService.getConnectedDelegateList(eligibleListOfDelegates, task.getAccountId(), batch);
-
-        if (!task.getData().isAsync() && connectedEligibleDelegates.isEmpty()) {
+      /*  if (!task.getData().isAsync() && assignDelegateService.noInstalledDelegates(task.getAccountId())) {
           log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(NO_ELIGIBLE_DELEGATE, task));
-          if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
-            throw new NoInstalledDelegatesException();
-          } else {
-            throw new NoAvailableDelegatesException();
-          }
-        }
+          throw new NoInstalledDelegatesException();
+        }*/
 
         checkTaskRankRateLimit(task.getRank());
 
         // Added temporarily to help to identifying tasks whose task setup abstractions need to be fixed
         verifyTaskSetupAbstractions(task);
+        persistence.save(DelegateSelectionLogTaskMetadata.builder()
+                .taskId(task.getUuid())
+                .accountId(task.getAccountId())
+                .setupAbstractions(task.getSetupAbstractions())
+                .build());
         delegateSelectionLogsService.save(batch);
         persistence.save(task);
       } catch (Exception exception) {
