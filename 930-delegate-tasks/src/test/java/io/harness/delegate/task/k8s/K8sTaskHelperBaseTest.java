@@ -33,6 +33,7 @@ import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TATHAGAT;
@@ -120,6 +121,7 @@ import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.UrlNotProvidedException;
 import io.harness.exception.UrlNotReachableException;
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.kubectl.AbstractExecutable;
@@ -221,6 +223,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpec;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpecBuilder;
+import org.json.JSONArray;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1741,6 +1744,45 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testSavingPatchesToDirectory() throws Exception {
+    Path temp = Files.createTempDirectory("testRenderManifestFilesForGoTemplate");
+    try {
+      FileIo.writeUtf8StringToFile(temp.toString() + '/' + "kustomization.yaml",
+          "patchesStrategicMerge:\n"
+              + "- env.yaml\n");
+      List<String> kustomizePatchesList = Arrays.asList("field: value", "field: value");
+      spyK8sTaskHelperBase.savingPatchesToDirectory(temp.toString(), kustomizePatchesList, executionLogCallback);
+      ArgumentCaptor<JSONArray> captor = ArgumentCaptor.forClass(JSONArray.class);
+      verify(spyK8sTaskHelperBase, times(1)).updateKustomizationYaml(any(), captor.capture());
+      assertThat(captor.getValue()).isNotNull();
+      assertThat(captor.getValue().get(0)).isEqualTo("patches-0.yaml");
+      // no patches case
+      spyK8sTaskHelperBase.savingPatchesToDirectory(temp.toString(), emptyList(), executionLogCallback);
+      verify(executionLogCallback, times(1))
+          .saveExecutionLog("No Patches files found. Skipping kustomization.yaml updation");
+
+    } finally {
+      deleteDirectoryAndItsContentIfExists(temp.toString());
+    }
+    temp = Files.createTempDirectory("testRenderManifestFilesForGoTemplate");
+    try {
+      FileIo.writeUtf8StringToFile(temp.toString() + '/' + "kustomization.yaml",
+          "resources:\n"
+              + "- ../../application\n");
+      List<String> kustomizePatchesList = Arrays.asList("field: value", "field: value");
+      spyK8sTaskHelperBase.savingPatchesToDirectory(temp.toString(), kustomizePatchesList, executionLogCallback);
+      ArgumentCaptor<JSONArray> captor = ArgumentCaptor.forClass(JSONArray.class);
+      verify(spyK8sTaskHelperBase, times(2)).updateKustomizationYaml(any(), captor.capture());
+      assertThat(captor.getValue()).isNotNull();
+      assertThat(captor.getValue().get(0)).isEqualTo("patches-0.yaml");
+    } finally {
+      deleteDirectoryAndItsContentIfExists(temp.toString());
+    }
+  }
+
+  @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testDoStatusCheckForAllCustomResources() throws Exception {
@@ -2878,14 +2920,16 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     List<FileData> renderedFiles = ImmutableList.of(FileData.builder().fileName("deploy.yaml").build());
     doReturn(renderedFiles)
         .when(kustomizeTaskHelper)
-        .buildForApply(kustomizePath, kustomizePluginPath, "manifest", fileList, executionLogCallback);
+        .buildForApply(
+            kustomizePath, kustomizePluginPath, "manifest", fileList, false, emptyList(), executionLogCallback);
 
     List<FileData> result = k8sTaskHelperBase.renderTemplateForGivenFiles(delegateTaskParams, manifestDelegateConfig,
         "manifest", fileList, valuesList, "release", "namespace", executionLogCallback, 10);
 
     assertThat(result).isEqualTo(renderedFiles);
     verify(kustomizeTaskHelper, times(1))
-        .buildForApply(kustomizePath, kustomizePluginPath, "manifest", fileList, executionLogCallback);
+        .buildForApply(
+            kustomizePath, kustomizePluginPath, "manifest", fileList, false, emptyList(), executionLogCallback);
   }
 
   @Test

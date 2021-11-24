@@ -35,6 +35,7 @@ type Config struct {
 		EvalTable      string `envconfig:"TI_SERVICE_HYPER_TABLE"`
 		SelectionTable string `envconfig:"TI_SERVICE_SELECTION_HYPER_TABLE"`
 		CoverageTable  string `envconfig:"TI_SERVICE_COVERAGE_HYPER_TABLE"`
+		ExecutionTable string `envconfig:"TI_SERVICE_TAG_HYPER_TABLE" default:"tag"`
 	}
 
 	MongoDb struct {

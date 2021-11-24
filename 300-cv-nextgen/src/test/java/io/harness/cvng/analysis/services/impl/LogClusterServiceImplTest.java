@@ -146,8 +146,8 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
     verificationJobService.create(accountId, verificationJob);
     VerificationJobInstance verificationJobInstance = newVerificationJobInstanceDTO();
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     AnalysisInput input =
         AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(start).endTime(end).build();
     logClusterService.scheduleDeploymentL2ClusteringTask(input);
@@ -175,8 +175,8 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
     VerificationJobInstance instance = hPersistence.get(VerificationJobInstance.class, verificationJobInstanceId);
     instance.setResolvedJob(verificationJob);
     hPersistence.save(instance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
 
     List<ClusteredLog> logRecords = createClusteredLogRecords(verificationTaskId, 5, start, end);
     hPersistence.save(logRecords);
@@ -211,8 +211,8 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
     VerificationJobInstance instance = hPersistence.get(VerificationJobInstance.class, verificationJobInstanceId);
     instance.setResolvedJob(verificationJob);
     hPersistence.save(instance);
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
 
     List<ClusteredLog> logRecords = createClusteredLogRecords(verificationTaskId, 5, start, end);
     hPersistence.save(logRecords);

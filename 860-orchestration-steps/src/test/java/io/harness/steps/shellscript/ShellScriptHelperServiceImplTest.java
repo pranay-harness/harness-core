@@ -240,9 +240,8 @@ public class ShellScriptHelperServiceImplTest extends CategoryTest {
         ShellScriptStepParameters.infoBuilder()
             .source(ShellScriptSourceWrapper.builder().spec(source).type("Inline").build())
             .build();
-    assertThatThrownBy(() -> shellScriptHelperServiceImpl.getShellScript(stepParameters))
-        .hasMessageContaining("Script contains unresolved expressions [<+unresolved1>, <+unresolved2>]");
-
+    assertThat(shellScriptHelperServiceImpl.getShellScript(stepParameters))
+        .isEqualTo("echo <+unresolved1>\necho <+unresolved2>");
     source.setScript(ParameterField.createValueField("echo hi"));
     assertThat(shellScriptHelperServiceImpl.getShellScript(stepParameters)).isEqualTo("echo hi");
   }

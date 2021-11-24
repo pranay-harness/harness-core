@@ -6,17 +6,16 @@ import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.newrelic.NewRelicApplication;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
+import io.harness.cvng.beans.newrelic.NewRelicFetchSampleDataRequest;
 import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
 import io.harness.cvng.core.beans.MetricPackValidationResponse;
 import io.harness.cvng.core.beans.MetricPackValidationResponse.MetricValidationResponse;
-import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
-import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.datacollection.exception.DataCollectionException;
-import io.harness.exception.UnsupportedOperationException;
 import io.harness.serializer.JsonUtils;
 
 import com.google.common.reflect.TypeToken;
@@ -98,8 +97,28 @@ public class NewRelicServiceImpl implements NewRelicService {
   }
 
   @Override
-  public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
-      List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
-    throw new UnsupportedOperationException("Import status is not supported for NewRelic");
+  public String fetchSampleData(
+      ProjectParams projectParams, String connectorIdentifier, String query, String tracingId) {
+    try {
+      DataCollectionRequest request = NewRelicFetchSampleDataRequest.builder()
+                                          .type(DataCollectionRequestType.NEWRELIC_SAMPLE_FETCH_REQUEST)
+                                          .query(query)
+                                          .build();
+      OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                      .dataCollectionRequest(request)
+                                                      .connectorIdentifier(connectorIdentifier)
+                                                      .accountId(projectParams.getAccountIdentifier())
+                                                      .orgIdentifier(projectParams.getOrgIdentifier())
+                                                      .tracingId(tracingId)
+                                                      .projectIdentifier(projectParams.getProjectIdentifier())
+                                                      .build();
+
+      OnboardingResponseDTO response =
+          onboardingService.getOnboardingResponse(projectParams.getAccountIdentifier(), onboardingRequestDTO);
+
+      return response.getResult().toString();
+    } catch (DataCollectionException ex) {
+      return null;
+    }
   }
 }

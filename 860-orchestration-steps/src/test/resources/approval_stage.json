@@ -1,0 +1,50 @@
+{
+  "name":"6FIJyvOXQc6KwJQyHvqoqg",
+  "identifier":"stage1",
+  "description":"48OagCMoShuZNmFHdt4z3Q",
+  "type":"Approval",
+  "spec":{
+    "execution":{
+      "steps":[
+        {
+          "step":{
+            "type":"Http",
+            "name":"33afmmzjRPa47Mn9vRwh7w",
+            "identifier":"ptth",
+            "spec":{
+              "url":"b-R4tClvSaOyXbE7goRkFw",
+              "method":"yI-VWdtdSD6rV8EcUS0vGA",
+              "headers":[
+
+              ],
+              "outputVariables":[
+                {
+                  "name":"test",
+                  "value":"YbAGDKThQUyF38keILo1wQ",
+                  "type":"String",
+                  "__uuid":"WvMaOFl7SmOk3fxmVmjJmg"
+                }
+              ],
+              "__uuid":"QwWuKSbYRwSnGsTimNcZRw"
+            },
+            "timeout":"rfLdIvZER6CgXMEUD2bdTw",
+            "__uuid":"O2kGPrIoQgSZaVBf8j-HbA"
+          },
+          "__uuid":"y8XDi_xlRuitfhAmYkJDHw"
+        }
+      ],
+      "rollbackSteps":[
+
+      ],
+      "__uuid":"NnmWEe_TRXCba1-R2EsDrw"
+    },
+    "serviceDependencies":[
+
+    ],
+    "__uuid":"QQNTNTqiTWKWsZAsLncmYA"
+  },
+  "tags":{
+    "__uuid":"w2gP0l_iStioQNRg1FkLXQ"
+  },
+  "__uuid":"eMt5UA9-RFOe4Bif9g1s9Q"
+}

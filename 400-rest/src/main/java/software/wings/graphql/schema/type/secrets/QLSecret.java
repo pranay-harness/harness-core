@@ -14,4 +14,7 @@ public interface QLSecret extends QLObject {
   QLSecretType getSecretType();
   String getName();
   QLUsageScope getUsageScope();
+  default String getSecretReference() {
+    return null;
+  };
 }

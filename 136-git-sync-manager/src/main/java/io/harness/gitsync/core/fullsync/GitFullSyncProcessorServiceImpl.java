@@ -44,8 +44,10 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
       if (fullSyncResponse != null) {
         errorMsg = fullSyncResponse.getErrorMsg();
       }
-      gitFullSyncEntityService.markQueuedOrFailed(entityInfo.getMessageId(), entityInfo.getAccountIdentifier(),
+      gitFullSyncEntityService.markQueuedOrFailed(entityInfo.getUuid(), entityInfo.getAccountIdentifier(),
           entityInfo.getRetryCount(), MAX_RETRY_COUNT, errorMsg);
+    } else {
+      gitFullSyncEntityService.markSuccessful(entityInfo.getUuid(), entityInfo.getAccountIdentifier());
     }
   }
 
@@ -71,6 +73,12 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
         .putAllLogContext(logContext)
         .setAccountIdentifier(entityInfo.getAccountIdentifier())
         .setFolderPath(yamlGitConfigDTO.getDefaultRootFolder().getRootFolder())
+        .setCommitMessage(getCommitMessageForTheFullSyncFlow(entityInfo.getFilePath()))
         .build();
+  }
+
+  private String getCommitMessageForTheFullSyncFlow(String filePath) {
+    return "Harness Full Sync: "
+        + "Add file " + filePath;
   }
 }

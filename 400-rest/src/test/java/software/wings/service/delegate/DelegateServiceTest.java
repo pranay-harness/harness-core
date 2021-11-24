@@ -13,6 +13,7 @@ import static io.harness.delegate.beans.DelegateType.SHELL_SCRIPT;
 import static io.harness.delegate.beans.K8sPermissionType.CLUSTER_ADMIN;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
+import static io.harness.obfuscate.Obfuscator.obfuscate;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.ANKIT;
@@ -34,6 +35,7 @@ import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.OwnerRule.XIN;
 
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.service.impl.DelegateServiceImpl.DELEGATE_DIR;
@@ -77,7 +79,6 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.EncryptedData;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilityRequirement;
@@ -161,6 +162,8 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.TaskType;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.cdn.CdnConfig;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.features.api.UsageLimitedFeature;
@@ -314,10 +317,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void setUp() throws IllegalAccessException {
     CdnConfig cdnConfig = new CdnConfig();
     cdnConfig.setUrl("http://localhost:9500");
-    Map<String, String> jreTarPaths = new HashMap<>();
-    jreTarPaths.put("openjdk8u242", getOpenjdkJreConfig().getJreTarPath());
-    cdnConfig.setCdnJreTarPaths(jreTarPaths);
-    cdnConfig.setAlpnJarPath(getOpenjdkJreConfig().getAlpnJarPath());
     when(subdomainUrlHelper.getDelegateMetadataUrl(any(), any(), any()))
         .thenReturn("http://localhost:" + port + "/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
@@ -351,7 +350,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(infraDownloadService.getDownloadUrlForDelegate(anyString(), any()))
         .thenReturn("http://localhost:" + port + "/builds/9/delegate.jar");
     when(infraDownloadService.getCdnWatcherBaseUrl()).thenReturn("http://localhost:9500/builds");
-    when(infraDownloadService.getCdnWatcherMetaDataFileUrl()).thenReturn("http://localhost:" + port + "/watcherci.txt");
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -653,34 +651,6 @@ public class DelegateServiceTest extends WingsBaseTest {
         .send(Channel.DELEGATES,
             anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
     verify(capabilityService, never()).getAllCapabilityRequirements(accountId);
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldAddAndInvokeRegenerateCapabilityPermissions() {
-    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
-    String accountId = generateUuid();
-    Delegate delegate = createDelegateBuilder().build();
-    delegate.setAccountId(accountId);
-    delegate.setUuid(generateUuid());
-
-    DelegateProfile delegateProfile =
-        createDelegateProfileBuilder().accountId(delegate.getAccountId()).uuid(generateUuid()).build();
-    delegate.setDelegateProfileId(delegateProfile.getUuid());
-
-    when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
-
-    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
-
-    delegate = delegateService.add(delegate);
-
-    assertThat(persistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
-    verify(eventEmitter)
-        .send(Channel.DELEGATES,
-            anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
-    verify(capabilityService).getAllCapabilityRequirements(accountId);
-    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
   }
 
   @Test
@@ -1446,28 +1416,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldRegisterHeartbeatWithPreviousDisconnection() throws IllegalAccessException {
-    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
-    DelegateConnection previousDelegateConnection = mock(DelegateConnection.class);
-    when(previousDelegateConnection.isDisconnected()).thenReturn(true);
-    DelegateConnectionDao mockConnectionDao = mock(DelegateConnectionDao.class);
-    when(mockConnectionDao.upsertCurrentConnection(any(), any(), any(), any(), any()))
-        .thenReturn(previousDelegateConnection);
-    FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
-    String delegateConnectionId = generateTimeBasedUuid();
-    DelegateConnectionHeartbeat heartbeat =
-        DelegateConnectionHeartbeat.builder().version(VERSION).delegateConnectionId(delegateConnectionId).build();
-
-    delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, null);
-
-    verify(subject).fireInform(any(), eq(ACCOUNT_ID), eq(DELEGATE_ID));
-    FieldUtils.writeField(delegateService, "delegateConnectionDao", delegateConnectionDao, true);
-    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
-  }
-
-  @Test
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldRegisterHeartbeatStreaming() throws IllegalAccessException {
@@ -1946,12 +1894,24 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(actualS.equals(expectedS));
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
+
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       String expectedP = CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedFile)))
                              .replaceAll("8888", "" + port);
       String actualP = new String(buffer);
       assertThat(actualP.equals(expectedP));
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/init.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
+
+      buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+      String expectedR = CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedFile)))
+                             .replaceAll("8888", "" + port);
+      String actualR = new String(buffer);
+      assertThat(actualR.equals(expectedR));
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/README.txt");
     }
@@ -2012,6 +1972,10 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(new String(buffer))
           .isEqualTo(
               CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedSetupProxy.sh"))));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/init.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/README.txt");
@@ -2641,6 +2605,14 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.saveProfileResult(
         ACCOUNT_ID, DELEGATE_ID, false, FileBucket.PROFILE_RESULTS, inputStream, fileDetail);
 
+    verify(alertService)
+        .closeAlert(eq(ACCOUNT_ID), eq(GLOBAL_APP_ID), eq(AlertType.DelegateProfileError),
+            eq(DelegateProfileErrorAlert.builder()
+                    .accountId(ACCOUNT_ID)
+                    .hostName("hostname")
+                    .obfuscatedIpAddress(obfuscate("1.2.3.4"))
+                    .build()));
+
     Delegate delegate = persistence.get(Delegate.class, DELEGATE_ID);
     assertThat(delegate.getProfileExecutedAt()).isGreaterThanOrEqualTo(now);
     assertThat(delegate.isProfileError()).isFalse();
@@ -2667,6 +2639,14 @@ public class DelegateServiceTest extends WingsBaseTest {
     long now = System.currentTimeMillis();
     delegateService.saveProfileResult(
         ACCOUNT_ID, DELEGATE_ID, true, FileBucket.PROFILE_RESULTS, inputStream, fileDetail);
+
+    verify(alertService)
+        .openAlert(eq(ACCOUNT_ID), eq(GLOBAL_APP_ID), eq(AlertType.DelegateProfileError),
+            eq(DelegateProfileErrorAlert.builder()
+                    .accountId(ACCOUNT_ID)
+                    .hostName("hostname")
+                    .obfuscatedIpAddress(obfuscate("1.2.3.4"))
+                    .build()));
 
     verify(fileService).deleteFile(eq("previous-result"), eq(FileBucket.PROFILE_RESULTS));
 
@@ -3073,7 +3053,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                        .label("Laptop")
                                        .taskLimit(50)
                                        .replicas(1)
-                                       .ram(2560)
+                                       .ram(2048)
                                        .cpu(0.5)
                                        .build(),
             DelegateSizeDetails.builder()
@@ -3081,7 +3061,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Small")
                 .taskLimit(100)
                 .replicas(2)
-                .ram(5120)
+                .ram(4096)
                 .cpu(1)
                 .build(),
             DelegateSizeDetails.builder()
@@ -3089,7 +3069,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Medium")
                 .taskLimit(200)
                 .replicas(4)
-                .ram(10240)
+                .ram(8192)
                 .cpu(2)
                 .build(),
             DelegateSizeDetails.builder()
@@ -3097,7 +3077,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Large")
                 .taskLimit(400)
                 .replicas(8)
-                .ram(20480)
+                .ram(16384)
                 .cpu(4)
                 .build());
   }
@@ -3446,6 +3426,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void testDownloadNgDockerDelegateShouldReturnComposeFile() throws IOException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey(TOKEN_VALUE).withUuid(ACCOUNT_ID).build());
+
+    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
 
     DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
                                             .orgIdentifier("9S5HMP0xROugl3_QgO62rQO")

@@ -1,0 +1,32 @@
+package io.harness.delegate.task.helm;
+
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
+import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.ManifestDelegateConfig;
+import io.harness.k8s.model.HelmVersion;
+import io.harness.logging.LogCallback;
+
+import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+public class HelmInstallCommandRequestNG extends HelmCommandRequestNG {
+  @Builder.Default private long timeoutInMillis = 600000;
+  private Integer newReleaseVersion;
+  private Integer prevReleaseVersion;
+  @Builder
+  public HelmInstallCommandRequestNG(boolean skipDryRun, String releaseName, List<String> valuesYamlList,
+      K8sInfraDelegateConfig k8sInfraDelegateConfig, ManifestDelegateConfig manifestDelegateConfig, String accountId,
+      boolean skipSteadyStateCheck, boolean shouldOpenFetchFilesLogStream, CommandUnitsProgress commandUnitsProgress,
+      LogCallback logCallback, String namespace, HelmVersion helmVersion, String commandFlags, String repoName,
+      String workingDir, String kubeConfigLocation, String ocPath, String commandName, boolean useLatestKubectlVersion,
+      Integer prevReleaseVersion, Integer newReleaseVersion) {
+    super(skipDryRun, releaseName, HelmCommandType.INSTALL, valuesYamlList, k8sInfraDelegateConfig,
+        manifestDelegateConfig, accountId, skipSteadyStateCheck, shouldOpenFetchFilesLogStream, commandUnitsProgress,
+        logCallback, namespace, helmVersion, commandFlags, repoName, workingDir, kubeConfigLocation, ocPath,
+        commandName, useLatestKubectlVersion);
+    this.prevReleaseVersion = prevReleaseVersion;
+    this.newReleaseVersion = newReleaseVersion;
+  }
+}

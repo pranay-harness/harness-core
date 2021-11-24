@@ -84,7 +84,7 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
 
   @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
-      StepElementParameters stepElementParameters, List<String> valuesFileContents,
+      StepElementParameters stepElementParameters, List<String> manifestOverrideContents,
       K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream,
       UnitProgressData unitProgressData) {
     final InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
@@ -94,7 +94,8 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
     final String accountId = AmbianceUtils.getAccountId(ambiance);
     final boolean skipDryRun = K8sStepHelper.getParameterFieldBooleanValue(
         canaryStepParameters.getSkipDryRun(), K8sCanaryBaseStepInfoKeys.skipDryRun, stepElementParameters);
-    List<String> manifestFilesContents = k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents);
+    List<String> manifestFilesContents =
+        k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, manifestOverrideContents);
     boolean isOpenshiftTemplate = ManifestType.OpenshiftTemplate.equals(k8sManifestOutcome.getType());
 
     K8sCanaryDeployRequest k8sCanaryDeployRequest =
@@ -108,6 +109,7 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
             .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepElementParameters))
             .valuesYamlList(!isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .openshiftParamList(isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
+            .kustomizePatchesList(k8sStepHelper.renderPatches(k8sManifestOutcome, ambiance, manifestOverrideContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .accountId(accountId)

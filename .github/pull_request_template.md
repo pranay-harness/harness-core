@@ -22,3 +22,4 @@ You can use the following comments to re-trigger PR Checks
 - runUnitTests4: `trigger unittest4`
 - runFunctionalTests_1: `trigger ft1`
 - runFunctionalTests_2: `trigger ft2`
+- runCodeBaseHashCheck: `trigger codebasehashcheck`

@@ -56,7 +56,8 @@ public class PlatformAppStartupTest extends CategoryTest {
         ConfigOverride.config("notificationServiceConfig.mongo.uri", getMongoUri("notification")),
         ConfigOverride.config("auditServiceConfig.mongo.uri", getMongoUri("ng-audits")),
         ConfigOverride.config("notificationClient.messageBroker.uri", getMongoUri("notificationChannel")),
-        ConfigOverride.config("resourceGroupServiceConfig.mongo.uri", getMongoUri("resourcegroup")));
+        ConfigOverride.config("resourceGroupServiceConfig.mongo.uri", getMongoUri("resourcegroup")),
+        ConfigOverride.config("hostname", "localhost"), ConfigOverride.config("basePathPrefix", ""));
     SUPPORT.before();
   }
 

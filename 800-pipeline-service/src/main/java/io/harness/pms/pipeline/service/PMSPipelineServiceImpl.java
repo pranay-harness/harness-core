@@ -22,6 +22,7 @@ import io.harness.exception.ScmException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.scm.EntityObjectIdUtils;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
@@ -150,7 +151,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     PipelineEntity tempEntity = entityToUpdate.withYaml(pipelineEntity.getYaml())
                                     .withName(pipelineEntity.getName())
                                     .withDescription(pipelineEntity.getDescription())
-                                    .withTags(pipelineEntity.getTags());
+                                    .withTags(pipelineEntity.getTags())
+                                    .withIsEntityInvalid(false);
 
     return makePipelineUpdateCall(tempEntity, entityToUpdate, changeType);
   }
@@ -211,6 +213,25 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     Update update = new Update();
     update.inc(PipelineEntityKeys.runSequence);
     return Optional.ofNullable(updatePipelineMetadata(accountId, orgIdentifier, projectIdentifier, criteria, update));
+  }
+
+  @Override
+  public boolean markEntityInvalid(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml) {
+    Optional<PipelineEntity> optionalPipelineEntity =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier, false);
+    if (!optionalPipelineEntity.isPresent()) {
+      log.warn(String.format(
+          "Marking pipeline [%s] as invalid failed as it does not exist or has been deleted", identifier));
+      return false;
+    }
+    PipelineEntity existingPipeline = optionalPipelineEntity.get();
+    PipelineEntity pipelineEntityUpdated = existingPipeline.withYaml(invalidYaml)
+                                               .withObjectIdOfYaml(EntityObjectIdUtils.getObjectIdOfYaml(invalidYaml))
+                                               .withIsEntityInvalid(true);
+    pmsPipelineRepository.updatePipelineYaml(
+        pipelineEntityUpdated, existingPipeline, PipelineYamlDtoMapper.toDto(pipelineEntityUpdated), ChangeType.NONE);
+    return true;
   }
 
   @Override

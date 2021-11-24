@@ -46,6 +46,7 @@ import org.springframework.stereotype.Service;
 @Api("budgets")
 @Path("budgets")
 @Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @NextGenManagerAuth
 @Slf4j
 @Service

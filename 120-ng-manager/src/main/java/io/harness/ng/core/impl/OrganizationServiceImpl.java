@@ -6,6 +6,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.enforcement.constants.FeatureRestrictionName.MULTIPLE_ORGANIZATIONS;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_ORGANIZATION_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.ORGANIZATION;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
 import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.ng.core.utils.NGUtils.validate;
@@ -19,7 +21,10 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.AccessControlDTO;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
@@ -56,11 +61,14 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import org.apache.commons.lang3.tuple.Pair;
@@ -334,6 +342,38 @@ public class OrganizationServiceImpl implements OrganizationService {
       }
       return success;
     }));
+  }
+
+  @Override
+  public Set<String> getPermittedOrganizations(@NotNull String accountIdentifier, String orgIdentifier) {
+    Set<String> orgIdentifiers;
+    if (isEmpty(orgIdentifier)) {
+      Criteria orgCriteria = Criteria.where(OrganizationKeys.accountIdentifier)
+                                 .is(accountIdentifier)
+                                 .and(OrganizationKeys.deleted)
+                                 .ne(Boolean.TRUE);
+      List<Organization> organizations = list(orgCriteria);
+      orgIdentifiers = organizations.stream().map(Organization::getIdentifier).collect(Collectors.toSet());
+    } else {
+      orgIdentifiers = Collections.singleton(orgIdentifier);
+    }
+
+    ResourceScope resourceScope = ResourceScope.builder().accountIdentifier(accountIdentifier).build();
+    List<PermissionCheckDTO> permissionChecks = orgIdentifiers.stream()
+                                                    .map(oi
+                                                        -> PermissionCheckDTO.builder()
+                                                               .permission(VIEW_ORGANIZATION_PERMISSION)
+                                                               .resourceIdentifier(oi)
+                                                               .resourceScope(resourceScope)
+                                                               .resourceType(ORGANIZATION)
+                                                               .build())
+                                                    .collect(Collectors.toList());
+    AccessCheckResponseDTO accessCheckResponse = accessControlClient.checkForAccess(permissionChecks);
+    return accessCheckResponse.getAccessControlList()
+        .stream()
+        .filter(AccessControlDTO::isPermitted)
+        .map(AccessControlDTO::getResourceIdentifier)
+        .collect(Collectors.toSet());
   }
 
   private void validateUpdateOrganizationRequest(String identifier, OrganizationDTO organization) {

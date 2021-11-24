@@ -57,6 +57,7 @@ import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.licensing.LicenseService;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.security.authentication.totp.TotpModule;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.intfc.AccountService;
@@ -203,6 +204,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new AlertModule());
     modules.add(new CapabilityModule());
     modules.add(new WingsModule(configuration));
+    modules.add(new TotpModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

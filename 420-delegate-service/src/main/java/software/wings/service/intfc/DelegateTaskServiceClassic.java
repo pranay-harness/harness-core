@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.DEL;
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
-import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.delegate.beans.DelegateProgressData;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
@@ -58,9 +57,6 @@ public interface DelegateTaskServiceClassic extends OwnedByAccount {
   Optional<DelegateTask> fetchDelegateTask(String accountId, String taskId);
 
   void convertToExecutionCapability(DelegateTask task);
-
-  void executeBatchCapabilityCheckTask(String accountId, String delegateId,
-      List<CapabilitySubjectPermission> capabilitySubjectPermissions, String blockedTaskSelectionDetailsId);
 
   String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
 

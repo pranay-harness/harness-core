@@ -10,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.cli.CliResponse;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.kustomize.KustomizeClient;
@@ -30,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 @Singleton
 public class KustomizeTaskHelper {
   @Inject private KustomizeClient kustomizeClient;
+  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
 
   @Nonnull
   public List<FileData> build(@Nonnull String manifestFilesDirectory, @Nonnull String kustomizeBinaryPath,
@@ -68,12 +70,17 @@ public class KustomizeTaskHelper {
 
   @NotNull
   public List<FileData> buildForApply(@Nonnull String kustomizeBinaryPath, String pluginRootDir,
-      @Nonnull String manifestFilesDirectory, @NotEmpty List<String> filesToApply, LogCallback executionLogCallback) {
+      @Nonnull String manifestFilesDirectory, @NotEmpty List<String> filesToApply, boolean useLatestKustomizeVersion,
+      List<String> kustomizePatchesFiles, LogCallback executionLogCallback) {
     if (isEmpty(filesToApply)) {
       throw new InvalidRequestException("Apply files can't be empty", USER);
     }
     if (filesToApply.size() > 1) {
       throw new InvalidRequestException("Apply with Kustomize is supported for single file only", USER);
+    }
+    if (useLatestKustomizeVersion) {
+      String kustomizePath = manifestFilesDirectory + '/' + filesToApply.get(0);
+      k8sTaskHelperBase.savingPatchesToDirectory(kustomizePath, kustomizePatchesFiles, executionLogCallback);
     }
     String kustomizeDirPath = filesToApply.get(0);
     return build(manifestFilesDirectory, kustomizeBinaryPath, pluginRootDir, kustomizeDirPath, executionLogCallback);

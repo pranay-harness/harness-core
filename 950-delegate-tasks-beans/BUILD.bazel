@@ -24,6 +24,7 @@ java_library(
         "//959-file-service-commons:module",
         "//960-api-services:module",
         "//960-ng-core-beans:module",
+        "//960-ng-license-beans:module",
         "//960-persistence:module",
         "//970-api-services-beans:module",
         "//970-ng-commons:module",

@@ -75,7 +75,8 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
         -> ENTITIES_TO_DELETE_BY_VERIFICATION_ID.forEach(entity
             -> hPersistence.delete(hPersistence.createQuery(entity).filter(
                 VerificationTask.VERIFICATION_TASK_ID_KEY, verificationTaskId))));
-    verificationTaskService.removeCVConfigMappings(deletedCVConfig.getCvConfig().getUuid());
+    verificationTaskService.removeCVConfigMappings(
+        deletedCVConfig.getCvConfig().getAccountId(), deletedCVConfig.getCvConfig().getUuid());
     monitoringSourcePerpetualTaskService.deleteTask(deletedCVConfig.getCvConfig().getAccountId(),
         deletedCVConfig.getCvConfig().getOrgIdentifier(), deletedCVConfig.getCvConfig().getProjectIdentifier(),
         deletedCVConfig.getCvConfig().getIdentifier());

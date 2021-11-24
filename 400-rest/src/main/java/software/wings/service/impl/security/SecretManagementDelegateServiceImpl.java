@@ -79,6 +79,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           sshVaultConfig.setAuthToken(vaultToken);
         }
       }
+
       VaultSysAuthRestClient restClient =
           VaultRestClientFactory
               .getVaultRetrofit(sshVaultConfig.getVaultUrl(), sshVaultConfig.isCertValidationRequired())

@@ -2,10 +2,10 @@ package io.harness.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.DelegateType.KUBERNETES;
 import static io.harness.filter.FilterType.DELEGATEPROFILE;
 import static io.harness.mongo.MongoUtils.setUnset;
 
+import static java.time.Duration.ofMinutes;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -15,7 +15,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
-import io.harness.delegate.beans.DelegateConnectionDetails;
 import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroup.DelegateGroupKeys;
@@ -26,7 +25,6 @@ import io.harness.delegate.beans.DelegateInsightsDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
-import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.filter.DelegateFilterPropertiesDTO;
 import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.exception.InvalidRequestException;
@@ -42,6 +40,7 @@ import software.wings.service.impl.DelegateConnectionDao;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +48,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.executable.ValidateOnExecution;
@@ -67,6 +67,10 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
   @Inject private DelegateInsightsService delegateInsightsService;
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private FilterService filterService;
+  private static final Duration HEARTBEAT_EXPIRY_TIME = ofMinutes(5);
+  private static final String GROUP_STATUS_CONNECTED = "connected";
+  private static final String GROUP_STATUS_DISCONNECTED = "disconnected";
+  private static final String GROUP_STATUS_PARTIALLY_CONNECTED = "partially connected";
 
   @Override
   public long getDelegateGroupCount(
@@ -135,18 +139,6 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
   private DelegateInsightsDetails retrieveDelegateInsightsDetails(String accountId, String delegateGroupId) {
     return delegateInsightsService.retrieveDelegateInsightsDetails(
         accountId, delegateGroupId, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
-  }
-
-  private List<DelegateGroupListing.DelegateInner> buildInnerDelegates(List<Delegate> delegates,
-      Map<String, List<DelegateConnectionDetails>> perDelegateConnections, boolean filterInactiveDelegates) {
-    return delegates.stream()
-        .filter(delegate -> !filterInactiveDelegates || perDelegateConnections.containsKey(delegate.getUuid()))
-        .map(delegate -> {
-          List<DelegateConnectionDetails> connections =
-              perDelegateConnections.computeIfAbsent(delegate.getUuid(), uuid -> emptyList());
-          return DelegateGroupListing.DelegateInner.builder().uuid(delegate.getUuid()).connections(connections).build();
-        })
-        .collect(Collectors.toList());
   }
 
   @Override
@@ -381,43 +373,51 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
       groupDelegates = emptyList();
     }
 
-    Map<String, List<DelegateConnectionDetails>> activeDelegateConnections =
-        delegateConnectionDao.obtainActiveDelegateConnections(accountId);
-
     String delegateType = delegateGroup != null ? delegateGroup.getDelegateType() : null;
     String groupName = delegateGroup != null ? delegateGroup.getName() : null;
     String delegateDescription = delegateGroup != null ? delegateGroup.getDescription() : null;
     String delegateConfigurationId = delegateGroup != null ? delegateGroup.getDelegateConfigurationId() : null;
     String delegateGroupIdentifier = delegateGroup != null ? delegateGroup.getIdentifier() : null;
-    DelegateSizeDetails sizeDetails = delegateGroup != null ? delegateGroup.getSizeDetails() : null;
     Set<String> groupCustomSelectors = delegateGroup != null ? delegateGroup.getTags() : null;
 
-    String groupHostName = "";
-    if (KUBERNETES.equals(delegateType) && isNotEmpty(groupDelegates)) {
-      groupHostName = getHostNameForGroupedDelegate(groupDelegates.get(0).getHostName());
-    }
-
     long lastHeartBeat = groupDelegates.stream().mapToLong(Delegate::getLastHeartBeat).max().orElse(0);
-
+    AtomicInteger countOfDelegatesConnected = new AtomicInteger();
     List<DelegateGroupListing.DelegateInner> delegateInstanceDetails =
-        buildInnerDelegates(groupDelegates, activeDelegateConnections, true);
+        groupDelegates.stream()
+            .map(delegate -> {
+              countOfDelegatesConnected.addAndGet(
+                  (delegate.getLastHeartBeat() > System.currentTimeMillis() - HEARTBEAT_EXPIRY_TIME.toMillis()) ? 1
+                                                                                                                : 0);
+              return DelegateGroupListing.DelegateInner.builder()
+                  .uuid(delegate.getUuid())
+                  .lastHeartbeat(delegate.getLastHeartBeat())
+                  .activelyConnected(
+                      delegate.getLastHeartBeat() > System.currentTimeMillis() - HEARTBEAT_EXPIRY_TIME.toMillis())
+                  .hostName(delegate.getHostName())
+                  .build();
+            })
+            .collect(Collectors.toList());
+    String connectivityStatus = GROUP_STATUS_PARTIALLY_CONNECTED;
+    if (countOfDelegatesConnected.get() == 0) {
+      connectivityStatus = GROUP_STATUS_DISCONNECTED;
+    } else if (countOfDelegatesConnected.get() >= groupDelegates.size()) {
+      connectivityStatus = GROUP_STATUS_CONNECTED;
+    }
 
     return DelegateGroupDetails.builder()
         .groupId(delegateGroupId)
         .delegateGroupIdentifier(delegateGroupIdentifier)
         .delegateType(delegateType)
         .groupName(groupName)
-        .groupHostName(groupHostName)
         .delegateDescription(delegateDescription)
         .delegateConfigurationId(delegateConfigurationId)
-        .sizeDetails(sizeDetails)
         .groupImplicitSelectors(retrieveDelegateGroupImplicitSelectors(delegateGroup))
         .groupCustomSelectors(groupCustomSelectors)
         .delegateInsightsDetails(retrieveDelegateInsightsDetails(accountId, delegateGroupId))
         .lastHeartBeat(lastHeartBeat)
-        .activelyConnected(
-            delegateInstanceDetails.stream().anyMatch(delegateDetails -> isNotEmpty(delegateDetails.getConnections())))
         .delegateInstanceDetails(delegateInstanceDetails)
+        .connectivityStatus(connectivityStatus)
+        .activelyConnected(!connectivityStatus.equals(GROUP_STATUS_DISCONNECTED))
         .build();
   }
 
