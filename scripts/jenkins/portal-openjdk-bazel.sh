@@ -116,14 +116,13 @@ fi
 
 cd ../..
 
-
 mkdir -p dist/delegate
-if [ ${USE_BAZEL_DELEGATE} == "true" ]; then
-  echo "building bazel 260-delegate"
-  cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
-else
+if [ ${USE_MAVEN_DELEGATE} == "true" ]; then
   echo "building maven 260-delegate"
   cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
+else
+  echo "building bazel 260-delegate"
+  cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
 fi
 
 cp 260-delegate/config-delegate.yml dist/delegate/config-delegate.yml
