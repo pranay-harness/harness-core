@@ -251,8 +251,8 @@ public class DelegateQueueTask implements Runnable {
                                         .filter(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount());
 
         LinkedList<String> eligibleDelegatesList = delegateTask.getEligibleToExecuteDelegateIds();
-        if (isEmpty(eligibleDelegatesList)){
-            continue;
+        if (isEmpty(eligibleDelegatesList)) {
+          continue;
         }
         // add connected eligible delegates to broadcast list. Also rotate the eligibleDelegatesList list
         List<String> broadcastList = new ArrayList<>();
