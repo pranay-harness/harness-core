@@ -372,7 +372,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     spydelegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ");
 
     verify(spydelegateTaskServiceClassic, times(1)).assignTask(anyString(), anyString(), any(DelegateTask.class));
-    //verify(delegateSelectionLogsService).save(batch);
+    // verify(delegateSelectionLogsService).save(batch);
   }
 
   @Test

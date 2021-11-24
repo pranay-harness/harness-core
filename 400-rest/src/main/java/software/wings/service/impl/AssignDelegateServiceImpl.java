@@ -849,11 +849,11 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         return eligibleDelegateIds;
       }
       List<String> assignableDelegateIds = accountDelegates.stream()
-                                              .filter(delegate
-                                                  -> delegate.getStatus() != DelegateInstanceStatus.DELETED
-                                                      && canAssign(batch, delegate.getUuid(), task))
-                                              .map(Delegate::getUuid)
-                                              .collect(Collectors.toList());
+                                               .filter(delegate
+                                                   -> delegate.getStatus() != DelegateInstanceStatus.DELETED
+                                                       && canAssign(batch, delegate.getUuid(), task))
+                                               .map(Delegate::getUuid)
+                                               .collect(Collectors.toList());
 
       List<String> criteria = fetchCriteria(task);
       if (isEmpty(criteria)) {
@@ -881,8 +881,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   }
 
   @Override
-  public List<String> getConnectedDelegateList(List<String> delegatesList, String accountId, BatchDelegateSelectionLog batch) {
-    if (isEmpty(delegatesList)){
+  public List<String> getConnectedDelegateList(
+      List<String> delegatesList, String accountId, BatchDelegateSelectionLog batch) {
+    if (isEmpty(delegatesList)) {
       return delegatesList;
     }
     List<String> connectedDelegates = retrieveActiveDelegates(accountId, batch);
