@@ -8,17 +8,9 @@ import static io.harness.delegate.beans.DelegateInstanceStatus.ENABLED;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
-import static io.harness.rule.OwnerRule.ANSHUL;
-import static io.harness.rule.OwnerRule.ARVIND;
-import static io.harness.rule.OwnerRule.BRETT;
-import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.MARKO;
-import static io.harness.rule.OwnerRule.PRASHANT;
-import static io.harness.rule.OwnerRule.PUNEET;
-import static io.harness.rule.OwnerRule.SANJA;
-import static io.harness.rule.OwnerRule.TATHAGAT;
-import static io.harness.rule.OwnerRule.VUK;
 
+import static io.harness.rule.OwnerRule.*;
+import static org.mockito.Matchers.*;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.service.impl.AssignDelegateServiceImpl.BLACKLIST_TTL;
@@ -35,20 +27,19 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anySet;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.utils.WingsTestConstants.*;
 
+import com.google.common.collect.ImmutableSet;
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.category.element.UnitTests;
@@ -73,11 +64,7 @@ import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.intfc.DelegateCache;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.InfrastructureMappingType;
-import software.wings.beans.TaskType;
+import software.wings.beans.*;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
@@ -138,6 +125,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Mock
   private LoadingCache<ImmutablePair<String, String>, Optional<DelegateConnectionResult>> delegateConnectionResultCache;
   @Mock private LoadingCache<String, List<Delegate>> accountDelegatesCache;
+  @InjectMocks @Inject private DelegateTaskServiceClassicImpl delegateTaskServiceClassic;
 
   @Inject @InjectMocks private AssignDelegateServiceImpl assignDelegateService;
 
@@ -147,6 +135,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   private static final String WRONG_INFRA_MAPPING_ID = "WRONG_INFRA_MAPPING_ID";
 
   private static final String VERSION = "1.0.0";
+  private static final String DELEGATE_TYPE = "dockerType";
 
   @Before
   public void setUp() throws IllegalAccessException, ExecutionException {
@@ -2085,4 +2074,120 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     assertThat(assignDelegateService.getAccountDelegates(accountId)).isEmpty();
   }
+
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testGetAccountEligibleDelegatesToExecuteTask() throws ExecutionException {
+    Delegate delegate = createAccountDelegate();
+    DelegateTask task = constructDelegateTask(false,Collections.emptySet(), DelegateTask.Status.QUEUED);
+    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
+    when(delegateCache.get("ACCOUNT_ID", delegate.getUuid(), false)).thenReturn(delegate);
+    assertThat(assignDelegateService.getEligibleDelegatesToExecuteTask(task,null)).isNotEmpty();
+    assertThat(assignDelegateService.getEligibleDelegatesToExecuteTask(task,null)).contains(delegate.getUuid());
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testGetAccountEligibleDelegatesToExecuteTaskWithCriteraMatch() throws ExecutionException {
+    Delegate delegate = createAccountDelegate();
+    DelegateTask task = constructDelegateTask(false,Collections.emptySet(), DelegateTask.Status.QUEUED);
+    HttpConnectionExecutionCapability matchingExecutionCapability =
+            buildHttpConnectionExecutionCapability("http//www.capabilities.com", null);
+    task.setExecutionCapabilities(Arrays.asList(matchingExecutionCapability));
+
+    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
+    when(delegateCache.get("ACCOUNT_ID", delegate.getUuid(), false)).thenReturn(delegate);
+    DelegateConnectionResult connectionResult = DelegateConnectionResult.builder()
+            .accountId("ACCOUNT_ID")
+            .delegateId(delegate.getUuid())
+            .criteria(matchingExecutionCapability.fetchCapabilityBasis())
+            .validated(true)
+            .build();
+    when(delegateConnectionResultCache.get(ImmutablePair.of(delegate.getUuid(), connectionResult.getCriteria())))
+            .thenReturn(of(connectionResult));
+    assertThat(assignDelegateService.getEligibleDelegatesToExecuteTask(task,null)).isNotEmpty();
+    assertThat(assignDelegateService.getEligibleDelegatesToExecuteTask(task,null)).contains(delegate.getUuid());
+  }
+
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testGetEligibleDelegatesToExecuteTaskWithNoActiveDelegates() throws ExecutionException {
+    DelegateTask task = constructDelegateTask(false,Collections.emptySet(), DelegateTask.Status.QUEUED);
+    assertThat(assignDelegateService.getEligibleDelegatesToExecuteTask(task,null)).isEmpty();
+  }
+
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testGetEligibleDelegatesWhenOwnerMismatch() throws ExecutionException {
+    Delegate delegate = createAccountDelegate();
+    delegate.setOwner(DelegateEntityOwner.builder().build());
+    DelegateTask task = constructDelegateTask(false,Collections.emptySet(), DelegateTask.Status.QUEUED);
+    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
+    when(delegateCache.get("ACCOUNT_ID", delegate.getUuid(), false)).thenReturn(delegate);
+    assertThat(assignDelegateService.getEligibleDelegatesToExecuteTask(task,null)).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testGetConnectedDelegatesFromlist() throws ExecutionException {
+    Delegate delegate = createAccountDelegate();
+    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
+    when(delegateCache.get("ACCOUNT_ID", delegate.getUuid(), false)).thenReturn(delegate);
+    assertThat(assignDelegateService.getConnectedDelegateList(Arrays.asList(delegate.getUuid()),ACCOUNT_ID,null)).isNotEmpty();
+    assertThat(assignDelegateService.getConnectedDelegateList(Arrays.asList(delegate.getUuid()),ACCOUNT_ID,null)).contains(delegate.getUuid());
+  }
+
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testEligibleDelegatesForTask() {
+
+  }
+
+
+
+  private DelegateTask constructDelegateTask(boolean async, Set<String> validatingTaskIds, DelegateTask.Status status) {
+    DelegateTask delegateTask =
+            DelegateTask.builder()
+                    .accountId(ACCOUNT_ID)
+                    .waitId(generateUuid())
+                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                    .version(VERSION)
+                    .data(TaskData.builder()
+                            .async(async)
+                            .taskType(TaskType.HTTP.name())
+                            .parameters(new Object[] {HttpTaskParameters.builder().url("https://www.google.com").build()})
+                            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                            .build())
+                    .validatingDelegateIds(validatingTaskIds)
+                    .validationCompleteDelegateIds(ImmutableSet.of(DELEGATE_ID))
+                    .build();
+
+    //delegateTaskServiceClassic.processDelegateTask(delegateTask, status);
+    return delegateTask;
+  }
+
+  private Delegate createAccountDelegate() {
+    Delegate delegate = Delegate.builder()
+            .accountId(ACCOUNT_ID)
+            .ip("127.0.0.1")
+            .hostName("localhost")
+            .delegateName("testDelegateName")
+            .delegateType(DELEGATE_TYPE)
+            .version(VERSION)
+            .status(DelegateInstanceStatus.ENABLED)
+            .lastHeartBeat(System.currentTimeMillis()).build();
+    persistence.save(delegate);
+    return delegate;
+  }
+
 }

@@ -10,6 +10,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.BOJAN;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.JENNY;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MARKOM;
 import static io.harness.rule.OwnerRule.PUNEET;
@@ -274,7 +275,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     String delegateId = generateUuid();
     when(assignDelegateService.getEligibleDelegatesToExecuteTask(
              any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
-        .thenReturn(new HashSet<>(singletonList(DELEGATE_ID)));
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
 
     List<DelegateTaskEvent> delegateTaskEvents =
@@ -914,6 +915,88 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     assertThat(selectorCapabilities).hasSize(1);
   }
 
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void shouldSaveDelegateTask_Sync() {
+    DelegateTask delegateTask = getDelegateTask();
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    delegateTaskServiceClassic.scheduleSyncTask(delegateTask);
+    DelegateTask task = persistence.get(DelegateTask.class, delegateTask.getUuid());
+    assertThat(task).isNotNull();
+    assertThat(task.getStatus()).isEqualTo(QUEUED);
+    assertThat(task.getExpiry()).isNotNull();
+    assertThat(task.getEligibleToExecuteDelegateIds()).contains(DELEGATE_ID);
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void shouldSaveDelegateTaskWhenNoEligibleDelegate_Sync() {
+    DelegateTask delegateTask = getDelegateTask();
+    delegateTaskServiceClassic.scheduleSyncTask(delegateTask);
+    assertThat(persistence.get(DelegateTask.class, delegateTask.getUuid())).isNull();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void shouldSaveDelegateTaskWhenNoActiveEligibleDelegate_Sync() {
+    DelegateTask delegateTask = getDelegateTask();
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+
+    delegateTaskServiceClassic.scheduleSyncTask(delegateTask);
+    assertThat(persistence.get(DelegateTask.class, delegateTask.getUuid())).isNull();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void shouldSaveDelegateTask_async() {
+    DelegateTask delegateTask = getDelegateTask();
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    delegateTaskServiceClassic.queueTask(delegateTask);
+    DelegateTask task = persistence.get(DelegateTask.class, delegateTask.getUuid());
+    assertThat(task).isNotNull();
+    assertThat(task.getStatus()).isEqualTo(QUEUED);
+    assertThat(task.getExpiry()).isNotNull();
+    assertThat(task.getEligibleToExecuteDelegateIds()).contains(DELEGATE_ID);
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void shouldSaveDelegateTaskWhenNoEligibleDelegate_async() {
+    DelegateTask delegateTask = getDelegateTask();
+    delegateTaskServiceClassic.queueTask(delegateTask);
+    assertThat(persistence.get(DelegateTask.class, delegateTask.getUuid())).isNull();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void shouldSaveDelegateTaskWhenNoActiveEligibleDelegate_async() {
+    DelegateTask delegateTask = getDelegateTask();
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    delegateTaskServiceClassic.queueTask(delegateTask);
+    assertThat(persistence.get(DelegateTask.class, delegateTask.getUuid())).isNotNull();
+    assertThat(persistence.get(DelegateTask.class, delegateTask.getUuid()).getStatus()).isEqualTo(QUEUED);
+  }
+
   private CapabilityRequirement buildCapabilityRequirement() {
     return CapabilityRequirement.builder()
         .accountId(generateUuid())
@@ -1010,5 +1093,22 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     persistence.save(delegate);
     return delegate.getUuid();
+  }
+
+  private DelegateTask getDelegateTask() {
+    return DelegateTask.builder()
+        .uuid(generateUuid())
+        .accountId(ACCOUNT_ID)
+        .waitId(generateUuid())
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+        .version(VERSION)
+        .data(TaskData.builder()
+                  .async(false)
+                  .taskType(TaskType.HTTP.name())
+                  .parameters(new Object[] {HttpTaskParameters.builder().url("https://www.google.com").build()})
+                  .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                  .build())
+        .tags(new ArrayList<>())
+        .build();
   }
 }

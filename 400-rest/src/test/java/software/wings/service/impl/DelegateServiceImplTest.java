@@ -3,20 +3,8 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static io.harness.rule.OwnerRule.ADWAIT;
-import static io.harness.rule.OwnerRule.ARPIT;
-import static io.harness.rule.OwnerRule.BOJAN;
-import static io.harness.rule.OwnerRule.BRETT;
-import static io.harness.rule.OwnerRule.DEEPAK;
-import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.INDER;
-import static io.harness.rule.OwnerRule.MARKO;
-import static io.harness.rule.OwnerRule.NICOLAS;
-import static io.harness.rule.OwnerRule.ROHITKARELIA;
-import static io.harness.rule.OwnerRule.UTSAV;
-import static io.harness.rule.OwnerRule.VLAD;
-import static io.harness.rule.OwnerRule.VUK;
 
+import static io.harness.rule.OwnerRule.*;
 import static java.util.Collections.singletonList;
 import static org.mockito.Matchers.*;
 import static software.wings.utils.Utils.uuidToIdentifier;
@@ -220,7 +208,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     persistence.save(delegate);
     when(assignDelegateService.getEligibleDelegatesToExecuteTask(
             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
-            .thenReturn(new HashSet<>(singletonList(DELEGATE_ID)));
+            .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
             .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     DelegateTask delegateTask = getDelegateTask();
@@ -250,7 +238,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     thread.start();
     when(assignDelegateService.getEligibleDelegatesToExecuteTask(
             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
-            .thenReturn(new HashSet<>(singletonList(DELEGATE_ID)));
+            .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
 
     DelegateResponseData responseData = delegateTaskServiceClassic.executeTask(delegateTask);
     assertThat(responseData).isInstanceOf(HttpStateExecutionResponse.class);
@@ -288,7 +276,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     String taskId = generateUuid();
     when(assignDelegateService.getEligibleDelegatesToExecuteTask(
             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
-            .thenReturn(new HashSet<>(singletonList(DELEGATE_ID)));
+            .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
             .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
 
@@ -297,7 +285,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateTask.setUuid(taskId);
     when(assignDelegateService.getEligibleDelegatesToExecuteTask(
             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
-            .thenReturn(new HashSet<>(singletonList(DELEGATE_ID)));
+            .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
 
     delegateTaskServiceClassic.processDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(persistence.get(DelegateTask.class, taskId).getPreAssignedDelegateId()).isNotEqualTo(delegateId);
@@ -343,7 +331,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     when(assignDelegateService.getEligibleDelegatesToExecuteTask(
             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
-            .thenReturn(new HashSet<>(singletonList(DELEGATE_ID)));
+            .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
             .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
 
@@ -1343,6 +1331,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     setUpDelegatesForInitializationTest();
     delegateService.validateDelegateProfileId(ACCOUNT_ID, null);
   }
+
+
+
 
   private List<String> setUpDelegatesForInitializationTest() {
     List<String> delegateIds = new ArrayList<>();

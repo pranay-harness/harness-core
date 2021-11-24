@@ -130,7 +130,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
 
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder()
                                           .delegateSelectionLogs(Arrays.asList(selectionLog))
-                                          .taskMetadata(taskMetadata)
                                           .build();
 
     delegateSelectionLogsService.save(batch);
@@ -169,7 +168,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     Concurrent.test(10, n -> {
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder()
                                             .delegateSelectionLogs(createDelegateSelectionLogs(taskId, accountId))
-                                            .taskMetadata(taskMetadata)
                                             .build();
       delegateSelectionLogsService.save(batch);
     });
