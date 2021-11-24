@@ -3,6 +3,7 @@ package ci.pipeline.execution;
 import static io.harness.rule.OwnerRule.HARSH;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,6 +14,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.rule.Owner;
+import io.harness.telemetry.TelemetryReporter;
 
 import io.fabric8.utils.Lists;
 import org.apache.groovy.util.Maps;
@@ -28,6 +30,7 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
   @Mock private NodeExecutionServiceImpl nodeExecutionService;
   @Mock private GitBuildStatusUtility gitBuildStatusUtility;
   @InjectMocks private PipelineExecutionUpdateEventHandler pipelineExecutionUpdateEventHandler;
+  @Mock private TelemetryReporter telemetryReporter;
 
   @Before
   public void setup() {
@@ -51,5 +54,6 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
     pipelineExecutionUpdateEventHandler.handleEvent(orchestrationEvent);
 
     verify(gitBuildStatusUtility).sendStatusToGit(any(), any(), any(), any());
+    verify(telemetryReporter, times(1)).sendTrackEvent(any(), any(), any(), any(), any(), any());
   }
 }

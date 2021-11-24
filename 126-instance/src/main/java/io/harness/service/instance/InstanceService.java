@@ -37,6 +37,9 @@ public interface InstanceService {
   List<InstanceDTO> getActiveInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs);
 
+  List<InstanceDTO> getDistinctActiveInstances(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs);
+
   List<InstanceDTO> getActiveInstancesByServiceId(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs);
 

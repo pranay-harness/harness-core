@@ -1,8 +1,16 @@
 package io.harness.service.deploymentevent;
 
+import static io.harness.instrumentation.ServiceInstrumentationConstants.ACTIVE_SERVICES_ACCOUNT_ID;
+import static io.harness.instrumentation.ServiceInstrumentationConstants.ACTIVE_SERVICES_ACCOUNT_NAME;
+import static io.harness.instrumentation.ServiceInstrumentationConstants.ACTIVE_SERVICES_COUNT;
+import static io.harness.instrumentation.ServiceInstrumentationConstants.ACTIVE_SERVICES_COUNT_EVENT;
+import static io.harness.instrumentation.ServiceInstrumentationConstants.ACTIVE_SERVICES_ORG_ID;
+import static io.harness.instrumentation.ServiceInstrumentationConstants.ACTIVE_SERVICES_PROJECT_ID;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.ROLLBACK_STEPS;
+import static io.harness.telemetry.Destination.AMPLITUDE;
 
+import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
@@ -12,6 +20,7 @@ import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.instancesync.ServerInstanceInfo;
 import io.harness.dtos.DeploymentSummaryDTO;
 import io.harness.dtos.InfrastructureMappingDTO;
+import io.harness.dtos.InstanceDTO;
 import io.harness.dtos.deploymentinfo.DeploymentInfoDTO;
 import io.harness.entities.ArtifactDetails;
 import io.harness.exception.InvalidRequestException;
@@ -19,6 +28,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.models.DeploymentEvent;
 import io.harness.models.constants.InstanceSyncFlow;
+import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ngpipeline.artifact.bean.ArtifactsOutcome;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -32,12 +42,17 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.service.deploymentsummary.DeploymentSummaryService;
 import io.harness.service.infrastructuremapping.InfrastructureMappingService;
+import io.harness.service.instance.InstanceService;
 import io.harness.service.instancesync.InstanceSyncService;
 import io.harness.service.instancesynchandler.AbstractInstanceSyncHandler;
 import io.harness.service.instancesynchandlerfactory.InstanceSyncHandlerFactoryService;
+import io.harness.telemetry.Category;
+import io.harness.telemetry.TelemetryReporter;
 import io.harness.util.logging.InstanceSyncLogContext;
 
 import com.google.inject.Inject;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -53,6 +68,9 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
   private final InstanceSyncService instanceSyncService;
   private final InstanceInfoService instanceInfoService;
   private final DeploymentSummaryService deploymentSummaryService;
+  @Inject InstanceService instanceService;
+  @Inject AccountService accountService;
+  @Inject TelemetryReporter telemetryReporter;
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
@@ -81,6 +99,24 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
 
       instanceSyncService.processInstanceSyncForNewDeployment(
           new DeploymentEvent(deploymentSummaryDTO, null, infrastructureOutcome));
+
+      String accountId = AmbianceUtils.getAccountId(ambiance);
+      AccountDTO accountDTO = accountService.getAccount(accountId);
+      String accountName = accountDTO.getName();
+      String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
+      String orgId = AmbianceUtils.getOrgIdentifier(ambiance);
+      String identity = ambiance.getMetadata().getTriggerInfo().getTriggeredBy().getExtraInfoMap().get("email");
+      HashMap<String, Object> activeServicesCountPropMap = new HashMap<>();
+      List<InstanceDTO> distinctActiveInstances =
+          instanceService.getDistinctActiveInstances(accountId, orgId, projectId, System.currentTimeMillis());
+      activeServicesCountPropMap.put(ACTIVE_SERVICES_COUNT, distinctActiveInstances.size());
+      activeServicesCountPropMap.put(ACTIVE_SERVICES_ACCOUNT_ID, accountId);
+      activeServicesCountPropMap.put(ACTIVE_SERVICES_ACCOUNT_NAME, accountName);
+      activeServicesCountPropMap.put(ACTIVE_SERVICES_PROJECT_ID, projectId);
+      activeServicesCountPropMap.put(ACTIVE_SERVICES_ORG_ID, orgId);
+      telemetryReporter.sendTrackEvent(ACTIVE_SERVICES_COUNT_EVENT, identity, accountName, activeServicesCountPropMap,
+          Collections.singletonMap(AMPLITUDE, true), Category.GLOBAL);
+
     } catch (Exception exception) {
       log.error("Exception occured while handling event for instance sync", exception);
     }
