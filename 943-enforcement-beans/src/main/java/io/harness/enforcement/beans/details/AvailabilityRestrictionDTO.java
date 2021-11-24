@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +21,8 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.GTM)
+@Schema(
+    name = "AvailabilityRestriction", description = "This contains details of the Availability Restriction in Harness")
 public class AvailabilityRestrictionDTO extends RestrictionDTO {
   private boolean enabled;
 }
