@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.enforcement.beans.TimeUnit;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +22,8 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.GTM)
+@Schema(name = "RateLimitRestrictionMetadata",
+    description = "This contains metadata of the Rate Limit Restriction in Harness")
 public class RateLimitRestrictionMetadataDTO extends RestrictionMetadataDTO {
   private Long limit;
   private TimeUnit timeUnit;
