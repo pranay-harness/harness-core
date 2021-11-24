@@ -14,7 +14,6 @@ import software.wings.service.intfc.AssignDelegateService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;

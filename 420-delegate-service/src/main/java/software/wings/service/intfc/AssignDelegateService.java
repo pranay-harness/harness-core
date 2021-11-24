@@ -14,7 +14,6 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @OwnedBy(DEL)
 public interface AssignDelegateService {

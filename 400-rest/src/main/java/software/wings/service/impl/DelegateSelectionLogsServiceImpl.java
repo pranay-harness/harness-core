@@ -125,9 +125,15 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
   @Override
   public void save(BatchDelegateSelectionLog batch) {
-    if (batch == null || batch.getDelegateSelectionLogs().isEmpty()) {
+    if (batch == null || isEmpty(batch.getDelegateSelectionLogs())) {
       return;
     }
+
+    String accountId = batch.getDelegateSelectionLogs().get(0).getAccountId();
+    if (featureFlagService.isEnabled(FeatureName.DELEGATE_SELECTION_LOGS_DISABLED, accountId)) {
+      return;
+    }
+
     try {
       persistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
     } catch (Exception exception) {
@@ -143,11 +149,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
     boolean isTaskNg =
         !isEmpty(task.getSetupAbstractions()) && Boolean.parseBoolean(task.getSetupAbstractions().get(NG));
-
-    return BatchDelegateSelectionLog.builder()
-        .taskId(task.getUuid())
-        .isTaskNg(isTaskNg)
-        .build();
+    return BatchDelegateSelectionLog.builder().taskId(task.getUuid()).isTaskNg(isTaskNg).build();
   }
 
   @Override
