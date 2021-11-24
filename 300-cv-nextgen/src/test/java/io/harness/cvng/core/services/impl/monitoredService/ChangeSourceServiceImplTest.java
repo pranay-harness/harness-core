@@ -1,13 +1,17 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.ANJAN;
+import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
@@ -24,9 +28,9 @@ import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.services.api.ChangeEventService;
+import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
-import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
-import io.harness.data.structure.UUIDGenerator;
+import io.harness.cvng.core.utils.FeatureFlagNames;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -47,8 +51,7 @@ import org.mockito.Mock;
 public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
   @Inject ChangeSourceService changeSourceService;
   @Inject HPersistence hPersistence;
-  @Inject ChangeSourceEntityAndDTOTransformer changeSourceEntityAndDTOTransformer;
-  @Mock VerificationManagerService verificationManagerService;
+  @Inject VerificationManagerService verificationManagerService;
   @Mock ChangeEventService changeEventService;
   BuilderFactory builderFactory;
 
@@ -57,7 +60,6 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
   @Before
   public void setup() throws IllegalAccessException {
     FieldUtils.writeField(changeSourceService, "changeEventService", changeEventService, true);
-    FieldUtils.writeField(changeSourceService, "verificationManagerService", verificationManagerService, true);
 
     builderFactory = BuilderFactory.getDefault();
     environmentParams = ServiceEnvironmentParams.builder()
@@ -82,6 +84,40 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
         changeSourceService.get(environmentParams, Arrays.asList(changeSourceDTO.getIdentifier()));
 
     assertThat(changeSourceDTOSetFromDb.size()).isEqualTo(1);
+    ChangeSource changeSource = changeSourceService.get(environmentParams, changeSourceDTO.getIdentifier());
+    assertThat(changeSource.isEligibleForDemo()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreate_forDemoWithFFOff() {
+    ChangeSourceDTO changeSourceDTO =
+        builderFactory.getHarnessCDChangeSourceDTOBuilder().identifier("cdng_dev").build();
+    Set<ChangeSourceDTO> changeSourceDTOToBeCreated = new HashSet<>(Arrays.asList(changeSourceDTO));
+    changeSourceService.create(environmentParams, changeSourceDTOToBeCreated);
+    ChangeSource changeSource = changeSourceService.get(environmentParams, changeSourceDTO.getIdentifier());
+    assertThat(changeSource).isNotNull();
+    assertThat(changeSource.isConfiguredForDemo()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreate_forDemoWithFFOn() throws IllegalAccessException {
+    ChangeSourceDTO changeSourceDTO =
+        builderFactory.getHarnessCDChangeSourceDTOBuilder().identifier("cdng_dev").build();
+    Set<ChangeSourceDTO> changeSourceDTOToBeCreated = new HashSet<>(Arrays.asList(changeSourceDTO));
+    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    when(featureFlagService.isFeatureFlagEnabled(
+             eq(builderFactory.getContext().getAccountId()), eq(FeatureFlagNames.CVNG_MONITORED_SERVICE_DEMO)))
+        .thenReturn(true);
+    FieldUtils.writeField(changeSourceService, "featureFlagService", featureFlagService, true);
+    changeSourceService.create(environmentParams, changeSourceDTOToBeCreated);
+    ChangeSource changeSource = changeSourceService.get(environmentParams, changeSourceDTO.getIdentifier());
+    assertThat(changeSource).isNotNull();
+    assertThat(changeSource.isConfiguredForDemo()).isTrue();
+    assertThat(changeSource.isEligibleForDemo()).isTrue();
   }
 
   @Test
@@ -164,9 +200,11 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = ANJAN)
   @Category(UnitTests.class)
-  public void testEnqueueDataCollectionTask() {
+  public void testEnqueueDataCollectionTask() throws IllegalAccessException {
+    verificationManagerService = spy(verificationManagerService);
+    FieldUtils.writeField(changeSourceService, "verificationManagerService", verificationManagerService, true);
     String kubeConnectorIdentifier = randomAlphanumeric(20);
-    String datacollectionTaskId = UUIDGenerator.generateUuid();
+    String datacollectionTaskId = generateUuid();
     String identifier = randomAlphanumeric(20);
     String name = randomAlphanumeric(20);
 
@@ -194,7 +232,7 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
                              .build());
 
     changeSourceService.create(environmentParams, changeSourceDTOS);
-    ChangeSource changeSource = getChangeSourceFromDb(identifier);
+    ChangeSource changeSource = changeSourceService.get(environmentParams, identifier);
     kubeChangeSource.setUuid(changeSource.getUuid());
 
     when(verificationManagerService.createDataCollectionTask(eq(builderFactory.getContext().getAccountId()),
@@ -203,7 +241,7 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
         .thenReturn(datacollectionTaskId);
     changeSourceService.enqueueDataCollectionTask(kubeChangeSource);
 
-    changeSource = getChangeSourceFromDb(identifier);
+    changeSource = changeSourceService.get(environmentParams, identifier);
     assertThat(changeSource.getDataCollectionTaskId()).isEqualTo(datacollectionTaskId);
   }
 
