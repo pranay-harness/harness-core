@@ -1,5 +1,7 @@
 package io.harness.cvng.connectiontask;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DecryptableEntity;
@@ -21,6 +23,7 @@ import io.harness.security.encryption.SecretDecryptionService;
 import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -52,8 +55,9 @@ public class CVNGConnectorValidationDelegateTask extends AbstractDelegateRunnabl
   public DelegateResponseData run(TaskParameters parameters) {
     CVConnectorTaskParams taskParameters = (CVConnectorTaskParams) parameters;
     if (taskParameters.getConnectorConfigDTO() instanceof DecryptableEntity) {
-      secretDecryptionService.decrypt(taskParameters.getConnectorConfigDTO().getDecryptableEntities().get(0),
-          taskParameters.getEncryptionDetails());
+      List<DecryptableEntity> decryptableEntities = taskParameters.getConnectorConfigDTO().getDecryptableEntities();
+      secretDecryptionService.decrypt(
+          isNotEmpty(decryptableEntities) ? decryptableEntities.get(0) : null, taskParameters.getEncryptionDetails());
     }
     boolean validCredentials = false;
     try {
