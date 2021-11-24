@@ -110,7 +110,7 @@ public class ManifestCollectionUtils {
             .chartUrl(helmChartConfig.getChartUrl())
             .basePath(helmChartConfig.getBasePath())
             .encryptedDataDetails(encryptionDataDetails)
-            .repoName(convertBase64UuidToCanonicalForm(settingAttribute.getUuid()))
+            .repoName(convertBase64UuidToCanonicalForm(appManifestId))
             .repoDisplayName(settingAttribute.getName())
             .helmVersion(helmVersion)
             .helmRepoConfig(helmRepoConfig);
