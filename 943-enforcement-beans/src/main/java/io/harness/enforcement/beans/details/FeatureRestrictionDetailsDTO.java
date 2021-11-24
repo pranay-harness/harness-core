@@ -23,7 +23,7 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(name = "FeatureRestrictionDetails",
-    description = "This is the view of a feature restriction details object defined in Harness")
+    description = "This contains the feature restriction details object defined in Harness")
 public class FeatureRestrictionDetailsDTO {
   private FeatureRestrictionName name;
   private String description;
