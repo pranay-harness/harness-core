@@ -1,5 +1,7 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import static io.harness.cvng.core.utils.FeatureFlagNames.CVNG_MONITORED_SERVICE_DEMO;
+
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
@@ -41,7 +43,7 @@ public class HealthSourceServiceImpl implements HealthSourceService {
       for (CVConfig cvConfig : cvConfigUpdateResult.getAdded()) {
         cvConfig.setEnabled(enabled);
         if (cvConfig.isEligibleForDemo()
-            && featureFlagService.isFeatureFlagEnabled(accountId, "CVNG_MONITORED_SERVICE_DEMO")) {
+            && featureFlagService.isFeatureFlagEnabled(accountId, CVNG_MONITORED_SERVICE_DEMO)) {
           isDemoEnabledForAnyCVConfig = true;
           cvConfig.setDemo(true);
         }

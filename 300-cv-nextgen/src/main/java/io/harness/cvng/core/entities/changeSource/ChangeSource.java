@@ -56,6 +56,16 @@ public abstract class ChangeSource
                  .field(ChangeSourceKeys.identifier)
                  .unique(true)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("demo_generation_index")
+                 .field(ChangeSourceKeys.isConfiguredForDemo)
+                 .field(ChangeSourceKeys.demoDataGenerationIteration)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("data_collection_iteration")
+                 .field(ChangeSourceKeys.type)
+                 .field(ChangeSourceKeys.dataCollectionTaskIteration)
+                 .build())
         .build();
   }
 
@@ -75,9 +85,11 @@ public abstract class ChangeSource
   @NotNull ChangeSourceType type;
 
   boolean enabled;
+  boolean isConfiguredForDemo;
 
   @FdIndex String dataCollectionTaskId;
-  @FdIndex Long dataCollectionTaskIteration;
+  Long demoDataGenerationIteration;
+  Long dataCollectionTaskIteration;
 
   @Getter(AccessLevel.NONE) boolean dataCollectionRequired;
 
@@ -104,6 +116,8 @@ public abstract class ChangeSource
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (ChangeSourceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       this.dataCollectionTaskIteration = nextIteration;
+    } else if (ChangeSourceKeys.demoDataGenerationIteration.equals(fieldName)) {
+      this.demoDataGenerationIteration = nextIteration;
       return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
@@ -113,7 +127,13 @@ public abstract class ChangeSource
   public Long obtainNextIteration(String fieldName) {
     if (ChangeSourceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       return this.dataCollectionTaskIteration;
+    } else if (ChangeSourceKeys.demoDataGenerationIteration.equals(fieldName)) {
+      return this.demoDataGenerationIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  public boolean isEligibleForDemo() {
+    return this.identifier.endsWith("_dev");
   }
 }
