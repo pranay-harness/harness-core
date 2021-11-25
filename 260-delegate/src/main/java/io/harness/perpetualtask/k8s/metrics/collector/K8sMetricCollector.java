@@ -252,7 +252,7 @@ public class K8sMetricCollector {
     V1PodList podList;
     try {
       podList = coreV1Api.listNamespacedPod(
-          namespace, null, false, null, "metadata.name=" + podName, null, 1, null, null, false);
+          namespace, null, false, null, "metadata.name=" + podName, null, 1, null, null, null, false);
     } catch (ApiException e) {
       log.warn("Failed to get pod {} in namespace {}: {}", podName, namespace, e);
       return null;
