@@ -20,12 +20,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import javax.ws.rs.core.UriBuilder;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
 
 @OwnedBy(HarnessTeam.PL)
 @Singleton
@@ -64,7 +65,7 @@ public class NotificationServiceImpl implements NotificationService {
     emailNotificationService.send(emailData);
   }
 
-  private void sendPasswordResetNotification(String email) {
+  private void sendPasswordResetNotification(String email) throws URISyntaxException {
     User user = getUserByEmail(email);
     String token = generateJwtToken(email);
     Account defaultAccount = getDefaultAccount(user);
@@ -102,15 +103,18 @@ public class NotificationServiceImpl implements NotificationService {
     return user.getAccounts().get(0).getUuid();
   }
 
-  private String getResetPasswordUrl(String token, String defaultAccountId, boolean isNGRequest) {
-    UriBuilder uriBuilder = UriBuilder.fromUri(subdomainUrlHelper.getPortalBaseUrl(defaultAccountId));
+  private String getResetPasswordUrl(String token, String defaultAccountId, boolean isNGRequest)
+      throws URISyntaxException {
+    URIBuilder uriBuilder = new URIBuilder(subdomainUrlHelper.getPortalBaseUrl(defaultAccountId));
     if (isNGRequest) {
-      uriBuilder.segment("auth");
+      uriBuilder.setPath("auth/");
     }
-    return uriBuilder.segment("reset-password").segment(token).queryParam("accountId", defaultAccountId).toString();
+    uriBuilder.setFragment("/reset-password/" + token + "?accountId=" + defaultAccountId);
+    return uriBuilder.toString();
   }
 
-  private Map<String, String> getTemplateModel(String userName, String token, Account defaultAccount) {
+  private Map<String, String> getTemplateModel(String userName, String token, Account defaultAccount)
+      throws URISyntaxException {
     Map<String, String> templateModel = new HashMap<>();
     templateModel.put("name", sanitizeUserName(userName));
     templateModel.put("url", getResetPasswordUrl(token, defaultAccount.getUuid(), isAccountNg(defaultAccount)));
