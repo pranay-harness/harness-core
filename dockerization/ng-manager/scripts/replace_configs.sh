@@ -157,6 +157,10 @@ if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
 fi
 
+if [[ "" != "$JWT_ZENDESK_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.jwtZendeskSecret "$JWT_ZENDESK_SECRET"
+fi
+
 if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.pipelineServiceSecret "$NEXT_GEN_MANAGER_SECRET"
 fi
@@ -445,3 +449,5 @@ replace_key_value scopeAccessCheckEnabled "${SCOPE_ACCESS_CHECK:-true}"
 replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"
 replace_key_value secretsConfiguration.gcpSecretManagerProject "$GCP_SECRET_MANAGER_PROJECT"
 replace_key_value secretsConfiguration.secretResolutionEnabled "$RESOLVE_SECRETS"
+
+replace_key_value zendeskConfig.baseUrl "$ZENDESK_BASEURL"

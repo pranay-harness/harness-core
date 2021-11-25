@@ -30,6 +30,7 @@ import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.helpcenter.ZendeskConfig;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.opaclient.OpaServiceConfiguration;
 import io.harness.outbox.OutboxPollConfiguration;
@@ -107,6 +108,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String INSTANCE_SYNC_PACKAGE = "io.harness.ng.instancesync.resources";
   public static final String INSTANCE_NG_PACKAGE = "io.harness.ng.instance";
   public static final String SMTP_NG_RESOURCE = "io.harness.ng.core.smtp.resources";
+  public static final String HELP_CENTER_PACKAGE = "io.harness.ng.helpcenter.resources";
   public static final String SERVICENOW_PACKAGE = "io.harness.ng.servicenow.resources";
   public static final String SCIM_NG_RESOURCE = "io.harness.ng.scim.resource";
   public static final String LICENSING_USAGE_PACKAGE = "io.harness.licensing.usage.resources";
@@ -180,6 +182,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
   @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
+  @JsonProperty("zendeskConfig") ZendeskConfig zendeskConfig;
   @JsonProperty("ciManagerClientConfig") ServiceHttpClientConfig ciManagerClientConfig;
   @JsonProperty("secretsConfiguration") private SecretsConfiguration secretsConfiguration;
   @JsonProperty("pmsPlanCreatorServicePoolConfig") private ThreadPoolConfig pmsPlanCreatorServicePoolConfig;
@@ -215,7 +218,7 @@ public class NextGenConfiguration extends Configuration {
                 ENVIRONMENT_PACKAGE, USERPROFILE_PACKAGE, JIRA_PACKAGE, EXECUTION_PACKAGE, ENTITYSETUP_PACKAGE,
                 SCHEMA_PACKAGE, DELEGATE_PACKAGE, ACCESS_CONTROL_PACKAGE, FEEDBACK_PACKAGE, INSTANCE_SYNC_PACKAGE,
                 INVITE_PACKAGE, USER_PACKAGE, INSTANCE_NG_PACKAGE, LICENSING_USAGE_PACKAGE, SMTP_NG_RESOURCE,
-                SERVICENOW_PACKAGE, SCIM_NG_RESOURCE))
+                SERVICENOW_PACKAGE, HELP_CENTER_PACKAGE, SCIM_NG_RESOURCE))
         .collect(Collectors.toSet());
   }
 

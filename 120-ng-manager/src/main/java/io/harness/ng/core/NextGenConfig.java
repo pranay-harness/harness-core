@@ -24,6 +24,7 @@ public class NextGenConfig {
   @ConfigSecret String pipelineServiceSecret;
   @ConfigSecret String jwtAuthSecret;
   @ConfigSecret String jwtIdentityServiceSecret;
+  @ConfigSecret String jwtZendeskSecret;
   @ConfigSecret String ciManagerSecret;
   @ConfigSecret String ceNextGenServiceSecret;
   @ConfigSecret String ffServiceSecret;

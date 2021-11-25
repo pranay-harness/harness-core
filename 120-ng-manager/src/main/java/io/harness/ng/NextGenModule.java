@@ -163,6 +163,8 @@ import io.harness.ng.core.user.service.impl.UserEntityCrudStreamListener;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.feedback.services.FeedbackService;
 import io.harness.ng.feedback.services.impls.FeedbackServiceImpl;
+import io.harness.ng.helpcenter.services.ZendeskService;
+import io.harness.ng.helpcenter.services.impl.ZendeskServiceImpl;
 import io.harness.ng.overview.service.CDLandingDashboardService;
 import io.harness.ng.overview.service.CDLandingDashboardServiceImpl;
 import io.harness.ng.overview.service.CDOverviewDashboardService;
@@ -660,6 +662,7 @@ public class NextGenModule extends AbstractModule {
     bind(FeedbackService.class).to(FeedbackServiceImpl.class);
     bind(PollingService.class).to(PollingServiceImpl.class);
     bind(PollingPerpetualTaskService.class).to(PollingPerpetualTaskServiceImpl.class);
+    bind(ZendeskService.class).to(ZendeskServiceImpl.class);
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("ngTelemetryPublisherExecutor"))
         .toInstance(new ScheduledThreadPoolExecutor(1,
