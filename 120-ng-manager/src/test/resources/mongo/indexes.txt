@@ -612,6 +612,7 @@ pipelines {"name": "accountId_1", "background": true} {"accountId": 1}
 pipelines {"name": "accountId_name", "background": true} {"accountId": 1, "name": 1}
 pipelines {"name": "appId_1", "background": true} {"appId": 1}
 pipelines {"name": "createdAt_1", "background": true} {"createdAt": 1}
+podDetails {"name": "accountId_1", "background": true} {"accountId": 1}
 pollingDocuments {"name": "accountId", "background": true} {"accountId": 1}
 pollingDocuments {"name": "accountId_organizationIdentifier_projectIdentifier_pollingType_pollingItem", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "pollingType": 1, "pollingInfo": 1, "signatures": 1}
 preferences {"name": "appId_1", "background": true} {"appId": 1}
@@ -736,6 +737,7 @@ ssoSettings {"name": "appId_1", "background": true} {"appId": 1}
 ssoSettings {"name": "createdAt_1", "background": true} {"createdAt": 1}
 ssoSettings {"name": "nextIterations_1", "background": true} {"nextIterations": 1}
 ssoSettings {"name": "typeNextIterations", "background": true} {"type": 1, "nextIterations": 1}
+stageDetails {"name": "accountId_1", "background": true} {"accountId": 1}
 stateExecutionInstances {"name": "accountId_1", "background": true} {"accountId": 1}
 stateExecutionInstances {"name": "appIdExecutionIdStatus", "background": true} {"appId": 1, "executionUuid": 1, "status": 1}
 stateExecutionInstances {"name": "appId_1", "background": true} {"appId": 1}
