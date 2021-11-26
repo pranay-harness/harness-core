@@ -9,6 +9,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.pms.plan.execution.AccountExecutionInfo;
 
 import ci.pipeline.execution.CIAccountExecutionMetadata;
+import ci.pipeline.execution.CIAccountExecutionMetadata.CIAccountExecutionMetadataKeys;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
@@ -32,8 +33,7 @@ public class CIAccountExecutionMetadataRepositoryCustomImpl implements CIAccount
 
   @Override
   public void updateAccountExecutionMetadata(String accountId, Long startTS) {
-    Criteria criteria =
-        Criteria.where(CIAccountExecutionMetadata.CIAccountExecutionMetadataKeys.accountId).is(accountId);
+    Criteria criteria = Criteria.where(CIAccountExecutionMetadataKeys.accountId).is(accountId);
     Query query = new Query(criteria);
     // Since there can be parallel executions for a given account, update after taking a lock
     try (
