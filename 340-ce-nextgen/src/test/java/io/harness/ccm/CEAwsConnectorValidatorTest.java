@@ -1,15 +1,10 @@
 package io.harness.ccm;
 
-import static io.harness.ccm.AWSConnectorTestHelper.createNonEmptyObjectListing;
-import static io.harness.ccm.AWSConnectorTestHelper.createReportDefinition;
-import static io.harness.rule.OwnerRule.UTSAV;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
-
+import com.amazonaws.services.costandusagereport.model.ReportDefinition;
+import com.amazonaws.services.identitymanagement.model.AmazonIdentityManagementException;
+import com.amazonaws.services.identitymanagement.model.EvaluationResult;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.google.common.collect.ImmutableList;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -24,15 +19,6 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.rule.Owner;
-
-import com.amazonaws.services.costandusagereport.model.ReportDefinition;
-import com.amazonaws.services.identitymanagement.model.AmazonIdentityManagementException;
-import com.amazonaws.services.identitymanagement.model.EvaluationResult;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.google.common.collect.ImmutableList;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -42,6 +28,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+
+import java.time.Instant;
+import java.util.Collections;
+import java.util.Optional;
+
+import static io.harness.ccm.AWSConnectorTestHelper.createNonEmptyObjectListing;
+import static io.harness.ccm.AWSConnectorTestHelper.createReportDefinition;
+import static io.harness.rule.OwnerRule.UTSAV;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CE)

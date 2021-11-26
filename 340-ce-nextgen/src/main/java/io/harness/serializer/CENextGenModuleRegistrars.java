@@ -1,10 +1,8 @@
 package io.harness.serializer;
 
+import com.google.common.collect.ImmutableSet;
 import io.harness.ccm.serializer.CECommonsRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.serializer.morphia.ConnectorMorphiaClassesRegistrar;
-
-import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
