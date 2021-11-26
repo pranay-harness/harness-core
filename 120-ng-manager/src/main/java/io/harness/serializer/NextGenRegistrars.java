@@ -38,6 +38,7 @@ public class NextGenRegistrars {
           .addAll(LicenseManagerRegistrars.kryoRegistrars)
           .add(PipelineServiceUtilKryoRegistrar.class)
           .addAll(DelegateTaskRegistrars.kryoRegistrars)
+          .addAll(CiExecutionRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -65,6 +66,7 @@ public class NextGenRegistrars {
           .add(FeedbackMorphiaRegistrars.class)
           .addAll(InstanceRegistrars.morphiaRegistrars)
           .addAll(DelegateTaskRegistrars.morphiaRegistrars)
+          .addAll(CiExecutionRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
