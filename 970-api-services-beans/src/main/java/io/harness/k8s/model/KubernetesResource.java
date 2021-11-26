@@ -282,6 +282,20 @@ public class KubernetesResource {
     return this;
   }
 
+  public KubernetesResource manifestFormating() {
+    Object k8sResource = getK8sResource();
+    try {
+      org.yaml.snakeyaml.Yaml yaml =
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+      this.spec = yaml.dump(k8sResource);
+      this.value = readYaml(this.spec).get(0);
+    } catch (IOException e) {
+      // do nothing
+      noop();
+    }
+    return this;
+  }
+
   private void updateName(Object k8sResource, UnaryOperator<Object> transformer) {
     String newName;
 

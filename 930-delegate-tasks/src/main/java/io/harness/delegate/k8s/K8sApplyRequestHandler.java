@@ -38,6 +38,7 @@ import io.harness.exception.NestedExceptionUtils;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sDelegateTaskParams;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 
@@ -87,6 +88,10 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
     k8sApplyBaseHandler.prepare(
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress),
         k8sApplyRequest.isSkipSteadyStateCheck(), k8sApplyHandlerConfig, isErrorFrameworkSupported());
+
+    for (KubernetesResource resource : k8sApplyHandlerConfig.getResources()) {
+      resource.manifestFormating();
+    }
 
     k8sTaskHelperBase.applyManifests(k8sApplyHandlerConfig.getClient(), k8sApplyHandlerConfig.getResources(),
         k8sDelegateTaskParams,
