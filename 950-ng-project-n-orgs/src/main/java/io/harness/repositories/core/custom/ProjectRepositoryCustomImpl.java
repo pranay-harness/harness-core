@@ -101,4 +101,9 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
   public <T> AggregationResults<T> aggregate(Aggregation aggregation, Class<T> classToFillResultIn) {
     return mongoTemplate.aggregate(aggregation, Project.class, classToFillResultIn);
   }
+
+  @Override
+  public long count(Criteria criteria) {
+    return mongoTemplate.count(new Query(criteria), Project.class);
+  }
 }

@@ -7,7 +7,6 @@ import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.beans.DelegateTask.Status.runningStatuses;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
-import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.SizeFunction.size;
@@ -19,24 +18,20 @@ import static io.harness.delegate.beans.executioncapability.ExecutionCapability.
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.delegate.task.TaskFailureReason.NO_ELIGIBLE_DELEGATE;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.govern.Switch.noop;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
-import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.BreakDependencyOn;
@@ -46,15 +41,10 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
-import io.harness.beans.FeatureName;
 import io.harness.capability.CapabilityRequirement;
-import io.harness.capability.CapabilityRequirement.CapabilityRequirementKeys;
 import io.harness.capability.CapabilitySubjectPermission;
-import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionKeys;
-import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.capability.CapabilityTaskSelectionDetails;
 import io.harness.capability.CapabilityTaskSelectionDetails.CapabilityTaskSelectionDetailsKeys;
-import io.harness.capability.internal.CapabilityAttributes;
 import io.harness.capability.service.CapabilityService;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
@@ -75,7 +65,6 @@ import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.SecretDetail;
-import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
@@ -83,12 +72,8 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
-import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskParameters;
-import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
-import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
 import io.harness.delegate.task.pcf.CfCommandRequest;
 import io.harness.delegate.task.pcf.request.CfCommandTaskParameters;
 import io.harness.delegate.task.pcf.request.CfCommandTaskParameters.CfCommandTaskParametersBuilder;
@@ -186,7 +171,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -435,16 +419,11 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     try (AutoLogContext ignore = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
       try {
-        if (isBlank(task.getMustExecuteOnDelegateId())) {
-          // order of these three calls is important, first capabilities are created, then appended, then used in
-          // pickFirstAttemptDelegate
-          generateCapabilitiesForTaskIfFeatureEnabled(task);
-          convertToExecutionCapability(task);
-          upsertCapabilityRequirements(task);
-          task.setPreAssignedDelegateId(obtainCapableDelegateId(task, Collections.emptySet()));
-        } else {
-          task.setPreAssignedDelegateId(task.getMustExecuteOnDelegateId());
-        }
+        // order of these three calls is important, first capabilities are created, then appended, then used in
+        // pickFirstAttemptDelegate
+        generateCapabilitiesForTaskIfFeatureEnabled(task);
+        convertToExecutionCapability(task);
+        task.setPreAssignedDelegateId(obtainCapableDelegateId(task, Collections.emptySet()));
 
         // Ensure that broadcast happens at least 5 seconds from current time for async tasks
         if (task.getData().isAsync()) {
@@ -478,73 +457,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   public String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates) {
     try (TaskLogContext ignore = new TaskLogContext(task.getUuid(), OVERRIDE_ERROR);
          AccountLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
-      if (!featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, task.getAccountId())) {
-        // Old way with rebroadcasting
-        return assignDelegateService.pickFirstAttemptDelegate(task);
-      }
-
-      BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
-      List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId(), batch);
-      delegateSelectionLogsService.save(batch);
-
-      if (isEmpty(task.getExecutionCapabilities())) {
-        return pickDelegateForTaskWithoutAnyAgentCapabilities(task, activeDelegates);
-      }
-
-      // get all agent capabilities and convert to CR
-      List<ExecutionCapability> agentCapabilities =
-          task.getExecutionCapabilities()
-              .stream()
-              .filter(capability -> EvaluationMode.AGENT == capability.evaluationMode())
-              .collect(toList());
-
-      if (isEmpty(agentCapabilities)) {
-        return pickDelegateForTaskWithoutAnyAgentCapabilities(task, activeDelegates);
-      }
-
-      List<CapabilityRequirement> capabilityRequirements =
-          createCapabilityRequirementInstances(task.getAccountId(), agentCapabilities);
-
-      // get delegates capable to execute the task. Retry to cover case when there are no known delegates capable to do
-      // the task and we are waiting for immediate capabilities validation
-      Set<String> capableDelegateIds =
-          capabilityService.getCapableDelegateIds(task.getAccountId(), capabilityRequirements);
-      int i = 1;
-      while (capableDelegateIds.isEmpty() && i <= 10) {
-        sleep(ofSeconds(1));
-        capableDelegateIds = capabilityService.getCapableDelegateIds(task.getAccountId(), capabilityRequirements);
-        i++;
-      }
-
-      boolean ignoreAlreadyTriedDelegates =
-          alreadyTriedDelegates == null || alreadyTriedDelegates.containsAll(capableDelegateIds);
-
-      // Filter delegate to try different ones when rebroadcasting, but allow all eventually when all are exhausted
-      Set<String> validDelegateIds =
-          capableDelegateIds.stream()
-              .filter(delegateId -> ignoreAlreadyTriedDelegates || !alreadyTriedDelegates.contains(delegateId))
-              .collect(Collectors.toSet());
-
-      // pick one, check still in scope and assign if ok or delete permission record and try another one
-      for (String delegateId : validDelegateIds) {
-        boolean assignableDelegate = true;
-        for (CapabilityRequirement capabilityRequirement : capabilityRequirements) {
-          if (!isDelegateStillInScope(task.getAccountId(), delegateId, capabilityRequirement.getUuid())) {
-            capabilityService.deleteCapabilitySubjectPermission(
-                task.getAccountId(), delegateId, capabilityRequirement.getUuid());
-            assignableDelegate = false;
-            break;
-          }
-        }
-
-        if (assignableDelegate && activeDelegates.contains(delegateId)) {
-          log.info("Setting preAssignedDelegate to {}.", delegateId);
-          return delegateId;
-        }
-      }
-
-      // No in scope delegates, capable of doing the task
-      return null;
+      return assignDelegateService.pickFirstAttemptDelegate(task);
     } catch (Exception ex) {
       log.error("Unexpected error occurred while obtaining capable delegate Ids", ex);
       return null;
@@ -580,56 +493,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
     log.warn("No assignable active delegates found to execute the task.");
     return null;
-  }
-
-  @VisibleForTesting
-  public void upsertCapabilityRequirements(DelegateTask task) {
-    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, task.getAccountId())
-        && isNotEmpty(task.getExecutionCapabilities())) {
-      // Check if any capability with AGENT evaluation mode is present
-      List<ExecutionCapability> agentCapabilities =
-          task.getExecutionCapabilities()
-              .stream()
-              .filter(capability -> EvaluationMode.AGENT == capability.evaluationMode())
-              .collect(toList());
-
-      if (isNotEmpty(agentCapabilities)) {
-        List<Delegate> accountDelegates = assignDelegateService.getAccountDelegates(task.getAccountId());
-        if (accountDelegates != null) {
-          BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
-          List<String> assignableDelegateIds =
-              accountDelegates.stream()
-                  .filter(delegate
-                      -> delegate.getStatus() != DelegateInstanceStatus.DELETED
-                          && assignDelegateService.canAssign(batch, delegate.getUuid(), task))
-                  .map(Delegate::getUuid)
-                  .collect(Collectors.toList());
-          delegateSelectionLogsService.save(batch);
-
-          // for each of the agent capabilities, prepare CapabilityRequirement record
-          List<CapabilityRequirement> capabilityRequirements =
-              createCapabilityRequirementInstances(task.getAccountId(), agentCapabilities);
-
-          // Process each of the CapabilityRequirement records to insert/update capability details, task selection
-          // records and permissions
-          for (CapabilityRequirement capabilityRequirement : capabilityRequirements) {
-            CapabilityTaskSelectionDetails taskSelectionDetails =
-                createCapabilityTaskSelectionDetailsInstance(task, capabilityRequirement, assignableDelegateIds);
-
-            // This will wakeup iterator of BlockingCapabilityPermissionsRecordHandler to process blocking entries
-            // urgently
-            capabilityService.processTaskCapabilityRequirement(
-                capabilityRequirement, taskSelectionDetails, assignableDelegateIds);
-          }
-        } else {
-          log.info("No delegates found for the given account.");
-        }
-      } else {
-        log.info("No AGENT execution capabilities found on task.");
-      }
-    } else if (log.isDebugEnabled()) {
-      log.debug("FF PER_AGENT_CAPABILITIES is disabled or task did not have any execution capabilities.");
-    }
   }
 
   @VisibleForTesting
@@ -672,121 +535,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
     return capabilityService.buildCapabilityTaskSelectionDetails(
         capabilityRequirement, taskGroup, task.getSetupAbstractions(), selectorCapabilities, assignableDelegateIds);
-  }
-
-  @Override
-  public void executeBatchCapabilityCheckTask(String accountId, String delegateId,
-      List<CapabilitySubjectPermission> capabilitySubjectPermissions, String blockedTaskSelectionDetailsId) {
-    List<CapabilityCheckDetails> capabilityCheckDetailsList =
-        capabilitySubjectPermissions.stream()
-            .map(capSubjectPermission -> {
-              // Log that we did not revalidate the capability on time
-              if (capSubjectPermission.getMaxValidUntil() > 0
-                  && System.currentTimeMillis() > capSubjectPermission.getMaxValidUntil()) {
-                log.warn("Capability {} is being re-validated with delay of {} millis.",
-                    capSubjectPermission.getCapabilityId(),
-                    System.currentTimeMillis() - capSubjectPermission.getMaxValidUntil());
-              }
-
-              // For re-validation cases we need to check that given delegate is still in scope for given capability and
-              // remove record if it is not anymore. UNCHECKED and blocking ones are already checked prior to this
-              if (isBlank(blockedTaskSelectionDetailsId)
-                  && capSubjectPermission.getPermissionResult() != PermissionResult.UNCHECKED
-                  && !isDelegateStillInScope(capSubjectPermission.getAccountId(), capSubjectPermission.getDelegateId(),
-                      capSubjectPermission.getCapabilityId())) {
-                capabilityService.deleteCapabilitySubjectPermission(capSubjectPermission.getUuid());
-                return null;
-              }
-
-              CapabilityRequirement capabilityRequirement =
-                  persistence.createQuery(CapabilityRequirement.class)
-                      .filter(CapabilityRequirementKeys.accountId, capSubjectPermission.getAccountId())
-                      .filter(CapabilityRequirementKeys.uuid, capSubjectPermission.getCapabilityId())
-                      .get();
-
-              if (capabilityRequirement != null && capabilityRequirement.getCapabilityParameters() != null
-                  && isNotBlank(capabilityRequirement.getCapabilityType())) {
-                return CapabilityCheckDetails.builder()
-                    .accountId(capSubjectPermission.getAccountId())
-                    .delegateId(capSubjectPermission.getDelegateId())
-                    .capabilityId(capSubjectPermission.getCapabilityId())
-                    .capabilityType(CapabilityType.valueOf(capabilityRequirement.getCapabilityType()))
-                    .capabilityParameters(capabilityRequirement.getCapabilityParameters())
-                    .build();
-              }
-
-              return null;
-            })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
-
-    if (isNotEmpty(capabilityCheckDetailsList)) {
-      DelegateTask capabilitiesCheckTask =
-          buildCapabilitiesCheckTask(accountId, delegateId, capabilityCheckDetailsList);
-
-      try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR);
-           AutoLogContext ignore1 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-        DelegateResponseData delegateResponseData = executeTask(capabilitiesCheckTask);
-
-        if (delegateResponseData instanceof BatchCapabilityCheckTaskResponse) {
-          BatchCapabilityCheckTaskResponse response = (BatchCapabilityCheckTaskResponse) delegateResponseData;
-
-          for (CapabilityCheckDetails capabilityCheckDetails : response.getCapabilityCheckDetailsList()) {
-            // Update permission record
-            Query<CapabilitySubjectPermission> query =
-                persistence.createQuery(CapabilitySubjectPermission.class)
-                    .filter(CapabilitySubjectPermissionKeys.accountId, capabilityCheckDetails.getAccountId())
-                    .filter(CapabilitySubjectPermissionKeys.delegateId, capabilityCheckDetails.getDelegateId())
-                    .filter(CapabilitySubjectPermissionKeys.capabilityId, capabilityCheckDetails.getCapabilityId());
-
-            UpdateOperations<CapabilitySubjectPermission> updateOperations =
-                persistence.createUpdateOperations(CapabilitySubjectPermission.class);
-            setUnset(updateOperations, CapabilitySubjectPermissionKeys.permissionResult,
-                capabilityCheckDetails.getPermissionResult());
-            setUnset(updateOperations, CapabilitySubjectPermissionKeys.maxValidUntil,
-                System.currentTimeMillis()
-                    + CapabilityAttributes.getValidityPeriod(capabilityCheckDetails.getCapabilityParameters())
-                          .toMillis());
-            setUnset(updateOperations, CapabilitySubjectPermissionKeys.revalidateAfter,
-                System.currentTimeMillis()
-                    + CapabilityAttributes
-                          .getPeriodUntilNextValidation(capabilityCheckDetails.getCapabilityParameters())
-                          .toMillis());
-
-            persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
-
-            if (isNotBlank(blockedTaskSelectionDetailsId)
-                && capabilityCheckDetails.getPermissionResult() == PermissionResult.ALLOWED) {
-              // Update task selection details record and mark it as not blocked
-              Query<CapabilityTaskSelectionDetails> selectionDetailsQuery =
-                  persistence.createQuery(CapabilityTaskSelectionDetails.class)
-                      .filter(CapabilityTaskSelectionDetailsKeys.accountId, capabilityCheckDetails.getAccountId())
-                      .filter(CapabilityTaskSelectionDetailsKeys.uuid, blockedTaskSelectionDetailsId);
-
-              UpdateOperations<CapabilityTaskSelectionDetails> selectionDetailsUpdateOperations =
-                  persistence.createUpdateOperations(CapabilityTaskSelectionDetails.class);
-              setUnset(selectionDetailsUpdateOperations, CapabilityTaskSelectionDetailsKeys.blocked, false);
-
-              persistence.findAndModify(
-                  selectionDetailsQuery, selectionDetailsUpdateOperations, HPersistence.returnNewOptions);
-            }
-          }
-        } else if ((delegateResponseData instanceof RemoteMethodReturnValueData)
-            && (((RemoteMethodReturnValueData) delegateResponseData).getException()
-                    instanceof InvalidRequestException)) {
-          log.error("Invalid request exception: ", ((RemoteMethodReturnValueData) delegateResponseData).getException());
-        } else {
-          log.error("Batch capabilities check task execution got unexpected delegate response {}",
-              delegateResponseData != null ? delegateResponseData.toString() : "null");
-        }
-      } catch (NoInstalledDelegatesException exception) {
-        ignoredOnPurpose(exception);
-      } catch (NoAvailableDelegatesException exception) {
-        log.warn("Targeted delegate was not available for capabilities check task execution.", exception);
-      } catch (Exception e) {
-        log.error("Failed to execute capabilities check task.", e);
-      }
-    }
   }
 
   @VisibleForTesting
@@ -858,24 +606,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
     return assignDelegateService.canAssign(null, delegateId, accountId, appId, envId, infraMappingId,
         taskSelectionDetails.getTaskGroup(), selectorCapabilities, taskSelectionDetails.getTaskSetupAbstractions());
-  }
-
-  @VisibleForTesting
-  public DelegateTask buildCapabilitiesCheckTask(
-      String accountId, String delegateId, List<CapabilityCheckDetails> capabilityCheckParamsList) {
-    return DelegateTask.builder()
-        .accountId(accountId)
-        .rank(DelegateTaskRank.CRITICAL)
-        .data(TaskData.builder()
-                  .async(false)
-                  .taskType(TaskType.BATCH_CAPABILITY_CHECK.name())
-                  .parameters(new Object[] {BatchCapabilityCheckTaskParameters.builder()
-                                                .capabilityCheckDetailsList(capabilityCheckParamsList)
-                                                .build()})
-                  .timeout(TimeUnit.MINUTES.toMillis(CAPABILITIES_CHECK_TASK_TIMEOUT_IN_MINUTES))
-                  .build())
-        .mustExecuteOnDelegateId(delegateId)
-        .build();
   }
 
   private void verifyTaskSetupAbstractions(DelegateTask task) {
@@ -1104,14 +834,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
           log.info("Delegate is not scoped for task");
           ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
           return null;
-        }
-
-        if (delegateId != null && delegateId.equals(delegateTask.getMustExecuteOnDelegateId())) {
-          return assignTask(delegateId, taskId, delegateTask);
-        }
-
-        if (featureFlagService.isEnabled(FeatureName.PER_AGENT_CAPABILITIES, accountId)) {
-          return assignTask(delegateId, taskId, delegateTask);
         }
 
         if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
@@ -1636,10 +1358,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
             .doesNotExist()
             .field(DelegateTaskKeys.expiry)
             .greaterThan(currentTimeMillis());
-
-    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
-      delegateTaskQuery.filter(DelegateTaskKeys.preAssignedDelegateId, delegateId);
-    }
 
     return delegateTaskQuery.asKeyList()
         .stream()

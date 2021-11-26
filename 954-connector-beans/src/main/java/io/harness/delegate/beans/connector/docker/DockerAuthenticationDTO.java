@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -21,6 +22,7 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(using = DockerAuthenticationDTODeserializer.class)
+@Schema(name = "DockerAuthentication", description = "This contains details of Docker Authentication")
 public class DockerAuthenticationDTO {
   @NotNull @JsonProperty("type") DockerAuthType authType;
 

@@ -23,6 +23,8 @@ import io.harness.plancreator.steps.resourceconstraint.ResourceConstraintStepPla
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
+import io.harness.pms.sdk.core.pipeline.variables.ApprovalStageVariableCreator;
+import io.harness.pms.sdk.core.pipeline.variables.ExecutionVariableCreator;
 import io.harness.pms.sdk.core.pipeline.variables.PipelineVariableCreator;
 import io.harness.pms.sdk.core.pipeline.variables.StepGroupVariableCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
@@ -85,6 +87,8 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     variableCreators.add(new ShellScriptStepVariableCreator());
     variableCreators.add(new JiraStepVariableCreator());
     variableCreators.add(new ApprovalStepVariableCreator());
+    variableCreators.add(new ExecutionVariableCreator());
+    variableCreators.add(new ApprovalStageVariableCreator());
     injectorUtils.injectMembers(variableCreators);
     return variableCreators;
   }

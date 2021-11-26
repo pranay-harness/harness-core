@@ -85,7 +85,7 @@ public class RemoteSegmentSender implements TelemetryReporter {
     TelemetryDataDTO data = TelemetryDataDTO.builder()
                                 .eventType(SegmentEventType.TRACK)
                                 .properties(nonNullProperties)
-                                .trackPayloadDTO(trackPayloadDTO)
+                                .trackPayload(trackPayloadDTO)
                                 .build();
 
     executorService.submit(() -> sendWithRetry(data));
@@ -112,7 +112,7 @@ public class RemoteSegmentSender implements TelemetryReporter {
     TelemetryDataDTO data = TelemetryDataDTO.builder()
                                 .eventType(SegmentEventType.IDENTIFY)
                                 .properties(nonNullProperties)
-                                .identifyPayloadDTO(identifyPayloadDTO)
+                                .identifyPayload(identifyPayloadDTO)
                                 .build();
 
     executorService.submit(() -> sendWithRetry(data));
@@ -154,7 +154,7 @@ public class RemoteSegmentSender implements TelemetryReporter {
     TelemetryDataDTO data = TelemetryDataDTO.builder()
                                 .eventType(SegmentEventType.GROUP)
                                 .properties(nonNullProperties)
-                                .groupPayloadDTO(groupPayloadDTO)
+                                .groupPayload(groupPayloadDTO)
                                 .build();
 
     executorService.submit(() -> sendWithRetry(data));

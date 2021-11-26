@@ -136,6 +136,7 @@ Riyas P riyas.yash@harness.io
 Rohit Karelia rohit.karelia@harness.io
 Rohit Kumar rohit.kumar@harness.io
 Rushabh Shah rushabh.shah@harness.io
+Sagnik De sagnik.de@harness.io
 Sahil Hindwani sahil.hindwani@harness.io
 Sahithi Kolichala sahithi@harness.io
 Sainath Batthala sainath.batthala@harness.io

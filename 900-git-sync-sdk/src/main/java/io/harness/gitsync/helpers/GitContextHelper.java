@@ -44,6 +44,6 @@ public class GitContextHelper {
     if (gitEntityInfo == null) {
       return false;
     }
-    return gitEntityInfo.getIsFullSyncFlow();
+    return Boolean.TRUE.equals(gitEntityInfo.getIsFullSyncFlow());
   }
 }

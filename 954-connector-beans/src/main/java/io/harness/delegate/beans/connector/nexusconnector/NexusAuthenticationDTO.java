@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -23,6 +24,7 @@ import lombok.NoArgsConstructor;
 @ApiModel("NexusAuthentication")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(using = NexusAuthDTODeserializer.class)
+@Schema(name = "NexusAuthentication", description = "This contains details of Nexus Authentication")
 public class NexusAuthenticationDTO {
   @NotNull @JsonProperty("type") NexusAuthType authType;
   @JsonProperty("spec")

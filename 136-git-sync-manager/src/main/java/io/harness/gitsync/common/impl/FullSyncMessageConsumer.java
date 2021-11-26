@@ -1,51 +1,47 @@
-package io.harness.gitsync.common.events;
+package io.harness.gitsync.common.impl;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
-import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_FULL_SYNC_STREAM;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.eventsframework.api.Consumer;
-import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.ng.core.event.MessageListener;
-import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@OwnedBy(HarnessTeam.DX)
-public class GitSyncConfigStreamConsumer implements Runnable {
+public class FullSyncMessageConsumer implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 10;
-  private final Consumer redisConsumer;
-  private final Set<MessageListener> messageListeners;
-  private final QueueController queueController;
+  private final io.harness.eventsframework.api.Consumer redisConsumer;
+  private final List<MessageListener> messageListenersList;
+  private final io.harness.queue.QueueController queueController;
 
   @Inject
-  public GitSyncConfigStreamConsumer(@Named(GIT_CONFIG_STREAM) Consumer redisConsumer, QueueController queueController,
-      @Named(GIT_CONFIG_STREAM) Set<MessageListener> messageListeners) {
+  public FullSyncMessageConsumer(@Named(GIT_FULL_SYNC_STREAM) io.harness.eventsframework.api.Consumer redisConsumer,
+      @Named(GIT_FULL_SYNC_STREAM) MessageListener fullSyncEventMessageProcessor,
+      io.harness.queue.QueueController queueController) {
     this.redisConsumer = redisConsumer;
     this.queueController = queueController;
-    this.messageListeners = messageListeners;
+    messageListenersList = new ArrayList<>();
+    messageListenersList.add(fullSyncEventMessageProcessor);
   }
 
   @Override
   public void run() {
-    log.info("Started the consumer for git sync config stream");
+    log.info("Started the consumer for setup usage stream");
     try {
       SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
         if (queueController.isNotPrimary()) {
-          log.info("git config consumer is not running on primary deployment, will try again after some time...");
+          log.info("Setup usage consumer is not running on primary deployment, will try again after some time...");
           TimeUnit.SECONDS.sleep(30);
           continue;
         }
@@ -55,7 +51,7 @@ public class GitSyncConfigStreamConsumer implements Runnable {
       SecurityContextBuilder.unsetCompleteContext();
       Thread.currentThread().interrupt();
     } catch (Exception ex) {
-      log.error("Git Config consumer unexpectedly stopped", ex);
+      log.error("Setup Usage consumer unexpectedly stopped", ex);
     } finally {
       SecurityContextBuilder.unsetCompleteContext();
     }
@@ -64,8 +60,8 @@ public class GitSyncConfigStreamConsumer implements Runnable {
   private void readEventsFrameworkMessages() throws InterruptedException {
     try {
       pollAndProcessMessages();
-    } catch (EventsFrameworkDownException e) {
-      log.error("Events framework is down for Git Config consumer. Retrying again...", e);
+    } catch (io.harness.eventsframework.api.EventsFrameworkDownException e) {
+      log.error("Events framework is down for Setup Usage consumer. Retrying again...", e);
       TimeUnit.SECONDS.sleep(WAIT_TIME_IN_SECONDS);
     }
   }
@@ -97,7 +93,7 @@ public class GitSyncConfigStreamConsumer implements Runnable {
 
   private boolean processMessage(Message message) {
     AtomicBoolean success = new AtomicBoolean(true);
-    messageListeners.forEach(messageListener -> {
+    messageListenersList.forEach(messageListener -> {
       if (!messageListener.handleMessage(message)) {
         success.set(false);
       }

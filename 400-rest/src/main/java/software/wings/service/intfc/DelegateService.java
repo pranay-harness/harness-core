@@ -187,4 +187,15 @@ public interface DelegateService extends OwnedByAccount {
       DelegateSetupDetails delegateSetupDetails) throws IOException;
 
   String createDelegateGroup(String accountId, DelegateSetupDetails delegateSetupDetails);
+
+  File generateKubernetesYamlUsingNgToken(String accountId, DelegateSetupDetails delegateSetupDetails,
+      String managerHost, String verificationServiceUrl, MediaType fileFormat) throws IOException;
+
+  DelegateSetupDetails validateKubernetesYamlUsingNgToken(String accountId, DelegateSetupDetails delegateSetupDetails);
+
+  void validateDockerSetupDetailsUsingNgToken(
+      String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType);
+
+  File downloadNgDockerUsingToken(String managerHost, String verificationServiceUrl, String accountId,
+      DelegateSetupDetails delegateSetupDetails) throws IOException;
 }
