@@ -6,7 +6,6 @@ import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.HarnessCDCurrentGenActivity;
-import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity;
@@ -146,7 +145,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(ServiceGuardDataCollectionTask.class);
     set.add(LogAnalysisCluster.class);
     set.add(LogClusterLearningEngineTask.class);
-    set.add(InfrastructureActivity.class);
     set.add(LogAnalysisLearningEngineTask.class);
     set.add(LogAnalysisResult.class);
     set.add(KubernetesActivitySource.class);
