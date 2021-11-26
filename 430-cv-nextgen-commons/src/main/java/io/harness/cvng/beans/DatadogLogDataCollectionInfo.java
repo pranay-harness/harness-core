@@ -15,7 +15,7 @@ import lombok.Value;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class DatadogLogDataCollectionInfo extends LogDataCollectionInfo<DatadogConnectorDTO> {
-  public static final long LOG_MAX_LIMIT = 1000;
+  public static final long LOG_MAX_LIMIT = 500;
   DatadogLogDefinition logDefinition;
 
   @Override

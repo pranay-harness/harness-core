@@ -116,7 +116,9 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
       setCommonOperations(updateOperations, datadogMetricCVConfig);
       updateOperations.set(DatadogCVConfigKeys.metricInfoList, datadogMetricCVConfig.getMetricInfoList());
       updateOperations.set(DatadogCVConfigKeys.dashboardName, datadogMetricCVConfig.getDashboardName());
-      updateOperations.set(DatadogCVConfigKeys.dashboardId, datadogMetricCVConfig.getDashboardId());
+      if (datadogMetricCVConfig.getDashboardId() != null) {
+        updateOperations.set(DatadogCVConfigKeys.dashboardId, datadogMetricCVConfig.getDashboardId());
+      }
     }
   }
 }
