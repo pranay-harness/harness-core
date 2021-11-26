@@ -9,29 +9,20 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
-import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
-import io.harness.cvng.DataGenerator;
-import io.harness.cvng.activity.beans.ActivityVerificationSummary;
-import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
-import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.CanaryAdditionalInfo;
 import io.harness.cvng.analysis.beans.Risk;
-import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -87,7 +78,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -407,59 +397,6 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testGetAggregatedVerificationResult_queuedState() {
-    VerificationJobInstance verificationJobInstance = createVerificationJobInstance(verificationJobIdentifier, "prod");
-    DeploymentActivityVerificationResultDTO deploymentActivityVerificationResultDTO =
-        verificationJobInstanceService.getAggregatedVerificationResult(
-            Collections.singletonList(verificationJobInstance.getUuid()));
-    assertThat(deploymentActivityVerificationResultDTO).isNotNull();
-    assertThat(deploymentActivityVerificationResultDTO.getPreProductionDeploymentSummary()).isNull();
-    assertThat(deploymentActivityVerificationResultDTO.getPostDeploymentSummary()).isNull();
-    assertThat(deploymentActivityVerificationResultDTO.getProductionDeploymentSummary())
-        .isEqualTo(ActivityVerificationSummary.builder()
-                       .total(1)
-                       .startTime(verificationJobInstance.getStartTime().toEpochMilli())
-                       .risk(null)
-                       .notStarted(1)
-                       .durationMs(Duration.ofMinutes(15).toMillis())
-                       .remainingTimeMs(1200000)
-                       .verficationStatusMap(new HashMap<>())
-                       .build());
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testGetAggregatedVerificationResult_runningStateWithAnalysis() {
-    VerificationJobInstance verificationJobInstance =
-        createVerificationJobInstance(verificationJobIdentifier, "prod", ExecutionStatus.RUNNING, CANARY);
-
-    DataGenerator dataGenerator = DataGenerator.builder().accountId(accountId).build();
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = dataGenerator.createDeploymentTimSeriesAnalysis(
-        verificationTaskService.getVerificationTaskId(accountId, cvConfigId, verificationJobInstance.getUuid()));
-    deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
-    DeploymentActivityVerificationResultDTO deploymentActivityVerificationResultDTO =
-        verificationJobInstanceService.getAggregatedVerificationResult(
-            Collections.singletonList(verificationJobInstance.getUuid()));
-    assertThat(deploymentActivityVerificationResultDTO).isNotNull();
-    assertThat(deploymentActivityVerificationResultDTO.getPreProductionDeploymentSummary()).isNull();
-    assertThat(deploymentActivityVerificationResultDTO.getPostDeploymentSummary()).isNull();
-    assertThat(deploymentActivityVerificationResultDTO.getProductionDeploymentSummary())
-        .isEqualTo(ActivityVerificationSummary.builder()
-                       .total(1)
-                       .progress(1)
-                       .startTime(verificationJobInstance.getStartTime().toEpochMilli())
-                       .risk(Risk.OBSERVE)
-                       .notStarted(0)
-                       .durationMs(Duration.ofMinutes(15).toMillis())
-                       .remainingTimeMs(1200000)
-                       .verficationStatusMap(new HashMap<>())
-                       .build());
-  }
-
-  @Test
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
   public void testAbort() throws IllegalAccessException {
@@ -485,184 +422,6 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
         hPersistence.get(VerificationJobInstance.class, failedVerificationJobInstance.getUuid());
     assertThat(abortedFailedVJI.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     Mockito.verify(dataCollectionTaskService).abortDeploymentDataCollectionTasks(verificationTaskIds);
-  }
-
-  @Test
-  @Owner(developers = NEMANJA)
-  @Category(UnitTests.class)
-  public void testSetDeploymentJobSummaries() {
-    VerificationJobInstance devVerificationJobInstance =
-        createVerificationJobInstance("devVerificationJobInstance", "dev");
-    VerificationJobInstance prodVerificationJobInstance =
-        createVerificationJobInstance("prodVerificationJobInstance", "prod");
-
-    DeploymentResultSummary deploymentResultSummary =
-        DeploymentResultSummary.builder()
-            .preProductionDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
-            .productionDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
-            .postDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
-            .build();
-
-    verificationJobInstanceService.addResultsToDeploymentResultSummary(accountId,
-        Arrays.asList(devVerificationJobInstance.getUuid(), prodVerificationJobInstance.getUuid()),
-        deploymentResultSummary);
-
-    assertThat(deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries().size())
-        .isEqualTo(1);
-    assertThat(deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries()
-                   .get(0)
-                   .getEnvironmentName())
-        .isEqualTo("Harness dev");
-    assertThat(deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries().size()).isEqualTo(1);
-    assertThat(
-        deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries().get(0).getEnvironmentName())
-        .isEqualTo("Harness prod");
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testSetDeploymentJobSummaries_noVerificationTaskMappingExists() {
-    verificationJobService.create(accountId, createVerificationJobDTO(verificationJobIdentifier, "dev", CANARY));
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(
-        accountId, orgIdentifier, projectIdentifier, verificationJobIdentifier);
-    VerificationJobInstance verificationJobInstance =
-        VerificationJobInstance.builder()
-            .accountId(accountId)
-            .executionStatus(ExecutionStatus.QUEUED)
-            .deploymentStartTime(Instant.ofEpochMilli(deploymentStartTimeMs))
-            .resolvedJob(verificationJob)
-            .createdAt(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())
-            .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))
-            .build();
-    verificationJobInstanceService.create(verificationJobInstance);
-    createVerificationJobInstance("devVerificationJobInstance", "dev");
-    DeploymentResultSummary deploymentResultSummary =
-        DeploymentResultSummary.builder()
-            .preProductionDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
-            .productionDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
-            .postDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
-            .build();
-
-    verificationJobInstanceService.addResultsToDeploymentResultSummary(
-        accountId, Arrays.asList(verificationJobInstance.getUuid()), deploymentResultSummary);
-
-    assertThat(deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries()).hasSize(1);
-    DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary pre =
-        deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries().get(0);
-    assertThat(pre.getEnvironmentName()).isEqualTo("Harness dev");
-    assertThat(pre.getAdditionalInfo().getType()).isEqualTo(CANARY);
-    assertThat(((CanaryAdditionalInfo) pre.getAdditionalInfo()).getCanary()).isEmpty();
-    assertThat(((CanaryAdditionalInfo) pre.getAdditionalInfo()).getPrimary()).isEmpty();
-    assertThat(deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries()).isEmpty();
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testGetDeploymentVerificationPopoverResult_verificationJobInstanceDoesNotExist() {
-    String verificationJobInstanceId = generateUuid();
-    assertThatThrownBy(()
-                           -> verificationJobInstanceService.getDeploymentVerificationPopoverResult(
-                               Arrays.asList(verificationJobInstanceId)))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("No VerificationJobInstance found with IDs " + Arrays.asList(verificationJobInstanceId).toString());
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testGetDeploymentVerificationPopoverResult_validVerificationJobInstancesWithFailedInstance() {
-    VerificationJobInstance devVerificationJobInstance =
-        createVerificationJobInstance("devVerificationJobInstance", "dev");
-    VerificationJobInstance prodVerificationJobInstance =
-        createVerificationJobInstance("prodVerificationJobInstance", "prod");
-    verificationJobInstanceService.logProgress(
-        AnalysisProgressLog.builder()
-            .analysisStatus(AnalysisStatus.FAILED)
-            .startTime(prodVerificationJobInstance.getStartTime())
-            .endTime(prodVerificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
-            .isFinalState(true)
-            .verificationTaskId(verificationTaskService.getVerificationTaskId(
-                accountId, cvConfigId, prodVerificationJobInstance.getUuid()))
-            .log("Time series")
-            .build());
-    DeploymentActivityPopoverResultDTO deploymentActivityPopoverResultDTO =
-        verificationJobInstanceService.getDeploymentVerificationPopoverResult(
-            Arrays.asList(devVerificationJobInstance.getUuid(), prodVerificationJobInstance.getUuid()));
-    assertThat(deploymentActivityPopoverResultDTO.getPreProductionDeploymentSummary())
-        .isEqualTo(DeploymentPopoverSummary.builder()
-                       .total(1)
-                       .verificationResults(Collections.singletonList(
-                           DeploymentActivityPopoverResultDTO.VerificationResult.builder()
-                               .jobName(devVerificationJobInstance.getResolvedJob().getJobName())
-                               .progressPercentage(0)
-                               .remainingTimeMs(1200000L)
-                               .status(ActivityVerificationStatus.NOT_STARTED)
-                               .startTime(devVerificationJobInstance.getStartTime().toEpochMilli())
-                               .build()))
-                       .build());
-    assertThat(deploymentActivityPopoverResultDTO.getProductionDeploymentSummary())
-        .isEqualTo(DeploymentPopoverSummary.builder()
-                       .total(1)
-                       .verificationResults(Collections.singletonList(
-                           DeploymentActivityPopoverResultDTO.VerificationResult.builder()
-                               .jobName(prodVerificationJobInstance.getResolvedJob().getJobName())
-                               .progressPercentage(6)
-                               .remainingTimeMs(0L)
-                               .status(ActivityVerificationStatus.ERROR)
-                               .startTime(prodVerificationJobInstance.getStartTime().toEpochMilli())
-                               .build()))
-                       .build());
-    assertThat(deploymentActivityPopoverResultDTO.getPostDeploymentSummary()).isEqualTo(null);
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testGetDeploymentVerificationPopoverResult_validVerificationJobInstancesWithInProgressInstance() {
-    VerificationJobInstance devVerificationJobInstance =
-        createVerificationJobInstance("devVerificationJobInstance", "dev", ExecutionStatus.RUNNING, CANARY);
-    VerificationJobInstance prodVerificationJobInstance =
-        createVerificationJobInstance("prodVerificationJobInstance", "prod", ExecutionStatus.RUNNING, CANARY);
-    verificationJobInstanceService.logProgress(
-        AnalysisProgressLog.builder()
-            .analysisStatus(AnalysisStatus.SUCCESS)
-            .startTime(prodVerificationJobInstance.getStartTime())
-            .endTime(prodVerificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
-            .isFinalState(true)
-            .verificationTaskId(verificationTaskService.getVerificationTaskId(
-                accountId, cvConfigId, prodVerificationJobInstance.getUuid()))
-            .log("Time series")
-            .build());
-    DeploymentActivityPopoverResultDTO deploymentActivityPopoverResultDTO =
-        verificationJobInstanceService.getDeploymentVerificationPopoverResult(
-            Arrays.asList(devVerificationJobInstance.getUuid(), prodVerificationJobInstance.getUuid()));
-    assertThat(deploymentActivityPopoverResultDTO.getPreProductionDeploymentSummary())
-        .isEqualTo(DeploymentPopoverSummary.builder()
-                       .total(1)
-                       .verificationResults(Collections.singletonList(
-                           DeploymentActivityPopoverResultDTO.VerificationResult.builder()
-                               .jobName(devVerificationJobInstance.getResolvedJob().getJobName())
-                               .progressPercentage(0)
-                               .remainingTimeMs(1200000L)
-                               .status(ActivityVerificationStatus.IN_PROGRESS)
-                               .startTime(devVerificationJobInstance.getStartTime().toEpochMilli())
-                               .build()))
-                       .build());
-    assertThat(deploymentActivityPopoverResultDTO.getProductionDeploymentSummary())
-        .isEqualTo(DeploymentPopoverSummary.builder()
-                       .total(1)
-                       .verificationResults(Collections.singletonList(
-                           DeploymentActivityPopoverResultDTO.VerificationResult.builder()
-                               .jobName(prodVerificationJobInstance.getResolvedJob().getJobName())
-                               .progressPercentage(6)
-                               .remainingTimeMs(1886110L)
-                               .status(ActivityVerificationStatus.IN_PROGRESS)
-                               .startTime(prodVerificationJobInstance.getStartTime().toEpochMilli())
-                               .build()))
-                       .build());
-    assertThat(deploymentActivityPopoverResultDTO.getPostDeploymentSummary()).isEqualTo(null);
   }
 
   @Test

@@ -246,31 +246,6 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
   }
 
   @Override
-  public void deleteByProjectIdentifier(
-      Class<ChangeSource> clazz, String accountId, String orgIdentifier, String projectIdentifier) {
-    hPersistence.createQuery(ChangeSource.class)
-        .filter(ChangeSourceKeys.accountId, accountId)
-        .filter(ChangeSourceKeys.orgIdentifier, orgIdentifier)
-        .filter(ChangeSourceKeys.projectIdentifier, projectIdentifier)
-        .forEach(hPersistence::delete);
-  }
-
-  @Override
-  public void deleteByOrgIdentifier(Class<ChangeSource> clazz, String accountId, String orgIdentifier) {
-    hPersistence.createQuery(ChangeSource.class)
-        .filter(ChangeSourceKeys.accountId, accountId)
-        .filter(ChangeSourceKeys.orgIdentifier, orgIdentifier)
-        .forEach(hPersistence::delete);
-  }
-
-  @Override
-  public void deleteByAccountIdentifier(Class<ChangeSource> clazz, String accountId) {
-    hPersistence.createQuery(ChangeSource.class)
-        .filter(ChangeSourceKeys.accountId, accountId)
-        .forEach(hPersistence::delete);
-  }
-
-  @Override
   public void handleCurrentGenEvents(HarnessCDCurrentGenChangeSource changeSource) {
     List<HarnessCDCurrentGenEventMetadata> events = verificationManagerService.getCurrentGenEvents(
         changeSource.getAccountId(), changeSource.getHarnessApplicationId(), changeSource.getHarnessEnvironmentId(),
