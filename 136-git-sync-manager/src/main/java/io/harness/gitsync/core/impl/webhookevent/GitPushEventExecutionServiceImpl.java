@@ -21,6 +21,7 @@ import io.harness.product.ci.scm.proto.Repository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import graphql.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.DX)
@@ -108,9 +109,9 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
         .build();
   }
 
-  private String getBranchName(ParseWebhookResponse parseWebhookResponse) {
+  @VisibleForTesting
+  String getBranchName(ParseWebhookResponse parseWebhookResponse) {
     String branchRef = parseWebhookResponse.getPush().getRef();
-    final int lastIndexOfSlash = branchRef.lastIndexOf('/');
-    return branchRef.substring(lastIndexOfSlash + 1);
+    return branchRef.replaceFirst("^refs/heads/", "");
   }
 }
