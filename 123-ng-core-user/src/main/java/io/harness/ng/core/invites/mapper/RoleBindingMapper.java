@@ -64,21 +64,21 @@ public class RoleBindingMapper {
 
   public static String getDefaultResourceGroupIdentifier(String orgIdentifier, String projectIdentifier) {
     if (isNotEmpty(projectIdentifier)) {
-      return "_all_project_resources";
+      return "_all_project_level_resources";
     } else if (isNotEmpty(orgIdentifier)) {
-      return "_all_organization_resources";
+      return "_all_organization_level_resources";
     } else {
-      return "_all_account_resources";
+      return "_all_account_level_resources";
     }
   }
 
   public String getDefaultResourceGroupName(String orgIdentifier, String projectIdentifier) {
     if (isNotEmpty(projectIdentifier)) {
-      return "All Project Resources";
+      return "All Project Level Resources";
     } else if (isNotEmpty(orgIdentifier)) {
-      return "All Organization Resources";
+      return "All Organization Level Resources";
     } else {
-      return "All Account Resources";
+      return "All Account Level Resources";
     }
   }
 }

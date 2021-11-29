@@ -22,11 +22,11 @@ public class AdminPrivilegedRoleAssignmentMapper {
               new AbstractMap.SimpleEntry<>("_organization_admin", "_super_organization_admin"))
           .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   public static final String ALL_RESOURCES_RESOURCE_GROUP = "_all_resources";
-  public static final String ALL_PROJECT_RESOURCES = "_all_project_resources";
-  public static final String ALL_ORGANIZATION_RESOURCES = "_all_organization_resources";
-  public static final String ALL_ACCOUNT_RESOURCES = "_all_account_resources";
-  public static final List<String> MANAGED_RESOURCE_GROUP_IDENTIFIERS = ImmutableList.of(
-      ALL_RESOURCES_RESOURCE_GROUP, ALL_ACCOUNT_RESOURCES, ALL_ORGANIZATION_RESOURCES, ALL_PROJECT_RESOURCES);
+  public static final String ALL_PROJECT_LEVEL_RESOURCES = "_all_project_level_resources";
+  public static final String ALL_ORGANIZATION_LEVEL_RESOURCES = "_all_organization_level_resources";
+  public static final String ALL_ACCOUNT_LEVEL_RESOURCES = "_all_account_level_resources";
+  public static final List<String> MANAGED_RESOURCE_GROUP_IDENTIFIERS = ImmutableList.of(ALL_RESOURCES_RESOURCE_GROUP,
+      ALL_ACCOUNT_LEVEL_RESOURCES, ALL_ORGANIZATION_LEVEL_RESOURCES, ALL_PROJECT_LEVEL_RESOURCES);
 
   public static Optional<PrivilegedRoleAssignment> buildAdminPrivilegedRoleAssignment(
       RoleAssignmentDBO roleAssignment) {
