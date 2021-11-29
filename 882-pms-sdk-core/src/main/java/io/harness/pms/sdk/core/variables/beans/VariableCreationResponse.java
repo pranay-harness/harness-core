@@ -5,9 +5,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.contracts.plan.YamlProperties;
+import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.pms.sdk.core.pipeline.creators.CreatorResponse;
 import io.harness.pms.yaml.YamlField;
 
@@ -23,49 +25,61 @@ import lombok.Singular;
 public class VariableCreationResponse implements CreatorResponse {
   @Singular Map<String, YamlProperties> yamlProperties;
   @Singular Map<String, YamlOutputProperties> yamlOutputProperties;
-  @Singular Map<String, YamlField> resolvedDependencies;
-  @Singular Map<String, YamlField> dependencies;
+  Dependencies dependencies;
+  Dependencies resolvedDependencies;
+  YamlUpdates yamlUpdates;
 
-  public void addResolvedDependencies(Map<String, YamlField> resolvedDependencies) {
-    if (EmptyPredicate.isEmpty(resolvedDependencies)) {
-      return;
-    }
-    resolvedDependencies.values().forEach(this::addResolvedDependency);
+  public Dependencies getDependenciesForVariable() {
+    return dependencies;
   }
 
-  public void addResolvedDependency(YamlField yamlField) {
+  public Map<String, YamlField> getDependencies() {
+    return null;
+  }
+
+  public void addResolvedDependencies(Dependencies resolvedDependencies) {
+    if (resolvedDependencies == null || EmptyPredicate.isEmpty(resolvedDependencies.getDependenciesMap())) {
+      return;
+    }
+    resolvedDependencies.getDependenciesMap().forEach(
+        (key, value) -> { addDependency(dependencies.getYaml(), key, value); });
+  }
+
+  public void addResolvedDependency(String yaml, String nodeId, String yamlPath) {
     if (resolvedDependencies == null) {
-      resolvedDependencies = new HashMap<>();
-    } else if (!(resolvedDependencies instanceof HashMap)) {
-      resolvedDependencies = new HashMap<>(resolvedDependencies);
+      resolvedDependencies = Dependencies.newBuilder().setYaml(yaml).build();
     }
 
-    resolvedDependencies.put(yamlField.getNode().getUuid(), yamlField);
+    resolvedDependencies = resolvedDependencies.toBuilder().putDependencies(nodeId, yamlPath).build();
     if (dependencies != null) {
-      dependencies.remove(yamlField.getNode().getUuid());
+      dependencies = dependencies.toBuilder().removeDependencies(nodeId).build();
     }
   }
 
-  public void addDependencies(Map<String, YamlField> fields) {
-    if (EmptyPredicate.isEmpty(fields)) {
+  public void addDependencies(Dependencies dependencies) {
+    if (dependencies == null || EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
       return;
     }
-    fields.values().forEach(this::addDependency);
+    dependencies.getDependenciesMap().forEach((key, value) -> { addDependency(dependencies.getYaml(), key, value); });
   }
 
-  public void addDependency(YamlField field) {
-    String nodeId = field.getNode().getUuid();
-    if (dependencies != null && dependencies.containsKey(nodeId)) {
+  @Override
+  public void addDependency(YamlField field) {}
+
+  public void addDependency(String yaml, String nodeId, String yamlPath) {
+    if (dependencies != null && dependencies.getDependenciesMap().containsKey(nodeId)) {
       return;
     }
 
     if (dependencies == null) {
-      dependencies = new HashMap<>();
-    } else if (!(dependencies instanceof HashMap)) {
-      dependencies = new HashMap<>(dependencies);
+      dependencies = Dependencies.newBuilder().setYaml(yaml).putDependencies(nodeId, yamlPath).build();
+      return;
     }
-    dependencies.put(nodeId, field);
+    dependencies = dependencies.toBuilder().putDependencies(nodeId, yamlPath).build();
   }
+
+  @Override
+  public void addResolvedDependency(YamlField yamlField) {}
 
   public void addYamlProperties(Map<String, YamlProperties> yamlProperties) {
     if (EmptyPredicate.isEmpty(yamlProperties)) {
@@ -108,16 +122,12 @@ public class VariableCreationResponse implements CreatorResponse {
   public VariablesCreationBlobResponse toBlobResponse() {
     VariablesCreationBlobResponse.Builder finalBuilder = VariablesCreationBlobResponse.newBuilder();
 
-    if (isNotEmpty(dependencies)) {
-      for (Map.Entry<String, YamlField> dependency : dependencies.entrySet()) {
-        finalBuilder.putDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
-      }
+    if (dependencies != null && isNotEmpty(dependencies.getDependenciesMap())) {
+      finalBuilder.setDeps(dependencies);
     }
 
-    if (isNotEmpty(resolvedDependencies)) {
-      for (Map.Entry<String, YamlField> dependency : resolvedDependencies.entrySet()) {
-        finalBuilder.putResolvedDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
-      }
+    if (resolvedDependencies != null && isNotEmpty(resolvedDependencies.getDependenciesMap())) {
+      finalBuilder.setResolvedDeps(resolvedDependencies);
     }
 
     if (isNotEmpty(yamlProperties)) {

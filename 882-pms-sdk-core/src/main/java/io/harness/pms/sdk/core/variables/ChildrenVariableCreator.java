@@ -22,13 +22,13 @@ public abstract class ChildrenVariableCreator implements VariableCreator {
     for (Map.Entry<String, VariableCreationResponse> entry : variablesForChildrenNodes.entrySet()) {
       finalResponse.addYamlProperties(entry.getValue().getYamlProperties());
       finalResponse.addResolvedDependencies(entry.getValue().getResolvedDependencies());
-      finalResponse.addDependencies(entry.getValue().getDependencies());
+      finalResponse.addDependencies(entry.getValue().getDependenciesForVariable());
     }
     VariableCreationResponse variablesForParentNode = createVariablesForParentNode(ctx, field);
     finalResponse.addYamlProperties(variablesForParentNode.getYamlProperties());
     finalResponse.addYamlOutputProperties(variablesForParentNode.getYamlOutputProperties());
     finalResponse.addResolvedDependencies(variablesForParentNode.getResolvedDependencies());
-    finalResponse.addDependencies(variablesForParentNode.getDependencies());
+    finalResponse.addDependencies(variablesForParentNode.getDependenciesForVariable());
     return finalResponse;
   }
 }
