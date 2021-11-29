@@ -28,7 +28,6 @@ import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.notification.bean.NotificationRules;
 import io.harness.opaclient.model.OpaConstants;
@@ -92,9 +91,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
-      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error"),
-          @ApiResponse(code = 403, response = TemplateInputsErrorResponseDTO.class,
-              message = "TemplateRefs Resolved failed in pipeline yaml.")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @Tag(name = "pipelines", description = "This contains APIs related to pipelines")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
