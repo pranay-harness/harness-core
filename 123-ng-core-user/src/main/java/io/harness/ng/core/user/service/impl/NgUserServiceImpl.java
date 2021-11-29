@@ -686,6 +686,26 @@ public class NgUserServiceImpl implements NgUserService {
     return true;
   }
 
+  @Override
+  public boolean removeUserWithCriteria(String userId, UserMembershipUpdateSource source, Criteria criteria) {
+    log.info("Trying to remove user {} with criteria {}", userId, criteria.toString());
+    try (TimeLogger timeLogger = new TimeLogger(LoggerFactory.getLogger(getClass().getName()))) {
+      List<UserMembership> userMemberships = userMembershipRepository.findAll(criteria);
+
+      Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
+      String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
+
+      userMemberships.forEach(
+          userMembership -> Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+            userMembershipRepository.delete(userMembership);
+            outboxService.save(new RemoveCollaboratorEvent(userMembership.getScope().getAccountIdentifier(),
+                userMembership.getScope(), publicIdentifier, userId, source));
+            return userMembership;
+          })));
+    }
+    return true;
+  }
+
   private void validateUserMembershipsDeletion(Scope scope, String userId, NGRemoveUserFilter removeUserFilter) {
     if (!NGRemoveUserFilter.STRICTLY_FORCE_REMOVE_USER.equals(removeUserFilter) && isEmpty(scope.getOrgIdentifier())) {
       checkIfUserIsLastAccountAdmin(scope.getAccountIdentifier(), userId);
