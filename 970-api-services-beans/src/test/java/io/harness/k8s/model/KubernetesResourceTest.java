@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.AVMOHAN;
+import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -173,7 +174,7 @@ public class KubernetesResourceTest extends CategoryTest {
 
 
   @Test
-  @Owner(developers = SATYAM)
+  @Owner(developers = NAMAN_TALAYCHA)
   @Category(UnitTests.class)
   public void manifestFormatingTest() throws Exception {
     String resourceFile = "manifest.yaml";
