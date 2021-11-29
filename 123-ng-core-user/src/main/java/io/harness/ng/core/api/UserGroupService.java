@@ -20,6 +20,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 public interface UserGroupService {
@@ -35,6 +36,8 @@ public interface UserGroupService {
 
   Page<UserGroup> list(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm, Pageable pageable);
+
+  List<UserGroup> list(Criteria criteria);
 
   List<UserGroup> list(UserGroupFilterDTO userGroupFilterDTO);
 

@@ -308,7 +308,7 @@ public class NgUserServiceImplTest extends CategoryTest {
     assertEquals(
         AddUserResponse.USER_ADDED_SUCCESSFULLY, response.getAddUserResponseMap().get(emailAlreadyPartOfAccount));
 
-    verify(userGroupService, times(1)).list(any());
+    verify(userGroupService, times(1)).list(any(UserGroupFilterDTO.class));
     verify(userMetadataRepository, times(1)).findAll(any(), any());
     verify(ngUserService, times(1)).getUsersAtScope(any(), any());
 
@@ -401,7 +401,7 @@ public class NgUserServiceImplTest extends CategoryTest {
     verify(userMetadataRepository, times(userIds.size())).findDistinctByUserId(any());
     verify(ngUserService, times(userIds.size() * getRank(scope))).addUserToScopeInternal(any(), any(), any(), any());
     verify(ngUserService, times(userIds.size())).createRoleAssignments(any(), any(), any());
-    verify(userGroupService, times(isEmpty(userGroups) ? 0 : userIds.size())).list(any());
+    verify(userGroupService, times(isEmpty(userGroups) ? 0 : userIds.size())).list(any(UserGroupFilterDTO.class));
     verify(userGroupService, times(userIds.size())).addUserToUserGroups(any(Scope.class), any(), any());
   }
 

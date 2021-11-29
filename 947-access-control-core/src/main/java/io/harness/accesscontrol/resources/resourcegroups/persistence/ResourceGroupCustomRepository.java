@@ -13,4 +13,5 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public interface ResourceGroupCustomRepository {
   List<ResourceGroupDBO> findAllWithCriteria(Criteria criteria);
   Optional<ResourceGroupDBO> find(Criteria criteria);
+  boolean deleteMulti(Criteria criteria);
 }

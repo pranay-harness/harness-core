@@ -46,11 +46,12 @@ import org.mockito.Mock;
 
 public class NotificationServiceImplIntegrationTest extends WingsBaseTest {
   private static final String SANITIZED_NAME = "sanitized_name";
+  private static final String APP_BASE_URL = "https://app.harness.io/";
 
   @Inject private HPersistence persistence;
-  @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Inject private MainConfiguration mainConfiguration;
 
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Mock private HtmlInputSanitizer htmlInputSanitizer;
   @Mock private EmailNotificationService emailNotificationService;
 
@@ -73,6 +74,7 @@ public class NotificationServiceImplIntegrationTest extends WingsBaseTest {
     user2 = buildUser2();
     persistence.save(user2);
 
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(APP_BASE_URL);
     when(htmlInputSanitizer.sanitizeInput(anyString())).thenReturn(SANITIZED_NAME);
 
     notificationService = new NotificationServiceImpl(
@@ -208,12 +210,14 @@ public class NotificationServiceImplIntegrationTest extends WingsBaseTest {
   }
 
   private void assertNgUrlValid(String url) {
-    String urlRegex = "PORTAL_URL/auth/reset-password/" + tokenRegex() + "\\?accountId=" + user2.getDefaultAccountId();
+    String urlRegex = Pattern.quote(APP_BASE_URL + "auth/#/reset-password/") + tokenRegex()
+        + Pattern.quote("?accountId=" + user2.getDefaultAccountId());
     assertThat(url).matches(Pattern.compile(urlRegex));
   }
 
   private void assertCgUrlValid(String url) {
-    String urlRegex = "PORTAL_URL/reset-password/" + tokenRegex() + "\\?accountId=" + user1.getDefaultAccountId();
+    String urlRegex = Pattern.quote(APP_BASE_URL + "#/reset-password/") + tokenRegex()
+        + Pattern.quote("?accountId=" + user1.getDefaultAccountId());
     assertThat(url).matches(Pattern.compile(urlRegex));
   }
 
@@ -229,9 +233,10 @@ public class NotificationServiceImplIntegrationTest extends WingsBaseTest {
   }
 
   private String tokenRegex() {
+    String tokenStart = "ey";
     String allExceptDot = "[a-zA-Z0-9-_]+";
     String dot = "\\.";
-    return allExceptDot + dot + allExceptDot + dot + allExceptDot;
+    return tokenStart + allExceptDot + dot + allExceptDot + dot + allExceptDot;
   }
 
   private String extractToken(String url) {

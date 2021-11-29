@@ -5,10 +5,10 @@ import static io.harness.pms.plan.creation.PlanCreatorUtils.supportsField;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.SetupMetadata;
 import io.harness.pms.contracts.plan.VariablesCreationBlobRequest;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
-import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.sdk.core.pipeline.creators.BaseCreatorService;
@@ -38,12 +38,11 @@ public class VariableCreatorService extends BaseCreatorService<VariableCreationR
   }
 
   public VariablesCreationBlobResponse createVariablesResponse(VariablesCreationBlobRequest request) {
-    Map<String, YamlFieldBlob> dependencyBlobs = request.getDependenciesMap();
-    Map<String, YamlField> initialDependencies = getInitialDependencies(dependencyBlobs);
+    Dependencies initialDependencies = request.getDeps();
 
     try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
              request.getMetadata().getGitSyncBranchContext(), true)) {
-      VariableCreationResponse response = processNodesRecursively(
+      VariableCreationResponse response = processNodesRecursivelyForVariable(
           initialDependencies, SetupMetadata.newBuilder().build(), VariableCreationResponse.builder().build());
       return response.toBlobResponse();
     }

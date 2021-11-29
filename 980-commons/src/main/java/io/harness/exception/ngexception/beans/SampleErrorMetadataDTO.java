@@ -1,4 +1,6 @@
-package io.harness.exception.ngexception;
+package io.harness.exception.ngexception.beans;
+
+import io.harness.exception.ngexception.ErrorMetadataDTO;
 
 import java.util.Map;
 import lombok.Builder;
