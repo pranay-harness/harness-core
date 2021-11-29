@@ -3,6 +3,7 @@
 
 # Run this script to download the required Go tools for Go development
 
+
 ##########################################################################################
 set -euo pipefail
 PROJECT_ROOT="${PROJECT_ROOT:-$(git rev-parse --show-toplevel)}"
