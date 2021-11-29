@@ -122,6 +122,7 @@ public class PrometheusCVConfig extends MetricCVConfig {
               .additionalFilters(prometheusMetricDefinition.getAdditionalFilters())
               .serviceInstanceFieldName(prometheusMetricDefinition.getServiceInstanceFieldName())
               .prometheusMetricName(prometheusMetricDefinition.getPrometheusMetric())
+              .identifier(prometheusMetricDefinition.getIdentifier())
               .aggregation(prometheusMetricDefinition.getAggregation())
               .sli(SLIMetricTransformer.transformDTOtoEntity(prometheusMetricDefinition.getSli()))
               .liveMonitoring(LiveMonitoringTransformer.transformDTOtoEntity(prometheusMetricDefinition.getAnalysis()))

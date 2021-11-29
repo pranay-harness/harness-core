@@ -58,8 +58,6 @@ import retrofit2.http.Body;
 @NextGenManagerAuth
 @OwnedBy(HarnessTeam.CV)
 public class MonitoredServiceResource {
-  private static final String YAML_TEMPLATE_KEY = "yaml";
-
   @Inject MonitoredServiceService monitoredServiceService;
 
   @POST

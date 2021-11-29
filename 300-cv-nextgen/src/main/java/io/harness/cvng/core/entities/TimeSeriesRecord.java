@@ -54,7 +54,6 @@ public final class TimeSeriesRecord
 
   @Id private String uuid;
   @FdIndex private String accountId;
-  @FdIndex private String cvConfigId;
   @FdIndex private String verificationTaskId;
   @FdIndex private String host;
   @FdIndex private String metricName;

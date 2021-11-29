@@ -42,6 +42,7 @@ public class PrometheusHealthSourceSpecTransformer
                 .additionalFilters(metricInfo.getAdditionalFilters())
                 .isManualQuery(metricInfo.isManualQuery())
                 .query(metricInfo.getQuery())
+                .identifier(metricInfo.getIdentifier())
                 .metricName(metricInfo.getMetricName())
                 .prometheusMetric(metricInfo.getPrometheusMetricName())
                 .aggregation(metricInfo.getAggregation())
