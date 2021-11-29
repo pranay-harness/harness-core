@@ -140,14 +140,16 @@ NOTE: the data from it is used for every git operation github does on you behave
    ```
    export BUILD_PURPOSE=DEVELOPMENT
    ```
-   
-4. Go to `portal` directory and run
+
+5. Disconnect from the VPN before running the following command
+
+6. Go to `portal` directory and run
 
     `mvn clean install -DskipTests`
 
     `bazel build :all`
 
-5. If Global Search is not required:
+7. If Global Search is not required:
 
     Install and start MongoDB Docker Image (v4.2):
     ```
@@ -157,7 +159,7 @@ NOTE: the data from it is used for every git operation github does on you behave
 
     Install & use [RoboMongo](https://robomongo.org/download) client to test MongoDB connection.
 
-6. If Global search has to be enabled (OPTIONAL):
+8. If Global search has to be enabled (OPTIONAL):
 
     Install and start Elasticsearch Docker Image for Search(v7.3):
     ```
@@ -194,7 +196,7 @@ NOTE: the data from it is used for every git operation github does on you behave
     In `360-cg-manager/config.yml` set `mongo.uri` to `mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness`.
     Do the same in `config-datagen.yml` and `verification-config.yml`.
 
-7. If TimeScaleDB has to be enabled (Optional for now)
+9. If TimeScaleDB has to be enabled (Optional for now)
 
    a. Start TimeScaleDB using the following docker command: `docker run -d --name harness-timescaledb -v ~/timescaledb/data:/var/lib/postgresql/data -p 5432:5432 --rm -e POSTGRES_USER=admin -e POSTGRES_DB=harness -e POSTGRES_PASSWORD=password timescale/timescaledb`
 
@@ -205,7 +207,7 @@ NOTE: the data from it is used for every git operation github does on you behave
     timescaledbUsername: admin
     timescaledbPassword: password
   ```
-8. Install Redis - Follow the instructions from [here](https://gist.github.com/tomysmile/1b8a321e7c58499ef9f9441b2faa0aa8)
+10. Install Redis - Follow the instructions from [here](https://gist.github.com/tomysmile/1b8a321e7c58499ef9f9441b2faa0aa8)
 
 
 ### Run Harness without IDE (especially for the UI development)
