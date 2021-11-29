@@ -29,9 +29,11 @@ class ChangeEventProcessor {
       Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("primary-change-processor").build());
   private Future<?> changeEventProcessorTaskFuture;
 
-  void startProcessingChangeEvents(Set<String> accountIdsToSyncToTimescale) {
-    ChangeEventProcessorTask changeEventProcessorTask = new ChangeEventProcessorTask(searchEntities, timeScaleEntities,
-        wingsPersistence, changeEventMetricsTracker, changeEventQueue, accountIdsToSyncToTimescale);
+  void startProcessingChangeEvents(
+      Set<String> accountIdsToSyncToTimescale, boolean closeTimeScaleSyncProcessingOnFailure) {
+    ChangeEventProcessorTask changeEventProcessorTask =
+        new ChangeEventProcessorTask(searchEntities, timeScaleEntities, wingsPersistence, changeEventMetricsTracker,
+            changeEventQueue, accountIdsToSyncToTimescale, closeTimeScaleSyncProcessingOnFailure);
     changeEventProcessorTaskFuture = changeEventExecutorService.submit(changeEventProcessorTask);
   }
 

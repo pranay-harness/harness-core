@@ -1,5 +1,6 @@
 package io.harness.reflection;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 
 import static java.lang.String.format;
@@ -205,10 +206,19 @@ public class ReflectionUtils {
     field.set(obj, value);
   }
 
-  public static Method getMethod(Class clazz, String methodName) {
+  public static Method getMethod(Class clazz, String methodName, Object... params) {
     try {
-      return clazz.getMethod(methodName);
+      if (isNotEmpty(params)) {
+        Class<?>[] paramClass = new Class<?>[ params.length ];
+        for (int i = 0; i < params.length; i++) {
+          paramClass[i] = params[i].getClass();
+        }
+        return clazz.getMethod(methodName, paramClass);
+      } else {
+        return clazz.getMethod(methodName);
+      }
     } catch (NoSuchMethodException e) {
+      log.error("Cannot find method [{}] in class [{}]", methodName, clazz, e);
       throw new UnsupportedOperationException(String.format("No method found with name %s", methodName));
     }
   }

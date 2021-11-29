@@ -126,6 +126,22 @@ public class EnforcementServiceImpl implements EnforcementService {
   }
 
   @Override
+  public List<FeatureRestrictionDetailsDTO> getFeatureDetails(
+      List<FeatureRestrictionName> featureRestrictionNames, String accountIdentifier) {
+    List<FeatureRestrictionDetailsDTO> result = new ArrayList<>();
+
+    for (FeatureRestrictionName name : featureRestrictionNames) {
+      if (!isFeatureRestrictionDefined(name)) {
+        throw new InvalidRequestException(String.format("Feature [%s] is not defined", name));
+      }
+      FeatureRestriction featureRestriction = featureRestrictionMap.get(name);
+      Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
+      result.add(toFeatureDetailsDTO(accountIdentifier, featureRestriction, edition));
+    }
+    return result;
+  }
+
+  @Override
   public List<FeatureRestrictionDetailsDTO> getEnabledFeatureDetails(String accountIdentifier) {
     List<FeatureRestrictionDetailsDTO> result = new ArrayList<>();
     // check all valid module type features(CD,CCM,FF,CI,CORE)

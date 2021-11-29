@@ -9,6 +9,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("NexusConnector")
+@Schema(name = "NexusConnector", description = "This contains details of Nexus Connector")
 public class NexusConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @NotNull @NotBlank String nexusServerUrl;
   @NotNull String version;

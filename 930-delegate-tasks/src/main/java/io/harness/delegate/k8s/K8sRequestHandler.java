@@ -1,6 +1,8 @@
 package io.harness.delegate.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.task.k8s.ManifestType.KUSTOMIZE;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -23,6 +25,7 @@ import io.harness.logging.LogLevel;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +69,15 @@ public abstract class K8sRequestHandler {
 
   protected K8sNGTaskResponse getTaskResponseOnFailure() {
     return null;
+  }
+
+  protected List<String> getManifestOverrideFlies(K8sDeployRequest request) {
+    if (request.isUseLatestKustomizeVersion()
+        && KUSTOMIZE.equals(request.getManifestDelegateConfig().getManifestType())) {
+      return request.getKustomizePatchesList();
+    } else {
+      return isEmpty(request.getValuesYamlList()) ? request.getOpenshiftParamList() : request.getValuesYamlList();
+    }
   }
 
   private K8sDeployResponse executeTaskWithExceptionHandling(K8sDeployRequest k8sDeployRequest,

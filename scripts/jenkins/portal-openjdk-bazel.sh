@@ -116,14 +116,13 @@ fi
 
 cd ../..
 
-
 mkdir -p dist/delegate
-if [ ${USE_BAZEL_DELEGATE} == "true" ]; then
-  echo "building bazel 260-delegate"
-  cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
-else
+if [ ${USE_MAVEN_DELEGATE} == "true" ]; then
   echo "building maven 260-delegate"
   cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
+else
+  echo "building bazel 260-delegate"
+  cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
 fi
 
 cp 260-delegate/config-delegate.yml dist/delegate/config-delegate.yml
@@ -207,7 +206,7 @@ cp ../../820-platform-service/cert.pem .
 cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/platform-service/Dockerfile-platform-service-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/platform-service/Dockerfile-platform-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
-cp -r ../../dockerization/platform-service/scripts/ .
+cp -r ../../dockerization/platform-service/scripts .
 cp ../../protocol.info .
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
@@ -215,6 +214,7 @@ if [ ! -z ${PURPOSE} ]
 then
     echo ${PURPOSE} > purpose.txt
 fi
+java -jar platform-service-capsule.jar scan-classpath-metadata
 
 cd ../..
 
@@ -239,6 +239,7 @@ if [ ! -z ${PURPOSE} ]
 then
     echo ${PURPOSE} > purpose.txt
 fi
+java -jar pipeline-service-capsule.jar scan-classpath-metadata
 
 cd ../..
 

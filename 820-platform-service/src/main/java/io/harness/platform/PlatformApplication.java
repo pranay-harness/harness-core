@@ -38,6 +38,7 @@ import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
+import io.harness.swagger.SwaggerBundleConfigurationFactory;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.token.TokenClientModule;
@@ -119,6 +120,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
       }
     });
     bootstrap.addCommand(new InspectCommand<>(this));
+    bootstrap.addCommand(new ScanClasspathMetadataCommand());
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -258,8 +260,10 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
   }
 
   public SwaggerBundleConfiguration getSwaggerConfiguration(PlatformConfiguration appConfig) {
-    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-    String resourcePackage = String.join(",", getUniquePackages(getPlatformServiceCombinedResourceClasses(appConfig)));
+    Collection<Class<?>> classes = getPlatformServiceCombinedResourceClasses(appConfig);
+    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration =
+        SwaggerBundleConfigurationFactory.buildSwaggerBundleConfiguration(classes);
+    String resourcePackage = String.join(",", getUniquePackages(classes));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost(appConfig.hostname);

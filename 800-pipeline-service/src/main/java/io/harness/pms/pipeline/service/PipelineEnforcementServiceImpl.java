@@ -15,9 +15,11 @@ import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +49,8 @@ public class PipelineEnforcementServiceImpl implements PipelineEnforcementServic
       String accountId, Set<String> featureRestrictionNameList) {
     Set<FeatureRestrictionName> featureRestrictionNames =
         featureRestrictionNameList.stream().map(FeatureRestrictionName::valueOf).collect(Collectors.toSet());
-    return enforcementClientService.getAvailabilityMap(featureRestrictionNames, accountId);
+    return enforcementClientService.getAvailabilityForRemoteFeatures(
+        new ArrayList<>(featureRestrictionNames), accountId);
   }
 
   @Override
@@ -117,7 +120,8 @@ public class PipelineEnforcementServiceImpl implements PipelineEnforcementServic
     // Add featureRestriction based on executions (Builds or deployments)
     for (String module : modules) {
       if (module.equalsIgnoreCase(ModuleType.CD.name())) {
-        featureRestrictionToStepNameMap.put(FeatureRestrictionName.DEPLOYMENTS.name(), DEPLOYMENT_EXCEEDED_KEY);
+        featureRestrictionToStepNameMap.put(
+            FeatureRestrictionName.DEPLOYMENTS_PER_MONTH.name(), DEPLOYMENT_EXCEEDED_KEY);
       } else if (module.equalsIgnoreCase(ModuleType.CI.name())) {
         featureRestrictionToStepNameMap.put(FeatureRestrictionName.BUILDS.name(), BUILD_EXCEEDED_KEY);
       }
@@ -131,7 +135,11 @@ public class PipelineEnforcementServiceImpl implements PipelineEnforcementServic
     boolean deploymentsExceeded = false;
     boolean buildsExceeded = false;
     for (FeatureRestrictionName featureRestrictionName : disabledFeatures) {
-      if (FeatureRestrictionName.DEPLOYMENTS.equals(featureRestrictionName)) {
+      if (isExecutionFeatureRestriction(featureRestrictionName)) {
+        continue;
+      }
+      // Todo: Take via pmsSdkInstance
+      if (FeatureRestrictionName.DEPLOYMENTS_PER_MONTH.equals(featureRestrictionName)) {
         deploymentsExceeded = true;
         continue;
       }
@@ -154,5 +162,10 @@ public class PipelineEnforcementServiceImpl implements PipelineEnforcementServic
     }
     stringBuilder.append(UPGRADE_YOUR_PLAN_ERROR_MESSAGE);
     return stringBuilder.toString();
+  }
+
+  private boolean isExecutionFeatureRestriction(FeatureRestrictionName featureRestrictionName) {
+    return ImmutableSet.of(FeatureRestrictionName.INITIAL_DEPLOYMENTS, FeatureRestrictionName.DEPLOYMENTS)
+        .contains(featureRestrictionName);
   }
 }

@@ -44,8 +44,10 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
       if (fullSyncResponse != null) {
         errorMsg = fullSyncResponse.getErrorMsg();
       }
-      gitFullSyncEntityService.markQueuedOrFailed(entityInfo.getMessageId(), entityInfo.getAccountIdentifier(),
+      gitFullSyncEntityService.markQueuedOrFailed(entityInfo.getUuid(), entityInfo.getAccountIdentifier(),
           entityInfo.getRetryCount(), MAX_RETRY_COUNT, errorMsg);
+    } else {
+      gitFullSyncEntityService.markSuccessful(entityInfo.getUuid(), entityInfo.getAccountIdentifier());
     }
   }
 

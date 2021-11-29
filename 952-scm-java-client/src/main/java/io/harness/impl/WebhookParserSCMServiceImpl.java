@@ -41,11 +41,13 @@ import io.harness.product.ci.scm.proto.User;
 import io.harness.service.WebhookParserSCMService;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,9 +68,10 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
 
     ParseWebhookResponse parseWebhookResponse;
     try {
+      Stopwatch stopwatch = Stopwatch.createStarted();
       parseWebhookResponse = scmBlockingStub.parseWebhook(
           ParseWebhookRequest.newBuilder().setBody(payload).setProvider(gitProvider).setHeader(header.build()).build());
-      log.info("Finished parsing webhook payload");
+      log.info("Finished parsing webhook payload in {} ", stopwatch.elapsed(TimeUnit.SECONDS));
     } catch (StatusRuntimeException e) {
       log.error("Failed to parse webhook payload");
       throw e;

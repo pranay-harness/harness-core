@@ -1,0 +1,6 @@
+Var fullQuery = concat(Env:baseUrl, "query?nrql=", Env:query)
+Request metricRequest = new Request(url=Var:fullQuery, header=Env:commonHeaders)
+print Var:fullQuery
+Var resp = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
+print Var:resp
+return Var:resp

@@ -22,5 +22,6 @@ public class QLCEK8sEntity {
   String workloadType;
   String node;
   String pod;
+  QLCEK8sEntityDetails entityDetails;
   List<QLCEK8sLabels> selectedLabels;
 }

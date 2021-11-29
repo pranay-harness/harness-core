@@ -443,18 +443,16 @@ public class HelmTaskHelper {
       String destinationDirectory, long timeoutInMillis, String workingDirectory) throws IOException {
     HelmChartConfigParams helmChartConfigParams = helmChartCollectionParams.getHelmChartConfigParams();
     HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmChartConfigParams.getHelmRepoConfig();
+    removeRepo(
+        helmChartConfigParams.getRepoName(), workingDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis);
     addRepo(helmChartConfigParams.getRepoName(), helmChartConfigParams.getRepoDisplayName(),
         httpHelmRepoConfig.getChartRepoUrl(), httpHelmRepoConfig.getUsername(), httpHelmRepoConfig.getPassword(),
         destinationDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis);
-
-    updateRepo(
-        helmChartConfigParams.getRepoName(), workingDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis);
 
     String commandOutput = executeCommandWithLogOutput(
         fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(), helmChartConfigParams.getChartName(),
             helmChartConfigParams.getRepoName(), destinationDirectory),
         workingDirectory, "Helm chart fetch versions command failed ", HelmCliCommandType.FETCH_ALL_VERSIONS);
-
     if (log.isDebugEnabled()) {
       log.debug("Result of the helm repo search command: {}, chart name: {}", commandOutput,
           helmChartCollectionParams.getHelmChartConfigParams().getChartName());

@@ -38,6 +38,10 @@ type Db interface {
 	WriteDiffFiles(ctx context.Context, accountID, orgId, projectId, pipelineId,
 		buildId, stageId, stepId string, diff types.DiffInfo) error
 
+	// WriteTestExecutionSummary writes all metadata associated with an execution to a table.
+	WriteTestExecutionSummary(ctx context.Context, accountId, orgId, projectId, pipelineId,
+		buildId, stageId, stepId, commitLink string) error
+
 	// GetDiffFiles gets the list of modified files corresponding to a build.
 	GetDiffFiles(ctx context.Context, accountID, orgId, projectId, pipelineId,
 		buildId, stageId, stepId string) (types.DiffInfo, error)

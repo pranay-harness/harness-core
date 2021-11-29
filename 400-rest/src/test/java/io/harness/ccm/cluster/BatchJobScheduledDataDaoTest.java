@@ -30,7 +30,7 @@ public class BatchJobScheduledDataDaoTest extends WingsBaseTest {
   @InjectMocks @Inject private BatchJobScheduledDataDao batchJobScheduledDataDao;
   @Inject private HPersistence hPersistence;
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
-  private static final String BATCH_JOB_TYPE = "UNALLOCATED_BILLING_HOURLY";
+  private static final String BATCH_JOB_TYPE = "CLUSTER_DATA_TO_BIG_QUERY";
   private final Instant NOW = Instant.now().truncatedTo(ChronoUnit.DAYS);
   private final Instant LAST_PROCESSED_DATA_START_TIME = NOW.minus(2, ChronoUnit.DAYS);
   private final Instant LAST_PROCESSED_DATA_END_TIME = NOW.minus(1, ChronoUnit.DAYS);

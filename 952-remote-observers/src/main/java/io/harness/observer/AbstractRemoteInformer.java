@@ -21,7 +21,7 @@ public abstract class AbstractRemoteInformer {
     this.eventProducer = eventProducer;
   }
 
-  public void fireInform(String methodName, Class<?> observerClass, Class<?> subjectClass, Object... param) {
+  public void fireInform(String methodName, Class<?> subjectClass, Object... param) {
     final int length = param.length;
     Informant.Builder informantBuilder = Informant.newBuilder().setMethodName(methodName);
     switch (length) {

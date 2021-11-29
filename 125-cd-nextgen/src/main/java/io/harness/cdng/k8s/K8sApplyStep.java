@@ -95,7 +95,7 @@ public class K8sApplyStep extends TaskChainExecutableWithRollbackAndRbac impleme
 
   @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
-      StepElementParameters stepElementParameters, List<String> valuesFileContents,
+      StepElementParameters stepElementParameters, List<String> manifestOverrideContents,
       K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream,
       UnitProgressData unitProgressData) {
     InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
@@ -115,8 +115,9 @@ public class K8sApplyStep extends TaskChainExecutableWithRollbackAndRbac impleme
             .commandName(K8S_APPLY_COMMAND_NAME)
             .taskType(K8sTaskType.APPLY)
             .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepElementParameters))
-            .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
+            .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, manifestOverrideContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
+            .kustomizePatchesList(k8sStepHelper.renderPatches(k8sManifestOutcome, ambiance, manifestOverrideContents))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .accountId(accountId)
             .deprecateFabric8Enabled(true)

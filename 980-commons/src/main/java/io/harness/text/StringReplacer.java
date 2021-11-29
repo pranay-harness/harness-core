@@ -86,9 +86,6 @@ public class StringReplacer {
 
         // Resolve the expression
         String expressionValue = expressionResolver.resolve(expression);
-        if (expressionValue == null) {
-          throw new RuntimeException(String.format("Cannot resolve expression: %s", expression));
-        }
 
         buf.replace(expressionStartPos, expressionEndPos, expressionValue);
         pos += expressionValue.length() - expressionWithDelimiters.length();

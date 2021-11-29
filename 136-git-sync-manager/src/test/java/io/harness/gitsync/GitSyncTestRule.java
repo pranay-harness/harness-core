@@ -115,6 +115,9 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
             .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
             .toInstance(mock(NoOpProducer.class));
         bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.GIT_FULL_SYNC_STREAM))
+            .toInstance(mock(NoOpProducer.class));
+        bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
             .toInstance(mock(NoOpProducer.class));
         bind(ExecutorService.class).toInstance(mock(ExecutorService.class));

@@ -161,29 +161,4 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
     });
     return monitoredServiceToDependentServicesMap;
   }
-
-  @Override
-  public void deleteByProjectIdentifier(
-      Class<ServiceDependency> clazz, String accountId, String orgIdentifier, String projectIdentifier) {
-    Query<ServiceDependency> deleteQuery = hPersistence.createQuery(ServiceDependency.class)
-                                               .filter(ServiceDependencyKeys.accountId, accountId)
-                                               .filter(ServiceDependencyKeys.orgIdentifier, orgIdentifier)
-                                               .filter(ServiceDependencyKeys.projectIdentifier, projectIdentifier);
-    hPersistence.deleteOnServer(deleteQuery);
-  }
-
-  @Override
-  public void deleteByOrgIdentifier(Class<ServiceDependency> clazz, String accountId, String orgIdentifier) {
-    Query<ServiceDependency> deleteQuery = hPersistence.createQuery(ServiceDependency.class)
-                                               .filter(ServiceDependencyKeys.accountId, accountId)
-                                               .filter(ServiceDependencyKeys.orgIdentifier, orgIdentifier);
-    hPersistence.deleteOnServer(deleteQuery);
-  }
-
-  @Override
-  public void deleteByAccountIdentifier(Class<ServiceDependency> clazz, String accountId) {
-    Query<ServiceDependency> deleteQuery =
-        hPersistence.createQuery(ServiceDependency.class).filter(ServiceDependencyKeys.accountId, accountId);
-    hPersistence.deleteOnServer(deleteQuery);
-  }
 }

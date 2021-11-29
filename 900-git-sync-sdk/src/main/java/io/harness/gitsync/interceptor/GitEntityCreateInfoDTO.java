@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.GitSyncApiConstants;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
@@ -21,11 +22,23 @@ import lombok.experimental.FieldNameConstants;
 @AllArgsConstructor
 @Schema(name = "GitEntityCreateInfo", description = "This contains details of the Git Entity for creation")
 public class GitEntityCreateInfoDTO {
-  @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch;
-  @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String yamlGitConfigId;
-  @QueryParam(GitSyncApiConstants.FOLDER_PATH) String folderPath;
-  @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath;
-  @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg;
-  @QueryParam(GitSyncApiConstants.NEW_BRANCH) boolean isNewBranch;
-  @QueryParam(GitSyncApiConstants.BASE_BRANCH) String baseBranch;
+  @Parameter(description = GitSyncApiConstants.BRANCH_PARAM_MESSAGE)
+  @QueryParam(GitSyncApiConstants.BRANCH_KEY)
+  String branch;
+  @Parameter(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE)
+  @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY)
+  String yamlGitConfigId;
+  @Parameter(description = GitSyncApiConstants.FOLDER_PATH_PARAM_MESSAGE)
+  @QueryParam(GitSyncApiConstants.FOLDER_PATH)
+  String folderPath;
+  @Parameter(description = GitSyncApiConstants.FILEPATH_PARAM_MESSAGE)
+  @QueryParam(GitSyncApiConstants.FILE_PATH_KEY)
+  String filePath;
+  @Parameter(description = GitSyncApiConstants.FILEPATH_PARAM_MESSAGE)
+  @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY)
+  String commitMsg;
+  @Parameter(description = "Checks the new branch") @QueryParam(GitSyncApiConstants.NEW_BRANCH) boolean isNewBranch;
+  @Parameter(description = GitSyncApiConstants.DEFAULT_BRANCH_PARAM_MESSAGE)
+  @QueryParam(GitSyncApiConstants.BASE_BRANCH)
+  String baseBranch;
 }

@@ -23,6 +23,7 @@ public class K8sCanaryDeployRequest implements K8sDeployRequest {
   @Expression(DISALLOW_SECRETS) String releaseName;
   @Expression(ALLOW_SECRETS) List<String> valuesYamlList;
   @Expression(ALLOW_SECRETS) List<String> openshiftParamList;
+  @Expression(ALLOW_SECRETS) List<String> kustomizePatchesList;
   boolean skipDryRun;
   K8sTaskType taskType;
   String commandName;
