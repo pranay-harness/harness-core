@@ -186,11 +186,13 @@ public class ExecutionHelper {
       pipelineYaml =
           InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineEntity.getYaml(), mergedRuntimeInputYaml, true);
     }
-    // TODO(archit): Add check on template resolve when templateReferences is implemented.
-    pipelineYaml = pipelineTemplateHelper
-                       .resolveTemplateRefsInPipeline(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
-                           pipelineEntity.getProjectIdentifier(), pipelineYaml)
-                       .getMergedPipelineYaml();
+
+    if (pipelineEntity.getTemplateReference() != null && pipelineEntity.getTemplateReference()) {
+      pipelineYaml = pipelineTemplateHelper
+                         .resolveTemplateRefsInPipeline(pipelineEntity.getAccountId(),
+                             pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineYaml)
+                         .getMergedPipelineYaml();
+    }
     pipelineYaml = InputSetSanitizer.trimValues(pipelineYaml);
     pmsYamlSchemaService.validateYamlSchema(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
         pipelineEntity.getProjectIdentifier(), pipelineYaml);

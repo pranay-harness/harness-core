@@ -33,7 +33,7 @@ public interface NGTemplateService {
       String projectIdentifier, Boolean getDistinctFromBranches);
 
   TemplateEntity updateStableTemplateVersion(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String templateIdentifier, String newStableTemplateVersion);
+      String templateIdentifier, String newStableTemplateVersion, String comments);
 
   boolean updateTemplateSettings(String accountId, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, Scope currentScope, Scope updateScope, String updateStableTemplateVersion,

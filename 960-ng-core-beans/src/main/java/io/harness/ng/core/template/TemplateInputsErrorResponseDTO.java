@@ -3,6 +3,7 @@ package io.harness.ng.core.template;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ngexception.beans.templateservice.TemplateInputsErrorDTO;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.dto.ErrorDTO;
 
