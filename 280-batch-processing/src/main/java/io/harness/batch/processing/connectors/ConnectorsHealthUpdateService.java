@@ -67,7 +67,7 @@ public class ConnectorsHealthUpdateService {
     ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder()
             .types(Arrays.asList(ConnectorType.GCP_CLOUD_COST, ConnectorType.CE_AWS, ConnectorType.CE_AZURE))
-            .ccmConnectorFilter(CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
+            .ccmConnectorFilter(CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING, CEFeatures.OPTIMIZATION)).build())
             //.connectivityStatuses(Arrays.asList(ConnectivityStatus.SUCCESS))
             .build();
     connectorFilterPropertiesDTO.setFilterType(FilterType.CONNECTOR);
