@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -55,6 +54,7 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
       TimeSeriesMetricType metricType = definition.getRiskProfile().getMetricType();
       metricInfoList.add(MetricInfo.builder()
                              .metricName(definition.getMetricName())
+                             .identifier(definition.getIdentifier())
                              .metric(definition.getMetric())
                              .query(definition.getQuery())
                              .groupingQuery(definition.getGroupingQuery())
@@ -79,9 +79,9 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
   }
 
   @Data
-  @Builder
+  @SuperBuilder
   @FieldNameConstants(innerTypeName = "MetricInfoKeys")
-  public static class MetricInfo {
+  public static class MetricInfo extends AnalysisInfo {
     private String metricName;
     private String metric;
     private String query;
