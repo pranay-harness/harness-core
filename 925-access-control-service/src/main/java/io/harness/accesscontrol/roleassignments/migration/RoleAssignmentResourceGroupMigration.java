@@ -14,6 +14,7 @@ import io.harness.migration.NGMigration;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -44,18 +45,21 @@ public class RoleAssignmentResourceGroupMigration implements NGMigration {
                             .is(scopeLevel.toString())
                             .and(RoleAssignmentDBOKeys.resourceGroupIdentifier)
                             .is(ALL_RESOURCES_RESOURCE_GROUP_IDENTIFIER);
-    do {
-      List<RoleAssignmentDBO> roleAssignmentList = roleAssignmentRepository.findAll(criteria, pageable).getContent();
-      if (isEmpty(roleAssignmentList)) {
-        return;
-      }
-      for (RoleAssignmentDBO roleAssignment : roleAssignmentList) {
-        roleAssignmentRepository.save(buildRoleAssignmentDBO(scopeLevel, roleAssignment));
-      }
-      for (RoleAssignmentDBO roleAssignment : roleAssignmentList) {
-        roleAssignmentRepository.deleteById(roleAssignment.getId());
-      }
-    } while (true);
+    try {
+      do {
+        List<RoleAssignmentDBO> roleAssignmentList = roleAssignmentRepository.findAll(criteria, pageable).getContent();
+        if (isEmpty(roleAssignmentList)) {
+          return;
+        }
+        for (RoleAssignmentDBO roleAssignment : roleAssignmentList) {
+          roleAssignmentRepository.save(buildRoleAssignmentDBO(scopeLevel, roleAssignment));
+          roleAssignmentRepository.deleteById(roleAssignment.getId());
+        }
+        TimeUnit.MINUTES.sleep(2);
+      } while (true);
+    } catch (InterruptedException exception) {
+      Thread.currentThread().interrupt();
+    }
   }
 
   private RoleAssignmentDBO buildRoleAssignmentDBO(ScopeLevel scopeLevel, RoleAssignmentDBO roleAssignmentDBO) {
