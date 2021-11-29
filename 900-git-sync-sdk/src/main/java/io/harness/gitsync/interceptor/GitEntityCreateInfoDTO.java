@@ -7,6 +7,7 @@ import io.harness.gitsync.sdk.GitSyncApiConstants;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,7 +38,10 @@ public class GitEntityCreateInfoDTO {
   @Parameter(description = GitSyncApiConstants.FILEPATH_PARAM_MESSAGE)
   @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY)
   String commitMsg;
-  @Parameter(description = "Checks the new branch") @QueryParam(GitSyncApiConstants.NEW_BRANCH) boolean isNewBranch;
+  @Parameter(description = "Checks the new branch")
+  @DefaultValue("false")
+  @QueryParam(GitSyncApiConstants.NEW_BRANCH)
+  Boolean isNewBranch;
   @Parameter(description = GitSyncApiConstants.DEFAULT_BRANCH_PARAM_MESSAGE)
   @QueryParam(GitSyncApiConstants.BASE_BRANCH)
   String baseBranch;
