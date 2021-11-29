@@ -1272,7 +1272,7 @@
           "properties" : {
             "type" : {
               "type" : "string",
-              "enum" : [ "SetFeatureFlagState", "SetOnVariation", "SetOffVariation", "AddRule", "UpdateRule", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
+              "enum" : [ "SetFeatureFlagState", "SetOnVariation", "SetOffVariation", "SetDefaultVariations", "AddRule", "UpdateRule", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
             }
           },
           "$schema" : "http://json-schema.org/draft-07/schema#"
@@ -1452,6 +1452,40 @@
               "$ref" : "#/definitions/cvng/Distribution"
             },
             "variation" : {
+              "type" : "string"
+            }
+          },
+          "$schema" : "http://json-schema.org/draft-07/schema#"
+        },
+        "SetDefaultVariationsYaml" : {
+          "allOf" : [ {
+            "$ref" : "#/definitions/cvng/PatchInstruction"
+          }, {
+            "type" : "object",
+            "required" : [ "identifier", "spec", "type" ],
+            "properties" : {
+              "identifier" : {
+                "type" : "string"
+              },
+              "spec" : {
+                "$ref" : "#/definitions/cvng/SetDefaultVariationsYamlSpec"
+              },
+              "type" : {
+                "type" : "string",
+                "enum" : [ "SetDefaultVariations" ]
+              }
+            }
+          } ],
+          "$schema" : "http://json-schema.org/draft-07/schema#"
+        },
+        "SetDefaultVariationsYamlSpec" : {
+          "type" : "object",
+          "required" : [ "off", "on" ],
+          "properties" : {
+            "off" : {
+              "type" : "string"
+            },
+            "on" : {
               "type" : "string"
             }
           },
