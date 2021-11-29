@@ -14,11 +14,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
-import io.harness.eraro.ErrorCode;
-import io.harness.ng.core.Status;
+import io.harness.exception.ngexception.beans.templateservice.TemplateInputsErrorMetadataDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateApplyRequestDTO;
-import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.ng.core.template.exception.NGTemplateResolveException;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
@@ -95,11 +93,11 @@ public class PMSPipelineTemplateHelperTest extends CategoryTest {
         .when(templateResourceClient)
         .applyTemplatesOnGivenYaml(
             ACCOUNT_ID, ORG_ID, PROJECT_ID, TemplateApplyRequestDTO.builder().originalEntityYaml(GIVEN_YAML).build());
-    TemplateInputsErrorResponseDTO templateInputsErrorResponseDTO = new TemplateInputsErrorResponseDTO(
-        Status.ERROR, ErrorCode.TEMPLATE_EXCEPTION, "Template Ref resolved failed.", "", errorYaml, new HashMap<>());
+    TemplateInputsErrorMetadataDTO templateInputsErrorMetadataDTO =
+        new TemplateInputsErrorMetadataDTO(errorYaml, new HashMap<>());
     when(callRequest.execute())
         .thenThrow(new NGTemplateResolveException(
-            "Exception in resolving template refs in given yaml.", USER, templateInputsErrorResponseDTO));
+            "Exception in resolving template refs in given yaml.", USER, templateInputsErrorMetadataDTO));
     assertThatThrownBy(
         () -> pipelineTemplateHelper.resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_ID, PROJECT_ID, GIVEN_YAML))
         .isInstanceOf(NGTemplateResolveException.class)
