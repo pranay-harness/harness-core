@@ -171,6 +171,20 @@ public class KubernetesResourceTest extends CategoryTest {
     }
   }
 
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void manifestFormatingTest() throws Exception {
+    String resourceFile = "manifest.yaml";
+    URL url = this.getClass().getResource("/" + resourceFile);
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    assertThat(resource.getField("data.enableRisky")).isEqualTo(true);
+    resource.manifestFormating();
+    assertThat(resource.getField("data.enableRisky")).isEqualTo("true");
+  }
+
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
