@@ -24,6 +24,8 @@ import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
 import io.harness.ccm.commons.service.intf.ClusterRecordService;
 import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
+import io.harness.ccm.graphql.core.budget.BudgetCostService;
+import io.harness.ccm.graphql.core.budget.BudgetCostServiceImpl;
 import io.harness.ccm.graphql.core.budget.BudgetService;
 import io.harness.ccm.graphql.core.budget.BudgetServiceImpl;
 import io.harness.ccm.perpetualtask.K8sWatchTaskResourceClientModule;
@@ -242,6 +244,7 @@ public class CENextGenModule extends AbstractModule {
     bind(AWSBucketPolicyHelperService.class).to(AWSBucketPolicyHelperServiceImpl.class);
     bind(BudgetService.class).to(BudgetServiceImpl.class);
     bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
+    bind(BudgetCostService.class).to(BudgetCostServiceImpl.class);
 
     registerEventsFrameworkMessageListeners();
 
