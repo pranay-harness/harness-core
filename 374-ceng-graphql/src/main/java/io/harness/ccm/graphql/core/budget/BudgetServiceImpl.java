@@ -1,33 +1,21 @@
 package io.harness.ccm.graphql.core.budget;
 
-import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
-import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
-
 import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.budget.AlertThreshold;
 import io.harness.ccm.budget.BudgetScope;
 import io.harness.ccm.budget.dao.BudgetDao;
 import io.harness.ccm.budget.utils.BudgetUtils;
 import io.harness.ccm.commons.entities.billing.Budget;
-import io.harness.ccm.commons.entities.budget.BudgetCostData;
 import io.harness.ccm.commons.entities.budget.BudgetData;
 import io.harness.ccm.commons.utils.BigQueryHelper;
 import io.harness.ccm.graphql.core.perspectives.PerspectiveTimeSeriesHelper;
-import io.harness.ccm.graphql.dto.common.TimeSeriesDataPoints;
-import io.harness.ccm.views.graphql.QLCEViewAggregation;
-import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
-import io.harness.ccm.views.graphql.QLCEViewGroupBy;
-import io.harness.ccm.views.graphql.QLCEViewTimeGroupType;
-import io.harness.ccm.views.graphql.QLCEViewTimeTruncGroupBy;
 import io.harness.ccm.views.graphql.ViewsQueryHelper;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewsBillingService;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,12 +31,14 @@ public class BudgetServiceImpl implements BudgetService {
   @Inject PerspectiveTimeSeriesHelper perspectiveTimeSeriesHelper;
   @Inject BigQueryService bigQueryService;
   @Inject BigQueryHelper bigQueryHelper;
+  @Inject BudgetCostService budgetCostService;
 
   @Override
   public String create(Budget budget) {
     BudgetUtils.validateBudget(budget, budgetDao.list(budget.getAccountId(), budget.getName()));
     removeEmailDuplicates(budget);
     validatePerspective(budget);
+    updateBudgetEndTime(budget);
     updateBudgetCosts(budget);
     return budgetDao.save(budget);
   }
@@ -96,6 +86,7 @@ public class BudgetServiceImpl implements BudgetService {
     BudgetUtils.validateBudget(budget, budgetDao.list(budget.getAccountId(), budget.getName()));
     removeEmailDuplicates(budget);
     validatePerspective(budget);
+    updateBudgetEndTime(budget);
     updateBudgetCosts(budget);
     budgetDao.update(budgetId, budget);
   }
@@ -120,40 +111,7 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public BudgetData getBudgetTimeSeriesStats(Budget budget) {
-    if (budget == null) {
-      throw new InvalidRequestException(BudgetUtils.INVALID_BUDGET_ID_EXCEPTION);
-    }
-    List<BudgetCostData> budgetCostDataList = new ArrayList<>();
-    Double budgetedAmount = budget.getBudgetAmount();
-    if (budgetedAmount == null) {
-      budgetedAmount = 0.0;
-    }
-
-    String viewId = budget.getScope().getEntityIds().get(0);
-    long timeFilterValue = BudgetUtils.getStartTimeForCurrentBillingCycle();
-    try {
-      List<TimeSeriesDataPoints> monthlyCostData =
-          getPerspectiveBudgetMonthlyCostData(viewId, budget.getAccountId(), timeFilterValue);
-
-      for (TimeSeriesDataPoints data : monthlyCostData) {
-        double actualCost =
-            data.getValues().stream().map(dataPoint -> dataPoint.getValue().doubleValue()).reduce(0D, Double::sum);
-        double budgetVariance = BudgetUtils.getBudgetVariance(budgetedAmount, actualCost);
-        double budgetVariancePercentage = BudgetUtils.getBudgetVariancePercentage(budgetVariance, budgetedAmount);
-        BudgetCostData budgetCostData =
-            BudgetCostData.builder()
-                .actualCost(viewsQueryHelper.getRoundedDoubleValue(actualCost))
-                .budgeted(viewsQueryHelper.getRoundedDoubleValue(budgetedAmount))
-                .budgetVariance(viewsQueryHelper.getRoundedDoubleValue(budgetVariance))
-                .budgetVariancePercentage(viewsQueryHelper.getRoundedDoubleValue(budgetVariancePercentage))
-                .time(data.getTime())
-                .build();
-        budgetCostDataList.add(budgetCostData);
-      }
-    } catch (Exception e) {
-      log.info("Error in generating data for budget : {}", budget.getUuid());
-    }
-    return BudgetData.builder().costData(budgetCostDataList).forecastCost(budget.getForecastCost()).build();
+    return budgetCostService.getBudgetTimeSeriesStats(budget);
   }
 
   private void validatePerspective(Budget budget) {
@@ -185,11 +143,32 @@ public class BudgetServiceImpl implements BudgetService {
     }
   }
 
+  private void updateBudgetEndTime(Budget budget) {
+    boolean isStartTimeValid = true;
+    try {
+      budget.setEndTime(BudgetUtils.getEndTimeForBudget(budget.getStartTime(), budget.getPeriod()));
+      if (budget.getEndTime() < BudgetUtils.getStartOfCurrentDay()) {
+        isStartTimeValid = false;
+      }
+    } catch (Exception e) {
+      log.error("Error occurred while updating end time of budget: {}, Exception : {}", budget.getUuid(), e);
+    }
+
+    if (!isStartTimeValid) {
+      throw new InvalidRequestException(BudgetUtils.INVALID_START_TIME_EXCEPTION);
+    }
+  }
+
   // Methods for updating costs for budget
-  private void updateBudgetCosts(Budget budget) {
+  @Override
+  public void updateBudgetCosts(Budget budget) {
+    // If given budget is next-gen budget, update ng budget costs and return
+    if (updateNgBudgetCosts(budget)) {
+      return;
+    }
     try {
       Double actualCost = getActualCostForPerspectiveBudget(budget);
-      Double forecastCost = actualCost + getForecastCostForPerspectiveBudget(budget);
+      Double forecastCost = getForecastCostForPerspectiveBudget(budget);
       Double lastMonthCost = getLastMonthCostForPerspectiveBudget(budget);
 
       budget.setActualCost(actualCost);
@@ -213,22 +192,19 @@ public class BudgetServiceImpl implements BudgetService {
     return ceViewService.getForecastCostForPerspective(budget.getAccountId(), budget.getScope().getEntityIds().get(0));
   }
 
-  private List<TimeSeriesDataPoints> getPerspectiveBudgetMonthlyCostData(
-      String viewId, String accountId, long startTime) {
-    List<QLCEViewAggregation> aggregationFunction = viewsQueryHelper.getPerspectiveTotalCostAggregation();
-    List<QLCEViewGroupBy> groupBy = new ArrayList<>();
-    groupBy.add(
-        QLCEViewGroupBy.builder()
-            .timeTruncGroupBy(QLCEViewTimeTruncGroupBy.builder().resolution(QLCEViewTimeGroupType.MONTH).build())
-            .build());
-    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
-    filters.add(viewsQueryHelper.getViewMetadataFilter(viewId));
-    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(startTime, AFTER));
-    String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
-    return perspectiveTimeSeriesHelper
-        .fetch(viewsBillingService.getTimeSeriesStats(bigQueryService.get(), filters, groupBy, aggregationFunction,
-                   Collections.emptyList(), cloudProviderTable),
-            perspectiveTimeSeriesHelper.getTimePeriod(groupBy))
-        .getStats();
+  private boolean updateNgBudgetCosts(Budget budget) {
+    try {
+      Double actualCost = budgetCostService.getActualCost(budget);
+      Double forecastCost = budgetCostService.getForecastCost(budget);
+      Double lastPeriodCost = budgetCostService.getLastPeriodCost(budget);
+
+      budget.setActualCost(actualCost);
+      budget.setForecastCost(forecastCost);
+      budget.setLastMonthCost(lastPeriodCost);
+      return true;
+    } catch (Exception e) {
+      log.error("Error occurred while updating costs of budget: {}, Exception : {}", budget.getUuid(), e);
+      return false;
+    }
   }
 }
