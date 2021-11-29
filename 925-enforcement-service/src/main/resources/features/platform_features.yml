@@ -20,8 +20,9 @@ features:
     description: Allow creating multiple organizations within a account
     restrictions:
       COMMUNITY:
-        restrictionType: AVAILABILITY
-        enabled: false
+        restrictionType: STATIC_LIMIT
+        limit: 1
+        clientName: ngmanager
       FREE:
         restrictionType: STATIC_LIMIT
         limit: 1
@@ -40,8 +41,9 @@ features:
     description: Allow creating multiple projects within a organization
     restrictions:
       COMMUNITY:
-        restrictionType: AVAILABILITY
-        enabled: false
+        restrictionType: STATIC_LIMIT
+        limit: 1
+        clientName: ngmanager
       FREE:
         restrictionType: AVAILABILITY
         enabled: true
