@@ -63,6 +63,7 @@ public class StackdriverMetricHealthSourceSpecTest {
     StackdriverDefinition metricDefinition =
         StackdriverDefinition.builder()
             .metricName(metricName)
+            .identifier(metricName)
             .dashboardName("Delegate Tasks - prod")
             .dashboardPath("projects/778566137835/dashboards/861a44fb-7d3f-4cf9-b945-765121fe14eb")
             .isManualQuery(Boolean.FALSE)
@@ -102,6 +103,7 @@ public class StackdriverMetricHealthSourceSpecTest {
     assertThat(cvConfig.getMetricInfoList().size()).isEqualTo(1);
     StackdriverCVConfig.MetricInfo metricInfo = cvConfig.getMetricInfoList().get(0);
     assertThat(metricInfo.getMetricName()).isEqualTo(metricName);
+    assertThat(metricInfo.getIdentifier()).isEqualTo(metricName);
     assertThat(metricInfo.getLiveMonitoring().isEnabled())
         .isEqualTo(metricDefinition.getAnalysis().getLiveMonitoring().getEnabled());
     assertThat(metricInfo.getDeploymentVerification().isEnabled())
@@ -118,6 +120,7 @@ public class StackdriverMetricHealthSourceSpecTest {
     StackdriverDefinition metricDefinition =
         StackdriverDefinition.builder()
             .metricName(metricName)
+            .identifier(metricName)
             .dashboardName("Delegate Tasks - prod")
             .dashboardPath("projects/778566137835/dashboards/861a44fb-7d3f-4cf9-b945-765121fe14eb")
             .isManualQuery(Boolean.FALSE)

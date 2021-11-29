@@ -22,7 +22,6 @@ public class PrometheusMetricDefinition extends HealthSourceMetricDefinition {
   @JsonIgnore private String envIdentifier;
   private boolean isManualQuery;
   private String groupName;
-  private String metricName;
 
   public String getServiceInstanceFieldName() {
     if (Objects.nonNull(analysis) && Objects.nonNull(analysis.getDeploymentVerification())

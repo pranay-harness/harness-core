@@ -7,6 +7,7 @@ import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateRe
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.validators.UniqueIdentifierCheck;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Sets;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -30,7 +32,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PrometheusHealthSourceSpec extends HealthSourceSpec {
-  List<PrometheusMetricDefinition> metricDefinitions;
+  @UniqueIdentifierCheck @Valid List<PrometheusMetricDefinition> metricDefinitions;
 
   @Override
   public CVConfigUpdateResult getCVConfigUpdateResult(String accountId, String orgIdentifier, String projectIdentifier,
