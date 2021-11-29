@@ -16,8 +16,14 @@ import java.util.stream.Collectors;
 public abstract class AbstractRemoteObserverModule extends AbstractModule {
   @Override
   protected void configure() {
-    bind(RemoteObserverProcessor.class).to(RemoteObserverProcessorImpl.class);
+    if (noOpProducer()) {
+      bind(RemoteObserverProcessor.class).to(NoOpRemoteObserverProcessorImpl.class);
+    } else {
+      bind(RemoteObserverProcessor.class).to(RemoteObserverProcessorImpl.class);
+    }
   }
+
+  public abstract boolean noOpProducer();
 
   public abstract Set<RemoteObserver> observers();
 

@@ -10,7 +10,6 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.AutoLogContext.OverrideBehavior;
 import io.harness.observer.Informant;
 import io.harness.observer.Informant.InformantCase;
-import io.harness.observer.Observer;
 import io.harness.observer.RemoteObserver;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.serializer.KryoSerializer;
@@ -52,12 +51,10 @@ public class RemoteObserverProcessorImpl implements RemoteObserverProcessor {
     final List<Class> observers = remoteObserver.getObservers();
     Informant informant = getInformant(message);
     final String methodName = informant.getMethodName();
-    observers.forEach(observer -> inform(message, informant, methodName, observer)
-
-    );
+    observers.forEach(observer -> inform(message, informant, methodName, observer));
   }
 
-  private void inform(Message message, Informant informant, String methodName, Class<Observer> observer) {
+  private void inform(Message message, Informant informant, String methodName, Class observer) {
     final Object observerClassObject = getObserver(observer);
     final InformantCase informantCase = informant.getInformantCase();
     try {
