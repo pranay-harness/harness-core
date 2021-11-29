@@ -2,7 +2,6 @@ package io.harness.gitsync.persistance;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
@@ -262,7 +261,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   @Override
   public Criteria getCriteriaWithGitSync(
       String projectIdentifier, String orgIdentifier, String accountId, Class entityClass) {
-    if (!GLOBAL_ACCOUNT_ID.equals(accountId) && isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
+    if (!"__GLOBAL_ACCOUNT_ID__".equals(accountId) && isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
       final GitEntityInfo gitBranchInfo = getGitEntityInfo();
       if (gitBranchInfo == null) {
         return createGitSyncCriteriaForRepoAndBranch(null, null, null, entityClass);
