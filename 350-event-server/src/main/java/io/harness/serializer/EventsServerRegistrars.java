@@ -1,5 +1,6 @@
 package io.harness.serializer;
 
+import io.harness.authenticationservice.serialization.NgAuthenticationServiceKryoRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
@@ -32,6 +33,7 @@ public class EventsServerRegistrars {
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(OrchestrationStepsKryoRegistrar.class)
           .add(ManagerKryoRegistrar.class)
+          .add(NgAuthenticationServiceKryoRegistrar.class)
           .add(ProjectAndOrgKryoRegistrar.class)
           .addAll(NGCoreRegistrars.kryoRegistrars)
           .add(SecretManagerClientKryoRegistrar.class)
