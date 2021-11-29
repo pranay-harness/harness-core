@@ -18,6 +18,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.task.artifacts.ArtifactDelegateRequestUtils;
@@ -224,6 +225,15 @@ public class DockerResourceServiceImpl implements DockerResourceService {
     if (responseData instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
       throw new ArtifactServerException(ifFailedMessage + " - " + errorNotifyResponseData.getErrorMessage());
+    } else if (responseData instanceof RemoteMethodReturnValueData) {
+      RemoteMethodReturnValueData remoteMethodReturnValueData = (RemoteMethodReturnValueData) responseData;
+      if (remoteMethodReturnValueData.getException() instanceof InvalidRequestException) {
+        throw(InvalidRequestException)(remoteMethodReturnValueData.getException());
+      } else {
+        throw new ArtifactServerException(
+            "Unexpected error during authentication to docker server " + remoteMethodReturnValueData.getReturnValue(),
+            WingsException.USER);
+      }
     }
     ArtifactTaskResponse artifactTaskResponse = (ArtifactTaskResponse) responseData;
     if (artifactTaskResponse.getCommandExecutionStatus() != SUCCESS) {

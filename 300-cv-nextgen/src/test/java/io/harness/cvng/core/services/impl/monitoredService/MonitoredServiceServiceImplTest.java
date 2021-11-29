@@ -68,8 +68,10 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
+import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ng.core.service.dto.ServiceResponse;
+import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -1180,6 +1182,102 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(dependentHealthScores.get(1).getRiskStatus()).isEqualTo(Risk.OBSERVE);
     assertThat(dependentHealthScores.get(2).getRiskStatus()).isEqualTo(Risk.NO_DATA);
     assertThat(dependentHealthScores.get(3).getRiskStatus()).isEqualTo(Risk.NO_ANALYSIS);
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testGetMonitoredServiceFromDependencyGraph_withCorrectServiceIdentifier() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    MonitoredServiceDTO monitoredServiceOneDTO = createMonitoredServiceDTOWithCustomDependencies("service_1_local",
+        environmentParams.getServiceIdentifier(), Sets.newHashSet("service_2_local", "service_3_local"));
+    MonitoredServiceDTO monitoredServiceTwoDTO =
+        createMonitoredServiceDTOWithCustomDependencies("service_2_local", "service_2", Sets.newHashSet());
+    MonitoredServiceDTO monitoredServiceThreeDTO =
+        createMonitoredServiceDTOWithCustomDependencies("service_3_local", "service_3", Sets.newHashSet());
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceOneDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceTwoDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceThreeDTO);
+
+    when(nextGenService.listService(any(), any(), any(), any())).thenReturn(new ArrayList<ServiceResponse>() {
+      { add(ServiceResponse.builder().service(ServiceResponseDTO.builder().name("serviceName").build()).build()); }
+    });
+    when(nextGenService.listEnvironment(any(), any(), any(), any())).thenReturn(new ArrayList<EnvironmentResponse>() {
+      {
+        add(EnvironmentResponse.builder()
+                .environment(EnvironmentResponseDTO.builder().name("environmentName").build())
+                .build());
+      }
+    });
+
+    HeatMap msOneHeatMap = builderFactory.heatMapBuilder()
+                               .serviceIdentifier(environmentParams.getServiceIdentifier())
+                               .heatMapResolution(FIVE_MIN)
+                               .build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msOneHeatMap, endTime, 0.15, 0.15);
+    hPersistence.save(msOneHeatMap);
+
+    HeatMap msTwoHeatMap =
+        builderFactory.heatMapBuilder().serviceIdentifier("service_2").heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msTwoHeatMap, endTime, 0.85, 0.85);
+    hPersistence.save(msTwoHeatMap);
+
+    HeatMap msThreeHeatMap =
+        builderFactory.heatMapBuilder().serviceIdentifier("service_3").heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msThreeHeatMap, endTime, 0.50, 0.50);
+    hPersistence.save(msThreeHeatMap);
+
+    MonitoredServiceListItemDTO monitoredServiceListItemDTO =
+        monitoredServiceService.getMonitoredServiceDetails(environmentParams);
+    assertThat(monitoredServiceListItemDTO.getIdentifier()).isEqualTo("service_1_local");
+    assertThat(monitoredServiceListItemDTO.getName()).isEqualTo("service_1_local");
+    assertThat(monitoredServiceListItemDTO.getServiceRef()).isEqualTo(environmentParams.getServiceIdentifier());
+    assertThat(monitoredServiceListItemDTO.getEnvironmentRef()).isEqualTo(environmentParams.getEnvironmentIdentifier());
+    assertThat(monitoredServiceListItemDTO.getType()).isEqualTo(MonitoredServiceType.APPLICATION);
+    assertThat(monitoredServiceListItemDTO.isHealthMonitoringEnabled()).isTrue();
+    assertThat(monitoredServiceListItemDTO.getServiceName()).isEqualTo("serviceName");
+    assertThat(monitoredServiceListItemDTO.getEnvironmentName()).isEqualTo("environmentName");
+    assertThat(monitoredServiceListItemDTO.getCurrentHealthScore().getRiskStatus()).isEqualTo(Risk.HEALTHY);
+    assertThat(monitoredServiceListItemDTO.getDependentHealthScore().size()).isEqualTo(2);
+    assertThat(monitoredServiceListItemDTO.getDependentHealthScore().get(0).getRiskStatus()).isEqualTo(Risk.UNHEALTHY);
+    assertThat(monitoredServiceListItemDTO.getDependentHealthScore().get(1).getRiskStatus()).isEqualTo(Risk.OBSERVE);
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testGetMonitoredServiceFromDependencyGraph_withWrongServiceIdentifier() {
+    MonitoredServiceDTO monitoredServiceOneDTO = createMonitoredServiceDTOWithCustomDependencies(
+        "service_1_local", environmentParams.getServiceIdentifier(), Sets.newHashSet());
+    MonitoredServiceDTO monitoredServiceTwoDTO =
+        createMonitoredServiceDTOWithCustomDependencies("service_2_local", "service_2", Sets.newHashSet());
+    MonitoredServiceDTO monitoredServiceThreeDTO =
+        createMonitoredServiceDTOWithCustomDependencies("service_3_local", "service_3", Sets.newHashSet());
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceOneDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceTwoDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceThreeDTO);
+    when(nextGenService.listService(any(), any(), any(), any())).thenReturn(new ArrayList<ServiceResponse>() {
+      { add(ServiceResponse.builder().service(ServiceResponseDTO.builder().name("serviceName").build()).build()); }
+    });
+    when(nextGenService.listEnvironment(any(), any(), any(), any())).thenReturn(new ArrayList<EnvironmentResponse>() {
+      {
+        add(EnvironmentResponse.builder()
+                .environment(EnvironmentResponseDTO.builder().name("environmentName").build())
+                .build());
+      }
+    });
+    ServiceEnvironmentParams serviceEnvironmentParams =
+        ServiceEnvironmentParams.builder()
+            .accountIdentifier(environmentParams.getAccountIdentifier())
+            .orgIdentifier(environmentParams.getOrgIdentifier())
+            .projectIdentifier(environmentParams.getProjectIdentifier())
+            .serviceIdentifier("service_4")
+            .environmentIdentifier(environmentParams.getEnvironmentIdentifier())
+            .build();
+    assertThatThrownBy(() -> monitoredServiceService.getMonitoredServiceDetails(serviceEnvironmentParams))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage(String.format("Monitored service with service identifier %s does not exists",
+            serviceEnvironmentParams.getServiceIdentifier()));
   }
 
   @Test

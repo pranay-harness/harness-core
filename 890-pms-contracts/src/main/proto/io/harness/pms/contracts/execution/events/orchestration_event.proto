@@ -18,4 +18,6 @@ message OrchestrationEvent {
   string serviceName = 7;
   triggers.TriggerPayload triggerPayload = 8;
   repeated string tags = 9;
+  bytes moduleInfo = 10;
+  int64 endTs = 11;
 }

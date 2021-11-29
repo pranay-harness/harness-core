@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.cdng.manifest.ManifestType.HelmChart;
 import static io.harness.cdng.manifest.ManifestType.K8Manifest;
 import static io.harness.cdng.manifest.ManifestType.Kustomize;
+import static io.harness.cdng.manifest.ManifestType.KustomizePatches;
 import static io.harness.cdng.manifest.ManifestType.OpenshiftParam;
 import static io.harness.cdng.manifest.ManifestType.OpenshiftTemplate;
 import static io.harness.cdng.manifest.ManifestType.VALUES;
@@ -15,6 +16,7 @@ import io.harness.cdng.manifest.steps.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
+import io.harness.cdng.manifest.yaml.KustomizePatchesManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
@@ -23,6 +25,7 @@ import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.KustomizeManifest;
+import io.harness.cdng.manifest.yaml.kinds.KustomizePatchesManifest;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftManifest;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftParamManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
@@ -57,6 +60,8 @@ public class ManifestOutcomeMapper {
         return getHelmChartOutcome(manifestAttributes);
       case Kustomize:
         return getKustomizeOutcome(manifestAttributes);
+      case KustomizePatches:
+        return getKustomizePatchesOutcome(manifestAttributes, parameters);
       case OpenshiftTemplate:
         return getOpenshiftOutcome(manifestAttributes);
       case OpenshiftParam:
@@ -107,6 +112,16 @@ public class ManifestOutcomeMapper {
         .store(kustomizeManifest.getStoreConfig())
         .skipResourceVersioning(kustomizeManifest.getSkipResourceVersioning())
         .pluginPath(kustomizeManifest.getPluginPath())
+        .build();
+  }
+
+  private KustomizePatchesManifestOutcome getKustomizePatchesOutcome(
+      ManifestAttributes manifestAttributes, ManifestStepParameters params) {
+    KustomizePatchesManifest attributes = (KustomizePatchesManifest) manifestAttributes;
+    return KustomizePatchesManifestOutcome.builder()
+        .identifier(attributes.getIdentifier())
+        .store(attributes.getStoreConfig())
+        .order(params.getOrder())
         .build();
   }
 

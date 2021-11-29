@@ -1,0 +1,101 @@
+package io.harness.observer.consumer;
+
+import io.harness.eventsframework.api.Consumer;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.eventsframework.consumer.Message;
+import io.harness.observer.RemoteObserver;
+import io.harness.queue.QueueController;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.ServicePrincipal;
+
+import com.google.inject.Inject;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public abstract class AbstractRemoteObserverEventConsumer implements Runnable {
+  private static final int WAIT_TIME_IN_SECONDS = 10;
+  private final Consumer redisConsumer;
+  private final Map<String, RemoteObserver> remoteObservers;
+  private final QueueController queueController;
+  private final RemoteObserverProcessor remoteObserverProcessor;
+
+  @Inject
+  public AbstractRemoteObserverEventConsumer(Consumer redisConsumer, Map<String, RemoteObserver> remoteObservers,
+      QueueController queueController, RemoteObserverProcessor remoteObserverProcessor) {
+    this.redisConsumer = redisConsumer;
+    this.remoteObservers = remoteObservers;
+    this.queueController = queueController;
+    this.remoteObserverProcessor = remoteObserverProcessor;
+  }
+
+  public abstract String getServicePrincipal();
+
+  @Override
+  public void run() {
+    log.info("Started the Remote observer event consumer");
+    try {
+      SecurityContextBuilder.setContext(new ServicePrincipal(getServicePrincipal()));
+      while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info(
+              "Remote observer event consumer is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
+        readEventsFrameworkMessages();
+      }
+    } catch (InterruptedException ex) {
+      SecurityContextBuilder.unsetCompleteContext();
+      Thread.currentThread().interrupt();
+    } catch (Exception ex) {
+      log.error("Remote observer event consumer unexpectedly stopped", ex);
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
+    }
+  }
+
+  private void readEventsFrameworkMessages() throws InterruptedException {
+    try {
+      pollAndProcessMessages();
+    } catch (EventsFrameworkDownException e) {
+      log.error("Events framework is down for remote observer event consumer. Retrying again...", e);
+      TimeUnit.SECONDS.sleep(WAIT_TIME_IN_SECONDS);
+    }
+  }
+
+  private void pollAndProcessMessages() {
+    List<Message> messages;
+    String messageId;
+    boolean messageProcessed;
+    messages = redisConsumer.read(Duration.ofSeconds(WAIT_TIME_IN_SECONDS));
+    for (Message message : messages) {
+      messageId = message.getId();
+      messageProcessed = handleMessage(message);
+      if (messageProcessed) {
+        redisConsumer.acknowledge(messageId);
+      }
+    }
+  }
+
+  private boolean handleMessage(Message message) {
+    try {
+      return processMessage(message);
+    } catch (Exception ex) {
+      // This is not evicted from events framework so that it can be processed
+      // by other consumer if the error is a runtime error
+      log.error(String.format("Error occurred in processing message with id %s", message.getId()), ex);
+      return false;
+    }
+  }
+
+  private boolean processMessage(Message message) {
+    if (message.getMessage() == null) {
+      return true;
+    }
+    return remoteObserverProcessor.process(message, remoteObservers);
+  }
+}

@@ -73,4 +73,5 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
   AnomaliesSummaryDTO getAnomaliesSummary(
       ProjectParams projectParams, String monitoredServiceIdentifier, TimeRangeParams timeRangeParams);
   CountServiceDTO getCountOfServices(ProjectParams projectParams, String environmentIdentifier, String filter);
+  MonitoredServiceListItemDTO getMonitoredServiceDetails(ServiceEnvironmentParams serviceEnvironmentParams);
 }

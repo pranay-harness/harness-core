@@ -1,11 +1,14 @@
 package io.harness.steps.cf;
 
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
+
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
@@ -25,8 +28,10 @@ public class FlagConfigurationStepParameters implements SpecParameters {
   String name;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> feature;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> environment;
-
-  List<PatchInstruction> instructions;
+  @NotNull
+  @ApiModelProperty(dataType = "[Lio.harness.steps.cf.PatchInstruction;")
+  @YamlSchemaTypes(value = {runtime})
+  ParameterField<List<PatchInstruction>> instructions;
 
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> state;
 }

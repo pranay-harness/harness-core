@@ -49,6 +49,9 @@ import io.harness.enforcement.client.example.ExampleStaticLimitUsageImpl;
 import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.enforcement.executions.DeploymentRestrictionUsageImpl;
+import io.harness.enforcement.executions.DeploymentsPerMonthRestrictionUsageImpl;
+import io.harness.enforcement.executions.InitialDeploymentRestrictionUsageImpl;
 import io.harness.enforcement.services.FeatureRestrictionLoader;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.gitsync.AbstractGitSyncModule;
@@ -241,6 +244,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   public void initialize(Bootstrap<NextGenConfiguration> bootstrap) {
     initializeLogging();
     bootstrap.addCommand(new InspectCommand<>(this));
+    bootstrap.addCommand(new ScanClasspathMetadataCommand());
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -772,6 +776,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                     .put(FeatureRestrictionName.MULTIPLE_ORGANIZATIONS, OrgRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.SERVICES, ServiceRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.CCM_K8S_CLUSTERS, CloudCostK8sConnectorRestrictionsUsageImpl.class)
+                    .put(FeatureRestrictionName.DEPLOYMENTS_PER_MONTH, DeploymentsPerMonthRestrictionUsageImpl.class)
+                    .put(FeatureRestrictionName.INITIAL_DEPLOYMENTS, InitialDeploymentRestrictionUsageImpl.class)
                     .build())
             .build();
     CustomRestrictionRegisterConfiguration customConfig =
@@ -779,6 +785,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
             .customRestrictionMap(
                 ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
                     .put(FeatureRestrictionName.TEST4, ExampleCustomImpl.class)
+                    .put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class)
                     .build())
             .build();
 

@@ -365,6 +365,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     User user = spy(new User());
     user.setTwoFactorAuthenticationEnabled(twoFactorEnabled);
     user.setTwoFactorAuthenticationMechanism(TOTP);
+    user.setName("UsersName");
     return user;
   }
 }

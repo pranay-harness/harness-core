@@ -1069,4 +1069,56 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .servicesAtRiskCount(monitoredServicesAtRisk.size())
         .build();
   }
+
+  @Override
+  public MonitoredServiceListItemDTO getMonitoredServiceDetails(ServiceEnvironmentParams serviceEnvironmentParams) {
+    ServiceEnvKey serviceEnvKey = ServiceEnvKey.builder()
+                                      .serviceIdentifier(serviceEnvironmentParams.getServiceIdentifier())
+                                      .envIdentifier(serviceEnvironmentParams.getEnvironmentIdentifier())
+                                      .build();
+    MonitoredService monitoredService = getMonitoredService(serviceEnvironmentParams);
+    Preconditions.checkNotNull(monitoredService, "Monitored service with service identifier %s does not exists",
+        serviceEnvKey.getServiceIdentifier());
+    MonitoredServiceListItemDTOBuilder monitoredServiceListItemDTOBuilder = toMonitorServiceListDTO(monitoredService);
+    Set<ServiceDependencyDTO> dependentServiceDTOs = serviceDependencyService.getDependentServicesForMonitoredService(
+        serviceEnvironmentParams, monitoredService.getIdentifier());
+    List<String> dependentServices = new ArrayList<>();
+    dependentServiceDTOs.forEach(x -> dependentServices.add(x.getMonitoredServiceIdentifier()));
+    List<MonitoredService> allMonitoredServices = getMonitoredServices(serviceEnvironmentParams);
+    Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap =
+        getLatestRiskScoreByServiceMap(serviceEnvironmentParams, allMonitoredServices);
+
+    String serviceName =
+        nextGenService
+            .listService(serviceEnvironmentParams.getAccountIdentifier(), serviceEnvironmentParams.getOrgIdentifier(),
+                serviceEnvironmentParams.getProjectIdentifier(), Arrays.asList(serviceEnvKey.getServiceIdentifier()))
+            .get(0)
+            .getService()
+            .getName();
+    String environmentName =
+        nextGenService
+            .listEnvironment(serviceEnvironmentParams.getAccountIdentifier(),
+                serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
+                Arrays.asList(serviceEnvKey.getEnvIdentifier()))
+            .get(0)
+            .getEnvironment()
+            .getName();
+    List<HistoricalTrend> historicalTrendList =
+        heatMapService.getHistoricalTrend(serviceEnvironmentParams.getAccountIdentifier(),
+            serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
+            Arrays.asList(Pair.of(serviceEnvKey.getServiceIdentifier(), serviceEnvKey.getEnvIdentifier())), 24);
+    RiskData monitoredServiceRiskScore = latestRiskScoreByServiceMap.get(serviceEnvKey);
+    List<RiskData> dependentServiceRiskScoreList = getSortedDependentServiceRiskScoreList(
+        serviceEnvironmentParams, dependentServices, latestRiskScoreByServiceMap);
+    ChangeSummaryDTO changeSummary = changeSourceService.getChangeSummary(serviceEnvironmentParams,
+        monitoredService.getChangeSourceIdentifiers(), clock.instant().minus(Duration.ofDays(1)), clock.instant());
+
+    return monitoredServiceListItemDTOBuilder.historicalTrend(historicalTrendList.get(0))
+        .currentHealthScore(monitoredServiceRiskScore)
+        .dependentHealthScore(dependentServiceRiskScoreList)
+        .serviceName(serviceName)
+        .environmentName(environmentName)
+        .changeSummary(changeSummary)
+        .build();
+  }
 }

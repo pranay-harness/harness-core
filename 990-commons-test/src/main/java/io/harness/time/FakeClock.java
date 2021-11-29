@@ -1,6 +1,7 @@
 package io.harness.time;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.TemporalUnit;
@@ -26,6 +27,10 @@ public class FakeClock extends Clock {
 
   public void advanceBy(long amountToAdd, TemporalUnit unit) {
     instant = instant.plus(amountToAdd, unit);
+  }
+
+  public void advanceBy(Duration duration) {
+    instant = instant.plus(duration);
   }
 
   public Clock toFixed() {

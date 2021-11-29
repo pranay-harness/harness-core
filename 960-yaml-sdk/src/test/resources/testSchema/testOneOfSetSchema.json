@@ -1,7 +1,4 @@
 {
-  "type": "object",
-  "required": [],
-  "properties": {},
   "$schema": "http://json-schema.org/draft-07/schema#",
   "oneOf": [
     {
@@ -108,9 +105,6 @@
   ],
   "definitions": {
     "ClassWithOneOfSetAnnotation": {
-      "type": "object",
-      "required": [],
-      "properties": {},
       "$schema": "http://json-schema.org/draft-07/schema#",
       "oneOf": [
         {

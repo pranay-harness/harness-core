@@ -80,11 +80,6 @@ func (e *runTestsStep) validate() error {
 	if e.runTestsInfo.GetContainerPort() == 0 {
 		return fmt.Errorf("runTestsStep container port is not set")
 	}
-
-	if e.runTestsInfo.GetLanguage() != "java" {
-		e.log.Errorw(fmt.Sprintf("only java is supported as the codebase language. Received language is: %s", e.runTestsInfo.GetLanguage()), "step_id", e.id)
-		return fmt.Errorf("unsupported language in test intelligence step")
-	}
 	return nil
 }
 

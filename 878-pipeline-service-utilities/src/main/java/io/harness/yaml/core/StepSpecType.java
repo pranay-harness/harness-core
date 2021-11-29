@@ -25,6 +25,6 @@ public interface StepSpecType extends StepParameters {
 
   @JsonIgnore
   default boolean skipUnresolvedExpressionsCheck() {
-    return false;
+    return true;
   }
 }

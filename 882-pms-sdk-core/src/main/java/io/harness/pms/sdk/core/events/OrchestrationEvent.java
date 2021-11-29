@@ -11,6 +11,7 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,8 @@ public class OrchestrationEvent {
   @NotNull OrchestrationEventType eventType;
   TriggerPayload triggerPayload;
   List<String> tags;
+  PipelineModuleInfo moduleInfo;
+  Long endTs;
 
   public AutoLogContext autoLogContext() {
     Map<String, String> logContext = AmbianceUtils.logContextMap(ambiance);

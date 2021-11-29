@@ -2,6 +2,10 @@ package io.harness.pms.pipeline.service;
 
 import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.SPEC_NODE;
 
 import static java.lang.String.format;
 
@@ -40,6 +44,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -176,7 +181,29 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     pmsYamlSchemaHelper.processPartialStageSchema(mergedDefinitions, pipelineStepsDefinitions, stageElementConfig,
         featureFlagYamlService.getFeatureFlagYamlSchema(projectIdentifier, orgIdentifier, scope));
 
+    // Remove duplicate if then statements from stage element config. Keep references only to new ones we added above.
+    removeDuplicateIfThenFromStageElementConfig(stageElementConfig);
+
     return ((ObjectNode) pipelineSchema).set(DEFINITIONS_NODE, pipelineDefinitions);
+  }
+
+  private void removeDuplicateIfThenFromStageElementConfig(ObjectNode stageElementConfig) {
+    ArrayNode stageElementConfigAllOfNode = (ArrayNode) stageElementConfig.get(ALL_OF_NODE);
+    if (stageElementConfigAllOfNode == null) {
+      return;
+    }
+
+    Iterator<JsonNode> elements = stageElementConfigAllOfNode.elements();
+    while (elements.hasNext()) {
+      JsonNode element = elements.next();
+      JsonNode refNode = element.findValue(REF_NODE);
+      if (refNode != null && refNode.isValueNode()) {
+        if (refNode.asText().equals("#/definitions/ApprovalStageConfig")
+            || refNode.asText().equals("#/definitions/FeatureFlagStageConfig")) {
+          elements.remove();
+        }
+      }
+    }
   }
 
   private void mergeCVIntoCDIfPresent(Map<ModuleType, PartialSchemaDTO> partialSchemaDTOMap) {
@@ -206,15 +233,27 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   }
 
   private void populateAllOfForCD(JsonNode cdDefinitions, JsonNode cdDefinitionsCopy) {
-    ArrayNode cdDefinitionsAllOfNode =
-        (ArrayNode) cdDefinitions.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ALL_OF_NODE);
-    ArrayNode cdDefinitionsCopyAllOfNode =
-        (ArrayNode) cdDefinitionsCopy.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ALL_OF_NODE);
+    ArrayNode cdDefinitionsAllOfNode = getAllOfNodeWithTypeAndSpec(
+        (ArrayNode) cdDefinitions.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ONE_OF_NODE));
+    ArrayNode cdDefinitionsCopyAllOfNode = getAllOfNodeWithTypeAndSpec(
+        (ArrayNode) cdDefinitionsCopy.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ONE_OF_NODE));
 
+    if (cdDefinitionsCopyAllOfNode == null || cdDefinitionsAllOfNode == null) {
+      return;
+    }
     for (int i = 0; i < cdDefinitionsCopyAllOfNode.size(); i++) {
       cdDefinitionsAllOfNode.add(cdDefinitionsCopyAllOfNode.get(i));
     }
     JsonNodeUtils.removeDuplicatesFromArrayNode(cdDefinitionsAllOfNode);
+  }
+
+  private ArrayNode getAllOfNodeWithTypeAndSpec(ArrayNode node) {
+    for (int i = 0; i < node.size(); i++) {
+      if (node.get(i).get(PROPERTIES_NODE).get(SPEC_NODE) != null) {
+        return (ArrayNode) node.get(i).get(ALL_OF_NODE);
+      }
+    }
+    return null;
   }
 
   @SuppressWarnings("unchecked")

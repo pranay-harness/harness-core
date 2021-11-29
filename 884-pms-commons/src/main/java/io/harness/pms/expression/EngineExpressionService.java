@@ -7,7 +7,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 @OwnedBy(HarnessTeam.PIPELINE)
 public interface EngineExpressionService {
   default String renderExpression(Ambiance ambiance, String expression) {
-    return renderExpression(ambiance, expression, false);
+    return renderExpression(ambiance, expression, true);
   }
   String renderExpression(Ambiance ambiance, String expression, boolean skipUnresolvedExpressionsCheck);
 
