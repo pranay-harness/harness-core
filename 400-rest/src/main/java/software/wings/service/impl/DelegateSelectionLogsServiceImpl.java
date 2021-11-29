@@ -48,7 +48,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +94,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID = "TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID";
   private static final String TARGETED_OWNER_NOT_MATCHED_GROUP_ID = "TARGETED_OWNER_MATCHED_GROUP_ID";
   private static final String NO_ELIGIBLE_DELEGATES_GROUP_ID = "NO_ELIGIBLE_DELEGATES_GROUP_ID";
+  private static final String NO_ELIGIBLE_DELEGATES_AVAILABLE_GROUP_ID = "NO_ELIGIBLE_DELEGATES_AVAILABLE_GROUP_ID";
 
   private final LoadingCache<ImmutablePair<String, String>, String> setupAbstractionsCache =
       CacheBuilder.newBuilder()
@@ -190,8 +190,15 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   @Override
   public void logNoEligibleDelegatesToExecuteTask(
       @Nullable final BatchDelegateSelectionLog batch, final String accountId) {
-    final String message = "No eligible delegates in account {} to execute task";
-    logBatch(batch, accountId, Collections.EMPTY_SET, message, REJECTED, NO_ELIGIBLE_DELEGATES_GROUP_ID);
+    final String message = "No eligible delegates in account to execute task";
+    logBatch(batch, accountId, Sets.newHashSet(), message, REJECTED, NO_ELIGIBLE_DELEGATES_GROUP_ID);
+  }
+
+  @Override
+  public void logNoEligibleDelegatesAvailableToExecuteTask(
+      @Nullable final BatchDelegateSelectionLog batch, final String accountId) {
+    final String message = "No eligible delegates in account available to execute task";
+    logBatch(batch, accountId, Sets.newHashSet(), message, REJECTED, NO_ELIGIBLE_DELEGATES_AVAILABLE_GROUP_ID);
   }
 
   @Override

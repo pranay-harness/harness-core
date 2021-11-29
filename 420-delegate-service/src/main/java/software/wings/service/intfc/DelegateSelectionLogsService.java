@@ -56,4 +56,6 @@ public interface DelegateSelectionLogsService {
   void logMustExecuteOnDelegateNotMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
   void logNoEligibleDelegatesToExecuteTask(BatchDelegateSelectionLog batch, String accountId);
+
+  void logNoEligibleDelegatesAvailableToExecuteTask(BatchDelegateSelectionLog batch, String accountId);
 }

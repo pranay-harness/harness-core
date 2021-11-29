@@ -936,7 +936,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   @Test
   @Owner(developers = JENNY)
   @Category(UnitTests.class)
-  public void shouldSaveDelegateTaskWhenNoEligibleDelegate_Sync() {
+  public void shouldNotSaveDelegateTaskWhenNoEligibleDelegate_Sync() {
     DelegateTask delegateTask = getDelegateTask();
     delegateTaskServiceClassic.scheduleSyncTask(delegateTask);
     assertThat(persistence.get(DelegateTask.class, delegateTask.getUuid())).isNull();
@@ -945,7 +945,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   @Test
   @Owner(developers = JENNY)
   @Category(UnitTests.class)
-  public void shouldSaveDelegateTaskWhenNoActiveEligibleDelegate_Sync() {
+  public void shouldNotSaveDelegateTaskWhenNoActiveEligibleDelegate_Sync() {
     DelegateTask delegateTask = getDelegateTask();
     when(assignDelegateService.getEligibleDelegatesToExecuteTask(
              any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
@@ -976,7 +976,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   @Test
   @Owner(developers = JENNY)
   @Category(UnitTests.class)
-  public void shouldSaveDelegateTaskWhenNoEligibleDelegate_async() {
+  public void shouldNotSaveDelegateTaskWhenNoEligibleDelegate_async() {
     DelegateTask delegateTask = getDelegateTask();
     delegateTaskServiceClassic.queueTask(delegateTask);
     assertThat(persistence.get(DelegateTask.class, delegateTask.getUuid())).isNull();

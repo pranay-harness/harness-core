@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.JENNY;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
@@ -81,6 +82,8 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String MISSING_SELECTOR_MESSAGE = "missing selector";
   private static final String TARGETED_DELEGATE_MATCHED_GROUP_ID = "TARGETED_DELEGATE_MATCHED_GROUP_ID";
   private static final String TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID = "TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID";
+  private static final String NO_ELIGIBLE_DELEGATES_GROUP_ID = "NO_ELIGIBLE_DELEGATES_GROUP_ID";
+  private static final String NO_ELIGIBLE_DELEGATES_AVAILABLE_GROUP_ID = "NO_ELIGIBLE_DELEGATES_AVAILABLE_GROUP_ID";
 
   @Inject protected WingsPersistence wingsPersistence;
   @Mock protected FeatureFlagService featureFlagService;
@@ -134,18 +137,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     delegateSelectionLogsService.save(batch);
 
     assertThat(wingsPersistence.get(DelegateSelectionLog.class, selectionLog.getUuid())).isNotNull();
-
-    DelegateSelectionLogTaskMetadata savedTaskMetadata =
-        wingsPersistence.get(DelegateSelectionLogTaskMetadata.class, taskMetadata.getUuid());
-
-    assertThat(savedTaskMetadata).isNotNull();
-    assertThat(savedTaskMetadata.getSetupAbstractions()).isNotNull();
-    assertThat(savedTaskMetadata.getSetupAbstractions().get(Cd1SetupFields.APPLICATION))
-        .isEqualTo(taskMetadata.getSetupAbstractions().get(Cd1SetupFields.APPLICATION));
-    assertThat(savedTaskMetadata.getSetupAbstractions().get(Cd1SetupFields.SERVICE))
-        .isEqualTo(taskMetadata.getSetupAbstractions().get(Cd1SetupFields.SERVICE));
-    assertThat(savedTaskMetadata.getSetupAbstractions().get(Cd1SetupFields.ENVIRONMENT))
-        .isEqualTo(taskMetadata.getSetupAbstractions().get(Cd1SetupFields.ENVIRONMENT));
   }
 
   @Test
@@ -158,12 +149,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     wingsPersistence.ensureIndexForTesting(DelegateSelectionLog.class);
     wingsPersistence.ensureIndexForTesting(DelegateSelectionLogTaskMetadata.class);
 
-    DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder()
-                                                        .taskId(taskId)
-                                                        .accountId(accountId)
-                                                        .setupAbstractions(obtainTaskSetupAbstractions())
-                                                        .build();
-
     Concurrent.test(10, n -> {
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder()
                                             .delegateSelectionLogs(createDelegateSelectionLogs(taskId, accountId))
@@ -172,12 +157,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     });
 
     assertThat(wingsPersistence.createQuery(DelegateSelectionLog.class)
-                   .filter(DelegateSelectionLogKeys.taskId, taskId)
-                   .filter(DelegateSelectionLogKeys.accountId, accountId)
-                   .count())
-        .isEqualTo(1L);
-
-    assertThat(wingsPersistence.createQuery(DelegateSelectionLogTaskMetadata.class)
                    .filter(DelegateSelectionLogKeys.taskId, taskId)
                    .filter(DelegateSelectionLogKeys.accountId, accountId)
                    .count())
@@ -1038,6 +1017,50 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("No matching owner: orgId/projectId");
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo("TARGETED_OWNER_MATCHED_GROUP_ID");
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void shouldLogNoEligibleDelegates() {
+    String taskId = generateUuid();
+    String accountId = generateUuid();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
+
+    delegateSelectionLogsService.logNoEligibleDelegatesToExecuteTask(batch, accountId);
+
+    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(0);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("No eligible delegates in account to execute task");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(NO_ELIGIBLE_DELEGATES_GROUP_ID);
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void shouldLogNoEligibleAvailableDelegates() {
+    String taskId = generateUuid();
+    String accountId = generateUuid();
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
+
+    delegateSelectionLogsService.logNoEligibleDelegatesAvailableToExecuteTask(batch, accountId);
+
+    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(0);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("No eligible delegates in account available to execute task");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId())
+        .isEqualTo(NO_ELIGIBLE_DELEGATES_AVAILABLE_GROUP_ID);
   }
 
   private DelegateSelectionLogBuilder createDelegateSelectionLogBuilder() {
