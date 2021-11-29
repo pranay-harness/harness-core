@@ -27,7 +27,7 @@ import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultC
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
-import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
+import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.DuplicateFieldException;
@@ -57,13 +57,16 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   private final ConnectorService defaultConnectorService;
   private final ConnectorRepository connectorRepository;
   private final NGVaultService ngVaultService;
+  private final EnforcementClientService enforcementClientService;
 
   @Inject
   public SecretManagerConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
-      ConnectorRepository connectorRepository, NGVaultService ngVaultService) {
+      ConnectorRepository connectorRepository, NGVaultService ngVaultService,
+      EnforcementClientService enforcementClientService) {
     this.defaultConnectorService = defaultConnectorService;
     this.connectorRepository = connectorRepository;
     this.ngVaultService = ngVaultService;
+    this.enforcementClientService = enforcementClientService;
   }
 
   @Override
@@ -87,16 +90,22 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  @FeatureRestrictionCheck(FeatureRestrictionName.SECRET_MANAGERS)
   public ConnectorResponseDTO create(@Valid ConnectorDTO connector, @AccountIdentifier String accountIdentifier) {
-    return createSecretManagerConnector(connector, accountIdentifier, ChangeType.ADD);
+    return create(connector, accountIdentifier, ChangeType.ADD);
   }
 
   @Override
-  @FeatureRestrictionCheck(FeatureRestrictionName.SECRET_MANAGERS)
   public ConnectorResponseDTO create(
       ConnectorDTO connector, @AccountIdentifier String accountIdentifier, ChangeType gitChangeType) {
-    return createSecretManagerConnector(connector, accountIdentifier, ChangeType.ADD);
+    // To support AccountSetup call we need to create Harness Default Secret Manager irrespective of LicenseType
+    if (connector.getConnectorInfo() != null
+        && !HARNESS_SECRET_MANAGER_IDENTIFIER.equalsIgnoreCase(connector.getConnectorInfo().getIdentifier())) {
+      log.info("Creating new Secret managers Need to check License Enforcement ");
+      enforcementClientService.checkAvailability(FeatureRestrictionName.SECRET_MANAGERS, accountIdentifier);
+    } else {
+      log.info("[AccountSetup] Creating default Secret manager");
+    }
+    return createSecretManagerConnector(connector, accountIdentifier, gitChangeType);
   }
 
   private ConnectorResponseDTO createSecretManagerConnector(
