@@ -199,6 +199,24 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testValidateInvalidConnectorURL() {
+    doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
+    wireMockRule.stubFor(get(urlEqualTo("/v2")).willReturn(aResponse().withStatus(404)));
+    wireMockRule.stubFor(get(urlEqualTo("/v2/")).willReturn(aResponse().withStatus(404)));
+
+    assertThatThrownBy(() -> dockerRegistryService.validateCredentials(dockerConfig))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
+        .isInstanceOf(InvalidArtifactServerException.class)
+        .extracting("params.message")
+        .isEqualTo("Invalid Docker Registry URL");
+  }
+
+  @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testValidateCredentialForMissingPassword() {
