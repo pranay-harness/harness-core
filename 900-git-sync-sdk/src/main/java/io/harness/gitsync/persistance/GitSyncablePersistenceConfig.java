@@ -30,7 +30,7 @@ import org.springframework.guice.annotation.GuiceModule;
 @Configuration
 @GuiceModule
 @EnableMongoRepositories(basePackages = {"io.harness.repositories"},
-    includeFilters = @ComponentScan.Filter(GitSyncableHarnessRepo.class), mongoTemplateRef = "primary")
+    includeFilters = @ComponentScan.Filter(GitSyncableHarnessRepo.class))
 @EnableMongoAuditing
 @OwnedBy(DX)
 public class GitSyncablePersistenceConfig extends AbstractMongoConfiguration {
@@ -62,8 +62,7 @@ public class GitSyncablePersistenceConfig extends AbstractMongoConfiguration {
     return new MongoClientURI(mongoConfig.getUri()).getDatabase();
   }
 
-  @Bean(name = "primary")
-  @Primary
+  @Bean
   public MongoTemplate mongoTemplate() throws Exception {
     return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter(), mongoConfig.getTraceMode());
   }

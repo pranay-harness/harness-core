@@ -68,21 +68,9 @@ public class AccessControlMigrationPersistenceConfig extends AbstractMongoConfig
 
   @Bean
   public MongoTemplate mongoTemplate() throws Exception {
-    MongoClientOptions primaryMongoClientOptions =
-        MongoClientOptions.builder()
-            .retryWrites(true)
-            .connectTimeout(mongoBackendConfiguration.getConnectTimeout())
-            .serverSelectionTimeout(mongoBackendConfiguration.getServerSelectionTimeout())
-            .maxConnectionIdleTime(mongoBackendConfiguration.getMaxConnectionIdleTime())
-            .connectionsPerHost(mongoBackendConfiguration.getConnectionsPerHost())
-            .readPreference(ReadPreference.primary())
-            .build();
-    MongoClientURI uri =
-        new MongoClientURI(mongoBackendConfiguration.getUri(), MongoClientOptions.builder(primaryMongoClientOptions));
-    DbRefResolver dbRefResolver = new DefaultDbRefResolver(this.mongoDbFactory());
-    MongoDbFactory mongoDbFactory =
-        new SimpleMongoDbFactory(new MongoClient(uri), Objects.requireNonNull(uri.getDatabase()));
-    MongoMappingContext mappingContext = this.mongoMappingContext();
+    MongoDbFactory mongoDbFactory = mongoDbFactory();
+    DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory);
+    MongoMappingContext mappingContext = mongoMappingContext();
     mappingContext.setAutoIndexCreation(false);
     MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
     converter.setCodecRegistryProvider(mongoDbFactory);

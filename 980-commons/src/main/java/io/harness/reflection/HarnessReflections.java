@@ -8,7 +8,10 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.experimental.UtilityClass;
+import org.reflections.Configuration;
 import org.reflections.Reflections;
+import org.reflections.scanners.ResourcesScanner;
+import org.reflections.scanners.SubTypesScanner;
 import org.reflections.serializers.JsonSerializer;
 import org.reflections.util.ConfigurationBuilder;
 
@@ -27,7 +30,11 @@ public class HarnessReflections {
 
         reflections.set(new Reflections(config).collect(CLASSPATH_METADATA_FILE));
       } else {
-        reflections.set(new Reflections(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS));
+        Configuration configuration =
+            new ConfigurationBuilder()
+                .forPackages(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS)
+                .addScanners(new ResourcesScanner());
+        reflections.set(new Reflections(configuration));
       }
     }
 

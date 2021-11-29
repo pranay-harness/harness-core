@@ -9,6 +9,8 @@ import java.security.SecureRandom;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import io.harness.reflection.HarnessReflections;
 import lombok.extern.slf4j.Slf4j;
 import org.reflections.Reflections;
 
@@ -21,8 +23,7 @@ public class RecordMetricsJob {
 
   public void scheduleMetricsTasks() {
     long initialDelay = new SecureRandom().nextInt(60);
-    Reflections reflections = new Reflections("io.harness");
-    Set<Class<? extends MetricsPublisher>> classes = reflections.getSubTypesOf(MetricsPublisher.class);
+    Set<Class<? extends MetricsPublisher>> classes = HarnessReflections.get().getSubTypesOf(MetricsPublisher.class);
 
     try {
       classes.forEach(subClass -> {

@@ -120,6 +120,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.redis.RedisConfig;
+import io.harness.reflection.HarnessReflections;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.secret.ConfigSecretUtils;
 import io.harness.secrets.SecretMigrationEventListener;
@@ -158,6 +159,7 @@ import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import io.harness.workers.background.iterator.InstanceSyncHandler;
 import io.harness.workers.background.iterator.SettingAttributeValidateConnectivityHandler;
 
+import org.apache.commons.lang3.StringUtils;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
@@ -283,6 +285,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -292,6 +295,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -883,10 +887,15 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerResources(MainConfiguration configuration, Environment environment, Injector injector) {
-    Reflections reflections =
-        new Reflections(AppResource.class.getPackage().getName(), DelegateTaskResource.class.getPackage().getName());
+    Set<Class<?>> resourceClasses =
+        HarnessReflections.get()
+            .getTypesAnnotatedWith(Path.class)
+            .stream()
+            .filter(klazz
+                -> StringUtils.startsWithAny(klazz.getPackage().getName(), AppResource.class.getPackage().getName(),
+                    DelegateTaskResource.class.getPackage().getName()))
+            .collect(Collectors.toSet());
 
-    Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
     if (!configuration.isGraphQLEnabled()) {
       resourceClasses.remove(GraphQLResource.class);
     }

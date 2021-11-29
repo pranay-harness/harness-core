@@ -11,6 +11,7 @@ import io.harness.metrics.beans.MetricConfiguration;
 import io.harness.metrics.beans.MetricGroup;
 import io.harness.metrics.service.api.MetricDefinitionInitializer;
 import io.harness.metrics.service.api.MetricService;
+import io.harness.reflection.HarnessReflections;
 import io.harness.serializer.YamlUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -92,8 +93,8 @@ public class MetricServiceImpl implements MetricService {
   private static void initializeFromYAML() {
     List<MetricConfiguration> metricConfigDefinitions = new ArrayList<>();
     long startTime = Instant.now().toEpochMilli();
-    Reflections reflections = new Reflections("metrics.metricDefinitions", new ResourcesScanner());
-    Set<String> metricDefinitionFileNames = reflections.getResources(Pattern.compile(".*\\.yaml"));
+    Set<String> metricDefinitionFileNames = HarnessReflections.get().getResources(Pattern.compile(".*\\.yaml"));
+    metricDefinitionFileNames.removeIf(c -> !c.startsWith("metrics/metricDefinitions"));
     metricDefinitionFileNames.forEach(metricDefinition -> {
       try {
         String path = "/" + metricDefinition;
@@ -108,8 +109,8 @@ public class MetricServiceImpl implements MetricService {
         throw new RuntimeException("Exception occured while reading metric definition files", ex);
       }
     });
-    reflections = new Reflections("metrics.metricGroups", new ResourcesScanner());
-    Set<String> metricGroupFileNames = reflections.getResources(Pattern.compile(".*\\.yaml"));
+    Set<String> metricGroupFileNames = HarnessReflections.get().getResources(Pattern.compile(".*\\.yaml"));
+    metricGroupFileNames.removeIf(c -> !c.startsWith("metrics/metricGroups"));
     metricGroupFileNames.forEach(name -> {
       try {
         String path = "/" + name;
