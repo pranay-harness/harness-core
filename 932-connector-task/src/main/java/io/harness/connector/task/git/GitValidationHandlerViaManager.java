@@ -4,7 +4,9 @@ import static io.harness.connector.helper.GitApiAccessDecryptionHelper.hasApiAcc
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.DecryptableEntityHelper;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
+import io.harness.connector.task.shell.SshSessionConfigMapper;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
@@ -22,6 +24,8 @@ import java.util.List;
 public class GitValidationHandlerViaManager extends AbstractGitValidationHandler {
   @Inject SecretNGManagerClient ngSecretDecryptionClient;
   @Inject NGRestClientExecutor restClientExecutor;
+  @Inject DecryptableEntityHelper decryptableEntityHelper;
+  @Inject SshSessionConfigMapper sshSessionConfigMapper;
 
   public ConnectorValidationResult validate(
       ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
@@ -30,8 +34,9 @@ public class GitValidationHandlerViaManager extends AbstractGitValidationHandler
 
   @Override
   public void decrypt(GitConfigDTO gitConfig, ScmValidationParams scmValidationParams, String accountIdentifier) {
-    final DecryptableEntityWithEncryptionConsumers build = buildDecryptableEntityWithEncryptionConsumers(
-        gitConfig.getGitAuth(), scmValidationParams.getEncryptedDataDetails());
+    final DecryptableEntityWithEncryptionConsumers build =
+        decryptableEntityHelper.buildDecryptableEntityWithEncryptionConsumers(
+            gitConfig.getGitAuth(), scmValidationParams.getEncryptedDataDetails());
     final DecryptableEntity decryptedGitAuth =
         restClientExecutor.getResponse(ngSecretDecryptionClient.decryptEncryptedDetails(build, accountIdentifier));
     gitConfig.setGitAuth((GitAuthenticationDTO) decryptedGitAuth);
@@ -40,7 +45,7 @@ public class GitValidationHandlerViaManager extends AbstractGitValidationHandler
       DecryptableEntity apiAccessDecryptableEntity =
           GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmValidationParams.getScmConnector());
       DecryptableEntityWithEncryptionConsumers decryptableEntityWithEncryptionConsumers =
-          buildDecryptableEntityWithEncryptionConsumers(
+          decryptableEntityHelper.buildDecryptableEntityWithEncryptionConsumers(
               apiAccessDecryptableEntity, scmValidationParams.getEncryptedDataDetails());
 
       final DecryptableEntity decryptedScmSpec =
@@ -54,15 +59,9 @@ public class GitValidationHandlerViaManager extends AbstractGitValidationHandler
   @Override
   public SshSessionConfig getSSHSessionConfig(
       SSHKeySpecDTO sshKeySpecDTO, List<EncryptedDataDetail> encryptionDetails) {
-    // todo: Implement SSH support for git connectors via manager
-    return null;
-  }
-
-  private DecryptableEntityWithEncryptionConsumers buildDecryptableEntityWithEncryptionConsumers(
-      DecryptableEntity decryptableEntity, List<EncryptedDataDetail> encryptedDataDetails) {
-    return DecryptableEntityWithEncryptionConsumers.builder()
-        .decryptableEntity(decryptableEntity)
-        .encryptedDataDetailList(encryptedDataDetails)
-        .build();
+    if (sshKeySpecDTO == null) {
+      return null;
+    }
+    return sshSessionConfigMapper.getSSHSessionConfig(sshKeySpecDTO, encryptionDetails);
   }
 }

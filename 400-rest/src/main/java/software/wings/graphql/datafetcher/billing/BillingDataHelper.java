@@ -66,6 +66,14 @@ public class BillingDataHelper {
   private static final int UNALLOCATED_COST_BASELINE = 5;
 
   protected double roundingDoubleFieldValue(BillingDataMetaDataFields field, ResultSet resultSet) throws SQLException {
+    return roundingDoubleFieldValue(field, resultSet, false);
+  }
+
+  protected double roundingDoubleFieldValue(BillingDataMetaDataFields field, ResultSet resultSet, boolean skipRoundOff)
+      throws SQLException {
+    if (skipRoundOff) {
+      return resultSet.getDouble(field.getFieldName());
+    }
     return Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
   }
 

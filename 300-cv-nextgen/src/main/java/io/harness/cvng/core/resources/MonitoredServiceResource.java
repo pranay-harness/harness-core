@@ -39,6 +39,7 @@ import io.swagger.annotations.ApiParam;
 import java.time.Instant;
 import java.util.List;
 import javax.validation.Valid;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -442,5 +443,16 @@ public class MonitoredServiceResource {
                                       .projectIdentifier(projectIdentifier)
                                       .build();
     return monitoredServiceService.getCountOfServices(projectParams, environmentIdentifier, filter);
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/service-details")
+  @ApiOperation(value = "get details of a monitored service present in the Service Dependency Graph",
+      nickname = "getMonitoredServiceDetails")
+  public MonitoredServiceListItemDTO
+  getMonitoredServiceDetails(@BeanParam ServiceEnvironmentParams serviceEnvironmentParams) {
+    return monitoredServiceService.getMonitoredServiceDetails(serviceEnvironmentParams);
   }
 }

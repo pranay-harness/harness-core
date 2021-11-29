@@ -504,11 +504,6 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
 
-    // Added to support delegate profile startup script execution through the workflow
-    String mustExecuteOnDelegateIdRendered = !"null".equals(context.renderExpression(mustExecuteOnDelegateId))
-        ? context.renderExpression(mustExecuteOnDelegateId)
-        : null;
-
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(executionContext.getApp().getAccountId())
@@ -531,7 +526,6 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
-            .mustExecuteOnDelegateId(mustExecuteOnDelegateIdRendered)
             .build();
 
     String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask,

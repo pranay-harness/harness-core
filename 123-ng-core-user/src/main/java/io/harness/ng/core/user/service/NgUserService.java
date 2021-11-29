@@ -74,6 +74,8 @@ public interface NgUserService {
   boolean removeUserFromScope(
       String userId, Scope scope, UserMembershipUpdateSource source, NGRemoveUserFilter removeUserFilter);
 
+  boolean removeUserWithCriteria(String userId, UserMembershipUpdateSource source, Criteria criteria);
+
   boolean isUserPasswordSet(String accountIdentifier, String email);
 
   List<String> listUserAccountIds(String userId);

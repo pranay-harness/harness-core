@@ -6,11 +6,13 @@ import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.newrelic.NewRelicApplication;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
+import io.harness.cvng.beans.newrelic.NewRelicFetchSampleDataRequest;
 import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
 import io.harness.cvng.core.beans.MetricPackValidationResponse;
 import io.harness.cvng.core.beans.MetricPackValidationResponse.MetricValidationResponse;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.datacollection.exception.DataCollectionException;
@@ -91,6 +93,32 @@ public class NewRelicServiceImpl implements NewRelicService {
       return validationResponse;
     } catch (DataCollectionException ex) {
       return MetricPackValidationResponse.builder().overallStatus(ThirdPartyApiResponseStatus.FAILED).build();
+    }
+  }
+
+  @Override
+  public String fetchSampleData(
+      ProjectParams projectParams, String connectorIdentifier, String query, String tracingId) {
+    try {
+      DataCollectionRequest request = NewRelicFetchSampleDataRequest.builder()
+                                          .type(DataCollectionRequestType.NEWRELIC_SAMPLE_FETCH_REQUEST)
+                                          .query(query)
+                                          .build();
+      OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                      .dataCollectionRequest(request)
+                                                      .connectorIdentifier(connectorIdentifier)
+                                                      .accountId(projectParams.getAccountIdentifier())
+                                                      .orgIdentifier(projectParams.getOrgIdentifier())
+                                                      .tracingId(tracingId)
+                                                      .projectIdentifier(projectParams.getProjectIdentifier())
+                                                      .build();
+
+      OnboardingResponseDTO response =
+          onboardingService.getOnboardingResponse(projectParams.getAccountIdentifier(), onboardingRequestDTO);
+
+      return response.getResult().toString();
+    } catch (DataCollectionException ex) {
+      return null;
     }
   }
 }

@@ -10,7 +10,7 @@ import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPat
 import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPublicApi;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.ng.NextGenConfiguration.getResourceClasses;
+import static io.harness.ng.NextGenConfiguration.HARNESS_RESOURCE_CLASSES;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -49,6 +49,9 @@ import io.harness.enforcement.client.example.ExampleStaticLimitUsageImpl;
 import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.enforcement.executions.DeploymentRestrictionUsageImpl;
+import io.harness.enforcement.executions.DeploymentsPerMonthRestrictionUsageImpl;
+import io.harness.enforcement.executions.InitialDeploymentRestrictionUsageImpl;
 import io.harness.enforcement.services.FeatureRestrictionLoader;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.gitsync.AbstractGitSyncModule;
@@ -241,6 +244,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   public void initialize(Bootstrap<NextGenConfiguration> bootstrap) {
     initializeLogging();
     bootstrap.addCommand(new InspectCommand<>(this));
+    bootstrap.addCommand(new ScanClasspathMetadataCommand());
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -324,10 +328,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(appConfig);
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
     modules.add(PipelineServiceUtilityModule.getInstance());
-
     CacheModule cacheModule = new CacheModule(appConfig.getCacheConfig());
     modules.add(cacheModule);
-
     Injector injector = Guice.createInjector(modules);
 
     // Will create collections and Indexes
@@ -357,12 +359,12 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerManagedBeans(environment, injector);
     initializeEnforcementService(injector, appConfig);
     initializeEnforcementSdk(injector);
-
     if (appConfig.getShouldDeployWithGitSync()) {
       intializeGitSync(injector);
       GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
     }
     registerMigrations(injector);
+
     MaintenanceController.forceMaintenance(false);
   }
 
@@ -604,7 +606,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   private void registerResources(Environment environment, Injector injector) {
-    for (Class<?> resource : getResourceClasses()) {
+    for (Class<?> resource : HARNESS_RESOURCE_CLASSES) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
@@ -772,6 +774,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                     .put(FeatureRestrictionName.MULTIPLE_ORGANIZATIONS, OrgRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.SERVICES, ServiceRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.CCM_K8S_CLUSTERS, CloudCostK8sConnectorRestrictionsUsageImpl.class)
+                    .put(FeatureRestrictionName.DEPLOYMENTS_PER_MONTH, DeploymentsPerMonthRestrictionUsageImpl.class)
+                    .put(FeatureRestrictionName.INITIAL_DEPLOYMENTS, InitialDeploymentRestrictionUsageImpl.class)
                     .build())
             .build();
     CustomRestrictionRegisterConfiguration customConfig =
@@ -779,6 +783,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
             .customRestrictionMap(
                 ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
                     .put(FeatureRestrictionName.TEST4, ExampleCustomImpl.class)
+                    .put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class)
                     .build())
             .build();
 
@@ -787,6 +792,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   public static Collection<Class<?>> getOAS3ResourceClassesOnly() {
-    return getResourceClasses().stream().filter(x -> x.isAnnotationPresent(Tag.class)).collect(Collectors.toList());
+    return HARNESS_RESOURCE_CLASSES.stream().filter(x -> x.isAnnotationPresent(Tag.class)).collect(Collectors.toList());
   }
 }

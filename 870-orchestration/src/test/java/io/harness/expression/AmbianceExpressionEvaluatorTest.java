@@ -3,8 +3,6 @@ package io.harness.expression;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -16,8 +14,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
-import io.harness.exception.CriticalExpressionEvaluationException;
-import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.field.dummy.DummyOrchestrationField;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
@@ -132,7 +128,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
                                              .put("i22", 222)
                                              .build());
 
-    validateSingleExpression(evaluator, "bVal1CVal1.strVal", "c11", false, false);
+    validateSingleExpression(evaluator, "bVal1CVal1.strVal", "c11", false);
     validateExpression(evaluator, "bVal1.cVal1.strVal", "c11");
     validateExpression(evaluator, "bVal1.cVal2.strVal", "finalC12", true);
     validateExpression(evaluator, "bVal1.strVal1", "b11");
@@ -142,7 +138,12 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
     validateExpression(evaluator, "bVal2.cVal1.strVal", "c21");
     validateExpression(evaluator, "bVal2.cVal2.strVal", "finalC22", true);
     validateExpression(evaluator, "bVal2.strVal1", "finalB21", true);
-    validateExpression(evaluator, "bVal2.strVal2", "<+b22>", false, true);
+    validateSingleExpression(evaluator, "bVal2.strVal2", "<+bVal2.strVal2>", true);
+    validateSingleExpression(evaluator,
+        "obj."
+            + "bVal2.strVal2",
+        null, false);
+    assertThat(evaluator.evaluateExpression("<+bVal2.strVal2>")).isEqualTo(null);
     validateExpression(evaluator, "bVal2.intVal1", 21);
     validateExpression(evaluator, "bVal2.intVal2", 222, true);
     validateExpression(evaluator, "strVal1", "a1");
@@ -154,39 +155,24 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
   }
 
   private void validateExpression(
-      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean shouldThrow) {
-    validateExpression(evaluator, expression, expected, shouldThrow, false);
+      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
+    validateExpressionWithObjExpression(evaluator, expression, expected, skipEvaluate);
   }
 
-  private void validateExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
-      boolean skipEvaluate, boolean shouldThrow) {
-    validateSingleExpression(evaluator, expression, expected, skipEvaluate, shouldThrow);
-    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate, shouldThrow);
+  private void validateExpressionWithObjExpression(
+      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
+    validateSingleExpression(evaluator, expression, expected, skipEvaluate);
+    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate);
   }
 
-  private void validateSingleExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
-      boolean skipEvaluate, boolean shouldThrow) {
+  private void validateSingleExpression(
+      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
     expression = "<+" + expression + ">";
-    if (shouldThrow) {
-      String finalExpression = expression;
-      assertThatThrownBy(() -> evaluator.renderExpression(finalExpression))
-          .isInstanceOfAny(UnresolvedExpressionsException.class, CriticalExpressionEvaluationException.class);
-      assertThatCode(() -> evaluator.renderExpression(finalExpression, true)).doesNotThrowAnyException();
-    } else {
-      assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
-    }
-
+    assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
     if (skipEvaluate) {
       return;
     }
-
-    if (shouldThrow) {
-      String finalExpression = expression;
-      assertThatThrownBy(() -> evaluator.evaluateExpression(finalExpression))
-          .isInstanceOfAny(UnresolvedExpressionsException.class, CriticalExpressionEvaluationException.class);
-    } else {
-      assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
-    }
+    assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
   }
 
   @Test

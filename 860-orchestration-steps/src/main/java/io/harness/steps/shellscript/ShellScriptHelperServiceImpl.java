@@ -10,10 +10,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.shell.ShellScriptTaskParametersNG;
 import io.harness.delegate.task.shell.ShellScriptTaskParametersNG.ShellScriptTaskParametersNGBuilder;
-import io.harness.eraro.Level;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
-import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.k8s.K8sConstants;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
@@ -33,8 +30,6 @@ import io.harness.shell.ScriptType;
 import io.harness.steps.OutputExpressionConstants;
 import io.harness.utils.IdentifierRefHelper;
 
-import software.wings.exception.ShellScriptException;
-
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
@@ -42,7 +37,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -165,18 +159,7 @@ public class ShellScriptHelperServiceImpl implements ShellScriptHelperService {
   @Override
   public String getShellScript(@Nonnull ShellScriptStepParameters stepParameters) {
     ShellScriptInlineSource shellScriptInlineSource = (ShellScriptInlineSource) stepParameters.getSource().getSpec();
-    if (shellScriptInlineSource.getScript().isExpression()) {
-      final long maxLimit = 10;
-      List<String> variables =
-          EngineExpressionEvaluator.findExpressions(shellScriptInlineSource.getScript().getExpressionValue())
-              .stream()
-              .limit(maxLimit)
-              .collect(Collectors.toList());
-      throw new ShellScriptException(
-          "Script contains unresolved expressions " + variables, null, Level.ERROR, WingsException.USER);
-    }
-
-    return shellScriptInlineSource.getScript().getValue();
+    return (String) shellScriptInlineSource.getScript().fetchFinalValue();
   }
 
   @Override

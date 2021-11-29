@@ -22,6 +22,7 @@ import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -49,14 +50,17 @@ public class PipelineEnforcementServiceImplTest extends PipelineServiceTestBase 
     Set<FeatureRestrictionName> featureRestrictionNames = Sets.newHashSet();
     featureRestrictionNames.add(FeatureRestrictionName.TEST1);
     Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap = Maps.of(FeatureRestrictionName.TEST1, true);
-    Mockito.when(enforcementClientService.getAvailabilityMap(featureRestrictionNames, accountId))
+    Mockito
+        .when(enforcementClientService.getAvailabilityForRemoteFeatures(
+            new ArrayList<>(featureRestrictionNames), accountId))
         .thenReturn(featureRestrictionNameBooleanMap);
 
     assertThat(pipelineEnforcementService.getFeatureRestrictionMap(accountId,
                    featureRestrictionNames.stream().map(FeatureRestrictionName::toString).collect(Collectors.toSet())))
         .isEqualTo(featureRestrictionNameBooleanMap);
 
-    Mockito.verify(enforcementClientService).getAvailabilityMap(featureRestrictionNames, accountId);
+    Mockito.verify(enforcementClientService)
+        .getAvailabilityForRemoteFeatures(new ArrayList<>(featureRestrictionNames), accountId);
   }
 
   @Test
@@ -75,16 +79,19 @@ public class PipelineEnforcementServiceImplTest extends PipelineServiceTestBase 
 
     Set<FeatureRestrictionName> featureRestrictionNames = Sets.newHashSet();
     featureRestrictionNames.add(FeatureRestrictionName.TEST5);
-    featureRestrictionNames.add(FeatureRestrictionName.DEPLOYMENTS);
+    featureRestrictionNames.add(FeatureRestrictionName.DEPLOYMENTS_PER_MONTH);
 
     Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap = Maps.of(FeatureRestrictionName.TEST1, true);
     Mockito.when(pmsSdkInstanceService.getSdkSteps()).thenReturn(sdkSteps);
-    Mockito.when(enforcementClientService.getAvailabilityMap(featureRestrictionNames, accountId))
+    Mockito
+        .when(enforcementClientService.getAvailabilityForRemoteFeatures(
+            new ArrayList<>(featureRestrictionNames), accountId))
         .thenReturn(featureRestrictionNameBooleanMap);
 
     pipelineEnforcementService.validatePipelineExecutionRestriction(accountId, Sets.newHashSet(stepType));
 
-    Mockito.verify(enforcementClientService).getAvailabilityMap(featureRestrictionNames, accountId);
+    Mockito.verify(enforcementClientService)
+        .getAvailabilityForRemoteFeatures(new ArrayList<>(featureRestrictionNames), accountId);
   }
 
   @Test
@@ -105,12 +112,14 @@ public class PipelineEnforcementServiceImplTest extends PipelineServiceTestBase 
 
     Set<FeatureRestrictionName> featureRestrictionNames = Sets.newHashSet();
     featureRestrictionNames.add(FeatureRestrictionName.TEST5);
-    featureRestrictionNames.add(FeatureRestrictionName.DEPLOYMENTS);
+    featureRestrictionNames.add(FeatureRestrictionName.DEPLOYMENTS_PER_MONTH);
 
     Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap =
-        Maps.of(FeatureRestrictionName.TEST5, false, FeatureRestrictionName.DEPLOYMENTS, false);
+        Maps.of(FeatureRestrictionName.TEST5, false, FeatureRestrictionName.DEPLOYMENTS_PER_MONTH, false);
     Mockito.when(pmsSdkInstanceService.getSdkSteps()).thenReturn(sdkSteps);
-    Mockito.when(enforcementClientService.getAvailabilityMap(featureRestrictionNames, accountId))
+    Mockito
+        .when(enforcementClientService.getAvailabilityForRemoteFeatures(
+            new ArrayList<>(featureRestrictionNames), accountId))
         .thenReturn(featureRestrictionNameBooleanMap);
 
     assertThatThrownBy(
@@ -119,7 +128,8 @@ public class PipelineEnforcementServiceImplTest extends PipelineServiceTestBase 
         .hasMessage(
             "Your current plan does not support the use of following steps: [test 5].You have exceeded max number of deployments.Please upgrade your plan.");
 
-    Mockito.verify(enforcementClientService).getAvailabilityMap(featureRestrictionNames, accountId);
+    Mockito.verify(enforcementClientService)
+        .getAvailabilityForRemoteFeatures(new ArrayList<>(featureRestrictionNames), accountId);
   }
 
   @Test
@@ -140,12 +150,14 @@ public class PipelineEnforcementServiceImplTest extends PipelineServiceTestBase 
 
     Set<FeatureRestrictionName> featureRestrictionNames = Sets.newHashSet();
     featureRestrictionNames.add(FeatureRestrictionName.TEST5);
-    featureRestrictionNames.add(FeatureRestrictionName.DEPLOYMENTS);
+    featureRestrictionNames.add(FeatureRestrictionName.DEPLOYMENTS_PER_MONTH);
 
     Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap =
-        Maps.of(FeatureRestrictionName.TEST5, true, FeatureRestrictionName.DEPLOYMENTS, false);
+        Maps.of(FeatureRestrictionName.TEST5, true, FeatureRestrictionName.DEPLOYMENTS_PER_MONTH, false);
     Mockito.when(pmsSdkInstanceService.getSdkSteps()).thenReturn(sdkSteps);
-    Mockito.when(enforcementClientService.getAvailabilityMap(featureRestrictionNames, accountId))
+    Mockito
+        .when(enforcementClientService.getAvailabilityForRemoteFeatures(
+            new ArrayList<>(featureRestrictionNames), accountId))
         .thenReturn(featureRestrictionNameBooleanMap);
 
     assertThatThrownBy(
@@ -153,6 +165,7 @@ public class PipelineEnforcementServiceImplTest extends PipelineServiceTestBase 
         .isInstanceOf(FeatureNotSupportedException.class)
         .hasMessage("You have exceeded max number of deployments.Please upgrade your plan.");
 
-    Mockito.verify(enforcementClientService).getAvailabilityMap(featureRestrictionNames, accountId);
+    Mockito.verify(enforcementClientService)
+        .getAvailabilityForRemoteFeatures(new ArrayList<>(featureRestrictionNames), accountId);
   }
 }

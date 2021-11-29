@@ -147,7 +147,7 @@ public class KustomizeTaskHelperTest extends CategoryTest {
         .build(eq(RANDOM), eq(RANDOM), pluginRootCaptor.capture(), kustomizeDirPathCaptor.capture(), eq(logCallback));
 
     List<FileData> actualManifestFiles =
-        spyKustomizeTaskHelper.buildForApply(RANDOM, RANDOM, RANDOM, file, logCallback);
+        spyKustomizeTaskHelper.buildForApply(RANDOM, RANDOM, RANDOM, file, false, Collections.emptyList(), logCallback);
 
     assertThat(actualManifestFiles).isEqualTo(manifestFiles);
     assertThat(kustomizeDirPathCaptor.getValue()).isEqualTo("file");
@@ -155,17 +155,18 @@ public class KustomizeTaskHelperTest extends CategoryTest {
   }
 
   private void applyFilesSizeShouldBeOne() {
-    assertThatThrownBy(() -> kustomizeTaskHelper.buildForApply(null, null, null, null, null))
+    assertThatThrownBy(() -> kustomizeTaskHelper.buildForApply(null, null, null, null, false, null, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Apply files can't be empty");
 
-    assertThatThrownBy(() -> kustomizeTaskHelper.buildForApply(null, null, null, Collections.emptyList(), null))
+    assertThatThrownBy(
+        () -> kustomizeTaskHelper.buildForApply(null, null, null, Collections.emptyList(), false, null, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Apply files can't be empty");
 
     List<String> applyFiles = Arrays.asList("file1", "file2");
 
-    assertThatThrownBy(() -> kustomizeTaskHelper.buildForApply(null, null, null, applyFiles, null))
+    assertThatThrownBy(() -> kustomizeTaskHelper.buildForApply(null, null, null, applyFiles, false, null, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Apply with Kustomize is supported for single file only");
   }

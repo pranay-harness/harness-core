@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -38,6 +39,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("JiraConnector")
 @OneOfField(fields = {"username", "usernameRef"})
+@Schema(name = "JiraConnector", description = "This contains details of Jira Connector")
 public class JiraConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity, DelegateSelectable {
   @NotNull @NotBlank String jiraUrl;
   String username;

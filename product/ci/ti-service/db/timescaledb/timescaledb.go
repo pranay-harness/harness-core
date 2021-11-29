@@ -33,11 +33,12 @@ type TimeScaleDb struct {
 	EvalTable      string // table for test reports
 	CoverageTable  string // table for file coverage
 	SelectionTable string // table for test selection stats for test intelligence
+	ExecutionTable string // table for test execution summary
 }
 
 // New connects to timescaledb and returns a wrapped connection object.
 func New(username, password, host, port, dbName,
-	evalTable, coverageTable, selectionTable string,
+	evalTable, coverageTable, selectionTable, executionTable string,
 	enableSSL bool, sslMode, sslCertPath string, log *zap.SugaredLogger) (*TimeScaleDb, error) {
 	iport, err := strconv.ParseUint(port, 10, 64)
 	if err != nil {
@@ -59,7 +60,7 @@ func New(username, password, host, port, dbName,
 	if err != nil {
 		return nil, err
 	}
-	return &TimeScaleDb{Conn: db, EvalTable: evalTable, CoverageTable: coverageTable, SelectionTable: selectionTable}, nil
+	return &TimeScaleDb{Conn: db, EvalTable: evalTable, CoverageTable: coverageTable, SelectionTable: selectionTable, ExecutionTable: executionTable}, nil
 }
 
 func constructPsqlInsertStmt(low, high int) string {
@@ -130,6 +131,25 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, accountId, orgId, projectId, 
 			logger.FromContext(ctx).Errorw("could not write test data to database", zap.Error(err))
 			return err
 		}
+	}
+	return nil
+}
+
+// WriteTestExecutionSummary writes basic details about the test execution to DB
+func (tdb *TimeScaleDb) WriteTestExecutionSummary(ctx context.Context, accountId, orgId, projectId, pipelineId,
+	buildId, stageId, stepId, commitLink string) error {
+	entries := 8
+	valueArgs := make([]interface{}, 0, entries)
+	stmt := fmt.Sprintf(
+		`
+					INSERT INTO %s
+					(account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, commit_link)
+					VALUES %s`, tdb.ExecutionTable, constructPsqlInsertStmt(1, entries))
+	valueArgs = append(valueArgs, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, commitLink)
+	_, err := tdb.Conn.ExecContext(ctx, stmt, valueArgs...)
+	if err != nil {
+		logger.FromContext(ctx).Errorw("could not write test execution summary to database", zap.Error(err))
+		return err
 	}
 	return nil
 }

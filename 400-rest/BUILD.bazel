@@ -737,6 +737,7 @@ java_library(
         "//920-delegate-agent-beans:module",
         "//920-delegate-service-beans:module",
         "//930-delegate-tasks:module",
+        "//930-delegate-tasks:tests",
         "//930-ng-core-clients:module",
         "//940-feature-flag:module",
         "//940-notification-client:module",

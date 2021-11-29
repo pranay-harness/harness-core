@@ -1,5 +1,7 @@
 package io.harness.ng;
 
+import static io.harness.swagger.SwaggerBundleConfigurationFactory.buildSwaggerBundleConfiguration;
+
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.AccessControlClientConfiguration;
@@ -18,7 +20,6 @@ import io.harness.file.FileServiceConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
-import io.harness.licensing.LicenseConfig;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
@@ -49,10 +50,12 @@ import java.util.Set;
 import javax.ws.rs.Path;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.reflections.Reflections;
 
 @Getter
 @OwnedBy(HarnessTeam.PL)
+@Slf4j
 public class NextGenConfiguration extends Configuration {
   public static final String SERVICE_ID = "ng-manager";
   public static final String CORE_PACKAGE = "io.harness.ng.core.remote";
@@ -92,6 +95,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String FEEDBACK_PACKAGE = "io.harness.ng.feedback.resources";
   public static final String INSTANCE_SYNC_PACKAGE = "io.harness.ng.instancesync.resources";
   public static final String INSTANCE_NG_PACKAGE = "io.harness.ng.instance";
+  public static final Collection<Class<?>> HARNESS_RESOURCE_CLASSES = getResourceClasses();
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @Setter @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -123,7 +127,6 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("accountConfig") private AccountConfig accountConfig;
-  @JsonProperty("licenseConfig") private LicenseConfig licenseConfig;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfiguration logStreamingServiceConfig;
   private OpaServiceConfiguration opaServerConfig;
   @JsonProperty("gitSyncServerConfig") private GrpcServerConfig gitSyncGrpcServerConfig;
@@ -157,16 +160,15 @@ public class NextGenConfiguration extends Configuration {
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
-    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-
-    String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
+    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration =
+        buildSwaggerBundleConfiguration(HARNESS_RESOURCE_CLASSES);
+    String resourcePackage = String.join(",", getUniquePackages(HARNESS_RESOURCE_CLASSES));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost(hostname);
     defaultSwaggerBundleConfiguration.setUriPrefix(basePathPrefix);
     defaultSwaggerBundleConfiguration.setTitle("CD NextGen API Reference");
     defaultSwaggerBundleConfiguration.setVersion("2.0");
-
     return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerBundleConfiguration);
   }
 
@@ -187,6 +189,6 @@ public class NextGenConfiguration extends Configuration {
   }
 
   public static Set<String> getUniquePackagesContainingResources() {
-    return getResourceClasses().stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
+    return HARNESS_RESOURCE_CLASSES.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }
 }
