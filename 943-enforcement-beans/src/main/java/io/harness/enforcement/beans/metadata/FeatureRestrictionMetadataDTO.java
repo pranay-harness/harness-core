@@ -24,7 +24,7 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(name = "FeatureRestrictionMetadata",
-    description = "This is the view of a feature restriction metadata object defined in Harness")
+    description = "This contains metadata of the feature restriction object defined in Harness")
 public class FeatureRestrictionMetadataDTO {
   private FeatureRestrictionName name;
   private ModuleType moduleType;

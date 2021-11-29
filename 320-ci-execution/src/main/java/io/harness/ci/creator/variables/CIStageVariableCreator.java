@@ -7,12 +7,14 @@ import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.sdk.core.variables.ChildrenVariableCreator;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationContext;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -27,8 +29,12 @@ public class CIStageVariableCreator extends ChildrenVariableCreator {
     YamlField executionField =
         config.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YAMLFieldNameConstants.EXECUTION);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(executionField)) {
+      Map<String, YamlField> executionDependencyMap = new HashMap<>();
+      executionDependencyMap.put(executionField.getNode().getUuid(), executionField);
       responseMap.put(executionField.getNode().getUuid(),
-          VariableCreationResponse.builder().dependency(executionField.getNode().getUuid(), executionField).build());
+          VariableCreationResponse.builder()
+              .dependencies(DependenciesUtils.toDependenciesProto(executionDependencyMap))
+              .build());
     }
 
     YamlField variablesField = config.getNode().getField(YAMLFieldNameConstants.VARIABLES);

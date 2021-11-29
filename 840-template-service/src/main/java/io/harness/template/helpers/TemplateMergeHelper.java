@@ -10,11 +10,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.common.NGExpressionUtils;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ngexception.NGTemplateException;
-import io.harness.ng.core.Status;
-import io.harness.ng.core.template.TemplateInputsErrorDTO;
-import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
+import io.harness.exception.ngexception.beans.templateservice.TemplateInputsErrorDTO;
+import io.harness.exception.ngexception.beans.templateservice.TemplateInputsErrorMetadataDTO;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.ng.core.template.TemplateReferenceSummary;
 import io.harness.ng.core.template.exception.NGTemplateResolveException;
@@ -155,7 +153,7 @@ public class TemplateMergeHelper {
       throw new NGTemplateException("Could not convert yaml to JsonNode: " + e.getMessage());
     }
 
-    TemplateInputsErrorResponseDTO errorResponse =
+    TemplateInputsErrorMetadataDTO errorResponse =
         validateLinkedTemplateInputsInYaml(accountId, orgId, projectId, pipelineYamlNode);
     if (errorResponse != null) {
       throw new NGTemplateResolveException("Exception in resolving template refs in given yaml.", USER, errorResponse);
@@ -348,7 +346,7 @@ public class TemplateMergeHelper {
    * @param yaml - Yaml on which we need to validate template inputs in linked template.
    * @return
    */
-  public TemplateInputsErrorResponseDTO validateLinkedTemplateInputsInYaml(
+  public TemplateInputsErrorMetadataDTO validateLinkedTemplateInputsInYaml(
       String accountId, String orgId, String projectId, YamlNode yamlNode) {
     Map<String, TemplateInputsErrorDTO> templateInputsErrorMap = new LinkedHashMap<>();
     Map<String, Object> errorYamlMap =
@@ -358,8 +356,7 @@ public class TemplateMergeHelper {
     }
     String errorYaml = convertToYaml(errorYamlMap);
     String errorTemplateYaml = convertUuidErrorMapToFqnErrorMap(errorYaml, templateInputsErrorMap);
-    return new TemplateInputsErrorResponseDTO(Status.ERROR, ErrorCode.TEMPLATE_EXCEPTION,
-        "Template resolve failed in given yaml.", null, errorTemplateYaml, templateInputsErrorMap);
+    return new TemplateInputsErrorMetadataDTO(errorTemplateYaml, templateInputsErrorMap);
   }
 
   private Map<String, Object> validateTemplateInputsInObject(String accountId, String orgId, String projectId,

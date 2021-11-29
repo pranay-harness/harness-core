@@ -120,7 +120,7 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
       supplier = ()
           -> outboxService.save(
               new TemplateUpdateEvent(templateToUpdate.getAccountIdentifier(), templateToUpdate.getOrgIdentifier(),
-                  templateToUpdate.getProjectIdentifier(), templateToUpdate, oldTemplateEntity, "",
+                  templateToUpdate.getProjectIdentifier(), templateToUpdate, oldTemplateEntity, comments,
                   templateUpdateEventType != null ? templateUpdateEventType : TemplateUpdateEventType.OTHERS_EVENT));
     }
     return gitAwarePersistence.save(

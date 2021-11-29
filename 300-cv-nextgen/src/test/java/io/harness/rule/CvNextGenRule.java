@@ -14,9 +14,13 @@ import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.CVServiceModule;
 import io.harness.cvng.EventsFrameworkModule;
 import io.harness.cvng.VerificationConfiguration;
+import io.harness.cvng.client.MockedVerificationManagerService;
 import io.harness.cvng.client.NextGenClientModule;
 import io.harness.cvng.client.VerificationManagerClientModule;
+import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.NGManagerServiceConfig;
+import io.harness.cvng.core.services.api.FeatureFlagService;
+import io.harness.cvng.core.services.impl.AlwaysFalseFeatureFlagServiceImpl;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.ff.FeatureFlagConfig;
@@ -48,6 +52,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.util.Modules;
 import io.dropwizard.configuration.YamlConfigurationFactory;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.validation.Validators;
@@ -117,7 +122,10 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
 
     modules.add(TestMongoModule.getInstance());
     VerificationConfiguration verificationConfiguration = getVerificationConfiguration();
-    modules.add(new CVServiceModule(verificationConfiguration));
+    modules.add(Modules.override(new CVServiceModule(verificationConfiguration)).with(binder -> {
+      binder.bind(FeatureFlagService.class).to(AlwaysFalseFeatureFlagServiceImpl.class);
+      binder.bind(VerificationManagerService.class).to(MockedVerificationManagerService.class);
+    }));
     MongoBackendConfiguration mongoBackendConfiguration =
         MongoBackendConfiguration.builder().uri("mongodb://localhost:27017/notificationChannel").build();
     modules.add(new EventsFrameworkModule(verificationConfiguration.getEventsFrameworkConfiguration()));

@@ -529,8 +529,8 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testSupportsCleanup() {
-    List<ArtifactStreamType> supported = asList(DOCKER, AMI, ARTIFACTORY, GCR, ECR, ACR, NEXUS);
-    List<ArtifactStreamType> unsupported = asList(JENKINS, BAMBOO, AMAZON_S3, GCS, SMB, SFTP, AZURE_ARTIFACTS, CUSTOM);
+    List<ArtifactStreamType> supported = asList(DOCKER, AMI, ARTIFACTORY, GCR, ECR, ACR, NEXUS, CUSTOM);
+    List<ArtifactStreamType> unsupported = asList(JENKINS, BAMBOO, AMAZON_S3, GCS, SMB, SFTP, AZURE_ARTIFACTS);
     for (ArtifactStreamType artifactStreamType : supported) {
       assertThat(ArtifactCollectionUtils.supportsCleanup(artifactStreamType.name())).isTrue();
     }

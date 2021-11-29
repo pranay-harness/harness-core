@@ -1101,7 +1101,7 @@ public class EcsStateHelper {
     DelegateTask task =
         DelegateTask.builder()
             .accountId(ecsRunTaskDataBag.getApplicationAccountId())
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ecsRunTaskDataBag.getApplicationAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ecsRunTaskDataBag.getApplicationUuid())
             .waitId(waitId)
             .tags(isNotEmpty(ecsRunTaskDataBag.getAwsConfig().getTag())
                     ? singletonList(ecsRunTaskDataBag.getAwsConfig().getTag())

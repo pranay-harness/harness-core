@@ -26,7 +26,8 @@ public enum AuthorizationServiceHeader {
   PLATFORM_SERVICE("PlatformService"),
   GIT_SYNC_SERVICE("GitSyncService"),
   DEFAULT("Default"),
-  DASHBOAD_AGGREGATION_SERVICE("DashboardAggregationService");
+  DASHBOAD_AGGREGATION_SERVICE("DashboardAggregationService"),
+  DMS("DelegateManagementService");
 
   private final String serviceId;
 

@@ -5,12 +5,10 @@ import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.ng.core.Status;
+import io.harness.exception.ngexception.beans.templateservice.TemplateInputsErrorMetadataDTO;
 import io.harness.ng.core.template.TemplateApplyRequestDTO;
-import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.ng.core.template.exception.NGTemplateResolveException;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
@@ -32,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PMSPipelineTemplateHelper {
   private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
   private final TemplateResourceClient templateResourceClient;
+  private final String TEMPLATE_RESOLVE_EXCEPTION_MSG = "Exception in resolving template refs in given pipeline yaml.";
 
   public TemplateMergeResponseDTO resolveTemplateRefsInPipeline(PipelineEntity pipelineEntity) {
     return resolveTemplateRefsInPipeline(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
@@ -45,19 +44,21 @@ public class PMSPipelineTemplateHelper {
         return NGRestUtils.getResponse(templateResourceClient.applyTemplatesOnGivenYaml(
             accountId, orgId, projectId, TemplateApplyRequestDTO.builder().originalEntityYaml(yaml).build()));
       } catch (InvalidRequestException e) {
-        throw new NGTemplateResolveException(e.getMessage(), USER,
-            new TemplateInputsErrorResponseDTO(
-                Status.ERROR, ErrorCode.TEMPLATE_EXCEPTION, e.getMessage(), "", "", new HashMap<>()));
+        if (e.getMetadata() instanceof TemplateInputsErrorMetadataDTO) {
+          throw new NGTemplateResolveException(
+              TEMPLATE_RESOLVE_EXCEPTION_MSG, USER, (TemplateInputsErrorMetadataDTO) e.getMetadata());
+        } else {
+          throw new NGTemplateResolveException(
+              TEMPLATE_RESOLVE_EXCEPTION_MSG, USER, new TemplateInputsErrorMetadataDTO("", new HashMap<>()));
+        }
       } catch (UnexpectedException e) {
         log.error("Error connecting to Template Service", e);
-        throw new NGTemplateResolveException("Exception in resolving template refs in given pipeline yaml.", USER,
-            new TemplateInputsErrorResponseDTO(Status.ERROR, ErrorCode.TEMPLATE_EXCEPTION,
-                "Exception while resolving template refs.", "", "", new HashMap<>()));
+        throw new NGTemplateResolveException(
+            TEMPLATE_RESOLVE_EXCEPTION_MSG, USER, new TemplateInputsErrorMetadataDTO("", new HashMap<>()));
       } catch (Exception e) {
         log.error("Unknown un-exception in resolving templates", e);
-        throw new NGTemplateResolveException("Exception in resolving template refs in given pipeline yaml.", USER,
-            new TemplateInputsErrorResponseDTO(Status.ERROR, ErrorCode.TEMPLATE_EXCEPTION,
-                "Exception while resolving template refs.", "", "", new HashMap<>()));
+        throw new NGTemplateResolveException(
+            TEMPLATE_RESOLVE_EXCEPTION_MSG, USER, new TemplateInputsErrorMetadataDTO("", new HashMap<>()));
       }
     }
     return TemplateMergeResponseDTO.builder().mergedPipelineYaml(yaml).build();

@@ -36,7 +36,7 @@ public class VersionInfoManager {
       }
     } catch (IOException exception) {
       log.error("Error reading version info from file: {}", VERSION_INFO_YAML);
-      throw new VersionInfoException(exception);
+      throw new VersionInfoException(String.format("Failed to parse yaml content %s", versionInfo), exception);
     }
     return versionInfo;
   }

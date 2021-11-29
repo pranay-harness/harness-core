@@ -1657,6 +1657,7 @@
             "SetFeatureFlagState",
             "SetOnVariation",
             "SetOffVariation",
+            "SetDefaultVariations",
             "AddRule",
             "UpdateRule",
             "AddTargetsToVariationTargetMap",
@@ -2105,6 +2106,52 @@
           "$ref": "#/definitions/Distribution"
         },
         "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetDefaultVariationsYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/SetDefaultVariationsYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SetDefaultVariations"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetDefaultVariationsYamlSpec": {
+      "type": "object",
+      "required": [
+        "off",
+        "on"
+      ],
+      "properties": {
+        "off": {
+          "type": "string"
+        },
+        "on": {
           "type": "string"
         }
       },
