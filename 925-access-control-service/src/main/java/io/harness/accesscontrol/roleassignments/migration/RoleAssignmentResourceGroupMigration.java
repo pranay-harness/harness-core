@@ -76,11 +76,11 @@ public class RoleAssignmentResourceGroupMigration implements NGMigration {
 
   private String getResourceGroupIdentifier(ScopeLevel scopeLevel) {
     if (HarnessScopeLevel.PROJECT.equals(scopeLevel)) {
-      return "_all_project_resources";
+      return "_all_project_level_resources";
     } else if (HarnessScopeLevel.ORGANIZATION.equals(scopeLevel)) {
-      return "_all_organization_resources";
+      return "_all_organization_level_resources";
     } else {
-      return "_all_account_resources";
+      return "_all_account_level_resources";
     }
   }
 }

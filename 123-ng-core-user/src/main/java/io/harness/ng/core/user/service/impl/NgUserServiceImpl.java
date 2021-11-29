@@ -120,8 +120,8 @@ public class NgUserServiceImpl implements NgUserService {
   private static final String ORG_ADMIN = "_organization_admin";
   private static final String PROJECT_ADMIN = "_project_admin";
   private static final String PROJECT_VIEWER = "_project_viewer";
-  private static final List<String> MANAGED_RESOURCE_GROUP_IDENTIFIERS = ImmutableList.of(
-      "_all_resources", "_all_account_resources", "_all_organization_resources", "_all_project_resources");
+  private static final List<String> MANAGED_RESOURCE_GROUP_IDENTIFIERS = ImmutableList.of("_all_resources",
+      "_all_account_level_resources", "_all_organization_level_resources", "_all_project_level_resources");
   private static final List<String> MANAGED_ROLE_IDENTIFIERS =
       ImmutableList.of(ACCOUNT_VIEWER, ORGANIZATION_VIEWER, PROJECT_VIEWER);
   public static final int DEFAULT_PAGE_SIZE = 10000;
@@ -629,11 +629,11 @@ public class NgUserServiceImpl implements NgUserService {
 
   private String getDefaultResourceGroupIdentifier(Scope scope) {
     if (isNotEmpty(scope.getProjectIdentifier())) {
-      return "_all_project_resources";
+      return "_all_project_level_resources";
     } else if (isNotEmpty(scope.getOrgIdentifier())) {
-      return "_all_organization_resources";
+      return "_all_organization_level_resources";
     } else {
-      return "_all_account_resources";
+      return "_all_account_level_resources";
     }
   }
 

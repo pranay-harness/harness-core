@@ -36,11 +36,11 @@ public class RoleAssignmentActionValidator implements HarnessActionValidator<Rol
   private static final String ORG_ADMIN = "_organization_admin";
   private static final String ACCOUNT_ADMIN = "_account_admin";
   private static final String RESOURCE_GROUP_IDENTIFIER = "_all_resources";
-  private static final String ALL_PROJECT_RESOURCES = "_all_project_resources";
-  private static final String ALL_ORGANIZATION_RESOURCES = "_all_organization_resources";
-  private static final String ALL_ACCOUNT_RESOURCES = "_all_account_resources";
-  private static final List<String> MANAGED_RESOURCE_GROUP_IDENTIFIERS = ImmutableList.of(
-      RESOURCE_GROUP_IDENTIFIER, ALL_ACCOUNT_RESOURCES, ALL_ORGANIZATION_RESOURCES, ALL_PROJECT_RESOURCES);
+  private static final String ALL_PROJECT_LEVEL_RESOURCES = "_all_project_level_resources";
+  private static final String ALL_ORGANIZATION_LEVEL_RESOURCES = "_all_organization_level_resources";
+  private static final String ALL_ACCOUNT_LEVEL_RESOURCES = "_all_account_level_resources";
+  private static final List<String> MANAGED_RESOURCE_GROUP_IDENTIFIERS = ImmutableList.of(RESOURCE_GROUP_IDENTIFIER,
+      ALL_ACCOUNT_LEVEL_RESOURCES, ALL_ORGANIZATION_LEVEL_RESOURCES, ALL_PROJECT_LEVEL_RESOURCES);
 
   @Inject
   public RoleAssignmentActionValidator(
@@ -66,19 +66,19 @@ public class RoleAssignmentActionValidator implements HarnessActionValidator<Rol
         && ACCOUNT_ADMIN.equals(roleAssignment.getRoleIdentifier())) {
       roleAssignmentFilter = builder.scopeFilter(roleAssignment.getScopeIdentifier())
                                  .roleFilter(Sets.newHashSet(ACCOUNT_ADMIN))
-                                 .resourceGroupFilter(Sets.newHashSet(ALL_ACCOUNT_RESOURCES))
+                                 .resourceGroupFilter(Sets.newHashSet(ALL_ACCOUNT_LEVEL_RESOURCES))
                                  .build();
     } else if (HarnessScopeLevel.ORGANIZATION.equals(scope.getLevel())
         && ORG_ADMIN.equals(roleAssignment.getRoleIdentifier())) {
       roleAssignmentFilter = builder.scopeFilter(roleAssignment.getScopeIdentifier())
                                  .roleFilter(Sets.newHashSet(ORG_ADMIN))
-                                 .resourceGroupFilter(Sets.newHashSet(ALL_ORGANIZATION_RESOURCES))
+                                 .resourceGroupFilter(Sets.newHashSet(ALL_ORGANIZATION_LEVEL_RESOURCES))
                                  .build();
     } else if (HarnessScopeLevel.PROJECT.equals(scope.getLevel())
         && PROJECT_ADMIN.equals(roleAssignment.getRoleIdentifier())) {
       roleAssignmentFilter = builder.scopeFilter(roleAssignment.getScopeIdentifier())
                                  .roleFilter(Sets.newHashSet(PROJECT_ADMIN))
-                                 .resourceGroupFilter(Sets.newHashSet(ALL_PROJECT_RESOURCES))
+                                 .resourceGroupFilter(Sets.newHashSet(ALL_PROJECT_LEVEL_RESOURCES))
                                  .build();
     } else {
       return ValidationResult.builder().valid(true).build();

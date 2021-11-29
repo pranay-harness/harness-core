@@ -418,11 +418,11 @@ public class RoleAssignmentResource {
 
   private String getDefaultResourceGroupIdentifier(HarnessScopeParams harnessScopeParams) {
     if (isNotEmpty(harnessScopeParams.getProjectIdentifier())) {
-      return "_all_project_resources";
+      return "_all_project_level_resources";
     } else if (isNotEmpty(harnessScopeParams.getOrgIdentifier())) {
-      return "_all_organization_resources";
+      return "_all_organization_level_resources";
     } else {
-      return "_all_account_resources";
+      return "_all_account_level_resources";
     }
   }
 
