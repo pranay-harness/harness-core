@@ -1,6 +1,7 @@
 package io.harness.ccm.views.graphql;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.ccm.views.graphql.QLCEViewTimeGroupType.DAY;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY_UN_NESTED;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_VALUE_UN_NESTED;
@@ -112,6 +113,13 @@ public class ViewsQueryBuilder {
   public SelectQuery getQuery(List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters,
       List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations,
       List<QLCEViewSortCriteria> sortCriteriaList, String cloudProviderTableName) {
+    return getQuery(
+        rules, filters, timeFilters, groupByList, aggregations, sortCriteriaList, cloudProviderTableName, 0);
+  }
+
+  public SelectQuery getQuery(List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters,
+      List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations,
+      List<QLCEViewSortCriteria> sortCriteriaList, String cloudProviderTableName, int timeOffsetInDays) {
     SelectQuery selectQuery = new SelectQuery();
     selectQuery.addCustomFromTable(cloudProviderTableName);
     List<QLCEViewFieldInput> groupByEntity = getGroupByEntity(groupByList);
@@ -162,7 +170,11 @@ public class ViewsQueryBuilder {
     }
 
     if (groupByTime != null) {
-      decorateQueryWithGroupByTime(selectQuery, groupByTime, isClusterTable);
+      if (timeOffsetInDays == 0) {
+        decorateQueryWithGroupByTime(selectQuery, groupByTime, isClusterTable);
+      } else {
+        decorateQueryWithGroupByTimeWithOffset(selectQuery, groupByTime, isClusterTable, timeOffsetInDays);
+      }
     }
 
     if (!aggregations.isEmpty()) {
@@ -903,6 +915,28 @@ public class ViewsQueryBuilder {
     selectQuery.addCustomOrdering(ViewsMetaDataFields.TIME_GRANULARITY.getFieldName(), OrderObject.Dir.ASCENDING);
   }
 
+  private void decorateQueryWithGroupByTimeWithOffset(SelectQuery selectQuery, QLCEViewTimeTruncGroupBy groupByTime,
+      boolean isTimeInEpochMillis, int timeOffsetInDays) {
+    if (isTimeInEpochMillis) {
+      selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
+          new TimeTruncatedExpression(new TimestampDiffExpression(new TimestampMillisExpression(new CustomSql(
+                                                                      ViewsMetaDataFields.START_TIME.getFieldName())),
+                                          timeOffsetInDays, DAY),
+              groupByTime.getResolution()),
+          ViewsMetaDataFields.TIME_GRANULARITY.getFieldName()));
+    } else {
+      selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
+          new TimeTruncatedExpression(
+              new TimestampDiffExpression(
+                  new CustomSql(ViewsMetaDataFields.START_TIME.getFieldName()), timeOffsetInDays, DAY),
+              groupByTime.getResolution()),
+          ViewsMetaDataFields.TIME_GRANULARITY.getFieldName()));
+    }
+
+    selectQuery.addCustomGroupings(ViewsMetaDataFields.TIME_GRANULARITY.getFieldName());
+    selectQuery.addCustomOrdering(ViewsMetaDataFields.TIME_GRANULARITY.getFieldName(), OrderObject.Dir.ASCENDING);
+  }
+
   protected List<QLCEViewFieldInput> getGroupByEntity(List<QLCEViewGroupBy> groupBy) {
     return groupBy != null ? groupBy.stream()
                                  .filter(g -> g.getEntityGroupBy() != null)
@@ -965,7 +999,7 @@ public class ViewsQueryBuilder {
 
   public QLCEViewTimeGroupType mapViewTimeGranularityToQLCEViewTimeGroupType(ViewTimeGranularity timeGranularity) {
     if (timeGranularity.equals(ViewTimeGranularity.DAY)) {
-      return QLCEViewTimeGroupType.DAY;
+      return DAY;
     } else if (timeGranularity.equals(ViewTimeGranularity.MONTH)) {
       return QLCEViewTimeGroupType.MONTH;
     }
