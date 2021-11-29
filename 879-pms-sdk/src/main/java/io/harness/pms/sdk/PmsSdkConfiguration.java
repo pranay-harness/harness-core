@@ -16,6 +16,7 @@ import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
 import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
+import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.steps.Step;
@@ -48,6 +49,7 @@ public class PmsSdkConfiguration {
   Class<? extends ExecutionSummaryModuleInfoProvider> executionSummaryModuleInfoProviderClass;
   @Builder.Default ThreadPoolConfig executionPoolConfig = ThreadPoolConfig.builder().build();
   @Builder.Default ThreadPoolConfig orchestrationEventPoolConfig = ThreadPoolConfig.builder().build();
+  Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers;
 
   @Default
   EventsFrameworkConfiguration eventsFrameworkConfiguration =
