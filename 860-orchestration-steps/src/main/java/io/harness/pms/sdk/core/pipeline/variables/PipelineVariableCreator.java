@@ -5,6 +5,7 @@ import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.variables.ChildrenVariableCreator;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationContext;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -108,7 +109,9 @@ public class PipelineVariableCreator extends ChildrenVariableCreator {
       Map<String, YamlField> stageYamlFieldMap = new HashMap<>();
       stageYamlFieldMap.put(stageYamlField.getNode().getUuid(), stageYamlField);
       responseMap.put(stageYamlField.getNode().getUuid(),
-          VariableCreationResponse.builder().dependencies(stageYamlFieldMap).build());
+          VariableCreationResponse.builder()
+              .dependencies(DependenciesUtils.toDependenciesProto(stageYamlFieldMap))
+              .build());
     }
   }
 }
