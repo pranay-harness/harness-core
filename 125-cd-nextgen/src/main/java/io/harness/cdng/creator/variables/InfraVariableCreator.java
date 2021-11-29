@@ -6,6 +6,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -46,7 +47,10 @@ public class InfraVariableCreator {
     if (envRefField != null) {
       VariableCreatorHelper.addFieldToPropertiesMap(envRefField, yamlPropertiesMap, YamlTypes.PIPELINE_INFRASTRUCTURE);
     }
-    return VariableCreationResponse.builder().yamlProperties(yamlPropertiesMap).dependencies(dependenciesMap).build();
+    return VariableCreationResponse.builder()
+        .yamlProperties(yamlPropertiesMap)
+        .dependencies(DependenciesUtils.toDependenciesProto(dependenciesMap))
+        .build();
   }
 
   private static Map<String, YamlField> addDependencyForProvisionerSteps(YamlField provisionerField) {

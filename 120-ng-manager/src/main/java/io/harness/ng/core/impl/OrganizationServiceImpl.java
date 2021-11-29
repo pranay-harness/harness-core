@@ -207,10 +207,16 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   private Organization saveOrganization(Organization organization) {
+    if (DEFAULT_ORG_IDENTIFIER.equalsIgnoreCase(organization.getIdentifier())) {
+      log.info("[AccountSetup]: Creating Default Organization");
+    }
     return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       Organization savedOrganization = organizationRepository.save(organization);
       outboxService.save(
           new OrganizationCreateEvent(organization.getAccountIdentifier(), OrganizationMapper.writeDto(organization)));
+      if (DEFAULT_ORG_IDENTIFIER.equalsIgnoreCase(organization.getIdentifier())) {
+        log.info("[AccountSetup]: Default Organization created Successfully");
+      }
       return savedOrganization;
     }));
   }
