@@ -179,6 +179,7 @@ public class K8BuildSetupUtils {
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.podDetails));
 
     NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
+    
     Infrastructure infrastructure = initializeStepInfo.getInfrastructure();
 
     if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
