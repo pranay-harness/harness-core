@@ -20,6 +20,7 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
+import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
@@ -50,6 +51,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 
 import com.google.inject.Inject;
@@ -129,6 +131,11 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     ServiceNowConfig config = getSnowConfig(serviceNowCreateUpdateParams.getSnowConnectorId(), accountId);
     renderExpressions(context, serviceNowCreateUpdateParams);
 
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String envId = (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
+        ? null
+        : workflowStandardParams.getEnv().getUuid();
+
     ServiceNowTaskParameters serviceNowTaskParameters;
     if (serviceNowCreateUpdateParams.getAction() == ServiceNowAction.IMPORT_SET) {
       if (!isJSONValid(serviceNowCreateUpdateParams.getJsonBody())) {
@@ -166,6 +173,8 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
             .accountId(accountId)
             .waitId(activityId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.fetchRequiredApp().getAppId())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
             .description(serviceNowTaskParameters.getAction() != null
                     ? serviceNowCreateUpdateParams.getAction().getDisplayName() + " ServiceNow ticket"
                     : "ServiceNow task")
