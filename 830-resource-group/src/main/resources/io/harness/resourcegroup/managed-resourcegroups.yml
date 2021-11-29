@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: resourceGroupsConfiguration
-version: 1
+version: 2
 resourceGroups:
   - identifier: _all_resources
     name: All Resources
@@ -9,4 +9,22 @@ resourceGroups:
     allowedScopeLevels:
       - account
       - organization
+      - project
+  - identifier: _all_account_level_resources
+    name: All Account Level Resources
+    fullScopeSelected: true
+    description: All the resources at this account scope are included in this resource group.
+    allowedScopeLevels:
+      - account
+  - identifier: _all_organization_level_resources
+    name: All Organization Level Resources
+    fullScopeSelected: true
+    description: All the resources at this organization scope are included in this resource group.
+    allowedScopeLevels:
+      - organization
+  - identifier: _all_project_level_resources
+    name: All Project Level Resources
+    fullScopeSelected: true
+    description: All the resources at this project scope are included in this resource group.
+    allowedScopeLevels:
       - project
