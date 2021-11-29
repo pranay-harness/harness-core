@@ -521,8 +521,8 @@ public class NextGenModule extends AbstractModule {
         appConfig.getEnforcementClientConfiguration()));
     install(new AuthenticationSettingsModule(
         this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
-    install(new CENextGenResourceClientModule(this.appConfig.getCeNextGenClientConfig(),
-        this.appConfig.getNextGenConfig().getCeNextGenServiceSecret(), CE_NEXT_GEN.getServiceId()));
+    //install(new CENextGenResourceClientModule(this.appConfig.getCeNextGenClientConfig(),
+    //    this.appConfig.getNextGenConfig().getCeNextGenServiceSecret(), CE_NEXT_GEN.getServiceId()));
     install(ConnectorModule.getInstance(appConfig.getNextGenConfig(), appConfig.getCeNextGenClientConfig()));
     install(new ProviderModule() {
       @Provides
