@@ -58,4 +58,6 @@ public interface DelegateSelectionLogsService {
   void logNoEligibleDelegatesToExecuteTask(BatchDelegateSelectionLog batch, String accountId);
 
   void logNoEligibleDelegatesAvailableToExecuteTask(BatchDelegateSelectionLog batch, String accountId);
+
+  void logEligibleDelegatesToExecuteTask(BatchDelegateSelectionLog batch, Set<String> delegateIds, String accountId);
 }

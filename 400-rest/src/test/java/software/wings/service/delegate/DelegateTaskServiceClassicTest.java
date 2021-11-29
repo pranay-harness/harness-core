@@ -275,7 +275,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     String delegateId = generateUuid();
     when(assignDelegateService.getEligibleDelegatesToExecuteTask(
              any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
-        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+        .thenReturn(new ArrayList<>(singletonList(delegateId)));
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
 
     List<DelegateTaskEvent> delegateTaskEvents =
@@ -995,6 +995,92 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     delegateTaskServiceClassic.queueTask(delegateTask);
     assertThat(persistence.get(DelegateTask.class, delegateTask.getUuid())).isNotNull();
     assertThat(persistence.get(DelegateTask.class, delegateTask.getUuid()).getStatus()).isEqualTo(QUEUED);
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testDelegateQueuedEventForTaskPoll_async() {
+    DelegateTask delegateTask = getDelegateTask();
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    delegateTaskServiceClassic.queueTask(delegateTask);
+    List<DelegateTaskEvent> delegateTaskEvents =
+        delegateTaskServiceClassic.getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, false);
+    assertThat(delegateTaskEvents).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testDelegateQueuedEventForTaskPollWhenNoEligibleDelegates_async() {
+    DelegateTask delegateTask = getDelegateTask();
+    delegateTaskServiceClassic.queueTask(delegateTask);
+    List<DelegateTaskEvent> delegateTaskEvents =
+        delegateTaskServiceClassic.getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, false);
+    assertThat(delegateTaskEvents).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testDelegateQueuedEventForTaskPollWhenNonEligibleDelegateAcquire_async() {
+    DelegateTask delegateTask = getDelegateTask();
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    delegateTaskServiceClassic.queueTask(delegateTask);
+    List<DelegateTaskEvent> delegateTaskEvents =
+        delegateTaskServiceClassic.getDelegateTaskEvents(ACCOUNT_ID, "delegateid2", false);
+    assertThat(delegateTaskEvents).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testDelegateQueuedEventForTaskPoll_sync() {
+    DelegateTask delegateTask = getDelegateTask();
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    delegateTaskServiceClassic.executeTask(delegateTask);
+    List<DelegateTaskEvent> delegateTaskEvents =
+        delegateTaskServiceClassic.getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, true);
+    assertThat(delegateTaskEvents).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testDelegateQueuedEventForTaskPollWhenNoEligibleDelegates_sync() {
+    DelegateTask delegateTask = getDelegateTask();
+    delegateTaskServiceClassic.queueTask(delegateTask);
+    List<DelegateTaskEvent> delegateTaskEvents =
+        delegateTaskServiceClassic.getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, true);
+    assertThat(delegateTaskEvents).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testDelegateQueuedEventForTaskPollWhenNonEligibleDelegateAcquire_sync() {
+    DelegateTask delegateTask = getDelegateTask();
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    delegateTaskServiceClassic.queueTask(delegateTask);
+    List<DelegateTaskEvent> delegateTaskEvents =
+        delegateTaskServiceClassic.getDelegateTaskEvents(ACCOUNT_ID, "delegateid2", true);
+    assertThat(delegateTaskEvents).isEmpty();
   }
 
   private CapabilityRequirement buildCapabilityRequirement() {

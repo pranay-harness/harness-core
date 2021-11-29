@@ -80,6 +80,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String REJECTED = "Rejected";
   private static final String SELECTED = "Selected";
   private static final String ACCEPTED = "Accepted";
+  private static final String INFO = "Info";
 
   private static final String CAN_ASSIGN_GROUP_ID = "CAN_ASSIGN_GROUP_ID";
   private static final String NO_INCLUDE_SCOPE_MATCHED_GROUP_ID = "NO_INCLUDE_SCOPE_MATCHED_GROUP_ID";
@@ -95,6 +96,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String TARGETED_OWNER_NOT_MATCHED_GROUP_ID = "TARGETED_OWNER_MATCHED_GROUP_ID";
   private static final String NO_ELIGIBLE_DELEGATES_GROUP_ID = "NO_ELIGIBLE_DELEGATES_GROUP_ID";
   private static final String NO_ELIGIBLE_DELEGATES_AVAILABLE_GROUP_ID = "NO_ELIGIBLE_DELEGATES_AVAILABLE_GROUP_ID";
+  private static final String ELIGIBLE_DELEGATES_GROUP_ID = "ELIGIBLE_DELEGATES_GROUP_ID";
 
   private final LoadingCache<ImmutablePair<String, String>, String> setupAbstractionsCache =
       CacheBuilder.newBuilder()
@@ -199,6 +201,13 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
       @Nullable final BatchDelegateSelectionLog batch, final String accountId) {
     final String message = "No eligible delegates in account available to execute task";
     logBatch(batch, accountId, Sets.newHashSet(), message, REJECTED, NO_ELIGIBLE_DELEGATES_AVAILABLE_GROUP_ID);
+  }
+
+  @Override
+  public void logEligibleDelegatesToExecuteTask(
+      BatchDelegateSelectionLog batch, final Set<String> delegateIds, String accountId) {
+    final String message = "Delegates eligible to execute task";
+    logBatch(batch, accountId, delegateIds, message, INFO, ELIGIBLE_DELEGATES_GROUP_ID);
   }
 
   @Override

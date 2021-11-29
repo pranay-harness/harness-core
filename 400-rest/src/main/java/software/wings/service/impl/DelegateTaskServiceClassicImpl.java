@@ -16,7 +16,6 @@ import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuild
 import static io.harness.delegate.beans.NgSetupFields.NG;
 import static io.harness.delegate.beans.executioncapability.ExecutionCapability.EvaluationMode;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
-import static io.harness.delegate.task.TaskFailureReason.NO_ELIGIBLE_DELEGATE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -59,8 +58,6 @@ import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.NoAvailableDelegatesException;
-import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskGroup;
@@ -151,6 +148,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -413,9 +411,13 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         if (eligibleListOfDelegates.isEmpty()) {
           log.info("No eligible delegates to execute {}", task.getUuid());
           delegateSelectionLogsService.logNoEligibleDelegatesToExecuteTask(batch, task.getAccountId());
-          handleTaskFailureResponse(task, NO_ELIGIBLE_DELEGATE.toString());
+          handleTaskProcessFailed(task, "No eligible delegates to execute task");
+          delegateSelectionLogsService.save(batch);
           return;
         }
+
+        delegateSelectionLogsService.logEligibleDelegatesToExecuteTask(
+            batch, Sets.newHashSet(eligibleListOfDelegates), task.getAccountId());
         // save eligible delegate ids as part of task (will be used for rebroadcasting)
         task.setEligibleToExecuteDelegateIds(new LinkedList<>(eligibleListOfDelegates));
 
@@ -426,10 +428,12 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         if (!task.getData().isAsync() && connectedEligibleDelegates.isEmpty()) {
           log.info("No Connected eligible delegates to execute sync task {}", task.getUuid());
           if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
-            throw new NoInstalledDelegatesException();
+            handleTaskProcessFailed(task, "No installed delegates to execute task");
           } else {
-            throw new NoAvailableDelegatesException();
+            handleTaskProcessFailed(task, "No eligible active delegates to execute task");
           }
+          delegateSelectionLogsService.save(batch);
+          return;
         }
 
         checkTaskRankRateLimit(task.getRank());
@@ -461,6 +465,16 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                                         .build();
     log.info("Task {} marked as failed ", task.getUuid());
     delegateTaskService.handleResponse(task, taskQuery, response);
+  }
+
+  private void handleTaskProcessFailed(DelegateTask task, String errorMessage) {
+    DelegateTaskResponse response = DelegateTaskResponse.builder()
+                                        .response(ErrorNotifyResponseData.builder().errorMessage(errorMessage).build())
+                                        .responseCode(ResponseCode.FAILED)
+                                        .accountId(task.getAccountId())
+                                        .build();
+    log.info("Task {} failure response ", task.getUuid());
+    delegateTaskService.handleResponse(task, null, response);
   }
 
   @VisibleForTesting
@@ -1272,6 +1286,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
             .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
             .filter(DelegateTaskKeys.status, QUEUED)
             .filter(DelegateTaskKeys.data_async, !sync)
+            .field(DelegateTaskKeys.eligibleToExecuteDelegateIds)
+            .in(Collections.singletonList(delegateId))
             .field(DelegateTaskKeys.delegateId)
             .doesNotExist()
             .field(DelegateTaskKeys.expiry)
