@@ -4,12 +4,8 @@ import static io.harness.cvng.core.services.CVNextGenConstants.ACTIVITY_RESOURCE
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.ExposeInternalException;
-import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
@@ -18,7 +14,6 @@ import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
-import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
 import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.ng.beans.PageResponse;
@@ -30,7 +25,6 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -52,71 +46,11 @@ public class ActivityResource {
   @Inject private ActivityService activityService;
 
   @GET
-  @Path("recent-deployment-activity-verifications")
-  @ApiOperation(
-      value = "get recent deployment activity verification", nickname = "getRecentDeploymentActivityVerifications")
-  public RestResponse<List<DeploymentActivityVerificationResultDTO>>
-  getRecentDeploymentActivityVerifications(@NotNull @QueryParam("accountId") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
-    return new RestResponse<>(
-        activityService.getRecentDeploymentActivityVerifications(accountId, orgIdentifier, projectIdentifier));
-  }
-
-  @GET
-  @Path("deployment-activity-verifications/{deploymentTag}")
-  @ApiOperation(
-      value = "get deployment activities for given build tag", nickname = "getDeploymentActivityVerificationsByTag")
-  public RestResponse<DeploymentActivityResultDTO>
-  getDeploymentActivityVerificationsByTag(@NotNull @QueryParam("accountId") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
-      @NotNull @PathParam("deploymentTag") String deploymentTag) {
-    return new RestResponse(activityService.getDeploymentActivityVerificationsByTag(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deploymentTag));
-  }
-
-  @GET
   @Path("/{activityId}/deployment-activity-summary")
   @ApiOperation(value = "get summary of deployment activity", nickname = "getDeploymentActivitySummary")
   public RestResponse<DeploymentActivitySummaryDTO> getDeploymentSummary(
       @NotNull @QueryParam("accountId") String accountId, @NotNull @PathParam("activityId") String activityId) {
     return new RestResponse(activityService.getDeploymentSummary(activityId));
-  }
-
-  @GET
-  @Path("deployment-activity-verifications-popover-summary/{deploymentTag}")
-  @ApiOperation(value = "get deployment activities summary for given build tag",
-      nickname = "getDeploymentActivityVerificationsPopoverSummaryByTag")
-  public RestResponse<DeploymentActivityPopoverResultDTO>
-  getDeploymentActivityVerificationsPopoverSummary(@NotNull @QueryParam("accountId") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
-      @NotNull @PathParam("deploymentTag") String deploymentTag) {
-    return new RestResponse(activityService.getDeploymentActivityVerificationsPopoverSummary(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deploymentTag));
-  }
-
-  @GET
-  @Path("list")
-  @ApiOperation(value = "list all activities between a given time range for an environment, project, org",
-      nickname = "listActivitiesForDashboard")
-  public RestResponse<List<ActivityDashboardDTO>>
-  listActivitiesForDashboard(@NotNull @QueryParam("accountId") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @QueryParam("environmentIdentifier") String environmentIdentifier,
-      @QueryParam("serviceIdentifier") String serviceIdentifier, @NotNull @QueryParam("startTime") Long startTime,
-      @NotNull @QueryParam("endTime") Long endTime) {
-    ProjectParams projectParams = ProjectParams.builder()
-                                      .accountIdentifier(accountId)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .build();
-    return new RestResponse(activityService.listActivitiesInTimeRange(projectParams, serviceIdentifier,
-        environmentIdentifier, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
 
   @GET

@@ -30,6 +30,7 @@ const (
 	classNameParam    = "class"
 	limitParam        = "limit"
 	shaParam          = "sha"
+	commitLinkParam   = "commitLink"
 )
 
 // writeBadRequest writes the json-encoded error message

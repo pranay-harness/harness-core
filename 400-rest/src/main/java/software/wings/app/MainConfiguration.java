@@ -38,6 +38,7 @@ import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.secret.SecretsConfiguration;
 import io.harness.stream.AtmosphereBroadcaster;
+import io.harness.swagger.SwaggerBundleConfigurationFactory;
 import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ThreadPoolConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -80,13 +81,16 @@ import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import javax.ws.rs.Path;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.reflections.Reflections;
 
 /**
  * Used to load all the application configuration.
@@ -244,12 +248,20 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
    * @return the swagger bundle configuration
    */
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
-    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
+    Collection<Class<?>> resourceClasses = getResourceClasses();
+    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration =
+        SwaggerBundleConfigurationFactory.buildSwaggerBundleConfiguration(resourceClasses);
     defaultSwaggerBundleConfiguration.setResourcePackage(
         "software.wings.resources,software.wings.utils,io.harness.cvng.core.resources,io.harness.delegate.resources");
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost("{{host}}");
     return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerBundleConfiguration);
+  }
+
+  public static Collection<Class<?>> getResourceClasses() {
+    Reflections reflections = new Reflections("software.wings.resources", "software.wings.utils",
+        "io.harness.cvng.core.resources", "io.harness.delegate.resources");
+    return reflections.getTypesAnnotatedWith(Path.class);
   }
 
   /**

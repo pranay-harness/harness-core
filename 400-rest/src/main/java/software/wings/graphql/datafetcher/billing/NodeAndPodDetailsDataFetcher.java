@@ -100,6 +100,12 @@ public class NodeAndPodDetailsDataFetcher
   protected QLNodeAndPodDetailsTableData getData(@NotNull String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMGroupBy> groupByList,
       List<QLBillingSortCriteria> sortCriteria, Integer limit, Integer offset) {
+    return getNodeAndPodData(accountId, filters, aggregateFunction, groupByList, sortCriteria, limit, offset, false);
+  }
+
+  public QLNodeAndPodDetailsTableData getNodeAndPodData(@NotNull String accountId, List<QLBillingDataFilter> filters,
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMGroupBy> groupByList,
+      List<QLBillingSortCriteria> sortCriteria, Integer limit, Integer offset, boolean skipRoundOff) {
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
     QLNodeAndPodDetailsTableData costData = null;
@@ -120,7 +126,7 @@ public class NodeAndPodDetailsDataFetcher
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
-        costData = generateCostData(queryData, resultSet);
+        costData = generateCostData(queryData, resultSet, skipRoundOff);
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
@@ -144,8 +150,8 @@ public class NodeAndPodDetailsDataFetcher
     return null;
   }
 
-  private QLNodeAndPodDetailsTableData generateCostData(BillingDataQueryMetadata queryData, ResultSet resultSet)
-      throws SQLException {
+  private QLNodeAndPodDetailsTableData generateCostData(
+      BillingDataQueryMetadata queryData, ResultSet resultSet, boolean skipRoundOff) throws SQLException {
     List<QLNodeAndPodDetailsTableRow> qlNodeAndPodDetailsTableRows = new ArrayList<>();
     List<QLPVDetailsTableRow> qlpvDetailsTableRows = new ArrayList<>();
 
@@ -184,19 +190,19 @@ public class NodeAndPodDetailsDataFetcher
             entityId = resultSet.getString(field.getFieldName());
             break;
           case SUM:
-            totalCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            totalCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case IDLECOST:
-            idleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            idleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case UNALLOCATEDCOST:
-            unallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            unallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case SYSTEMCOST:
-            systemCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            systemCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case NETWORKCOST:
-            networkCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            networkCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case CLUSTERNAME:
             clusterName = resultSet.getString(field.getFieldName());
@@ -215,7 +221,7 @@ public class NodeAndPodDetailsDataFetcher
             = resultSet.getString(field.getFieldName());
             break;
           case STORAGECOST:
-            storageCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            storageCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case STORAGEUTILIZATIONVALUE:
             storageUsed = resultSet.getDouble(field.getFieldName());
@@ -224,7 +230,7 @@ public class NodeAndPodDetailsDataFetcher
             storageRequested = resultSet.getDouble(field.getFieldName());
             break;
           case STORAGEACTUALIDLECOST:
-            storageIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            storageIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case WORKLOADNAME:
             workloadName = resultSet.getString(field.getFieldName());
@@ -236,25 +242,25 @@ public class NodeAndPodDetailsDataFetcher
             cloudProviderName = resultSet.getString(field.getFieldName());
             break;
           case MEMORYBILLINGAMOUNT:
-            memoryBillingAmount = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            memoryBillingAmount = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case CPUBILLINGAMOUNT:
-            cpuBillingAmount = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            cpuBillingAmount = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case STORAGEUNALLOCATEDCOST:
-            storageUnallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            storageUnallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case MEMORYUNALLOCATEDCOST:
-            memoryUnallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            memoryUnallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case CPUUNALLOCATEDCOST:
-            cpuUnallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            cpuUnallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case MEMORYIDLECOST:
-            memoryIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            memoryIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           case CPUIDLECOST:
-            cpuIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            cpuIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet, skipRoundOff);
             break;
           default:
             break;

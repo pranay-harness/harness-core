@@ -41,6 +41,7 @@ import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.TaskFailureReason;
 import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
@@ -160,17 +161,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     Delegate delegate = delegateCache.get(task.getAccountId(), delegateId, false);
     if (delegate == null) {
       return false;
-    }
-
-    // Applicable only in case of targeting delegate for the purpose of delegate profile script execution
-    if (isNotBlank(task.getMustExecuteOnDelegateId())) {
-      if (delegateId.equals(task.getMustExecuteOnDelegateId())) {
-        delegateSelectionLogsService.logMustExecuteOnDelegateMatched(batch, task.getAccountId(), delegateId);
-        return true;
-      } else {
-        delegateSelectionLogsService.logMustExecuteOnDelegateNotMatched(batch, task.getAccountId(), delegateId);
-        return false;
-      }
     }
 
     boolean canAssignCgNg = canAssignCgNg(delegate, task.getSetupAbstractions());
@@ -514,14 +504,16 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
       } else {
         if (isNotBlank(appId) && isNotBlank(envId)) {
-          Environment environment = environmentService.get(appId, envId, false);
-          if (environment == null) {
-            log.info("Environment {} referenced by scope {} does not exist.", envId, scope.getName());
+          try {
+            Environment environment = environmentService.get(appId, envId, false);
+            scopeMatchResult =
+                environment != null && scope.getEnvironmentTypes().contains(environment.getEnvironmentType())
+                ? ScopeMatchResult.SCOPE_MATCHED
+                : ScopeMatchResult.SCOPE_NOT_MATCHED;
+          } catch (InvalidRequestException ex) {
+            log.error("Environment {} referenced by scope {} does not exist.", envId, scope.getName());
+            throw ex;
           }
-          scopeMatchResult =
-              environment != null && scope.getEnvironmentTypes().contains(environment.getEnvironmentType())
-              ? ScopeMatchResult.SCOPE_MATCHED
-              : ScopeMatchResult.SCOPE_NOT_MATCHED;
         } else {
           scopeMatchResult = ScopeMatchResult.SCOPE_NOT_MATCHED;
         }

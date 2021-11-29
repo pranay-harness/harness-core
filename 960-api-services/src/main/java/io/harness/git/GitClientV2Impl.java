@@ -139,7 +139,7 @@ public class GitClientV2Impl implements GitClientV2 {
    * @param request GitBaseRequest
    */
   @Override
-  public void ensureRepoLocallyClonedAndUpdated(GitBaseRequest request) {
+  public synchronized void ensureRepoLocallyClonedAndUpdated(GitBaseRequest request) {
     notNullCheck("Repo update request cannot be null", request);
     cleanup(request);
     File repoDir = new File(gitClientHelper.getRepoDirectory(request));

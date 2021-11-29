@@ -2,6 +2,7 @@ package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
@@ -282,7 +283,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   public void markOverriddenErrors(String accountId, String repoUrl, String branchName, Set<String> filePaths) {
     Criteria criteria = createActiveErrorsFilterCriteria(accountId, repoUrl, branchName, new ArrayList<>(filePaths));
     Update update = update(GitSyncErrorKeys.status, GitSyncErrorStatus.OVERRIDDEN);
-    gitSyncErrorRepository.updateGitError(criteria, update);
+    gitSyncErrorRepository.updateError(criteria, update);
   }
 
   @Override
@@ -291,7 +292,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     Criteria criteria = createActiveErrorsFilterCriteria(accountId, repoUrl, branchName, new ArrayList<>(filePaths));
     Update update =
         update(GitSyncErrorKeys.status, GitSyncErrorStatus.RESOLVED).set(GitSyncErrorKeys.resolvedByCommitId, commitId);
-    gitSyncErrorRepository.updateGitError(criteria, update);
+    gitSyncErrorRepository.updateError(criteria, update);
   }
 
   private Criteria createActiveErrorsFilterCriteria(
@@ -329,7 +330,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     Criteria criteria =
         Criteria.where(GitSyncErrorKeys.createdAt).lte(OffsetDateTime.now().minusDays(30).toInstant().toEpochMilli());
     Update update = update(GitSyncErrorKeys.status, GitSyncErrorStatus.EXPIRED);
-    gitSyncErrorRepository.updateGitError(criteria, update);
+    gitSyncErrorRepository.updateError(criteria, update);
   }
 
   @Override
@@ -339,21 +340,56 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   @Override
   public void recordConnectivityError(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      GitSyncErrorType gitSyncErrorType, String repoUrl, String branch, String errorMessage) {
-    GitSyncError gitSyncError = GitSyncError.builder()
-                                    .accountIdentifier(accountIdentifier)
-                                    .errorType(gitSyncErrorType)
-                                    .repoUrl(repoUrl)
-                                    .branchName(branch)
-                                    .failureReason(errorMessage)
-                                    .status(GitSyncErrorStatus.ACTIVE)
-                                    .additionalErrorDetails(HarnessToGitErrorDetails.builder()
-                                                                .orgIdentifier(orgIdentifier)
-                                                                .projectIdentifier(projectIdentifier)
-                                                                .build())
-                                    .createdAt(System.currentTimeMillis())
-                                    .build();
-    save(gitSyncError);
+      String repoUrl, String branch, String errorMessage) {
+    if (isEmpty(orgIdentifier)) {
+      List<YamlGitConfigDTO> yamlGitConfigDTOList = yamlGitConfigService.getByRepo(repoUrl);
+      yamlGitConfigDTOList.forEach(yamlGitConfigDTO
+          -> recordConnectivityErrorInternal(accountIdentifier, yamlGitConfigDTO.getOrganizationIdentifier(),
+              yamlGitConfigDTO.getProjectIdentifier(), repoUrl, branch, errorMessage));
+    } else {
+      recordConnectivityErrorInternal(
+          accountIdentifier, orgIdentifier, projectIdentifier, repoUrl, branch, errorMessage);
+    }
+  }
+
+  private void recordConnectivityErrorInternal(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String repoUrl, String branch, String errorMessage) {
+    Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(GitSyncErrorKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(GitSyncErrorKeys.projectIdentifier)
+                            .is(projectIdentifier)
+                            .and(GitSyncErrorKeys.errorType)
+                            .is(GitSyncErrorType.CONNECTIVITY_ISSUE)
+                            .and(GitSyncErrorKeys.repoUrl)
+                            .is(repoUrl)
+                            .and(GitSyncErrorKeys.branchName)
+                            .is(branch)
+                            .and(GitSyncErrorKeys.status)
+                            .is(GitSyncErrorStatus.ACTIVE);
+    GitSyncError gitSyncError = gitSyncErrorRepository.find(criteria);
+    if (gitSyncError == null) {
+      GitSyncError error = GitSyncError.builder()
+                               .accountIdentifier(accountIdentifier)
+                               .errorType(GitSyncErrorType.CONNECTIVITY_ISSUE)
+                               .repoUrl(repoUrl)
+                               .branchName(branch)
+                               .failureReason(errorMessage)
+                               .status(GitSyncErrorStatus.ACTIVE)
+                               .additionalErrorDetails(HarnessToGitErrorDetails.builder()
+                                                           .orgIdentifier(orgIdentifier)
+                                                           .projectIdentifier(projectIdentifier)
+                                                           .build())
+                               .createdAt(System.currentTimeMillis())
+                               .build();
+      save(error);
+    } else {
+      Update update = update(GitSyncErrorKeys.failureReason, errorMessage)
+                          .set(GitSyncErrorKeys.createdAt, System.currentTimeMillis())
+                          .set(GitSyncErrorKeys.lastUpdatedAt, System.currentTimeMillis());
+      gitSyncErrorRepository.upsert(criteria, update);
+    }
   }
 
   @Override

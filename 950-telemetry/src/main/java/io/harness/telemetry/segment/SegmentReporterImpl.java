@@ -1,15 +1,12 @@
 package io.harness.telemetry.segment;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.security.SecurityContextBuilder;
-import io.harness.security.dto.Principal;
-import io.harness.security.dto.UserPrincipal;
 import io.harness.telemetry.Category;
 import io.harness.telemetry.Destination;
+import io.harness.telemetry.TelemetryOption;
 import io.harness.telemetry.TelemetryReporter;
+import io.harness.telemetry.utils.TelemetryDataUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -34,27 +31,22 @@ public class SegmentReporterImpl implements TelemetryReporter {
   private static final String CATEGORY_KEY = "category";
 
   @Override
-  public void sendTrackEvent(
-      String eventName, HashMap<String, Object> properties, Map<Destination, Boolean> destinations, String category) {
-    if (!segmentSender.isEnabled()) {
-      return;
-    }
-    String identity = readIdentityFromPrincipal();
-    String accountId = readAccountIdFromPrincipal();
-    sendTrackEvent(eventName, identity, accountId, properties, destinations, category);
+  public void sendTrackEvent(String eventName, HashMap<String, Object> properties,
+      Map<Destination, Boolean> destinations, String category, TelemetryOption... telemetryOption) {
+    sendTrackEvent(eventName, null, null, properties, destinations, category, telemetryOption);
   }
 
   @Override
   public void sendTrackEvent(String eventName, String identity, String accountId, HashMap<String, Object> properties,
-      Map<Destination, Boolean> destinations, String category) {
+      Map<Destination, Boolean> destinations, String category, TelemetryOption... telemetryOption) {
     if (!segmentSender.isEnabled()) {
       return;
     }
     if (identity == null) {
-      identity = readIdentityFromPrincipal();
+      identity = TelemetryDataUtils.readIdentityFromPrincipal();
     }
     if (accountId == null) {
-      accountId = readAccountIdFromPrincipal();
+      accountId = TelemetryDataUtils.readAccountIdFromPrincipal();
     }
     if (category == null) {
       category = Category.GLOBAL;
@@ -82,8 +74,8 @@ public class SegmentReporterImpl implements TelemetryReporter {
   }
 
   @Override
-  public void sendIdentifyEvent(
-      String identity, HashMap<String, Object> properties, Map<Destination, Boolean> destinations) {
+  public void sendIdentifyEvent(String identity, HashMap<String, Object> properties,
+      Map<Destination, Boolean> destinations, TelemetryOption... telemetryOption) {
     if (!segmentSender.isEnabled()) {
       return;
     }
@@ -104,32 +96,25 @@ public class SegmentReporterImpl implements TelemetryReporter {
   }
 
   @Override
-  public void sendGroupEvent(
-      String accountId, HashMap<String, Object> properties, Map<Destination, Boolean> destinations) {
-    if (!segmentSender.isEnabled()) {
-      return;
-    }
-    String identity = readIdentityFromPrincipal();
-    sendGroupEvent(accountId, identity, properties, destinations);
-  }
-
-  @Override
-  public void sendGroupEvent(
-      String accountId, String identity, HashMap<String, Object> properties, Map<Destination, Boolean> destinations) {
-    if (!segmentSender.isEnabled()) {
-      return;
-    }
-    sendGroupEvent(accountId, identity, properties, destinations, null);
+  public void sendGroupEvent(String accountId, HashMap<String, Object> properties,
+      Map<Destination, Boolean> destinations, TelemetryOption... telemetryOption) {
+    sendGroupEvent(accountId, null, properties, destinations, telemetryOption);
   }
 
   @Override
   public void sendGroupEvent(String accountId, String identity, HashMap<String, Object> properties,
-      Map<Destination, Boolean> destinations, Date timestamp) {
+      Map<Destination, Boolean> destinations, TelemetryOption... telemetryOption) {
+    sendGroupEvent(accountId, identity, properties, destinations, null, telemetryOption);
+  }
+
+  @Override
+  public void sendGroupEvent(String accountId, String identity, HashMap<String, Object> properties,
+      Map<Destination, Boolean> destinations, Date timestamp, TelemetryOption... telemetryOption) {
     if (!segmentSender.isEnabled()) {
       return;
     }
     if (identity == null) {
-      identity = readIdentityFromPrincipal();
+      identity = TelemetryDataUtils.readIdentityFromPrincipal();
     }
     try {
       GroupMessage.Builder groupMessageBuilder = GroupMessage.builder(accountId).userId(identity);
@@ -153,50 +138,5 @@ public class SegmentReporterImpl implements TelemetryReporter {
   @Override
   public void flush() {
     segmentSender.flushDataInQueue();
-  }
-
-  private String readIdentityFromPrincipal() {
-    Principal principal = SecurityContextBuilder.getPrincipal();
-    String identity = null;
-    if (principal != null) {
-      switch (principal.getType()) {
-        case USER:
-          UserPrincipal userPrincipal = (UserPrincipal) principal;
-          identity = userPrincipal.getEmail();
-          break;
-        case API_KEY:
-        case SERVICE:
-          identity = principal.getName();
-          break;
-        default:
-          log.warn("Unknown principal type from SecurityContextBuilder when reading identity");
-      }
-    }
-    if (isEmpty(identity)) {
-      log.debug("Failed to read identity from principal, use system user instead");
-      // TODO add "-{accountId}" after "system" when accountId is provided in principal
-      identity = "system";
-    }
-    return identity;
-  }
-
-  private String readAccountIdFromPrincipal() {
-    Principal principal = SecurityContextBuilder.getPrincipal();
-    String accountId = "unknown accountId";
-    if (principal != null) {
-      switch (principal.getType()) {
-        case USER:
-          UserPrincipal userPrincipal = (UserPrincipal) principal;
-          accountId = userPrincipal.getAccountId();
-          break;
-        case API_KEY:
-        case SERVICE:
-          // TODO: accountId should be provided in principal
-          break;
-        default:
-          log.warn("Unknown principal type from SecurityContextBuilder when reading accountId");
-      }
-    }
-    return accountId;
   }
 }

@@ -37,6 +37,7 @@ import io.harness.steps.cf.AddTargetsToVariationTargetMapYaml.AddTargetsToVariat
 import io.harness.steps.cf.PatchInstruction.Type;
 import io.harness.steps.cf.RemoveSegmentToVariationTargetMapYaml.RemoveSegmentToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.RemoveTargetsToVariationTargetMapYaml.RemoveTargetsToVariationTargetMapYamlSpec;
+import io.harness.steps.cf.SetDefaultVariationsYaml.SetDefaultVariationsYamlSpec;
 import io.harness.steps.cf.SetFeatureFlagStateYaml.SetFeatureFlagStateYamlSpec;
 import io.harness.steps.cf.SetOffVariationYaml.SetOffVariationYamlSpec;
 import io.harness.steps.cf.SetOnVariationYaml.SetOnVariationYamlSpec;
@@ -45,6 +46,7 @@ import io.harness.steps.cf.UpdateRuleYaml.UpdateRuleYamlSpec;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import io.github.resilience4j.core.StringUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -132,6 +134,25 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
               format("setting Off variation for flag to %s", spec.getVariation().getValue()), LogLevel.INFO);
         }
 
+        if (patchInstruction.getType().equals(Type.SET_DEFAULT_VARIATIONS)) {
+          SetDefaultVariationsYamlSpec spec = ((SetDefaultVariationsYaml) patchInstruction).getSpec();
+          String on = spec.getOn().getValue();
+          if (StringUtils.isNotEmpty(on)) {
+            String logStr = format("setting On variation for flag to %s", on);
+            log.debug(logStr);
+            instructions.add(cfApi.setOnVariation(on));
+            ngManagerLogCallback.saveExecutionLog(logStr, LogLevel.INFO);
+          }
+
+          String off = spec.getOff().getValue();
+          if (StringUtils.isNotEmpty(off)) {
+            String logStr = format("setting Off variation for flag to %s", on);
+            log.debug(logStr);
+            instructions.add(cfApi.setOffVariation(off));
+            ngManagerLogCallback.saveExecutionLog(logStr, LogLevel.INFO);
+          }
+        }
+
         if (patchInstruction.getType().equals(Type.ADD_RULE)) {
           AddRuleYamlSpec spec = ((AddRuleYaml) patchInstruction).getSpec();
           String identifier = ((AddRuleYaml) patchInstruction).getIdentifier();
@@ -201,11 +222,12 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
           LogLevel.INFO, CommandExecutionStatus.SUCCESS);
 
     } catch (ApiException e) {
-      log.error(format("API error while updating flag because %s : response [%s] code: %d", e.getMessage(),
-          e.getResponseBody(), e.getCode()));
+      String errStr = format("API error while updating flag because %s : response [%s] code: %d", e.getMessage(),
+          e.getResponseBody(), e.getCode());
+      log.error(errStr);
       return StepResponse.builder()
           .status(Status.ERRORED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(e.getMessage()).build())
+          .failureInfo(FailureInfo.newBuilder().setErrorMessage(errStr).build())
           .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
                                                           .setUnitName(INFRASTRUCTURE_COMMAND_UNIT)
                                                           .setStatus(UnitStatus.FAILURE)
@@ -247,7 +269,6 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
     String apiKey = JWTTokenServiceUtils.generateJWTToken(ImmutableMap.of("type", "APIKey", "name", "PIPELINE-SERVICE"),
         minutes(10).toStandardDuration().getMillis(), config.getFfServerApiKey());
     cfApi.getApiClient().addDefaultHeader("api-key", "Bearer " + apiKey);
-    log.info("FF Server API Key: {}", apiKey);
   }
 
   /**

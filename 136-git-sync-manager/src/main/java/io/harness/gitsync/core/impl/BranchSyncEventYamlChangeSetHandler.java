@@ -16,6 +16,7 @@ import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
+import io.harness.gitsync.common.helper.GitConnectivityExceptionHelper;
 import io.harness.gitsync.common.helper.GitToHarnessProgressHelper;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
@@ -23,6 +24,7 @@ import io.harness.gitsync.common.service.GitToHarnessProgressService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 import io.harness.gitsync.core.service.YamlChangeSetHandler;
+import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,6 +42,7 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
   private GitBranchService gitBranchService;
   private GitToHarnessProgressService gitToHarnessProgressService;
   private GitToHarnessProgressHelper gitToHarnessProgressHelper;
+  private GitSyncErrorService gitSyncErrorService;
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
@@ -97,6 +100,8 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
       }
     } catch (Exception ex) {
       log.error("Error encountered while syncing the branch [{}]", branch, ex);
+      String errorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
+      recordErrors(accountIdentifier, branchSyncMetadata, repoURL, branch, errorMessage);
       gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);
       // TODO adding it here for safer side as of now. Ideally should be part of step service to mark it
       gitToHarnessProgressService.updateStepStatus(
@@ -106,5 +111,11 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProgressStatus.ERROR);
       return YamlChangeSetStatus.FAILED_WITH_RETRY;
     }
+  }
+
+  private void recordErrors(
+      String accountId, BranchSyncMetadata branchSyncMetadata, String repo, String branch, String errorMessage) {
+    gitSyncErrorService.recordConnectivityError(accountId, branchSyncMetadata.getOrgIdentifier(),
+        branchSyncMetadata.getProjectIdentifier(), repo, branch, errorMessage);
   }
 }

@@ -9,6 +9,7 @@ import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
 public interface GitFullSyncEntityService {
   GitFullSyncEntityInfo save(GitFullSyncEntityInfo gitFullSyncEntityInfo);
 
-  void markQueuedOrFailed(
-      String messageId, String accountId, long currentRetryCount, long maxRetryCount, String errorMsg);
+  void markQueuedOrFailed(String uuid, String accountId, long currentRetryCount, long maxRetryCount, String errorMsg);
+
+  void markSuccessful(String uuid, String accountId);
 }

@@ -107,7 +107,7 @@ if [ -e init.sh ]; then
     then
       echo "Completed executing initialization script"
     else
-      echo "Error while executing initialization script. Delegate wont be started."
+      echo "Error while executing initialization script. Delegate will not start."
       exit 1
     fi
 fi
