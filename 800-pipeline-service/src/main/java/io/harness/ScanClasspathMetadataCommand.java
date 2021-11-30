@@ -32,7 +32,7 @@ public class ScanClasspathMetadataCommand extends Command {
     String savePath = Paths.get(System.getProperty("user.dir"), CLASSPATH_METADATA_FILE_NAME).toString();
     Configuration configuration =
         new ConfigurationBuilder()
-            .forPackages(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS)
+            .forPackages(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS, "metrics.metricDefinitions", "metrics.metricGroups")
             .addScanners(new ResourcesScanner());
     new Reflections(configuration).save(savePath, new JsonSerializer());
   }
