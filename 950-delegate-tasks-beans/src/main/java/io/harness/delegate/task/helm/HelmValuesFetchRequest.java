@@ -32,6 +32,7 @@ public class HelmValuesFetchRequest implements TaskParameters, ExecutionCapabili
   private String accountId;
   private long timeout;
   private HelmChartManifestDelegateConfig helmChartManifestDelegateConfig;
+  private boolean closeLogStream;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

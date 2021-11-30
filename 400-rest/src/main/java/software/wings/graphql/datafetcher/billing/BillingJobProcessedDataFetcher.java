@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BillingJobProcessedDataFetcher
     extends AbstractObjectDataFetcher<QLBatchLastProcessedData, QLNoOpQueryParameters> {
   @Inject private BatchJobScheduledDataDao batchJobScheduledDataDao;
-  private static final String BATCH_JOB_TYPE = "UNALLOCATED_BILLING_HOURLY";
+  private static final String BATCH_JOB_TYPE = "CLUSTER_DATA_TO_BIG_QUERY";
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)

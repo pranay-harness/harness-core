@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.NICOLAS;
 import static io.harness.rule.OwnerRule.VLAD;
 import static io.harness.rule.OwnerRule.VUK;
 
+import static java.time.Duration.ofMinutes;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -49,6 +50,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import io.fabric8.utils.Lists;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -72,8 +74,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
   private static final String TEST_DELEGATE_GROUP_ID_2 = "delegateGroupId2";
   private static final String TEST_DELEGATE_GROUP_ID_3 = "delegateGroupId3";
   private static final String TEST_DELEGATE_GROUP_ID_4 = "delegateGroupId4";
-  private static final String TEST_DELEGATE_ID_1 = "delegateId1";
-  private static final String TEST_DELEGATE_ID_2 = "delegateId2";
+  public static final Duration HEARTBEAT_EXPIRY_TIME = ofMinutes(5);
 
   @Mock private DelegateCache delegateCache;
   @Mock private DelegateInsightsService delegateInsightsService;
@@ -149,6 +150,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                              .sizeDetails(grp1SizeDetails)
                              .delegateGroupId(delegateGroup1.getUuid())
                              .delegateProfileId(delegateProfileId)
+                             .lastHeartBeat(System.currentTimeMillis())
                              .build();
 
     Delegate delegate2 = createDelegateBuilder()
@@ -169,8 +171,10 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                              .accountId(accountId)
                              .ng(true)
                              .delegateName("grp2")
+                             .hostName("kube-2")
                              .sizeDetails(DelegateSizeDetails.builder().replicas(1).build())
                              .delegateGroupId(delegateGroup2.getUuid())
+                             .lastHeartBeat(System.currentTimeMillis() - 600000)
                              .build();
 
     Delegate deletedDelegate =
@@ -183,22 +187,14 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
 
     persistence.save(Arrays.asList(orgDelegate, deletedDelegate, delegate1, delegate2, delegate3));
 
-    DelegateConnection delegateConnection1 = DelegateConnection.builder()
+    DelegateConnection delegateConnection3 = DelegateConnection.builder()
                                                  .accountId(accountId)
-                                                 .delegateId(delegate1.getUuid())
-                                                 .lastHeartbeat(System.currentTimeMillis())
+                                                 .delegateId(delegate3.getUuid())
+                                                 .lastHeartbeat(System.currentTimeMillis() - 600000)
                                                  .disconnected(false)
                                                  .version(VERSION)
                                                  .build();
-    DelegateConnection delegateConnection2 = DelegateConnection.builder()
-                                                 .accountId(accountId)
-                                                 .delegateId(delegate2.getUuid())
-                                                 .lastHeartbeat(System.currentTimeMillis())
-                                                 .disconnected(false)
-                                                 .version(VERSION)
-                                                 .build();
-    persistence.save(delegateConnection1);
-    persistence.save(delegateConnection2);
+    persistence.save(delegateConnection3);
 
     DelegateGroupListing delegateGroupListing = delegateSetupService.listDelegateGroupDetails(accountId, null, null);
 
@@ -212,8 +208,8 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
         assertThat(group.getDelegateInstanceDetails()).hasSize(2);
         assertThat(group.getGroupId()).isEqualTo(delegateGroup1.getUuid());
         assertThat(group.getDelegateType()).isEqualTo(KUBERNETES);
-        assertThat(group.getGroupHostName()).isEqualTo("kube-{n}");
         assertThat(group.getDelegateDescription()).isEqualTo("description");
+        assertThat(group.getConnectivityStatus()).isEqualTo("connected");
         assertThat(group.getDelegateConfigurationId()).isEqualTo(delegateProfileId);
         assertThat(group.getGroupImplicitSelectors()).isNotNull();
         assertThat(group.getGroupImplicitSelectors().containsKey("grp1")).isTrue();
@@ -225,17 +221,21 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
         assertThat(group.getGroupCustomSelectors()).isNotNull();
         assertThat(group.getGroupCustomSelectors().contains("custom-grp-tag")).isTrue();
         assertThat(group.getLastHeartBeat()).isEqualTo(delegate1.getLastHeartBeat());
-        assertThat(group.isActivelyConnected()).isTrue();
-        assertThat(group.getSizeDetails()).isEqualTo(grp1SizeDetails);
         assertThat(group.getDelegateInstanceDetails())
             .extracting(DelegateGroupListing.DelegateInner::getUuid)
             .containsOnly(delegate1.getUuid(), delegate2.getUuid());
         assertThat(group.getDelegateInsightsDetails()).isNotNull();
         assertThat(group.getDelegateInsightsDetails().getInsights()).hasSize(2);
       } else if (group.getGroupName().equals("grp2")) {
-        assertThat(group.getDelegateInstanceDetails()).isEmpty();
-        assertThat(group.isActivelyConnected()).isFalse();
-        assertThat(group.getSizeDetails().getReplicas()).isEqualTo(1);
+        assertThat(group.getConnectivityStatus()).isEqualTo("disconnected");
+        assertThat(group.getDelegateInstanceDetails())
+            .contains(DelegateGroupListing.DelegateInner.builder()
+                          .uuid(delegate3.getUuid())
+                          .lastHeartbeat(delegate3.getLastHeartBeat())
+                          .activelyConnected(delegate3.getLastHeartBeat()
+                              > System.currentTimeMillis() - HEARTBEAT_EXPIRY_TIME.toMillis())
+                          .hostName(delegate3.getHostName())
+                          .build());
       }
     }
   }
@@ -479,6 +479,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                              .sizeDetails(grp1SizeDetails)
                              .delegateGroupId(delegateGroup1.getUuid())
                              .delegateProfileId(delegateProfileId)
+                             .lastHeartBeat(System.currentTimeMillis())
                              .build();
 
     Delegate delegate2 = createDelegateBuilder()
@@ -491,27 +492,10 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                              .sizeDetails(grp1SizeDetails)
                              .delegateGroupId(delegateGroup1.getUuid())
                              .delegateProfileId(delegateProfileId)
-                             .lastHeartBeat(System.currentTimeMillis() - 60000)
+                             .lastHeartBeat(System.currentTimeMillis() - 600000)
                              .build();
 
     persistence.save(Arrays.asList(delegate1, delegate2));
-
-    DelegateConnection delegateConnection1 = DelegateConnection.builder()
-                                                 .accountId(accountId)
-                                                 .delegateId(delegate1.getUuid())
-                                                 .lastHeartbeat(System.currentTimeMillis())
-                                                 .disconnected(false)
-                                                 .version(VERSION)
-                                                 .build();
-    DelegateConnection delegateConnection2 = DelegateConnection.builder()
-                                                 .accountId(accountId)
-                                                 .delegateId(delegate2.getUuid())
-                                                 .lastHeartbeat(System.currentTimeMillis())
-                                                 .disconnected(false)
-                                                 .version(VERSION)
-                                                 .build();
-    persistence.save(delegateConnection1);
-    persistence.save(delegateConnection2);
 
     DelegateGroupDetails delegateGroupDetails =
         delegateSetupService.getDelegateGroupDetails(accountId, delegateGroup1.getUuid());
@@ -522,8 +506,8 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     assertThat(delegateGroupDetails.getDelegateInstanceDetails()).hasSize(2);
     assertThat(delegateGroupDetails.getGroupId()).isEqualTo(delegateGroup1.getUuid());
     assertThat(delegateGroupDetails.getDelegateType()).isEqualTo(KUBERNETES);
-    assertThat(delegateGroupDetails.getGroupHostName()).isEqualTo("kube-{n}");
     assertThat(delegateGroupDetails.getDelegateDescription()).isEqualTo("description");
+    assertThat(delegateGroupDetails.getConnectivityStatus()).isEqualTo("partially connected");
     assertThat(delegateGroupDetails.getDelegateConfigurationId()).isEqualTo(delegateProfileId);
     assertThat(delegateGroupDetails.getGroupImplicitSelectors()).isNotNull();
     assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("grp1")).isTrue();
@@ -534,11 +518,18 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("s2")).isTrue();
     assertThat(delegateGroupDetails.getGroupCustomSelectors().contains("custom-grp-tag")).isTrue();
     assertThat(delegateGroupDetails.getLastHeartBeat()).isEqualTo(delegate1.getLastHeartBeat());
-    assertThat(delegateGroupDetails.isActivelyConnected()).isTrue();
-    assertThat(delegateGroupDetails.getSizeDetails()).isEqualTo(grp1SizeDetails);
     assertThat(delegateGroupDetails.getDelegateInstanceDetails())
         .extracting(DelegateGroupListing.DelegateInner::getUuid)
         .containsOnly(delegate1.getUuid(), delegate2.getUuid());
+    assertThat(delegateGroupDetails.getDelegateInstanceDetails())
+        .extracting(DelegateGroupListing.DelegateInner::getHostName)
+        .containsOnly("kube-0", "kube-1");
+    assertThat(delegateGroupDetails.getDelegateInstanceDetails())
+        .extracting(DelegateGroupListing.DelegateInner::getLastHeartbeat)
+        .containsOnly(delegate1.getLastHeartBeat(), delegate2.getLastHeartBeat());
+    assertThat(delegateGroupDetails.getDelegateInstanceDetails())
+        .extracting(DelegateGroupListing.DelegateInner::isActivelyConnected)
+        .containsOnly(true, false);
     assertThat(delegateGroupDetails.getDelegateInsightsDetails()).isNotNull();
     assertThat(delegateGroupDetails.getDelegateInsightsDetails().getInsights()).hasSize(2);
   }
@@ -645,8 +636,8 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     assertThat(delegateGroupDetails.getDelegateInstanceDetails()).hasSize(2);
     assertThat(delegateGroupDetails.getGroupId()).isEqualTo(delegateGroup1.getUuid());
     assertThat(delegateGroupDetails.getDelegateType()).isEqualTo(KUBERNETES);
-    assertThat(delegateGroupDetails.getGroupHostName()).isEqualTo("kube-{n}");
     assertThat(delegateGroupDetails.getDelegateDescription()).isEqualTo("description");
+    assertThat(delegateGroupDetails.getConnectivityStatus()).isEqualTo("connected");
     assertThat(delegateGroupDetails.getDelegateConfigurationId()).isEqualTo(delegateProfileId);
     assertThat(delegateGroupDetails.getGroupImplicitSelectors()).isNotNull();
     assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("grp1")).isTrue();
@@ -657,11 +648,18 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("s2")).isTrue();
     assertThat(delegateGroupDetails.getGroupCustomSelectors().contains("custom-grp-tag")).isTrue();
     assertThat(delegateGroupDetails.getLastHeartBeat()).isEqualTo(delegate1.getLastHeartBeat());
-    assertThat(delegateGroupDetails.isActivelyConnected()).isTrue();
-    assertThat(delegateGroupDetails.getSizeDetails()).isEqualTo(grp1SizeDetails);
     assertThat(delegateGroupDetails.getDelegateInstanceDetails())
         .extracting(DelegateGroupListing.DelegateInner::getUuid)
         .containsOnly(delegate1.getUuid(), delegate2.getUuid());
+    assertThat(delegateGroupDetails.getDelegateInstanceDetails())
+        .extracting(DelegateGroupListing.DelegateInner::getHostName)
+        .containsOnly("kube-0", "kube-1");
+    assertThat(delegateGroupDetails.getDelegateInstanceDetails())
+        .extracting(DelegateGroupListing.DelegateInner::getLastHeartbeat)
+        .containsOnly(delegate1.getLastHeartBeat(), delegate2.getLastHeartBeat());
+    assertThat(delegateGroupDetails.getDelegateInstanceDetails())
+        .extracting(DelegateGroupListing.DelegateInner::isActivelyConnected)
+        .containsOnly(true, true);
     assertThat(delegateGroupDetails.getDelegateInsightsDetails()).isNotNull();
     assertThat(delegateGroupDetails.getDelegateInsightsDetails().getInsights()).hasSize(2);
   }

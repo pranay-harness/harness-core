@@ -1,7 +1,7 @@
 package io.harness.gitsync;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_FULL_SYNC_STREAM;
 
 import io.harness.EntityType;
 import io.harness.Microservice;
@@ -12,6 +12,7 @@ import io.harness.cistatus.service.GithubService;
 import io.harness.cistatus.service.GithubServiceImpl;
 import io.harness.gitsync.client.GitSyncSdkGrpcClientModule;
 import io.harness.gitsync.common.events.FullSyncMessageListener;
+import io.harness.gitsync.common.impl.FullSyncTriggerServiceImpl;
 import io.harness.gitsync.common.impl.GitBranchServiceImpl;
 import io.harness.gitsync.common.impl.GitBranchSyncServiceImpl;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
@@ -24,6 +25,7 @@ import io.harness.gitsync.common.impl.ScmManagerFacilitatorServiceImpl;
 import io.harness.gitsync.common.impl.ScmOrchestratorServiceImpl;
 import io.harness.gitsync.common.impl.YamlGitConfigServiceImpl;
 import io.harness.gitsync.common.impl.gittoharness.GitToHarnessProcessorServiceImpl;
+import io.harness.gitsync.common.service.FullSyncTriggerService;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.GitEntityService;
@@ -133,15 +135,16 @@ public class GitSyncModule extends AbstractModule {
     bind(GitFullSyncEntityService.class).to(GitFullSyncEntityServiceImpl.class);
     bind(GitFullSyncProcessorService.class).to(GitFullSyncProcessorServiceImpl.class);
     bind(ScmFacilitatorService.class).to(ScmFacilitatorServiceImpl.class);
+    bind(FullSyncTriggerService.class).to(FullSyncTriggerServiceImpl.class);
     registerRequiredBindings();
 
-    bindGitSyncConfigMessageListeners();
+    bindFullSyncMessageListeners();
   }
 
-  private void bindGitSyncConfigMessageListeners() {
-    Multibinder<MessageListener> gitSyncConfigStreamMessageListeners =
-        Multibinder.newSetBinder(binder(), MessageListener.class, Names.named(GIT_CONFIG_STREAM));
-    gitSyncConfigStreamMessageListeners.addBinding().to(FullSyncMessageListener.class);
+  private void bindFullSyncMessageListeners() {
+    Multibinder<MessageListener> fullSyncMessageListener =
+        Multibinder.newSetBinder(binder(), MessageListener.class, Names.named(GIT_FULL_SYNC_STREAM));
+    fullSyncMessageListener.addBinding().to(FullSyncMessageListener.class);
   }
 
   private void registerRequiredBindings() {

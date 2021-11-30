@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
+import io.harness.reflection.HarnessReflections;
 import io.harness.springdata.HMongoTemplate;
 
 import com.google.inject.Injector;
@@ -12,12 +13,12 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.Set;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
@@ -73,8 +74,8 @@ public class GitSyncablePersistenceConfig extends AbstractMongoConfiguration {
   }
 
   @Override
-  protected Collection<String> getMappingBasePackages() {
-    return Collections.singleton("io.harness");
+  protected Set<Class<?>> getInitialEntitySet() {
+    return HarnessReflections.get().getTypesAnnotatedWith(TypeAlias.class);
   }
 
   @Override

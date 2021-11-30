@@ -82,6 +82,18 @@ if [[ -e proxy.config ]]; then
   fi
 fi
 
+if [ -s init.sh ]; then
+    echo "Starting initialization script for delegate"
+    source ./init.sh
+    if [ $? -eq 0 ];
+    then
+      echo "Completed executing initialization script"
+    else
+      echo "Error while executing initialization script. Delegate will not start."
+      exit 1
+    fi
+fi
+
 if [[ "$OSTYPE" == linux* ]]; then
   touch /tmp/exec-test.sh && chmod +x /tmp/exec-test.sh
   /tmp/exec-test.sh

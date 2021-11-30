@@ -9,9 +9,7 @@ import static io.harness.cvng.beans.activity.ActivityType.CONFIG;
 import static io.harness.cvng.beans.activity.ActivityType.DEPLOYMENT;
 import static io.harness.cvng.beans.activity.ActivityType.HARNESS_CD;
 import static io.harness.cvng.beans.activity.ActivityType.HARNESS_CD_CURRENT_GEN;
-import static io.harness.cvng.beans.activity.ActivityType.INFRASTRUCTURE;
 import static io.harness.cvng.beans.activity.ActivityType.KUBERNETES;
-import static io.harness.cvng.beans.activity.ActivityType.OTHER;
 import static io.harness.cvng.beans.activity.ActivityType.PAGER_DUTY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -134,8 +132,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
 
     alertRuleDTO.getAlertCondition().getVerificationsNotify().setVerificationStatuses(
         Lists.newArrayList(VERIFICATION_PASSED, VERIFICATION_FAILED));
-    alertRuleDTO.getAlertCondition().getVerificationsNotify().setActivityTypes(
-        Lists.newArrayList(DEPLOYMENT, INFRASTRUCTURE));
+    alertRuleDTO.getAlertCondition().getVerificationsNotify().setActivityTypes(Lists.newArrayList(DEPLOYMENT));
 
     alertRuleDTO.validate();
 
@@ -158,8 +155,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     alertRuleDTO.getAlertCondition().getVerificationsNotify().setVerificationStatuses(
         Lists.newArrayList(VERIFICATION_PASSED, VERIFICATION_FAILED));
     alertRuleDTO.getAlertCondition().getVerificationsNotify().setAllActivityTpe(false);
-    alertRuleDTO.getAlertCondition().getVerificationsNotify().setActivityTypes(
-        Lists.newArrayList(DEPLOYMENT, INFRASTRUCTURE));
+    alertRuleDTO.getAlertCondition().getVerificationsNotify().setActivityTypes(Lists.newArrayList(DEPLOYMENT));
 
     assertThat(alertRuleDTO.getAlertCondition().isAllServices()).isFalse();
     assertThat(alertRuleDTO.getAlertCondition().isAllEnvironments()).isFalse();
@@ -169,7 +165,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(alertRuleDTO.getAlertCondition().getVerificationsNotify().isAllActivityTpe()).isFalse();
     assertThat(alertRuleDTO.getAlertCondition().getVerificationsNotify().isAllVerificationStatuses()).isFalse();
     assertThat(alertRuleDTO.getAlertCondition().getVerificationsNotify().getActivityTypes())
-        .isEqualTo(Lists.newArrayList(DEPLOYMENT, INFRASTRUCTURE));
+        .isEqualTo(Lists.newArrayList(DEPLOYMENT));
     assertThat(alertRuleDTO.getAlertCondition().getVerificationsNotify().getVerificationStatuses())
         .isEqualTo(Lists.newArrayList(VERIFICATION_PASSED, VERIFICATION_FAILED));
   }
@@ -210,8 +206,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
 
     assertThat(activityTypes).isNotNull();
     assertThat(activityTypes)
-        .containsExactly(
-            DEPLOYMENT, INFRASTRUCTURE, CONFIG, OTHER, KUBERNETES, HARNESS_CD, PAGER_DUTY, HARNESS_CD_CURRENT_GEN);
+        .containsExactly(DEPLOYMENT, CONFIG, KUBERNETES, HARNESS_CD, PAGER_DUTY, HARNESS_CD_CURRENT_GEN);
   }
 
   @Test
@@ -919,7 +914,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testProcessDeploymentVerification_ActivityTypeAndVerificationStatusNull_ChannelIsNotNotified() {
     VerificationsNotify verificationsNotify = VerificationsNotify.builder()
-                                                  .activityTypes(Arrays.asList(INFRASTRUCTURE, DEPLOYMENT))
+                                                  .activityTypes(Arrays.asList(DEPLOYMENT))
                                                   .verificationStatuses(Arrays.asList(VERIFICATION_PASSED))
                                                   .build();
 
@@ -960,11 +955,10 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void testProcessDeploymentVerification_AllActivityTypesDifferentVerificationStatus_ChannelIsNotNotified() {
-    VerificationsNotify verificationsNotify =
-        VerificationsNotify.builder()
-            .activityTypes(Arrays.asList(DEPLOYMENT, INFRASTRUCTURE, CONFIG, KUBERNETES))
-            .verificationStatuses(Arrays.asList(VERIFICATION_PASSED))
-            .build();
+    VerificationsNotify verificationsNotify = VerificationsNotify.builder()
+                                                  .activityTypes(Arrays.asList(DEPLOYMENT, CONFIG, KUBERNETES))
+                                                  .verificationStatuses(Arrays.asList(VERIFICATION_PASSED))
+                                                  .build();
 
     AlertCondition alertCondition = AlertCondition.builder()
                                         .enabledRisk(true)

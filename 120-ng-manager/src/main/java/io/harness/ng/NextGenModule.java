@@ -71,6 +71,7 @@ import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.file.NGFileServiceModule;
 import io.harness.gitsync.GitSyncModule;
+import io.harness.gitsync.common.events.FullSyncMessageListener;
 import io.harness.gitsync.core.runnable.HarnessToGitPushMessageListener;
 import io.harness.gitsync.core.webhook.createbranchevent.GitBranchHookEventStreamListener;
 import io.harness.gitsync.core.webhook.pushevent.GitPushEventStreamListener;
@@ -78,8 +79,6 @@ import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.GrpcClientConfig;
-import io.harness.licensing.AbstractLicenseModule;
-import io.harness.licensing.LicenseConfig;
 import io.harness.licensing.LicenseModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
@@ -584,12 +583,6 @@ public class NextGenModule extends AbstractModule {
       }
     });
 
-    install(new AbstractLicenseModule() {
-      @Override
-      public LicenseConfig licenseConfiguration() {
-        return appConfig.getLicenseConfig();
-      }
-    });
     install(LicenseModule.getInstance());
     bind(AggregateUserService.class).to(AggregateUserServiceImpl.class);
     registerOutboxEventHandlers();
@@ -738,6 +731,9 @@ public class NextGenModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM))
         .to(GitBranchHookEventStreamListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(EventsFrameworkConstants.GIT_FULL_SYNC_STREAM))
+        .to(FullSyncMessageListener.class);
     bind(ServiceAccountService.class).to(ServiceAccountServiceImpl.class);
   }
 

@@ -81,7 +81,7 @@ public class AccountResource {
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns an account DTO")
+        ApiResponse(responseCode = "default", description = "Returns an account")
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.ACCOUNT, permission = VIEW_ACCOUNT_PERMISSION)
   public ResponseDTO<AccountDTO>

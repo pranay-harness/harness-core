@@ -8,11 +8,11 @@ import lombok.Value;
 @Builder
 public class DatadogDashboardDetail {
   String widgetName;
-  List<DataSet> dataSets;
+  List<DatadogDataSet> dataSets;
 
   @Data
   @Builder
-  public static class DataSet {
+  public static class DatadogDataSet {
     String name;
     String query;
   }

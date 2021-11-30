@@ -9,5 +9,5 @@ import lombok.Value;
 @Builder
 public class RemoteObserver {
   Class<?> subjectCLass;
-  @Singular private List<Class<Observer>> observers;
+  @Singular private List<Class> observers;
 }

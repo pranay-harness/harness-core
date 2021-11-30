@@ -8,6 +8,7 @@ import io.harness.licensing.beans.modules.types.CDLicenseType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,6 +24,7 @@ import lombok.experimental.SuperBuilder;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
+@Schema(name = "CDModuleLicense", description = "This contains details of the Continuous Delivery License in Harness")
 public class CDModuleLicenseDTO extends ModuleLicenseDTO {
   CDLicenseType cdLicenseType;
   Integer workloads;

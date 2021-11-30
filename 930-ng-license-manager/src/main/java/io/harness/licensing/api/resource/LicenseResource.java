@@ -28,6 +28,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -260,6 +261,7 @@ public class LicenseResource {
   @ApiOperation(
       value = "Deprecated Check All Inactive", nickname = "checkNGLicensesAllInactiveDeprecated", hidden = true)
   @InternalApi
+  @Hidden
   public ResponseDTO<CheckExpiryResultDTO>
   checkExpiry(@PathParam("accountId") String accountId) {
     return ResponseDTO.newResponse(licenseService.checkExpiry(accountId));
@@ -269,6 +271,7 @@ public class LicenseResource {
   @Path("{accountId}/soft-delete")
   @ApiOperation(value = "Deprecated Soft Delete", nickname = "softDeleteDeprecated", hidden = true)
   @InternalApi
+  @Hidden
   public ResponseDTO<Boolean> softDelete(@PathParam("accountId") String accountId) {
     licenseService.softDelete(accountId);
     return ResponseDTO.newResponse(Boolean.TRUE);

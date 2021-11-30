@@ -1,7 +1,7 @@
 package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
-import static io.harness.PipelineServiceConfiguration.getResourceClasses;
+import static io.harness.PipelineServiceConfiguration.HARNESS_RESOURCE_CLASSES;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
@@ -25,7 +25,6 @@ import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.enforcement.executions.BuildRestrictionUsageImpl;
 import io.harness.enforcement.executions.CIMonthlyBuildImpl;
 import io.harness.enforcement.executions.CITotalBuildImpl;
-import io.harness.enforcement.executions.DeploymentRestrictionUsageImpl;
 import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
@@ -64,6 +63,7 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.template.exception.NGTemplateResolveExceptionMapper;
 import io.harness.notification.module.NotificationClientModule;
@@ -242,6 +242,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   public void initialize(Bootstrap<PipelineServiceConfiguration> bootstrap) {
     initializeLogging();
     bootstrap.addCommand(new InspectCommand<>(this));
+    bootstrap.addCommand(new ScanClasspathMetadataCommand());
 
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
@@ -694,7 +695,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void registerResources(Environment environment, Injector injector) {
-    for (Class<?> resource : getResourceClasses()) {
+    for (Class<?> resource : HARNESS_RESOURCE_CLASSES) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
@@ -703,6 +704,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {
+    environment.jersey().register(JerseyViolationExceptionMapperV2.class);
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(NGAccessDeniedExceptionMapper.class);
@@ -761,7 +763,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         CustomRestrictionRegisterConfiguration.builder()
             .customRestrictionMap(
                 ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
-                    .put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class)
                     .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
                     .build())
             .build();

@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BillingJobQuery {
   @Inject GraphQLUtils graphQLUtils;
   @Inject BatchJobScheduledDataDao batchJobScheduledDataDao;
-  private static final String BATCH_JOB_TYPE = "UNALLOCATED_BILLING_HOURLY";
+  private static final String BATCH_JOB_TYPE = "CLUSTER_DATA_TO_BIG_QUERY";
 
   @GraphQLQuery(name = "billingJobLastProcessedTime")
   public Long billingJobLastProcessedTime(@GraphQLEnvironment final ResolutionEnvironment env) {

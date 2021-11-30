@@ -9,6 +9,8 @@ import io.harness.ng.core.entities.Organization;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -44,4 +46,6 @@ public interface OrganizationService {
   boolean restore(String accountIdentifier, String identifier);
 
   Long countOrgs(String accountIdentifier);
+
+  Set<String> getPermittedOrganizations(@NotNull String accountIdentifier, String orgIdentifier);
 }

@@ -3,7 +3,6 @@ package io.harness.expression;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
@@ -11,8 +10,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.CriticalExpressionEvaluationException;
-import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;
@@ -23,6 +20,7 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
+import org.apache.commons.jexl3.JexlException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -69,7 +67,6 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
                         .strVal1("a1")
                         .strVal2(DummyField.createValueField("a2"))
                         .build();
-
     EngineExpressionEvaluator evaluator =
         prepareEngineExpressionEvaluator(ImmutableMap.of("obj", DummyField.createValueField(dummyA)));
 
@@ -115,7 +112,6 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
                         .strVal1("a1")
                         .strVal2(DummyField.createValueField("a2"))
                         .build();
-
     EngineExpressionEvaluator evaluator =
         prepareEngineExpressionEvaluator(new ImmutableMap.Builder<String, Object>()
                                              .put("obj", DummyField.createValueField(dummyA))
@@ -125,7 +121,7 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
                                              .put("i22", 222)
                                              .build());
 
-    validateSingleExpression(evaluator, "bVal1CVal1.strVal", "c11", false, false);
+    validateSingleExpression(evaluator, "bVal1CVal1.strVal", "c11", false);
     validateExpression(evaluator, "bVal1.cVal1.strVal", "c11");
     validateExpression(evaluator, "bVal1.cVal2.strVal", "finalC12", true);
     validateExpression(evaluator, "bVal1.strVal1", "b11");
@@ -135,7 +131,12 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     validateExpression(evaluator, "bVal2.cVal1.strVal", "c21");
     validateExpression(evaluator, "bVal2.cVal2.strVal", "finalC22", true);
     validateExpression(evaluator, "bVal2.strVal1", "finalB21", true);
-    validateExpression(evaluator, "bVal2.strVal2", "<+b22>", false, true);
+    validateSingleExpression(evaluator, "bVal2.strVal2", "<+bVal2.strVal2>", true);
+    validateSingleExpression(evaluator,
+        "obj."
+            + "bVal2.strVal2",
+        null, false);
+    assertThat(evaluator.evaluateExpression("<+bVal2.strVal2>")).isEqualTo(null);
     validateExpression(evaluator, "bVal2.intVal1", 21);
     validateExpression(evaluator, "bVal2.intVal2", 222, true);
     validateExpression(evaluator, "strVal1", "a1");
@@ -148,38 +149,23 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
 
   private void validateExpression(
       EngineExpressionEvaluator evaluator, String expression, Object expected, boolean shouldThrow) {
-    validateExpression(evaluator, expression, expected, shouldThrow, false);
+    validateExpressionWithObjExpression(evaluator, expression, expected, shouldThrow);
   }
 
-  private void validateExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
-      boolean skipEvaluate, boolean shouldThrow) {
-    validateSingleExpression(evaluator, expression, expected, skipEvaluate, shouldThrow);
-    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate, shouldThrow);
+  private void validateExpressionWithObjExpression(
+      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
+    validateSingleExpression(evaluator, expression, expected, skipEvaluate);
+    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate);
   }
 
-  private void validateSingleExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
-      boolean skipEvaluate, boolean shouldThrow) {
+  private void validateSingleExpression(
+      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
     expression = "<+" + expression + ">";
-    if (shouldThrow) {
-      String finalExpression = expression;
-      assertThatThrownBy(() -> evaluator.renderExpression(finalExpression))
-          .isInstanceOfAny(UnresolvedExpressionsException.class, CriticalExpressionEvaluationException.class);
-      assertThatCode(() -> evaluator.renderExpression(finalExpression, true)).doesNotThrowAnyException();
-    } else {
-      assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
-    }
-
+    assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
     if (skipEvaluate) {
       return;
     }
-
-    if (shouldThrow) {
-      String finalExpression = expression;
-      assertThatThrownBy(() -> evaluator.evaluateExpression(finalExpression))
-          .isInstanceOfAny(UnresolvedExpressionsException.class, CriticalExpressionEvaluationException.class);
-    } else {
-      assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
-    }
+    assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
   }
 
   @Test
@@ -291,14 +277,11 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
                                                                                .put("f", "<+b>")
                                                                                .build());
     assertThat(evaluator.evaluateExpression("<+a> + <+a>")).isEqualTo(10);
-    assertThatThrownBy(() -> evaluator.evaluateExpression("<+a> + <+b>"))
-        .isInstanceOf(UnresolvedExpressionsException.class);
-    assertThatThrownBy(() -> evaluator.evaluateExpression("<+a> + <+<+b> + <+e>>"))
-        .isInstanceOf(UnresolvedExpressionsException.class);
+    assertThatThrownBy(() -> evaluator.evaluateExpression("<+a> + <+b>")).isInstanceOf(JexlException.class);
+    assertThatThrownBy(() -> evaluator.evaluateExpression("<+a> + <+<+b> + <+e>>")).isInstanceOf(JexlException.class);
     assertThat(evaluator.evaluateExpression("<+a> + <+<+a> + <+e>>")).isEqualTo(15);
-    assertThatThrownBy(() -> evaluator.renderExpression("<+<+a> + <+b>>"))
-        .isInstanceOf(UnresolvedExpressionsException.class);
-    assertThat(evaluator.renderExpression("<+<+a> + <+b>>", true)).endsWith("+ <+b>>");
+    assertThatThrownBy(() -> evaluator.renderExpression("<+<+a> + <+b>>")).isInstanceOf(JexlException.class);
+    assertThatThrownBy(() -> evaluator.renderExpression("<+<+a> + <+b>>", true)).isInstanceOf(JexlException.class);
 
     EngineExpressionEvaluator.PartialEvaluateResult result = evaluator.partialEvaluateExpression("<+a> + <+a>");
     assertThat(result).isNotNull();
@@ -384,11 +367,10 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     EngineExpressionEvaluator evaluator = prepareEngineExpressionEvaluator(
         new ImmutableMap.Builder<String, Object>().put("a", 5).put("c", "abc").put("d", "<+a>").build());
     assertThat(evaluator.evaluateExpression("<+a> + <+d>")).isEqualTo(10);
-    assertThatThrownBy(() -> evaluator.evaluateExpression("<+b>")).isInstanceOf(UnresolvedExpressionsException.class);
+    assertThat(evaluator.evaluateExpression("<+b>")).isEqualTo(null);
 
     assertThat(evaluator.renderExpression("<+a> + <+d>")).isEqualTo("5 + 5");
-    assertThatThrownBy(() -> evaluator.renderExpression("<+a> + <+b> + <+c> + <+d>"))
-        .isInstanceOf(UnresolvedExpressionsException.class);
+    assertThat(evaluator.renderExpression("<+a> + <+b> + <+c> + <+d>")).isEqualTo("5 + <+b> + abc + 5");
     assertThat(evaluator.renderExpression("<+a> + <+b> + <+c> + <+d>", true)).isEqualTo("5 + <+b> + abc + 5");
   }
 

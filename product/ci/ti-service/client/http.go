@@ -22,7 +22,7 @@ import (
 var _ Client = (*HTTPClient)(nil)
 
 const (
-	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s&repo=%s&sha=%s"
+	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s&repo=%s&sha=%s&commitLink=%s"
 	testEndpoint = "/tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s"
 	cgEndpoint   = "/tests/uploadcg?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s&timeMs=%d"
 )
@@ -68,8 +68,8 @@ type HTTPClient struct {
 }
 
 // Write writes test results to the TI server
-func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, stage, step, report, repo, sha string, tests []*types.TestCase) error {
-	path := fmt.Sprintf(dbEndpoint, c.AccountID, org, project, pipeline, build, stage, step, report, repo, sha)
+func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, stage, step, report, repo, sha, commitLink string, tests []*types.TestCase) error {
+	path := fmt.Sprintf(dbEndpoint, c.AccountID, org, project, pipeline, build, stage, step, report, repo, sha, commitLink)
 	ctx = context.WithValue(ctx, "reqId", sha)
 	_, err := c.do(ctx, c.Endpoint+path, "POST", &tests, nil)
 	return err

@@ -719,6 +719,91 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
     assertThat(activeAppDetails.get(0).getApplicationGuid()).isEqualTo(activeApplication.getId());
   }
 
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testVerifyMaxVersionToKeep() throws PivotalClientApiException {
+    List<ApplicationSummary> previousReleases = getPreviousReleases();
+    ApplicationSummary inActiveApplication = previousReleases.get(3);
+    ApplicationSummary activeApplication = previousReleases.get(4);
+    CfAppSetupTimeDetails inActiveApplicationDetails =
+        CfAppSetupTimeDetails.builder()
+            .applicationGuid(inActiveApplication.getId())
+            .applicationName(inActiveApplication.getName())
+            .initialInstanceCount(inActiveApplication.getRunningInstances())
+            .urls(new ArrayList<>(inActiveApplication.getUrls()))
+            .build();
+
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
+    CfAppAutoscalarRequestData cfAppAutoscalarRequestData = CfAppAutoscalarRequestData.builder().build();
+    CfCommandSetupRequest setupRequest = getSetupRequest("PaymentApp", false, false, false);
+    ApplicationDetail applicationDetail = ApplicationDetail.builder()
+                                              .id("10")
+                                              .diskQuota(1)
+                                              .instances(0)
+                                              .memoryLimit(1)
+                                              .name("PaymentApp__1")
+                                              .requestedState(STOPPED)
+                                              .stack("")
+                                              .runningInstances(0)
+                                              .build();
+    doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(eq(cfRequestConfig));
+    ArgumentCaptor<String> appDeletedMsgCaptor = ArgumentCaptor.forClass(String.class);
+
+    pcfSetupCommandTaskHandler.deleteOlderApplications(previousReleases, cfRequestConfig, setupRequest,
+        cfAppAutoscalarRequestData, activeApplication, inActiveApplicationDetails, executionLogCallback);
+    verify(pcfDeploymentManager, times(2)).deleteApplication(eq(cfRequestConfig));
+    verify(executionLogCallback, times(6)).saveExecutionLog(appDeletedMsgCaptor.capture());
+    List<String> appDeletedMsgCaptorAllValues = appDeletedMsgCaptor.getAllValues();
+    assertThat(appDeletedMsgCaptorAllValues.get(3))
+        .isEqualTo("# Older application being deleted: \u001B[0;96m\u001B[40mPaymentApp__2#==#");
+    assertThat(appDeletedMsgCaptorAllValues.get(4))
+        .isEqualTo("# Older application being deleted: \u001B[0;96m\u001B[40mPaymentApp__1#==#");
+    assertThat(appDeletedMsgCaptorAllValues.get(5))
+        .isEqualTo("# Done Deleting older applications. Deleted Total 2 applications");
+
+    reset(pcfDeploymentManager);
+    reset(executionLogCallback);
+    ArgumentCaptor<String> appDeletedMsgCaptor1 = ArgumentCaptor.forClass(String.class);
+    doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(eq(cfRequestConfig));
+    pcfSetupCommandTaskHandler.deleteOlderApplications(previousReleases, cfRequestConfig, setupRequest,
+        cfAppAutoscalarRequestData, activeApplication, null, executionLogCallback);
+    verify(pcfDeploymentManager, times(2)).deleteApplication(eq(cfRequestConfig));
+    verify(executionLogCallback, times(6)).saveExecutionLog(appDeletedMsgCaptor1.capture());
+    appDeletedMsgCaptorAllValues = appDeletedMsgCaptor1.getAllValues();
+    assertThat(appDeletedMsgCaptorAllValues.get(3))
+        .isEqualTo("# Older application being deleted: \u001B[0;96m\u001B[40mPaymentApp__2#==#");
+    assertThat(appDeletedMsgCaptorAllValues.get(4))
+        .isEqualTo("# Older application being deleted: \u001B[0;96m\u001B[40mPaymentApp__1#==#");
+    assertThat(appDeletedMsgCaptorAllValues.get(5))
+        .isEqualTo("# Done Deleting older applications. Deleted Total 2 applications");
+
+    reset(pcfDeploymentManager);
+    reset(executionLogCallback);
+    previousReleases.remove(0);
+    previousReleases.remove(1);
+    ArgumentCaptor<String> appDeletedMsgCaptor2 = ArgumentCaptor.forClass(String.class);
+    doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(eq(cfRequestConfig));
+    pcfSetupCommandTaskHandler.deleteOlderApplications(previousReleases, cfRequestConfig, setupRequest,
+        cfAppAutoscalarRequestData, activeApplication, null, executionLogCallback);
+    verify(pcfDeploymentManager, times(0)).deleteApplication(eq(cfRequestConfig));
+    verify(executionLogCallback, times(4)).saveExecutionLog(appDeletedMsgCaptor2.capture());
+    appDeletedMsgCaptorAllValues = appDeletedMsgCaptor2.getAllValues();
+    assertThat(appDeletedMsgCaptorAllValues.get(3)).isEqualTo("# No older applications were eligible for deletion\n");
+
+    reset(pcfDeploymentManager);
+    reset(executionLogCallback);
+    previousReleases.remove(2);
+    ArgumentCaptor<String> appDeletedMsgCaptor3 = ArgumentCaptor.forClass(String.class);
+    doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(eq(cfRequestConfig));
+    pcfSetupCommandTaskHandler.deleteOlderApplications(previousReleases, cfRequestConfig, setupRequest,
+        cfAppAutoscalarRequestData, activeApplication, null, executionLogCallback);
+    verify(pcfDeploymentManager, times(0)).deleteApplication(eq(cfRequestConfig));
+    verify(executionLogCallback, times(4)).saveExecutionLog(appDeletedMsgCaptor3.capture());
+    appDeletedMsgCaptorAllValues = appDeletedMsgCaptor2.getAllValues();
+    assertThat(appDeletedMsgCaptorAllValues.get(3)).isEqualTo("# No older applications were eligible for deletion\n");
+  }
+
   private void assertAppRenamingVersionToNonVersion(String releaseName, ApplicationSummary activeApplication,
       ApplicationSummary inActiveApplication) throws PivotalClientApiException {
     ArgumentCaptor<ApplicationSummary> renamedAppCaptor = ArgumentCaptor.forClass(ApplicationSummary.class);
@@ -823,12 +908,61 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
         .routeMaps(Arrays.asList("harness-prod1-pcf", "harness-prod2-pcf.com"))
         .timeoutIntervalInMin(5)
         .releaseNamePrefix(releaseName)
-        .olderActiveVersionCountToKeep(2)
         .maxCount(2)
         .isNonVersioning(isNonVersion)
         .nonVersioningInactiveRollbackEnabled(featureFlagEnabled)
         .blueGreen(isBlueGreen)
         .build();
+  }
+
+  private List<ApplicationSummary> getPreviousReleases() {
+    List<ApplicationSummary> previousReleases = new ArrayList<>();
+    previousReleases.add(ApplicationSummary.builder()
+                             .name("PaymentApp__1")
+                             .diskQuota(1)
+                             .requestedState(STOPPED)
+                             .id("1")
+                             .instances(0)
+                             .memoryLimit(1)
+                             .runningInstances(0)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name("PaymentApp__2")
+                             .diskQuota(1)
+                             .requestedState(STOPPED)
+                             .id("2")
+                             .instances(0)
+                             .memoryLimit(1)
+                             .runningInstances(0)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name("PaymentApp__3")
+                             .diskQuota(1)
+                             .requestedState(STOPPED)
+                             .id("3")
+                             .instances(1)
+                             .memoryLimit(1)
+                             .runningInstances(0)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name("PaymentApp__4")
+                             .diskQuota(1)
+                             .requestedState(STOPPED)
+                             .id("4")
+                             .instances(1)
+                             .memoryLimit(1)
+                             .runningInstances(0)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name("PaymentApp__5")
+                             .diskQuota(1)
+                             .requestedState(RUNNING)
+                             .id("5")
+                             .instances(1)
+                             .memoryLimit(1)
+                             .runningInstances(2)
+                             .build());
+    return previousReleases;
   }
 
   private List<ApplicationSummary> getPreviousReleasesBeforeDeploymentStart(String activeApp, String inActiveApp) {
