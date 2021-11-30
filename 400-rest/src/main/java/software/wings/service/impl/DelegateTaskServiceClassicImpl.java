@@ -427,6 +427,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
         if (!task.getData().isAsync() && connectedEligibleDelegates.isEmpty()) {
           log.info("No Connected eligible delegates to execute sync task {}", task.getUuid());
+
           if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
             handleTaskProcessFailed(task, "No installed delegates to execute task");
           } else {

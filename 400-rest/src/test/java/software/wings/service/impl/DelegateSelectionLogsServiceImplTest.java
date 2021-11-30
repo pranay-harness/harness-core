@@ -124,13 +124,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     DelegateSelectionLog selectionLog =
         createDelegateSelectionLogBuilder().uuid(generateUuid()).message("ffenabled").groupId(generateUuid()).build();
 
-    DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder()
-                                                        .uuid(generateUuid())
-                                                        .taskId(generateUuid())
-                                                        .accountId(generateUuid())
-                                                        .setupAbstractions(obtainTaskSetupAbstractions())
-                                                        .build();
-
     BatchDelegateSelectionLog batch =
         BatchDelegateSelectionLog.builder().delegateSelectionLogs(Arrays.asList(selectionLog)).build();
 

@@ -283,6 +283,7 @@ public class DelegateQueueTask implements Runnable {
         delegateTask.setBroadcastToDelegateIds(broadcastList);
         delegateSelectionLogsService.logBroadcastToDelegate(
             batch, Sets.newHashSet(broadcastList), delegateTask.getAccountId());
+        delegateSelectionLogsService.save(batch);
 
         try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR);
