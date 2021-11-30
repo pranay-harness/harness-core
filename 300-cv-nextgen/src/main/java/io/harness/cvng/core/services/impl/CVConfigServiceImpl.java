@@ -13,6 +13,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
@@ -520,5 +521,15 @@ public class CVConfigServiceImpl implements CVConfigService {
     return cvConfigs.stream()
         .filter(cvConfig -> monitoringSources.contains(cvConfig.getIdentifier()))
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<CVConfig> getCVConfigs(ProjectParams projectParams, String identifier) {
+    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
+        .filter(CVConfigKeys.accountId, projectParams.getAccountIdentifier())
+        .filter(CVConfigKeys.orgIdentifier, projectParams.getOrgIdentifier())
+        .filter(CVConfigKeys.projectIdentifier, projectParams.getProjectIdentifier())
+        .filter(CVConfigKeys.identifier, identifier)
+        .asList();
   }
 }

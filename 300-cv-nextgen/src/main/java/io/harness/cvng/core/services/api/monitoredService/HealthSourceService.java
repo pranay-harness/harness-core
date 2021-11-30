@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.api.monitoredService;
 
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
+import io.harness.cvng.core.entities.CVConfig;
 
 import java.util.List;
 import java.util.Set;
@@ -21,4 +22,7 @@ public interface HealthSourceService {
   }
   void setHealthMonitoringFlag(String accountId, String orgIdentifier, String projectIdentifier, String namespace,
       List<String> healthSourceIdentifiers, boolean enable);
+
+  List<CVConfig> getCVConfigs(String accountId, String orgIdentifier, String projectIdentifier,
+      String monitoredServiceIdentifier, String healthSourceIdentifier);
 }
