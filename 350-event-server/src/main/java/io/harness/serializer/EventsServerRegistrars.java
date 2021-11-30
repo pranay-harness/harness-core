@@ -1,11 +1,11 @@
 package io.harness.serializer;
 
-import io.harness.authenticationservice.serialization.NgAuthenticationServiceKryoRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateAgentKryoRegister;
 import io.harness.serializer.kryo.ManagerKryoRegistrar;
+import io.harness.serializer.kryo.NgAuthenticationServiceKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationStepsKryoRegistrar;
 import io.harness.serializer.kryo.ProjectAndOrgKryoRegistrar;
 import io.harness.serializer.kryo.SecretManagerClientKryoRegistrar;
