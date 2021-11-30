@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(using = DockerAuthenticationDTODeserializer.class)
-@Schema(name = "DockerAuthentication", description = "This contains details of Docker Authentication")
+@Schema(name = "DockerAuthentication", description = "This entity contains the details for Docker Authentication")
 public class DockerAuthenticationDTO {
   @NotNull @JsonProperty("type") DockerAuthType authType;
 

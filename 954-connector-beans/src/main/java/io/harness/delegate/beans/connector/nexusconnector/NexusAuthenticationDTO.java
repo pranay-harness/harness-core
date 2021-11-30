@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 @ApiModel("NexusAuthentication")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(using = NexusAuthDTODeserializer.class)
-@Schema(name = "NexusAuthentication", description = "This contains details of Nexus Authentication")
+@Schema(name = "NexusAuthentication", description = "This entity contains the details for Nexus Authentication")
 public class NexusAuthenticationDTO {
   @NotNull @JsonProperty("type") NexusAuthType authType;
   @JsonProperty("spec")
