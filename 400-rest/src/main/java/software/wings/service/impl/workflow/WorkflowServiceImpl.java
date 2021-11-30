@@ -87,8 +87,6 @@ import static software.wings.sm.StepType.AZURE_WEBAPP_SLOT_SWAP;
 import static software.wings.sm.StepType.K8S_TRAFFIC_SPLIT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK;
-import static software.wings.sm.StepType.TERRAGRUNT_DESTROY;
-import static software.wings.sm.StepType.TERRAGRUNT_PROVISION;
 import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
 
 import static java.lang.String.format;
@@ -4286,9 +4284,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                         .build();
         if (!step.getType().equals(
                 StateType.CVNG.name())) { // TODO: Hiding it for now. We can remove it after few months.
-          if (shouldHideStep(step, accountId)) {
-            continue;
-          }
           steps.put(step.getType(), stepMeta);
         }
       }
@@ -4305,11 +4300,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     addServiceCommandsToWorkflowCategories(steps, fetchServiceCommandNames(workflowPhase, appId), categories);
 
     return WorkflowCategorySteps.builder().steps(steps).categories(categories).build();
-  }
-
-  private boolean shouldHideStep(StepType stepType, String accountId) {
-    List<StepType> terragruntSteps = asList(TERRAGRUNT_DESTROY, StepType.TERRAGRUNT_ROLLBACK, TERRAGRUNT_PROVISION);
-    return terragruntSteps.contains(stepType) && !featureFlagService.isEnabled(FeatureName.TERRAGRUNT, accountId);
   }
 
   private List<StepType> filterSelectNodesStep(List<StepType> stepTypesList, StepType filteredSelectNode) {
