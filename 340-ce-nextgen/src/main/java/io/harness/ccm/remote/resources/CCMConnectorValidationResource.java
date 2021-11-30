@@ -6,6 +6,7 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.connectors.AbstractCEConnectorValidator;
 import io.harness.ccm.connectors.CEConnectorValidatorFactory;
+import io.harness.ccm.utils.LogAccountIdentifier;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -39,6 +40,7 @@ public class CCMConnectorValidationResource {
   @POST
   @Timed
   @ExceptionMetered
+  @LogAccountIdentifier
   @ApiOperation(value = "Validate connector", nickname = "validate connector")
   public ResponseDTO<ConnectorValidationResult> testConnection(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, ConnectorResponseDTO connectorResponseDTO) {
