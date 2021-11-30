@@ -10,8 +10,11 @@ import java.nio.file.Paths;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.argparse4j.inf.Namespace;
 import net.sourceforge.argparse4j.inf.Subparser;
+import org.reflections.Configuration;
 import org.reflections.Reflections;
+import org.reflections.scanners.ResourcesScanner;
 import org.reflections.serializers.JsonSerializer;
+import org.reflections.util.ConfigurationBuilder;
 
 @Slf4j
 public class ScanClasspathMetadataCommand extends Command {
@@ -25,6 +28,10 @@ public class ScanClasspathMetadataCommand extends Command {
   @Override
   public void run(Bootstrap<?> bootstrap, Namespace namespace) throws Exception {
     String savePath = Paths.get(System.getProperty("user.dir"), CLASSPATH_METADATA_FILE_NAME).toString();
-    new Reflections(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS).save(savePath, new JsonSerializer());
+    Configuration configuration =
+        new ConfigurationBuilder()
+            .forPackages(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS, "metrics.metricDefinitions", "metrics.metricGroups")
+            .addScanners(new ResourcesScanner());
+    new Reflections(configuration).save(savePath, new JsonSerializer());
   }
 }
