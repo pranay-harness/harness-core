@@ -3,9 +3,15 @@ package io.harness.yaml.utils;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.yaml.schema.beans.SchemaConstants.EXECUTION_WRAPPER_CONFIG_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.STEP_NODE;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.jackson.JsonNodeUtils;
 import io.harness.packages.HarnessPackages;
 import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
@@ -15,10 +21,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.cfg.MapperConfig;
 import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.File;
@@ -29,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -269,5 +280,40 @@ public class YamlSchemaUtils {
     // Generating only for harness classes hence checking if package is software.wings or io.harness.
     return !clazz.isPrimitive() && !clazz.isEnum()
         && (clazz.getCanonicalName().startsWith("io.harness") || clazz.getCanonicalName().startsWith("software.wings"));
+  }
+
+  public void addOneOfInExecutionWrapperConfig(
+      JsonNode pipelineSchema, Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypesToBeAdded, String namespace) {
+    String nameSpaceString = "";
+    if (isNotEmpty(namespace)) {
+      nameSpaceString = namespace + "/";
+    }
+    JsonNode executionWrapperConfigProperties = pipelineSchema.get(EXECUTION_WRAPPER_CONFIG_NODE).get(PROPERTIES_NODE);
+    ArrayNode oneOfNode = getOneOfNode(executionWrapperConfigProperties);
+    JsonNode stepsNode = executionWrapperConfigProperties.get(STEP_NODE);
+
+    for (Set<Class<?>> classes : newYamlSchemaSubtypesToBeAdded.values()) {
+      for (Class<?> clazz : classes) {
+        if (YamlSchemaUtils.getTypedField(clazz) != null) {
+          oneOfNode.add(JsonNodeUtils.upsertPropertyInObjectNode(new ObjectNode(JsonNodeFactory.instance), REF_NODE,
+              "#/definitions/" + nameSpaceString + clazz.getSimpleName()));
+        }
+      }
+    }
+    ((ObjectNode) stepsNode).set(ONE_OF_NODE, oneOfNode);
+  }
+
+  private ArrayNode getOneOfNode(JsonNode executionWrapperConfig) {
+    ArrayNode oneOfList = new ArrayNode(JsonNodeFactory.instance);
+    JsonNode stepsNode = executionWrapperConfig.get(STEP_NODE);
+    if (executionWrapperConfig.get(STEP_NODE).get(REF_NODE) != null) {
+      String stepElementConfigRef = executionWrapperConfig.get(STEP_NODE).get(REF_NODE).toString().replace("\"", "");
+      JsonNodeUtils.deletePropertiesInJsonNode((ObjectNode) stepsNode, REF_NODE);
+      oneOfList.add(JsonNodeUtils.upsertPropertyInObjectNode(
+          new ObjectNode(JsonNodeFactory.instance), REF_NODE, stepElementConfigRef));
+    } else if (executionWrapperConfig.get(STEP_NODE).get(ONE_OF_NODE) != null) {
+      return (ArrayNode) executionWrapperConfig.get(STEP_NODE).get(ONE_OF_NODE);
+    }
+    return oneOfList;
   }
 }

@@ -107,7 +107,7 @@ public class PipelineEntity
   @Wither int stageCount;
   @Wither @Singular List<String> stageNames;
 
-  @Wither @Setter @NonFinal Boolean templateReference;
+  @Wither @Setter @NonFinal @Default Boolean templateReference = false;
 
   @Wither @Setter @NonFinal String objectIdOfYaml;
   @Setter @NonFinal Boolean isFromDefaultBranch;

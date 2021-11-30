@@ -94,6 +94,7 @@ public class StackdriverCVConfig extends MetricCVConfig {
       metricInfoList.add(
           MetricInfo.builder()
               .metricName(definition.getMetricName())
+              .identifier(definition.getIdentifier())
               .jsonMetricDefinition(JsonUtils.asJson(definition.getJsonMetricDefinition()))
               .metricType(metricType)
               .tags(definition.getMetricTags())

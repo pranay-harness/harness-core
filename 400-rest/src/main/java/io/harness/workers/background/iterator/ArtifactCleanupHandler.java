@@ -7,7 +7,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
-import static java.util.Arrays.asList;
 
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIterator;
@@ -25,7 +24,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.AccountService;
@@ -66,10 +64,7 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(query
                 -> query.field(ArtifactStreamKeys.artifactStreamType)
-                       .in(asList(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.AMI.name(),
-                           ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ECR.name(),
-                           ArtifactStreamType.GCR.name(), ArtifactStreamType.ACR.name(),
-                           ArtifactStreamType.NEXUS.name(), ArtifactStreamType.AZURE_MACHINE_IMAGE.name()))
+                       .in(ArtifactCollectionUtils.SUPPORTED_ARTIFACT_CLEANUP_LIST)
                        .field(ArtifactStreamKeys.collectionEnabled)
                        .in(Arrays.asList(true, null)))
             .schedulingType(REGULAR)

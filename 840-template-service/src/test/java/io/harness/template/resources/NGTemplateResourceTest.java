@@ -183,7 +183,7 @@ public class NGTemplateResourceTest extends CategoryTest {
     doReturn(entityWithMongoVersion)
         .when(templateService)
         .updateStableTemplateVersion(
-            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL);
+            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, "");
     ResponseDTO<String> responseDTO = templateResource.updateStableTemplate(
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, "");
     assertThat(responseDTO.getData()).isNotNull();

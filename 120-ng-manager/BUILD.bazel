@@ -34,6 +34,7 @@ shared_dependencies = [
     "//958-migration-sdk:module",
     "//958-ng-file-service-sdk:module",
     "//959-psql-database-models:module",
+    "//960-watcher:module",
     "//965-api-key-filter:module",
     "//product/ci/scm/proto:ciscm_java_proto",
     "@maven//:net_rcarz_jira_client",

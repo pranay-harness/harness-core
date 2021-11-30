@@ -138,6 +138,7 @@ public class DatadogLogHealthSourceSpec extends HealthSourceSpec {
                                                   .queryName(queryDTO.getName())
                                                   .query(queryDTO.getQuery())
                                                   .serviceInstanceIdentifier(queryDTO.getServiceInstanceIdentifier())
+                                                  .indexes(queryDTO.getIndexes())
                                                   .category(CVMonitoringCategory.ERRORS)
                                                   .build();
       cvConfigs.add(datadogLogCVConfig);

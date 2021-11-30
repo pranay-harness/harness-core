@@ -757,8 +757,8 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
           viewRuleList, idFilters, timeFilters, modifiedGroupBy, cloudProviderTableName);
     }
 
-    return viewsQueryBuilder.getQuery(
-        viewRuleList, idFilters, timeFilters, modifiedGroupBy, aggregateFunction, sort, cloudProviderTableName);
+    return viewsQueryBuilder.getQuery(viewRuleList, idFilters, timeFilters, modifiedGroupBy, aggregateFunction, sort,
+        cloudProviderTableName, queryParams.getTimeOffsetInDays());
   }
 
   public static List<ViewRule> convertQLCEViewRuleToViewRule(@NotNull List<QLCEViewRule> ruleList) {

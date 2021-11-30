@@ -16,6 +16,7 @@ import org.springframework.data.annotation.TypeAlias;
   @JsonSubTypes.Type(value = SetFeatureFlagStateYaml.class, name = "SetFeatureFlagState")
   , @JsonSubTypes.Type(value = SetOnVariationYaml.class, name = "SetOnVariation"),
       @JsonSubTypes.Type(value = SetOffVariationYaml.class, name = "SetOffVariation"),
+      @JsonSubTypes.Type(value = SetDefaultVariationsYaml.class, name = "SetDefaultVariations"),
       @JsonSubTypes.Type(value = AddRuleYaml.class, name = "AddRule"),
       @JsonSubTypes.Type(value = UpdateRuleYaml.class, name = "UpdateRule"),
       @JsonSubTypes.Type(value = AddTargetsToVariationTargetMapYaml.class, name = "AddTargetsToVariationTargetMap"),
@@ -32,6 +33,7 @@ public interface PatchInstruction {
     @JsonProperty("SetFeatureFlagState") SET_FEATURE_FLAG_STATE("SetFeatureFlagState"),
     @JsonProperty("SetOnVariation") SET_ON_VARIATION("SetOnVariation"),
     @JsonProperty("SetOffVariation") SET_OFF_VARIATION("SetOffVariation"),
+    @JsonProperty("SetDefaultVariations") SET_DEFAULT_VARIATIONS("SetDefaultVariations"),
     @JsonProperty("AddRule") ADD_RULE("AddRule"),
     @JsonProperty("UpdateRule") UPDATE_RULE("UpdateRule"),
     @JsonProperty("AddTargetsToVariationTargetMap")

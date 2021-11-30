@@ -167,7 +167,7 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
 
     // Update stable template
     TemplateEntity updateStableTemplateVersion = templateService.updateStableTemplateVersion(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, "version2");
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, "version2", "");
     assertThat(updateStableTemplateVersion).isNotNull();
     assertThat(updateStableTemplateVersion.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(updateStableTemplateVersion.getOrgIdentifier()).isEqualTo(ORG_IDENTIFIER);
@@ -183,7 +183,7 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
 
     // Testing updating stable template to check the lastUpdatedBy flag
     updateStableTemplateVersion = templateService.updateStableTemplateVersion(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, "version2");
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, "version2", "");
     assertThat(updateStableTemplateVersion.isLastUpdatedTemplate()).isTrue();
 
     // delete template stable template
@@ -310,8 +310,8 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
     assertThat(templateEntities.getContent().get(0).getVersionLabel()).isEqualTo("version2");
 
     // Update stable template
-    TemplateEntity updateStableTemplateVersion =
-        templateService.updateStableTemplateVersion(ACCOUNT_ID, ORG_IDENTIFIER, null, TEMPLATE_IDENTIFIER, "version2");
+    TemplateEntity updateStableTemplateVersion = templateService.updateStableTemplateVersion(
+        ACCOUNT_ID, ORG_IDENTIFIER, null, TEMPLATE_IDENTIFIER, "version2", "");
     assertThat(updateStableTemplateVersion).isNotNull();
     assertThat(updateStableTemplateVersion.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(updateStableTemplateVersion.getOrgIdentifier()).isEqualTo(ORG_IDENTIFIER);
