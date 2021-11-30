@@ -10,12 +10,20 @@ import static io.harness.NGCommonEntityConstants.INTERNAL_SERVER_ERROR_MESSAGE;
 import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.ng.core.rbac.ProjectPermissions.EDIT_PROJECT_PERMISSION;
+import static io.harness.ng.core.rbac.ProjectPermissions.VIEW_PROJECT_PERMISSION;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.common.dtos.TriggerFullSyncRequestDTO;
+import io.harness.connector.accesscontrol.ResourceTypes;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.gitsync.common.dtos.TriggerFullSyncResponseDTO;
 import io.harness.gitsync.common.service.FullSyncTriggerService;
+import io.harness.gitsync.core.fullsync.GitFullSyncConfigService;
+import io.harness.gitsync.fullsync.dtos.GitFullSyncConfigDTO;
+import io.harness.gitsync.fullsync.dtos.GitFullSyncConfigRequestDTO;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -37,11 +45,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("/full-sync")
@@ -72,7 +84,8 @@ ApiResponse(responseCode = INTERNAL_SERVER_ERROR_CODE, description = INTERNAL_SE
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(DX)
 public class FullSyncResource {
-  FullSyncTriggerService fullSyncTriggerService;
+  private final FullSyncTriggerService fullSyncTriggerService;
+  private final GitFullSyncConfigService gitFullSyncConfigService;
 
   @POST
   @ApiOperation(value = "Triggers Full Sync", nickname = "triggerFullSync")
@@ -80,7 +93,7 @@ public class FullSyncResource {
       responses =
       { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Successfully triggered Full Sync") })
   public ResponseDTO<TriggerFullSyncResponseDTO>
-  create(@RequestBody(description = "The Full Sync Request") @NotNull @Valid TriggerFullSyncRequestDTO fullSyncRequest,
+  create(
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @OrgIdentifier @QueryParam(
@@ -88,6 +101,99 @@ public class FullSyncResource {
       @Parameter(description = PROJECT_PARAM_MESSAGE) @ProjectIdentifier @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     return ResponseDTO.newResponse(
-        fullSyncTriggerService.triggerFullSync(accountIdentifier, orgIdentifier, projectIdentifier, fullSyncRequest));
+        fullSyncTriggerService.triggerFullSync(accountIdentifier, orgIdentifier, projectIdentifier));
+  }
+
+  @POST
+  @Path("/config")
+  @ApiOperation(value = "Create a full sync configuration", nickname = "createGitFullSyncConfig")
+  @Operation(operationId = "createGitFullSyncConfig", summary = "Creates a configuration for performing git full sync",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the configuration back along with the scope information")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = EDIT_PROJECT_PERMISSION)
+  public ResponseDTO<GitFullSyncConfigDTO>
+  createFullSyncConfig(
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @io.harness.accesscontrol.AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
+      harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier,
+      @RequestBody(description = "Configuration body") @NotNull @Valid GitFullSyncConfigRequestDTO requestDTO) {
+    return ResponseDTO.newResponse(
+        gitFullSyncConfigService.createConfig(accountIdentifier, orgIdentifier, projectIdentifier, requestDTO));
+  }
+
+  @PUT
+  @Path("/config")
+  @ApiOperation(value = "Update a full sync configuration", nickname = "updateGitFullSyncConfig")
+  @Operation(operationId = "updateGitFullSyncConfig", summary = "Updates a configuration for performing git full sync",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the configuration back along with the scope information")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = EDIT_PROJECT_PERMISSION)
+  public ResponseDTO<GitFullSyncConfigDTO>
+  updateFullSyncConfig(
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @io.harness.accesscontrol.AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
+      harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier,
+      @RequestBody(description = "Configuration body") @NotNull @Valid GitFullSyncConfigRequestDTO requestDTO) {
+    return ResponseDTO.newResponse(
+        gitFullSyncConfigService.updateConfig(accountIdentifier, orgIdentifier, projectIdentifier, requestDTO));
+  }
+
+  @GET
+  @Path("/config")
+  @ApiOperation(value = "Get full sync configuration", nickname = "getGitFullSyncConfig")
+  @Operation(operationId = "getGitFullSyncConfig", summary = "Get configuration for performing git full sync",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the configuration back along with the scope information")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = VIEW_PROJECT_PERMISSION)
+  public ResponseDTO<GitFullSyncConfigDTO>
+  getFullSyncConfig(
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @io.harness.accesscontrol.AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
+      harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier) {
+    GitFullSyncConfigDTO gitFullSyncConfigDTO =
+        gitFullSyncConfigService.get(accountIdentifier, orgIdentifier, projectIdentifier)
+            .orElseThrow(
+                () -> new InvalidRequestException("Config not found at the scope provided", WingsException.USER));
+    return ResponseDTO.newResponse(gitFullSyncConfigDTO);
+  }
+
+  @DELETE
+  @Path("/config")
+  @ApiOperation(value = "Delete full sync configuration", nickname = "deleteGitFullSyncConfig")
+  @Operation(operationId = "deleteGitFullSyncConfig", summary = "Delete configuration for performing git full sync",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns true/false depending upon whether the operation was successful")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = EDIT_PROJECT_PERMISSION)
+  public ResponseDTO<Boolean>
+  deleteFullSyncConfig(
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @io.harness.accesscontrol.AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
+      harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier) {
+    return ResponseDTO.newResponse(
+        gitFullSyncConfigService.delete(accountIdentifier, orgIdentifier, projectIdentifier));
   }
 }
