@@ -29,7 +29,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("ArtifactoryConnector")
-@Schema(name = "ArtifactoryConnector", description = "This contains details of Artifactory Connector")
+@Schema(name = "ArtifactoryConnector", description = "This entity contains the details of the Artifactory Connectors")
 public class ArtifactoryConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @NotNull @NotBlank String artifactoryServerUrl;
   @Valid ArtifactoryAuthenticationDTO auth;

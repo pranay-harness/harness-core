@@ -22,7 +22,7 @@ import lombok.Data;
 @JsonTypeName(ArtifactoryConstants.USERNAME_PASSWORD)
 @OneOfField(fields = {"username", "usernameRef"})
 @Schema(name = "ArtifactoryUsernamePasswordAuth",
-    description = "This contains details of Artifactory Username and Password")
+    description = "This entity contains the details of the Artifactory Username and Password")
 public class ArtifactoryUsernamePasswordAuthDTO implements ArtifactoryAuthCredentialsDTO {
   String username;
   @ApiModelProperty(dataType = "string") @SecretReference SecretRefData usernameRef;

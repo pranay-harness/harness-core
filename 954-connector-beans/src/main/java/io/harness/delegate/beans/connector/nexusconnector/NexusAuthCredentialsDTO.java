@@ -13,5 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @JsonSubTypes(
     { @JsonSubTypes.Type(value = NexusUsernamePasswordAuthDTO.class, name = NexusConstants.USERNAME_PASSWORD) })
 @ApiModel("NexusAuthCredentials")
-@Schema(name = "NexusAuthCredentials", description = "This contains details of credentials for Nexus Authentication")
+@Schema(name = "NexusAuthCredentials",
+    description = "This entity contains the details of credentials for Nexus Authentication")
 public interface NexusAuthCredentialsDTO extends DecryptableEntity {}
