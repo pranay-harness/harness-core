@@ -21,7 +21,8 @@ import lombok.Data;
 @ApiModel("NexusUsernamePasswordAuth")
 @JsonTypeName(NexusConstants.USERNAME_PASSWORD)
 @OneOfField(fields = {"username", "usernameRef"})
-@Schema(name = "NexusUsernamePasswordAuth", description = "This contains details of Nexus Username and Password")
+@Schema(name = "NexusUsernamePasswordAuth",
+    description = "This entity contains the details of the Nexus Username and Password")
 public class NexusUsernamePasswordAuthDTO implements NexusAuthCredentialsDTO {
   String username;
   @ApiModelProperty(dataType = "string") @SecretReference SecretRefData usernameRef;

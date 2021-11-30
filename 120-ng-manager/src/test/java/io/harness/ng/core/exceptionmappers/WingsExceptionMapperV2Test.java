@@ -10,7 +10,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
-import io.harness.exception.ngexception.SampleErrorMetadataDTO;
+import io.harness.exception.ngexception.beans.SampleErrorMetadataDTO;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.rule.Owner;

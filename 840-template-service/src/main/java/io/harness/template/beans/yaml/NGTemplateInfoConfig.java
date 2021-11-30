@@ -44,7 +44,7 @@ public class NGTemplateInfoConfig {
   @NotNull @EntityName @Pattern(regexp = NGRegexValidatorConstants.NAME_PATTERN) String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
   Map<String, String> tags;
-  @NotNull @Pattern(regexp = NGRegexValidatorConstants.IDENTIFIER_PATTERN) String versionLabel;
+  @NotNull @Pattern(regexp = NGRegexValidatorConstants.VERSION_LABEL_PATTERN) String versionLabel;
 
   @NotNull TemplateEntityType type;
   JsonNode spec;

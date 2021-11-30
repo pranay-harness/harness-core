@@ -149,6 +149,11 @@ public class ArtifactCollectionUtils {
   @Inject private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
   @Inject private MainConfiguration mainConfiguration;
 
+  public static final List<String> SUPPORTED_ARTIFACT_CLEANUP_LIST =
+      Lists.newArrayList(DOCKER, AMI, ARTIFACTORY, GCR, ECR, ACR, NEXUS, AZURE_MACHINE_IMAGE, CUSTOM)
+          .stream()
+          .map(Enum::name)
+          .collect(Collectors.toList());
   public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
 
   static final List<String> metadataOnlyStreams = Collections.unmodifiableList(
@@ -1036,9 +1041,6 @@ public class ArtifactCollectionUtils {
   }
 
   public static boolean supportsCleanup(String artifactStreamType) {
-    return Lists.newArrayList(DOCKER, AMI, ARTIFACTORY, GCR, ECR, ACR, NEXUS, AZURE_MACHINE_IMAGE)
-        .stream()
-        .map(Enum::name)
-        .anyMatch(x -> x.equals(artifactStreamType));
+    return SUPPORTED_ARTIFACT_CLEANUP_LIST.stream().anyMatch(x -> x.equals(artifactStreamType));
   }
 }

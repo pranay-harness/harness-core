@@ -431,6 +431,9 @@ public class AppServiceImpl implements AppService {
       // Now we are ready to delete the object.
       if (wingsPersistence.delete(Application.class, appId)) {
         sendNotification(application, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
+      } else {
+        throw new InvalidRequestException(
+            String.format("Application %s does not exist or might already be deleted.", application.getName()));
       }
 
       // Note that if we failed to delete the object we left without the yaml. Likely the users

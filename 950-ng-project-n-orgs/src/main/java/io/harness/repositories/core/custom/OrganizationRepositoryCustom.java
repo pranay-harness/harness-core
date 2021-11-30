@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.ng.core.entities.Organization;
 
+import com.mongodb.client.result.UpdateResult;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,4 +29,6 @@ public interface OrganizationRepositoryCustom {
   Organization restore(String accountIdentifier, String identifier);
 
   List<Scope> findAllOrgs(Criteria criteria);
+
+  UpdateResult updateMultiple(Query query, Update update);
 }

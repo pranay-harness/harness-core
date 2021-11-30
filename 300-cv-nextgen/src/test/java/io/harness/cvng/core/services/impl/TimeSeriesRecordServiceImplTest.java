@@ -270,7 +270,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
     List<TimeSeriesRecord> timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
                                                    .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
                                                    .asList();
-    Set<String> nullableFields = Sets.newHashSet(TimeSeriesRecordKeys.cvConfigId);
+    Set<String> nullableFields = Sets.newHashSet();
     timeSeriesRecords.forEach(timeSeriesRecord -> {
       List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(TimeSeriesRecord.class);
       fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {

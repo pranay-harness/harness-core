@@ -190,6 +190,13 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       }
 
       @Provides
+      @Named("new-yaml-schema-subtypes-cd")
+      @Singleton
+      public Map<Class<?>, Set<Class<?>>> newCdYamlSchemaSubtypes() {
+        return Mockito.mock(Map.class);
+      }
+
+      @Provides
       @Named("disableDeserialization")
       @Singleton
       public boolean getSerializationForDelegate() {

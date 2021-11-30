@@ -116,6 +116,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(value = "searchEnabled") private boolean isSearchEnabled;
   @JsonProperty(value = "graphQLEnabled") private boolean isGraphQLEnabled;
   @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
+  @JsonProperty("disableResourceValidation") private boolean disableResourceValidation;
   @JsonProperty private PortalConfig portal = new PortalConfig();
   @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;

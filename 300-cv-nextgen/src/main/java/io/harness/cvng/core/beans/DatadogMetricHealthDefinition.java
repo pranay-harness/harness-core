@@ -2,17 +2,16 @@ package io.harness.cvng.core.beans;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
-import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.SuperBuilder;
 
 @Value
-@Builder
-public class DatadogMetricHealthDefinition {
+@SuperBuilder
+public class DatadogMetricHealthDefinition extends HealthSourceMetricDefinition {
   String dashboardId;
   String dashboardName;
   String query;
   String groupingQuery;
-  String metricName;
   String metric;
   String aggregation;
   String serviceInstanceIdentifierTag;

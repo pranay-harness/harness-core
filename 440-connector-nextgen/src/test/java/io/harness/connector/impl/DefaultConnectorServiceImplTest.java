@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -249,7 +250,8 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Category(UnitTests.class)
   public void testMarkConnectorInvalid() {
     createConnector(identifier, name);
-    connectorService.markEntityInvalid(accountIdentifier, null, null, identifier, "xyz");
+    IdentifierRef identifierRef = IdentifierRef.builder().identifier(identifier).build();
+    connectorService.markEntityInvalid(accountIdentifier, identifierRef, "xyz");
     Optional<ConnectorResponseDTO> connectorResponseDTO =
         connectorService.get(accountIdentifier, null, null, identifier);
     assertThat(connectorResponseDTO).isPresent();

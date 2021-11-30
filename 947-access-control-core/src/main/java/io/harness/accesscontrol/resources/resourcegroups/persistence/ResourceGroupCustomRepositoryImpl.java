@@ -32,4 +32,10 @@ public class ResourceGroupCustomRepositoryImpl implements ResourceGroupCustomRep
     Query query = new Query(criteria);
     return Optional.ofNullable(mongoTemplate.findOne(query, ResourceGroupDBO.class));
   }
+
+  @Override
+  public boolean deleteMulti(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.remove(query, ResourceGroupDBO.class).wasAcknowledged();
+  }
 }
