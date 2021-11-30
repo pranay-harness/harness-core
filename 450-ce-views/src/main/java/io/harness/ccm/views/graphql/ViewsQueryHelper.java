@@ -5,6 +5,7 @@ import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.entities.ViewQueryParams;
+import io.harness.ccm.views.utils.ViewFieldUtils;
 
 import com.sun.istack.internal.Nullable;
 import java.math.BigDecimal;
@@ -293,5 +294,12 @@ public class ViewsQueryHelper {
         .filter(f -> f.getViewMetadataFilter() != null)
         .findFirst()
         .map(x -> x.getViewMetadataFilter().getViewId());
+  }
+
+  public static Boolean isGroupByNonePresent(List<QLCEViewGroupBy> groupByList) {
+    // Mind the index here
+    String noneFieldName = ViewFieldUtils.getCommonFields().get(3).getFieldName();
+    return groupByList.stream().anyMatch(groupBy
+        -> groupBy.getEntityGroupBy() != null && groupBy.getEntityGroupBy().getFieldName().equals(noneFieldName));
   }
 }
