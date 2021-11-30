@@ -60,4 +60,6 @@ public interface DelegateSelectionLogsService {
   void logNoEligibleDelegatesAvailableToExecuteTask(BatchDelegateSelectionLog batch, String accountId);
 
   void logEligibleDelegatesToExecuteTask(BatchDelegateSelectionLog batch, Set<String> delegateIds, String accountId);
+
+  void logBroadcastToDelegate(BatchDelegateSelectionLog batch, Set<String> delegateIds, String accountId);
 }

@@ -32,6 +32,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
@@ -45,6 +46,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -277,7 +279,10 @@ public class DelegateQueueTask implements Runnable {
         if (delegateTask == null) {
           continue;
         }
+        BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(delegateTask);
         delegateTask.setBroadcastToDelegateIds(broadcastList);
+        delegateSelectionLogsService.logBroadcastToDelegate(
+            batch, Sets.newHashSet(broadcastList), delegateTask.getAccountId());
 
         try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR);

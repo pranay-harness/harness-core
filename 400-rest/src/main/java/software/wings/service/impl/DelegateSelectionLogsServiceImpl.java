@@ -97,6 +97,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String NO_ELIGIBLE_DELEGATES_GROUP_ID = "NO_ELIGIBLE_DELEGATES_GROUP_ID";
   private static final String NO_ELIGIBLE_DELEGATES_AVAILABLE_GROUP_ID = "NO_ELIGIBLE_DELEGATES_AVAILABLE_GROUP_ID";
   private static final String ELIGIBLE_DELEGATES_GROUP_ID = "ELIGIBLE_DELEGATES_GROUP_ID";
+  private static final String BROADCAST_TO_DELEGATE_GROUP_ID = "BROADCAST_TO_DELEGATE_GROUP_ID";
 
   private final LoadingCache<ImmutablePair<String, String>, String> setupAbstractionsCache =
       CacheBuilder.newBuilder()
@@ -206,8 +207,14 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   @Override
   public void logEligibleDelegatesToExecuteTask(
       BatchDelegateSelectionLog batch, final Set<String> delegateIds, String accountId) {
-    final String message = "Delegates eligible to execute task";
+    final String message = "Delegate eligible to execute task";
     logBatch(batch, accountId, delegateIds, message, INFO, ELIGIBLE_DELEGATES_GROUP_ID);
+  }
+
+  @Override
+  public void logBroadcastToDelegate(BatchDelegateSelectionLog batch, Set<String> delegateIds, String accountId) {
+    final String message = "Broadcasting to delegate";
+    logBatch(batch, accountId, delegateIds, message, INFO, BROADCAST_TO_DELEGATE_GROUP_ID);
   }
 
   @Override
