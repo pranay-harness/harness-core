@@ -314,6 +314,7 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -934,6 +935,10 @@ public class WingsApplication extends Application<MainConfiguration> {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
+    }
+    if (configuration.isDisableResourceValidation()) {
+      environment.jersey().property(
+          ServerProperties.RESOURCE_VALIDATION_DISABLE, configuration.isDisableResourceValidation());
     }
   }
 
