@@ -50,6 +50,7 @@ import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.PagerDutyWebhook;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
+import io.harness.cvng.core.entities.SLIDataCollectionTask;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.entities.ServiceGuardDataCollectionTask;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -99,6 +100,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(HeatMap.class);
     set.add(DataCollectionTask.class);
     set.add(ServiceGuardDataCollectionTask.class);
+    set.add(SLIDataCollectionTask.class);
     set.add(DeploymentDataCollectionTask.class);
     set.add(CVConfig.class);
     set.add(CVNGSchema.class);
