@@ -140,7 +140,7 @@ function copy_ng_dashboard_jars(){
 	mkdir -p dist/ng-dashboard-service ;
 	cd dist/ng-dashboard-service
 
-	cp ${BAZEL_BIN}/290-dashboard-service/module_deploy.jar change-data-capture.jar
+	cp ${BAZEL_BIN}/290-dashboard-service/module_deploy.jar ng-dashboard-service.jar
 	cp ../../290-dashboard-service/config.yml .
 
 	if [ -e ../../dockerization/ng-dashboard-service/Dockerfile-ng-dashboard-k8-openjdk ]
