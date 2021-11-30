@@ -17,7 +17,8 @@ import lombok.Data;
 @Data
 @Builder
 @OneOfField(fields = {"username", "usernameRef"})
-@Schema(name = "DockerUserNamePassword", description = "This contains details of Docker Username and Password")
+@Schema(name = "DockerUserNamePassword",
+    description = "This entity contains the details of the Docker Username and Password")
 public class DockerUserNamePasswordDTO implements DockerAuthCredentialsDTO {
   String username;
   @ApiModelProperty(dataType = "string") @SecretReference SecretRefData usernameRef;
