@@ -7,6 +7,7 @@ import static io.harness.git.model.ChangeType.NONE;
 
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorDTO;
@@ -328,9 +329,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public boolean markEntityInvalid(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml) {
-    return defaultConnectorService.markEntityInvalid(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalidYaml);
+  public boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String invalidYaml) {
+    return defaultConnectorService.markEntityInvalid(accountIdentifier, entityReference, invalidYaml);
   }
 }
