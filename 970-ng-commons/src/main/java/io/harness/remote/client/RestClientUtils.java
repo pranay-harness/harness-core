@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -50,6 +51,10 @@ public class RestClientUtils {
           if (restResponse != null && isNotEmpty(restResponse.getResponseMessages())) {
             List<ResponseMessage> responseMessageList = restResponse.getResponseMessages();
             errorMessage = responseMessageList.get(0).getMessage();
+            if (!StringUtils.isEmpty(errorMessage)
+                && responseMessageList.get(0).getCode() == ErrorCode.INVALID_REQUEST) {
+              errorMessage = errorMessage.substring(17);
+            }
           }
         } catch (Exception e) {
           log.debug("Error while converting error received from upstream systems", e);
