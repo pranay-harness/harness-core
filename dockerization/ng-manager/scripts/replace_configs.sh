@@ -194,6 +194,10 @@ if [[ "" != "$CE_NG_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE ceNextGenClientConfig.baseUrl "$CE_NG_CLIENT_BASEURL"
 fi
 
+if [[ "" != "$LW_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE lightwingClientConfig.baseUrl "$LW_CLIENT_BASEURL"
+fi
+
 if [[ "" != "$AUDIT_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
 fi

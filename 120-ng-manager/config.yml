@@ -149,6 +149,11 @@ ceNextGenClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
+lightwingClientConfig:
+  baseUrl: http://localhost:9595/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
 enableAuth: true
 
 grpcClient:
