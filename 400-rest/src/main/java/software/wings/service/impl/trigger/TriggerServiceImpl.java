@@ -186,6 +186,7 @@ import org.quartz.TriggerKey;
 @Slf4j
 @TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerServiceImpl implements TriggerService {
+  private static final long MIN_INTERVAL = 300;
   public static final String TRIGGER_SLOWNESS_ERROR_MESSAGE = "Trigger rejected due to slowness in the product";
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
@@ -2103,6 +2104,12 @@ public class TriggerServiceImpl implements TriggerService {
       if (!trigger.isDisabled() && EmptyPredicate.isEmpty(trigger.getNextIterations())) {
         throw new InvalidRequestException(
             "Given cron expression doesn't evaluate to a valid time. Please check the expression provided");
+      }
+      nextIterations = trigger.getNextIterations();
+      if (nextIterations.size() > 1 && ((nextIterations.get(1) - nextIterations.get(0)) / 1000 < MIN_INTERVAL)) {
+        throw new InvalidRequestException(
+            "Deployments can be triggered only at 5 minute intervals. Cron Expression should evaluate to time intervals of at least "
+            + MIN_INTERVAL + " seconds.");
       }
     }
   }
