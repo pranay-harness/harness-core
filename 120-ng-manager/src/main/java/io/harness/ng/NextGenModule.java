@@ -180,6 +180,8 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.UserProvider;
 import io.harness.pipeline.PipelineRemoteClientModule;
+import io.harness.plancreator.steps.StepSchemaUtils;
+import io.harness.plancreator.steps.http.PmsAbstractStepNode;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.polling.service.impl.PollingPerpetualTaskServiceImpl;
 import io.harness.polling.service.impl.PollingServiceImpl;
@@ -218,6 +220,7 @@ import io.harness.utils.featureflaghelper.NGFeatureFlagHelperServiceImpl;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import software.wings.security.ThreadLocalUserProvider;
@@ -256,6 +259,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 public class NextGenModule extends AbstractModule {
   public static final String SECRET_MANAGER_CONNECTOR_SERVICE = "secretManagerConnectorService";
   public static final String CONNECTOR_DECORATOR_SERVICE = "connectorDecoratorService";
+  public static Set<Class<?>> cdStepsMovedToNewSchema = new HashSet<>();
   private final NextGenConfiguration appConfig;
   public NextGenModule(NextGenConfiguration appConfig) {
     this.appConfig = appConfig;
@@ -355,8 +359,15 @@ public class NextGenModule extends AbstractModule {
 
     Set<Class<? extends StepSpecType>> subTypesOfStepSpecType = reflections.getSubTypesOf(StepSpecType.class);
     Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
-
+    set = YamlSchemaTransientHelper.removeNewSchemaStepsSubtypes(set, StepSchemaUtils.getStepsMovedToNewSchema());
     return ImmutableMap.of(StepSpecType.class, set);
+  }
+
+  @Provides
+  @Named("new-yaml-schema-subtypes-cd")
+  @Singleton
+  public Map<Class<?>, Set<Class<?>>> newCdYamlSchemaSubtypes() {
+    return ImmutableMap.of(PmsAbstractStepNode.class, cdStepsMovedToNewSchema);
   }
 
   @Provides
