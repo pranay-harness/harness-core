@@ -623,9 +623,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     ConnectorValidationResult validationResult;
     try {
       log.info("connectorInfo.getConnectorType() {}", connectorInfo.getConnectorType());
-      if (connectorInfo.getConnectorType().equals(ConnectorType.CE_AWS)
-          || connectorInfo.getConnectorType().equals(ConnectorType.GCP_CLOUD_COST)
-          || connectorInfo.getConnectorType().equals(ConnectorType.CE_AZURE)) {
+      if (isCCMConnector(connectorInfo)) {
         validationResult = connectionValidator.validate(
             connectorResponseDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
         log.info("validation result {}", validationResult);
@@ -657,6 +655,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       return createValidationResultWithGenericError(ex);
     }
     return validationResult;
+  }
+
+  private boolean isCCMConnector(ConnectorInfoDTO connectorInfo) {
+    return connectorInfo.getConnectorType().equals(ConnectorType.CE_AWS)
+        || connectorInfo.getConnectorType().equals(ConnectorType.GCP_CLOUD_COST)
+        || connectorInfo.getConnectorType().equals(ConnectorType.CE_AZURE);
   }
 
   private ConnectorValidationResult createValidationResultWithGenericError(Exception ex) {
