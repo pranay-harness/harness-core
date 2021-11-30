@@ -139,7 +139,6 @@ public class EnforcementResource {
   @Path("/{featureRestrictionName}/metadata")
   @ApiOperation(
       value = "Fetch Feature Restriction Metadata", nickname = "fetchFeatureRestrictionMetadata", hidden = true)
-  @Hidden
   @InternalApi
   public ResponseDTO<FeatureRestrictionMetadataDTO>
   fetchFeatureRestrictionMetadata(
