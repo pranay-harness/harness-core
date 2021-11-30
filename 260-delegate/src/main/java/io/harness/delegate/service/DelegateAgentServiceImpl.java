@@ -399,6 +399,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private DelegateConnectionHeartbeat connectionHeartbeat;
   private String migrateToJreVersion = System.getProperty(JAVA_VERSION);
   private boolean sendJreInformationToWatcher;
+  private long currentTimeMillis;
 
   private final boolean multiVersion = DeployMode.KUBERNETES.name().equals(System.getenv().get(DeployMode.DEPLOY_MODE))
       || TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
@@ -1804,7 +1805,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     if (!shouldContactManager()) {
       return;
     }
-
+    currentTimeMillis = System.currentTimeMillis();
     log.info("DelegateTaskEvent received - {}", delegateTaskEvent);
 
     String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
@@ -2266,6 +2267,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           while (retries-- > 0) {
             resp = delegateAgentManagerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
             if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
+              log.info("Task {} took {} milliseconds for execution", taskId, System.currentTimeMillis()-currentTimeMillis);
               log.info("Task {} response sent to manager", taskId);
               return resp;
             } else {
