@@ -33,6 +33,7 @@ import io.harness.project.remote.ProjectClient;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.utils.JsonPipelineUtils;
 import io.harness.yaml.utils.YamlSchemaUtils;
@@ -141,15 +142,19 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
       String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope) {
     JsonNode pipelineSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINES, orgIdentifier, projectIdentifier, scope);
-
     JsonNode pipelineSteps =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINE_STEPS, orgIdentifier, projectIdentifier, scope);
+    JsonNode httpStep = yamlSchemaProvider.getYamlSchema(EntityType.HTTP_STEP, orgIdentifier, projectIdentifier, scope);
+
     ObjectNode pipelineDefinitions = (ObjectNode) pipelineSchema.get(DEFINITIONS_NODE);
     ObjectNode pipelineStepsDefinitions = (ObjectNode) pipelineSteps.get(DEFINITIONS_NODE);
+    ObjectNode pipelineStepsV2Definitions = (ObjectNode) httpStep.get(DEFINITIONS_NODE);
 
-    ObjectNode mergedDefinitions = (ObjectNode) JsonNodeUtils.merge(pipelineDefinitions, pipelineStepsDefinitions);
+    ObjectNode tempMergedDefinitions = (ObjectNode) JsonNodeUtils.merge(pipelineDefinitions, pipelineStepsDefinitions);
+    ObjectNode mergedDefinitions = (ObjectNode) JsonNodeUtils.merge(tempMergedDefinitions, pipelineStepsV2Definitions);
 
     ObjectNode stageElementConfig = (ObjectNode) pipelineDefinitions.get(STAGE_ELEMENT_CONFIG);
+    YamlSchemaTransientHelper.deleteSpecNodeInStageElementConfig(stageElementConfig);
 
     PmsYamlSchemaHelper.flattenParallelElementConfig(pipelineDefinitions);
 
