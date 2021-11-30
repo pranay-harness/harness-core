@@ -4,6 +4,7 @@ import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,4 +19,5 @@ public interface DataCollectionTaskService {
   void handleCreateNextTask(CVConfig cvConfig);
   List<String> createSeqTasks(List<DataCollectionTask> dataCollectionTasks);
   void abortDeploymentDataCollectionTasks(List<String> verificationTaskIds);
+  void handleCreateNextSLITask(ServiceLevelIndicator serviceLevelIndicator);
 }

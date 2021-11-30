@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
 import static io.harness.rule.OwnerRule.PAVIC;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,10 +12,13 @@ import io.harness.cvng.beans.DatadogMetricsDataCollectionInfo;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.entities.DatadogMetricCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.Collections;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -50,5 +54,60 @@ public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase
       assertThat(metricInfoToCheck.getMetricName()).isEqualTo(MOCKED_METRIC_NAME);
       assertThat(metricInfoToCheck.getQuery()).isEqualTo(MOCKED_METRIC_QUERY);
     });
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testToDataCollectionInfoForSLI() {
+    MetricPack metricPack = MetricPack.builder().dataCollectionDsl("metric-pack-dsl").build();
+    DatadogMetricCVConfig.MetricInfo metricInfo = DatadogMetricCVConfig.MetricInfo.builder()
+                                                      .query(MOCKED_METRIC_QUERY)
+                                                      .metricName(MOCKED_METRIC_NAME)
+                                                      .metricType(TimeSeriesMetricType.INFRA)
+                                                      .build();
+    ServiceLevelIndicator serviceLevelIndicator =
+        ThresholdServiceLevelIndicator.builder().metric1(MOCKED_METRIC_NAME).build();
+
+    DatadogMetricCVConfig datadogMetricCVConfig = builderFactory.datadogMetricCVConfigBuilder()
+                                                      .metricInfoList(Arrays.asList(metricInfo))
+                                                      .dashboardName(MOCKED_DASHBOARD_NAME)
+                                                      .build();
+    datadogMetricCVConfig.setMetricPack(metricPack);
+
+    DatadogMetricsDataCollectionInfo collectionInfoResult = classUnderTest.toDataCollectionInfoForSLI(
+        Collections.singletonList(datadogMetricCVConfig), serviceLevelIndicator);
+
+    assertThat(collectionInfoResult).isNotNull();
+    assertThat(collectionInfoResult.getMetricDefinitions().size()).isEqualTo(1);
+    collectionInfoResult.getMetricDefinitions().forEach(metricInfoToCheck -> {
+      assertThat(metricInfoToCheck.getMetricName()).isEqualTo(MOCKED_METRIC_NAME);
+      assertThat(metricInfoToCheck.getQuery()).isEqualTo(MOCKED_METRIC_QUERY);
+    });
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testToDataCollectionInfoForSLIWithDifferentMetricName() {
+    MetricPack metricPack = MetricPack.builder().dataCollectionDsl("metric-pack-dsl").build();
+    DatadogMetricCVConfig.MetricInfo metricInfo = DatadogMetricCVConfig.MetricInfo.builder()
+                                                      .query(MOCKED_METRIC_QUERY)
+                                                      .metricName(MOCKED_METRIC_NAME)
+                                                      .metricType(TimeSeriesMetricType.INFRA)
+                                                      .build();
+    ServiceLevelIndicator serviceLevelIndicator = ThresholdServiceLevelIndicator.builder().metric1("metric1").build();
+
+    DatadogMetricCVConfig datadogMetricCVConfig = builderFactory.datadogMetricCVConfigBuilder()
+                                                      .metricInfoList(Arrays.asList(metricInfo))
+                                                      .dashboardName(MOCKED_DASHBOARD_NAME)
+                                                      .build();
+    datadogMetricCVConfig.setMetricPack(metricPack);
+
+    DatadogMetricsDataCollectionInfo collectionInfoResult = classUnderTest.toDataCollectionInfoForSLI(
+        Collections.singletonList(datadogMetricCVConfig), serviceLevelIndicator);
+
+    assertThat(collectionInfoResult).isNotNull();
+    assertThat(collectionInfoResult.getMetricDefinitions().size()).isEqualTo(0);
   }
 }
