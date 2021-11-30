@@ -28,10 +28,6 @@ public class ScanClasspathMetadataCommand extends Command {
   @Override
   public void run(Bootstrap<?> bootstrap, Namespace namespace) throws Exception {
     String savePath = Paths.get(System.getProperty("user.dir"), CLASSPATH_METADATA_FILE_NAME).toString();
-    Configuration configuration =
-        new ConfigurationBuilder()
-            .forPackages(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS, "metrics.metricDefinitions", "metrics.metricGroups")
-            .addScanners(new ResourcesScanner());
-    new Reflections(configuration).save(savePath, new JsonSerializer());
+    new Reflections(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS).save(savePath, new JsonSerializer());
   }
 }
