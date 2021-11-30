@@ -1442,12 +1442,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public boolean deleteWorkflow(String appId, String workflowId) {
-    String accountId = appService.getAccountIdByAppId(appId);
-    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
-        new Action(accountId, ActionType.CREATE_WORKFLOW));
-
-    return LimitEnforcementUtils.withCounterDecrement(
-        checker, () -> { return deleteWorkflow(appId, workflowId, false, false); });
+    return deleteWorkflow(appId, workflowId, false, false);
   }
 
   private boolean deleteWorkflow(String appId, String workflowId, boolean forceDelete, boolean syncFromGit) {
@@ -1456,14 +1451,25 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return true;
     }
 
-    if (!forceDelete) {
-      ensureWorkflowSafeToDelete(workflow);
-    }
+    String accountId =
+        workflow.getAccountId() == null ? appService.getAccountIdByAppId(appId) : workflow.getAccountId();
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_WORKFLOW));
 
-    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
-    yamlPushService.pushYamlChangeSet(accountId, workflow, null, Type.DELETE, syncFromGit, false);
+    return LimitEnforcementUtils.withCounterDecrement(checker, () -> {
+      if (!forceDelete) {
+        ensureWorkflowSafeToDelete(workflow);
+      }
 
-    return pruneWorkflow(appId, workflowId);
+      yamlPushService.pushYamlChangeSet(accountId, workflow, null, Type.DELETE, syncFromGit, false);
+
+      if (!pruneWorkflow(appId, workflowId)) {
+        throw new InvalidRequestException(
+            String.format("Workflow %s does not exist or might already be deleted.", workflow.getName()));
+      }
+
+      return true;
+    });
   }
 
   @Override

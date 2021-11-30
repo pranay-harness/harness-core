@@ -535,6 +535,7 @@ public class AppServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Application.class, APP_ID))
         .thenReturn(anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build());
     when(workflowExecutionService.runningExecutionsForApplication(APP_ID)).thenReturn(null);
+    when(wingsPersistence.delete(Application.class, APP_ID)).thenReturn(true);
     appService.delete(APP_ID, false);
     verify(yamlPushService).pushYamlChangeSet(anyString(), any(), any(), any(), anyBoolean(), anyBoolean());
     verify(usageRestrictionsService).removeAppEnvReferences(anyString(), anyString(), anyString());
