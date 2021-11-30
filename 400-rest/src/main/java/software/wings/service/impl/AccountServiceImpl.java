@@ -88,6 +88,7 @@ import io.harness.network.Http;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.account.OauthProviderType;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.reflection.ReflectionUtils;
@@ -165,7 +166,6 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
 
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -280,6 +280,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
   @Inject private DelegateService delegateService;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -315,6 +316,8 @@ public class AccountServiceImpl implements AccountService {
 
     try (AutoLogContext logContext = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
       accountCrudSubject.fireInform(AccountCrudObxxxxxxxx:onAccountCreated, account);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(AccountCrudObserver.class, "onAccountCreated"), AccountServiceImpl.class, account);
 
       // When an account is just created for import, no need to create default account entities.
       // As the import process will do all these instead.
@@ -885,6 +888,8 @@ public class AccountServiceImpl implements AccountService {
     publishAccountChangeEvent(updatedAccount);
     try (AutoLogContext logContext = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
       accountCrudSubject.fireInform(AccountCrudObxxxxxxxx:onAccountUpdated, updatedAccount);
+      remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(AccountCrudObserver.class, "onAccountUpdated"),
+          AccountServiceImpl.class, updatedAccount);
     }
     return updatedAccount;
   }

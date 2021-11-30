@@ -52,10 +52,12 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ShellExecutionException;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
 import io.harness.validation.Update;
@@ -179,6 +181,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject @Getter private Subject<ArtifactStreamServiceObserver> subject = new Subject<>();
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -588,6 +591,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     try {
       subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onSaved, artifactStream);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ArtifactStreamServiceObserver.class, "onSaved", artifactStream),
+          ArtifactStreamServiceImpl.class, artifactStream);
     } catch (Exception e) {
       log.error(EXCEPTION_OBSERVERS_OF_ARTIFACT_STREAM, e);
     }
@@ -600,6 +606,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     try {
       subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onUpdated, artifactStream);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ArtifactStreamServiceObserver.class, "onUpdated", artifactStream),
+          ArtifactStreamServiceImpl.class, artifactStream);
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Artifact Stream", e);
     }
@@ -612,6 +621,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     try {
       subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onDeleted, artifactStream);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ArtifactStreamServiceObserver.class, "onDeleted", artifactStream),
+          ArtifactStreamServiceImpl.class, artifactStream);
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Artifact Stream", e);
     }

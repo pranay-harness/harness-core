@@ -138,11 +138,13 @@ import io.harness.logging.Misc;
 import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
 import io.harness.ng.core.utils.NGUtils;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCache;
@@ -382,6 +384,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateServiceClassicGrpcClient delegateServiceClassicGrpcClient;
   @Inject private TelemetryReporter telemetryReporter;
   @Inject private DelegateNgTokenService delegateNgTokenService;
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -812,6 +815,10 @@ public class DelegateServiceImpl implements DelegateService {
     if (newProfileApplied) {
       delegateProfileSubject.fireInform(DelegateProfileObxxxxxxxx:onProfileApplied, delegate.getAccountId(),
           delegate.getUuid(), delegate.getDelegateProfileId());
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(DelegateProfileObserver.class, "onProfileApplied", delegate.getAccountId(),
+              delegate.getUuid(), delegate.getDelegateProfileId()),
+          DelegateServiceImpl.class, delegate.getAccountId(), delegate.getUuid(), delegate.getDelegateProfileId());
       auditServiceHelper.reportForAuditingUsingAccountId(
           delegate.getAccountId(), originalDelegate, updatedDelegate, Type.UPDATE);
       final DelegateProfile profile =
@@ -2005,6 +2012,8 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       if (savedDelegate.isCeEnabled()) {
         subject.fireInform(DelegateObxxxxxxxx:onAdded, savedDelegate);
+        remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(DelegateObserver.class, "onAdded", savedDelegate),
+            DelegateServiceImpl.class, savedDelegate);
       }
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Delegate.", e);
@@ -2834,6 +2843,9 @@ public class DelegateServiceImpl implements DelegateService {
   public void delegateDisconnected(String accountId, String delegateId, String delegateConnectionId) {
     delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
     subject.fireInform(DelegateObxxxxxxxx:onDisconnected, accountId, delegateId);
+    remoteObserverInformer.sendEvent(
+        ReflectionUtils.getMethod(DelegateObserver.class, "onDisconnected", accountId, delegateId),
+        DelegateServiceImpl.class, accountId, delegateId);
   }
 
   @Override

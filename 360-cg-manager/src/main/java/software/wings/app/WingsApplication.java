@@ -65,7 +65,9 @@ import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
 import io.harness.event.reconciliation.service.DeploymentReconTask;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.eventframework.dms.DmsEventConsumerService;
+import io.harness.eventframework.dms.DmsObserverEventProducer;
 import io.harness.eventframework.manager.ManagerEventConsumerService;
+import io.harness.eventframework.manager.ManagerObserverEventProducer;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.exception.WingsException;
 import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
@@ -94,7 +96,9 @@ import io.harness.mongo.QueryFactory;
 import io.harness.mongo.tracing.TraceMode;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.observer.NoOpRemoteObserverInformerImpl;
 import io.harness.observer.RemoteObserver;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
@@ -417,7 +421,6 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     List<Module> modules = new ArrayList<>();
     addModules(configuration, modules);
-    registerRemoteObserverModule(configuration, modules);
     Injector injector = Guice.createInjector(modules);
 
     initializeManagerSvc(injector, environment, configuration);
@@ -430,7 +433,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       modules.add(new AbstractRemoteObserverModule() {
         @Override
         public boolean noOpProducer() {
-          // todo(abhinav): change to false once everyone is onboarded to remote observer
+          // todo(abhinav): change to false once everyone is onboarded to remote observer.
           return true;
         }
 
@@ -443,6 +446,31 @@ public class WingsApplication extends Application<MainConfiguration> {
           //            /// todo(abhinav): register dms
           //          }
           return Collections.emptySet();
+        }
+
+        @Override
+        public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+          if (isManager()) {
+            return ManagerObserverEventProducer.class;
+          }
+          return DmsObserverEventProducer.class;
+        }
+      });
+    } else {
+      modules.add(new AbstractRemoteObserverModule() {
+        @Override
+        public boolean noOpProducer() {
+          return true;
+        }
+
+        @Override
+        public Set<RemoteObserver> observers() {
+          return Collections.emptySet();
+        }
+
+        @Override
+        public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+          return NoOpRemoteObserverInformerImpl.class;
         }
       });
     }
@@ -685,6 +713,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
     modules.add(MigrationModule.getInstance());
+    registerRemoteObserverModule(configuration, modules);
     modules.add(new WingsModule(configuration));
     modules.add(new TotpModule());
     modules.add(new ProviderModule() {
