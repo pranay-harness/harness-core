@@ -1,0 +1,61 @@
+package io.harness.delegate.task.helm;
+
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
+public interface HelmDeployServiceNG {
+  void setLogStreamingClient(ILogStreamingTaskClient iLogStreamingTaskClient);
+  HelmCommandResponseNG deploy(HelmInstallCommandRequestNG commandRequest) throws IOException;
+
+  /**
+   * Rollback helm command response.
+   *
+   * @param commandRequest       the command request
+   * @return the helm command response
+   */
+  HelmCommandResponseNG rollback(HelmRollbackCommandRequestNG commandRequest);
+
+  /**
+   * Ensure helm cli and tiller installed helm command response.
+   *
+   * @param helmCommandRequest   the helm command request
+   * @return the helm command response
+   */
+  HelmCommandResponseNG ensureHelmCliAndTillerInstalled(HelmCommandRequestNG helmCommandRequest);
+
+  /**
+   * Last successful release version string.
+   *
+   * @param helmCommandRequest the helm command request
+   * @return the string
+   */
+  HelmListReleaseResponseNG listReleases(HelmInstallCommandRequestNG helmCommandRequest);
+
+  /**
+   * Release history helm release history command response.
+   *
+   * @param helmCommandRequest the helm command request
+   * @return the helm release history command response
+   */
+  HelmReleaseHistoryCmdResponseNG releaseHistory(HelmReleaseHistoryCommandRequestNG helmCommandRequest);
+
+  /**
+   * Render chart templates and return the output.
+   *
+   * @param helmCommandRequest the helm command request
+   * @param namespace the namespace
+   * @param chartLocation the chart location
+   * @param valueOverrides the value overrides
+   * @return the helm release history command response
+   */
+  HelmCommandResponseNG renderHelmChart(HelmCommandRequestNG helmCommandRequest, String namespace, String chartLocation,
+      List<String> valueOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException;
+
+  HelmCommandResponseNG ensureHelm3Installed(HelmCommandRequestNG commandRequest);
+
+  HelmCommandResponseNG ensureHelmInstalled(HelmCommandRequestNG commandRequest);
+}

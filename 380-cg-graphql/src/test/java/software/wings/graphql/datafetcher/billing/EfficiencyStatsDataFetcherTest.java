@@ -105,6 +105,7 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTestBase 
         .when(billingDataHelper)
         .getCostTrendForEntity(resultSet, entityIdToPrevBillingAmountData.get(entityIdAppender.toString()), filters);
     doCallRealMethod().when(billingDataHelper).roundingDoubleFieldValue(any(), anyObject());
+    doCallRealMethod().when(billingDataHelper).roundingDoubleFieldValue(any(), anyObject(), anyBoolean());
     doCallRealMethod().when(billingDataHelper).getRoundedDoubleValue(anyDouble());
     doCallRealMethod().when(billingDataHelper).getRoundedDoubleValue(any());
     doCallRealMethod().when(billingDataHelper).getStartTimeFilter(filters);

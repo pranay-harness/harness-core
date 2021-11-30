@@ -150,7 +150,7 @@ public class OrganizationResourceTest extends CategoryTest {
         .thenReturn(getPage(singletonList(organization), 1));
 
     ResponseDTO<PageResponse<OrganizationResponse>> response =
-        organizationResource.listAllOrganizations(accountIdentifier, Collections.EMPTY_LIST, searchTerm);
+        organizationResource.listAllOrganizations(accountIdentifier, searchTerm, Collections.EMPTY_LIST);
 
     verify(organizationService, times(1))
         .listPermittedOrgs(eq(accountIdentifier), pageableArgumentCaptor.capture(), orgArgumentCaptor.capture());

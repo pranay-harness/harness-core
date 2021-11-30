@@ -18,6 +18,7 @@ import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 
@@ -105,6 +106,9 @@ public class SdkOrchestrationEventHandlerTest extends PmsSdkCoreTestBase {
     assertThat(sdkOrchestrationEventHandler.buildSdkOrchestrationEvent(orchestrationEvent))
         .isEqualTo(io.harness.pms.sdk.core.events.OrchestrationEvent.builder()
                        .eventType(orchestrationEvent.getEventType())
+                       .endTs(orchestrationEvent.getEndTs())
+                       .moduleInfo(RecastOrchestrationUtils.fromJson(
+                           orchestrationEvent.getModuleInfo().toStringUtf8(), PipelineModuleInfo.class))
                        .ambiance(orchestrationEvent.getAmbiance())
                        .status(orchestrationEvent.getStatus())
                        .resolvedStepParameters(RecastOrchestrationUtils.fromJson(
@@ -123,6 +127,10 @@ public class SdkOrchestrationEventHandlerTest extends PmsSdkCoreTestBase {
     assertThat(sdkOrchestrationEventHandler.buildSdkOrchestrationEvent(orchestrationEvent))
         .isEqualTo(io.harness.pms.sdk.core.events.OrchestrationEvent.builder()
                        .eventType(orchestrationEvent.getEventType())
+                       .endTs(orchestrationEvent.getEndTs())
+                       .moduleInfo(RecastOrchestrationUtils.fromJson(
+                           orchestrationEvent.getModuleInfo().toStringUtf8(), PipelineModuleInfo.class))
+
                        .ambiance(orchestrationEvent.getAmbiance())
                        .status(orchestrationEvent.getStatus())
                        .resolvedStepParameters(RecastOrchestrationUtils.fromJson(

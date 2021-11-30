@@ -934,3 +934,11 @@ fi
 if [[ "" != "$USE_GLOBAL_KMS_AS_BASE_ALGO" ]]; then
   yq write -i $CONFIG_FILE useGlobalKMSAsBaseAlgo "$USE_GLOBAL_KMS_AS_BASE_ALGO"
 fi
+
+if [[ "" != "$SECOPS_EMAIL" ]]; then
+ yq write -i config.yml totp.secOpsEmail "$SECOPS_EMAIL"
+fi
+
+if [[ "" != "$INCORRECT_ATTEMPTS_UNTIL_SECOPS_NOTIFIED" ]]; then
+ yq write -i config.yml totp.incorrectAttemptsUntilSecOpsNotified "$INCORRECT_ATTEMPTS_UNTIL_SECOPS_NOTIFIED"
+fi

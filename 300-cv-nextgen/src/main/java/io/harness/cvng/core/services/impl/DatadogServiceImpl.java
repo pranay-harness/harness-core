@@ -123,6 +123,7 @@ public class DatadogServiceImpl implements DatadogService {
                                                                .from(now.minus(Duration.ofMinutes(1000)).toEpochMilli())
                                                                .to(now.toEpochMilli())
                                                                .limit(DatadogLogDataCollectionInfo.LOG_MAX_LIMIT)
+                                                               .query(query)
                                                                .build();
 
       Type type = new TypeToken<List<LinkedHashMap>>() {}.getType();

@@ -43,9 +43,9 @@ case "$OSTYPE" in
     ;;
 esac
 
-JVM_URL=http://localhost:9500/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+JVM_URL=http://localhost:8888/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
 
-ALPN_BOOT_JAR_URL=http://localhost:9500/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
+ALPN_BOOT_JAR_URL=http://localhost:8888/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -157,6 +157,18 @@ if [[ -e proxy.config ]]; then
   fi
 fi
 
+if [ -s init.sh ]; then
+    echo "Starting initialization script for delegate"
+    source ./init.sh
+    if [ $? -eq 0 ];
+    then
+      echo "Completed executing initialization script"
+    else
+      echo "Error while executing initialization script. Delegate will not start."
+      exit 1
+    fi
+fi
+
 if [[ "$OSTYPE" == linux* ]]; then
   touch /tmp/exec-test.sh && chmod +x /tmp/exec-test.sh
   /tmp/exec-test.sh
@@ -197,7 +209,7 @@ if [ ! -d $JRE_DIR  -o ! -e $JRE_BINARY ]; then
   exit 1
 fi
 
-USE_CDN=true
+USE_CDN=false
 
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=http://localhost:8888
@@ -227,7 +239,7 @@ export DEPLOY_MODE=KUBERNETES
 
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
-  DELEGATE_STORAGE_URL=http://localhost:9500
+  DELEGATE_STORAGE_URL=http://localhost:8888
   REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/delegateci.txt)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
@@ -271,9 +283,9 @@ if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
   echo "upgradeCheckIntervalSeconds: 43200" >> config-watcher.yml
 fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
-  echo "delegateCheckLocation: http://localhost:9500/delegateci.txt" >> config-watcher.yml
+  echo "delegateCheckLocation: http://localhost:8888/delegateci.txt" >> config-watcher.yml
 else
-  sed -i.bak "s|^delegateCheckLocation:.*$|delegateCheckLocation: http://localhost:9500/delegateci.txt|" config-watcher.yml
+  sed -i.bak "s|^delegateCheckLocation:.*$|delegateCheckLocation: http://localhost:8888/delegateci.txt|" config-watcher.yml
 fi
 if ! `grep fileHandlesMonitoringEnabled config-watcher.yml > /dev/null`; then
   echo "fileHandlesMonitoringEnabled: false" >> config-watcher.yml

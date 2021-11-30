@@ -2,8 +2,10 @@ package io.harness.signup.services.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.GTM;
 import static io.harness.configuration.DeployMode.DEPLOY_MODE;
+import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.remote.client.RestClientUtils.getResponse;
+import static io.harness.signup.services.SignupType.COMMUNITY_PROVISION;
 import static io.harness.utils.CryptoUtils.secureRandAlphaNumString;
 
 import static java.lang.Boolean.FALSE;
@@ -24,7 +26,6 @@ import io.harness.exception.SignupException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
 import io.harness.exception.WingsException;
-import io.harness.licensing.LicenseConfig;
 import io.harness.licensing.services.LicenseService;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.user.UserInfo;
@@ -44,8 +45,10 @@ import io.harness.signup.services.SignupType;
 import io.harness.signup.validator.SignupValidator;
 import io.harness.telemetry.Category;
 import io.harness.telemetry.Destination;
+import io.harness.telemetry.TelemetryOption;
 import io.harness.telemetry.TelemetryReporter;
 import io.harness.user.remote.UserClient;
+import io.harness.version.VersionInfoManager;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -54,7 +57,9 @@ import com.google.inject.name.Named;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -84,8 +89,8 @@ public class SignupServiceImpl implements SignupService {
   private final SignupVerificationTokenRepository verificationTokenRepository;
   private final ExecutorService executorService;
   private final AccessControlClient accessControlClient;
-  private final LicenseConfig licenseConfig;
   private final LicenseService licenseService;
+  private final VersionInfoManager versionInfoManager;
 
   public static final String FAILED_EVENT_NAME = "SIGNUP_ATTEMPT_FAILED";
   public static final String SUCCEED_EVENT_NAME = "NEW_SIGNUP";
@@ -96,13 +101,15 @@ public class SignupServiceImpl implements SignupService {
   private static final String UNDEFINED_ACCOUNT_ID = "undefined";
   private static final String NG_AUTH_UI_PATH_PREFIX = "auth/";
 
+  private static String deployVersion = System.getenv().get(DEPLOY_VERSION);
+
   @Inject
   public SignupServiceImpl(AccountService accountService, UserClient userClient, SignupValidator signupValidator,
       ReCaptchaVerifier reCaptchaVerifier, TelemetryReporter telemetryReporter,
       SignupNotificationHelper signupNotificationHelper, SignupVerificationTokenRepository verificationTokenRepository,
       @Named("NGSignupNotification") ExecutorService executorService,
-      @Named("PRIVILEGED") AccessControlClient accessControlClient, LicenseConfig licenseConfig,
-      LicenseService licenseService) {
+      @Named("PRIVILEGED") AccessControlClient accessControlClient, LicenseService licenseService,
+      VersionInfoManager versionInfoManager) {
     this.accountService = accountService;
     this.userClient = userClient;
     this.signupValidator = signupValidator;
@@ -112,8 +119,8 @@ public class SignupServiceImpl implements SignupService {
     this.verificationTokenRepository = verificationTokenRepository;
     this.executorService = executorService;
     this.accessControlClient = accessControlClient;
-    this.licenseConfig = licenseConfig;
     this.licenseService = licenseService;
+    this.versionInfoManager = versionInfoManager;
   }
 
   /**
@@ -149,12 +156,11 @@ public class SignupServiceImpl implements SignupService {
   @Override
   public UserInfo communitySignup(SignupDTO dto) throws WingsException {
     String deployMode = System.getenv().get(DEPLOY_MODE);
-
     if (!DeployMode.isOnPrem(deployMode)) {
       throw new InvalidRequestException("Deploy mode is not on prem", ErrorCode.DEPLOY_MODE_IS_NOT_ON_PREM, USER);
     }
 
-    if (!DeployVariant.COMMUNITY.equals(licenseConfig.getDeployVariant())) {
+    if (!DeployVariant.isCommunity(deployVersion)) {
       throw new InvalidRequestException("Community edition not found", ErrorCode.COMMNITY_EDITION_NOT_FOUND, USER);
     }
 
@@ -185,7 +191,7 @@ public class SignupServiceImpl implements SignupService {
     waitForRbacSetup(userInfo.getDefaultAccountId(), userInfo.getUuid(), userInfo.getEmail());
 
     licenseService.startCommunityLicense(userInfo.getDefaultAccountId(), ModuleType.CD);
-
+    sendCommunitySucceedTelemetry(userInfo.getEmail(), userInfo.getDefaultAccountId(), userInfo, COMMUNITY_PROVISION);
     return userInfo;
   }
 
@@ -194,7 +200,7 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public boolean createSignupInvite(SignupDTO dto, String captchaToken) {
-    if (DeployVariant.COMMUNITY.equals(licenseConfig.getDeployVariant())) {
+    if (DeployVariant.isCommunity(deployVersion)) {
       throw new InvalidRequestException("You are not allowed to create a signup invite with community edition");
     }
 
@@ -244,7 +250,7 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public UserInfo completeSignupInvite(String token) {
-    if (DeployVariant.COMMUNITY.equals(licenseConfig.getDeployVariant())) {
+    if (DeployVariant.isCommunity(deployVersion)) {
       throw new InvalidRequestException("You are not allowed to complete a signup invite with community edition");
     }
 
@@ -389,6 +395,10 @@ public class SignupServiceImpl implements SignupService {
 
   @Override
   public UserInfo oAuthSignup(OAuthSignupDTO dto) {
+    if (DeployVariant.isCommunity(deployVersion)) {
+      throw new InvalidRequestException("You are not allowed to oauth signup with community edition");
+    }
+
     try {
       signupValidator.validateEmail(dto.getEmail());
     } catch (SignupException | UserAlreadyPresentException e) {
@@ -545,6 +555,30 @@ public class SignupServiceImpl implements SignupService {
                 ImmutableMap.<Destination, Boolean>builder().put(Destination.MARKETO, true).build(), Category.SIGN_UP),
         20, TimeUnit.SECONDS);
     log.info("Signup telemetry sent");
+  }
+
+  private void sendCommunitySucceedTelemetry(String email, String accountId, UserInfo userInfo, String source) {
+    HashMap<String, Object> properties = new HashMap<>();
+    properties.put("email", userInfo.getEmail());
+    properties.put("name", userInfo.getName());
+    properties.put("id", userInfo.getUuid());
+    properties.put("firstInstallTime", String.valueOf(Instant.now().toEpochMilli()));
+    properties.put("accountId", accountId);
+    properties.put("source", source);
+    try {
+      properties.put("hostName", InetAddress.getLocalHost().getHostName());
+    } catch (UnknownHostException e) {
+      log.error("Unabled to fetch local host name", e);
+      properties.put("hostName", "unknown");
+    }
+    properties.put("version", versionInfoManager.getVersionInfo());
+
+    telemetryReporter.sendIdentifyEvent(
+        userInfo.getEmail(), properties, null, TelemetryOption.builder().sendForCommunity(true).build());
+
+    telemetryReporter.sendTrackEvent(SUCCEED_EVENT_NAME, email, accountId, properties, null, Category.SIGN_UP,
+        TelemetryOption.builder().sendForCommunity(true).build());
+    log.info("Community Signup telemetry sent");
   }
 
   private void sendSucceedInvite(String email, UtmInfo utmInfo) {
