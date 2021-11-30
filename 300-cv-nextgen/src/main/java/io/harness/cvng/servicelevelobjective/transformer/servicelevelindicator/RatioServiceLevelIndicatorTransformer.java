@@ -10,8 +10,9 @@ import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator
 public class RatioServiceLevelIndicatorTransformer
     extends ServiceLevelIndicatorTransformer<RatioServiceLevelIndicator, ServiceLevelIndicatorSpec> {
   @Override
-  public RatioServiceLevelIndicator getEntity(
-      ProjectParams projectParams, ServiceLevelIndicatorDTO serviceLevelIndicatorDTO) {
+  public RatioServiceLevelIndicator getEntity(ProjectParams projectParams,
+      ServiceLevelIndicatorDTO serviceLevelIndicatorDTO, String monitoredServiceIndicator,
+      String healthSourceIndicator) {
     RatioSLIMetricSpec ratioSLIMetricSpec = (RatioSLIMetricSpec) serviceLevelIndicatorDTO.getSpec().getSpec();
     return RatioServiceLevelIndicator.builder()
         .accountId(projectParams.getAccountIdentifier())
@@ -23,6 +24,8 @@ public class RatioServiceLevelIndicatorTransformer
         .metric1(ratioSLIMetricSpec.getMetric1())
         .metric2(ratioSLIMetricSpec.getMetric2())
         .eventType(ratioSLIMetricSpec.getEventType())
+        .monitoredServiceIdentifier(monitoredServiceIndicator)
+        .healthSourceIdentifier(healthSourceIndicator)
         .build();
   }
 

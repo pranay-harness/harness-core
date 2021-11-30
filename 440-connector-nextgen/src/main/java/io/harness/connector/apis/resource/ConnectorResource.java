@@ -36,7 +36,7 @@ import io.harness.connector.utils.ConnectorAllowedFieldValues;
 import io.harness.connector.utils.FieldValues;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.ConnectorValidationParameterResponse;
 import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
@@ -456,7 +456,7 @@ public class ConnectorResource {
   @ApiOperation(hidden = true, value = "Gets connector validation params")
   @InternalApi
   @Produces("application/x-kryo")
-  public ResponseDTO<ConnectorValidationParams> getConnectorValidationParams(
+  public ResponseDTO<ConnectorValidationParameterResponse> getConnectorValidationParams(
       @Parameter(description = "Connector Identifier") @PathParam(
           NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(

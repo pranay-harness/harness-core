@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.api;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
@@ -67,4 +68,5 @@ public interface CVConfigService extends DeleteEntityByHandler<CVConfig> {
 
   Map<String, DataSourceType> getDataSourceTypeForCVConfigs(
       ServiceEnvironmentParams serviceEnvironmentParams, List<String> cvConfigIds);
+  List<CVConfig> getCVConfigs(ProjectParams projectParams, String identifier);
 }

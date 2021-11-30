@@ -2,6 +2,7 @@ package io.harness.connector.services;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.EntityReference;
 import io.harness.connector.stats.ConnectorStatistics;
 
 import java.util.List;
@@ -22,6 +23,5 @@ public interface ConnectorService extends ConnectorCrudService, ConnectorValidat
    */
   void resetHeartbeatForReferringConnectors(List<Pair<String, String>> connectorPerpetualTaskInfoList);
 
-  boolean markEntityInvalid(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml);
+  boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String invalidYaml);
 }

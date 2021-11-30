@@ -8,7 +8,9 @@ import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
@@ -45,7 +47,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(HarnessTeam.CV)
 @StoreIn(DbAliases.CVNG)
 public abstract class ServiceLevelIndicator
-    implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware, CreatedAtAware {
+    implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware, CreatedAtAware, PersistentRegularIterable {
   String accountId;
   String orgIdentifier;
   String projectIdentifier;
@@ -54,12 +56,16 @@ public abstract class ServiceLevelIndicator
   String name;
   private long lastUpdatedAt;
   private long createdAt;
+  private String healthSourceIdentifier;
+  private String monitoredServiceIdentifier;
   private ServiceLevelIndicatorType type;
   private SLIMetricType sliMetricType;
 
   public abstract SLIMetricType getSLIMetricType();
 
   public abstract ServiceLevelIndicatorSpec getServiceLevelIndicatorSpec();
+
+  public abstract List<String> getMetricNames();
 
   public abstract static class ServiceLevelIndicatorUpdatableEntity<T extends ServiceLevelIndicator, D
                                                                         extends ServiceLevelIndicator>
@@ -68,7 +74,7 @@ public abstract class ServiceLevelIndicator
       updateOperations.set(ServiceLevelIndicatorKeys.type, serviceLevelIndicator.getType());
     }
   }
-
+  @FdIndex Long createNextTaskIteration;
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -80,5 +86,22 @@ public abstract class ServiceLevelIndicator
                  .field(ServiceLevelIndicatorKeys.identifier)
                  .build())
         .build();
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    if (fieldName.equals(ServiceLevelIndicatorKeys.createNextTaskIteration)) {
+      this.createNextTaskIteration = nextIteration;
+      return;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    if (fieldName.equals(ServiceLevelIndicatorKeys.createNextTaskIteration)) {
+      return createNextTaskIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 }

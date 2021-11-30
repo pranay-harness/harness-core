@@ -698,6 +698,50 @@ public class K8sStepHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void shouldGetGitStoreDelegateConfigOptimizedFilesFetchWithKustomize() {
+    List<String> paths = asList("path/to");
+    GitStoreConfig gitStoreConfig = GithubStore.builder()
+            .repoName(ParameterField.createValueField("parent-repo/module"))
+            .paths(ParameterField.createValueField(paths))
+            .build();
+    ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
+    SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
+    List<EncryptedDataDetail> apiEncryptedDataDetails = new ArrayList<>();
+    GithubConnectorDTO githubConnectorDTO =
+            GithubConnectorDTO.builder()
+                    .connectionType(GitConnectionType.ACCOUNT)
+                    .url("http://localhost")
+                    .apiAccess(GithubApiAccessDTO.builder().spec(GithubTokenSpecDTO.builder().build()).build())
+                    .authentication(GithubAuthenticationDTO.builder()
+                            .authType(GitAuthType.HTTP)
+                            .credentials(GithubHttpCredentialsDTO.builder()
+                                    .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                                    .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
+                                            .username("usermane")
+                                            .passwordRef(SecretRefData.builder().build())
+                                            .build())
+                                    .build())
+                            .build())
+                    .build();
+    connectorInfoDTO.setConnectorConfig(githubConnectorDTO);
+
+    doReturn(true).when(cdFeatureFlagHelper).isEnabled(any(), eq(OPTIMIZED_GIT_FETCH_FILES));
+    doReturn(sshKeySpecDTO).when(gitConfigAuthenticationInfoHelper).getSSHKey(any(), any(), any(), any());
+    doReturn(apiEncryptedDataDetails).when(secretManagerClientService).getEncryptionDetails(any(), any());
+
+    GitStoreDelegateConfig gitStoreDelegateConfig = k8sStepHelper.getGitStoreDelegateConfig(
+            gitStoreConfig, connectorInfoDTO, KustomizeManifestOutcome.builder().build(), paths, ambiance);
+
+    assertThat(gitStoreDelegateConfig).isNotNull();
+    assertThat(gitStoreDelegateConfig.isOptimizedFilesFetch()).isFalse();
+    GitConfigDTO gitConfigDTO = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
+    assertThat(gitConfigDTO.getUrl()).isEqualTo("http://localhost/parent-repo/module");
+    assertThat(gitConfigDTO.getGitConnectionType()).isEqualTo(GitConnectionType.REPO);
+  }
+
+  @Test
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void shouldGetGitStoreDelegateConfigFFEnabledNotGithubOrGitlab() {

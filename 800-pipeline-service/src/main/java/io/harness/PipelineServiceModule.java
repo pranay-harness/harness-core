@@ -51,6 +51,9 @@ import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.plancreator.steps.StepSchemaUtils;
+import io.harness.plancreator.steps.http.HttpStepNode;
+import io.harness.plancreator.steps.http.PmsAbstractStepNode;
 import io.harness.pms.Dashboard.PMSLandingDashboardService;
 import io.harness.pms.Dashboard.PMSLandingDashboardServiceImpl;
 import io.harness.pms.approval.ApprovalResourceService;
@@ -132,6 +135,7 @@ import io.harness.version.VersionInfoManager;
 import io.harness.webhook.WebhookEventClientModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
@@ -171,6 +175,10 @@ public class PipelineServiceModule extends AbstractModule {
   private final PipelineServiceConfiguration configuration;
 
   private static PipelineServiceModule instance;
+  public static Set<Class<?>> commonStepsMovedToNewSchema = new HashSet() {
+    { add(HttpStepNode.class); }
+  };
+  ;
 
   private PipelineServiceModule(PipelineServiceConfiguration configuration) {
     this.configuration = configuration;
@@ -485,8 +493,15 @@ public class PipelineServiceModule extends AbstractModule {
 
     Set<Class<? extends StepSpecType>> subTypesOfStepSpecType = reflections.getSubTypesOf(StepSpecType.class);
     Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
-
+    set = YamlSchemaTransientHelper.removeNewSchemaStepsSubtypes(set, StepSchemaUtils.getStepsMovedToNewSchema());
     return ImmutableMap.of(StepSpecType.class, set);
+  }
+
+  @Provides
+  @Named("new-yaml-schema-subtypes-pms")
+  @Singleton
+  public Map<Class<?>, Set<Class<?>>> newPmsYamlSchemaSubtypes() {
+    return ImmutableMap.of(PmsAbstractStepNode.class, commonStepsMovedToNewSchema);
   }
 
   @Provides

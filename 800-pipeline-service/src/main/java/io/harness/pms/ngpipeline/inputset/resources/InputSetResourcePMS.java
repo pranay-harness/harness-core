@@ -134,15 +134,20 @@ public class InputSetResourcePMS {
                 "Gets an Input Set if it exists for the identifier in the path. Throws an error if no Input Set exists for this identifier.")
       })
   public ResponseDTO<InputSetResponseDTOPMS>
-  getInputSet(@PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+  getInputSet(@PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) @Parameter(
+                  description = PipelineResourceConstants.INPUT_SET_ID_PARAM_MESSAGE) String inputSetIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Parameter(
+          description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @Parameter(
+          description = PipelineResourceConstants.ORG_PARAM_MESSAGE) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier @Parameter(
+          description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE) String projectIdentifier,
       @Parameter(
           description =
-              "Pipeline identifier for the input set. The input set will work only for the pipeline corresponding to this identifier.")
+              "Pipeline ID for the Input Set. The Input Set will work only for the Pipeline corresponding to this identifier.")
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
-      @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted,
+      @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") @Parameter(
+          description = "Whether the Input Set is deleted or not.") boolean deleted,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info(String.format("Retrieving input set with identifier %s for pipeline %s in project %s, org %s, account %s",
         inputSetIdentifier, pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
@@ -170,10 +175,12 @@ public class InputSetResourcePMS {
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
             description =
-                "Gets an Overlay Input Set if it exists for the identifier in the path. Throws an error if no Overlay Input Set exists for this identifier.")
+                "Fetches the Overlay Input Set corresponding to the Overlay Input Set Id provided in the API URL.")
       })
   public ResponseDTO<OverlayInputSetResponseDTOPMS>
-  getOverlayInputSet(@PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
+  getOverlayInputSet(
+      @PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) @Parameter(
+          description = PipelineResourceConstants.OVERLAY_INPUT_SET_ID_PARAM_MESSAGE) String inputSetIdentifier,
       @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE) @NotNull @QueryParam(
@@ -182,9 +189,10 @@ public class InputSetResourcePMS {
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @Parameter(
           description =
-              "Pipeline identifier for the Overlay Input Set. The Overlay Input Set only for the Pipeline corresponding to this identifier will be returned.")
+              "This is the Pipeline Id specific to the Overlay Input Set. Overlay Input Set corresponding to the Pipeline with this Id would be fetched")
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
-      @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted,
+      @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") @Parameter(
+          description = "Whether the Input Set is deleted or not.") boolean deleted,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info(String.format(
         "Retrieving overlay input set with identifier %s for pipeline %s in project %s, org %s, account %s",
@@ -216,15 +224,21 @@ public class InputSetResourcePMS {
                 "If the YAML is valid, returns created Input Set. If not, it sends what is wrong with the YAML")
       })
   public ResponseDTO<InputSetResponseDTOPMS>
-  createInputSet(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+  createInputSet(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Parameter(
+                     description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @Parameter(
+          description = PipelineResourceConstants.ORG_PARAM_MESSAGE) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier @Parameter(
+          description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE) String projectIdentifier,
       @Parameter(
           description =
               "Pipeline identifier for the input set. The input set will work only for the pipeline corresponding to this identifier.")
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
-      @QueryParam("pipelineBranch") String pipelineBranch, @QueryParam("pipelineRepoID") String pipelineRepoID,
-      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo,
+      @QueryParam("pipelineBranch") @Parameter(
+          description = "Github branch of the Pipeline for which the Input Set is to be created") String pipelineBranch,
+      @QueryParam("pipelineRepoID")
+      @Parameter(description = "Github Repo identifier of the Pipeline for which the Input Set is to be created")
+      String pipelineRepoID, @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo,
       @RequestBody(required = true,
           description =
               "Input set YAML to be created. The account, org, project, and pipeline identifiers inside the YAML should match the query parameters")
@@ -311,18 +325,24 @@ public class InputSetResourcePMS {
           description =
               "Identifier for the Input Set that needs to be updated. An Input Set corresponding to this identifier should already exist.")
       @PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @Parameter(
           description =
-              "Pipeline identifier for the Input Set. The Input Set will work only for the Pipeline corresponding to this identifier.")
+              "Pipeline Id for the Input Set. The Input Set will work only for the Pipeline corresponding to this Id.")
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
-      @QueryParam("pipelineBranch") String pipelineBranch, @QueryParam("pipelineRepoID") String pipelineRepoID,
-      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo,
+      @QueryParam("pipelineBranch") @Parameter(
+          description = "Github branch of the Pipeline for which the Input Set is to be created") String pipelineBranch,
+      @QueryParam("pipelineRepoID")
+      @Parameter(description = "Github Repo Id of the Pipeline for which the Input Set is to be created")
+      String pipelineRepoID, @BeanParam GitEntityUpdateInfoDTO gitEntityInfo,
       @RequestBody(required = true,
           description =
-              "Input set YAML to be updated. The account, org, project, and pipeline identifiers inside the YAML should match the query parameters")
+              "Input set YAML to be updated. The Account, Org, Project, and Pipeline Ids inside the YAML should match the query parameters")
       @NotNull String yaml) {
     log.info(String.format("Updating input set with identifier %s for pipeline %s in project %s, org %s, account %s",
         inputSetIdentifier, pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
@@ -410,11 +430,14 @@ public class InputSetResourcePMS {
       @Parameter(description = PipelineResourceConstants.IF_MATCH_PARAM_MESSAGE) @HeaderParam(IF_MATCH) String ifMatch,
       @Parameter(
           description =
-              "Identifier for the Input Set that needs to be deleted. An Input Set corresponding to this identifier should exist.")
+              "This is the Id of the Input Set that needs to be deleted. An error is thrown if no Input Set exists for this Id.")
       @PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Parameter(
+          description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @Parameter(
+          description = PipelineResourceConstants.ORG_PARAM_MESSAGE) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier @Parameter(
+          description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE) String projectIdentifier,
       @Parameter(
           description =
               "Pipeline identifier for the Input Set. Input Set will be deleted for the Pipeline corresponding to this Identifier")
@@ -434,11 +457,13 @@ public class InputSetResourcePMS {
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
             description =
-                "List all Input Sets, including Overlay Input Sets, for a pipeline. The response is paginated")
+                "Fetch all the Input Sets for a Pipeline, including Overlay Input Sets. The response is paginated")
       })
   public ResponseDTO<PageResponse<InputSetSummaryResponseDTOPMS>>
-  listInputSetsForPipeline(@QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
-      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
+  listInputSetsForPipeline(@QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") @Parameter(
+                               description = NGCommonEntityConstants.PAGE_PARAM_MESSAGE) int page,
+      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") @Parameter(
+          description = NGCommonEntityConstants.SIZE_PARAM_MESSAGE) int size,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @Parameter(
           description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @Parameter(
@@ -451,8 +476,10 @@ public class InputSetResourcePMS {
           description =
               "Type of Input Set needed: \"INPUT_SET\", or \"OVERLAY_INPUT_SET\", or \"ALL\". If nothing is sent, ALL is considered.")
       @QueryParam("inputSetType") @DefaultValue("ALL") InputSetListTypePMS inputSetListType,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @QueryParam(NGResourceFilterConstants.SORT_KEY) List<String> sort,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) @Parameter(
+          description = PipelineResourceConstants.INPUT_SET_SEARCH_TERM_PARAM_MESSAGE) String searchTerm,
+      @QueryParam(NGResourceFilterConstants.SORT_KEY) @Parameter(
+          description = NGCommonEntityConstants.SORT_PARAM_MESSAGE) List<String> sort,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info(String.format("Get List of input sets for pipeline %s in project %s, org %s, account %s",
         pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));

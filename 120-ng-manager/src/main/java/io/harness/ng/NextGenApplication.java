@@ -219,6 +219,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.Resource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -338,7 +339,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);
-    registerResources(environment, injector);
+    registerResources(appConfig, environment, injector);
     registerJerseyProviders(environment, injector);
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
@@ -608,13 +609,15 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
   }
 
-  private void registerResources(Environment environment, Injector injector) {
+  private void registerResources(NextGenConfiguration appConfig, Environment environment, Injector injector) {
     for (Class<?> resource : HARNESS_RESOURCE_CLASSES) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
     environment.jersey().register(injector.getInstance(VersionInfoResource.class));
+    environment.jersey().property(
+        ServerProperties.RESOURCE_VALIDATION_DISABLE, appConfig.isDisableResourceValidation());
   }
 
   private OpenAPIConfiguration getOasConfig(NextGenConfiguration appConfig) {

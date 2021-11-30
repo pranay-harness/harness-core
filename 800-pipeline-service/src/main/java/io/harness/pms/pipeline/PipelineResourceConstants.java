@@ -9,8 +9,11 @@ public interface PipelineResourceConstants {
   String PIPELINE_ID_LIST_PARAM_MESSAGE = "Pipeline Identifier filter if exact pipelines needs to be filtered.";
   String PIPELINE_SEARCH_TERM_PARAM_MESSAGE =
       "Search term to filter out pipelines based on pipeline name, identifier, tags.";
+  String INPUT_SET_SEARCH_TERM_PARAM_MESSAGE = "Search term to filter out Input Sets based on name, identifier, tags.";
   String IF_MATCH_PARAM_MESSAGE = "Version of entity to match";
   String MODULE_TYPE_PARAM_MESSAGE = "The module from which execution was triggered.";
   String ORIGINAL_EXECUTION_ID_PARAM_MESSAGE = "Id of the execution from which we are running";
   String USE_FQN_IF_ERROR_RESPONSE_ERROR_MESSAGE = "Use FQN in error response";
+  String INPUT_SET_ID_PARAM_MESSAGE = "Identifier of the Input Set";
+  String OVERLAY_INPUT_SET_ID_PARAM_MESSAGE = "Identifier of the Overlay Input Set";
 }

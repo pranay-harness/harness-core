@@ -15,6 +15,8 @@ import io.harness.cvng.core.entities.VerificationTask.DeploymentInfo;
 import io.harness.cvng.core.entities.VerificationTask.DeploymentInfo.DeploymentInfoKeys;
 import io.harness.cvng.core.entities.VerificationTask.LiveMonitoringInfo;
 import io.harness.cvng.core.entities.VerificationTask.LiveMonitoringInfo.LiveMonitoringInfoKeys;
+import io.harness.cvng.core.entities.VerificationTask.SLIInfo;
+import io.harness.cvng.core.entities.VerificationTask.SLIInfo.SLIInfoKeys;
 import io.harness.cvng.core.entities.VerificationTask.TaskInfo;
 import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.entities.VerificationTask.VerificationTaskKeys;
@@ -59,6 +61,20 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
     return verificationTask.getUuid();
   }
 
+  @Override
+  public String createSLIVerificationTask(String accountId, String sliId) {
+    Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(sliId);
+    // TODO: Change to new generated uuid in a separate PR since it needs more validation.
+    VerificationTask verificationTask = VerificationTask.builder()
+                                            .uuid(sliId)
+                                            .accountId(accountId)
+                                            .taskInfo(SLIInfo.builder().sliId(sliId).build())
+                                            .build();
+    hPersistence.save(verificationTask);
+    return verificationTask.getUuid();
+  }
+
   public String createDeploymentVerificationTask(
       String accountId, String cvConfigId, String verificationJobInstanceId, DataSourceType provider) {
     Preconditions.checkNotNull(accountId, "accountId can not be null");
@@ -96,6 +112,29 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
       return ((LiveMonitoringInfo) verificationTask.getTaskInfo()).getCvConfigId();
     }
     throw new IllegalStateException("Verification task is of not the right type to have CVConfig, type : "
+        + verificationTask.getTaskInfo().getTaskType());
+  }
+
+  @Override
+  public Optional<String> maybeGetCVConfigId(String verificationTaskId) {
+    VerificationTask verificationTask = get(verificationTaskId);
+    String cvConfigId = null;
+    if (verificationTask.getTaskInfo().getTaskType().equals(TaskType.DEPLOYMENT)) {
+      cvConfigId = ((DeploymentInfo) verificationTask.getTaskInfo()).getCvConfigId();
+    }
+    if (verificationTask.getTaskInfo().getTaskType().equals(TaskType.LIVE_MONITORING)) {
+      cvConfigId = ((LiveMonitoringInfo) verificationTask.getTaskInfo()).getCvConfigId();
+    }
+    return Optional.ofNullable(cvConfigId);
+  }
+
+  @Override
+  public String getSliId(String verificationTaskId) {
+    VerificationTask verificationTask = get(verificationTaskId);
+    if (verificationTask.getTaskInfo().getTaskType().equals(TaskType.SLI)) {
+      return ((SLIInfo) verificationTask.getTaskInfo()).getSliId();
+    }
+    throw new IllegalStateException("Verification task is of not the right type to have ServiceLevelIndicator, type: "
         + verificationTask.getTaskInfo().getTaskType());
   }
 
@@ -170,6 +209,14 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
     VerificationTask result = getLiveMonitoringTask(accountId, cvConfigId);
     Preconditions.checkNotNull(
         result, "VerificationTask mapping does not exist for cvConfigId %s. Please check cvConfigId", cvConfigId);
+    return result.getUuid();
+  }
+
+  @Override
+  public String getSLIVerificationTaskId(String accountId, String sliId) {
+    VerificationTask result = getSLITask(accountId, sliId);
+    Preconditions.checkNotNull(
+        result, "VerificationTask mapping does not exist for SLI Id %s. Please check sliId", sliId);
     return result.getUuid();
   }
 
@@ -325,6 +372,14 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
       return verificationTask;
     }
     return createQueryForOldLiveMonitoring(accountId, cvConfigId).get();
+  }
+
+  private VerificationTask getSLITask(String accountId, String sliId) {
+    return hPersistence.createQuery(VerificationTask.class, excludeValidate)
+        .filter(VerificationTaskKeys.accountId, accountId)
+        .filter(VerificationTaskKeys.taskInfo + "." + TaskInfo.TASK_TYPE_FIELD_NAME, TaskType.SLI)
+        .filter(VerificationTaskKeys.taskInfo + "." + SLIInfoKeys.sliId, sliId)
+        .get();
   }
 
   private Query<VerificationTask> createQueryForLiveMonitoring(String accountId, String cvConfigId) {
