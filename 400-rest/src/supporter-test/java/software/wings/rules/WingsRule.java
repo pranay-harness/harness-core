@@ -31,6 +31,7 @@ import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.config.PublisherConfiguration;
 import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -442,7 +443,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     modules.add(new SpringPersistenceTestModule());
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
-    modules.add(new WingsModule((MainConfiguration) configuration));
+    modules.add(new WingsModule((MainConfiguration) configuration, StartupMode.MANAGER));
     modules.add(new SimpleTotpModule());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());
