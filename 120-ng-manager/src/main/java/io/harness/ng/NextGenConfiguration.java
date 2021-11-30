@@ -101,6 +101,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @Setter @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
+  @JsonProperty("disableResourceValidation") private boolean disableResourceValidation;
   @JsonProperty("pmsSdkExecutionPoolConfig") private ThreadPoolConfig pmsSdkExecutionPoolConfig;
   @JsonProperty("pmsSdkOrchestrationEventPoolConfig") private ThreadPoolConfig pmsSdkOrchestrationEventPoolConfig;
   @JsonProperty("pmsMongo") private MongoConfig pmsMongoConfig;
@@ -114,6 +115,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("pipelineServiceClientConfig") private ServiceHttpClientConfig pipelineServiceClientConfig;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty("ceNextGenClientConfig") private ServiceHttpClientConfig ceNextGenClientConfig;
+  @JsonProperty("lightwingClientConfig") private ServiceHttpClientConfig lightwingClientConfig;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;

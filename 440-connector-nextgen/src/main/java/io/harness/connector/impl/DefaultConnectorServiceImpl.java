@@ -25,6 +25,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorDTO;
@@ -63,6 +64,7 @@ import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidEntityException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -530,6 +532,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     Connector connector =
         getConnectorOrThrowException(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connector);
+    if (!connectorDTO.getEntityValidityDetails().isValid()) {
+      throw new InvalidEntityException("Invalid connector yaml", USER);
+    }
     ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
     return validateConnector(connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier,
         projectIdentifier, connectorIdentifier);
@@ -794,10 +799,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public boolean markEntityInvalid(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml) {
-    Optional<Connector> existingConnectorOptional =
-        getInternal(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+  public boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String invalidYaml) {
+    Optional<Connector> existingConnectorOptional = getInternal(accountIdentifier, entityReference.getOrgIdentifier(),
+        entityReference.getProjectIdentifier(), entityReference.getIdentifier());
     if (!existingConnectorOptional.isPresent()) {
       return false;
     }
@@ -806,6 +810,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     existingConnector.setYaml(invalidYaml);
     existingConnector.setObjectIdOfYaml(EntityObjectIdUtils.getObjectIdOfYaml(invalidYaml));
     connectorRepository.save(existingConnector, ChangeType.NONE);
+    if (existingConnector.getHeartbeatPerpetualTaskId() != null) {
+      connectorHeartbeatService.resetPerpetualTask(accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
+    }
     return true;
   }
 }

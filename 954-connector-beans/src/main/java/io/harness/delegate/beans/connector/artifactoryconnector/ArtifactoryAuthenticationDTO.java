@@ -24,7 +24,8 @@ import lombok.NoArgsConstructor;
 @ApiModel("ArtifactoryAuthentication")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(using = ArtifactoryAuthDTODeserializer.class)
-@Schema(name = "ArtifactoryAuthentication", description = "This contains details of Artifactory Authentication")
+@Schema(
+    name = "ArtifactoryAuthentication", description = "This entity contains the details for Artifactory Authentication")
 public class ArtifactoryAuthenticationDTO {
   @NotNull @JsonProperty("type") ArtifactoryAuthType authType;
 

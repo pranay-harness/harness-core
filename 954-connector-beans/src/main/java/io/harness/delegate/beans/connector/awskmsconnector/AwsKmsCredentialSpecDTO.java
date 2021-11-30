@@ -7,6 +7,7 @@ import io.harness.beans.DecryptableEntity;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @OwnedBy(PL)
 @JsonSubTypes({
@@ -15,4 +16,5 @@ import io.swagger.annotations.ApiModel;
       @JsonSubTypes.Type(value = AwsKmsCredentialSpecAssumeSTSDTO.class, name = AwsKmsConstants.ASSUME_STS_ROLE)
 })
 @ApiModel("AwsKmsCredentialSpec")
+@Schema(name = "AwsKmsCredentialSpec", description = "This contains the credential spec of AWS KMS SM")
 public interface AwsKmsCredentialSpecDTO extends DecryptableEntity {}

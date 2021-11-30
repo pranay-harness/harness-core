@@ -2,6 +2,7 @@ package io.harness.delegate.beans.connector.ceawsconnector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("AwsCurAttributes")
+@Schema(name = "AwsCurAttributes", description = "This contains AWS cost and usage reports attributes")
 public class AwsCurAttributesDTO {
   @NotNull String reportName;
   @NotNull String s3BucketName;

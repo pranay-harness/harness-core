@@ -437,7 +437,8 @@ public class K8sStepHelper {
     SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
     List<EncryptedDataDetail> encryptedDataDetails =
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
-    boolean optimizedFilesFetch = isOptimizedFilesFetch(connectorDTO, AmbianceUtils.getAccountId(ambiance));
+    boolean optimizedFilesFetch = isOptimizedFilesFetch(connectorDTO, AmbianceUtils.getAccountId(ambiance))
+        && !ManifestType.Kustomize.equals(manifestOutcome.getType());
 
     if (optimizedFilesFetch) {
       scmConnector = (ScmConnector) connectorDTO.getConnectorConfig();
