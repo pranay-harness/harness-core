@@ -32,6 +32,8 @@ commonPoolConfig:
   idleTime: ${COMMON_POOL_IDLE_TIME:-500}
   timeUnit: ${COMMON_POOL_IDLE_TIME_TIME_UNIT:-MILLISECONDS}
 
+disableResourceValidation: ${DISABLE_RESOURCE_VALIDATION:-false}
+
 auditConfig:
   storeRequestPayload: false
   storeResponsePayload: false
