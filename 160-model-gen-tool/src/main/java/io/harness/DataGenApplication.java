@@ -20,6 +20,7 @@ import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
@@ -203,7 +204,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new DelegateServiceModule());
     modules.add(new AlertModule());
     modules.add(new CapabilityModule());
-    modules.add(new WingsModule(configuration));
+    modules.add(new WingsModule(configuration, StartupMode.MANAGER));
     modules.add(new TotpModule());
     modules.add(new ProviderModule() {
       @Provides
