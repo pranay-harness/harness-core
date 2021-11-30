@@ -8,8 +8,6 @@ shared_dependencies = [
     "//:lombok",
     "//127-cd-nextgen-beans:module",
     "//400-rest:module",
-    "//945-account-mgmt:module",
-    "//950-telemetry:module",
     "//958-migration-sdk:module",
     "//980-commons:module",
     "//970-ng-commons:module",
