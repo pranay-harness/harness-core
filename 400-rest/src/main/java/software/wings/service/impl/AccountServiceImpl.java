@@ -317,7 +317,8 @@ public class AccountServiceImpl implements AccountService {
     try (AutoLogContext logContext = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
       accountCrudSubject.fireInform(AccountCrudObxxxxxxxx:onAccountCreated, account);
       remoteObserverInformer.sendEvent(
-          ReflectionUtils.getMethod(AccountCrudObserver.class, "onAccountCreated"), AccountServiceImpl.class, account);
+          ReflectionUtils.getMethod(AccountCrudObserver.class, "onAccountCreated", account), AccountServiceImpl.class,
+          account);
 
       // When an account is just created for import, no need to create default account entities.
       // As the import process will do all these instead.
@@ -888,7 +889,8 @@ public class AccountServiceImpl implements AccountService {
     publishAccountChangeEvent(updatedAccount);
     try (AutoLogContext logContext = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
       accountCrudSubject.fireInform(AccountCrudObxxxxxxxx:onAccountUpdated, updatedAccount);
-      remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(AccountCrudObserver.class, "onAccountUpdated"),
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(AccountCrudObserver.class, "onAccountUpdated", updatedAccount),
           AccountServiceImpl.class, updatedAccount);
     }
     return updatedAccount;

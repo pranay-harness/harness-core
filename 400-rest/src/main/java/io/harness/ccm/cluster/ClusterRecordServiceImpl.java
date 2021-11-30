@@ -71,7 +71,8 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
     }
     try {
       subject.fireInform(ClusterRecordObxxxxxxxx:onUpserted, upsertedClusterRecord);
-      remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(ClusterRecordObserver.class, "onUpserted"),
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ClusterRecordObserver.class, "onUpserted", upsertedClusterRecord),
           ClusterRecordServiceImpl.class, upsertedClusterRecord);
     } catch (Exception e) {
       log.error("Failed to inform the observers for the Cluster with id={}", upsertedClusterRecord.getUuid(), e);
@@ -120,7 +121,8 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
       for (ClusterRecord clusterRecord : clusterRecords) {
         try {
           subject.fireInform(ClusterRecordObxxxxxxxx:onDeactivating, clusterRecord);
-          remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(ClusterRecordObserver.class, "onDeactivating"),
+          remoteObserverInformer.sendEvent(
+              ReflectionUtils.getMethod(ClusterRecordObserver.class, "onDeactivating", clusterRecord),
               ClusterRecordServiceImpl.class, clusterRecord);
         } catch (Exception e) {
           log.error("Failed to inform the Observers for ClusterRecord with id={}", clusterRecord.getCluster(), e);
@@ -140,7 +142,8 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
       for (ClusterRecord clusterRecord : clusterRecords) {
         try {
           subject.fireInform(ClusterRecordObxxxxxxxx:onDeleting, clusterRecord);
-          remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(ClusterRecordObserver.class, "onDeleting"),
+          remoteObserverInformer.sendEvent(
+              ReflectionUtils.getMethod(ClusterRecordObserver.class, "onDeleting", clusterRecord),
               ClusterRecordServiceImpl.class, clusterRecord);
         } catch (Exception e) {
           log.error("Failed to inform the Observers for ClusterRecord with id={}", clusterRecord.getCluster(), e);

@@ -80,8 +80,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
     perpetualTaskStateObserverSubject.fireInform(
         PerpetualTaskStateObxxxxxxxx:onPerpetualTaskAssigned, accountId, taskId, delegateId);
-    remoteObserverInformer.sendEvent(
-        ReflectionUtils.getMethod(PerpetualTaskStateObserver.class, "onPerpetualTaskAssigned"),
+    remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(PerpetualTaskStateObserver.class,
+                                         "onPerpetualTaskAssigned", accountId, taskId, delegateId),
         PerpetualTaskServiceImpl.class, accountId, taskId, delegateId);
   }
 
