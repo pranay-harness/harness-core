@@ -441,7 +441,22 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         return PublisherConfiguration.allOn();
       }
     });
+    modules.add(new AbstractRemoteObserverModule() {
+      @Override
+      public boolean noOpProducer() {
+        return true;
+      }
 
+      @Override
+      public Set<RemoteObserver> observers() {
+        return Collections.emptySet();
+      }
+
+      @Override
+      public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+        return NoOpRemoteObserverInformerImpl.class;
+      }
+    });
     modules.add(new ValidationModule(validatorFactory));
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
@@ -474,22 +489,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
       }
     });
     modules.add(new SearchModule());
-    modules.add(new AbstractRemoteObserverModule() {
-      @Override
-      public boolean noOpProducer() {
-        return true;
-      }
-
-      @Override
-      public Set<RemoteObserver> observers() {
-        return Collections.emptySet();
-      }
-
-      @Override
-      public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
-        return NoOpRemoteObserverInformerImpl.class;
-      }
-    });
     return modules;
   }
 
