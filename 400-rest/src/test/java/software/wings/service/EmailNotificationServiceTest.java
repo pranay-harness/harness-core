@@ -1,7 +1,9 @@
 package software.wings.service;
 
+import static io.harness.ng.core.account.DefaultExperience.CG;
 import static io.harness.rule.OwnerRule.RUSHABH;
 
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -23,11 +25,13 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.Account;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.EmailSendingFailedAlert;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EmailNotificationService;
@@ -39,6 +43,7 @@ import software.wings.utils.EmailUtils;
 
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
@@ -100,6 +105,15 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
                                                    .accountId("testAccount")
                                                    .build();
 
+  private static final Account dummyAccount = anAccount()
+                                                  .withCompanyName("Harness")
+                                                  .withAccountName("Account Name 1")
+                                                  .withAccountKey("ACCOUNT_KEY")
+                                                  .withLicenseInfo(getLicenseInfo())
+                                                  .withDefaultExperience(CG)
+                                                  .withWhitelistedDomains(new HashSet<>())
+                                                  .build();
+
   @Mock private Mailer mailer;
 
   @Mock private SettingsService settingsService;
@@ -113,6 +127,8 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   @Mock private MainConfiguration mainConfiguration;
 
   @Mock private AlertService alertService;
+
+  @Mock private AccountService accountService;
 
   @Inject EmailUtils emailUtils;
 
@@ -136,7 +152,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   public void setupMocks() {
     when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SMTP.name()))
         .thenReturn(newArrayList(aSettingAttribute().withValue(smtpConfig).build()));
-
+    when(accountService.get(any())).thenReturn(dummyAccount);
     SmtpConfig mock = mock(SmtpConfig.class);
     when(mock.valid()).thenReturn(true);
     when(mainConfiguration.getSmtpConfig()).thenReturn(mock);

@@ -240,6 +240,20 @@ public class SettingValidationService {
     }
   }
 
+  public boolean validateConnectorName(String name, String accountId, String appId, String envId) {
+    SettingAttribute sa = wingsPersistence.createQuery(SettingAttribute.class)
+                              .filter(SettingAttributeKeys.accountId, accountId)
+                              .filter("appId", appId)
+                              .filter(SettingAttributeKeys.envId, envId)
+                              .filter(SettingAttributeKeys.name, name)
+                              .filter(SettingAttributeKeys.category, SettingAttribute.SettingCategory.CONNECTOR)
+                              .get();
+    if (sa != null) {
+      return false;
+    }
+    return true;
+  }
+
   public boolean validate(SettingAttribute settingAttribute) {
     // Name has leading/trailing spaces
     SettingAttribute sa = wingsPersistence.createQuery(SettingAttribute.class)
