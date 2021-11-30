@@ -142,6 +142,9 @@ import io.harness.ng.core.outbox.UserGroupEventHandler;
 import io.harness.ng.core.schema.YamlBaseUrlService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.ng.core.smtp.NgSMTPSettingsHttpClientModule;
+import io.harness.ng.core.smtp.SmtpNgService;
+import io.harness.ng.core.smtp.SmtpNgServiceImpl;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.NgUserServiceImpl;
 import io.harness.ng.core.user.service.impl.UserEntityCrudStreamListener;
@@ -614,8 +617,11 @@ public class NextGenModule extends AbstractModule {
         appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
     install(CeLicenseClientModule.getInstance(appConfig.getManagerClientConfig(),
         appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
+    install(NgSMTPSettingsHttpClientModule.getInstance(appConfig.getManagerClientConfig(),
+        appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
 
     bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
+    bind(SmtpNgService.class).to(SmtpNgServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
     bind(TokenService.class).to(TokenServiceImpl.class);
     bind(FeedbackService.class).to(FeedbackServiceImpl.class);
