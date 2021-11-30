@@ -9,6 +9,7 @@ import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.YamlTypes;
 
@@ -32,7 +33,7 @@ public class ApprovalStepVariableCreator extends GenericStepVariableCreator {
       Map<String, YamlOutputProperties> yamlOutputPropertiesMap, YamlNode yamlNode) {
     List<String> complexFields = new ArrayList<>();
     complexFields.add(YamlTypes.APPROVAL_INPUTS);
-    complexFields.add(YAMLFieldNameConstants.OUTPUT_VARIABLES);
+    complexFields.add(YamlTypes.APPROVERS);
 
     List<YamlField> fields = yamlNode.fields();
     fields.forEach(field -> {
@@ -41,9 +42,9 @@ public class ApprovalStepVariableCreator extends GenericStepVariableCreator {
       }
     });
 
-    YamlField outputVariablesField = yamlNode.getField(YAMLFieldNameConstants.OUTPUT_VARIABLES);
-    if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
-      addVariablesForOutputVariables(outputVariablesField, yamlOutputPropertiesMap);
+    YamlField approversField = yamlNode.getField(YamlTypes.APPROVERS);
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(approversField)) {
+      addVariablesForApprovers(approversField, yamlPropertiesMap);
     }
 
     YamlField inputsField = yamlNode.getField(YamlTypes.APPROVAL_INPUTS);
@@ -53,7 +54,25 @@ public class ApprovalStepVariableCreator extends GenericStepVariableCreator {
   }
 
   private void addVariablesForInputs(YamlField inputsField, Map<String, YamlProperties> yamlPropertiesMap) {
-    List<YamlField> fields = inputsField.getNode().fields();
+    List<YamlNode> nodes = inputsField.getNode().asArray();
+    nodes.forEach(node -> {
+      YamlField field = node.getField(YAMLFieldNameConstants.UUID);
+      if (field != null) {
+        String fqn = YamlUtils.getFullyQualifiedName(field.getNode());
+        String localName;
+        if (fqn.contains(YAMLFieldNameConstants.PIPELINE_INFRASTRUCTURE)) {
+          localName = YamlUtils.getQualifiedNameTillGivenField(node, YAMLFieldNameConstants.PIPELINE_INFRASTRUCTURE);
+        } else {
+          localName = YamlUtils.getQualifiedNameTillGivenField(node, YAMLFieldNameConstants.EXECUTION);
+        }
+        yamlPropertiesMap.put(node.getField("defaultValue").getNode().getCurrJsonNode().textValue(),
+            YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
+      }
+    });
+  }
+
+  private void addVariablesForApprovers(YamlField yamlField, Map<String, YamlProperties> yamlPropertiesMap) {
+    List<YamlField> fields = yamlField.getNode().fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YAMLFieldNameConstants.UUID)) {
         addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
