@@ -10,4 +10,5 @@ public interface NGRegexValidatorConstants {
   String NAME_PATTERN = "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$";
   String TIMEOUT_PATTERN =
       "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$";
+  String VERSION_LABEL_PATTERN = "^[0-9a-zA-Z][^\\s]{0,63}$";
 }
