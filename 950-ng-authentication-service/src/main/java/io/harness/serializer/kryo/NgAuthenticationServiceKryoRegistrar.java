@@ -1,4 +1,4 @@
-package io.harness.authenticationservice.serialization;
+package io.harness.serializer.kryo;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
