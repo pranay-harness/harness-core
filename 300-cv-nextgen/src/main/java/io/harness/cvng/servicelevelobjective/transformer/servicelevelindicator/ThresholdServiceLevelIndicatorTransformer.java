@@ -12,7 +12,7 @@ public class ThresholdServiceLevelIndicatorTransformer
   @Override
   public ThresholdServiceLevelIndicator getEntity(ProjectParams projectParams,
       ServiceLevelIndicatorDTO serviceLevelIndicatorDTO, String monitoredServiceIdentifier,
-      String healthSourceIndicator) {
+      String healthSourceIdentifier) {
     ThresholdSLIMetricSpec thresholdSLIMetricSpec =
         (ThresholdSLIMetricSpec) serviceLevelIndicatorDTO.getSpec().getSpec();
 
@@ -25,7 +25,7 @@ public class ThresholdServiceLevelIndicatorTransformer
         .type(serviceLevelIndicatorDTO.getType())
         .metric1(thresholdSLIMetricSpec.getMetric1())
         .monitoredServiceIdentifier(monitoredServiceIdentifier)
-        .healthSourceIdentifier(healthSourceIndicator)
+        .healthSourceIdentifier(healthSourceIdentifier)
         .build();
   }
 

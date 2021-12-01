@@ -49,12 +49,12 @@ import io.harness.cvng.core.entities.demo.CVNGDemoPerpetualTask.CVNGDemoPerpetua
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.CVNGDemoPerpetualTaskHandler;
 import io.harness.cvng.core.jobs.ChangeSourceDemoHandler;
-import io.harness.cvng.core.jobs.DataCollectionTaskCreateNextTaskHandler;
 import io.harness.cvng.core.jobs.DeploymentChangeEventConsumer;
 import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
 import io.harness.cvng.core.jobs.MonitoringSourcePerpetualTaskHandler;
 import io.harness.cvng.core.jobs.PersistentLockCleanup;
 import io.harness.cvng.core.jobs.SLIDataCollectionTaskCreateNextTaskHandler;
+import io.harness.cvng.core.jobs.ServiceGuardDataCollectionTaskCreateNextTaskHandler;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
@@ -635,9 +635,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
   private void registerCreateNextDataCollectionTaskIterator(Injector injector) {
     ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
         3, new ThreadFactoryBuilder().setNameFormat("create-next-task-iterator").build());
-    DataCollectionTaskCreateNextTaskHandler dataCollectionTaskCreateNextTaskHandler =
-        injector.getInstance(DataCollectionTaskCreateNextTaskHandler.class);
-    PersistenceIterator dataCollectionTaskRecoverHandlerIterator =
+    ServiceGuardDataCollectionTaskCreateNextTaskHandler serviceGuardDataCollectionTaskCreateNextTaskHandler =
+        injector.getInstance(ServiceGuardDataCollectionTaskCreateNextTaskHandler.class);
+    PersistenceIterator liveMonitoringDataCollectionTaskRecoverHandlerIterator =
         MongoPersistenceIterator.<CVConfig, MorphiaFilterExpander<CVConfig>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
             .clazz(CVConfig.class)
@@ -646,15 +646,15 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(dataCollectionExecutor)
             .semaphore(new Semaphore(3))
-            .handler(dataCollectionTaskCreateNextTaskHandler)
+            .handler(serviceGuardDataCollectionTaskCreateNextTaskHandler)
             .schedulingType(REGULAR)
             .filterExpander(query -> query.filter(CVConfigKeys.enabled, true))
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();
-    injector.injectMembers(dataCollectionTaskRecoverHandlerIterator);
+    injector.injectMembers(liveMonitoringDataCollectionTaskRecoverHandlerIterator);
     dataCollectionExecutor.scheduleWithFixedDelay(
-        () -> dataCollectionTaskRecoverHandlerIterator.process(), 0, 1, TimeUnit.MINUTES);
+        () -> liveMonitoringDataCollectionTaskRecoverHandlerIterator.process(), 0, 1, TimeUnit.MINUTES);
   }
 
   private void registerCreateNextSLIDataCollectionTaskIterator(Injector injector) {
