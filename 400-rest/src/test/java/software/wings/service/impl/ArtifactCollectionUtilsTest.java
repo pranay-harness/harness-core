@@ -190,7 +190,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                                               .build();
 
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(customArtifactStream);
-    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, ACCOUNT_ID);
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(delegateTask.getTags()).contains("Delegate Tag");
     TaskData data = delegateTask.getData();
@@ -234,7 +234,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                         .artifactType(JAR)
                         .build());
 
-    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, null);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(delegateTask.getTags()).contains("nexus");
@@ -281,7 +281,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                         .artifactType(JAR)
                         .build());
 
-    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, null);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(delegateTask.getTags()).contains("jfrog");
@@ -329,7 +329,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                         .artifactType(JAR)
                         .build());
 
-    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, null);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(delegateTask.getTags()).contains("k8s");
@@ -375,7 +375,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                         .artifactType(JAR)
                         .build());
 
-    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, null);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(delegateTask.getTags()).contains("AWS Tag");
@@ -393,7 +393,8 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category({UnitTests.class})
   public void shouldPrepareValidateTaskArtifactStreamNotExists() {
-    artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, null);
+    verify(artifactStreamService.deletePerpetualTaskByArtifactStream(null, ARTIFACT_STREAM_ID));
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -412,7 +413,8 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                                                         .build();
 
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(amazonS3ArtifactStream);
-    artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, null);
+    verify(artifactStreamService.deletePerpetualTaskByArtifactStream(null, ARTIFACT_STREAM_ID));
   }
 
   @Test
