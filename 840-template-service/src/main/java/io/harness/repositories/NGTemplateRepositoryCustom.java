@@ -30,7 +30,7 @@ public interface NGTemplateRepositoryCustom {
 
   TemplateEntity updateTemplateYaml(TemplateEntity templateEntity, TemplateEntity oldTemplateEntity,
       NGTemplateConfig templateConfig, ChangeType changeType, String comments,
-      TemplateUpdateEventType templateUpdateEventType);
+      TemplateUpdateEventType templateUpdateEventType, boolean skipAudits);
 
   TemplateEntity deleteTemplate(TemplateEntity templateToDelete, NGTemplateConfig templateConfig, String comments);
 
