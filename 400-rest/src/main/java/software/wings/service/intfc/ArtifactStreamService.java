@@ -104,6 +104,8 @@ public interface ArtifactStreamService extends OwnedByService {
 
   ArtifactStream fetchByArtifactSourceVariableValue(String appId, String variableValue);
 
+  boolean deletePerpetualTaskByArtifactStream(String accountId, String artifactStreamId);
+
   boolean updateLastIterationFields(String accountId, String uuid, boolean success);
 
   ArtifactStream resetStoppedArtifactCollection(String appId, String artifactStreamId);
