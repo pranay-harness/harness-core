@@ -17,7 +17,7 @@ allowedOrigins:
 logging:
   level: INFO
   loggers:
-    org.glassfish.jersey: INFO
+    org.glassfish.jersey: WARN
     allbegray.slack: WARN
     org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
   appenders:
