@@ -1,10 +1,12 @@
 package io.harness.delegate.task.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.jira.mappers.JiraRequestResponseMapper;
-import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidArtifactServerException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.jira.JiraClient;
 import io.harness.jira.JiraIssueCreateMetadataNG;
 import io.harness.jira.JiraIssueNG;
@@ -28,7 +30,10 @@ public class JiraTaskNGHandler {
     } catch (Exception ex) {
       String errorMessage = "Failed to fetch projects during credential validation";
       log.error(errorMessage, ex);
-      throw new GeneralException(errorMessage, ex);
+      throw NestedExceptionUtils.hintWithExplanationException(
+          "Check if the Jira URL & Jira credentials are correct. Jira URLs are different for different credentials",
+          "The Jira URL or username or password for the connector is incorrect",
+          new InvalidArtifactServerException("Invalid Jira connector details", USER));
     }
   }
 
