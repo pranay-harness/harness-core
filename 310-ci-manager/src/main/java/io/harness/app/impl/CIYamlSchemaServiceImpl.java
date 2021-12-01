@@ -133,7 +133,6 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
       while (elements.hasNext()) {
         JsonNode jsonNode = elements.next();
         yamlSchemaGenerator.removeUnwantedNodes(jsonNode, YAMLFieldNameConstants.ROLLBACK_STEPS);
-        yamlSchemaGenerator.removeUnwantedNodes(jsonNode, YAMLFieldNameConstants.FAILURE_STRATEGIES);
         yamlSchemaGenerator.removeUnwantedNodes(jsonNode, YAMLFieldNameConstants.STEP_GROUP);
       }
     }
