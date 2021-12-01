@@ -32,6 +32,7 @@ import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -142,6 +143,7 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
     assertThat(cvngLogs.getContent()).hasSize(7);
     final int[] timeCounter = {0};
     final Long[] lastCreatedAt = {Long.MAX_VALUE};
+    cvngLogs.getContent().sort(Comparator.comparing(log -> ((ApiCallLogDTO) log).getRequestTime()).reversed());
     cvngLogs.getContent().forEach(logRecord -> {
       assertThat(logRecord.getAccountId()).isEqualTo(accountId);
       assertThat(logRecord.getTraceableId()).isEqualTo(traceableId);
@@ -153,7 +155,7 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
       assertThat(logRecord.getEndTime()).isEqualTo(endTime.toEpochMilli());
       assertThat(logRecord.getTraceableType()).isEqualTo(TraceableType.ONBOARDING);
       assertThat(logRecord.getType()).isEqualTo(CVNGLogType.API_CALL_LOG);
-      assertThat(logRecord.getCreatedAt()).isLessThan(lastCreatedAt[0]);
+      assertThat(logRecord.getCreatedAt()).isLessThanOrEqualTo(lastCreatedAt[0]);
       lastCreatedAt[0] = logRecord.getCreatedAt();
       timeCounter[0] += 10;
     });
@@ -178,6 +180,7 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
             endTime.plus(Duration.ofMillis(1)), null, CVNGLogType.API_CALL_LOG, 0, 3);
     assertThat(cvngLogs.getContent()).hasSize(3);
     final int[] timeCounter = {0};
+    cvngLogs.getContent().sort(Comparator.comparing(log -> ((ApiCallLogDTO) log).getRequestTime()).reversed());
     (cvngLogs.getContent()).forEach(logRecord -> {
       assertThat(logRecord.getAccountId()).isEqualTo(accountId);
       assertThat(logRecord.getTraceableId()).isEqualTo(traceableId);
