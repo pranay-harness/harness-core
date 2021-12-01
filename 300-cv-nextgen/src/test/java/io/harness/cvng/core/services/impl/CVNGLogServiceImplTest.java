@@ -155,7 +155,7 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
       assertThat(logRecord.getEndTime()).isEqualTo(endTime.toEpochMilli());
       assertThat(logRecord.getTraceableType()).isEqualTo(TraceableType.ONBOARDING);
       assertThat(logRecord.getType()).isEqualTo(CVNGLogType.API_CALL_LOG);
-      assertThat(logRecord.getCreatedAt()).isLessThan(lastCreatedAt[0]);
+      assertThat(logRecord.getCreatedAt()).isLessThanOrEqualTo(lastCreatedAt[0]);
       lastCreatedAt[0] = logRecord.getCreatedAt();
       timeCounter[0] += 10;
     });
