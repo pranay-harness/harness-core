@@ -2,6 +2,7 @@ package io.harness.delegate.task.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.MOUNIK;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
+import io.harness.exception.HintException;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableSet;
@@ -57,6 +59,16 @@ public class JiraTaskNGTest extends CategoryTest {
     JiraTaskNGResponse taskResponse = JiraTaskNGResponse.builder().build();
     when(jiraTaskNGHelper.getJiraTaskResponse(any())).thenReturn(taskResponse);
     assertThatCode(() -> jiraTaskNG.run(JiraTaskNGParameters.builder().build())).doesNotThrowAnyException();
+    verify(jiraTaskNGHelper).getJiraTaskResponse(JiraTaskNGParameters.builder().build());
+  }
+
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void testRunFailure() {
+    JiraTaskNGResponse taskResponse = JiraTaskNGResponse.builder().build();
+    when(jiraTaskNGHelper.getJiraTaskResponse(any())).thenThrow(new HintException("Exception"));
+    assertThatThrownBy(() -> jiraTaskNG.run(JiraTaskNGParameters.builder().build())).isInstanceOf(HintException.class);
     verify(jiraTaskNGHelper).getJiraTaskResponse(JiraTaskNGParameters.builder().build());
   }
 
