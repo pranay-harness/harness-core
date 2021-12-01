@@ -10,32 +10,33 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.ModuleType;
 import io.harness.category.element.UnitTests;
-import io.harness.enforcement.bases.RateLimitRestriction;
+import io.harness.enforcement.bases.LicenseStaticLimitRestriction;
 import io.harness.enforcement.beans.FeatureRestrictionUsageDTO;
-import io.harness.enforcement.beans.TimeUnit;
 import io.harness.enforcement.beans.details.FeatureRestrictionDetailsDTO;
-import io.harness.enforcement.beans.metadata.RateLimitRestrictionMetadataDTO;
+import io.harness.enforcement.beans.metadata.LicenseStaticLimitRestrictionMetadataDTO;
 import io.harness.enforcement.beans.metadata.RestrictionMetadataDTO;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.enforcement.constants.RestrictionType;
-import io.harness.enforcement.exceptions.LimitExceededException;
 import io.harness.enforcement.services.impl.EnforcementSdkClient;
 import io.harness.licensing.Edition;
+import io.harness.licensing.LicenseType;
+import io.harness.licensing.beans.summary.CDLicenseSummaryDTO;
+import io.harness.licensing.services.LicenseService;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
-import java.time.temporal.ChronoUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class RateLimitRestrictionHandlerTest extends CategoryTest {
-  private RateLimitRestrictionHandler handler;
+public class LicenseStaticLimitRestrictionHandlerTest extends CategoryTest {
+  private LicenseStaticLimitRestrictionHandler handler;
+  private LicenseService licenseService;
   private FeatureRestrictionName featureRestrictionName = FeatureRestrictionName.TEST1;
-  private RateLimitRestriction restriction;
+  private LicenseStaticLimitRestriction restriction;
   private EnforcementSdkClient client;
   private String accountIdentifier = "accountId";
   private ModuleType moduleType = ModuleType.CD;
@@ -43,14 +44,22 @@ public class RateLimitRestrictionHandlerTest extends CategoryTest {
 
   @Before
   public void setup() throws IOException {
-    handler = new RateLimitRestrictionHandler();
+    licenseService = mock(LicenseService.class);
+    when(licenseService.getLicenseSummary(accountIdentifier, moduleType))
+        .thenReturn(CDLicenseSummaryDTO.builder()
+                        .totalWorkload(10)
+                        .edition(Edition.ENTERPRISE)
+                        .maxExpiryTime(Integer.MAX_VALUE)
+                        .licenseType(LicenseType.TRIAL)
+                        .build());
+
+    handler = new LicenseStaticLimitRestrictionHandler(licenseService);
     client = mock(EnforcementSdkClient.class);
     Call<ResponseDTO<FeatureRestrictionUsageDTO>> usageCall = mock(Call.class);
     when(usageCall.execute())
         .thenReturn(Response.success(ResponseDTO.newResponse(FeatureRestrictionUsageDTO.builder().count(10).build())));
     when(client.getRestrictionUsage(any(), any(), any())).thenReturn(usageCall);
-    restriction =
-        new RateLimitRestriction(RestrictionType.RATE_LIMIT, 11, new TimeUnit(ChronoUnit.DAYS, 1), false, client);
+    restriction = new LicenseStaticLimitRestriction(RestrictionType.LICENSE_STATIC_LIMIT, "totalWorkload", client);
   }
 
   @Test
@@ -60,23 +69,14 @@ public class RateLimitRestrictionHandlerTest extends CategoryTest {
     handler.check(featureRestrictionName, restriction, accountIdentifier, moduleType, edition);
   }
 
-  @Test(expected = LimitExceededException.class)
-  @Owner(developers = ZHUO)
-  @Category(UnitTests.class)
-  public void testCheckFailed() {
-    RateLimitRestriction invalid =
-        new RateLimitRestriction(RestrictionType.RATE_LIMIT, 10, new TimeUnit(ChronoUnit.DAYS, 1), false, client);
-    handler.check(featureRestrictionName, invalid, accountIdentifier, moduleType, edition);
-  }
-
   @Test
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testFillRestrictionDTO() {
-    FeatureRestrictionDetailsDTO dto = FeatureRestrictionDetailsDTO.builder().build();
+    FeatureRestrictionDetailsDTO dto = FeatureRestrictionDetailsDTO.builder().moduleType(ModuleType.CD).build();
     handler.fillRestrictionDTO(featureRestrictionName, restriction, accountIdentifier, edition, dto);
 
-    assertThat(dto.getRestrictionType()).isEqualTo(RestrictionType.RATE_LIMIT);
+    assertThat(dto.getRestrictionType()).isEqualTo(RestrictionType.LICENSE_STATIC_LIMIT);
     assertThat(dto.getRestriction()).isNotNull();
     assertThat(dto.isAllowed()).isTrue();
   }
@@ -85,10 +85,10 @@ public class RateLimitRestrictionHandlerTest extends CategoryTest {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testGetMetadataDTO() {
-    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction, null, null);
+    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction, accountIdentifier, moduleType);
 
-    RateLimitRestrictionMetadataDTO dto = (RateLimitRestrictionMetadataDTO) metadataDTO;
-    assertThat(dto.getRestrictionType()).isEqualTo(RestrictionType.RATE_LIMIT);
-    assertThat(dto.getLimit()).isEqualTo(11);
+    LicenseStaticLimitRestrictionMetadataDTO dto = (LicenseStaticLimitRestrictionMetadataDTO) metadataDTO;
+    assertThat(dto.getRestrictionType()).isEqualTo(RestrictionType.LICENSE_STATIC_LIMIT);
+    assertThat(dto.getLimit()).isEqualTo(10);
   }
 }
