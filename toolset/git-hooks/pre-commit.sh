@@ -66,34 +66,34 @@ else
     done
 fi
 
-POM_FORMAT_PROPERTY=hook.pre-commit.format.pom
-if [ "`git config $POM_FORMAT_PROPERTY`" == "false" ]
-then
-    echo -e '\033[0;31m' formatting poms is disabled - to enable: '\033[0;37m'git config --unset $POM_FORMAT_PROPERTY '\033[0m'
-else
-    echo -e '\033[0;34m' formatting poms ... to disable: '\033[0;37m'git config --add $POM_FORMAT_PROPERTY false '\033[0m'
+#POM_FORMAT_PROPERTY=hook.pre-commit.format.pom
+#if [ "`git config $POM_FORMAT_PROPERTY`" == "false" ]
+#then
+    #echo -e '\033[0;31m' formatting poms is disabled - to enable: '\033[0;37m'git config --unset $POM_FORMAT_PROPERTY '\033[0m'
+#else
+    #echo -e '\033[0;34m' formatting poms ... to disable: '\033[0;37m'git config --add $POM_FORMAT_PROPERTY false '\033[0m'
 
-    POMS=`git diff-index --cached --name-only $against | grep "pom\.xml$"`
+    #POMS=`git diff-index --cached --name-only $against | grep "pom\.xml$"`
 
-    if [ ! -z "$POMS" ]
-    then
-        mvn ${MAVEN_ARGS} sortpom:sort > /dev/null
-        pushd tools > /dev/null; mvn ${MAVEN_ARGS} sortpom:sort > /dev/null; popd > /dev/null
+    #if [ ! -z "$POMS" ]
+    #then
+        #mvn ${MAVEN_ARGS} sortpom:sort > /dev/null
+        #pushd tools > /dev/null; mvn ${MAVEN_ARGS} sortpom:sort > /dev/null; popd > /dev/null
 
-        #do the formatting
-        for file in `find . -type f -name pom.xml`
-        do
-            if [ -e "${file}" ]
-            then
-                git diff --exit-code -- "${file}"
-                if [ "$?" -ne "0" ]
-                then
-                    git add "${file}"
-                fi
-            fi
-        done
-    fi
-fi
+        ##do the formatting
+        #for file in `find . -type f -name pom.xml`
+        #do
+            #if [ -e "${file}" ]
+            #then
+                #git diff --exit-code -- "${file}"
+                #if [ "$?" -ne "0" ]
+                #then
+                    #git add "${file}"
+                #fi
+            #fi
+        #done
+    #fi
+#fi
 
 GRAPHQL_FORMAT_PROPERTY=hook.pre-commit.format.graphql
 if [ "`git config $GRAPHQL_FORMAT_PROPERTY`" == "false" ]
