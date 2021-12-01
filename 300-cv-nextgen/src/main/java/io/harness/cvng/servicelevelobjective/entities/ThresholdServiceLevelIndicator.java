@@ -1,8 +1,6 @@
 package io.harness.cvng.servicelevelobjective.entities;
 
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
-import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
-import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdSLIMetricSpec;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
@@ -26,14 +24,6 @@ public class ThresholdServiceLevelIndicator extends ServiceLevelIndicator {
   @Override
   public SLIMetricType getSLIMetricType() {
     return SLIMetricType.THRESHOLD;
-  }
-
-  @Override
-  public ServiceLevelIndicatorSpec getServiceLevelIndicatorSpec() {
-    return ServiceLevelIndicatorSpec.builder()
-        .type(SLIMetricType.THRESHOLD)
-        .spec(ThresholdSLIMetricSpec.builder().metric1(metric1).build())
-        .build();
   }
 
   @Override

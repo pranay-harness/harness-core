@@ -3,6 +3,7 @@ package io.harness.cvng.migration;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.migration.list.AddDefaultFieldsToMonitoredService;
 import io.harness.cvng.migration.list.AddDeploymentMonitoringSourcePerpetualTask;
 import io.harness.cvng.migration.list.AddMonitoringSourcesToVerificationJobMigration;
 import io.harness.cvng.migration.list.CVNGBaseMigration;
@@ -66,6 +67,7 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(23, CleanUpMonitoringSourcePerpetualTask.class))
         .add(Pair.of(24, DeleteOrchestratorWithInvalidVerificationTaskId.class))
         .add(Pair.of(25, DeleteSLISLOMigration.class))
+        .add(Pair.of(26, AddDefaultFieldsToMonitoredService.class))
         .build();
   }
 }

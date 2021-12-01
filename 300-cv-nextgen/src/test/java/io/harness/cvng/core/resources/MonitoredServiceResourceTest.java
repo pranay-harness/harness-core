@@ -66,7 +66,7 @@ public class MonitoredServiceResourceTest extends CvNextGenTestBase {
         ((PrometheusHealthSourceSpec) healthSource.getSpec()).getMetricDefinitions().get(0);
     // assertThat(healthSourceMetricDefinition.getIdentifier()).isEqualTo("prometheus_metric123");
     assertThat(healthSourceMetricDefinition.getIdentifier())
-        .isEqualTo("Prometheus Metric"); // TODO: remove this after enabling validation.
+        .isEqualTo("PrometheusMetric"); // TODO: remove this after enabling validation.
   }
 
   @Test
