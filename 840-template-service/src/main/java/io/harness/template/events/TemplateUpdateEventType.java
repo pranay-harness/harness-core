@@ -3,6 +3,7 @@ package io.harness.template.events;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.ng.core.template.TemplateEntityConstants.OTHERS;
 import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_CHANGE_SCOPE;
+import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_CREATE;
 import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_LAST_UPDATED_FALSE;
 import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_LAST_UPDATED_TRUE;
 import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_STABLE_FALSE;
@@ -26,6 +27,7 @@ public enum TemplateUpdateEventType {
   @JsonProperty(TEMPLATE_LAST_UPDATED_TRUE) TEMPLATE_LAST_UPDATED_TRUE_EVENT(TEMPLATE_LAST_UPDATED_TRUE),
   @JsonProperty(TEMPLATE_LAST_UPDATED_FALSE) TEMPLATE_LAST_UPDATED_FALSE_EVENT(TEMPLATE_LAST_UPDATED_FALSE),
   @JsonProperty(TEMPLATE_CHANGE_SCOPE) TEMPLATE_CHANGE_SCOPE_EVENT(TEMPLATE_CHANGE_SCOPE),
+  @JsonProperty(TEMPLATE_CREATE) TEMPLATE_CREATE_EVENT(TEMPLATE_CREATE),
   @JsonProperty(OTHERS) OTHERS_EVENT(OTHERS);
 
   private final String yamlType;
