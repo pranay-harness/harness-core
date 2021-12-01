@@ -64,6 +64,7 @@ import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.DataCollectionTask.Type;
 import io.harness.cvng.core.entities.DatadogLogCVConfig.DatadogLogCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.DatadogMetricCVConfig.DatadogMetricCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigUpdatableEntity;
@@ -88,6 +89,8 @@ import io.harness.cvng.core.services.api.CVNGLogService;
 import io.harness.cvng.core.services.api.CVNGYamlSchemaService;
 import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
+import io.harness.cvng.core.services.api.DataCollectionSLIInfoMapper;
+import io.harness.cvng.core.services.api.DataCollectionTaskManagementService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.DataSourceConnectivityChecker;
 import io.harness.cvng.core.services.api.DatadogService;
@@ -141,6 +144,8 @@ import io.harness.cvng.core.services.impl.PagerDutyServiceImpl;
 import io.harness.cvng.core.services.impl.PagerdutyChangeSourceUpdateHandler;
 import io.harness.cvng.core.services.impl.PrometheusDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.PrometheusServiceImpl;
+import io.harness.cvng.core.services.impl.SLIDataCollectionTaskServiceImpl;
+import io.harness.cvng.core.services.impl.ServiceGuardDataCollectionTaskServiceImpl;
 import io.harness.cvng.core.services.impl.SetupUsageEventServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
@@ -322,6 +327,12 @@ public class CVServiceModule extends AbstractModule {
     bind(LogClusterService.class).to(LogClusterServiceImpl.class);
     bind(LogAnalysisService.class).to(LogAnalysisServiceImpl.class);
     bind(DataCollectionTaskService.class).to(DataCollectionTaskServiceImpl.class);
+    MapBinder<Type, DataCollectionTaskManagementService> dataCollectionTaskServiceMapBinder =
+        MapBinder.newMapBinder(binder(), Type.class, DataCollectionTaskManagementService.class);
+    dataCollectionTaskServiceMapBinder.addBinding(Type.SERVICE_GUARD)
+        .to(ServiceGuardDataCollectionTaskServiceImpl.class);
+    dataCollectionTaskServiceMapBinder.addBinding(Type.DEPLOYMENT).to(ServiceGuardDataCollectionTaskServiceImpl.class);
+    dataCollectionTaskServiceMapBinder.addBinding(Type.SLI).to(SLIDataCollectionTaskServiceImpl.class);
     bind(VerificationManagerService.class).to(VerificationManagerServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
     bind(MetricPackService.class).to(MetricPackServiceImpl.class);
@@ -366,6 +377,15 @@ public class CVServiceModule extends AbstractModule {
         .to(DatadogMetricDataCollectionInfoMapper.class);
     dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.DATADOG_LOG)
         .to(DatadogLogDataCollectionInfoMapper.class);
+
+    MapBinder<DataSourceType, DataCollectionSLIInfoMapper> dataSourceTypeDataCollectionSLIInfoMapperMapBinder =
+        MapBinder.newMapBinder(binder(), DataSourceType.class, DataCollectionSLIInfoMapper.class);
+    dataSourceTypeDataCollectionSLIInfoMapperMapBinder.addBinding(DataSourceType.PROMETHEUS)
+        .to(PrometheusDataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionSLIInfoMapperMapBinder.addBinding(DataSourceType.DATADOG_METRICS)
+        .to(DatadogMetricDataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionSLIInfoMapperMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
+        .to(StackdriverDataCollectionInfoMapper.class);
 
     bind(MetricPackService.class).to(MetricPackServiceImpl.class);
     bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
