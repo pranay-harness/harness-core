@@ -6,7 +6,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
-import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -62,8 +61,6 @@ public abstract class ServiceLevelIndicator
   private SLIMetricType sliMetricType;
 
   public abstract SLIMetricType getSLIMetricType();
-
-  public abstract ServiceLevelIndicatorSpec getServiceLevelIndicatorSpec();
 
   public abstract List<String> getMetricNames();
 
