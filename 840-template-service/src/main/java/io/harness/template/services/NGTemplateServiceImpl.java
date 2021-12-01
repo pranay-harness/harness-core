@@ -124,7 +124,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   }
 
   private TemplateEntity updateTemplateHelper(String oldOrgIdentifier, String oldProjectIdentifier,
-      TemplateEntity templateEntity, ChangeType changeType, boolean setDefaultTemplate,
+      TemplateEntity templateEntity, ChangeType changeType, boolean setStableTemplate,
       boolean updateLastUpdatedTemplateFlag, String comments, TemplateUpdateEventType eventType) {
     try {
       NGTemplateServiceHelper.validatePresenceOfRequiredFields(
@@ -136,7 +136,9 @@ public class NGTemplateServiceImpl implements NGTemplateService {
       if (gitEntityInfo != null && gitEntityInfo.isNewBranch()) {
         // sending old entity as null here because a new mongo entity will be created. If audit trail needs to be added
         // to git synced projects, a get call needs to be added here to the base branch of this template update
-        return makeTemplateUpdateCall(templateEntity, null, changeType, comments, TemplateUpdateEventType.OTHERS_EVENT);
+        TemplateEntity templateToCreate = templateEntity.withLastUpdatedTemplate(true);
+        return makeTemplateUpdateCall(
+            templateToCreate, null, changeType, comments, TemplateUpdateEventType.TEMPLATE_CREATE_EVENT, false);
       }
 
       Optional<TemplateEntity> optionalTemplate =
@@ -176,7 +178,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
                                             .withLastUpdatedTemplate(updateLastUpdatedTemplateFlag);
 
       // Updating the stable template version.
-      if (setDefaultTemplate && !templateToUpdate.isStableTemplate()) {
+      if (setStableTemplate && !templateToUpdate.isStableTemplate()) {
         TemplateEntity templateToUpdateWithStable = templateToUpdate.withStableTemplate(true);
         String finalComments = comments;
         return transactionHelper.performTransaction(() -> {
@@ -184,12 +186,12 @@ public class NGTemplateServiceImpl implements NGTemplateService {
               templateEntity.getProjectIdentifier(), templateEntity.getIdentifier(),
               templateToUpdate.getVersionLabel());
           return makeTemplateUpdateCall(templateToUpdateWithStable, oldTemplateEntity, changeType, finalComments,
-              TemplateUpdateEventType.TEMPLATE_STABLE_TRUE_WITH_YAML_CHANGE_EVENT);
+              TemplateUpdateEventType.TEMPLATE_STABLE_TRUE_WITH_YAML_CHANGE_EVENT, false);
         });
       }
 
       return makeTemplateUpdateCall(templateToUpdate, oldTemplateEntity, changeType, comments,
-          eventType != null ? eventType : TemplateUpdateEventType.OTHERS_EVENT);
+          eventType != null ? eventType : TemplateUpdateEventType.OTHERS_EVENT, false);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
           format(DUP_KEY_EXP_FORMAT_STRING, templateEntity.getIdentifier(), templateEntity.getVersionLabel(),
@@ -379,7 +381,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
         TemplateEntity templateToUpdateForGivenVersion =
             oldTemplateForGivenVersion.withStableTemplate(true).withLastUpdatedTemplate(true);
         return makeTemplateUpdateCall(templateToUpdateForGivenVersion, oldTemplateForGivenVersion, ChangeType.MODIFY,
-            comments, TemplateUpdateEventType.TEMPLATE_STABLE_TRUE_EVENT);
+            comments, TemplateUpdateEventType.TEMPLATE_STABLE_TRUE_EVENT, false);
       }
     } catch (Exception e) {
       log.error(
@@ -393,10 +395,10 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   }
 
   private TemplateEntity makeTemplateUpdateCall(TemplateEntity templateToUpdate, TemplateEntity oldTemplateEntity,
-      ChangeType changeType, String comments, TemplateUpdateEventType templateUpdateEventType) {
+      ChangeType changeType, String comments, TemplateUpdateEventType templateUpdateEventType, boolean skipAudits) {
     try {
       TemplateEntity updatedTemplate = templateRepository.updateTemplateYaml(templateToUpdate, oldTemplateEntity,
-          NGTemplateDtoMapper.toDTO(templateToUpdate), changeType, comments, templateUpdateEventType);
+          NGTemplateDtoMapper.toDTO(templateToUpdate), changeType, comments, templateUpdateEventType, skipAudits);
       if (updatedTemplate == null) {
         throw new InvalidRequestException(format(
             "Template with identifier [%s] and versionLabel [%s], under Project[%s], Organization [%s] could not be updated.",
@@ -415,6 +417,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   }
 
   // Current scope is template original scope, updatedScope is new scope.
+  // TODO: Change implementation to new requirements. Handle template last updated flag false gracefully.
   private boolean updateTemplateScope(String accountId, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, Scope currentScope, Scope updatedScope, String updateStableTemplateVersion,
       Boolean getDistinctFromBranches) {
@@ -484,8 +487,8 @@ public class NGTemplateServiceImpl implements NGTemplateService {
                format("Template with identifier [%s] and versionLabel [%s] marking stable template as false.",
                    templateIdentifier, oldTemplate.getVersionLabel()))) {
         TemplateEntity templateToUpdate = oldTemplate.withStableTemplate(false);
-        makeTemplateUpdateCall(
-            templateToUpdate, oldTemplate, ChangeType.MODIFY, "", TemplateUpdateEventType.TEMPLATE_STABLE_FALSE_EVENT);
+        makeTemplateUpdateCall(templateToUpdate, oldTemplate, ChangeType.MODIFY, "",
+            TemplateUpdateEventType.TEMPLATE_STABLE_FALSE_EVENT, true);
       }
     }
   }
@@ -508,7 +511,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
                    templateIdentifier, oldTemplate.getVersionLabel()))) {
         TemplateEntity templateToUpdate = oldTemplate.withLastUpdatedTemplate(false);
         makeTemplateUpdateCall(templateToUpdate, oldTemplate, ChangeType.MODIFY, "",
-            TemplateUpdateEventType.TEMPLATE_LAST_UPDATED_FALSE_EVENT);
+            TemplateUpdateEventType.TEMPLATE_LAST_UPDATED_FALSE_EVENT, true);
       }
     }
   }
