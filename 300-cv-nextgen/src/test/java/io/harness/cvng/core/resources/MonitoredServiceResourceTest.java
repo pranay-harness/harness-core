@@ -1,5 +1,6 @@
 package io.harness.cvng.core.resources;
 
+import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,9 +10,11 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.core.beans.HealthSourceMetricDefinition;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
+import io.harness.cvng.core.beans.monitoredService.MetricDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.PrometheusHealthSourceSpec;
+import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.ResourceTestRule;
@@ -19,6 +22,7 @@ import io.harness.rule.ResourceTestRule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
@@ -34,6 +38,8 @@ import org.yaml.snakeyaml.Yaml;
 
 public class MonitoredServiceResourceTest extends CvNextGenTestBase {
   @Inject private Injector injector;
+  @Inject private HPersistence hPersistence;
+
   private BuilderFactory builderFactory;
   private static MonitoredServiceResource monitoredServiceResource = new MonitoredServiceResource();
 
@@ -45,6 +51,37 @@ public class MonitoredServiceResourceTest extends CvNextGenTestBase {
     injector.injectMembers(monitoredServiceResource);
     builderFactory = BuilderFactory.getDefault();
   }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testGetSloMetrics() throws IOException {
+    String monitoredServiceYaml = getResource("monitoredservice/monitored-service-prometheus.yaml");
+
+    Response createResponse = RESOURCES.client()
+                                  .target("http://localhost:9998/monitored-service/")
+                                  .queryParam("accountId", builderFactory.getContext().getAccountId())
+                                  .request(MediaType.APPLICATION_JSON_TYPE)
+                                  .post(Entity.json(convertToJson(monitoredServiceYaml)));
+    assertThat(createResponse.getStatus()).isEqualTo(200);
+
+    Response response =
+        RESOURCES.client()
+            .target("http://localhost:9998/monitored-service/MSIdentifier/health-source/test/slo-metrics")
+            .queryParam("accountId", builderFactory.getContext().getAccountId())
+            .queryParam("projectIdentifier", "cvng_proj_fve79nRfOe")
+            .queryParam("orgIdentifier", "cvng_org_gc5qeLWq1W")
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .get();
+    assertThat(response.getStatus()).isEqualTo(200);
+    RestResponse<List<MetricDTO>> restResponse =
+        response.readEntity(new GenericType<RestResponse<List<MetricDTO>>>() {});
+    List<MetricDTO> metricDTOS = restResponse.getResource();
+    assertThat(metricDTOS).hasSize(1);
+    assertThat(metricDTOS.get(0).getMetricName()).isEqualTo("Prometheus Metric");
+    assertThat(metricDTOS.get(0).getIdentifier()).isEqualTo("Prometheus Metric");
+  }
+
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)

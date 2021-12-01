@@ -13,6 +13,7 @@ import io.harness.cvng.core.beans.monitoredService.CountServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
+import io.harness.cvng.core.beans.monitoredService.MetricDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
@@ -441,6 +442,18 @@ public class MonitoredServiceResource {
                                       .projectIdentifier(projectIdentifier)
                                       .build();
     return monitoredServiceService.getCountOfServices(projectParams, environmentIdentifier, filter);
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/{monitoredServiceIdentifier}/health-source/{healthSourceIdentifier}/slo-metrics")
+  @ApiOperation(value = "get slo metrics in a healthSource ", nickname = "getSloMetrcs")
+  public RestResponse<List<MetricDTO>> getSloMetrics(@BeanParam ProjectParams projectParams,
+      @PathParam("monitoredServiceIdentifier") String monitoredServiceIdentifier,
+      @PathParam("healthSourceIdentifier") String healthSourceIdentifier) {
+    return new RestResponse<>(
+        monitoredServiceService.getSloMetrics(projectParams, monitoredServiceIdentifier, healthSourceIdentifier));
   }
 
   @GET

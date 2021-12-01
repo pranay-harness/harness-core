@@ -10,6 +10,7 @@ import io.harness.cvng.core.beans.monitoredService.CountServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
+import io.harness.cvng.core.beans.monitoredService.MetricDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
@@ -73,5 +74,9 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
   AnomaliesSummaryDTO getAnomaliesSummary(
       ProjectParams projectParams, String monitoredServiceIdentifier, TimeRangeParams timeRangeParams);
   CountServiceDTO getCountOfServices(ProjectParams projectParams, String environmentIdentifier, String filter);
+
+  List<MetricDTO> getSloMetrics(
+      ProjectParams projectParams, String monitoredServiceIdentifier, String healthSourceIdentifier);
+
   MonitoredServiceListItemDTO getMonitoredServiceDetails(ServiceEnvironmentParams serviceEnvironmentParams);
 }
