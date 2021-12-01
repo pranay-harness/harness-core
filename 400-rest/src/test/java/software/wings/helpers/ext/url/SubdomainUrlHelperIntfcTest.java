@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.url;
 
 import static io.harness.rule.OwnerRule.MEHUL;
+import static io.harness.rule.OwnerRule.RAJ;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -37,9 +38,11 @@ public class SubdomainUrlHelperIntfcTest extends WingsBaseTest {
   @InjectMocks @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   private static final String PORTAL_URL_WITH_SEPARATOR = PORTAL_URL + "/";
-  private static final String SUBDOMAIN_URL = "https://domain.com/";
-  private static final String SUBDOMAIN_URL_WITHOUT_SEPARATOR = "https://domain.com";
+  private static final String SUBDOMAIN_URL = "https://localdev.harness.io/";
+  private static final String SUBDOMAIN_URL_WITHOUT_SEPARATOR = "https://localdev.harness.io";
   private static final String API_URL = "API_URL";
+  private static final String GRATIS_API_URL = "https://localdev.harness.io/gratis";
+  private static final String GRATIS_API_URL_WITH_SEPARATOR = "https://localdev.harness.io/gratis/";
   private static final String API_URL_WITH_SEPARATOR = API_URL + "/";
   private static final String DELEGATE_METADATA_URL = "http://delegate.harness.io/test/file";
   private static final String DELEGATE_METADATA_URL_WITH_SUBDOMAIN = SUBDOMAIN_URL + "test/file";
@@ -47,7 +50,8 @@ public class SubdomainUrlHelperIntfcTest extends WingsBaseTest {
   private static final String WATCHER_METADATA_URL_WITH_SUBDOMAIN = SUBDOMAIN_URL + "test/file";
   private static final String ACCOUNT_ID_1 = "account1";
   private static final String ACCOUNT_ID_2 = "account2";
-  private Account account1, account2;
+  private static final String ACCOUNT_ID_3 = "account3";
+  private Account account1, account2, account3;
   private HttpServletRequest mockHttpServletRequest;
 
   @Before
@@ -60,15 +64,24 @@ public class SubdomainUrlHelperIntfcTest extends WingsBaseTest {
                    .withLicenseInfo(getLicenseInfo())
                    .build();
     account2 = anAccount()
-                   .withCompanyName("company3")
-                   .withAccountName("account3")
+                   .withCompanyName("company2")
+                   .withAccountName("account2")
                    .withAccountKey("ACCOUNT_KEY")
                    .withUuid(ACCOUNT_ID_2)
                    .withLicenseInfo(getLicenseInfo())
                    .withSubdomainUrl(SUBDOMAIN_URL)
                    .build();
+    account3 = anAccount()
+                   .withCompanyName("company3")
+                   .withAccountName("account3")
+                   .withAccountKey("ACCOUNT_KEY")
+                   .withUuid(ACCOUNT_ID_3)
+                   .withLicenseInfo(getLicenseInfo())
+                   .withSubdomainUrl(SUBDOMAIN_URL_WITHOUT_SEPARATOR)
+                   .build();
     when(accountService.get(ACCOUNT_ID_1)).thenReturn(account1);
     when(accountService.get(ACCOUNT_ID_2)).thenReturn(account2);
+    when(accountService.get(ACCOUNT_ID_3)).thenReturn(account3);
     when(urlConfiguration.getPortalUrl()).thenReturn(PORTAL_URL);
     when(urlConfiguration.getApiUrl()).thenReturn(API_URL);
     when(urlConfiguration.getDelegateMetadataUrl()).thenReturn(DELEGATE_METADATA_URL);
@@ -137,6 +150,15 @@ public class SubdomainUrlHelperIntfcTest extends WingsBaseTest {
     assertThat(result2).isEqualTo(API_URL_WITH_SEPARATOR);
     String result3 = subdomainUrlHelper.getApiBaseUrl(ACCOUNT_ID_2);
     assertThat(result3).isEqualTo(SUBDOMAIN_URL);
+  }
+
+  @Test
+  @Owner(developers = RAJ)
+  @Category(UnitTests.class)
+  public void getApiBaseUrlFromAccountIdWithSubdomain() {
+    when(urlConfiguration.getApiUrl()).thenReturn(GRATIS_API_URL);
+    String result3 = subdomainUrlHelper.getApiBaseUrl(ACCOUNT_ID_3);
+    assertThat(result3).isEqualTo(GRATIS_API_URL_WITH_SEPARATOR);
   }
 
   @Test
