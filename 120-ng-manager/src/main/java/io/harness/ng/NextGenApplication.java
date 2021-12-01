@@ -773,6 +773,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                 ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
                     .put(FeatureRestrictionName.TEST2, ExampleStaticLimitUsageImpl.class)
                     .put(FeatureRestrictionName.TEST3, ExampleRateLimitUsageImpl.class)
+                    .put(FeatureRestrictionName.TEST6, ExampleRateLimitUsageImpl.class)
+                    .put(FeatureRestrictionName.TEST7, ExampleStaticLimitUsageImpl.class)
                     .put(FeatureRestrictionName.MULTIPLE_PROJECTS, ProjectRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.MULTIPLE_ORGANIZATIONS, OrgRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.SERVICES, ServiceRestrictionsUsageImpl.class)

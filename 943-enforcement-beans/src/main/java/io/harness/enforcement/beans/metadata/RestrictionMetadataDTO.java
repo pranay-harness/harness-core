@@ -22,6 +22,8 @@ import lombok.experimental.SuperBuilder;
       @JsonSubTypes.Type(value = RateLimitRestrictionMetadataDTO.class, name = "RATE_LIMIT"),
       @JsonSubTypes.Type(value = CustomRestrictionMetadataDTO.class, name = "CUSTOM"),
       @JsonSubTypes.Type(value = DurationRestrictionMetadataDTO.class, name = "DURATION"),
+      @JsonSubTypes.Type(value = LicenseRateLimitRestrictionMetadataDTO.class, name = "LICENSE_RATE_LIMIT"),
+      @JsonSubTypes.Type(value = LicenseStaticLimitRestrictionMetadataDTO.class, name = "LICENSE_STATIC_LIMIT"),
 })
 @Schema(name = "RestrictionMetadata", description = "This contains metadata of the Restriction in Harness")
 public abstract class RestrictionMetadataDTO {
