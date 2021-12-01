@@ -79,7 +79,7 @@ public class MonitoredServiceResourceTest extends CvNextGenTestBase {
     List<MetricDTO> metricDTOS = restResponse.getResource();
     assertThat(metricDTOS).hasSize(1);
     assertThat(metricDTOS.get(0).getMetricName()).isEqualTo("Prometheus Metric");
-    assertThat(metricDTOS.get(0).getIdentifier()).isEqualTo("Prometheus Metric");
+    assertThat(metricDTOS.get(0).getIdentifier()).isEqualTo("PrometheusMetric");
   }
 
   @Test
