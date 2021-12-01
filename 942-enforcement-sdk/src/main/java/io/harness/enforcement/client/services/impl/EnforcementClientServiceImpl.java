@@ -314,6 +314,10 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
               String.format("Feature [%s] is not enabled", featureRestrictionName.name()));
         }
         break;
+      case LICENSE_RATE_LIMIT:
+      case LICENSE_STATIC_LIMIT:
+        // bypass license type check
+        break;
       default:
         throw new IllegalArgumentException("Unknown restriction type");
     }
