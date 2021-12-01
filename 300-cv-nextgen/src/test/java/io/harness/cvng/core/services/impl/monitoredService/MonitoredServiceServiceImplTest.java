@@ -35,6 +35,7 @@ import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.CountServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
+import io.harness.cvng.core.beans.monitoredService.MetricDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
@@ -47,12 +48,15 @@ import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceD
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.entities.AnalysisInfo.SLI;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.MonitoredService.MonitoredServiceKeys;
+import io.harness.cvng.core.entities.PrometheusCVConfig;
+import io.harness.cvng.core.entities.PrometheusCVConfig.MetricInfo;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.SetupUsageEventService;
@@ -107,6 +111,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject HeatMapService heatMapService;
   @Inject HPersistence hPersistence;
   @Inject ServiceDependencyService serviceDependencyService;
+  @Inject HealthSourceService healthSourceService;
   @Mock NextGenService nextGenService;
   @Mock SetupUsageEventService setupUsageEventService;
   @Mock ChangeSourceService changeSourceServiceMock;
@@ -190,6 +195,44 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             String.format("Multiple Health Sources exists with the same identifier %s", healthSourceIdentifier));
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testGetSloMetrics() {
+    String monitoredServiceIdentifier = "monitoredServiceIdentifier";
+    String healthSourceIdentifier = "healthSourceIdentifier";
+    PrometheusCVConfig cvConfig = (PrometheusCVConfig) builderFactory.prometheusCVConfigBuilder()
+                                      .metricInfoList(Arrays.asList(MetricInfo.builder()
+                                                                        .metricName("metricName1")
+                                                                        .sli(SLI.builder().enabled(true).build())
+                                                                        .identifier("identifier1")
+                                                                        .build(),
+                                          MetricInfo.builder()
+                                              .metricName("metricName2")
+                                              .sli(SLI.builder().enabled(false).build())
+                                              .identifier("identifier2")
+                                              .build(),
+                                          MetricInfo.builder()
+                                              .metricName("metricName3")
+                                              .sli(SLI.builder().enabled(true).build())
+                                              .identifier("identifier3")
+                                              .build()))
+                                      .metricPack(MetricPack.builder().category(CVMonitoringCategory.ERRORS).build())
+                                      .identifier(monitoredServiceIdentifier + "/" + healthSourceIdentifier)
+                                      .build();
+    hPersistence.save(cvConfig);
+
+    List<MetricDTO> metricDTOS = monitoredServiceService.getSloMetrics(
+        builderFactory.getContext().getProjectParams(), monitoredServiceIdentifier, healthSourceIdentifier);
+    metricDTOS =
+        metricDTOS.stream().sorted(Comparator.comparing(metricDTO -> metricDTO.getMetricName())).collect(toList());
+    assertThat(metricDTOS.size()).isEqualTo(2);
+    assertThat(metricDTOS.get(0).getMetricName()).isEqualTo("metricName1");
+    assertThat(metricDTOS.get(1).getMetricName()).isEqualTo("metricName3");
+    assertThat(metricDTOS.get(0).getIdentifier()).isEqualTo("identifier1");
+    assertThat(metricDTOS.get(1).getIdentifier()).isEqualTo("identifier3");
   }
 
   @Test

@@ -31,7 +31,7 @@ import lombok.experimental.SuperBuilder;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PrometheusHealthSourceSpec extends HealthSourceSpec {
+public class PrometheusHealthSourceSpec extends MetricHealthSourceSpec {
   @UniqueIdentifierCheck @Valid List<PrometheusMetricDefinition> metricDefinitions;
 
   @Override

@@ -20,6 +20,7 @@ import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
+import io.harness.cvng.core.beans.monitoredService.MetricDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
@@ -30,6 +31,7 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSou
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources.HealthSourceSummary;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.MetricHealthSourceSpec;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
@@ -77,6 +79,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.NonNull;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -1068,6 +1071,27 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .allServicesCount(allMonitoredServices.size())
         .servicesAtRiskCount(monitoredServicesAtRisk.size())
         .build();
+  }
+
+  @Override
+  public List<MetricDTO> getSloMetrics(
+      ProjectParams projectParams, String monitoredServiceIdentifier, String healthSourceIdentifier) {
+    Set<HealthSource> healthSources =
+        healthSourceService.get(projectParams.getAccountIdentifier(), projectParams.getOrgIdentifier(),
+            projectParams.getProjectIdentifier(), monitoredServiceIdentifier, Arrays.asList(healthSourceIdentifier));
+    return healthSources.stream()
+        .map(healthSource -> healthSource.getSpec())
+        .filter(spec -> spec instanceof MetricHealthSourceSpec)
+        .map(spec -> (MetricHealthSourceSpec) spec)
+        .filter(spec -> CollectionUtils.isNotEmpty(spec.getMetricDefinitions()))
+        .flatMap(spec -> spec.getMetricDefinitions().stream())
+        .filter(metricDefinition -> metricDefinition.getSli().getEnabled())
+        .map(metricDefinition
+            -> MetricDTO.builder()
+                   .metricName(metricDefinition.getMetricName())
+                   .identifier(metricDefinition.getIdentifier())
+                   .build())
+        .collect(Collectors.toList());
   }
 
   @Override
