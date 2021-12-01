@@ -64,6 +64,8 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
 import io.harness.event.reconciliation.service.DeploymentReconTask;
 import io.harness.event.usagemetrics.EventsModuleHelper;
+import io.harness.eventframework.dms.DmsEventConsumerService;
+import io.harness.eventframework.manager.ManagerEventConsumerService;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.exception.WingsException;
 import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
@@ -92,6 +94,8 @@ import io.harness.mongo.QueryFactory;
 import io.harness.mongo.tracing.TraceMode;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.observer.RemoteObserver;
+import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
@@ -203,6 +207,7 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.security.authentication.totp.TotpModule;
 import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
@@ -282,6 +287,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -308,6 +314,7 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -356,6 +363,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     initializeLogging();
     log.info("bootstrapping ...");
     bootstrap.addCommand(new InspectCommand<>(this));
+    bootstrap.addCommand(new ScanClasspathMetadataCommand());
 
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
@@ -409,12 +417,35 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     List<Module> modules = new ArrayList<>();
     addModules(configuration, modules);
-
+    registerRemoteObserverModule(configuration, modules);
     Injector injector = Guice.createInjector(modules);
 
     initializeManagerSvc(injector, environment, configuration);
     log.info("Starting app done");
     log.info("Manager is running on JRE: {}", System.getProperty("java.version"));
+  }
+
+  private void registerRemoteObserverModule(MainConfiguration configuration, List<Module> modules) {
+    if (shouldEnableRemoteObservers(configuration)) {
+      modules.add(new AbstractRemoteObserverModule() {
+        @Override
+        public boolean noOpProducer() {
+          // todo(abhinav): change to false once everyone is onboarded to remote observer
+          return true;
+        }
+
+        @Override
+        public Set<RemoteObserver> observers() {
+          //          if (isManager()) {
+          //            /// todo(abhinav): register manager
+          //          }
+          //          if (isDms()) {
+          //            /// todo(abhinav): register dms
+          //          }
+          return Collections.emptySet();
+        }
+      });
+    }
   }
 
   public void initializeManagerSvc(Injector injector, Environment environment, MainConfiguration configuration) {
@@ -465,7 +496,9 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerEventConsumers(injector);
 
-    registerObservers(configuration, injector);
+    if (!shouldEnableRemoteObservers(configuration)) {
+      registerObservers(configuration, injector, environment);
+    }
 
     if (shouldEnableDelegateMgmt) {
       registerInprocPerpetualTaskServiceClients(injector);
@@ -535,15 +568,19 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
 
     injector.getInstance(EventsModuleHelper.class).initialize();
+    registerDatadogPublisherIfEnabled(configuration);
+
+    initializeGrpcServer(injector);
+
+    log.info("Leaving startup maintenance mode");
+    MaintenanceController.resetForceMaintenance();
+  }
+
+  private void initializeGrpcServer(Injector injector) {
     log.info("Initializing gRPC server...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
     serviceManager.awaitHealthy();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-
-    registerDatadogPublisherIfEnabled(configuration);
-
-    log.info("Leaving startup maintenance mode");
-    MaintenanceController.resetForceMaintenance();
   }
 
   private void registerQueryTracer(Injector injector) {
@@ -557,7 +594,15 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   public boolean shouldEnableDelegateMgmt(final MainConfiguration configuration) {
-    return startupMode.equals(StartupMode.DELEGATE_SERVICE) || !configuration.isDisableDelegateMgmtInManager();
+    return isDms() || !configuration.isDisableDelegateMgmtInManager();
+  }
+
+  public boolean isDms() {
+    return startupMode.equals(StartupMode.DELEGATE_SERVICE);
+  }
+
+  private boolean shouldEnableRemoteObservers(final MainConfiguration configuration) {
+    return isDms() || configuration.isDisableDelegateMgmtInManager();
   }
 
   public void addModules(final MainConfiguration configuration, List<Module> modules) {
@@ -640,7 +685,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
     modules.add(MigrationModule.getInstance());
-    modules.add(new WingsModule(configuration));
+    modules.add(new WingsModule(configuration, startupMode));
+    modules.add(new TotpModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -890,6 +936,10 @@ public class WingsApplication extends Application<MainConfiguration> {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    if (configuration.isDisableResourceValidation()) {
+      environment.jersey().property(
+          ServerProperties.RESOURCE_VALIDATION_DISABLE, configuration.isDisableResourceValidation());
+    }
   }
 
   private void registerManagedBeansCommon(MainConfiguration configuration, Environment environment, Injector injector) {
@@ -1030,17 +1080,26 @@ public class WingsApplication extends Application<MainConfiguration> {
         0L, 10L, TimeUnit.SECONDS);
   }
 
-  public void registerObservers(MainConfiguration configuration, Injector injector) {
-    // Register Audit observer
-    DelegateServiceImpl delegateServiceImpl =
-        (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
+  public void registerObservers(MainConfiguration configuration, Injector injector, Environment environment) {
+    if (shouldEnableRemoteObservers(configuration)) {
+      if (isDms()) {
+        environment.lifecycle().manage(injector.getInstance(DmsEventConsumerService.class));
+      }
+      if (isManager()) {
+        environment.lifecycle().manage(injector.getInstance(ManagerEventConsumerService.class));
+      }
+    } else {
+      // Register Audit observer
+      DelegateServiceImpl delegateServiceImpl =
+          (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
 
-    if (isManager()) {
-      registerManagerObservers(injector, delegateServiceImpl);
-    }
+      if (isManager()) {
+        registerManagerObservers(injector, delegateServiceImpl);
+      }
 
-    if (shouldEnableDelegateMgmt(configuration)) {
-      registerDelegateServiceObservers(injector, delegateServiceImpl);
+      if (shouldEnableDelegateMgmt(configuration)) {
+        registerDelegateServiceObservers(injector, delegateServiceImpl);
+      }
     }
   }
 

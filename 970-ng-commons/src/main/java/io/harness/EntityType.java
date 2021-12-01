@@ -30,6 +30,8 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.PIPELINE_STEPS)
   PIPELINE_STEPS(
       ModuleType.CD, EntityTypeConstants.PIPELINE_STEPS, IdentifierRef.class, EntityYamlRootNames.PIPELINE_STEP),
+  @JsonProperty(EntityTypeConstants.HTTP)
+  HTTP_STEP(ModuleType.CD, EntityTypeConstants.HTTP, IdentifierRef.class, EntityYamlRootNames.HTTP),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
   CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, IdentifierRef.class, EntityYamlRootNames.CONNECTOR),
   @JsonProperty(EntityTypeConstants.SECRETS)

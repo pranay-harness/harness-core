@@ -1,5 +1,4 @@
 package io.harness.connector;
-
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -38,6 +37,8 @@ import io.harness.connector.mappers.ceazure.CEAzureDTOToEntity;
 import io.harness.connector.mappers.ceazure.CEAzureEntityToDTO;
 import io.harness.connector.mappers.cek8s.CEKubernetesDTOToEntity;
 import io.harness.connector.mappers.cek8s.CEKubernetesEntityToDTO;
+import io.harness.connector.mappers.customhealthconnectormapper.CustomHealthDTOToEntity;
+import io.harness.connector.mappers.customhealthconnectormapper.CustomHealthEntityToDTO;
 import io.harness.connector.mappers.datadogmapper.DatadogDTOToEntity;
 import io.harness.connector.mappers.datadogmapper.DatadogEntityToDTO;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
@@ -239,6 +240,10 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.PAGER_DUTY,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
             CVConnectorParamsProvider.class, PagerDutyDTOToEntity.class, PagerDutyEntityToDTO.class,
+            NotSupportedValidationHandler.class));
+    registrar.put(ConnectorType.CUSTOM_HEALTH,
+        new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
+            CVConnectorParamsProvider.class, CustomHealthDTOToEntity.class, CustomHealthEntityToDTO.class,
             NotSupportedValidationHandler.class));
   }
 

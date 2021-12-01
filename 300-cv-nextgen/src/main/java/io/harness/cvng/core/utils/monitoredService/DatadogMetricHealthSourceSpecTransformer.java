@@ -24,6 +24,7 @@ public class DatadogMetricHealthSourceSpecTransformer
               .dashboardId(cvConfig.getDashboardId())
               .dashboardName(cvConfig.getDashboardName())
               .metricName(metricInfo.getMetricName())
+              .identifier(metricInfo.getIdentifier())
               .metric(metricInfo.getMetric())
               .serviceInstanceIdentifierTag(metricInfo.getServiceInstanceIdentifierTag())
               .query(metricInfo.getQuery())

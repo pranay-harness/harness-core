@@ -4,6 +4,7 @@ import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.service.DelegateAgentServiceImpl.getDelegateId;
 import static io.harness.network.SafeHttpCall.execute;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -14,6 +15,7 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.NoOpConnectorValidationHandler;
 import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
+import io.harness.delegate.beans.connector.ConnectorValidationParameterResponse;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.NoOpConnectorValidationParams;
 import io.harness.grpc.utils.AnyUtils;
@@ -30,6 +32,7 @@ import com.google.inject.Singleton;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Response;
@@ -40,6 +43,7 @@ import org.eclipse.jetty.server.Response;
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(DX)
 public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExecutor {
+  private static final String ERROR_MSG_INVALID_YAML = "Invalid yaml";
   Map<String, ConnectorValidationHandler> connectorTypeToConnectorValidationHandlerMap;
   private KryoSerializer kryoSerializer;
   private DelegateAgentManagerClient delegateAgentManagerClient;
@@ -53,25 +57,38 @@ public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExe
     String orgIdentifier = taskParams.getOrgIdentifier().getValue();
     String projectIdentifier = taskParams.getProjectIdentifier().getValue();
     String connectorIdentifier = taskParams.getConnectorIdentifier();
+    final ConnectorValidationParameterResponse connectorValidationParameterResponse =
+        (ConnectorValidationParameterResponse) kryoSerializer.asObject(
+            taskParams.getConnectorValidationParameterResponse().toByteArray());
     final ConnectorValidationParams connectorValidationParams =
-        (ConnectorValidationParams) kryoSerializer.asObject(taskParams.getConnectorValidationParams().toByteArray());
+        connectorValidationParameterResponse.getConnectorValidationParams();
+    ConnectorValidationResult connectorValidationResult;
+    if (!connectorValidationParameterResponse.isInvalid()) {
+      ConnectorValidationHandler connectorValidationHandler;
+      if (connectorValidationParams instanceof NoOpConnectorValidationParams) {
+        connectorValidationHandler = new NoOpConnectorValidationHandler();
+      } else {
+        connectorValidationHandler = connectorTypeToConnectorValidationHandlerMap.get(
+            connectorValidationParams.getConnectorType().getDisplayName());
+      }
+      if (connectorValidationHandler == null || connectorValidationHandler instanceof NoOpConnectorValidationHandler) {
+        log.info("The connector validation handler is not registered for the connector.");
+        return getPerpetualTaskResponse(null);
+      }
+      connectorValidationResult = connectorValidationHandler.validate(connectorValidationParams, accountId);
+      connectorValidationResult.setTestedAt(System.currentTimeMillis());
+    } else {
+      log.info("Connector Heartbeat failed due to invalid yaml");
+      Optional<String> delegateId = getDelegateId();
+      connectorValidationResult = ConnectorValidationResult.builder()
+                                      .status(ConnectivityStatus.FAILURE)
+                                      .errorSummary(ERROR_MSG_INVALID_YAML)
+                                      .delegateId(delegateId.isPresent() ? delegateId.get() : null)
+                                      .testedAt(System.currentTimeMillis())
+                                      .build();
+    }
     String connectorMessage =
         String.format(CONNECTOR_STRING, connectorIdentifier, accountId, orgIdentifier, projectIdentifier);
-
-    ConnectorValidationHandler connectorValidationHandler;
-    if (connectorValidationParams instanceof NoOpConnectorValidationParams) {
-      connectorValidationHandler = new NoOpConnectorValidationHandler();
-    } else {
-      connectorValidationHandler = connectorTypeToConnectorValidationHandlerMap.get(
-          connectorValidationParams.getConnectorType().getDisplayName());
-    }
-    if (connectorValidationHandler == null || connectorValidationHandler instanceof NoOpConnectorValidationHandler) {
-      log.info("The connector validation handler is not registered for the connector.");
-      return getPerpetualTaskResponse(null);
-    }
-    ConnectorValidationResult connectorValidationResult =
-        connectorValidationHandler.validate(connectorValidationParams, accountId);
-    connectorValidationResult.setTestedAt(System.currentTimeMillis());
     try {
       execute(delegateAgentManagerClient.publishConnectorHeartbeatResult(taskId.getId(), accountId,
           createHeartbeatResponse(accountId, orgIdentifier, projectIdentifier, connectorIdentifier,

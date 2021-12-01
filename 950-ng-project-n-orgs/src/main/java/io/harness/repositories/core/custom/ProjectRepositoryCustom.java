@@ -30,4 +30,6 @@ public interface ProjectRepositoryCustom {
   Project restore(String accountIdentifier, String orgIdentifier, String identifier);
 
   <T> AggregationResults<T> aggregate(Aggregation aggregation, Class<T> classToFillResultIn);
+
+  long count(Criteria criteria);
 }

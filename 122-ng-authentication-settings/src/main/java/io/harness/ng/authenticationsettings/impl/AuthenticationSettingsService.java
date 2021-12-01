@@ -28,7 +28,7 @@ public interface AuthenticationSettingsService {
       @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl,
       String entityIdentifier);
   SSOConfig updateSAMLMetadata(@NotNull String accountId, MultipartBody.Part inputStream, String displayName,
-      String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl);
+      String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl, String entityIdentifier);
   SSOConfig deleteSAMLMetadata(@NotNull String accountIdentifier);
   LoginTypeResponse getSAMLLoginTest(@NotNull String accountIdentifier);
   boolean setTwoFactorAuthAtAccountLevel(

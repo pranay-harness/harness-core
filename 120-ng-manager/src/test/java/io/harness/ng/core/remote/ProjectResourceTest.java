@@ -35,6 +35,7 @@ import io.harness.ng.core.dto.ProjectRequest;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Project;
+import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.rule.Owner;
 
@@ -49,6 +50,7 @@ import org.mockito.ArgumentCaptor;
 @OwnedBy(PL)
 public class ProjectResourceTest extends CategoryTest {
   private ProjectService projectService;
+  private OrganizationService organizationService;
   private AccessControlClient accessControlClient;
   private ProjectResource projectResource;
 
@@ -60,8 +62,9 @@ public class ProjectResourceTest extends CategoryTest {
   @Before
   public void setup() {
     projectService = mock(ProjectService.class);
+    organizationService = mock(OrganizationService.class);
     accessControlClient = mock(AccessControlClient.class);
-    projectResource = new ProjectResource(projectService);
+    projectResource = new ProjectResource(projectService, organizationService);
   }
 
   private ProjectDTO getProjectDTO(String orgIdentifier, String identifier, String name) {

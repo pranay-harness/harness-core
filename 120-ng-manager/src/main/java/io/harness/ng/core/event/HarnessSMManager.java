@@ -165,7 +165,7 @@ public class HarnessSMManager {
   private String getDefaultHarnessSecretManagerName(EncryptionType encryptionType) {
     switch (encryptionType) {
       case GCP_KMS:
-        return "Harness Secrets Manager Google KMS";
+        return "Harness Built-in Secret Manager";
       case KMS:
         return "Harness Secrets Manager AWS KMS";
       case LOCAL:

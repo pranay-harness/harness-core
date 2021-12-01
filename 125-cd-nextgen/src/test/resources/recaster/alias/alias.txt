@@ -163,6 +163,7 @@ io.harness.steps.section.chain.SectionChainPassThroughData
 io.harness.cdng.provision.terraform.TerraformExecutionDataParameters
 io.harness.steps.approval.step.harness.HarnessApprovalSpecParameters
 io.harness.plancreator.steps.http.HttpStepInfo
+io.harness.plancreator.steps.http.HttpStepNode
 io.harness.cdng.manifest.yaml.GcsStoreConfig
 io.harness.ngpipeline.artifact.bean.EcrArtifactOutcome
 io.harness.steps.jira.JiraIssueOutcome
@@ -207,3 +208,5 @@ io.harness.cdng.service.beans.ServiceConfig
 io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary
 io.harness.cdng.manifest.yaml.ManifestConfigWrapper
 io.harness.advisers.rollback.RollbackTriggeredOutput
+io.harness.cdng.manifest.yaml.KustomizePatchesManifestOutcome
+io.harness.cdng.manifest.yaml.kinds.KustomizePatchesManifest

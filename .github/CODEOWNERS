@@ -8,3 +8,5 @@ WORKSPACE diptiman.adak@harness.io
 /860-orchestration-steps/src/test/resources/recaster/alias/alias.txt @prashantpal31
 /860-orchestration-visualization/src/test/resources/recaster/alias/alias.txt @prashantpal31
 /870-orchestration/src/test/resources/recaster/alias/alias.txt @prashantpal31
+/260-delegate/module-dependency.hash bojan.micovic@harness.io raghu@harness.io abhinav.singh@harness.io jenny.james@harness.io
+/270-delegate-service-app/module-dependency.hash bojan.micovic@harness.io raghu@harness.io abhinav.singh@harness.io jenny.james@harness.io

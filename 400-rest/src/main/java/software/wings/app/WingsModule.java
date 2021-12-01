@@ -80,6 +80,7 @@ import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.datahandler.utils.AccountSummaryHelperImpl;
 import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
 import io.harness.delegate.configuration.DelegateConfiguration;
@@ -783,14 +784,17 @@ import org.jetbrains.annotations.NotNull;
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private final MainConfiguration configuration;
+  private final StartupMode startupMode;
 
   /**
    * Creates a guice module for portal app.
    *
    * @param configuration Dropwizard configuration
+   * @param startupMode
    */
-  public WingsModule(MainConfiguration configuration) {
+  public WingsModule(MainConfiguration configuration, StartupMode startupMode) {
     this.configuration = configuration;
+    this.startupMode = startupMode;
   }
 
   @Provides
@@ -885,8 +889,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
 
-    install(new EventsFrameworkModule(
-        configuration.getEventsFrameworkConfiguration(), configuration.isEventsFrameworkAvailableInOnPrem()));
+    install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration(),
+        configuration.isEventsFrameworkAvailableInOnPrem(), StartupMode.DELEGATE_SERVICE.equals(startupMode)));
     install(FeatureFlagModule.getInstance());
     install(AccessControlAdminClientModule.getInstance(
         AccessControlAdminClientConfiguration.builder()

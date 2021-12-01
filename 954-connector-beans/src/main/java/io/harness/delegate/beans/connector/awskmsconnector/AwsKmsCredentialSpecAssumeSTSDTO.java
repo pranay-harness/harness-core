@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -20,6 +21,8 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(AwsKmsConstants.ASSUME_STS_ROLE)
 @ApiModel("AwsKmsCredentialSpecAssumeSTS")
+@Schema(name = "AwsKmsCredentialSpecAssumeSTS",
+    description = "This contains the credential spec of AWS KMS SM for STS role")
 public class AwsKmsCredentialSpecAssumeSTSDTO implements AwsKmsCredentialSpecDTO {
   @NotNull @Size(min = 1, message = "Delegate Selector can not be empty") private Set<String> delegateSelectors;
   @ApiModelProperty(dataType = "string") @NotNull private String roleArn;

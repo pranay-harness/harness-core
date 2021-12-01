@@ -91,6 +91,7 @@ import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
+import io.harness.delegate.beans.connector.ConnectorValidationParameterResponse;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.NoOpConnectorValidationParams;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
@@ -291,8 +292,17 @@ import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.delegate.task.helm.HelmCmdExecResponseNG;
 import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.helm.HelmCommandRequestNG;
 import io.harness.delegate.task.helm.HelmCommandResponse;
+import io.harness.delegate.task.helm.HelmCommandResponseNG;
+import io.harness.delegate.task.helm.HelmInstallCmdResponseNG;
+import io.harness.delegate.task.helm.HelmInstallCommandRequestNG;
+import io.harness.delegate.task.helm.HelmListReleaseResponseNG;
+import io.harness.delegate.task.helm.HelmReleaseHistoryCmdResponseNG;
+import io.harness.delegate.task.helm.HelmReleaseHistoryCommandRequestNG;
+import io.harness.delegate.task.helm.HelmRollbackCommandRequestNG;
 import io.harness.delegate.task.helm.HelmValuesFetchRequest;
 import io.harness.delegate.task.helm.HelmValuesFetchResponse;
 import io.harness.delegate.task.http.HttpStepResponse;
@@ -734,6 +744,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsCodeCommitValidationParams.class, 19547);
     kryo.register(HelmChartManifestDelegateConfig.class, 19548);
     kryo.register(HttpHelmValidationParams.class, 19549);
+    kryo.register(ConnectorValidationParameterResponse.class, 19551);
 
     kryo.register(HttpHelmConnectivityTaskParams.class, 19640);
     kryo.register(HttpHelmConnectivityTaskResponse.class, 19641);
@@ -946,6 +957,19 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CEKubernetesConnectionTaskParams.class, 543437);
     kryo.register(CEK8sValidationParams.class, 543438);
     kryo.register(ReleaseInfo.class, 543439);
+
+    kryo.register(HelmCommandRequestNG.class, 98399);
+    kryo.register(HelmCommandRequestNG.HelmCommandType.class, 98400);
+    kryo.register(HelmInstallCommandRequestNG.class, 98401);
+    kryo.register(HelmRollbackCommandRequestNG.class, 98402);
+    kryo.register(HelmReleaseHistoryCommandRequestNG.class, 98403);
+
+    kryo.register(HelmCommandResponseNG.class, 98404);
+    kryo.register(HelmInstallCmdResponseNG.class, 98405);
+    kryo.register(HelmListReleaseResponseNG.class, 98406);
+    kryo.register(HelmReleaseHistoryCmdResponseNG.class, 98407);
+    kryo.register(HelmCmdExecResponseNG.class, 98408);
+
     kryo.register(TaskNGDataException.class, 543440);
     kryo.register(K8sCanaryDataException.class, 543441);
     kryo.register(CITaskExecutionResponse.class, 543442);

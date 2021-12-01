@@ -92,25 +92,4 @@ public class WebhookServiceImpl implements WebhookService {
                                         .build();
     changeEventService.register(changeEventDTO);
   }
-
-  @Override
-  public void deleteByProjectIdentifier(
-      Class<Webhook> clazz, String accountId, String orgIdentifier, String projectIdentifier) {
-    hPersistence.delete(hPersistence.createQuery(Webhook.class)
-                            .filter(WebhookKeys.accountId, accountId)
-                            .filter(WebhookKeys.orgIdentifier, orgIdentifier)
-                            .filter(WebhookKeys.projectIdentifier, projectIdentifier));
-  }
-
-  @Override
-  public void deleteByOrgIdentifier(Class<Webhook> clazz, String accountId, String orgIdentifier) {
-    hPersistence.delete(hPersistence.createQuery(Webhook.class)
-                            .filter(WebhookKeys.accountId, accountId)
-                            .filter(WebhookKeys.orgIdentifier, orgIdentifier));
-  }
-
-  @Override
-  public void deleteByAccountIdentifier(Class<Webhook> clazz, String accountId) {
-    hPersistence.delete(hPersistence.createQuery(Webhook.class).filter(WebhookKeys.accountId, accountId));
-  }
 }

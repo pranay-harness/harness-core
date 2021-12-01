@@ -19,4 +19,5 @@ public interface BudgetService {
   boolean delete(String budgetId, String accountId);
 
   BudgetData getBudgetTimeSeriesStats(Budget budget);
+  void updateBudgetCosts(Budget budget);
 }

@@ -10,8 +10,9 @@ import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndic
 public class ThresholdServiceLevelIndicatorTransformer
     extends ServiceLevelIndicatorTransformer<ThresholdServiceLevelIndicator, ServiceLevelIndicatorSpec> {
   @Override
-  public ThresholdServiceLevelIndicator getEntity(
-      ProjectParams projectParams, ServiceLevelIndicatorDTO serviceLevelIndicatorDTO) {
+  public ThresholdServiceLevelIndicator getEntity(ProjectParams projectParams,
+      ServiceLevelIndicatorDTO serviceLevelIndicatorDTO, String monitoredServiceIdentifier,
+      String healthSourceIndicator) {
     ThresholdSLIMetricSpec thresholdSLIMetricSpec =
         (ThresholdSLIMetricSpec) serviceLevelIndicatorDTO.getSpec().getSpec();
 
@@ -23,6 +24,8 @@ public class ThresholdServiceLevelIndicatorTransformer
         .name(serviceLevelIndicatorDTO.getName())
         .type(serviceLevelIndicatorDTO.getType())
         .metric1(thresholdSLIMetricSpec.getMetric1())
+        .monitoredServiceIdentifier(monitoredServiceIdentifier)
+        .healthSourceIdentifier(healthSourceIndicator)
         .build();
   }
 

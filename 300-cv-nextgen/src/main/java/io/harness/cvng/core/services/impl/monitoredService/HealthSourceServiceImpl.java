@@ -1,9 +1,12 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import static io.harness.cvng.core.utils.FeatureFlagNames.CVNG_MONITORED_SERVICE_DEMO;
+
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.FeatureFlagService;
@@ -41,7 +44,7 @@ public class HealthSourceServiceImpl implements HealthSourceService {
       for (CVConfig cvConfig : cvConfigUpdateResult.getAdded()) {
         cvConfig.setEnabled(enabled);
         if (cvConfig.isEligibleForDemo()
-            && featureFlagService.isFeatureFlagEnabled(accountId, "CVNG_MONITORED_SERVICE_DEMO")) {
+            && featureFlagService.isFeatureFlagEnabled(accountId, CVNG_MONITORED_SERVICE_DEMO)) {
           isDemoEnabledForAnyCVConfig = true;
           cvConfig.setDemo(true);
         }
@@ -130,5 +133,17 @@ public class HealthSourceServiceImpl implements HealthSourceService {
     HealthSource healthSource = HealthSourceDTO.toHealthSource(cvConfigs, dataSourceTypeToHealthSourceTransformerMap);
     healthSource.setIdentifier(identifier);
     return healthSource;
+  }
+
+  @Override
+  public List<CVConfig> getCVConfigs(String accountId, String orgIdentifier, String projectIdentifier,
+      String monitoredServiceIdentifier, String healthSourceIdentifier) {
+    String identifier = HealthSourceService.getNameSpacedIdentifier(monitoredServiceIdentifier, healthSourceIdentifier);
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return cvConfigService.getCVConfigs(projectParams, identifier);
   }
 }

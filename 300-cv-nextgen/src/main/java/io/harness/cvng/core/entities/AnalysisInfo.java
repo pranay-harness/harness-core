@@ -8,6 +8,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 public class AnalysisInfo {
+  private String identifier;
   private LiveMonitoring liveMonitoring;
   private DeploymentVerification deploymentVerification;
   private SLI sli;

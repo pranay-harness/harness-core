@@ -1,5 +1,8 @@
 package io.harness.ng.core.user.remote;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGE_USER_PERMISSION;
@@ -57,6 +60,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -92,6 +100,19 @@ import retrofit2.http.Body;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@Tag(name = "User", description = "This contains APIs related to User as defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @NextGenManagerAuth
 @Slf4j
 @OwnedBy(PL)
@@ -105,15 +126,29 @@ public class UserResource {
   @GET
   @Path("currentUser")
   @ApiOperation(value = "get current user information", nickname = "getCurrentUserInfo")
-  public ResponseDTO<UserInfo> getUserInfo() {
+  @Operation(operationId = "getCurrentUserInfo", summary = "Gets current logged in User information",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns current logged in user info")
+      })
+  public ResponseDTO<UserInfo>
+  getUserInfo() {
     return ResponseDTO.newResponse(userInfoService.getCurrentUser());
   }
 
   @GET
   @Path("two-factor-auth/{authMechanism}")
   @ApiOperation(value = "get two factor auth settings", nickname = "getTwoFactorAuthSettings")
-  public ResponseDTO<TwoFactorAuthSettingsInfo> getTwoFactorAuthSettingsInfo(
-      @PathParam("authMechanism") TwoFactorAuthMechanismInfo authMechanism) {
+  @Operation(operationId = "getTwoFactorAuthSettings",
+      summary = "Gets two factor authentication settings information of the current logged in user",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "default", description = "Returns current logged in user's two factor authentication info")
+      })
+  public ResponseDTO<TwoFactorAuthSettingsInfo>
+  getTwoFactorAuthSettingsInfo(@PathParam("authMechanism") TwoFactorAuthMechanismInfo authMechanism) {
     return ResponseDTO.newResponse(userInfoService.getTwoFactorAuthSettingsInfo(authMechanism));
   }
 
@@ -138,9 +173,17 @@ public class UserResource {
   @GET
   @Path("currentgen")
   @ApiOperation(value = "Get users from current gen for an account", nickname = "getCurrentGenUsers")
-  public ResponseDTO<PageResponse<UserMetadataDTO>> getCurrentGenUsers(
-      @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
-      @QueryParam("searchString") @DefaultValue("") String searchString, @BeanParam PageRequest pageRequest) {
+  @Operation(operationId = "getCurrentGenUsers", summary = "list of current gen users with the given account Id",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "default", description = "Return list of current gen users with the given account Id")
+      })
+  public ResponseDTO<PageResponse<UserMetadataDTO>>
+  getCurrentGenUsers(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                         "accountIdentifier") @NotNull String accountIdentifier,
+      @Parameter(description = "Search term") @QueryParam("searchString") @DefaultValue("") String searchString,
+      @BeanParam PageRequest pageRequest) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, null, null), Resource.of(USER, null), VIEW_USER_PERMISSION);
     Pageable pageable = getPageRequest(pageRequest);
@@ -151,8 +194,17 @@ public class UserResource {
   @GET
   @Path("projects")
   @ApiOperation(value = "get user project information", nickname = "getUserProjectInfo")
-  public ResponseDTO<PageResponse<ProjectDTO>> getUserProjectInfo(
-      @QueryParam("accountId") String accountId, @BeanParam PageRequest pageRequest) {
+  @Operation(operationId = "getUserProjectInfo",
+      summary = "list of project(s) of current user in the passed account Id in form of page response",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "Returns the list of project(s) of current user in the passed account Id in form of page response")
+      })
+  public ResponseDTO<PageResponse<ProjectDTO>>
+  getUserProjectInfo(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") String accountId,
+      @BeanParam PageRequest pageRequest) {
     Optional<String> userId = getUserIdentifierFromSecurityContext();
     if (!userId.isPresent()) {
       return ResponseDTO.newResponse(PageResponse.getEmptyPageResponse(pageRequest));
@@ -163,19 +215,37 @@ public class UserResource {
   @GET
   @Path("all-projects")
   @ApiOperation(value = "get user all projects information", nickname = "getUserAllProjectsInfo")
-  public ResponseDTO<List<ProjectDTO>> getUserAllProjectsInfo(
-      @QueryParam("accountId") String accountId, @QueryParam("userId") String userId) {
+  @Operation(operationId = "getUserAllProjectsInfo",
+      summary = "list of project(s) of current user in the passed account Id in form of List",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns the list of project(s) of current user in the passed account Id in form of List")
+      })
+  public ResponseDTO<List<ProjectDTO>>
+  getUserAllProjectsInfo(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") String accountId,
+      @Parameter(description = "user Identifier") @QueryParam("userId") String userId) {
     return ResponseDTO.newResponse(projectService.listProjectsForUser(userId, accountId));
   }
 
   @GET
   @Path("projects-count")
   @ApiOperation(value = "Get count of projects accessible to a user", nickname = "getAccessibleProjectsCount")
-  public ResponseDTO<ActiveProjectsCountDTO> getAccessibleProjectsCount(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.USER_ID) String userId,
-      @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
-      @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+  @Operation(operationId = "getAccessibleProjectsCount",
+      summary = "count of projects that are accessible to a user filtered by CreatedAt time",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns the count of projects that are accessible to a user filtered by CreatedAt time")
+      })
+  public ResponseDTO<ActiveProjectsCountDTO>
+  getAccessibleProjectsCount(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                                 NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = "user Identifier") @QueryParam(NGCommonEntityConstants.USER_ID) String userId,
+      @Parameter(description = "Start time to Filter projects by CreatedAt time") @QueryParam(
+          NGResourceFilterConstants.START_TIME) long startInterval,
+      @Parameter(description = "End time to Filter projects by CreatedAt time") @QueryParam(
+          NGResourceFilterConstants.END_TIME) long endInterval) {
     return ResponseDTO.newResponse(
         projectService.accessibleProjectsCount(userId, accountIdentifier, startInterval, endInterval));
   }
@@ -183,10 +253,21 @@ public class UserResource {
   @GET
   @Path("last-admin")
   @ApiOperation(value = "check if user is last admin at the scope", nickname = "checkIfLastAdmin")
-  public ResponseDTO<Boolean> checkIfLastAdmin(@QueryParam(NGCommonEntityConstants.USER_ID) String userId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+  @Operation(operationId = "checkIfLastAdmin",
+      summary = "Boolean status whether the user is last admin at scope or not",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns Boolean status whether the user is last admin at scope or not")
+      })
+  public ResponseDTO<Boolean>
+  checkIfLastAdmin(
+      @Parameter(description = "user Identifier") @QueryParam(NGCommonEntityConstants.USER_ID) String userId,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USER, null), VIEW_USER_PERMISSION);
     Scope scope = Scope.builder()
@@ -200,11 +281,18 @@ public class UserResource {
   @POST
   @Path("batch")
   @ApiOperation(value = "Get a list of users", nickname = "getUsers")
-  public ResponseDTO<PageResponse<UserMetadataDTO>> getUsers(
-      @NotNull @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Valid @BeanParam PageRequest pageRequest, UserFilter userFilter) {
+  @Operation(operationId = "getUsers", summary = "list of user's Metadata for a given scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the list of user's Metadata for a given scope")
+      })
+  public ResponseDTO<PageResponse<UserMetadataDTO>>
+  getUsers(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @NotEmpty @QueryParam(
+               NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY)
+      String projectIdentifier, @Valid @BeanParam PageRequest pageRequest, UserFilter userFilter) {
     if (userFilter == null || UserFilter.ParentFilter.NO_PARENT_SCOPES.equals(userFilter.getParentFilter())) {
       accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
           Resource.of(USER, null), VIEW_USER_PERMISSION);
@@ -232,10 +320,20 @@ public class UserResource {
   @GET
   @Path("/aggregate/{userId}")
   @ApiOperation(value = "Get a user by userId for access control", nickname = "getAggregatedUser")
-  public ResponseDTO<UserAggregateDTO> getAggregatedUser(@PathParam("userId") String userId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+  @Operation(operationId = "getAggregatedUser",
+      summary = "Returns the user metadata along with rolesAssignments by userId and scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns the user metadata along with rolesAssignments by userId and scope")
+      })
+  public ResponseDTO<UserAggregateDTO>
+  getAggregatedUser(@Parameter(description = "user Identifier") @PathParam("userId") String userId,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USER, userId), VIEW_USER_PERMISSION);
 
@@ -251,12 +349,21 @@ public class UserResource {
   @POST
   @Path("aggregate")
   @ApiOperation(value = "Get a page of active users for access control", nickname = "getAggregatedUsers")
-  public ResponseDTO<PageResponse<UserAggregateDTO>> getAggregatedUsers(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam("searchTerm") String searchTerm, @BeanParam PageRequest pageRequest,
-      ACLAggregateFilter aclAggregateFilter) {
+  @Operation(operationId = "getAggregatedUsers",
+      summary = "list of all the user's metadata along with rolesAssignments who have access to given scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "Returns list of all the user's metadata along with rolesAssignments who have access to given scope")
+      })
+  public ResponseDTO<PageResponse<UserAggregateDTO>>
+  getAggregatedUsers(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                         NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY)
+      String projectIdentifier, @Parameter(description = "Search term") @QueryParam("searchTerm") String searchTerm,
+      @BeanParam PageRequest pageRequest, ACLAggregateFilter aclAggregateFilter) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USER, null), VIEW_USER_PERMISSION);
 
@@ -277,11 +384,18 @@ public class UserResource {
   @POST
   @Path("users")
   @ApiOperation(value = "Add users to a scope", nickname = "addUsers")
-  public ResponseDTO<AddUsersResponse> addUsers(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @Valid AddUsersDTO addUsersDTO) {
+  @Operation(operationId = "addUsers", summary = "Add user(s) to given scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns list of added users to a given scope")
+      })
+  public ResponseDTO<AddUsersResponse>
+  addUsers(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+               NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY)
+      String projectIdentifier, @NotNull @Valid AddUsersDTO addUsersDTO) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USER, null), MANAGE_USER_PERMISSION);
     return ResponseDTO.newResponse(
@@ -290,23 +404,44 @@ public class UserResource {
 
   @PUT
   @ApiOperation(value = "update user information", nickname = "updateUserInfo")
-  public ResponseDTO<UserInfo> updateUserInfo(@Body UserInfo userInfo) {
+  @Operation(operationId = "updateUserInfo", summary = "Updates the User information",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the update User information")
+      })
+  public ResponseDTO<UserInfo>
+  updateUserInfo(@Body UserInfo userInfo) {
     return ResponseDTO.newResponse(userInfoService.update(userInfo));
   }
 
   @PUT
   @Path("password")
   @ApiOperation(value = "Change user password", nickname = "changeUserPassword")
-  public ResponseDTO<PasswordChangeResponse> changeUserPassword(PasswordChangeDTO passwordChangeDTO) {
+  @Operation(operationId = "changeUserPassword", summary = "Updates the User password",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns whether the operation is successful or not with readable response.")
+      })
+  public ResponseDTO<PasswordChangeResponse>
+  changeUserPassword(PasswordChangeDTO passwordChangeDTO) {
     return ResponseDTO.newResponse(userInfoService.changeUserPassword(passwordChangeDTO));
   }
 
   @PUT
   @Path("enable-two-factor-auth")
   @ApiOperation(value = "enable two factor auth settings", nickname = "enableTwoFactorAuth")
+  @Operation(operationId = "enableTwoFactorAuth", summary = "Enables two-factor-auth for an user in an account",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns user information")
+      })
   @FeatureRestrictionCheck(FeatureRestrictionName.TWO_FACTOR_AUTH_SUPPORT)
-  public ResponseDTO<UserInfo> updateTwoFactorAuthInfo(
-      @QueryParam("routingId") @AccountIdentifier String accountIdentifier,
+  public ResponseDTO<UserInfo>
+  updateTwoFactorAuthInfo(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                              "routingId") @AccountIdentifier String accountIdentifier,
       @Body TwoFactorAuthSettingsInfo authSettingsInfo) {
     return ResponseDTO.newResponse(userInfoService.updateTwoFactorAuthInfo(authSettingsInfo));
   }
@@ -314,8 +449,16 @@ public class UserResource {
   @PUT
   @Path("disable-two-factor-auth")
   @ApiOperation(value = "disable two factor auth settings", nickname = "disableTwoFactorAuth")
+  @Operation(operationId = "disableTTwoFactorAuth", summary = "Disables two-factor-auth for an user in an account",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns user information")
+      })
   @FeatureRestrictionCheck(FeatureRestrictionName.TWO_FACTOR_AUTH_SUPPORT)
-  public ResponseDTO<UserInfo> disableTFA(@QueryParam("routingId") @AccountIdentifier String accountIdentifier) {
+  public ResponseDTO<UserInfo>
+  disableTFA(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+      "routingId") @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(userInfoService.disableTFA());
   }
 
@@ -324,10 +467,19 @@ public class UserResource {
   @Produces("application/json")
   @Consumes()
   @ApiOperation(value = "Remove user as the collaborator from the scope", nickname = "removeUser")
-  public ResponseDTO<Boolean> removeUser(@NotNull @PathParam("userId") String userId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+  @Operation(operationId = "removeUser", summary = "Remove user as the collaborator from the scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "default", description = "Returns Boolean status whether request was successful or not")
+      })
+  public ResponseDTO<Boolean>
+  removeUser(@Parameter(description = "user Identifier") @NotNull @PathParam("userId") String userId,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     return removeUserInternal(
         userId, accountIdentifier, orgIdentifier, projectIdentifier, NGRemoveUserFilter.ACCOUNT_LAST_ADMIN_CHECK);
   }
@@ -368,10 +520,19 @@ public class UserResource {
   @Produces("application/json")
   @Consumes()
   @ApiOperation(value = "unlock user", nickname = "unlockUser")
-  public ResponseDTO<UserInfo> unlockUser(@NotNull @PathParam("userId") String userId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+  @Operation(operationId = "unlockUser", summary = "unlock user in a given scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns user information")
+      })
+  public ResponseDTO<UserInfo>
+  unlockUser(@Parameter(description = "user Identifier") @NotNull @PathParam("userId") String userId,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USER, userId), MANAGE_USER_PERMISSION);
     return ResponseDTO.newResponse(userInfoService.unlockUser(userId, accountIdentifier));

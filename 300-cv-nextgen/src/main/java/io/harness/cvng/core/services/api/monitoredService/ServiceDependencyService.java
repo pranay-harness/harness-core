@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.ServiceDependency;
-import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 
 import java.util.List;
 import java.util.Map;
@@ -14,7 +13,7 @@ import java.util.Set;
 import lombok.NonNull;
 
 @OwnedBy(CV)
-public interface ServiceDependencyService extends DeleteEntityByHandler<ServiceDependency> {
+public interface ServiceDependencyService {
   void updateDependencies(ProjectParams projectParams, String toMonitoredServiceIdentifier,
       Set<ServiceDependencyDTO> fromMonitoredServiceIdentifiers);
 

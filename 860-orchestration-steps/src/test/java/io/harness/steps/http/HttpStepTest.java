@@ -90,7 +90,10 @@ public class HttpStepTest extends CategoryTest {
     variables.put("name3", var3);
 
     HttpStepResponse response2 = HttpStepResponse.builder().httpResponseBody(body).build();
-    assertThatThrownBy(() -> HttpStep.evaluateOutputVariables(variables, response2)).isNotNull();
+    evaluatedVariables = HttpStep.evaluateOutputVariables(variables, response2);
+    assertThat(evaluatedVariables).isNotEmpty();
+    assertThat(evaluatedVariables.get("name2")).isNull();
+    assertThat(evaluatedVariables.get("name3")).isNull();
   }
 
   @Test
