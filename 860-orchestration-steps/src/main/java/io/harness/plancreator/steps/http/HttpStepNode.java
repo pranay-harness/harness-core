@@ -42,6 +42,8 @@ public class HttpStepNode extends PmsAbstractStepNode {
   public StepSpecType getStepSpecType() {
     return httpStepInfo;
   }
+
+  // will re-iterate
   enum StepType {
     Http(StepSpecTypeConstants.HTTP);
     @Getter String name;
