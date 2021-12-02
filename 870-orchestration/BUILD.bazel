@@ -6,6 +6,7 @@ shared_dependencies = [
     "//955-delegate-beans:module",
     "//876-orchestration-beans:module",
     "//874-orchestration-delay:module",
+    "//878-pipeline-service-utilities:module",
     "//890-pms-contracts:module",
     "//910-delegate-service-driver:module",
     "//930-delegate-tasks:module",
