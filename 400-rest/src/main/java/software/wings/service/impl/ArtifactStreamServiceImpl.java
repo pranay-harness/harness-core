@@ -39,6 +39,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactCollectionPTaskClientParams.ArtifactCollectionPTaskClientParamsKeys;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -53,6 +54,8 @@ import io.harness.exception.ShellExecutionException;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.observer.Subject;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
@@ -808,6 +811,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new InvalidRequestException(
           "The Artifact Source variable should be of the format 'artifactSourceName (serviceName)'");
     }
+  }
+
+  @Override
+  public boolean deletePerpetualTaskByArtifactStream(String accountId, String artifactStreamId) {
+    log.info("Deleting perpetual task associated with artifact stream " + artifactStreamId);
+    Query<PerpetualTaskRecord> query = wingsPersistence.createQuery(PerpetualTaskRecord.class)
+                                           .field(PerpetualTaskRecordKeys.accountId)
+                                           .equal(accountId)
+                                           .field(PerpetualTaskRecordKeys.client_params + "."
+                                               + ArtifactCollectionPTaskClientParamsKeys.artifactStreamId)
+                                           .equal(artifactStreamId);
+    return wingsPersistence.delete(query);
   }
 
   @Override

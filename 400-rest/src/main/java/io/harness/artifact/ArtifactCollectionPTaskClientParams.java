@@ -7,10 +7,12 @@ import io.harness.perpetualtask.PerpetualTaskClientParams;
 
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 
 @OwnedBy(CDC)
 @Value
 @Builder
+@FieldNameConstants(innerTypeName = "ArtifactCollectionPTaskClientParamsKeys")
 public class ArtifactCollectionPTaskClientParams implements PerpetualTaskClientParams {
   String artifactStreamId;
 }

@@ -1,8 +1,6 @@
 package io.harness.cvng.servicelevelobjective.entities;
 
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
-import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
-import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
@@ -29,14 +27,6 @@ public class RatioServiceLevelIndicator extends ServiceLevelIndicator {
   @Override
   public SLIMetricType getSLIMetricType() {
     return SLIMetricType.RATIO;
-  }
-
-  @Override
-  public ServiceLevelIndicatorSpec getServiceLevelIndicatorSpec() {
-    return ServiceLevelIndicatorSpec.builder()
-        .type(SLIMetricType.RATIO)
-        .spec(RatioSLIMetricSpec.builder().eventType(eventType).metric1(metric1).metric2(metric2).build())
-        .build();
   }
 
   @Override

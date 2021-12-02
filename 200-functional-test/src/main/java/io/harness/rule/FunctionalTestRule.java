@@ -19,6 +19,7 @@ import io.harness.configuration.ConfigurationType;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
@@ -294,7 +295,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
-    modules.add(new WingsModule((MainConfiguration) configuration));
+    modules.add(new WingsModule((MainConfiguration) configuration, StartupMode.MANAGER));
     modules.add(new TestTotpModule());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());

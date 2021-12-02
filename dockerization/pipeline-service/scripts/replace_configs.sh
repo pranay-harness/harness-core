@@ -396,3 +396,4 @@ replace_key_value pipelineEventConsumersConfig.pmsNotify.threads "$PMS_NOTIFY_EV
 replace_key_value pipelineEventConsumersConfig.webhookEvent.threads "$PMS_WEBHOOK_EVENT_CONSUMER_THREAD_COUNT"
 
 replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"
+replace_key_value segmentConfiguration.url "$SEGMENT_URL"

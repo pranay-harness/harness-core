@@ -2,6 +2,7 @@ package io.harness.delegate.task.jira.connection;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.MOUNIK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -19,6 +20,8 @@ import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
 import io.harness.delegate.task.jira.JiraTaskNGHelper;
 import io.harness.delegate.task.jira.JiraTaskNGResponse;
+import io.harness.exception.HintException;
+import io.harness.jira.JiraClient;
 import io.harness.rule.Owner;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -32,6 +35,7 @@ import org.mockito.MockitoAnnotations;
 @OwnedBy(CDC)
 public class JiraTestConnectionTaskNGTest extends CategoryTest {
   @Mock private JiraTaskNGHelper jiraTaskNGHelper;
+  @Mock private JiraClient jiraClient;
   @InjectMocks
   private final JiraTestConnectionTaskNG jiraTestConnectionTaskNG = new JiraTestConnectionTaskNG(
       DelegateTaskPackage.builder().data(TaskData.builder().build()).build(), null, null, null);
@@ -72,6 +76,16 @@ public class JiraTestConnectionTaskNGTest extends CategoryTest {
 
     assertThat(((JiraTestConnectionTaskNGResponse) response).getCanConnect()).isEqualTo(false);
 
+    verify(jiraTaskNGHelper).getJiraTaskResponse(any());
+  }
+
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void testRunWhenCantConnectWithHintException() {
+    when(jiraTaskNGHelper.getJiraTaskResponse(any())).thenThrow(new HintException("exception"));
+    assertThatThrownBy(() -> jiraTestConnectionTaskNG.run(JiraConnectionTaskParams.builder().build()))
+        .isInstanceOf(HintException.class);
     verify(jiraTaskNGHelper).getJiraTaskResponse(any());
   }
 }

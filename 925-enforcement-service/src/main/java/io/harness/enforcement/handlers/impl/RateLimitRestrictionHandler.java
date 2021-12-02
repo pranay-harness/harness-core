@@ -54,7 +54,12 @@ public class RateLimitRestrictionHandler implements RestrictionHandler {
   }
 
   @Override
-  public RestrictionMetadataDTO getMetadataDTO(Restriction restriction) {
+  public RestrictionMetadataDTO getMetadataDTO(
+      Restriction restriction, String accountIdentifier, ModuleType moduleType) {
+    return generateMetadataDTO(restriction);
+  }
+
+  private RateLimitRestrictionMetadataDTO generateMetadataDTO(Restriction restriction) {
     RateLimitRestriction rateLimitRestriction = (RateLimitRestriction) restriction;
     return RateLimitRestrictionMetadataDTO.builder()
         .restrictionType(rateLimitRestriction.getRestrictionType())
@@ -66,7 +71,7 @@ public class RateLimitRestrictionHandler implements RestrictionHandler {
 
   private long getCurrentCount(FeatureRestrictionName featureRestrictionName, RateLimitRestriction rateLimitRestriction,
       String accountIdentifier) {
-    RestrictionMetadataDTO metadataDTO = getMetadataDTO(rateLimitRestriction);
+    RestrictionMetadataDTO metadataDTO = generateMetadataDTO(rateLimitRestriction);
     return RestrictionUtils.getCurrentUsage(
         rateLimitRestriction, featureRestrictionName, accountIdentifier, metadataDTO);
   }

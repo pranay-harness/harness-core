@@ -75,8 +75,8 @@ public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase
                                                       .build();
     datadogMetricCVConfig.setMetricPack(metricPack);
 
-    DatadogMetricsDataCollectionInfo collectionInfoResult = classUnderTest.toDataCollectionInfoForSLI(
-        Collections.singletonList(datadogMetricCVConfig), serviceLevelIndicator);
+    DatadogMetricsDataCollectionInfo collectionInfoResult =
+        classUnderTest.toDataCollectionInfo(Collections.singletonList(datadogMetricCVConfig), serviceLevelIndicator);
 
     assertThat(collectionInfoResult).isNotNull();
     assertThat(collectionInfoResult.getMetricDefinitions().size()).isEqualTo(1);
@@ -104,8 +104,8 @@ public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase
                                                       .build();
     datadogMetricCVConfig.setMetricPack(metricPack);
 
-    DatadogMetricsDataCollectionInfo collectionInfoResult = classUnderTest.toDataCollectionInfoForSLI(
-        Collections.singletonList(datadogMetricCVConfig), serviceLevelIndicator);
+    DatadogMetricsDataCollectionInfo collectionInfoResult =
+        classUnderTest.toDataCollectionInfo(Collections.singletonList(datadogMetricCVConfig), serviceLevelIndicator);
 
     assertThat(collectionInfoResult).isNotNull();
     assertThat(collectionInfoResult.getMetricDefinitions().size()).isEqualTo(0);
