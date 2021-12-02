@@ -14,3 +14,10 @@ io.harness.yaml.core.failurestrategy.FailureStrategyConfig
 io.harness.yaml.core.failurestrategy.OnFailureConfig
 io.harness.yaml.core.failurestrategy.rollback.StageRollbackFailureActionConfig
 io.harness.yaml.core.failurestrategy.marksuccess.MarkAsSuccessFailureActionConfig
+io.harness.when.beans.StageWhenCondition
+io.harness.advisers.rollback.OnFailRollbackOutput
+io.harness.advisers.rollback.OnFailRollbackParameters
+io.harness.when.beans.StepWhenCondition
+io.harness.advisers.rollback.RollbackTriggeredOutput
+io.harness.beans.common.VariablesSweepingOutput
+io.harness.plancreator.steps.common.StepElementParameters

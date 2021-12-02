@@ -30,7 +30,6 @@ import io.harness.rule.Owner;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.utils.steps.TestStepParameters;
 
-import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ import org.mockito.MockitoAnnotations;
 public class RedisProgressEventPublisherTest extends OrchestrationTestBase {
   @Mock NodeExecutionService nodeExecutionService;
   @Mock PmsEventSender eventSender;
-  @Inject @InjectMocks RedisProgressEventPublisher redisProgressEventPublisher;
+  @InjectMocks RedisProgressEventPublisher redisProgressEventPublisher;
 
   @Before
   public void setup() {
@@ -81,9 +80,6 @@ public class RedisProgressEventPublisherTest extends OrchestrationTestBase {
             .startTs(System.currentTimeMillis())
             .build();
     when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
-    redisProgressEventPublisher.publishEvent(nodeExecution.getUuid(),
-        BinaryResponseData.builder().data("PROGRESS_DATA".getBytes(StandardCharsets.UTF_8)).build());
-
     ProgressEvent progressEvent =
         ProgressEvent.newBuilder()
             .setAmbiance(nodeExecution.getAmbiance())
@@ -91,6 +87,12 @@ public class RedisProgressEventPublisherTest extends OrchestrationTestBase {
             .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
             .setProgressBytes(ByteString.copyFrom("PROGRESS_DATA".getBytes(StandardCharsets.UTF_8)))
             .build();
+    when(eventSender.sendEvent(nodeExecution.getAmbiance(), progressEvent.toByteString(),
+             PmsEventCategory.PROGRESS_EVENT, nodeExecution.getNode().getServiceName(), false))
+        .thenReturn("");
+
+    redisProgressEventPublisher.publishEvent(nodeExecution.getUuid(),
+        BinaryResponseData.builder().data("PROGRESS_DATA".getBytes(StandardCharsets.UTF_8)).build());
 
     verify(eventSender)
         .sendEvent(nodeExecution.getAmbiance(), progressEvent.toByteString(), PmsEventCategory.PROGRESS_EVENT,
