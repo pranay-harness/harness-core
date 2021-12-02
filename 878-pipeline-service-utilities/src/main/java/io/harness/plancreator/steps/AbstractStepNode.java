@@ -15,7 +15,6 @@ import io.harness.template.yaml.TemplateLinkConfig;
 import io.harness.validator.NGRegexValidatorConstants;
 import io.harness.when.beans.StepWhenCondition;
 import io.harness.yaml.core.StepSpecType;
-import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.timeout.Timeout;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -57,8 +56,6 @@ public abstract class AbstractStepNode {
   @ApiModelProperty(hidden = true)
   ParameterField<String> skipCondition;
   TemplateLinkConfig template;
-  // TODO: Will move after plan creation changes.
-  List<FailureStrategyConfig> failureStrategies;
 
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
   @ApiModelProperty(hidden = true)
