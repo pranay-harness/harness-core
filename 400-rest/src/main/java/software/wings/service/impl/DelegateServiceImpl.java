@@ -158,6 +158,7 @@ import io.harness.service.intfc.DelegateTokenService;
 import io.harness.stream.BoundedInputStream;
 import io.harness.telemetry.Category;
 import io.harness.telemetry.TelemetryReporter;
+import io.harness.validation.SuppressValidation;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -377,7 +378,9 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
   @Getter private Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
-  @Inject @Getter private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
+  @Inject
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
   @Inject private OutboxService outboxService;
   @Inject private DelegateServiceClassicGrpcClient delegateServiceClassicGrpcClient;
   @Inject private TelemetryReporter telemetryReporter;
