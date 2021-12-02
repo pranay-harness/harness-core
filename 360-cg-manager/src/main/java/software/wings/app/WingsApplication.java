@@ -19,6 +19,7 @@ import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMEN
 import static software.wings.common.VerificationConstants.VERIFICATION_METRIC_LABELS;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.not;
 import static com.google.inject.name.Names.named;
 import static java.time.Duration.ofHours;
@@ -124,6 +125,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.redis.RedisConfig;
+import io.harness.reflection.HarnessReflections;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.secret.ConfigSecretUtils;
 import io.harness.secrets.SecretMigrationEventListener;
@@ -148,6 +150,7 @@ import io.harness.timeout.TimeoutEngine;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.tracing.MongoRedisTracer;
+import io.harness.validation.SuppressValidation;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -297,14 +300,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletRegistration;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.Path;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.MetaBroadcaster;
@@ -319,9 +325,9 @@ import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.converters.TypeConverter;
-import org.reflections.Reflections;
 import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
+import ru.vyarus.guice.validator.aop.ValidationMethodInterceptor;
 
 /**
  * The main application - entry point for the entire Wings Application.
@@ -681,7 +687,15 @@ public class WingsApplication extends Application<MainConfiguration> {
                     }))
                     .build());
 
-    modules.add(new ValidationModule(validatorFactory));
+    modules.add(new ValidationModule(validatorFactory) {
+      @Override
+      protected void configureAop(ValidationMethodInterceptor interceptor) {
+        bindInterceptor(not(annotatedWith(SuppressValidation.class)),
+            annotatedWith(ValidateOnExecution.class).and(not(annotatedWith(SuppressValidation.class))), interceptor);
+        bindInterceptor(annotatedWith(ValidateOnExecution.class).and(not(annotatedWith(SuppressValidation.class))),
+            not(annotatedWith(SuppressValidation.class)), interceptor);
+      }
+    });
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
     modules.add(MigrationModule.getInstance());
@@ -921,10 +935,15 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerResources(MainConfiguration configuration, Environment environment, Injector injector) {
-    Reflections reflections =
-        new Reflections(AppResource.class.getPackage().getName(), DelegateTaskResource.class.getPackage().getName());
+    Set<Class<?>> resourceClasses =
+        HarnessReflections.get()
+            .getTypesAnnotatedWith(Path.class)
+            .stream()
+            .filter(klazz
+                -> StringUtils.startsWithAny(klazz.getPackage().getName(), AppResource.class.getPackage().getName(),
+                    DelegateTaskResource.class.getPackage().getName()))
+            .collect(Collectors.toSet());
 
-    Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
     if (!configuration.isGraphQLEnabled()) {
       resourceClasses.remove(GraphQLResource.class);
     }

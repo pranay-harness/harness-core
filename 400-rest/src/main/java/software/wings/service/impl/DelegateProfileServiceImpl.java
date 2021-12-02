@@ -40,6 +40,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.secrets.SecretService;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateProfileObserver;
+import io.harness.validation.SuppressValidation;
 
 import software.wings.beans.Account;
 import software.wings.beans.Event;
@@ -88,7 +89,8 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Inject private DelegateCache delegateCache;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
-  @Getter private final Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
+  @Getter(onMethod = @__(@SuppressValidation))
+  private final Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
 
   @Override
   public PageResponse<DelegateProfile> list(PageRequest<DelegateProfile> pageRequest) {
@@ -449,11 +451,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     if (!account.isForImport()) {
       DelegateProfile cgDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), null, false);
       add(cgDelegateProfile);
-
-      DelegateProfile ngDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), null, true);
-      add(ngDelegateProfile);
-
-      log.info("Primary Delegate Profiles added.");
+      log.info("Primary CG Delegate Profile added.");
 
       return;
     }

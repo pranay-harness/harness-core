@@ -8,6 +8,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
 import io.harness.observer.Subject;
 import io.harness.persistence.UuidAware;
+import io.harness.validation.SuppressValidation;
 
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
@@ -33,7 +34,8 @@ public class YamlPushServiceImpl implements YamlPushService {
   @Inject private ExecutorService executorService;
   @Inject private YamlHelper yamlHelper;
   @Inject private FeatureFlagService featureFlagService;
-  @Getter private Subject<EntityCrudOperationObserver> entityCrudSubject = new Subject<>();
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<EntityCrudOperationObserver> entityCrudSubject = new Subject<>();
 
   @Override
   public <T> Future<?> pushYamlChangeSet(

@@ -193,7 +193,8 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   }
 
   private void removeDuplicateIfThenFromStageElementConfig(ObjectNode stageElementConfig) {
-    ArrayNode stageElementConfigAllOfNode = (ArrayNode) stageElementConfig.get(ALL_OF_NODE);
+    ArrayNode stageElementConfigAllOfNode =
+        getAllOfNodeWithTypeAndSpec((ArrayNode) stageElementConfig.get(ONE_OF_NODE));
     if (stageElementConfigAllOfNode == null) {
       return;
     }

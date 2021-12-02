@@ -18,6 +18,8 @@ import io.harness.gitsync.FileChange;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
+import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.grpc.utils.StringValueUtils;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
@@ -166,13 +168,13 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   }
 
   @Override
-  public String getLastObjectIdIfExists(String accountIdentifier, String yaml) {
+  public Optional<EntityGitDetails> getEntityDetailsIfExists(String accountIdentifier, String yaml) {
     final PipelineConfig pipelineConfig = getYamlDTO(yaml);
     final PipelineInfoConfig pipelineInfoConfig = pipelineConfig.getPipelineInfoConfig();
     final Optional<PipelineEntity> pipelineEntity =
         pmsPipelineService.get(accountIdentifier, pipelineInfoConfig.getOrgIdentifier(),
             pipelineInfoConfig.getProjectIdentifier(), pipelineInfoConfig.getIdentifier(), false);
-    return pipelineEntity.map(PipelineEntity::getObjectIdOfYaml).orElse(null);
+    return pipelineEntity.map(entity -> EntityGitDetailsMapper.mapEntityGitDetails(entity));
   }
 
   @Override
