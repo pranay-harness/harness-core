@@ -110,7 +110,7 @@ NOTE: the data from it is used for every git operation github does on you behave
 #### Some Bazel Best Practices you can follow before building portal locally.
 `https://harness.atlassian.net/wiki/spaces/BT/pages/1910047082/Bazel+best+practices+for+faster+and+efficient+builds.`
 
-1. Clone form git repository: https://github.com/wings-software/portal
+1. Clone from git repository: https://github.com/wings-software/portal
 
    (Optional) Follow https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
    to setup your SSH keys. You can then use SSH to interact with git
