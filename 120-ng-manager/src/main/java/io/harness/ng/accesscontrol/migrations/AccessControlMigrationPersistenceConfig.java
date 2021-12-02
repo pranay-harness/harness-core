@@ -12,7 +12,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
-import java.util.Objects;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +19,6 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -68,21 +66,9 @@ public class AccessControlMigrationPersistenceConfig extends AbstractMongoConfig
 
   @Bean
   public MongoTemplate mongoTemplate() throws Exception {
-    MongoClientOptions primaryMongoClientOptions =
-        MongoClientOptions.builder()
-            .retryWrites(true)
-            .connectTimeout(mongoBackendConfiguration.getConnectTimeout())
-            .serverSelectionTimeout(mongoBackendConfiguration.getServerSelectionTimeout())
-            .maxConnectionIdleTime(mongoBackendConfiguration.getMaxConnectionIdleTime())
-            .connectionsPerHost(mongoBackendConfiguration.getConnectionsPerHost())
-            .readPreference(ReadPreference.primary())
-            .build();
-    MongoClientURI uri =
-        new MongoClientURI(mongoBackendConfiguration.getUri(), MongoClientOptions.builder(primaryMongoClientOptions));
-    DbRefResolver dbRefResolver = new DefaultDbRefResolver(this.mongoDbFactory());
-    MongoDbFactory mongoDbFactory =
-        new SimpleMongoDbFactory(new MongoClient(uri), Objects.requireNonNull(uri.getDatabase()));
-    MongoMappingContext mappingContext = this.mongoMappingContext();
+    MongoDbFactory mongoDbFactory = mongoDbFactory();
+    DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory);
+    MongoMappingContext mappingContext = mongoMappingContext();
     mappingContext.setAutoIndexCreation(false);
     MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
     converter.setCodecRegistryProvider(mongoDbFactory);

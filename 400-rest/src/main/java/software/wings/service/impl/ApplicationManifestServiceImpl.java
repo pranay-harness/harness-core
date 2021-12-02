@@ -54,6 +54,7 @@ import io.harness.observer.Subject;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.queue.QueuePublisher;
+import io.harness.validation.SuppressValidation;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -153,7 +154,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject @Getter private Subject<ApplicationManifestServiceObserver> subject = new Subject<>();
+  @Inject
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<ApplicationManifestServiceObserver> subject = new Subject<>();
   @Inject private HelmChartService helmChartService;
   @Inject private SettingsService settingsService;
   @Inject private HelmHelper helmHelper;

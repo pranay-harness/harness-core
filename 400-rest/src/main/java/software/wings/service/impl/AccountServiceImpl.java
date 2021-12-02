@@ -93,6 +93,7 @@ import io.harness.persistence.HIterator;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
+import io.harness.validation.SuppressValidation;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.app.MainConfiguration;
@@ -1008,6 +1009,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  @SuppressValidation
   public void updateFeatureFlagsForOnPremAccount() {
     Optional<Account> onPremAccount = getOnPremAccount();
     if (!onPremAccount.isPresent()) {

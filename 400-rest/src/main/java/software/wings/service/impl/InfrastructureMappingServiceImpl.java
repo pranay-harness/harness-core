@@ -75,6 +75,7 @@ import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.validation.Create;
+import io.harness.validation.SuppressValidation;
 
 import software.wings.annotation.BlueprintProcessor;
 import software.wings.annotation.EncryptableSetting;
@@ -221,7 +222,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   private static final String COMPUTE_PROVIDER_SETTING_ID_KEY = "computeProviderSettingId";
   private static final Integer REFERENCED_ENTITIES_TO_SHOW = 10;
   private static final String DEFAULT = "default";
-  @Inject @Getter private Subject<InfrastructureMappingServiceObserver> subject = new Subject<>();
+  @Inject
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<InfrastructureMappingServiceObserver> subject = new Subject<>();
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
