@@ -63,7 +63,8 @@ public class CEYamlServiceImpl implements CEYamlService {
       @NonNull K8sClusterSetupRequest request) throws IOException {
     String yamlFileContent = "";
 
-    K8sServiceAccountInfoResponse serviceAccount;
+    K8sServiceAccountInfoResponse serviceAccount =
+        K8sServiceAccountInfoResponse.builder().username(DEFAULT_SERVICE_ACCOUNT_USERNAME).build();
     try {
       serviceAccount = k8sTaskClient.fetchServiceAccount(
           request.getConnectorIdentifier(), accountId, request.getOrgIdentifier(), request.getProjectIdentifier());
@@ -73,8 +74,7 @@ public class CEYamlServiceImpl implements CEYamlService {
           accountId, request.getConnectorIdentifier(), request.getOrgIdentifier(), request.getProjectIdentifier(),
           serviceAccount);
     } catch (Exception ex) {
-      log.error("Failed delegate task K8S_SERVICE_ACCOUNT_INFO", ex);
-      throw ex;
+      log.error("Failed delegate task K8S_SERVICE_ACCOUNT_INFO Deprecated API", ex);
     }
 
     if (request.getFeaturesEnabled().contains(CEFeatures.VISIBILITY)) {
