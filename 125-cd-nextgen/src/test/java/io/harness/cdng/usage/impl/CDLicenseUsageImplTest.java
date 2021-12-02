@@ -72,7 +72,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
         ModuleType.CD, timestamp, CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICES).build());
 
     verify(instanceService, times(1))
-        .getInstancesModifiedInInterval(eq(accountIdentifier),
+        .getInstancesDeployedInInterval(eq(accountIdentifier),
             eq(Instant.ofEpochMilli(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
 
     assertActiveInstanceUsageDTOOutput(cdServiceUsageDTO);
@@ -116,7 +116,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
             CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICE_INSTANCES).build());
 
     verify(instanceService, times(1))
-        .getInstancesModifiedInInterval(eq(accountIdentifier),
+        .getInstancesDeployedInInterval(eq(accountIdentifier),
             eq(Instant.ofEpochMilli(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
 
     assertThat(cdServiceInstanceUsageDTO.getActiveServiceInstances()).isNotNull();
@@ -151,7 +151,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
         ModuleType.CD, timestamp, CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICES).build());
 
     verify(instanceService, times(1))
-        .getInstancesModifiedInInterval(eq(accountIdentifier),
+        .getInstancesDeployedInInterval(eq(accountIdentifier),
             eq(Instant.ofEpochMilli(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
     verify(serviceEntityService, times(0)).find(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 
@@ -168,7 +168,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
     when(cdLicenseUsageHelper.getActiveServicesInfoWithPercentileServiceInstanceCount(
              anyString(), anyDouble(), anyLong(), anyLong(), any(Table.class)))
         .thenReturn(testServiceUsageInfoData);
-    when(instanceService.getInstancesModifiedInInterval(anyString(), anyLong(), anyLong()))
+    when(instanceService.getInstancesDeployedInInterval(anyString(), anyLong(), anyLong()))
         .thenReturn(testInstanceDTOData);
     when(cdLicenseUsageHelper.getServiceEntities(any(), any())).thenReturn(testServiceData);
     when(cdLicenseUsageHelper.getOrgProjectServiceTableFromInstances(any())).thenCallRealMethod();

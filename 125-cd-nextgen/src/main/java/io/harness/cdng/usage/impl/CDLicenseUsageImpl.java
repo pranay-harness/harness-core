@@ -56,7 +56,7 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
     long startInterval = getEpochMilliNDaysAgo(timestamp, TIME_PERIOD_IN_DAYS);
 
     List<InstanceDTO> activeInstancesByAccount =
-        instanceService.getInstancesModifiedInInterval(accountIdentifier, startInterval, timestamp);
+        instanceService.getInstancesDeployedInInterval(accountIdentifier, startInterval, timestamp);
     Table<Record3<String, String, String>> serviceTableFromInstances =
         cdLicenseUsageHelper.getOrgProjectServiceTableFromInstances(activeInstancesByAccount);
 
