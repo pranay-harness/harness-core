@@ -14,6 +14,7 @@ import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.ManifestDelegateConfigHelper;
 import io.harness.delegate.task.TaskParameters;
@@ -56,6 +57,11 @@ public class HelmCommandTaskNG extends AbstractDelegateRunnableTask {
   @Override
   public DelegateResponseData run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
+  }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
   }
 
   @Override
@@ -106,12 +112,7 @@ public class HelmCommandTaskNG extends AbstractDelegateRunnableTask {
       helmCommandRequestNG.getLogCallback().saveExecutionLog(
           errorMsg + "\n Overall deployment Failed", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
       log.error(format("Exception in processing helm task [%s]", helmCommandRequestNG.toString()), ex);
-      return HelmCmdExecResponseNG.builder()
-          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage("Exception in processing helm task: " + errorMsg)
-          .commandUnitsProgress(
-              UnitProgressDataMapper.toUnitProgressData(helmCommandRequestNG.getCommandUnitsProgress()))
-          .build();
+      throw new TaskNGDataException(UnitProgressDataMapper.toUnitProgressData(helmCommandRequestNG.getCommandUnitsProgress()), ex);
     }
 
     helmCommandRequestNG.getLogCallback().saveExecutionLog(

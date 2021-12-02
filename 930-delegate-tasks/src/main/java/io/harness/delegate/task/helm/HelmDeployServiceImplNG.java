@@ -98,8 +98,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -139,7 +137,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   @Override
-  public HelmCommandResponseNG deploy(HelmInstallCommandRequestNG commandRequest) throws IOException {
+  public HelmCommandResponseNG deploy(HelmInstallCommandRequestNG commandRequest) throws Exception {
     LogCallback logCallback = commandRequest.getLogCallback();
     HelmChartInfo helmChartInfo = null;
 
@@ -164,29 +162,20 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
       logCallback = markDoneAndStartNew(commandRequest, logCallback, InstallUpgrade);
 
-      // call listReleases method
       HelmListReleaseResponseNG helmListReleaseResponseNG = listReleases(commandRequest);
 
       log.info(helmListReleaseResponseNG.getOutput());
 
-      // if list release failed:
       if (helmListReleaseResponseNG.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
         return helmListReleaseResponseNG;
       }
 
-      // list releases cmd passed
       if (checkNewHelmInstall(helmListReleaseResponseNG)) {
-        // install
         logCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
-        commandResponse = HelmCommandResponseMapper.getHelmInstCmdRespNG(
-            helmClient.install(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
-      }
-
-      else {
-        // upgrade
+        commandResponse = runHelmInstall(commandRequest, logCallback);
+      } else {
         logCallback.saveExecutionLog("Previous release exists for chart. Upgrading chart");
-        commandResponse = HelmCommandResponseMapper.getHelmInstCmdRespNG(
-            helmClient.upgrade(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
+        commandResponse = runHelmUpgrade(commandRequest, logCallback);
       }
 
       logCallback.saveExecutionLog(commandResponse.getOutput());
@@ -216,8 +205,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       return commandResponse;
 
     } catch (UncheckedTimeoutException e) {
-      String msg = TIMED_OUT_IN_STEADY_STATE;
-      log.error(msg, e);
+      log.error(TIMED_OUT_IN_STEADY_STATE, e);
       logCallback.saveExecutionLog(TIMED_OUT_IN_STEADY_STATE, LogLevel.ERROR);
       return HelmInstallCmdResponseNG.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -229,24 +217,43 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
                       .toString())
           .helmChartInfo(helmChartInfo)
           .build();
-    } catch (WingsException e) {
-      throw e;
-    } catch (Exception e) {
-      String exceptionMessage = ExceptionUtils.getMessage(e);
-      String msg = "Exception in deploying helm chart:" + exceptionMessage;
-      log.error(msg, e);
-      logCallback.saveExecutionLog(msg, LogLevel.ERROR);
-      return HelmInstallCmdResponseNG.builder()
-          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .output(msg)
-          .helmChartInfo(helmChartInfo)
-          .build();
-    } finally {
+    }
+    finally {
       if (checkIfReleasePurgingNeeded(commandRequest)) {
         logCallback.saveExecutionLog("Deployment failed.");
         deleteAndPurgeHelmRelease(commandRequest, logCallback);
       }
       cleanUpWorkingDirectory(commandRequest.getWorkingDir());
+    }
+  }
+
+  private HelmInstallCmdResponseNG runHelmUpgrade(HelmInstallCommandRequestNG commandRequest, LogCallback logCallback) {
+    try {
+      return HelmCommandResponseMapper.getHelmInstCmdRespNG(
+              helmClient.upgrade(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
+    } catch (HelmClientException e) {
+      String errorMessage = "Failed to upgrade helm chart.";
+      logCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      throw new HelmClientRuntimeException(e);
+    } catch (Exception e) {
+      String errorMessage = "Failed to upgrade helm chart.";
+      logCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      throw new HelmClientException(ExceptionUtils.getMessage(e), e, HelmCliCommandType.UPGRADE);
+    }
+  }
+
+  private HelmInstallCmdResponseNG runHelmInstall(HelmInstallCommandRequestNG commandRequest, LogCallback logCallback) {
+    try {
+      return HelmCommandResponseMapper.getHelmInstCmdRespNG(
+              helmClient.install(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
+    } catch (HelmClientException e) {
+      String errorMessage = "Failed to install helm chart.";
+      logCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      throw new HelmClientRuntimeException(e);
+    } catch (Exception e) {
+      String errorMessage = "Failed to install helm chart.";
+      logCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      throw new HelmClientException(ExceptionUtils.getMessage(e), e, HelmCliCommandType.INSTALL);
     }
   }
 
@@ -278,7 +285,12 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   private boolean checkIfReleasePurgingNeeded(HelmInstallCommandRequestNG commandRequest) {
-    HelmListReleaseResponseNG commandResponse = listReleases(commandRequest);
+    HelmListReleaseResponseNG commandResponse = null;
+    try {
+      commandResponse = listReleases(commandRequest);
+    } catch (Exception e) {
+      log.error("Helm list releases failed during release purge check.", e);
+    }
     log.info(commandResponse.getOutput());
 
     if (commandResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
@@ -498,8 +510,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   @Override
-  public HelmListReleaseResponseNG listReleases(HelmInstallCommandRequestNG helmCommandRequest) {
-    try {
+  public HelmListReleaseResponseNG listReleases(HelmInstallCommandRequestNG helmCommandRequest) throws Exception {
+//    try {
       HelmCliResponse helmCliResponse =
           helmClient.listReleases(HelmCommandDataMapperNG.getHelmCmdDataNG(helmCommandRequest));
       List<ReleaseInfo> releaseInfoList =
@@ -509,13 +521,14 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           .output(helmCliResponse.getOutput())
           .releaseInfoList(releaseInfoList)
           .build();
-    } catch (Exception e) {
-      log.error("Helm list releases failed", e);
-      return HelmListReleaseResponseNG.builder()
-          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .output(ExceptionUtils.getMessage(e))
-          .build();
-    }
+//    }
+//    catch (Exception e) {
+//      log.error("Helm list releases failed", e);
+//      return HelmListReleaseResponseNG.builder()
+//          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+//          .output(ExceptionUtils.getMessage(e))
+//          .build();
+//    }
   }
 
   @Override
@@ -566,7 +579,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   @VisibleForTesting
-  void prepareRepoAndCharts(HelmCommandRequestNG commandRequest, long timeoutInMillis) {
+  void prepareRepoAndCharts(HelmCommandRequestNG commandRequest, long timeoutInMillis) throws Exception {
     ManifestDelegateConfig manifestDelegateConfig = commandRequest.getManifestDelegateConfig();
     HelmChartManifestDelegateConfig helmChartManifestDelegateConfig =
         (HelmChartManifestDelegateConfig) manifestDelegateConfig;
@@ -586,7 +599,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     }
   }
 
-  private void fetchSourceRepo(HelmCommandRequestNG commandRequest) {
+  private void fetchSourceRepo(HelmCommandRequestNG commandRequest) throws Exception {
     StoreDelegateConfig storeDelegateConfig = commandRequest.getManifestDelegateConfig().getStoreDelegateConfig();
     if (!(storeDelegateConfig instanceof GitStoreDelegateConfig)) {
       throw new InvalidArgumentsException(Pair.of("storeDelegateConfig", "Must be instance of GitStoreDelegateConfig"));
@@ -624,7 +637,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     }
   }
 
-  private void fetchChartRepo(HelmCommandRequestNG commandRequestNG, long timeoutInMillis) {
+  private void fetchChartRepo(HelmCommandRequestNG commandRequestNG, long timeoutInMillis) throws Exception {
     String workingDir = Paths.get(commandRequestNG.getWorkingDir()).toString();
     HelmChartManifestDelegateConfig helmChartManifestDelegateConfig =
         (HelmChartManifestDelegateConfig) commandRequestNG.getManifestDelegateConfig();
@@ -638,7 +651,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   private void downloadFilesFromChartRepo(ManifestDelegateConfig manifestDelegateConfig, String destinationDirectory,
-      LogCallback logCallback, long timeoutInMillis) {
+      LogCallback logCallback, long timeoutInMillis) throws Exception {
     if (!(manifestDelegateConfig instanceof HelmChartManifestDelegateConfig)) {
       throw new InvalidArgumentsException(
           Pair.of("manifestDelegateConfig", "Must be instance of HelmChartManifestDelegateConfig"));
@@ -741,7 +754,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   @VisibleForTesting
-  public List<KubernetesResource> printHelmChartKubernetesResources(HelmInstallCommandRequestNG commandRequest) {
+  public List<KubernetesResource> printHelmChartKubernetesResources(HelmInstallCommandRequestNG commandRequest) throws Exception {
     ManifestDelegateConfig manifestDelegateConfig = commandRequest.getManifestDelegateConfig();
 
     Optional<StoreDelegateConfigType> storeTypeOpt =
@@ -786,7 +799,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
   private List<KubernetesResource> getKubernetesResourcesFromHelmChart(
       HelmInstallCommandRequestNG commandRequest, String namespace, String workingDir, List<String> valueOverrides)
-      throws InterruptedException, ExecutionException, TimeoutException, IOException {
+      throws Exception {
     log.debug("Getting K8S resources from Helm chart, namespace: {}, chartLocation: {}", namespace, workingDir);
 
     HelmCommandResponseNG commandResponse = renderHelmChart(commandRequest, namespace, workingDir, valueOverrides);
@@ -799,7 +812,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   @Override
   public HelmCommandResponseNG renderHelmChart(
       HelmCommandRequestNG commandRequest, String namespace, String chartLocation, List<String> valueOverrides)
-      throws InterruptedException, TimeoutException, IOException, ExecutionException {
+      throws Exception {
     LogCallback executionLogCallback = commandRequest.getLogCallback();
 
     log.debug("Rendering Helm chart, namespace: {}, chartLocation: {}", namespace, chartLocation);
@@ -859,8 +872,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
         .build();
   }
 
-  private HelmChartInfo getHelmChartDetails(HelmInstallCommandRequestNG helmInstallCommandRequestNG)
-      throws IOException {
+  private HelmChartInfo getHelmChartDetails(HelmInstallCommandRequestNG helmInstallCommandRequestNG) throws Exception {
     ManifestDelegateConfig manifestDelegateConfig = helmInstallCommandRequestNG.getManifestDelegateConfig();
     HelmChartManifestDelegateConfig helmChartManifestDelegateConfig =
         (HelmChartManifestDelegateConfig) manifestDelegateConfig;
@@ -868,7 +880,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     HelmChartInfo helmChartInfo = helmTaskHelperBase.getHelmChartInfoFromChartsYamlFile(
         Paths.get(helmInstallCommandRequestNG.getWorkingDir(), CHARTS_YAML_KEY).toString());
 
-    try {
+//    try {
       switch (manifestDelegateConfig.getStoreDelegateConfig().getType()) {
         case GIT:
           GitStoreDelegateConfig gitStoreDelegateConfig =
@@ -884,9 +896,9 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           log.warn("Unsupported store type: " + manifestDelegateConfig.getStoreDelegateConfig().getType());
       }
 
-    } catch (Exception e) {
-      log.error("Incorrect/Unsupported store type.", e);
-    }
+//    } catch (Exception e) {
+//      log.error("Incorrect/Unsupported store type.", e);
+//    }
 
     return helmChartInfo;
   }
