@@ -5,9 +5,11 @@ write_mongo_hosts_and_ports() {
   IFS=',' read -ra HOST_AND_PORT <<< "$2"
   for INDEX in "${!HOST_AND_PORT[@]}"; do
     HOST=$(cut -d: -f 1 <<< "${HOST_AND_PORT[$INDEX]}")
-    PORT=$(cut -d: -f 2 <<< "${HOST_AND_PORT[$INDEX]}")
+    PORT=$(cut -s -d: -f 2 <<< "${HOST_AND_PORT[$INDEX]}")
     yq write -i $CONFIG_FILE $1.hosts[$INDEX].host "$HOST"
-    yq write -i $CONFIG_FILE $1.hosts[$INDEX].port "$PORT"
+    if [ -n "$PORT" ]; then
+      yq write -i $CONFIG_FILE $1.hosts[$INDEX].port "$PORT"
+    fi
   done
 }
 
@@ -34,7 +36,7 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE harness-mongo.uri "$MONGO_URI"
 fi
 
-if [[ "" != "$MONGO_USERNAME" ]]; then
+if [[ "" != "$MONGO_HOSTS_AND_PORTS" ]]; then
   yq delete -i $CONFIG_FILE harness-mongo.uri
   yq write -i $CONFIG_FILE harness-mongo.username "$MONGO_USERNAME"
   yq write -i $CONFIG_FILE harness-mongo.password "$MONGO_PASSWORD"
@@ -63,7 +65,7 @@ if [[ "" != "$EVENTS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE events-mongo.uri "$EVENTS_MONGO_URI"
 fi
 
-if [[ "" != "$EVENTS_MONGO_USERNAME" ]]; then
+if [[ "" != "$EVENTS_MONGO_HOSTS_AND_PORTS" ]]; then
   yq delete -i $CONFIG_FILE events-mongo.uri
   yq write -i $CONFIG_FILE events-mongo.username "$EVENTS_MONGO_USERNAME"
   yq write -i $CONFIG_FILE events-mongo.password "$EVENTS_MONGO_PASSWORD"
@@ -76,7 +78,7 @@ if [[ "" != "$PMS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE pms-harness.uri "$PMS_MONGO_URI"
 fi
 
-if [[ "" != "$PMS_MONGO_USERNAME" ]]; then
+if [[ "" != "$PMS_MONGO_HOSTS_AND_PORTS" ]]; then
   yq delete -i $CONFIG_FILE pms-harness.uri
   yq write -i $CONFIG_FILE pms-harness.username "$PMS_MONGO_USERNAME"
   yq write -i $CONFIG_FILE pms-harness.password "$PMS_MONGO_PASSWORD"
@@ -89,7 +91,7 @@ if [[ "" != "$CDC_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE cdc-mongo.uri "$CDC_MONGO_URI"
 fi
 
-if [[ "" != "$CDC_MONGO_USERNAME" ]]; then
+if [[ "" != "$CDC_MONGO_HOSTS_AND_PORTS" ]]; then
   yq delete -i $CONFIG_FILE cdc-mongo.uri
   yq write -i $CONFIG_FILE cdc-mongo.username "$CDC_MONGO_USERNAME"
   yq write -i $CONFIG_FILE cdc-mongo.password "$CDC_MONGO_PASSWORD"
@@ -118,7 +120,7 @@ if [[ "" != "$NG_HARNESS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE ng-harness.uri  "$NG_HARNESS_MONGO_URI"
 fi
 
-if [[ "" != "$NG_HARNESS_MONGO_USERNAME" ]]; then
+if [[ "" != "$NG_HARNESS_MONGO_HOSTS_AND_PORTS" ]]; then
   yq delete -i $CONFIG_FILE ng-harness.uri
   yq write -i $CONFIG_FILE ng-harness.username "$NG_HARNESS_MONGO_USERNAME"
   yq write -i $CONFIG_FILE ng-harness.password "$NG_HARNESS_MONGO_PASSWORD"
