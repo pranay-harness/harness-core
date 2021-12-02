@@ -8,6 +8,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.validation.OneOfSet;
 import io.harness.yaml.core.StepSpecType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,6 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("HttpStepNode")
 @OwnedBy(PIPELINE)
 @RecasterAlias("io.harness.plancreator.steps.http.HttpStepNode")
+@OneOfSet(fields = {"type, httpStepInfo, timeout, failureStrategies, when, delegateSelectors", "template"})
 public class HttpStepNode extends PmsAbstractStepNode {
   @JsonProperty("type") @NotNull StepType type = StepType.Http;
   @JsonProperty("spec")
