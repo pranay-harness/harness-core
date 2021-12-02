@@ -49,6 +49,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.TransportException;
@@ -213,10 +214,12 @@ public class GitClientHelper {
     // These are the common error we find while delegate runs git command
     // TransportException is subclass of GitAPIException. This is thrown when there is any issue in connecting to git
     // repo, like invalid authorization and invalid repo
+    // RefNotFound is a subclass of GitAPIException, thrown when there's an invalid reference.
 
     // MissingObjectException is caused when some object(commit/ref) is missing in the git history
     if ((ex instanceof GitAPIException && ex.getCause() instanceof TransportException)
-        || ex instanceof JGitInternalException || ex instanceof MissingObjectException) {
+        || ex instanceof RefNotFoundException || ex instanceof JGitInternalException
+        || ex instanceof MissingObjectException) {
       throw new GitConnectionDelegateException(GIT_CONNECTION_ERROR, ex, ex.getMessage(), USER_ADMIN);
     }
   }
