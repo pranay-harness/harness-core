@@ -537,7 +537,7 @@ public class UserServiceImpl implements UserService {
                                .licenseUnits(50)
                                .build());
 
-    Account createdAccount = accountService.save(account, false);
+    Account createdAccount = accountService.save(account, false, false);
 
     // create user
     User user = User.Builder.anUser()
