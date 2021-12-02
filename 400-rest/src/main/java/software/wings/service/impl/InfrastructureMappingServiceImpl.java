@@ -70,9 +70,11 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.KubernetesConvention;
 import io.harness.k8s.KubernetesHelperService;
 import io.harness.logging.Misc;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.queue.QueuePublisher;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.validation.Create;
 import io.harness.validation.SuppressValidation;
@@ -262,6 +264,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private SSHVaultService sshVaultService;
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -514,6 +517,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     try {
       subject.fireInform(InfrastructureMappingServiceObxxxxxxxx:onSaved, infraMapping);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(InfrastructureMappingServiceObserver.class, "onSaved", InfrastructureMapping.class),
+          InfrastructureMappingServiceImpl.class, infraMapping);
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
@@ -875,6 +881,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     try {
       subject.fireInform(InfrastructureMappingServiceObxxxxxxxx:onUpdated, updatedInfraMapping);
+      remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(InfrastructureMappingServiceObserver.class,
+                                           "onUpdated", InfrastructureMapping.class),
+          InfrastructureMappingServiceImpl.class, updatedInfraMapping);
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }

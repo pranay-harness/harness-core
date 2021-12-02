@@ -89,6 +89,7 @@ import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.Misc;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.queue.QueuePublisher;
 import io.harness.reflection.ReflectionUtils;
@@ -300,6 +301,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   @Override
   public PageResponse<InfrastructureDefinition> list(
@@ -494,6 +496,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     try {
       subject.fireInform(InfrastructureDefinitionServiceObxxxxxxxx:onSaved, infrastructureDefinition);
+      remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(InfrastructureDefinitionServiceObserver.class,
+                                           "onSaved", InfrastructureDefinition.class),
+          InfrastructureDefinitionServiceImpl.class, infrastructureDefinition);
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
@@ -783,6 +788,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     try {
       subject.fireInform(InfrastructureDefinitionServiceObxxxxxxxx:onUpdated, infrastructureDefinition);
+      remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(InfrastructureDefinitionServiceObserver.class,
+                                           "onUpdated", InfrastructureDefinition.class),
+          InfrastructureDefinitionServiceImpl.class, infrastructureDefinition);
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
