@@ -14,6 +14,7 @@ import io.harness.connector.heartbeat.DockerConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpKmsConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpValidationParamsProvider;
 import io.harness.connector.heartbeat.HttpHelmConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.JiraValidationParamsProvider;
 import io.harness.connector.heartbeat.K8sConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.NexusValidationParamsProvider;
 import io.harness.connector.heartbeat.NoOpConnectorValidationParamsProvider;
@@ -203,7 +204,7 @@ public class ConnectorRegistryFactory {
             NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.JIRA,
         new ConnectorRegistrar(ConnectorCategory.TICKETING, JiraConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, JiraDTOToEntity.class, JiraEntityToDTO.class,
+            JiraValidationParamsProvider.class, JiraDTOToEntity.class, JiraEntityToDTO.class,
             NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.NEXUS,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, NexusConnectorValidator.class,
