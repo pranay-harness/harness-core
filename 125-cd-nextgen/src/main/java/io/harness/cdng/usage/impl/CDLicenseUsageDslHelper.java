@@ -49,9 +49,9 @@ public class CDLicenseUsageDslHelper {
             dsl.selectOne()
                 .from(orgProjectServiceTable)
                 .where(
-                    SERVICES.ORG_IDENTIFIER.eq((Field<String>) orgProjectServiceTable.field(ORG_ID))
-                        .and(SERVICES.PROJECT_IDENTIFIER.eq((Field<String>) orgProjectServiceTable.field(PROJECT_ID)))
-                        .and(SERVICES.IDENTIFIER.eq((Field<String>) orgProjectServiceTable.field(SERVICE_ID)))))
+                    NG_INSTANCE_STATS.ORGID.eq((Field<String>) orgProjectServiceTable.field(ORG_ID))
+                        .and(NG_INSTANCE_STATS.PROJECTID.eq((Field<String>) orgProjectServiceTable.field(PROJECT_ID)))
+                        .and(NG_INSTANCE_STATS.SERVICEID.eq((Field<String>) orgProjectServiceTable.field(SERVICE_ID)))))
         .groupBy(NG_INSTANCE_STATS.ORGID, NG_INSTANCE_STATS.PROJECTID, NG_INSTANCE_STATS.SERVICEID)
         .fetchInto(AggregateServiceUsageInfo.class);
   }
