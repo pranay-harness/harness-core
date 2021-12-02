@@ -13,6 +13,8 @@ public class RestrictionHandlerFactory {
   private final RestrictionHandler rateLimitRestrictionHandler;
   private final RestrictionHandler customRestrictionHandler;
   private final RestrictionHandler durationRestrictionHandler;
+  private final RestrictionHandler licenseRateLimitRestrictionHandler;
+  private final RestrictionHandler licenseStaticLimitRestrictionHandler;
 
   @Inject
   public RestrictionHandlerFactory(
@@ -20,12 +22,16 @@ public class RestrictionHandlerFactory {
       @Named("staticLimitRestrictionHandler") RestrictionHandler staticLimitRestrictionHandler,
       @Named("rateLimitRestrictionHandler") RestrictionHandler rateLimitRestrictionHandler,
       @Named("customRestrictionHandler") RestrictionHandler customRestrictionHandler,
-      @Named("durationRestrictionHandler") RestrictionHandler durationRestrictionHandler) {
+      @Named("durationRestrictionHandler") RestrictionHandler durationRestrictionHandler,
+      @Named("licenseRateLimitRestrictionHandler") RestrictionHandler licenseRateLimitRestrictionHandler,
+      @Named("licenseStaticLimitRestrictionHandler") RestrictionHandler licenseStaticLimitRestrictionHandler) {
     this.availabilityRestrictionHandler = availabilityRestrictionHandler;
     this.staticLimitRestrictionHandler = staticLimitRestrictionHandler;
     this.rateLimitRestrictionHandler = rateLimitRestrictionHandler;
     this.customRestrictionHandler = customRestrictionHandler;
     this.durationRestrictionHandler = durationRestrictionHandler;
+    this.licenseRateLimitRestrictionHandler = licenseRateLimitRestrictionHandler;
+    this.licenseStaticLimitRestrictionHandler = licenseStaticLimitRestrictionHandler;
   }
 
   public RestrictionHandler getHandler(RestrictionType restrictionType) {
@@ -40,6 +46,10 @@ public class RestrictionHandlerFactory {
         return customRestrictionHandler;
       case DURATION:
         return durationRestrictionHandler;
+      case LICENSE_RATE_LIMIT:
+        return licenseRateLimitRestrictionHandler;
+      case LICENSE_STATIC_LIMIT:
+        return licenseStaticLimitRestrictionHandler;
       default:
         throw new IllegalArgumentException("Unknown restriction type");
     }

@@ -83,7 +83,7 @@ public class PrometheusDataCollectionInfoMapperTest extends CvNextGenTestBase {
 
     cvConfig.setMetricInfoList(Arrays.asList(metricInfo));
     PrometheusDataCollectionInfo dataCollectionInfo =
-        mapper.toDataCollectionInfoForSLI(Collections.singletonList(cvConfig), serviceLevelIndicator);
+        mapper.toDataCollectionInfo(Collections.singletonList(cvConfig), serviceLevelIndicator);
     assertThat(dataCollectionInfo.getMetricCollectionInfoList().size()).isEqualTo(1);
   }
 
@@ -105,7 +105,7 @@ public class PrometheusDataCollectionInfoMapperTest extends CvNextGenTestBase {
 
     cvConfig.setMetricInfoList(Arrays.asList(metricInfo));
     PrometheusDataCollectionInfo dataCollectionInfo =
-        mapper.toDataCollectionInfoForSLI(Collections.singletonList(cvConfig), serviceLevelIndicator);
+        mapper.toDataCollectionInfo(Collections.singletonList(cvConfig), serviceLevelIndicator);
     assertThat(dataCollectionInfo.getMetricCollectionInfoList().size()).isEqualTo(0);
   }
 }

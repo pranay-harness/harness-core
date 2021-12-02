@@ -5,6 +5,8 @@ import io.harness.enforcement.handlers.RestrictionHandlerFactory;
 import io.harness.enforcement.handlers.impl.AvailabilityRestrictionHandler;
 import io.harness.enforcement.handlers.impl.CustomRestrictionHandler;
 import io.harness.enforcement.handlers.impl.DurationRestrictionHandler;
+import io.harness.enforcement.handlers.impl.LicenseRateLimitRestrictionHandler;
+import io.harness.enforcement.handlers.impl.LicenseStaticLimitRestrictionHandler;
 import io.harness.enforcement.handlers.impl.RateLimitRestrictionHandler;
 import io.harness.enforcement.handlers.impl.StaticLimitRestrictionHandler;
 import io.harness.enforcement.services.EnforcementService;
@@ -48,5 +50,11 @@ public class EnforcementModule extends AbstractModule {
     bind(RestrictionHandler.class)
         .annotatedWith(Names.named("durationRestrictionHandler"))
         .to(DurationRestrictionHandler.class);
+    bind(RestrictionHandler.class)
+        .annotatedWith(Names.named("licenseRateLimitRestrictionHandler"))
+        .to(LicenseRateLimitRestrictionHandler.class);
+    bind(RestrictionHandler.class)
+        .annotatedWith(Names.named("licenseStaticLimitRestrictionHandler"))
+        .to(LicenseStaticLimitRestrictionHandler.class);
   }
 }

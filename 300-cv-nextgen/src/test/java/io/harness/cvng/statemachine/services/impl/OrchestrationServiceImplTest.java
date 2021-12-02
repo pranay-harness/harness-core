@@ -111,7 +111,7 @@ public class OrchestrationServiceImplTest extends CvNextGenTestBase {
             .asList();
     assertThat(orchestrator).hasSize(1);
     assertThat(orchestrator.get(0).getStatus().name()).isEqualTo(AnalysisStatus.CREATED.name());
-    assertThat(orchestrator.get(0).getAnalysisStateMachineQueue()).hasSize(7);
+    assertThat(orchestrator.get(0).getAnalysisStateMachineQueue()).hasSize(6);
     orchestrationService.orchestrate(orchestrator.get(0));
     for (Instant startTime = clock.instant(); startTime.isBefore(clock.instant().plus(Duration.ofMinutes(15)));
          startTime = startTime.plus(Duration.ofMinutes(5))) {
@@ -122,7 +122,7 @@ public class OrchestrationServiceImplTest extends CvNextGenTestBase {
                        .asList();
     assertThat(orchestrator).hasSize(1);
     assertThat(orchestrator.get(0).getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
-    assertThat(orchestrator.get(0).getAnalysisStateMachineQueue()).hasSize(10);
+    assertThat(orchestrator.get(0).getAnalysisStateMachineQueue()).hasSize(8);
   }
 
   @Test

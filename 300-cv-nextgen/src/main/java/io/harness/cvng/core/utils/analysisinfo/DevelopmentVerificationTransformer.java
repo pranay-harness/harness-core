@@ -10,7 +10,10 @@ public class DevelopmentVerificationTransformer {
   // of PrometheusCVConfig
   public static DeploymentVerification transformDTOtoEntity(AnalysisDTO analysisDTO) {
     if (Objects.nonNull(analysisDTO) && Objects.nonNull(analysisDTO.getDeploymentVerification())) {
-      return DeploymentVerification.builder().enabled(analysisDTO.getDeploymentVerification().getEnabled()).build();
+      return DeploymentVerification.builder()
+          .enabled(analysisDTO.getDeploymentVerification().getEnabled())
+          .serviceInstanceMetricPath(analysisDTO.getDeploymentVerification().getServiceInstanceMetricPath())
+          .build();
     }
     return null;
   }

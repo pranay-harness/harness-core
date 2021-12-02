@@ -23,7 +23,7 @@ public class HealthSourceMetricDefinition implements WithIdentifier {
 
   public String getIdentifier() {
     if (this.identifier == null) { // TODO: remove. using only till migration and UI change
-      return metricName;
+      return metricName.replaceAll("[^A-Za-z0-9]", "");
     }
     return this.identifier;
   }
@@ -52,7 +52,9 @@ public class HealthSourceMetricDefinition implements WithIdentifier {
     @Builder
     public static class DeploymentVerificationDTO {
       Boolean enabled;
+      // TODO: Make this HealthSource type specific
       String serviceInstanceFieldName;
+      String serviceInstanceMetricPath;
     }
   }
 

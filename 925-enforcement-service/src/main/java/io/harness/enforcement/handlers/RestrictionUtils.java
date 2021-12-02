@@ -5,15 +5,17 @@ import static io.harness.remote.client.NGRestUtils.getResponse;
 import io.harness.enforcement.beans.FeatureRestrictionUsageDTO;
 import io.harness.enforcement.beans.metadata.RestrictionMetadataDTO;
 import io.harness.enforcement.constants.FeatureRestrictionName;
-import io.harness.enforcement.interfaces.LimitRestrictionInterface;
+import io.harness.enforcement.interfaces.EnforcementSdkSupportInterface;
 import io.harness.exception.InvalidRequestException;
+import io.harness.licensing.LicenseConstant;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class RestrictionUtils {
-  public long getCurrentUsage(LimitRestrictionInterface limitRestriction, FeatureRestrictionName featureRestrictionName,
-      String accountIdentifier, RestrictionMetadataDTO restrictionMetadataDTO) {
+  public long getCurrentUsage(EnforcementSdkSupportInterface limitRestriction,
+      FeatureRestrictionName featureRestrictionName, String accountIdentifier,
+      RestrictionMetadataDTO restrictionMetadataDTO) {
     try {
       FeatureRestrictionUsageDTO response = getResponse(limitRestriction.getEnforcementSdkClient().getRestrictionUsage(
           featureRestrictionName, accountIdentifier, restrictionMetadataDTO));
@@ -26,6 +28,10 @@ public class RestrictionUtils {
   }
 
   public boolean isAvailable(long currentCount, long limit, boolean allowedIfEqual) {
+    if (limit == LicenseConstant.UNLIMITED) {
+      return true;
+    }
+
     if (currentCount == limit) {
       return allowedIfEqual;
     } else {

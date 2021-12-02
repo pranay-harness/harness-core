@@ -391,3 +391,4 @@ replace_key_value pipelineEventConsumersConfig.partialPlanResponse.threads "$PAR
 replace_key_value pipelineEventConsumersConfig.createPlan.threads "$CREATE_PLAN_EVENT_CONSUMER_THREAD_COUNT"
 replace_key_value pipelineEventConsumersConfig.planNotify.threads "$PLAN_NOTIFY_EVENT_CONSUMER_THREAD_COUNT"
 replace_key_value pipelineEventConsumersConfig.pmsNotify.threads "$PMS_NOTIFY_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value segmentConfiguration.url "$SEGMENT_URL"

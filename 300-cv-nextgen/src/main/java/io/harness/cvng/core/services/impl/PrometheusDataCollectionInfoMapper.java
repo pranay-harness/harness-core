@@ -3,7 +3,9 @@ package io.harness.cvng.core.services.impl;
 import io.harness.cvng.beans.PrometheusDataCollectionInfo;
 import io.harness.cvng.beans.PrometheusDataCollectionInfo.MetricCollectionInfo;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
+import io.harness.cvng.core.entities.PrometheusCVConfig.MetricInfo;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
+import io.harness.cvng.core.services.api.DataCollectionSLIInfoMapper;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 
 import com.google.common.base.Preconditions;
@@ -11,49 +13,49 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PrometheusDataCollectionInfoMapper
-    implements DataCollectionInfoMapper<PrometheusDataCollectionInfo, PrometheusCVConfig> {
+    implements DataCollectionInfoMapper<PrometheusDataCollectionInfo, PrometheusCVConfig>,
+               DataCollectionSLIInfoMapper<PrometheusDataCollectionInfo, PrometheusCVConfig> {
   @Override
   public PrometheusDataCollectionInfo toDataCollectionInfo(PrometheusCVConfig cvConfig) {
     Preconditions.checkNotNull(cvConfig);
     List<MetricCollectionInfo> metricCollectionInfoList = new ArrayList<>();
-    cvConfig.getMetricInfoList().forEach(metricInfo -> {
-      metricCollectionInfoList.add(MetricCollectionInfo.builder()
-                                       .metricName(metricInfo.getMetricName())
-                                       .query(metricInfo.getQuery())
-                                       .filters(metricInfo.getFilters())
-                                       .serviceInstanceField(metricInfo.getServiceInstanceFieldName())
-                                       .build());
-    });
-    PrometheusDataCollectionInfo dataCollectionInfo = PrometheusDataCollectionInfo.builder()
-                                                          .groupName(cvConfig.getGroupName())
-                                                          .metricCollectionInfoList(metricCollectionInfoList)
-                                                          .build();
-    dataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
-    return dataCollectionInfo;
+    cvConfig.getMetricInfoList().forEach(
+        metricInfo -> { metricCollectionInfoList.add(getMetricCollectionInfo(metricInfo)); });
+    return getDataCollectionInfo(metricCollectionInfoList, cvConfig);
   }
 
   @Override
-  public PrometheusDataCollectionInfo toDataCollectionInfoForSLI(
+  public PrometheusDataCollectionInfo toDataCollectionInfo(
       List<PrometheusCVConfig> cvConfigList, ServiceLevelIndicator serviceLevelIndicator) {
     List<String> sliMetricNames = serviceLevelIndicator.getMetricNames();
     Preconditions.checkNotNull(cvConfigList);
     PrometheusCVConfig baseCvConfig = cvConfigList.get(0);
-    List<MetricCollectionInfo> metricCollectionInfoList = new ArrayList<>();
+    List<PrometheusDataCollectionInfo.MetricCollectionInfo> metricCollectionInfoList = new ArrayList<>();
     cvConfigList.forEach(cvConfig -> cvConfig.getMetricInfoList().forEach(metricInfo -> {
       if (sliMetricNames.contains(metricInfo.getMetricName())) {
-        metricCollectionInfoList.add(MetricCollectionInfo.builder()
-                                         .metricName(metricInfo.getMetricName())
-                                         .query(metricInfo.getQuery())
-                                         .filters(metricInfo.getFilters())
-                                         .serviceInstanceField(metricInfo.getServiceInstanceFieldName())
-                                         .build());
+        metricCollectionInfoList.add(getMetricCollectionInfo(metricInfo));
       }
     }));
+
+    return getDataCollectionInfo(metricCollectionInfoList, baseCvConfig);
+  }
+
+  private MetricCollectionInfo getMetricCollectionInfo(MetricInfo metricInfo) {
+    return PrometheusDataCollectionInfo.MetricCollectionInfo.builder()
+        .metricName(metricInfo.getMetricName())
+        .query(metricInfo.getQuery())
+        .filters(metricInfo.getFilters())
+        .serviceInstanceField(metricInfo.getServiceInstanceFieldName())
+        .build();
+  }
+
+  private PrometheusDataCollectionInfo getDataCollectionInfo(
+      List<MetricCollectionInfo> metricDefinitions, PrometheusCVConfig cvConfig) {
     PrometheusDataCollectionInfo dataCollectionInfo = PrometheusDataCollectionInfo.builder()
-                                                          .groupName(baseCvConfig.getGroupName())
-                                                          .metricCollectionInfoList(metricCollectionInfoList)
+                                                          .groupName(cvConfig.getGroupName())
+                                                          .metricCollectionInfoList(metricDefinitions)
                                                           .build();
-    dataCollectionInfo.setDataCollectionDsl(baseCvConfig.getDataCollectionDsl());
+    dataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
     return dataCollectionInfo;
   }
 }

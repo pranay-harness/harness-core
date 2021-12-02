@@ -449,11 +449,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     if (!account.isForImport()) {
       DelegateProfile cgDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), null, false);
       add(cgDelegateProfile);
-
-      DelegateProfile ngDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), null, true);
-      add(ngDelegateProfile);
-
-      log.info("Primary Delegate Profiles added.");
+      log.info("Primary CG Delegate Profile added.");
 
       return;
     }
