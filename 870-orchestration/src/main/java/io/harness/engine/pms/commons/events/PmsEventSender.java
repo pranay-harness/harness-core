@@ -12,6 +12,7 @@ import io.harness.OrchestrationModuleConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.events.PmsRedissonClientFactory;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
@@ -161,7 +162,8 @@ public class PmsEventSender {
   private Producer buildRedisProducer(String topicName, RedisConfig redisConfig, String serviceId, int topicSize) {
     return redisConfig.getRedisUrl().equals(DUMMY_REDIS_URL)
         ? NoOpProducer.of(topicName)
-        : RedisProducer.of(topicName, redisConfig, topicSize, serviceId);
+        : RedisProducer.of(topicName, PmsRedissonClientFactory.getRedisClient(redisConfig), topicSize, serviceId,
+            redisConfig.getEnvNamespace());
   }
 
   PmsSdkInstance getPmsSdkInstance(String serviceName) {
