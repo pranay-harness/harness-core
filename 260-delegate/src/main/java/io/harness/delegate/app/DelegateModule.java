@@ -153,6 +153,7 @@ import io.harness.delegate.task.helm.HelmValuesFetchTaskNG;
 import io.harness.delegate.task.helm.HttpHelmConnectivityDelegateTask;
 import io.harness.delegate.task.helm.HttpHelmValidationHandler;
 import io.harness.delegate.task.jira.JiraTaskNG;
+import io.harness.delegate.task.jira.JiraValidationHandler;
 import io.harness.delegate.task.jira.connection.JiraTestConnectionTaskNG;
 import io.harness.delegate.task.k8s.K8sFetchServiceAccountTask;
 import io.harness.delegate.task.k8s.K8sTaskNG;
@@ -1593,6 +1594,8 @@ public class DelegateModule extends AbstractModule {
         .to(CVConnectorValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.CUSTOM_HEALTH.getDisplayName())
         .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.JIRA.getDisplayName())
+        .to(JiraValidationHandler.class);
   }
 
   private void bindExceptionHandlers() {
