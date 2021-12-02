@@ -12,6 +12,12 @@ import java.util.Set;
 
 public interface EnforcementClientService {
   /**
+   * Check if enforcement is enabled in current module
+   * @return true if enabled, else false
+   */
+  boolean isEnforcementEnabled();
+
+  /**
    * Check if available for next feature consume
    * @param featureRestrictionName
    * @param accountIdentifier
