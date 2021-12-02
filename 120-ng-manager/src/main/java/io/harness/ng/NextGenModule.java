@@ -181,6 +181,7 @@ import io.harness.notification.module.NotificationClientModule;
 import io.harness.opaclient.OpaClientModule;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.payment.PaymentModule;
 import io.harness.persistence.UserProvider;
 import io.harness.pipeline.PipelineRemoteClientModule;
 import io.harness.plancreator.steps.http.PmsAbstractStepNode;
@@ -598,6 +599,7 @@ public class NextGenModule extends AbstractModule {
     });
 
     install(LicenseModule.getInstance());
+    install(PaymentModule.getInstance());
     bind(AggregateUserService.class).to(AggregateUserServiceImpl.class);
     registerOutboxEventHandlers();
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
