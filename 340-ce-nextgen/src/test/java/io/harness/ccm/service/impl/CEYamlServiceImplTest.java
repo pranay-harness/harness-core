@@ -10,12 +10,14 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.config.CEFeatures;
 import io.harness.ccm.remote.beans.K8sClusterSetupRequest;
 import io.harness.delegate.beans.connector.k8Connector.K8sServiceAccountInfoResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -127,6 +129,38 @@ public class CEYamlServiceImplTest extends CategoryTest {
     assertThat(actualYamlContent).isEqualTo(expectedYamlContent);
 
     assertContainsVisibilityParams(actualYamlContent);
+
+    // since optimization is not asked
+    assertThat(actualYamlContent).doesNotContain(CCM_CONNECTOR_IDENTIFIER);
+    assertThat(actualYamlContent).doesNotContain(ACCOUNT_IDENTIFIER);
+    assertThat(actualYamlContent).doesNotContain(HARNESS_HOST);
+    assertThat(actualYamlContent).doesNotContain(SERVER_NAME);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.UTSAV)
+  @Category(UnitTests.class)
+  public void testVisibilityYamlDefaultServiceAccountForDeprecatedAPI() throws Exception {
+    final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
+                                               .connectorIdentifier(CONNECTOR_IDENTIFIER)
+                                               .orgIdentifier(ORG_IDENTIFIER)
+                                               .projectIdentifier(PROJECT_IDENTIFIER)
+                                               .featuresEnabled(Collections.singletonList(CEFeatures.VISIBILITY))
+                                               .build();
+
+    when(k8sServiceAccountDelegateTaskClient.fetchServiceAccount(any(), any(), any(), any()))
+        .thenThrow(new RuntimeException(""));
+
+    final String actualYamlContent =
+        ceYamlService.unifiedCloudCostK8sClusterYaml(ACCOUNT_IDENTIFIER, HARNESS_HOST, SERVER_NAME, request);
+
+    verify(k8sServiceAccountDelegateTaskClient, times(1)).fetchServiceAccount(any(), any(), any(), any());
+
+    assertThat(actualYamlContent).isNotBlank();
+
+    // assert default values for ServiceAccount
+    assertThat(actualYamlContent).contains("\n    name: default");
+    assertThat(actualYamlContent).contains("\n    namespace: harness-delegate-ng");
 
     // since optimization is not asked
     assertThat(actualYamlContent).doesNotContain(CCM_CONNECTOR_IDENTIFIER);
