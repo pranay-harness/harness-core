@@ -32,6 +32,9 @@ public interface YamlTypes {
   String K8S_DELETE = StepSpecTypeConstants.K8S_DELETE;
   String K8S_CANARY_DELETE = StepSpecTypeConstants.K8S_CANARY_DELETE;
 
+  String HELM_DEPLOY = StepSpecTypeConstants.HELM_DEPLOY;
+  String HELM_ROLLBACK = StepSpecTypeConstants.HELM_ROLLBACK;
+
   String MANIFEST_LIST_CONFIG = "manifests";
   String MANIFEST_CONFIG = "manifest";
   String MANIFEST_OVERRIDE_SETS = "manifestOverrideSets";
