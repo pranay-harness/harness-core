@@ -1287,19 +1287,20 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
             .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
             .filter(DelegateTaskKeys.status, QUEUED)
             .filter(DelegateTaskKeys.data_async, !sync)
-            .field(DelegateTaskKeys.eligibleToExecuteDelegateIds)
-            .in(Collections.singletonList(delegateId))
             .field(DelegateTaskKeys.delegateId)
             .doesNotExist()
             .field(DelegateTaskKeys.expiry)
             .greaterThan(currentTimeMillis());
-
-    return delegateTaskQuery.asKeyList()
-        .stream()
-        .map(taskKey
+    List<DelegateTask> delegateTasks =
+        delegateTaskQuery.asList()
+            .stream()
+            .filter(delegateTask -> delegateTask.getEligibleToExecuteDelegateIds().contains(delegateId))
+            .collect(toList());
+    return delegateTasks.stream()
+        .map(delegateTask
             -> aDelegateTaskEvent()
                    .withAccountId(accountId)
-                   .withDelegateTaskId(taskKey.getId().toString())
+                   .withDelegateTaskId(delegateTask.getUuid())
                    .withSync(sync)
                    .build())
         .collect(toList());

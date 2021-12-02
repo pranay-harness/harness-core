@@ -820,10 +820,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
       assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTask)).isEqualTo(test.isAssignable());
 
-      verify(delegateSelectionLogsService, Mockito.times(test.getNumOfMissingAllSelectorsInvocations()))
-          .logMissingAllSelectors(batch, "ACCOUNT_ID", "DELEGATE_ID");
-      verify(delegateSelectionLogsService, Mockito.times(test.getNumOfMissingSelectorInvocations()))
-          .logMissingSelector(eq(batch), eq("ACCOUNT_ID"), eq("DELEGATE_ID"), anyString(), anyString());
     }
 
     delegateTaskBuilder.setupAbstraction("envId", "ENV_ID");
@@ -1450,12 +1446,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Set<String> disconnectedDelegates = new HashSet<>();
     disconnectedDelegates.add(disconnectedDelegate.getUuid());
-    verify(delegateSelectionLogsService).logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
+    // verify(delegateSelectionLogsService).logDisconnectedDelegate(eq(batch), eq(accountId),
+    // eq(disconnectedDelegates));
 
     Set<String> disconnectedScalingGroup = new HashSet<>();
     disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
-    verify(delegateSelectionLogsService)
-        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
+    /*verify(delegateSelectionLogsService)
+        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));*/
 
     // Test with FF NG_CG_TASK_ASSIGNMENT_ISOLATION enabled
     activeDelegate1.setNg(true);
@@ -1493,8 +1490,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Set<String> disconnectedDelegates = new HashSet<>();
     disconnectedDelegates.add(disconnectedDelegate.getUuid());
-    verify(delegateSelectionLogsService, times(1))
-        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
+    /* verify(delegateSelectionLogsService, times(1))
+         .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));*/
   }
 
   @Test
@@ -1524,8 +1521,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Set<String> disconnectedScalingGroup = new HashSet<>();
     disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
-    verify(delegateSelectionLogsService, times(1))
-        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
+    /* verify(delegateSelectionLogsService, times(1))
+         .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));*/
   }
 
   @Test
@@ -1556,8 +1553,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Set<String> delegateIds = new HashSet<>();
     delegateIds.add(waitForApprovalDelegate.getUuid());
-    verify(delegateSelectionLogsService, times(1))
-        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
+    /*verify(delegateSelectionLogsService, times(1))
+        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));*/
   }
 
   @Test
@@ -1581,8 +1578,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Set<String> disconnectedDelegates = new HashSet<>();
     disconnectedDelegates.add(disconnectedDelegate.getUuid());
-    verify(delegateSelectionLogsService, never())
-        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
+    /* verify(delegateSelectionLogsService, never())
+         .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));*/
   }
 
   @Test
@@ -1608,8 +1605,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Set<String> disconnectedScalingGroup = new HashSet<>();
     disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
-    verify(delegateSelectionLogsService, never())
-        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
+    /*  verify(delegateSelectionLogsService, never())
+          .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));*/
   }
 
   @Test
@@ -1636,8 +1633,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Set<String> delegateIds = new HashSet<>();
     delegateIds.add(waitForApprovalDelegate.getUuid());
-    verify(delegateSelectionLogsService, never())
-        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
+    /* verify(delegateSelectionLogsService, never())
+         .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));*/
   }
 
   @Test
@@ -1683,18 +1680,18 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Set<String> delegateIds = new HashSet<>();
     delegateIds.add(waitForApprovalDelegate.getUuid());
-    verify(delegateSelectionLogsService, times(1))
-        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
-
+    /*  verify(delegateSelectionLogsService, times(1))
+          .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
+  */
     Set<String> disconnectedScalingGroup = new HashSet<>();
     disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
-    verify(delegateSelectionLogsService, never())
-        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
+    /* verify(delegateSelectionLogsService, never())
+         .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));*/
 
     Set<String> disconnectedDelegates = new HashSet<>();
     disconnectedDelegates.add(disconnectedDelegate.getUuid());
-    verify(delegateSelectionLogsService, never())
-        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
+    /* verify(delegateSelectionLogsService, never())
+         .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));*/
   }
 
   @Test
@@ -1740,18 +1737,18 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Set<String> disconnectedDelegates = new HashSet<>();
     disconnectedDelegates.add(disconnectedDelegate.getUuid());
-    verify(delegateSelectionLogsService, times(1))
-        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
+    /*verify(delegateSelectionLogsService, times(1))
+        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));*/
 
     Set<String> delegateIds = new HashSet<>();
     delegateIds.add(waitForApprovalDelegate.getUuid());
-    verify(delegateSelectionLogsService, never())
-        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
+    /*  verify(delegateSelectionLogsService, never())
+          .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));*/
 
     Set<String> disconnectedScalingGroup = new HashSet<>();
     disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
-    verify(delegateSelectionLogsService, never())
-        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
+    /*verify(delegateSelectionLogsService, never())
+        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));*/
   }
 
   @Test

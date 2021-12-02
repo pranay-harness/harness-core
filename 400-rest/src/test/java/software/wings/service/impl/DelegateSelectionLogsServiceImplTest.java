@@ -66,6 +66,7 @@ import org.mockito.Mock;
 public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";
   private static final String DISCONNECTED = "Disconnected";
+  private static final String INFO = "Info";
   private static final String REJECTED = "Rejected";
   private static final String SELECTED = "Selected";
   private static final String ACCEPTED = "Accepted";
@@ -198,29 +199,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldLogCanAssign() {
-    String taskId = generateUuid();
-    String accountId = generateUuid();
-    String delegate1Id = generateUuid();
-
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
-
-    delegateSelectionLogsService.logCanAssign(batch, accountId, delegate1Id);
-
-    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(1);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(ACCEPTED);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
-        .isEqualTo("Successfully matched required delegate capabilities");
-    assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(CAN_ASSIGN_GROUP_ID);
-  }
-
-  @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldNotLogTaskAssigned() {
@@ -275,7 +253,8 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("No matching include scope");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("The delegate is not scoped to execute this task");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(NO_INCLUDE_SCOPE_MATCHED_GROUP_ID);
 
@@ -286,7 +265,8 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("No matching include scope");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("The delegate is not scoped to execute this task");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(NO_INCLUDE_SCOPE_MATCHED_GROUP_ID);
   }
@@ -317,7 +297,8 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Matched exclude scope testScope");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("Delegate is excluded to execute this task because of exclusion scope testScope");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(EXCLUDE_SCOPE_MATCHED_GROUP_ID);
 
@@ -328,7 +309,8 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Matched exclude scope testScope");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("Delegate is excluded to execute this task because of exclusion scope testScope");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(EXCLUDE_SCOPE_MATCHED_GROUP_ID);
   }
@@ -393,49 +375,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(2);
   }
 
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldNotLogMissingAllSelectors() {
-    DelegateSelectionLogsServiceImpl delegateSelectionLogsService = new DelegateSelectionLogsServiceImpl();
 
-    assertThatCode(() -> delegateSelectionLogsService.logMissingAllSelectors(null, null, ""))
-        .doesNotThrowAnyException();
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldLogMissingAllSelectors() {
-    String taskId = generateUuid();
-    String accountId = generateUuid();
-    String delegate1Id = generateUuid();
-    String delegate2Id = generateUuid();
-
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
-
-    delegateSelectionLogsService.logMissingAllSelectors(batch, accountId, delegate1Id);
-
-    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(1);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Missing all selectors");
-    assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(MISSING_ALL_SELECTORS_GROUP_ID);
-
-    delegateSelectionLogsService.logMissingAllSelectors(batch, accountId, delegate2Id);
-
-    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(2);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Missing all selectors");
-    assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(MISSING_ALL_SELECTORS_GROUP_ID);
-  }
 
   @Test
   @Owner(developers = VUK)
@@ -466,8 +406,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
-        .isEqualTo("The selector " + selector + " is configured in " + selectorOrigin
-            + ", but is not attached to this Delegate.");
+        .isEqualTo("The delegate selector tags are not part of the task selector tags");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(MISSING_SELECTOR_GROUP_ID);
 
@@ -479,8 +418,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
-        .isEqualTo("The selector " + selector + " is configured in " + selectorOrigin
-            + ", but is not attached to this Delegate.");
+        .isEqualTo("The delegate selector tags are not part of the task selector tags");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(MISSING_SELECTOR_GROUP_ID);
   }
@@ -508,39 +446,11 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
         .isTrue();
     assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(DISCONNECTED);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Delegate was disconnected");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(INFO);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("Not broadcasting to delegate(s) since disconnected");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(DISCONNECTED_GROUP_ID);
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldLogWaitingForApprovalDelegate() {
-    String taskId = generateUuid();
-    String accountId = generateUuid();
-    String delegate1Id = generateUuid();
-    String delegate2Id = generateUuid();
-    Set<String> wapprDelegates = new HashSet<>();
-    wapprDelegates.add(delegate1Id);
-    wapprDelegates.add(delegate2Id);
-
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
-
-    delegateSelectionLogsService.logWaitingForApprovalDelegate(batch, accountId, wapprDelegates);
-
-    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(2);
-    assertThat(
-        batch.getDelegateSelectionLogs().get(0).getDelegateIds().containsAll(Arrays.asList(delegate1Id, delegate2Id)))
-        .isTrue();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(WAITING_FOR_APPROVAL);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Delegate was waiting for approval");
-    assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(WAITING_ON_APPROVAL_GROUP_ID);
   }
 
   @Test
@@ -800,37 +710,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(logParamsOptional.isPresent()).isTrue();
     assertThat(logParamsOptional.get().getConclusion()).isEqualTo(delegateSelectionLog1.getConclusion());
     assertThat(logParamsOptional.get().getDelegateId()).isEqualTo(delegateId);
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldLogDisconnectedScalingGroup() {
-    String taskId = generateUuid();
-    String accountId = generateUuid();
-    String delegate1 = generateUuid();
-    String delegate2 = generateUuid();
-    String groupName = generateUuid();
-
-    Set<String> disconnectedScalingGroup = new HashSet<>();
-    disconnectedScalingGroup.add(delegate1);
-    disconnectedScalingGroup.add(delegate2);
-
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
-
-    delegateSelectionLogsService.logDisconnectedScalingGroup(batch, accountId, disconnectedScalingGroup, groupName);
-
-    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(2);
-    assertThat(
-        batch.getDelegateSelectionLogs().get(0).getDelegateIds().containsAll(Arrays.asList(delegate1, delegate2)))
-        .isTrue();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(DISCONNECTED);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
-        .isEqualTo("Delegate scaling group: " + groupName + " was disconnected");
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(DISCONNECTED_GROUP_ID);
   }
 
   @Test

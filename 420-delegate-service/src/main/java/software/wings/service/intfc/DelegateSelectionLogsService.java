@@ -19,8 +19,6 @@ public interface DelegateSelectionLogsService {
 
   BatchDelegateSelectionLog createBatch(DelegateTask task);
 
-  void logCanAssign(BatchDelegateSelectionLog batch, String accountId, String delegateId);
-
   void logExcludeScopeMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId, String scopeName);
 
   void logOwnerRuleNotMatched(
@@ -28,8 +26,6 @@ public interface DelegateSelectionLogsService {
 
   void logMissingSelector(
       BatchDelegateSelectionLog batch, String accountId, String delegateId, String selector, String selectorOrigin);
-
-  void logMissingAllSelectors(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
   void logTaskAssigned(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
@@ -45,8 +41,6 @@ public interface DelegateSelectionLogsService {
   Optional<DelegateSelectionLogParams> fetchSelectedDelegateForTask(String accountId, String taskId);
 
   void logDisconnectedDelegate(BatchDelegateSelectionLog batch, String accountId, Set<String> delegateIds);
-
-  void logWaitingForApprovalDelegate(BatchDelegateSelectionLog batch, String accountId, Set<String> delegateIds);
 
   void logDisconnectedScalingGroup(
       BatchDelegateSelectionLog batch, String accountId, Set<String> disconnectedScalingGroup, String groupName);

@@ -168,11 +168,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       log.debug("can not assign canAssignCgNg {}", canAssignCgNg);
       return canAssignCgNg;
     }
-    boolean canAssignOwner = canAssignOwner(batch, delegate, task.getSetupAbstractions());
-    if (!canAssignOwner) {
-      log.debug("can not assign canAssignOwner {}", canAssignOwner);
-      return canAssignOwner;
-    }
 
     boolean canAssignDelegateScopes = canAssignDelegateScopes(batch, delegate, task);
     if (!canAssignDelegateScopes) {
@@ -193,8 +188,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       log.debug("can not assign canAssignSelectors {}", canAssignSelectors);
       return canAssignSelectors;
     }
-
-    delegateSelectionLogsService.logCanAssign(batch, task.getAccountId(), delegateId);
     return true;
   }
 
@@ -269,8 +262,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
     // Account level task and delegate with an owner defined
     if (isEmpty(taskSetupAbstractions) || taskSetupAbstractions.get(NgSetupFields.OWNER) == null) {
-      delegateSelectionLogsService.logOwnerRuleNotMatched(
-          batch, delegate.getAccountId(), delegate.getUuid(), delegateOwner);
       return false;
     }
 
@@ -286,9 +277,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
     // Match org. When owner is specified, at org must be there.
     if (!StringUtils.equals(taskOrgIdentifier, delegateOrgIdentifier)) {
-      delegateSelectionLogsService.logOwnerRuleNotMatched(
-          batch, delegate.getAccountId(), delegate.getUuid(), delegateOwner);
-
       return false;
     }
 
@@ -299,9 +287,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         || StringUtils.equals(taskProjectIdentifier, delegateProjectIdentifier)) {
       return true;
     }
-
-    delegateSelectionLogsService.logOwnerRuleNotMatched(
-        batch, delegate.getAccountId(), delegate.getUuid(), delegateOwner);
     return false;
   }
 
@@ -469,7 +454,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     Set<String> delegateSelectors = trimmedLowercaseSet(delegateService.retrieveDelegateSelectors(delegate));
 
     if (isEmpty(delegateSelectors)) {
-      delegateSelectionLogsService.logMissingAllSelectors(batch, delegate.getAccountId(), delegate.getUuid());
       return false;
     }
 
@@ -973,9 +957,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
                                                 .filter(a -> isEmpty(a.getDelegateGroupName()))
                                                 .map(Delegate::getUuid)
                                                 .collect(Collectors.toSet());
-      if (isNotEmpty(disconnectedDelegateIds)) {
-        delegateSelectionLogsService.logDisconnectedDelegate(batch, accountId, disconnectedDelegateIds);
-      }
     }
 
     Set<String> disconnectedScalingGroup = new HashSet<>();
@@ -1007,7 +988,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
                                          .stream()
                                          .map(Delegate::getUuid)
                                          .collect(Collectors.toSet());
-      delegateSelectionLogsService.logWaitingForApprovalDelegate(batch, accountId, wapprDelegateIds);
+
     }
   }
 

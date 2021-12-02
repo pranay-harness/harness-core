@@ -257,14 +257,17 @@ public class DelegateQueueTask implements Runnable {
           continue;
         }
         // add connected eligible delegates to broadcast list. Also rotate the eligibleDelegatesList list
-        List<String> broadcastList = new ArrayList<>();
+        List<String> broadcastToDelegates = new ArrayList<>();
+        List<String> nonActiveDelegates = new ArrayList<>();
         int broadcastLimit = Math.min(eligibleDelegatesList.size(), broadcastHelper.getMaxBroadcastCount(delegateTask));
         Iterator<String> delegateIdIterator = eligibleDelegatesList.iterator();
         while (delegateIdIterator.hasNext() && broadcastLimit > 0) {
           String delegateId = eligibleDelegatesList.removeFirst();
           if (delegateService.checkDelegateConnected(delegateTask.getAccountId(), delegateId)) {
-            broadcastList.add(delegateId);
+            broadcastToDelegates.add(delegateId);
             broadcastLimit--;
+          } else {
+            nonActiveDelegates.add(delegateId);
           }
           eligibleDelegatesList.addLast(delegateId);
         }
@@ -280,9 +283,11 @@ public class DelegateQueueTask implements Runnable {
           continue;
         }
         BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(delegateTask);
-        delegateTask.setBroadcastToDelegateIds(broadcastList);
+        delegateTask.setBroadcastToDelegateIds(broadcastToDelegates);
         delegateSelectionLogsService.logBroadcastToDelegate(
-            batch, Sets.newHashSet(broadcastList), delegateTask.getAccountId());
+            batch, Sets.newHashSet(broadcastToDelegates), delegateTask.getAccountId());
+        delegateSelectionLogsService.logDisconnectedDelegate(
+            batch, delegateTask.getAccountId(), Sets.newHashSet(nonActiveDelegates));
         delegateSelectionLogsService.save(batch);
 
         try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
