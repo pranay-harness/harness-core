@@ -67,6 +67,6 @@ roleRef:
   name: ccm-visibility-clusterrole
 subjects:
   - kind: ServiceAccount
-    name: ${serviceAccountName}
-    namespace: ${serviceAccountNamespace}
+    name: VALUE_REPLACED_BY_UNIT_TEST_env-admin
+    namespace: VALUE_REPLACED_BY_UNIT_TEST_env-harness-delegate
 
