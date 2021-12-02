@@ -27,6 +27,7 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -267,6 +268,7 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
             .metricPacks(Arrays.asList(MetricPackDTO.builder().identifier(cvMonitoringCategory).build())
                              .stream()
                              .collect(Collectors.toSet()))
+            .metricDefinitions(Collections.EMPTY_LIST)
             .build();
     return HealthSource.builder()
         .identifier(identifier)
