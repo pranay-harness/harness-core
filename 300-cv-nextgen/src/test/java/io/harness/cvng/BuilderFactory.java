@@ -235,6 +235,7 @@ public class BuilderFactory {
         .tierName("tier")
         .connectorRef(CONNECTOR_IDENTIFIER)
         .feature("Application Monitoring")
+        .metricDefinitions(Collections.emptyList())
         .metricPacks(new HashSet<MetricPackDTO>() {
           { add(MetricPackDTO.builder().identifier(cvMonitoringCategory).build()); }
         })

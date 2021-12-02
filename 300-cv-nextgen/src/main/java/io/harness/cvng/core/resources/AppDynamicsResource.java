@@ -139,4 +139,19 @@ public class AppDynamicsResource {
     return ResponseDTO.newResponse(appDynamicsService.getMetricData(
         projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, generateUuid()));
   }
+
+  @GET
+  @Path("/service-instance-metric-path")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get service instance metric path for an application and a metric path",
+      nickname = "getServiceInstanceMetricPath")
+  public ResponseDTO<String>
+  getServiceInstanceMetricPath(@BeanParam ProjectParams projectParams,
+      @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
+      @NotNull @QueryParam("appName") String appName, @NotNull @QueryParam("baseFolder") String baseFolder,
+      @NotNull @QueryParam("tier") String tier, @NotNull @QueryParam("metricPath") String metricPath) {
+    return ResponseDTO.newResponse(appDynamicsService.getServiceInstanceMetricPath(
+        projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, generateUuid()));
+  }
 }

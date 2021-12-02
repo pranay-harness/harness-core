@@ -44,6 +44,8 @@ public class AnalysisInfo {
   @Builder
   public static class DeploymentVerification {
     boolean enabled;
+    // TODO: Make it healthSource type specific
+    String serviceInstanceMetricPath;
   }
 
   @Data
