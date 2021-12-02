@@ -3,6 +3,7 @@ package io.harness.observer.consumer;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.observer.RemoteObserver;
+import io.harness.observer.RemoteObserverInformer;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -21,6 +22,7 @@ public abstract class AbstractRemoteObserverModule extends AbstractModule {
     } else {
       bind(RemoteObserverProcessor.class).to(RemoteObserverProcessorImpl.class);
     }
+    bind(RemoteObserverInformer.class).to(getRemoteObserverImpl());
   }
 
   public abstract boolean noOpProducer();
@@ -38,4 +40,6 @@ public abstract class AbstractRemoteObserverModule extends AbstractModule {
     }
     return remoteObserverMap;
   }
+
+  public abstract Class<? extends RemoteObserverInformer> getRemoteObserverImpl();
 }
