@@ -256,14 +256,14 @@ public class JacksonClassHelper {
   OneOfSetMapping getOneOfSetMappingsForClass(Class<?> clazz) {
     final OneOfSet oneOfSetAnnotation = clazz.getAnnotation(OneOfSet.class);
     if (oneOfSetAnnotation != null) {
-      final Field[] declaredFields = clazz.getDeclaredFields();
+      final Set<Field> declaredFields = getAllFieldsOfClass(clazz);
       Set<Set<String>> mappedOneOfSetFields = new HashSet<>();
       for (String oneOfSetFields : oneOfSetAnnotation.fields()) {
         Set<String> oneOfSet =
             Stream.of(oneOfSetFields.trim().split("\\s*,\\s*"))
                 .map(oneOfSetField -> {
                   Optional<Field> declaredField =
-                      Arrays.stream(declaredFields).filter(f -> oneOfSetField.equals(f.getName())).findFirst();
+                      declaredFields.stream().filter(f -> oneOfSetField.equals(f.getName())).findFirst();
                   return declaredField.map(YamlSchemaUtils::getFieldName).orElse(null);
                 })
                 .filter(Objects::nonNull)
@@ -275,6 +275,15 @@ public class JacksonClassHelper {
       return OneOfSetMapping.builder().oneOfSets(mappedOneOfSetFields).build();
     }
     return null;
+  }
+
+  private Set<Field> getAllFieldsOfClass(Class<?> clazz) {
+    Set<Field> fields = new HashSet<>();
+    while (clazz != Object.class) {
+      fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+      clazz = clazz.getSuperclass();
+    }
+    return fields;
   }
 
   private Class<?> getAlternativeClassType(Field declaredField) {
