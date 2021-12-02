@@ -14,6 +14,7 @@ import io.harness.resourcegroup.model.StaticResourceSelector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(name = "ResourceGroup", description = "Contains information of Resource Group")
 @OwnedBy(HarnessTeam.PL)
 public class ResourceGroupDTO {
   @ApiModelProperty(required = true) @NotNull @NotEmpty String accountIdentifier;

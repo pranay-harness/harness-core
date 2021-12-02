@@ -11,7 +11,7 @@ import io.harness.ccm.config.CCMSettingService;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.service.impl.SettingAttributeObserver;
+import software.wings.service.impl.CloudProviderObserver;
 import software.wings.service.intfc.InfrastructureDefinitionServiceObserver;
 import software.wings.service.intfc.InfrastructureMappingServiceObserver;
 import software.wings.settings.SettingVariableTypes;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @OwnedBy(CE)
 public class ClusterRecordHandler
-    implements SettingAttributeObserver, InfrastructureDefinitionServiceObserver, InfrastructureMappingServiceObserver {
+    implements CloudProviderObserver, InfrastructureDefinitionServiceObserver, InfrastructureMappingServiceObserver {
   private final CCMSettingService ccmSettingService;
   private final ClusterRecordService clusterRecordService;
   private final CEPerpetualTaskManager cePerpetualTaskManager;

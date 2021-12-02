@@ -12,20 +12,34 @@ import io.harness.cvng.core.beans.MetricPackValidationResponse;
 import io.harness.cvng.core.beans.MetricPackValidationResponse.MetricValidationResponse;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
+import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
+import io.harness.datacollection.exception.DataCollectionDSLException;
 import io.harness.datacollection.exception.DataCollectionException;
 import io.harness.serializer.JsonUtils;
 
+import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
 import java.lang.reflect.Type;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class NewRelicServiceImpl implements NewRelicService {
   private static final List<String> NEW_RELIC_ENDPOINTS =
       Arrays.asList("https://insights-api.newrelic.com/", "https://insights-api.eu.newrelic.com/");
@@ -120,5 +134,71 @@ public class NewRelicServiceImpl implements NewRelicService {
     } catch (DataCollectionException ex) {
       return null;
     }
+  }
+
+  @Override
+  public List<TimeSeriesSampleDTO> parseSampleData(ProjectParams projectParams, String jsonResponse, String groupName,
+      String metricValueJsonPath, String timestampJsonPath, String timestampFormat) {
+    try {
+      List metricValueArr = compute(jsonResponse, metricValueJsonPath);
+      List timestampArr = compute(jsonResponse, timestampJsonPath);
+
+      Preconditions.checkState(metricValueArr.size() == timestampArr.size(),
+          "List of metric values does not match the list of timestamps in the response.");
+      List<TimeSeriesSampleDTO> parsedResponseList = new ArrayList<>();
+      int lengthOfValues = metricValueArr.size();
+
+      for (int i = 0; i < lengthOfValues; i++) {
+        Long timestamp = parseTimestamp(timestampArr.get(i), timestampFormat);
+
+        parsedResponseList.add(TimeSeriesSampleDTO.builder()
+                                   .metricValue(Double.valueOf(metricValueArr.get(i).toString()))
+                                   .timestamp(timestamp)
+                                   .txnName(groupName)
+                                   .build());
+      }
+
+      return parsedResponseList;
+    } catch (Exception ex) {
+      log.error("Exception while parsing jsonObject {} and metricPath {} and timestampPath {}", jsonResponse,
+          metricValueJsonPath, timestampJsonPath);
+      throw new RuntimeException("Unable to parse the response object with the given json paths", ex);
+    }
+  }
+
+  public List compute(String jsonValue, String jsonPath) {
+    Configuration conf = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
+    return JsonPath.using(conf).parse(jsonValue).read(jsonPath);
+  }
+
+  private long getTimestampInMillis(long timestamp) {
+    long now = Instant.now().toEpochMilli();
+    if (timestamp != 0 && String.valueOf(timestamp).length() < String.valueOf(now).length()) {
+      // Timestamp is in seconds. Convert to millis
+      timestamp = timestamp * 1000;
+    } else if (String.valueOf(timestamp).length() == String.valueOf(TimeUnit.MILLISECONDS.toNanos(now)).length()) {
+      timestamp = TimeUnit.NANOSECONDS.toMillis(timestamp);
+    }
+    return timestamp;
+  }
+
+  private long parseTimestamp(Object timestampObj, String format) {
+    long timestamp;
+    if (timestampObj instanceof Long) {
+      timestamp = (Long) timestampObj;
+      timestamp = getTimestampInMillis(timestamp);
+    } else if (timestampObj instanceof Double) {
+      timestamp = ((Double) timestampObj).longValue();
+      timestamp = getTimestampInMillis(timestamp);
+    } else {
+      try {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
+        Date date = simpleDateFormat.parse((String) timestampObj);
+        timestamp = date.toInstant().toEpochMilli();
+      } catch (ParseException e) {
+        throw new DataCollectionDSLException("Unable to parse timestamp", e);
+      }
+    }
+    return timestamp;
   }
 }

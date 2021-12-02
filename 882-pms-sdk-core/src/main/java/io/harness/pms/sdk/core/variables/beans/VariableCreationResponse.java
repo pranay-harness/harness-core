@@ -25,8 +25,8 @@ import lombok.Singular;
 public class VariableCreationResponse implements CreatorResponse {
   @Singular Map<String, YamlProperties> yamlProperties;
   @Singular Map<String, YamlOutputProperties> yamlOutputProperties;
-  Dependencies dependencies;
-  Dependencies resolvedDependencies;
+  @Builder.Default Dependencies dependencies = Dependencies.newBuilder().build();
+  @Builder.Default Dependencies resolvedDependencies = Dependencies.newBuilder().build();
   YamlUpdates yamlUpdates;
 
   public Dependencies getDependenciesForVariable() {

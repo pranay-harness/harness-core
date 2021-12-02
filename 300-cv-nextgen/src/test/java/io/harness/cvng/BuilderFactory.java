@@ -139,6 +139,14 @@ public class BuilderFactory {
         .callbackId(generateUuid());
   }
 
+  public ProjectParams getProjectParams() {
+    return ProjectParams.builder()
+        .accountIdentifier(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .build();
+  }
+
   public ServiceResponseDTOBuilder serviceResponseDTOBuilder() {
     return ServiceResponseDTO.builder()
         .accountId(context.getAccountId())
