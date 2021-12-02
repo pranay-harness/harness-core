@@ -101,7 +101,7 @@ public class NGSamlUserGroupSync {
     log.info("[NGSamlUserGroupSync] Checking removal of user: {} from all diff scopes post sync", userId);
     int countOfProjectLevelUserGroups =
         userGroupService
-            .list(Criteria.where(UserGroupKeys.projectIdentifier).exists(true).and(UserGroupKeys.users).is(userId))
+            .list(Criteria.where(UserGroupKeys.projectIdentifier).exists(true).and(UserGroupKeys.users).in(userId))
             .size();
 
     if (countOfProjectLevelUserGroups == 0) {
@@ -119,7 +119,7 @@ public class NGSamlUserGroupSync {
                                                     .and(UserGroupKeys.projectIdentifier)
                                                     .exists(false)
                                                     .and(UserGroupKeys.users)
-                                                    .is(userId))
+                                                    .in(userId))
                                           .size();
 
       if (countOfOrgLevelUserGroups == 0) {
@@ -140,7 +140,7 @@ public class NGSamlUserGroupSync {
                                                           .and(UserGroupKeys.projectIdentifier)
                                                           .exists(false)
                                                           .and(UserGroupKeys.users)
-                                                          .is(userId))
+                                                          .in(userId))
                                                 .size();
 
         if (countOfAccountLevelUserGroups == 0) {
