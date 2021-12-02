@@ -178,14 +178,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
                                            .filter(DelegateProfileKeys.ng, true)
                                            .get();
 
-    assertThat(ngPrimaryProfile).isNotNull();
-    assertThat(ngPrimaryProfile.getUuid()).isNotNull();
-    assertThat(ngPrimaryProfile.getAccountId()).isEqualTo(account.getUuid());
-    assertThat(ngPrimaryProfile.getName()).isEqualTo("Primary Account Configuration");
-    assertThat(ngPrimaryProfile.getDescription())
-        .isEqualTo(String.format("%s %s", PRIMARY_PROFILE_DESCRIPTION, "account"));
-    assertThat(ngPrimaryProfile.isPrimary()).isTrue();
-    assertThat(ngPrimaryProfile.isNg()).isTrue();
+    assertThat(ngPrimaryProfile).isNull();
   }
 
   @Test
