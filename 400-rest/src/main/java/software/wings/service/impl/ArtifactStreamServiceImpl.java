@@ -61,6 +61,7 @@ import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
+import io.harness.validation.SuppressValidation;
 import io.harness.validation.Update;
 
 import software.wings.beans.AccountEvent;
@@ -181,7 +182,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private TriggerService triggerService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private EventPublishHelper eventPublishHelper;
-  @Inject @Getter private Subject<ArtifactStreamServiceObserver> subject = new Subject<>();
+  @Inject
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<ArtifactStreamServiceObserver> subject = new Subject<>();
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {

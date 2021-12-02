@@ -261,7 +261,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   @Override
   public Criteria getCriteriaWithGitSync(
       String projectIdentifier, String orgIdentifier, String accountId, Class entityClass) {
-    if (isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
+    if (!"__GLOBAL_ACCOUNT_ID__".equals(accountId) && isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
       final GitEntityInfo gitBranchInfo = getGitEntityInfo();
       if (gitBranchInfo == null) {
         return createGitSyncCriteriaForRepoAndBranch(null, null, null, entityClass);

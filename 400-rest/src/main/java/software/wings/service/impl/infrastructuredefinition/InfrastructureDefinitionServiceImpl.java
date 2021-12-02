@@ -95,6 +95,7 @@ import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
+import io.harness.validation.SuppressValidation;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CloudProviderType;
@@ -280,7 +281,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private AzureARMManager azureARMManager;
   @Inject private AzureAppServiceManager azureAppServiceManager;
 
-  @Inject @Getter private Subject<InfrastructureDefinitionServiceObserver> subject = new Subject<>();
+  @Inject
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<InfrastructureDefinitionServiceObserver> subject = new Subject<>();
 
   private static Map<CloudProviderType, EnumSet<DeploymentType>> supportedCloudProviderDeploymentTypes =
       new EnumMap<>(CloudProviderType.class);
