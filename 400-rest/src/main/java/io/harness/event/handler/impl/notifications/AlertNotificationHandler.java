@@ -57,8 +57,6 @@ public class AlertNotificationHandler implements EventHandler {
   static {
     alertTypeNotificationMessageTypeMap.put(
         AlertType.DelegatesDown, NotificationMessageType.DELEGATE_DOWN_ALERT_NOTIFICATION);
-    alertTypeNotificationMessageTypeMap.put(AlertType.DelegatesScalingGroupDownAlert,
-        NotificationMessageType.DELEGATE_SCALING_GROUP_DOWN_ALERT_NOTIFICATION);
     alertTypeNotificationMessageTypeMap.put(
         AlertType.CONTINUOUS_VERIFICATION_ALERT, NotificationMessageType.CV_SERVICE_GUARD_NOTIFICATION);
   }
