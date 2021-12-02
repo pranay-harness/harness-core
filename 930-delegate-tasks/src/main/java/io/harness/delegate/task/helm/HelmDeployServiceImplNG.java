@@ -172,10 +172,10 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
       if (checkNewHelmInstall(helmListReleaseResponseNG)) {
         logCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
-        commandResponse = runHelmInstall(commandRequest, logCallback);
+        commandResponse = runHelmCommand(commandRequest, logCallback, HelmCliCommandType.INSTALL);
       } else {
         logCallback.saveExecutionLog("Previous release exists for chart. Upgrading chart");
-        commandResponse = runHelmUpgrade(commandRequest, logCallback);
+        commandResponse = runHelmCommand(commandRequest, logCallback, HelmCliCommandType.UPGRADE);
       }
 
       logCallback.saveExecutionLog(commandResponse.getOutput());
@@ -227,33 +227,26 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     }
   }
 
-  private HelmInstallCmdResponseNG runHelmUpgrade(HelmInstallCommandRequestNG commandRequest, LogCallback logCallback) {
+  public HelmInstallCmdResponseNG runHelmCommand(HelmInstallCommandRequestNG commandRequest, LogCallback logCallback, HelmCliCommandType commandType) {
     try {
-      return HelmCommandResponseMapper.getHelmInstCmdRespNG(
-              helmClient.upgrade(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
-    } catch (HelmClientException e) {
-      String errorMessage = "Failed to upgrade helm chart.";
+      switch (commandType) {
+        case INSTALL:
+            return HelmCommandResponseMapper.getHelmInstCmdRespNG(helmClient.install(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
+        case UPGRADE:
+            return HelmCommandResponseMapper.getHelmInstCmdRespNG(helmClient.upgrade(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
+        case ROLLBACK:
+            return null; // TODO: rollback refactor here
+        default:
+          throw new InvalidRequestException("Unexpected helm request type: " + commandType);
+      }
+    }  catch (HelmClientException e) {
+      String errorMessage = "Failed to run helm command. Command type: " + commandType.toString() + ". ";
       logCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       throw new HelmClientRuntimeException(e);
     } catch (Exception e) {
-      String errorMessage = "Failed to upgrade helm chart.";
+      String errorMessage = "Failed to run helm command. Command type: " + commandType.toString() + ". ";
       logCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      throw new HelmClientException(ExceptionUtils.getMessage(e), e, HelmCliCommandType.UPGRADE);
-    }
-  }
-
-  private HelmInstallCmdResponseNG runHelmInstall(HelmInstallCommandRequestNG commandRequest, LogCallback logCallback) {
-    try {
-      return HelmCommandResponseMapper.getHelmInstCmdRespNG(
-              helmClient.install(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
-    } catch (HelmClientException e) {
-      String errorMessage = "Failed to install helm chart.";
-      logCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      throw new HelmClientRuntimeException(e);
-    } catch (Exception e) {
-      String errorMessage = "Failed to install helm chart.";
-      logCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      throw new HelmClientException(ExceptionUtils.getMessage(e), e, HelmCliCommandType.INSTALL);
+      throw new HelmClientException(ExceptionUtils.getMessage(e), e, commandType);
     }
   }
 
@@ -437,6 +430,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       logCallback = markDoneAndStartNew(commandRequest, logCallback, Rollback);
       HelmInstallCmdResponseNG commandResponse = HelmCommandResponseMapper.getHelmInstCmdRespNG(
           helmClient.rollback(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
+      // TODO: Helm rollback refactor for error FW
       logCallback.saveExecutionLog(commandResponse.getOutput());
       if (commandResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
         return commandResponse;
@@ -510,8 +504,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   @Override
-  public HelmListReleaseResponseNG listReleases(HelmInstallCommandRequestNG helmCommandRequest) throws Exception {
-//    try {
+  public HelmListReleaseResponseNG listReleases(HelmInstallCommandRequestNG helmCommandRequest) {
+    try {
       HelmCliResponse helmCliResponse =
           helmClient.listReleases(HelmCommandDataMapperNG.getHelmCmdDataNG(helmCommandRequest));
       List<ReleaseInfo> releaseInfoList =
@@ -521,14 +515,13 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           .output(helmCliResponse.getOutput())
           .releaseInfoList(releaseInfoList)
           .build();
-//    }
-//    catch (Exception e) {
-//      log.error("Helm list releases failed", e);
-//      return HelmListReleaseResponseNG.builder()
-//          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-//          .output(ExceptionUtils.getMessage(e))
-//          .build();
-//    }
+    } catch (Exception e) {
+      log.error("Helm list releases failed", e);
+      return HelmListReleaseResponseNG.builder()
+          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+          .output(ExceptionUtils.getMessage(e))
+          .build();
+    }
   }
 
   @Override

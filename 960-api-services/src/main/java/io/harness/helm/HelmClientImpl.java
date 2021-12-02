@@ -2,6 +2,7 @@ package io.harness.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmConstants.DEFAULT_HELM_COMMAND_TIMEOUT;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static io.harness.helm.HelmConstants.HELM_COMMAND_FLAG_PLACEHOLDER;
@@ -10,12 +11,15 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.HelmClientException;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.CommandExecutionStatus;
@@ -26,6 +30,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
@@ -63,8 +68,7 @@ public class HelmClientImpl implements HelmClient {
       CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build(CacheLoader.from(Object::new));
 
   @Override
-  public HelmCliResponse install(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException, ExecutionException {
+  public HelmCliResponse install(HelmCommandData helmCommandData) throws Exception {
     String keyValueOverrides = constructValueOverrideFile(helmCommandData.getYamlFiles());
     String chartReference = getChartReference(helmCommandData.isRepoConfigNull(), helmCommandData.getChartName(),
         helmCommandData.getChartVersion(), helmCommandData.getChartUrl(), helmCommandData.getWorkingDir());
@@ -81,13 +85,13 @@ public class HelmClientImpl implements HelmClient {
         helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(installCommand, helmCommandData.getLogCallback());
     installCommand = applyKubeConfigToCommand(installCommand, kubeConfigLocation);
+    String errorMessagePrefix = "Failed to install helm chart. Executed command: ";
 
-    return executeHelmCLICommand(installCommand);
+    return fetchCliResponseWithExceptionHandling(installCommand, commandType, errorMessagePrefix);
   }
 
   @Override
-  public HelmCliResponse upgrade(HelmCommandData helmCommandData)
-      throws IOException, ExecutionException, TimeoutException, InterruptedException {
+  public HelmCliResponse upgrade(HelmCommandData helmCommandData) throws Exception {
     String keyValueOverrides = constructValueOverrideFile(helmCommandData.getYamlFiles());
     String chartReference = getChartReference(helmCommandData.isRepoConfigNull(), helmCommandData.getChartName(),
         helmCommandData.getChartVersion(), helmCommandData.getChartUrl(), helmCommandData.getWorkingDir());
@@ -103,13 +107,14 @@ public class HelmClientImpl implements HelmClient {
         helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(upgradeCommand, helmCommandData.getLogCallback());
     upgradeCommand = applyKubeConfigToCommand(upgradeCommand, kubeConfigLocation);
+    String errorMessagePrefix = "Failed to upgrade helm chart. Executed command: ";
 
-    return executeHelmCLICommand(upgradeCommand);
+    return fetchCliResponseWithExceptionHandling(upgradeCommand, commandType, errorMessagePrefix);
   }
 
   @Override
   public HelmCliResponse rollback(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException {
+      throws Exception {
     String kubeConfigLocation = Optional.ofNullable(helmCommandData.getKubeConfigLocation()).orElse("");
     HelmCliCommandType commandType = HelmCliCommandType.ROLLBACK;
 
@@ -121,8 +126,10 @@ public class HelmClientImpl implements HelmClient {
         helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
+    String errorMessagePrefix = "Failed to rollback helm chart. Executed command: ";
 
-    return executeHelmCLICommand(command);
+    return fetchCliResponseWithExceptionHandling(command, commandType, errorMessagePrefix);
+//    return executeHelmCLICommand(command);
   }
 
   @Override
@@ -437,6 +444,24 @@ public class HelmClientImpl implements HelmClient {
   @Override
   public String getHelmPath(HelmVersion helmVersion) {
     return helmVersion == HelmVersion.V3 ? k8sGlobalConfigService.getHelmPath(HelmVersion.V3) : "helm";
+  }
+
+  public HelmCliResponse fetchCliResponseWithExceptionHandling(
+      String command, HelmCliCommandType commandType, String errorMessagePrefix) {
+    try {
+      HelmCliResponse helmCliResponse = executeHelmCLICommand(command);
+
+      if (helmCliResponse.getCommandExecutionStatus() != SUCCESS) {
+        throw new HelmClientException(
+            errorMessagePrefix + command + ". " + helmCliResponse.getOutput(), USER, commandType);
+      }
+      return helmCliResponse;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new HelmClientException(ExceptionUtils.getMessage(e), USER, commandType);
+    } catch (Exception e) {
+      throw new HelmClientException(ExceptionUtils.getMessage(e), USER, commandType);
+    }
   }
 
   @RequiredArgsConstructor

@@ -29,8 +29,7 @@ public interface HelmClient {
    * @throws IOException          the io exception
    * @throws ExecutionException   the execution exception
    */
-  HelmCliResponse install(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException, ExecutionException;
+  HelmCliResponse install(HelmCommandData helmCommandData) throws Exception;
 
   /**
    * Upgrade helm command response.
@@ -42,8 +41,7 @@ public interface HelmClient {
    * @throws IOException          the io exception
    * @throws ExecutionException   the execution exception
    */
-  HelmCliResponse upgrade(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException, ExecutionException;
+  HelmCliResponse upgrade(HelmCommandData helmCommandData) throws Exception;
 
   /**
    * Rollback helm command response.
@@ -54,7 +52,7 @@ public interface HelmClient {
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  HelmCliResponse rollback(HelmCommandData helmCommandData) throws InterruptedException, TimeoutException, IOException;
+  HelmCliResponse rollback(HelmCommandData helmCommandData) throws Exception;
 
   HelmCliResponse releaseHistory(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException;
