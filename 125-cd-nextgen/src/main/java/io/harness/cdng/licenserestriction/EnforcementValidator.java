@@ -99,6 +99,10 @@ public class EnforcementValidator {
 
   public void validate(String accountIdentifier, String orgIdentifier, String projectIdentifier, String pipelineId,
       String yaml, String executionId) {
+    if (!enforcementClientService.isEnforcementEnabled()) {
+      return;
+    }
+
     Integer newServiceCount = newServiceCache.getIfPresent(executionId);
     if (null == newServiceCount) {
       newServiceCount =

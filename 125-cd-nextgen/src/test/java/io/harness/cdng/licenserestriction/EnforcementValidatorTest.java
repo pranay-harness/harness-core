@@ -10,6 +10,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -75,6 +76,7 @@ public class EnforcementValidatorTest extends CategoryTest {
   @Before
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
+    doReturn(true).when(enforcementClientService).isEnforcementEnabled();
     FieldUtils.writeField(
         enforcementValidator, "newServiceCache", CacheBuilder.newBuilder().maximumSize(2).build(), true);
   }
@@ -96,7 +98,7 @@ public class EnforcementValidatorTest extends CategoryTest {
         .build();
   }
 
-  public CDLicenseUsageDTO getServiceUsageDto(String... serviceIds) {
+  private CDLicenseUsageDTO getServiceUsageDto(String... serviceIds) {
     List<ReferenceDTO> references = new ArrayList<>();
     for (String serviceId : serviceIds) {
       references.add(getRefDTO(serviceId));
@@ -114,6 +116,18 @@ public class EnforcementValidatorTest extends CategoryTest {
     cache.put(EXECUTION_ID, 4);
     enforcementValidator.validate(ACCOUNT_ID, ORG_ID, PROJECT_ID, PIPELINE_ID, YAML, EXECUTION_ID);
     verify(enforcementClientService).checkAvailabilityWithIncrement(FeatureRestrictionName.SERVICES, ACCOUNT_ID, 4);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testValidateWithCacheEnforcementDisabled() throws Exception {
+    doReturn(false).when(enforcementClientService).isEnforcementEnabled();
+    Cache<String, Integer> cache = getCache();
+    cache.put(EXECUTION_ID, 4);
+    enforcementValidator.validate(ACCOUNT_ID, ORG_ID, PROJECT_ID, PIPELINE_ID, YAML, EXECUTION_ID);
+    verify(enforcementClientService, times(0))
+        .checkAvailabilityWithIncrement(FeatureRestrictionName.SERVICES, ACCOUNT_ID, 4);
   }
 
   @Test
