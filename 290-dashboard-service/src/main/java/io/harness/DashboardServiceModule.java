@@ -11,11 +11,11 @@ import io.harness.overviewdashboard.dashboardaggregateservice.service.OverviewDa
 import io.harness.overviewdashboard.rbac.impl.DashboardRBACServiceImpl;
 import io.harness.overviewdashboard.rbac.service.DashboardRBACService;
 import io.harness.pipeline.dashboards.PMSLandingDashboardResourceClientModule;
+import io.harness.project.ProjectClientModule;
 import io.harness.serializer.DashboardServiceRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.threading.ExecutorModule;
 import io.harness.token.TokenClientModule;
-import io.harness.userng.UserNGClientModule;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -37,9 +37,6 @@ public class DashboardServiceModule extends AbstractModule {
   @Override
   protected void configure() {
     install(ExecutorModule.getInstance());
-    install(UserNGClientModule.getInstance(config.getNgManagerClientConfig(),
-        config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
-        AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
     install(OrganizationClientModule.getInstance(config.getNgManagerClientConfig(),
         config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
         AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
@@ -52,6 +49,9 @@ public class DashboardServiceModule extends AbstractModule {
             .build();
       }
     });
+    install(ProjectClientModule.getInstance(config.getNgManagerClientConfig(),
+        config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
+        AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
     install(CDLandingDashboardResourceClientModule.getInstance(config.getNgManagerClientConfig(),
         config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
         AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));

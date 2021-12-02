@@ -4,9 +4,9 @@ import static io.harness.connector.helper.GitApiAccessDecryptionHelper.getAPIAcc
 import static io.harness.connector.helper.GitApiAccessDecryptionHelper.hasApiAccess;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.task.shell.SshSessionConfigMapper;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;

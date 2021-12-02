@@ -44,6 +44,9 @@ import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthConnectorDTO;
+import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthKeyAndValue;
+import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthMethod;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
@@ -296,6 +299,9 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CEFeatures.class, 19671);
     kryo.register(SumoLogicConnectorDTO.class, 19672);
     kryo.register(DynatraceConnectorDTO.class, 19673);
+    kryo.register(CustomHealthKeyAndValue.class, 19674);
     kryo.register(PagerDutyConnectorDTO.class, 19675);
+    kryo.register(CustomHealthConnectorDTO.class, 19676);
+    kryo.register(CustomHealthMethod.class, 19677);
   }
 }

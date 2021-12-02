@@ -31,6 +31,7 @@ import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.config.PublisherConfiguration;
 import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -98,6 +99,9 @@ import software.wings.app.YamlModule;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.security.authentication.MarketPlaceConfig;
+import software.wings.security.authentication.totp.SimpleTotpModule;
+import software.wings.security.authentication.totp.TotpConfig;
+import software.wings.security.authentication.totp.TotpLimit;
 import software.wings.service.impl.EventEmitter;
 
 import com.codahale.metrics.MetricRegistry;
@@ -383,6 +387,13 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
                                            .build());
     configuration.setLdapSyncJobConfig(
         LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
+
+    configuration.setTotpConfig(
+        TotpConfig.builder()
+            .secOpsEmail("secops.fake.email@mailnator.com")
+            .incorrectAttemptsUntilSecOpsNotified(50)
+            .limit(TotpLimit.builder().count(10).duration(3).durationUnit(TimeUnit.MINUTES).build())
+            .build());
     SegmentConfiguration segmentConfiguration =
         SegmentConfiguration.builder().enabled(false).url("dummy_url").apiKey("dummy_key").build();
     configuration.setSegmentConfiguration(segmentConfiguration);
@@ -432,7 +443,8 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     modules.add(new SpringPersistenceTestModule());
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
-    modules.add(new WingsModule((MainConfiguration) configuration));
+    modules.add(new WingsModule((MainConfiguration) configuration, StartupMode.MANAGER));
+    modules.add(new SimpleTotpModule());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());
     modules.add(new ManagerExecutorModule());

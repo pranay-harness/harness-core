@@ -1,10 +1,7 @@
 package io.harness.cvng.verificationjob.services.api;
 
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
-import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
-import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.TimeRange;
@@ -30,10 +27,6 @@ public interface VerificationJobInstanceService {
   void createDataCollectionTasks(VerificationJobInstance verificationJobInstance);
   void logProgress(ProgressLog progressLog);
   Optional<TimeRange> getPreDeploymentTimeRange(String verificationJobInstanceId);
-  DeploymentActivityVerificationResultDTO getAggregatedVerificationResult(List<String> verificationJobInstanceIds);
-  void addResultsToDeploymentResultSummary(
-      String accountId, List<String> verificationJobInstanceIds, DeploymentResultSummary deploymentResultSummary);
-  DeploymentActivityPopoverResultDTO getDeploymentVerificationPopoverResult(List<String> verificationJobInstanceIds);
   List<TestVerificationBaselineExecutionDTO> getTestJobBaselineExecutions(
       String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier);
   Optional<String> getLastSuccessfulTestVerificationJobExecutionId(

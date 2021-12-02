@@ -107,15 +107,15 @@ public class PipelineEntity
   @Wither int stageCount;
   @Wither @Singular List<String> stageNames;
 
-  @Wither @Setter @NonFinal Boolean templateReference;
+  @Wither @Setter @NonFinal @Default Boolean templateReference = false;
 
-  @Setter @NonFinal String objectIdOfYaml;
+  @Wither @Setter @NonFinal String objectIdOfYaml;
   @Setter @NonFinal Boolean isFromDefaultBranch;
   @Setter @NonFinal String branch;
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
-  @NonFinal Boolean isEntityInvalid;
+  @Wither @NonFinal Boolean isEntityInvalid;
 
   @Override
   public String getAccountIdentifier() {

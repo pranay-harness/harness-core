@@ -158,11 +158,12 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
         deleteFilePaths.forEach(each -> sb.append(color(format("- %s", each), Gray)).append(System.lineSeparator()));
         executionLogCallback.saveExecutionLog(sb.toString());
 
+        List<String> manifestOverrideFiles = getManifestOverrideFlies(k8sDeleteRequest);
+
         resources = k8sTaskHelperBase.getResourcesFromManifests(k8sDelegateTaskParams,
             k8sDeleteRequest.getManifestDelegateConfig(), manifestFilesDirectory, deleteFilePaths,
-            k8sDeleteRequest.getValuesYamlList(), releaseName,
-            k8sDeleteRequest.getK8sInfraDelegateConfig().getNamespace(), executionLogCallback,
-            k8sDeleteRequest.getTimeoutIntervalInMin());
+            manifestOverrideFiles, releaseName, k8sDeleteRequest.getK8sInfraDelegateConfig().getNamespace(),
+            executionLogCallback, k8sDeleteRequest.getTimeoutIntervalInMin());
 
         executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
         executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));

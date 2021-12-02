@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.CUSTOM_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.ERRORS_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.INFRASTRUCTURE_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
@@ -41,7 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 public class MetricPackServiceImpl implements MetricPackService {
   // TODO: Automatically read metricPack files:
   static final List<String> APPDYNAMICS_METRICPACK_FILES =
-      Lists.newArrayList("/appdynamics/metric-packs/peformance-pack.yml", "/appdynamics/metric-packs/quality-pack.yml");
+      Lists.newArrayList("/appdynamics/metric-packs/peformance-pack.yml", "/appdynamics/metric-packs/quality-pack.yml",
+          "/appdynamics/metric-packs/default-custom-pack.yml");
 
   static final List<String> NEWRELIC_METRICPACK_FILES =
       Lists.newArrayList("/newrelic/metric-packs/performance-pack.yml");
@@ -67,6 +69,9 @@ public class MetricPackServiceImpl implements MetricPackService {
   private static final URL APPDYNAMICS_INFRASTRUCTURE_PACK_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/appdynamics/dsl/infrastructure-pack.datacollection");
   public static final String APPDYNAMICS_INFRASTRUCTURE_PACK_DSL;
+  private static final URL APPDYNAMICS_CUSTOM_PACK_DSL_PATH =
+      MetricPackServiceImpl.class.getResource("/appdynamics/dsl/custom-pack.datacollection");
+  public static final String APPDYNAMICS_CUSTOM_PACK_DSL;
 
   private static final URL STACKDRIVER_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/stackdriver/dsl/metric-collection.datacollection");
@@ -87,6 +92,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     String appDPeformancePackDsl = null;
     String appDqualityPackDsl = null;
     String appDInfrastructurePackDsl = null;
+    String appDCustomPackDsl = null;
     String stackDriverDsl = null;
     String newrelicDsl = null;
     String prometheusDsl = null;
@@ -95,6 +101,7 @@ public class MetricPackServiceImpl implements MetricPackService {
       appDPeformancePackDsl = Resources.toString(APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH, Charsets.UTF_8);
       appDqualityPackDsl = Resources.toString(APPDYNAMICS_QUALITY_PACK_DSL_PATH, Charsets.UTF_8);
       appDInfrastructurePackDsl = Resources.toString(APPDYNAMICS_INFRASTRUCTURE_PACK_DSL_PATH, Charsets.UTF_8);
+      appDCustomPackDsl = Resources.toString(APPDYNAMICS_CUSTOM_PACK_DSL_PATH, Charsets.UTF_8);
       stackDriverDsl = Resources.toString(STACKDRIVER_DSL_PATH, Charsets.UTF_8);
       newrelicDsl = Resources.toString(NEW_RELIC_DSL_PATH, Charsets.UTF_8);
       prometheusDsl = Resources.toString(PROMETHEUS_DSL_PATH, Charsets.UTF_8);
@@ -107,6 +114,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     APPDYNAMICS_PERFORMANCE_PACK_DSL = appDPeformancePackDsl;
     APPDYNAMICS_QUALITY_PACK_DSL = appDqualityPackDsl;
     APPDYNAMICS_INFRASTRUCTURE_PACK_DSL = appDInfrastructurePackDsl;
+    APPDYNAMICS_CUSTOM_PACK_DSL = appDCustomPackDsl;
     STACKDRIVER_DSL = stackDriverDsl;
     NEW_RELIC_DSL = newrelicDsl;
     PROMETHEUS_DSL = prometheusDsl;
@@ -398,7 +406,8 @@ public class MetricPackServiceImpl implements MetricPackService {
         return APPDYNAMICS_QUALITY_PACK_DSL;
       case INFRASTRUCTURE_PACK_IDENTIFIER:
         return APPDYNAMICS_INFRASTRUCTURE_PACK_DSL;
-
+      case CUSTOM_PACK_IDENTIFIER:
+        return APPDYNAMICS_CUSTOM_PACK_DSL;
       default:
         throw new IllegalArgumentException("Invalid identifier " + metricPack.getIdentifier());
     }

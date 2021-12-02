@@ -10,6 +10,9 @@ import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.cvng.core.beans.StackdriverDefinition;
 import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
+import io.harness.cvng.core.utils.analysisinfo.DevelopmentVerificationTransformer;
+import io.harness.cvng.core.utils.analysisinfo.LiveMonitoringTransformer;
+import io.harness.cvng.core.utils.analysisinfo.SLIMetricTransformer;
 import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -91,18 +94,15 @@ public class StackdriverCVConfig extends MetricCVConfig {
       metricInfoList.add(
           MetricInfo.builder()
               .metricName(definition.getMetricName())
+              .identifier(definition.getIdentifier())
               .jsonMetricDefinition(JsonUtils.asJson(definition.getJsonMetricDefinition()))
               .metricType(metricType)
               .tags(definition.getMetricTags())
               .isManualQuery(definition.isManualQuery())
               .serviceInstanceField(definition.getServiceInstanceField())
-              .sli(AnalysisInfo.SLI.builder().enabled(definition.getSli().getEnabled()).build())
-              .liveMonitoring(AnalysisInfo.LiveMonitoring.builder()
-                                  .enabled(definition.getAnalysis().getLiveMonitoring().getEnabled())
-                                  .build())
-              .deploymentVerification(AnalysisInfo.DeploymentVerification.builder()
-                                          .enabled(definition.getAnalysis().getDeploymentVerification().getEnabled())
-                                          .build())
+              .sli(SLIMetricTransformer.transformDTOtoEntity(definition.getSli()))
+              .liveMonitoring(LiveMonitoringTransformer.transformDTOtoEntity(definition.getAnalysis()))
+              .deploymentVerification(DevelopmentVerificationTransformer.transformDTOtoEntity(definition.getAnalysis()))
               .build());
 
       // add this metric to the pack and the corresponding thresholds

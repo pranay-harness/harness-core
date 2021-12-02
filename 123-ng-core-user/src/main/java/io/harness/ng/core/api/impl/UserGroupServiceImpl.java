@@ -156,6 +156,11 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
+  public List<UserGroup> list(Criteria criteria) {
+    return userGroupRepository.findAll(criteria);
+  }
+
+  @Override
   public List<UserGroup> list(UserGroupFilterDTO userGroupFilterDTO) {
     validateFilter(userGroupFilterDTO);
     Criteria criteria =

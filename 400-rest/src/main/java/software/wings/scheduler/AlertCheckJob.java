@@ -14,6 +14,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.app.MainConfiguration;
@@ -171,6 +172,7 @@ public class AlertCheckJob implements Job {
     for (Delegate delegate : delegates) {
       if (primaryConnections.contains(delegate.getUuid()) && isNotEmpty(delegate.getDelegateGroupName())) {
         String delegateGroupName = delegate.getDelegateGroupName();
+        closeDelegateScalingGroupDownAlert(accountId, delegateGroupName);
         connectedScalingGroups.add(delegateGroupName);
       }
     }
@@ -181,5 +183,10 @@ public class AlertCheckJob implements Job {
                                        .collect(Collectors.toSet());
 
     allScalingGroups.removeAll(connectedScalingGroups);
+  }
+
+  private void closeDelegateScalingGroupDownAlert(String accountId, String groupName) {
+    AlertData alertData = DelegatesScalingGroupDownAlert.builder().accountId(accountId).groupName(groupName).build();
+    alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesScalingGroupDownAlert, alertData);
   }
 }

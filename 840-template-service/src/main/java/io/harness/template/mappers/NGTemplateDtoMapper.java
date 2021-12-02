@@ -1,6 +1,7 @@
 package io.harness.template.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.ng.core.utils.NGUtils.validate;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.NGTemplateReference;
@@ -170,6 +171,7 @@ public class NGTemplateDtoMapper {
   }
 
   private void validateTemplateYaml(NGTemplateConfig templateConfig, String orgIdentifier, String projectIdentifier) {
+    validate(templateConfig.getTemplateInfoConfig());
     if (EmptyPredicate.isNotEmpty(templateConfig.getTemplateInfoConfig().getProjectIdentifier())
         && !templateConfig.getTemplateInfoConfig().getProjectIdentifier().equals(projectIdentifier)) {
       throw new InvalidRequestException("ProjectIdentifier for template is not matching as in template yaml.");

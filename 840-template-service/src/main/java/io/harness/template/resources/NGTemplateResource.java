@@ -28,7 +28,6 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateApplyRequestDTO;
-import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
 import io.harness.ng.core.template.TemplateListType;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.ng.core.template.TemplateSummaryResponseDTO;
@@ -93,9 +92,7 @@ import retrofit2.http.Body;
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
-      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error"),
-          @ApiResponse(code = 403, response = TemplateInputsErrorResponseDTO.class,
-              message = "TemplateRefs Resolved failed in given yaml.")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @Tag(name = "Templates", description = "This contains a list of APIs specific to the Templates")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = NGCommonEntityConstants.BAD_REQUEST_CODE,
@@ -241,8 +238,8 @@ public class NGTemplateResource {
         "Updating Stable Template with identifier %s with versionLabel %s in project %s, org %s, account %s",
         templateIdentifier, versionLabel, projectId, orgId, accountId));
 
-    TemplateEntity templateEntity =
-        templateService.updateStableTemplateVersion(accountId, orgId, projectId, templateIdentifier, versionLabel);
+    TemplateEntity templateEntity = templateService.updateStableTemplateVersion(
+        accountId, orgId, projectId, templateIdentifier, versionLabel, comments);
     return ResponseDTO.newResponse(templateEntity.getVersion().toString(), templateEntity.getVersionLabel());
   }
 

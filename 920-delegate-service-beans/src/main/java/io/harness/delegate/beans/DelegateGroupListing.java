@@ -23,6 +23,10 @@ public class DelegateGroupListing {
   @Builder
   public static class DelegateInner {
     private String uuid;
+    // lastHeartbeat, activelyConnected and hostName is used only in case of NG.
+    private long lastHeartbeat;
+    private boolean activelyConnected;
+    private String hostName;
     List<DelegateConnectionDetails> connections;
   }
 }

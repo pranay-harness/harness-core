@@ -30,15 +30,19 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
+import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.dto.ProjectRequest;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
+import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.common.collect.ImmutableList;
@@ -56,6 +60,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -103,6 +108,7 @@ import org.springframework.data.domain.Page;
 @NextGenManagerAuth
 public class ProjectResource {
   private final ProjectService projectService;
+  private final OrganizationService organizationService;
 
   @POST
   @ApiOperation(value = "Create a Project", nickname = "postProject")
@@ -245,5 +251,72 @@ public class ProjectResource {
       @OrgIdentifier String orgIdentifier) {
     return ResponseDTO.newResponse(projectService.delete(
         accountIdentifier, orgIdentifier, identifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
+  }
+
+  @GET
+  @Path("all-projects")
+  @ApiOperation(value = "Get ProjectDTO list", nickname = "getProjectDTOList", hidden = true)
+  @Operation(operationId = "getProjectDTOList", summary = "Get ProjectDTO list",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns complete list of accessible projects")
+      },
+      hidden = true)
+  @InternalApi
+  public ResponseDTO<List<ProjectDTO>>
+  getProjectList(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                     NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = "Has module", required = false) @QueryParam("hasModule") @DefaultValue(
+          "true") boolean hasModule,
+      @Parameter(description = "Module type", required = false) @QueryParam(
+          NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
+      @Parameter(description = "Search Term", required = false) @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+    Set<String> permittedOrgIds = organizationService.getPermittedOrganizations(accountIdentifier, orgIdentifier);
+    ProjectFilterDTO projectFilterDTO = getProjectFilterDTO(searchTerm, permittedOrgIds, hasModule, moduleType);
+    return ResponseDTO.newResponse(projectService.listPermittedProjects(accountIdentifier, projectFilterDTO));
+  }
+
+  @GET
+  @Path("projects-count")
+  @ApiOperation(
+      value = "Get total count of projects accessible to a user", nickname = "getPermittedProjectsCount", hidden = true)
+  @Operation(operationId = "getPermittedProjectsCount", summary = "Get total count of projects accessible to a user",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns count of accessible projects")
+      },
+      hidden = true)
+  @InternalApi
+  public ResponseDTO<ActiveProjectsCountDTO>
+  getAccessibleProjectsCount(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                                 NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = "Does it has module.If left empty default is true", required = false) @QueryParam(
+          "hasModule") @DefaultValue("true") boolean hasModule,
+      @Parameter(description = "Module type", required = false) @QueryParam(
+          NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
+      @Parameter(description = "Search Term", required = false) @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @Parameter(description = "Start time") @NotNull @QueryParam(
+          NGResourceFilterConstants.START_TIME) long startInterval,
+      @Parameter(description = "End time") @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    Set<String> permittedOrgIds = organizationService.getPermittedOrganizations(accountIdentifier, orgIdentifier);
+    ProjectFilterDTO projectFilterDTO = getProjectFilterDTO(searchTerm, permittedOrgIds, hasModule, moduleType);
+    return ResponseDTO.newResponse(
+        projectService.permittedProjectsCount(accountIdentifier, projectFilterDTO, startInterval, endInterval));
+  }
+
+  private ProjectFilterDTO getProjectFilterDTO(
+      String searchTerm, Set<String> orgIdentifiers, boolean hasModule, ModuleType moduleType) {
+    return ProjectFilterDTO.builder()
+        .searchTerm(searchTerm)
+        .orgIdentifiers(orgIdentifiers)
+        .hasModule(hasModule)
+        .moduleType(moduleType)
+        .build();
   }
 }

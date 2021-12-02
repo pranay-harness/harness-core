@@ -6,6 +6,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.sdk.core.pipeline.creators.CreatorResponse;
@@ -63,11 +64,19 @@ public class FilterCreationResponse implements CreatorResponse {
     }
   }
 
+  @Override
+  public void addResolvedDependency(String yaml, String nodeId, String yamlPath) {}
+
   public void addDependencies(Map<String, YamlField> fields) {
     if (EmptyPredicate.isEmpty(fields)) {
       return;
     }
     fields.values().forEach(this::addDependency);
+  }
+
+  @Override
+  public Dependencies getDependenciesForVariable() {
+    return null;
   }
 
   public void addDependency(YamlField field) {
@@ -83,6 +92,9 @@ public class FilterCreationResponse implements CreatorResponse {
     }
     dependencies.put(nodeId, field);
   }
+
+  @Override
+  public void addDependency(String yaml, String nodeId, String yamlPath) {}
 
   public FilterCreationBlobResponse toBlobResponse() {
     FilterCreationBlobResponse.Builder finalBlobResponseBuilder = FilterCreationBlobResponse.newBuilder();

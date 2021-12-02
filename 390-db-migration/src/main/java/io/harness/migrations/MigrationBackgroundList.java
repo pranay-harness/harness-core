@@ -67,6 +67,7 @@ import io.harness.migrations.all.DelegateProfileIdentifierMigration;
 import io.harness.migrations.all.DelegateTokenMigration;
 import io.harness.migrations.all.DelegatesWithoutGroupMigration;
 import io.harness.migrations.all.DelegatesWithoutProfileMigration;
+import io.harness.migrations.all.DeleteDelegateAlertsExceptDelegateDown;
 import io.harness.migrations.all.DeleteInvalidArtifactStreams;
 import io.harness.migrations.all.DeleteInvalidServiceGuardConfigs;
 import io.harness.migrations.all.DeleteOrphanNotificationGroups;
@@ -346,6 +347,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(204, DeleteOrphanPerpetualTaskMigration.class))
         .add(Pair.of(205, ManageApplicationTemplatePermissionMigration.class))
         .add(Pair.of(206, CDPaidLicenseToNGMigration.class))
+        .add(Pair.of(207, DeleteDelegateAlertsExceptDelegateDown.class))
         .build();
   }
 }

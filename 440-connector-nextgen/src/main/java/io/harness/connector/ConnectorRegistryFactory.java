@@ -1,5 +1,4 @@
 package io.harness.connector;
-
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -15,6 +14,7 @@ import io.harness.connector.heartbeat.DockerConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpKmsConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpValidationParamsProvider;
 import io.harness.connector.heartbeat.HttpHelmConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.JiraValidationParamsProvider;
 import io.harness.connector.heartbeat.K8sConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.NexusValidationParamsProvider;
 import io.harness.connector.heartbeat.NoOpConnectorValidationParamsProvider;
@@ -38,6 +38,8 @@ import io.harness.connector.mappers.ceazure.CEAzureDTOToEntity;
 import io.harness.connector.mappers.ceazure.CEAzureEntityToDTO;
 import io.harness.connector.mappers.cek8s.CEKubernetesDTOToEntity;
 import io.harness.connector.mappers.cek8s.CEKubernetesEntityToDTO;
+import io.harness.connector.mappers.customhealthconnectormapper.CustomHealthDTOToEntity;
+import io.harness.connector.mappers.customhealthconnectormapper.CustomHealthEntityToDTO;
 import io.harness.connector.mappers.datadogmapper.DatadogDTOToEntity;
 import io.harness.connector.mappers.datadogmapper.DatadogEntityToDTO;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
@@ -202,7 +204,7 @@ public class ConnectorRegistryFactory {
             NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.JIRA,
         new ConnectorRegistrar(ConnectorCategory.TICKETING, JiraConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, JiraDTOToEntity.class, JiraEntityToDTO.class,
+            JiraValidationParamsProvider.class, JiraDTOToEntity.class, JiraEntityToDTO.class,
             NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.NEXUS,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, NexusConnectorValidator.class,
@@ -239,6 +241,10 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.PAGER_DUTY,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
             CVConnectorParamsProvider.class, PagerDutyDTOToEntity.class, PagerDutyEntityToDTO.class,
+            NotSupportedValidationHandler.class));
+    registrar.put(ConnectorType.CUSTOM_HEALTH,
+        new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
+            CVConnectorParamsProvider.class, CustomHealthDTOToEntity.class, CustomHealthEntityToDTO.class,
             NotSupportedValidationHandler.class));
   }
 

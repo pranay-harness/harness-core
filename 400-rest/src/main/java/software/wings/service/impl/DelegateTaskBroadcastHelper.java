@@ -1,9 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
-
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -57,18 +54,12 @@ public class DelegateTaskBroadcastHelper {
       return;
     }
 
-    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegateTask.getAccountId())
-        && isBlank(delegateTask.getPreAssignedDelegateId())) {
-      return;
-    }
-
     DelegateTaskBroadcast delegateTaskBroadcast = DelegateTaskBroadcast.builder()
                                                       .version(delegateTask.getVersion())
                                                       .accountId(delegateTask.getAccountId())
                                                       .taskId(delegateTask.getUuid())
                                                       .async(delegateTask.getData().isAsync())
                                                       .preAssignedDelegateId(delegateTask.getPreAssignedDelegateId())
-                                                      .alreadyTriedDelegates(delegateTask.getAlreadyTriedDelegates())
                                                       .build();
 
     Broadcaster broadcaster = broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true);

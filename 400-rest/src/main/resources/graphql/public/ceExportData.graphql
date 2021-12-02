@@ -53,12 +53,25 @@ input ceAggregation {
 enum ceAggregationFunction {
   SUM
   AVG
+  MIN
+  MAX
 }
 
 enum ceCost {
   TOTALCOST
   IDLECOST
   UNALLOCATEDCOST
+  NETWORKCOST
+  SYSTEMCOST
+  MEMORYCOST
+  MEMORYIDLECOST
+  MEMORYUNALLOCATEDCOST
+  CPUCOST
+  CPUIDLECOST
+  CPUUNALLOCATEDCOST
+  STORAGECOST
+  STORAGEIDLECOST
+  STORAGEUNALLOCATEDCOST
 }
 
 enum ceUtilization {
@@ -68,6 +81,8 @@ enum ceUtilization {
   MEMORY_REQUEST
   MEMORY_LIMIT
   MEMORY_UTILIZATION_VALUE
+  STORAGE_REQUEST
+  STORAGE_UTILIZATION_VALUE
 }
 
 input ceGroupBy {
@@ -167,7 +182,40 @@ type ceK8sEntity {
   namespace: String
   node: String
   pod: String
+  entityDetails: ceK8sEntityDetails
   selectedLabels: [ceK8sLabels]
+}
+
+type ceK8sEntityDetails {
+  name: String
+  id: String
+  nodePoolName: String
+  podCapacity: String
+  instanceCategory: String
+  machineType: String
+  qosClass: String
+  totalCost: Number
+  idleCost: Number
+  unallocatedCost: Number
+  systemCost: Number
+  networkCost: Number
+  storageTotalCost: Number
+  storageIdleCost: Number
+  storageUnallocatedCost: Number
+  storageUtilizationValue: Number
+  storageRequest: Number
+  memoryTotalCost: Number
+  memoryIdleCost: Number
+  memoryUnallocatedCost: Number
+  memoryAllocatable: Number
+  memoryRequested: Number
+  cpuTotalCost: Number
+  cpuIdleCost: Number
+  cpuUnallocatedCost: Number
+  cpuAllocatable: Number
+  cpuRequested: Number
+  createTime: Number
+  deleteTime: Number
 }
 
 type ceK8sLabels {

@@ -1,0 +1,235 @@
+package io.harness.cvng.core.services.impl;
+
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.RUNNING;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.spy;
+import static org.mockito.MockitoAnnotations.initMocks;
+
+import io.harness.CvNextGenTestBase;
+import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataCollectionExecutionStatus;
+import io.harness.cvng.beans.DataCollectionInfo;
+import io.harness.cvng.beans.PrometheusDataCollectionInfo;
+import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.DataCollectionTask;
+import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
+import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.entities.PrometheusCVConfig;
+import io.harness.cvng.core.entities.SLIDataCollectionTask;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.DataCollectionTaskManagementService;
+import io.harness.cvng.core.services.api.DataCollectionTaskService;
+import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
+import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
+import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorKeys;
+import io.harness.cvng.servicelevelobjective.services.ServiceLevelObjectiveService;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.persistence.HPersistence;
+import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+public class SLIDataCollectionTaskServiceTest extends CvNextGenTestBase {
+  @Inject private DataCollectionTaskService dataCollectionTaskService;
+  @Inject private HPersistence hPersistence;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private MetricPackService metricPackService;
+  @Inject private VerificationTaskService verificationTaskService;
+  @Inject private Clock clock;
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
+  private String cvConfigId;
+  private String accountId;
+  private String orgIdentifier;
+  private String projectIdentifier;
+  private Instant fakeNow;
+  private String dataCollectionWorkerId;
+  private String verificationTaskId;
+  private CVConfig cvConfig;
+  @Inject
+  private Map<DataCollectionTask.Type, DataCollectionTaskManagementService>
+      dataCollectionTaskManagementServiceMapBinder;
+  @Inject private PrometheusDataCollectionInfoMapper prometheusDataCollectionSLIInfoMapper;
+  @Inject private SLIDataCollectionTaskServiceImpl sliDataCollectionTaskService;
+  BuilderFactory builderFactory = BuilderFactory.getDefault();
+  @Inject private ServiceLevelObjectiveService serviceLevelObjectiveService;
+  @Inject private MonitoredServiceService monitoredServiceService;
+  ServiceLevelIndicator serviceLevelIndicator;
+
+  @Before
+  public void setupTests() throws IllegalAccessException {
+    initMocks(this);
+    accountId = builderFactory.getContext().getAccountId();
+    orgIdentifier = builderFactory.getContext().getOrgIdentifier();
+    projectIdentifier = builderFactory.getContext().getProjectIdentifier();
+    metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
+    cvConfig = cvConfigService.save(createCVConfig());
+    cvConfigId = cvConfig.getUuid();
+    serviceLevelIndicator = createSLI();
+    verificationTaskId = verificationTaskService.getSLIVerificationTaskId(accountId, serviceLevelIndicator.getUuid());
+    dataCollectionTaskService = spy(dataCollectionTaskService);
+    FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
+    FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
+    FieldUtils.writeField(
+        dataCollectionTaskService, "verificationJobInstanceService", verificationJobInstanceService, true);
+    fakeNow = clock.instant();
+    dataCollectionWorkerId = monitoringSourcePerpetualTaskService.getLiveMonitoringWorkerId(cvConfig.getAccountId(),
+        cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getConnectorIdentifier(),
+        cvConfig.getIdentifier());
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testSave_dataCollectionTask() {
+    DataCollectionTask dataCollectionTask = create();
+    dataCollectionTaskService.save(dataCollectionTask);
+    assertThat(dataCollectionTask.getStatus()).isEqualTo(QUEUED);
+    DataCollectionTask updatedDataCollectionTask = getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(updatedDataCollectionTask.getStatus()).isEqualTo(QUEUED);
+    assertThat(updatedDataCollectionTask.getVerificationTaskId()).isEqualTo(dataCollectionTask.getVerificationTaskId());
+    assertThat(updatedDataCollectionTask.shouldQueueAnalysis()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testSave_handleCreateNextTask() {
+    sliDataCollectionTaskService.handleCreateNextTask(serviceLevelIndicator);
+    DataCollectionTask savedTask = hPersistence.createQuery(DataCollectionTask.class)
+                                       .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
+                                       .get();
+    assertThat(savedTask.getStatus()).isEqualTo(QUEUED);
+    assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(PrometheusDataCollectionInfo.class);
+    assertThat(savedTask.getEndTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime());
+    assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testSave_createNextTask() {
+    sliDataCollectionTaskService.handleCreateNextTask(serviceLevelIndicator);
+    DataCollectionTask prevTask = hPersistence.createQuery(DataCollectionTask.class)
+                                      .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
+                                      .get();
+    sliDataCollectionTaskService.createNextTask(prevTask);
+    DataCollectionTask savedTask = hPersistence.createQuery(DataCollectionTask.class)
+                                       .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
+                                       .get();
+    assertThat(savedTask.getStatus()).isEqualTo(QUEUED);
+    assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(PrometheusDataCollectionInfo.class);
+    assertThat(savedTask.getEndTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime());
+    assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
+  }
+
+  private ServiceLevelIndicator createSLI() {
+    ServiceLevelObjectiveDTO sloDTO = builderFactory.getServiceLevelObjectiveDTOBuilder();
+    createMonitoredService();
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .projectIdentifier(projectIdentifier)
+                                      .orgIdentifier(orgIdentifier)
+                                      .build();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    String identifier =
+        serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators().get(0).getIdentifier();
+    return hPersistence.createQuery(ServiceLevelIndicator.class)
+        .filter(ServiceLevelIndicatorKeys.accountId, projectParams.getAccountIdentifier())
+        .filter(ServiceLevelIndicatorKeys.orgIdentifier, projectParams.getOrgIdentifier())
+        .filter(ServiceLevelIndicatorKeys.projectIdentifier, projectParams.getProjectIdentifier())
+        .filter(ServiceLevelIndicatorKeys.identifier, identifier)
+        .get();
+  }
+
+  private void createMonitoredService() {
+    MonitoredServiceDTO monitoredServiceDTO = builderFactory.monitoredServiceDTOBuilder().build();
+    monitoredServiceDTO.setSources(MonitoredServiceDTO.Sources.builder().build());
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+  }
+
+  private DataCollectionTask getDataCollectionTask(String dataCollectionTaskId) {
+    return hPersistence.get(DataCollectionTask.class, dataCollectionTaskId);
+  }
+
+  private DataCollectionTask create() {
+    return create(QUEUED, DataCollectionTask.Type.SLI);
+  }
+
+  private DataCollectionTask create(DataCollectionExecutionStatus executionStatus, DataCollectionTask.Type type) {
+    return SLIDataCollectionTask.builder()
+        .verificationTaskId(verificationTaskId)
+        .dataCollectionWorkerId(dataCollectionWorkerId)
+        .type(DataCollectionTask.Type.SLI)
+        .accountId(accountId)
+        .startTime(fakeNow.minus(Duration.ofMinutes(7)))
+        .endTime(fakeNow.minus(Duration.ofMinutes(2)))
+        .status(executionStatus)
+        .dataCollectionInfo(createSLIDataCollectionInfo())
+        .lastPickedAt(executionStatus == RUNNING ? fakeNow.minus(Duration.ofMinutes(5)) : null)
+        .build();
+  }
+
+  private DataCollectionInfo createSLIDataCollectionInfo() {
+    PrometheusCVConfig cvConfig = (PrometheusCVConfig) createCVConfig();
+    return prometheusDataCollectionSLIInfoMapper.toDataCollectionInfo(
+        Collections.singletonList(cvConfig), serviceLevelIndicator);
+  }
+
+  private CVConfig createCVConfig() {
+    PrometheusCVConfig cvConfig = new PrometheusCVConfig();
+    String identifier = HealthSourceService.getNameSpacedIdentifier(
+        builderFactory.getContext().getServiceIdentifier() + "_" + builderFactory.getContext().getEnvIdentifier(),
+        "healthSourceIdentifier");
+    cvConfig.setVerificationType(VerificationType.TIME_SERIES);
+    cvConfig.setAccountId(accountId);
+    cvConfig.setEnabled(true);
+    cvConfig.setConnectorIdentifier(generateUuid());
+    cvConfig.setServiceIdentifier(generateUuid());
+    cvConfig.setEnvIdentifier(generateUuid());
+    cvConfig.setProjectIdentifier(projectIdentifier);
+    cvConfig.setOrgIdentifier(orgIdentifier);
+    cvConfig.setIdentifier(identifier);
+    cvConfig.setMonitoringSourceName(identifier);
+    cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
+    cvConfig.setProductName(generateUuid());
+    cvConfig.setGroupName("myGroupName");
+    MetricPack metricPack = MetricPack.builder().dataCollectionDsl("metric-pack-dsl").build();
+    cvConfig.setMetricPack(metricPack);
+    PrometheusCVConfig.MetricInfo metricInfo = PrometheusCVConfig.MetricInfo.builder()
+                                                   .metricName("myMetric")
+                                                   .metricType(TimeSeriesMetricType.RESP_TIME)
+                                                   .prometheusMetricName("cpu_usage_total")
+                                                   .build();
+
+    cvConfig.setMetricInfoList(Arrays.asList(metricInfo));
+    return cvConfig;
+  }
+}

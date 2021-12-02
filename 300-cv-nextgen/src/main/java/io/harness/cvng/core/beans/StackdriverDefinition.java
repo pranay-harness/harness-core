@@ -17,7 +17,6 @@ import lombok.experimental.SuperBuilder;
 public class StackdriverDefinition extends HealthSourceMetricDefinition {
   private String dashboardName;
   private String dashboardPath;
-  private String metricName;
   private Object jsonMetricDefinition;
   private List<String> metricTags;
   private boolean isManualQuery;

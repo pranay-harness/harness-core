@@ -30,14 +30,17 @@ public class RenameInvalidYamlStringToYamlMigration implements NGMigration {
 
     log.info("Starting migration to rename invalid yaml string field to yaml for connectors");
     while (iterator.hasNext()) {
-      Connector connector = iterator.next();
-      if (connector.isEntityInvalid()) {
-        connector.setYaml(connector.getInvalidYamlString());
-        connector.setInvalidYamlString(null);
-        mongoTemplate.save(connector);
+      try {
+        Connector connector = iterator.next();
+        if (connector.isEntityInvalid()) {
+          connector.setYaml(connector.getInvalidYamlString());
+          connector.setInvalidYamlString(null);
+          mongoTemplate.save(connector);
+        }
+      } catch (Exception exception) {
+        log.error("unable to run rename invalid yaml string to yaml for entity, ignoring it...", exception);
       }
     }
-
     log.info("Migration to rename invalid yaml string field to yaml for connectors completed successfully");
   }
 }

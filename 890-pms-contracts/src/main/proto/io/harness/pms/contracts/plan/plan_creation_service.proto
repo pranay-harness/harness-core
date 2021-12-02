@@ -86,6 +86,7 @@ message FilterCreationBlobResponse {
 message VariablesCreationBlobRequest {
   map<string, YamlFieldBlob> dependencies = 1;
   VariablesCreationMetadata metadata = 2;
+  Dependencies deps = 3;
 }
 
 message VariablesCreationResponse {
@@ -97,10 +98,13 @@ message VariablesCreationResponse {
 
 message VariablesCreationBlobResponse {
   map<string, YamlProperties> yamlProperties = 1;
-  map<string, YamlFieldBlob> dependencies = 2;
-  map<string, YamlFieldBlob> resolvedDependencies = 3;
+  map<string, YamlFieldBlob> dependencies = 2 [deprecated = true];
+  map<string, YamlFieldBlob> resolvedDependencies = 3 [deprecated = true];
   repeated ErrorResponse errorResponse = 4;
   map<string, YamlOutputProperties> yamlOutputProperties = 5;
+  Dependencies deps = 6;
+  YamlUpdates yamlUpdates = 7;
+  Dependencies resolvedDeps = 8;
 }
 
 message ErrorResponse {

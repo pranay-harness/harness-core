@@ -94,7 +94,7 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
   }
 
   @Override
-  public SampleBean upsert(String accountIdentifier, String yaml) {
+  public SampleBean upsert(String accountIdentifier, String yaml, String filePath) {
     return null;
   }
 

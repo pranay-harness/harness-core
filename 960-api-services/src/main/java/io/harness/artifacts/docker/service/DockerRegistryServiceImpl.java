@@ -366,7 +366,14 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
               registryRestClient.getApiVersionEndingWithForwardSlash(BEARER + dockerRegistryToken.getToken()).execute();
         }
       }
-      return isSuccessful(response);
+      boolean isSuccess = isSuccessful(response);
+      if (!isSuccess && response.code() == 404) {
+        throw NestedExceptionUtils.hintWithExplanationException(
+            "Check with you registry provider for a Docker v2 compliant URL",
+            "Provided Docker Registry URL is incorrect",
+            new InvalidArtifactServerException("Invalid Docker Registry URL", USER));
+      }
+      return isSuccess;
     } catch (IOException ioException) {
       Exception exception = new Exception(ioException);
       throw NestedExceptionUtils.hintWithExplanationException("Invalid Credentials",

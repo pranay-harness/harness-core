@@ -113,7 +113,9 @@ public class PipelineTimescaleChangeDataHandler implements ChangeHandler {
     columnValueMapping.put("created_at", pipeline.getCreatedAt());
 
     // created_by
-    columnValueMapping.put("created_by", pipeline.getCreatedBy().getName());
+    if (pipeline.getCreatedBy() != null) {
+      columnValueMapping.put("created_by", pipeline.getCreatedBy().getName());
+    }
 
     // last_updated_by
     if (pipeline.getLastUpdatedBy() != null) {

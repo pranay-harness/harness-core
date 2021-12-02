@@ -135,4 +135,12 @@ public final class HelmConstants {
       + "#\n"
       + "# ---\n"
       + "namespace : ${NAMESPACE}\n";
+
+  public class ReleaseRecordConstants {
+    public static final String NAME = "NAME";
+    public static final String REVISION = "REVISION";
+    public static final String STATUS = "STATUS";
+    public static final String CHART = "CHART";
+    public static final String NAMESPACE = "NAMESPACE";
+  }
 }

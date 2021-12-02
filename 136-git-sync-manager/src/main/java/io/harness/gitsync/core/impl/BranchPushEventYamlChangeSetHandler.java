@@ -20,6 +20,7 @@ import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepRequest;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
+import io.harness.gitsync.common.helper.GitConnectivityExceptionHelper;
 import io.harness.gitsync.common.helper.GitToHarnessProgressHelper;
 import io.harness.gitsync.common.helper.YamlGitConfigHelper;
 import io.harness.gitsync.common.service.GitBranchSyncService;
@@ -167,7 +168,9 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
           gitFileChangeDTO -> gitFileChangeDTOListAsString.append(gitFileChangeDTO.toString()).append(" :::: "));
       log.info(gitFileChangeDTOListAsString.toString());
     } catch (Exception ex) {
-      log.error("Error occurred while perform step : {}", GitToHarnessProcessingStepType.GET_FILES);
+      log.error("Error occurred while perform step : {}" + GitToHarnessProcessingStepType.GET_FILES, ex);
+      String errorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
+      recordErrors(yamlGitConfigDTOList, yamlChangeSetDTO, errorMessage);
       // Mark step status error
       gitToHarnessProgressService.updateStepStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
@@ -187,6 +190,14 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         .processingCommitId(filesFromDiffResponse.getProcessingCommitId())
         .commitMessage(filesFromDiffResponse.getCommitMessage())
         .build();
+  }
+
+  private void recordErrors(
+      List<YamlGitConfigDTO> yamlGitConfigDTOList, YamlChangeSetDTO yamlChangeSetDTO, String errorMessage) {
+    yamlGitConfigDTOList.forEach(yamlGitConfigDTO
+        -> gitSyncErrorService.recordConnectivityError(yamlGitConfigDTO.getAccountIdentifier(),
+            yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(),
+            yamlChangeSetDTO.getRepoUrl(), yamlChangeSetDTO.getBranch(), errorMessage));
   }
 
   private GitToHarnessProcessMsvcStepResponse performBranchSync(GitToHarnessGetFilesStepRequest request) {

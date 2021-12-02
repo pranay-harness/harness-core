@@ -20,6 +20,7 @@ import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
@@ -57,6 +58,7 @@ import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.licensing.LicenseService;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.security.authentication.totp.TotpModule;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.intfc.AccountService;
@@ -202,7 +204,8 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new DelegateServiceModule());
     modules.add(new AlertModule());
     modules.add(new CapabilityModule());
-    modules.add(new WingsModule(configuration));
+    modules.add(new WingsModule(configuration, StartupMode.MANAGER));
+    modules.add(new TotpModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

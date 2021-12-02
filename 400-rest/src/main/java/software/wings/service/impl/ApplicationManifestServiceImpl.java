@@ -1486,11 +1486,12 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   @Override
   public boolean deletePerpetualTaskByAppManifest(String accountId, String appManifestId) {
+    log.info("Deleting perpetual task associated with app manifest " + appManifestId);
     Query<PerpetualTaskRecord> query =
         wingsPersistence.createQuery(PerpetualTaskRecord.class)
             .field(PerpetualTaskRecordKeys.accountId)
             .equal(accountId)
-            .field(PerpetualTaskRecordKeys.clientContext + "." + ManifestCollectionPTaskClientParamsKeys.appManifestId)
+            .field(PerpetualTaskRecordKeys.client_params + "." + ManifestCollectionPTaskClientParamsKeys.appManifestId)
             .equal(appManifestId);
     return wingsPersistence.delete(query);
   }

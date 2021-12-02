@@ -45,6 +45,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.k8s.K8sRequestHandler;
+import io.harness.delegate.task.ManifestDelegateConfigHelper;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -57,6 +58,7 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +67,7 @@ import java.util.function.Consumer;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.NotImplementedException;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -79,6 +82,7 @@ public class K8sTaskNGTest extends CategoryTest {
   final CommandUnitsProgress emptyCommandUnitsProgress = CommandUnitsProgress.builder().build();
   final DelegateTaskPackage delegateTaskPackage =
       DelegateTaskPackage.builder().data(TaskData.builder().build()).build();
+  private ManifestDelegateConfigHelper manifestDelegateConfigHelper = new ManifestDelegateConfigHelper();
 
   @Mock BooleanSupplier preExecute;
   @Mock Consumer<DelegateTaskResponse> consumer;
@@ -89,7 +93,9 @@ public class K8sTaskNGTest extends CategoryTest {
   @Mock GitDecryptionHelper gitDecryptionHelper;
   @Mock SecretDecryptionService decryptionService;
 
-  @InjectMocks K8sTaskNG k8sTaskNG = new K8sTaskNG(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
+  @Inject
+  @InjectMocks
+  K8sTaskNG k8sTaskNG = new K8sTaskNG(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
 
   @Mock K8sDeployRequest k8sDeployRequest;
   @Mock K8sInfraDelegateConfig k8sInfraDelegateConfig;
@@ -107,7 +113,7 @@ public class K8sTaskNGTest extends CategoryTest {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-
+    Reflect.on(k8sTaskNG).set("manifestDelegateConfigHelper", manifestDelegateConfigHelper);
     doReturn(instanceSyncRequestHandler).when(k8sTaskTypeToRequestHandler).get(K8sTaskType.INSTANCE_SYNC.name());
     doReturn(rollingRequestHandler).when(k8sTaskTypeToRequestHandler).get(K8sTaskType.DEPLOYMENT_ROLLING.name());
     doReturn(mockKubeConfigFileContent)
@@ -229,6 +235,7 @@ public class K8sTaskNGTest extends CategoryTest {
   public void testRunK8sManifestDelegateConfigGit() throws Exception {
     final GitConfigDTO gitConfigDTO = GitConfigDTO.builder().build();
     final List<EncryptedDataDetail> encryptedDataDetails = singletonList(EncryptedDataDetail.builder().build());
+
     testRunWithManifest(K8sManifestDelegateConfig.builder()
                             .storeDelegateConfig(GitStoreDelegateConfig.builder()
                                                      .gitConfigDTO(gitConfigDTO)
@@ -236,7 +243,6 @@ public class K8sTaskNGTest extends CategoryTest {
                                                      .build())
                             .build(),
         null);
-
     verify(gitDecryptionHelper).decryptGitConfig(gitConfigDTO, encryptedDataDetails);
   }
 
@@ -377,6 +383,9 @@ public class K8sTaskNGTest extends CategoryTest {
         .when(rollingRequestHandler)
         .executeTask(eq(k8sDeployRequest), any(K8sDelegateTaskParams.class), eq(logStreamingTaskClient),
             eq(emptyCommandUnitsProgress));
+
+    Reflect.on(manifestDelegateConfigHelper).set("gitDecryptionHelper", gitDecryptionHelper);
+    Reflect.on(manifestDelegateConfigHelper).set("decryptionService", decryptionService);
 
     K8sDeployResponse result = k8sTaskNG.run(k8sDeployRequest);
 

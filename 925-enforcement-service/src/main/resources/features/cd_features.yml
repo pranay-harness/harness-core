@@ -12,7 +12,7 @@ features:
     restrictions:
       FREE:
         restrictionType: CUSTOM
-        clientName: pipelineService
+        clientName: ngmanager
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true
@@ -189,6 +189,35 @@ features:
       FREE:
         restrictionType: AVAILABILITY
         enabled: true
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+  - name: DEPLOYMENTS_PER_MONTH
+    description: The restriction on number of deployments per month
+    restrictions:
+      FREE:
+        restrictionType: RATE_LIMIT
+        limit: 100
+        timeUnit:
+          unit: MONTHS
+          numberOfUnits: 1
+        clientName: ngmanager
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+  - name: INITIAL_DEPLOYMENTS
+    description: The restriction on number of initial number of deployments
+    restrictions:
+      FREE:
+        restrictionType: STATIC_LIMIT
+        limit: 1000
+        clientName: ngmanager
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true

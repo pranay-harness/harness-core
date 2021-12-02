@@ -357,3 +357,11 @@ ldapSyncJobConfig:
   poolSize: 3
   syncInterval: 15
   defaultCronExpression: "0 0/15 * 1/1 * ? *"
+
+totp:
+  secOpsEmail: secops.fake.email@mailnator.com
+  incorrectAttemptsUntilSecOpsNotified: 1000
+  limit:
+    count: 10
+    duration: 5
+    durationUnit: MINUTES

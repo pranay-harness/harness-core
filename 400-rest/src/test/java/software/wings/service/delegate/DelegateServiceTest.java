@@ -77,7 +77,6 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.EncryptedData;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilityRequirement;
@@ -314,10 +313,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void setUp() throws IllegalAccessException {
     CdnConfig cdnConfig = new CdnConfig();
     cdnConfig.setUrl("http://localhost:9500");
-    Map<String, String> jreTarPaths = new HashMap<>();
-    jreTarPaths.put("openjdk8u242", getOpenjdkJreConfig().getJreTarPath());
-    cdnConfig.setCdnJreTarPaths(jreTarPaths);
-    cdnConfig.setAlpnJarPath(getOpenjdkJreConfig().getAlpnJarPath());
     when(subdomainUrlHelper.getDelegateMetadataUrl(any(), any(), any()))
         .thenReturn("http://localhost:" + port + "/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
@@ -351,7 +346,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(infraDownloadService.getDownloadUrlForDelegate(anyString(), any()))
         .thenReturn("http://localhost:" + port + "/builds/9/delegate.jar");
     when(infraDownloadService.getCdnWatcherBaseUrl()).thenReturn("http://localhost:9500/builds");
-    when(infraDownloadService.getCdnWatcherMetaDataFileUrl()).thenReturn("http://localhost:" + port + "/watcherci.txt");
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -653,34 +647,6 @@ public class DelegateServiceTest extends WingsBaseTest {
         .send(Channel.DELEGATES,
             anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
     verify(capabilityService, never()).getAllCapabilityRequirements(accountId);
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldAddAndInvokeRegenerateCapabilityPermissions() {
-    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
-    String accountId = generateUuid();
-    Delegate delegate = createDelegateBuilder().build();
-    delegate.setAccountId(accountId);
-    delegate.setUuid(generateUuid());
-
-    DelegateProfile delegateProfile =
-        createDelegateProfileBuilder().accountId(delegate.getAccountId()).uuid(generateUuid()).build();
-    delegate.setDelegateProfileId(delegateProfile.getUuid());
-
-    when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
-
-    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
-
-    delegate = delegateService.add(delegate);
-
-    assertThat(persistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
-    verify(eventEmitter)
-        .send(Channel.DELEGATES,
-            anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
-    verify(capabilityService).getAllCapabilityRequirements(accountId);
-    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
   }
 
   @Test
@@ -1446,28 +1412,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldRegisterHeartbeatWithPreviousDisconnection() throws IllegalAccessException {
-    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
-    DelegateConnection previousDelegateConnection = mock(DelegateConnection.class);
-    when(previousDelegateConnection.isDisconnected()).thenReturn(true);
-    DelegateConnectionDao mockConnectionDao = mock(DelegateConnectionDao.class);
-    when(mockConnectionDao.upsertCurrentConnection(any(), any(), any(), any(), any()))
-        .thenReturn(previousDelegateConnection);
-    FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
-    String delegateConnectionId = generateTimeBasedUuid();
-    DelegateConnectionHeartbeat heartbeat =
-        DelegateConnectionHeartbeat.builder().version(VERSION).delegateConnectionId(delegateConnectionId).build();
-
-    delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, null);
-
-    verify(subject).fireInform(any(), eq(ACCOUNT_ID), eq(DELEGATE_ID));
-    FieldUtils.writeField(delegateService, "delegateConnectionDao", delegateConnectionDao, true);
-    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
-  }
-
-  @Test
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldRegisterHeartbeatStreaming() throws IllegalAccessException {
@@ -1946,12 +1890,24 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(actualS.equals(expectedS));
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
+
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       String expectedP = CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedFile)))
                              .replaceAll("8888", "" + port);
       String actualP = new String(buffer);
       assertThat(actualP.equals(expectedP));
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/init.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
+
+      buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+      String expectedR = CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedFile)))
+                             .replaceAll("8888", "" + port);
+      String actualR = new String(buffer);
+      assertThat(actualR.equals(expectedR));
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/README.txt");
     }
@@ -2012,6 +1968,10 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(new String(buffer))
           .isEqualTo(
               CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedSetupProxy.sh"))));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/init.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/README.txt");
@@ -3446,6 +3406,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void testDownloadNgDockerDelegateShouldReturnComposeFile() throws IOException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey(TOKEN_VALUE).withUuid(ACCOUNT_ID).build());
+
+    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
 
     DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
                                             .orgIdentifier("9S5HMP0xROugl3_QgO62rQO")
