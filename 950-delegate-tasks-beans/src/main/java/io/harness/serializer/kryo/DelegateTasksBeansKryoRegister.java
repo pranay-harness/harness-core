@@ -121,6 +121,7 @@ import io.harness.delegate.beans.connector.helm.HttpHelmConnectivityTaskParams;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectivityTaskResponse;
 import io.harness.delegate.beans.connector.helm.HttpHelmValidationParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
+import io.harness.delegate.beans.connector.jira.JiraValidationParams;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
 import io.harness.delegate.beans.connector.k8Connector.CEK8sValidationParams;
 import io.harness.delegate.beans.connector.k8Connector.CEKubernetesConnectionTaskParams;
@@ -977,5 +978,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CIAWSVmExecuteStepTaskParams.class, 543444);
     kryo.register(CIAwsVmCleanupTaskParams.class, 543445);
     kryo.register(AwsVmTaskExecutionResponse.class, 543446);
+    kryo.register(JiraValidationParams.class, 543447);
   }
 }
