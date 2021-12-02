@@ -1,4 +1,4 @@
-package io.harness.cvng.servicelevelobjective.services;
+package io.harness.cvng.servicelevelobjective.services.api;
 
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
