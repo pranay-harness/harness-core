@@ -9,14 +9,18 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
+import io.harness.cvng.core.entities.AnalysisInfo.DeploymentVerification;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig.MetricInfo;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -128,6 +132,7 @@ public class AppDynamicsHealthSourceSpecTransformerTest extends CvNextGenTestBas
   @Category(UnitTests.class)
   public void testTransformToHealthSourceConfig() {
     List<AppDynamicsCVConfig> cvConfigs = createCVConfigs();
+    cvConfigs.addAll(createCVConfigsForCustomMetrics());
     AppDynamicsHealthSourceSpec appDynamicsHealthSourceSpec =
         appDynamicsHealthSourceSpecTransformer.transform(cvConfigs);
 
@@ -136,6 +141,53 @@ public class AppDynamicsHealthSourceSpecTransformerTest extends CvNextGenTestBas
     assertThat(appDynamicsHealthSourceSpec.getTierName()).isEqualTo(tierName);
     assertThat(appDynamicsHealthSourceSpec.getFeature()).isEqualTo(productName);
     assertThat(appDynamicsHealthSourceSpec.getMetricPacks().size()).isEqualTo(2);
+    assertThat(appDynamicsHealthSourceSpec.getMetricDefinitions().size()).isEqualTo(1);
+    assertThat(appDynamicsHealthSourceSpec.getMetricDefinitions().get(0).getMetricName()).isEqualTo("metric1");
+    assertThat(appDynamicsHealthSourceSpec.getMetricDefinitions().get(0).getBaseFolder()).isEqualTo("baseFolder");
+    assertThat(appDynamicsHealthSourceSpec.getMetricDefinitions().get(0).getGroupName()).isEqualTo("group");
+    assertThat(appDynamicsHealthSourceSpec.getMetricDefinitions()
+                   .get(0)
+                   .getAnalysis()
+                   .getDeploymentVerification()
+                   .getServiceInstanceMetricPath())
+        .isEqualTo("serviceInstancePath1");
+    assertThat(appDynamicsHealthSourceSpec.getMetricDefinitions()
+                   .get(0)
+                   .getAnalysis()
+                   .getDeploymentVerification()
+                   .getEnabled())
+        .isTrue();
+  }
+
+  private List<AppDynamicsCVConfig> createCVConfigsForCustomMetrics() {
+    List<AppDynamicsCVConfig> appDynamicsCVConfigs = new ArrayList<>();
+    appDynamicsCVConfigs.add(
+        AppDynamicsCVConfig.builder()
+            .applicationName(applicationName)
+            .envIdentifier(envIdentifier)
+            .connectorIdentifier(connectorIdentifier)
+            .productName(productName)
+            .projectIdentifier(projectIdentifier)
+            .accountId(accountId)
+            .identifier(identifier)
+            .monitoringSourceName(monitoringSourceName)
+            .serviceIdentifier(serviceIdentifier)
+            .tierName(tierName)
+            .metricPack(MetricPack.builder().identifier("Custom").category(CVMonitoringCategory.ERRORS).build())
+            .groupName("group")
+            .metricInfos(Arrays.<MetricInfo>asList(
+                MetricInfo.builder()
+                    .metricName("metric1")
+                    .metricPath("path")
+                    .metricType(TimeSeriesMetricType.INFRA)
+                    .baseFolder("baseFolder")
+                    .deploymentVerification(DeploymentVerification.builder()
+                                                .serviceInstanceMetricPath("serviceInstancePath1")
+                                                .enabled(true)
+                                                .build())
+                    .build()))
+            .build());
+    return appDynamicsCVConfigs;
   }
 
   private List<AppDynamicsCVConfig> createCVConfigs() {
