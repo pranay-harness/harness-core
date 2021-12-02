@@ -19,6 +19,9 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: true
   - name: INTEGRATED_APPROVALS_WITH_JIRA
     description: Support for Integrated approvals with Harness JIRA
     restrictions:
@@ -31,3 +34,6 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
