@@ -3,9 +3,6 @@ clients:
   - name: cimanager
     clientConfig: ciManagerClientConfig
     secretConfig: nextGenConfig.ciManagerSecret
-  - name: ngmanager
-    clientConfig: ngManagerClientConfig
-    secretConfig: nextGenConfig.ngManagerServiceSecret
 features:
   - name: MAX_BUILDS_PER_MONTH
     description: Max build per month
@@ -16,7 +13,7 @@ features:
         timeUnit:
           unit: MONTHS
           numberOfUnits: 1
-        clientName: ngmanager
+        clientName: cimanager
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true
@@ -29,7 +26,7 @@ features:
       FREE:
         restrictionType: STATIC_LIMIT
         limit: 2500
-        clientName: ngmanager
+        clientName: cimanager
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true
@@ -73,7 +70,7 @@ features:
     restrictions:
       FREE:
         restrictionType: CUSTOM
-        clientName: ngmanager
+        clientName: cimanager
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true
