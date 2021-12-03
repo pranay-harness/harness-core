@@ -312,7 +312,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(appConfig);
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
     modules.add(PipelineServiceUtilityModule.getInstance());
-
     Injector injector = Guice.createInjector(modules);
     registerStores(appConfig, injector);
     registerEventListeners(injector);
