@@ -23,8 +23,6 @@ public class JiraStepVariableCreator extends GenericStepVariableCreator {
   public Set<String> getSupportedStepTypes() {
     Set<String> strings = new HashSet<>();
     strings.add(StepSpecTypeConstants.JIRA_CREATE);
-    strings.add(StepSpecTypeConstants.JIRA_UPDATE);
-    strings.add(StepSpecTypeConstants.JIRA_APPROVAL);
     return strings;
   }
 
@@ -32,7 +30,7 @@ public class JiraStepVariableCreator extends GenericStepVariableCreator {
   protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap,
       Map<String, YamlOutputProperties> yamlOutputPropertiesMap, YamlNode yamlNode) {
     List<String> complexFields = new ArrayList<>();
-    complexFields.add(YAMLFieldNameConstants.OUTPUT_VARIABLES);
+    complexFields.add("fields");
 
     List<YamlField> fields = yamlNode.fields();
     fields.forEach(field -> {
@@ -41,9 +39,19 @@ public class JiraStepVariableCreator extends GenericStepVariableCreator {
       }
     });
 
-    YamlField outputVariablesField = yamlNode.getField(YAMLFieldNameConstants.OUTPUT_VARIABLES);
-    if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
-      addVariablesForOutputVariables(outputVariablesField, yamlOutputPropertiesMap);
+    YamlField yamlField = yamlNode.getField("fields");
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(yamlField)) {
+      addVariablesForFields(yamlField, yamlPropertiesMap);
     }
+  }
+
+  private void addVariablesForFields(YamlField yamlField, Map<String, YamlProperties> yamlPropertiesMap) {
+    List<YamlNode> yamlNodes = yamlField.getNode().asArray();
+    yamlNodes.forEach(yamlNode -> {
+      YamlField uuidNode = yamlNode.getField(YAMLFieldNameConstants.UUID);
+      if (uuidNode != null) {
+        addFieldToPropertiesMapUnderStep(uuidNode, yamlPropertiesMap);
+      }
+    });
   }
 }

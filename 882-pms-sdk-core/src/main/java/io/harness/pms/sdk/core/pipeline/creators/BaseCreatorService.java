@@ -120,7 +120,8 @@ public abstract class BaseCreatorService<R extends CreatorResponse, M> {
       }
       mergeResponses(finalResponse, response);
       finalResponse.addResolvedDependency(currentYaml, yamlField.getNode().getUuid(), yamlPath);
-      if (isNotEmpty(response.getDependenciesForVariable().getDependenciesMap())) {
+      if ((response.getDependenciesForVariable()) != null
+          && isNotEmpty(response.getDependenciesForVariable().getDependenciesMap())) {
         for (Map.Entry<String, String> entry : response.getDependenciesForVariable().getDependenciesMap().entrySet()) {
           dependencies.putDependencies(entry.getKey(), entry.getValue());
         }

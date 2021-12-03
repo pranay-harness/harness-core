@@ -2,6 +2,7 @@ package io.harness.steps.approval;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.pipeline.variables.GenericStepVariableCreator;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @OwnedBy(HarnessTeam.CDC)
@@ -42,11 +44,6 @@ public class ApprovalStepVariableCreator extends GenericStepVariableCreator {
       }
     });
 
-    YamlField approversField = yamlNode.getField(YamlTypes.APPROVERS);
-    if (VariableCreatorHelper.isNotYamlFieldEmpty(approversField)) {
-      addVariablesForApprovers(approversField, yamlPropertiesMap);
-    }
-
     YamlField inputsField = yamlNode.getField(YamlTypes.APPROVAL_INPUTS);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(inputsField)) {
       addVariablesForInputs(inputsField, yamlPropertiesMap);
@@ -54,28 +51,27 @@ public class ApprovalStepVariableCreator extends GenericStepVariableCreator {
   }
 
   private void addVariablesForInputs(YamlField inputsField, Map<String, YamlProperties> yamlPropertiesMap) {
-    List<YamlNode> nodes = inputsField.getNode().asArray();
-    nodes.forEach(node -> {
-      YamlField field = node.getField(YAMLFieldNameConstants.UUID);
-      if (field != null) {
-        String fqn = YamlUtils.getFullyQualifiedName(field.getNode());
-        String localName;
-        if (fqn.contains(YAMLFieldNameConstants.PIPELINE_INFRASTRUCTURE)) {
-          localName = YamlUtils.getQualifiedNameTillGivenField(node, YAMLFieldNameConstants.PIPELINE_INFRASTRUCTURE);
-        } else {
-          localName = YamlUtils.getQualifiedNameTillGivenField(node, YAMLFieldNameConstants.EXECUTION);
-        }
-        yamlPropertiesMap.put(node.getField("defaultValue").getNode().getCurrJsonNode().textValue(),
-            YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
-      }
-    });
-  }
+    List<YamlNode> variableNodes = inputsField.getNode().asArray();
+    variableNodes.forEach(variableNode -> {
+      YamlField uuidNode = variableNode.getField(YAMLFieldNameConstants.UUID);
+      if (uuidNode != null) {
+        String original = YAMLFieldNameConstants.SPEC + ".approverInputs";
+        String replacement = YAMLFieldNameConstants.OUTPUT + ".approverInputs";
 
-  private void addVariablesForApprovers(YamlField yamlField, Map<String, YamlProperties> yamlPropertiesMap) {
-    List<YamlField> fields = yamlField.getNode().fields();
-    fields.forEach(field -> {
-      if (!field.getName().equals(YAMLFieldNameConstants.UUID)) {
-        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
+        String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode()).replace(original, replacement);
+        String localName =
+            YamlUtils.getQualifiedNameTillGivenField(uuidNode.getNode(), YAMLFieldNameConstants.EXECUTION)
+                .replace(original, replacement);
+
+        YamlField valueNode = variableNode.getField("defaultValue");
+        String variableName =
+            Objects.requireNonNull(variableNode.getField(YAMLFieldNameConstants.NAME)).getNode().asText();
+        if (valueNode == null) {
+          throw new InvalidRequestException(
+              "Variable with name \"" + variableName + "\" added without any value. Fqn: " + fqn);
+        }
+        yamlPropertiesMap.put(valueNode.getNode().getCurrJsonNode().textValue(),
+            YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
       }
     });
   }
