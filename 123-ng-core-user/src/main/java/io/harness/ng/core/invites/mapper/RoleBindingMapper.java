@@ -47,12 +47,7 @@ public class RoleBindingMapper {
     }
     return roleBindings.stream()
         .map(roleBinding -> {
-          if (isBlank(roleBinding.getResourceGroupIdentifier())) {
-            roleBinding.setResourceGroupIdentifier(
-                getDefaultResourceGroupIdentifier(scope.getOrgIdentifier(), scope.getProjectIdentifier()));
-            roleBinding.setResourceGroupName(
-                getDefaultResourceGroupName(scope.getOrgIdentifier(), scope.getProjectIdentifier()));
-          }
+          sanitizeRoleBinding(roleBinding, scope.getOrgIdentifier(), scope.getProjectIdentifier());
           return RoleAssignmentDTO.builder()
               .roleIdentifier(roleBinding.getRoleIdentifier())
               .resourceGroupIdentifier(roleBinding.getResourceGroupIdentifier())
@@ -61,6 +56,19 @@ public class RoleBindingMapper {
               .build();
         })
         .collect(Collectors.toList());
+  }
+
+  public static void sanitizeRoleBindings(
+      List<RoleBinding> roleBindings, String orgIdentifier, String projectIdentifier) {
+    roleBindings.forEach(roleBinding -> sanitizeRoleBinding(roleBinding, orgIdentifier, projectIdentifier));
+  }
+
+  public static void sanitizeRoleBinding(RoleBinding roleBinding, String orgIdentifier, String projectIdentifier) {
+    if (isBlank(roleBinding.getResourceGroupIdentifier())) {
+      roleBinding.setResourceGroupIdentifier(
+          RoleBindingMapper.getDefaultResourceGroupIdentifier(orgIdentifier, projectIdentifier));
+      roleBinding.setResourceGroupName(RoleBindingMapper.getDefaultResourceGroupName(orgIdentifier, projectIdentifier));
+    }
   }
 
   public static String getDefaultResourceGroupIdentifier(String orgIdentifier, String projectIdentifier) {
