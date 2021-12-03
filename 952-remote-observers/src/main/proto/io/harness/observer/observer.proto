@@ -24,17 +24,23 @@ message Informant0 {}
 
 message Informant1 {
   bytes param1 = 1;
+  string type1 = 2;
 }
 
 message Informant2 {
   bytes param1 = 1;
   bytes param2 = 2;
+  string type1 = 3;
+  string type2 = 4;
 }
 
 message Informant3 {
   bytes param1 = 1;
   bytes param2 = 2;
   bytes param3 = 3;
+  string type1 = 4;
+  string type2 = 5;
+  string type3 = 6;
 }
 
 message Informant4 {
@@ -42,6 +48,10 @@ message Informant4 {
   bytes param2 = 2;
   bytes param3 = 3;
   bytes param4 = 4;
+  string type1 = 5;
+  string type2 = 6;
+  string type3 = 7;
+  string type4 = 8;
 }
 
 message Response {}
