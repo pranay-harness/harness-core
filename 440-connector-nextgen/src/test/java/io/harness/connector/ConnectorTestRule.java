@@ -123,7 +123,9 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
     modules.add(new GitSyncablePersistenceTestModule());
-    modules.add(ConnectorModule.getInstance());
+    modules.add(ConnectorModule.getInstance(
+        io.harness.remote.NextGenConfig.builder().ceNextGenServiceSecret("test_secret").build(),
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build()));
     modules.add(KryoModule.getInstance());
     modules.add(YamlSdkModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(
