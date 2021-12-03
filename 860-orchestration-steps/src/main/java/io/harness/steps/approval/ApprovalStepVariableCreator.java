@@ -55,8 +55,8 @@ public class ApprovalStepVariableCreator extends GenericStepVariableCreator {
     variableNodes.forEach(variableNode -> {
       YamlField uuidNode = variableNode.getField(YAMLFieldNameConstants.UUID);
       if (uuidNode != null) {
-        String original = YAMLFieldNameConstants.SPEC + ".approverInputs";
-        String replacement = YAMLFieldNameConstants.OUTPUT + ".approverInputs";
+        String original = YAMLFieldNameConstants.SPEC + "." + YamlTypes.APPROVAL_INPUTS;
+        String replacement = YAMLFieldNameConstants.OUTPUT + "." + YamlTypes.APPROVAL_INPUTS;
 
         String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode()).replace(original, replacement);
         String localName =
