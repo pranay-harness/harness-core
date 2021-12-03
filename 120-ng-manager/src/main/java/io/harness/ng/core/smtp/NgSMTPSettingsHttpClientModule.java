@@ -28,8 +28,9 @@ public class NgSMTPSettingsHttpClientModule extends AbstractModule {
   }
 
   @Provides
-  private NgSMTPSettingsHttpClientFactory getNgSMTPSettingsHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
-    return new NgSMTPSettingsHttpClientFactory(managerClientConfig, managerServiceSecret, new ServiceTokenGenerator(), kryoConverterFactory);
+  private NgSMTPSettingsHttpClientFactory getNgSMTPSettingsHttpClientFactory(
+      KryoConverterFactory kryoConverterFactory) {
+    return new NgSMTPSettingsHttpClientFactory(
+        managerClientConfig, managerServiceSecret, new ServiceTokenGenerator(), kryoConverterFactory);
   }
-
 }
