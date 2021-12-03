@@ -1,8 +1,10 @@
 package io.harness.cvng.core.beans;
 
 import io.harness.beans.WithIdentifier;
+import io.harness.cvng.beans.CVMonitoringCategory;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -29,10 +31,19 @@ public class HealthSourceMetricDefinition implements WithIdentifier {
   }
 
   public RiskProfile getRiskProfile() {
-    if (riskProfile == null) {
-      return analysis.riskProfile;
+    RiskProfile profile;
+    if (Objects.nonNull(riskProfile)) {
+      profile = riskProfile;
+    } else if (Objects.nonNull(analysis.riskProfile)) {
+      profile = analysis.riskProfile;
+    } else {
+      return RiskProfile.builder().build();
     }
-    return riskProfile;
+    // TODO Need to be remove the default behaviour
+    if (Objects.isNull(profile.getCategory())) {
+      profile.setCategory(CVMonitoringCategory.ERRORS);
+    }
+    return profile;
   }
 
   @Data
