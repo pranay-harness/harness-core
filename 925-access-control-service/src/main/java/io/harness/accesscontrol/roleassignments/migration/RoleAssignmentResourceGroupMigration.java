@@ -18,10 +18,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@Slf4j
 @Singleton
 @OwnedBy(PL)
 public class RoleAssignmentResourceGroupMigration implements NGMigration {
@@ -61,6 +63,7 @@ public class RoleAssignmentResourceGroupMigration implements NGMigration {
         TimeUnit.MINUTES.sleep(2);
       } while (true);
     } catch (InterruptedException exception) {
+      log.error("InterruptedException occurred.", exception);
       Thread.currentThread().interrupt();
     }
   }
