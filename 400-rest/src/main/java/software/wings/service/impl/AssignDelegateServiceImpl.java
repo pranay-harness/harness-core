@@ -163,6 +163,14 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       return false;
     }
 
+    boolean canAssignTaskToDelegate =
+        canAssignTaskToDelegate(delegate.getSupportedTaskTypes(), task.getData().getTaskType());
+    if (!canAssignTaskToDelegate) {
+      log.debug("Delegate {} does not support task {} which is of type {}", delegateId, task.getUuid(),
+          task.getData().getTaskType());
+      return canAssignTaskToDelegate;
+    }
+
     boolean canAssignCgNg = canAssignCgNg(delegate, task.getSetupAbstractions());
     if (!canAssignCgNg) {
       log.debug("can not assign canAssignCgNg {}", canAssignCgNg);
@@ -383,6 +391,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         batch, delegate.getAccountId(), delegate.getUuid(), delegateProfile.getUuid(), failedRulesDescriptions);
 
     return false;
+  }
+
+  private boolean canAssignTaskToDelegate(List<String> supportedTaskTypesByDelegate, String taskType) {
+    return supportedTaskTypesByDelegate != null && taskType != null && supportedTaskTypesByDelegate.contains(taskType);
   }
 
   private boolean trySetupAbstractionsWorkaround(String logSequence, Map<String, String> taskSetupAbstractions,
