@@ -4,7 +4,7 @@ Portal Project Dev environment setup instructions
 
 ### Prerequisities
 1. Install Homebrew:
-```
+```aa
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
