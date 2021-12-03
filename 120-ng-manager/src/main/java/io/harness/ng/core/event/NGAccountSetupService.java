@@ -1,11 +1,9 @@
 package io.harness.ng.core.event;
 
-import static io.harness.NGConstants.DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
-import static io.harness.NGConstants.DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
-import static io.harness.NGConstants.DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.core.invites.mapper.RoleBindingMapper.getDefaultResourceGroupIdentifier;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -154,18 +152,8 @@ public class NGAccountSetupService {
     }
   }
 
-  private static String getManagedResourceGroupIdentifier(Scope scope) {
-    if (!StringUtils.isEmpty(scope.getProjectIdentifier())) {
-      return DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
-    } else if (!StringUtils.isEmpty(scope.getOrgIdentifier())) {
-      return DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
-    } else {
-      return DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
-    }
-  }
-
   private void assignAdminRoleToUsers(Scope scope, Collection<String> users, String roleIdentifier) {
-    createRoleAssignments(scope, buildRoleAssignments(users, roleIdentifier, getManagedResourceGroupIdentifier(scope)));
+    createRoleAssignments(scope, buildRoleAssignments(users, roleIdentifier, getDefaultResourceGroupIdentifier(scope)));
   }
 
   private List<RoleAssignmentDTO> buildRoleAssignments(
