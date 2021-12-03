@@ -4,6 +4,7 @@ import static software.wings.beans.TaskType.VALIDATE_KUBERNETES_CONFIG;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.validator.scmValidators.AbstractKubernetesConnectorValidator;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -29,6 +30,12 @@ public class KubernetesConnectionValidator extends AbstractKubernetesConnectorVa
         kubernetesClusterConfig, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     KubernetesConnectionTaskResponse taskResponse = (KubernetesConnectionTaskResponse) responseData;
     return taskResponse.getConnectorValidationResult();
+  }
+
+  @Override
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    return null;
   }
 
   @Override
