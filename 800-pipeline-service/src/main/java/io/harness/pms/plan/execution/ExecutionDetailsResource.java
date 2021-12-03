@@ -100,7 +100,6 @@ public class ExecutionDetailsResource {
   @Inject private final PMSExecutionService pmsExecutionService;
   @Inject private final AccessControlClient accessControlClient;
   @Inject private final PmsGitSyncHelper pmsGitSyncHelper;
-  @Inject private final PipelineExecutionSummaryDtoMapper pipelineExecutionSummaryDtoMapper;
 
   @POST
   @Path("/summary")
@@ -155,7 +154,7 @@ public class ExecutionDetailsResource {
     Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
         pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
             .map(e
-                -> pipelineExecutionSummaryDtoMapper.toDto(e,
+                -> PipelineExecutionSummaryDtoMapper.toDto(e,
                     e.getEntityGitDetails() != null
                         ? e.getEntityGitDetails()
                         : pmsGitSyncHelper.getEntityGitDetailsFromBytes(e.getGitSyncBranchContext())));
@@ -200,7 +199,7 @@ public class ExecutionDetailsResource {
 
     PipelineExecutionDetailDTO pipelineExecutionDetailDTO =
         PipelineExecutionDetailDTO.builder()
-            .pipelineExecutionSummary(pipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, entityGitDetails))
+            .pipelineExecutionSummary(PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, entityGitDetails))
             .executionGraph(ExecutionGraphMapper.toExecutionGraph(
                 pmsExecutionService.getOrchestrationGraph(stageNodeId, planExecutionId)))
             .build();
