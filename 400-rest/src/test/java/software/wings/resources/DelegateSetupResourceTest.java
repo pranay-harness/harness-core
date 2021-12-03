@@ -124,7 +124,7 @@ public class DelegateSetupResourceTest extends CategoryTest {
           .instance(new DelegateSetupResource(delegateService, delegateScopeService, downloadTokenService,
               subdomainUrlHelper, delegateCache, accessControlClient))
           .instance(new DelegateSetupResourceV3(delegateService, delegateScopeService, downloadTokenService,
-              subdomainUrlHelper, delegateCache, accessControlClient))
+              subdomainUrlHelper, delegateCache, accessControlClient, delegateSetupService))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -846,7 +846,7 @@ public class DelegateSetupResourceTest extends CategoryTest {
                                 .get();
     DelegateSetupDetails details = DelegateSetupDetails.builder().delegateType(DOCKER).name("name1").build();
     verify(delegateService, atLeastOnce())
-        .validateDockerSetupDetails(anyString(), eq(details), eq(DelegateType.DOCKER));
+        .validateDockerSetupDetailsNg(anyString(), eq(details), eq(DelegateType.DOCKER));
 
     assertThat(restResponse.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
   }

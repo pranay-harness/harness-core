@@ -1138,6 +1138,44 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
         .containsExactly(true, true);
   }
 
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldListDelegateGroupDetailsByTokenNameEmptyResult() {
+    prepareInitialData();
+
+    DelegateGroupListing delegateGroupListing =
+        delegateSetupService.listDelegateGroupDetails(TEST_ACCOUNT_ID, null, null, "test");
+
+    assertThat(delegateGroupListing.getDelegateGroupDetails()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldListDelegateGroupDetailsByTokenName() {
+    prepareInitialData();
+    Delegate delegate = createDelegateBuilder()
+                            .uuid("delegateId")
+                            .accountId(TEST_ACCOUNT_ID)
+                            .ng(true)
+                            .tags(Lists.newArrayList("tag123", "tag456", "commonTag"))
+                            .delegateType(KUBERNETES)
+                            .delegateName("delegate")
+                            .delegateGroupName("grp")
+                            .description("description")
+                            .hostName("kube-0")
+                            .delegateGroupId(TEST_DELEGATE_GROUP_ID_1)
+                            .delegateTokenName("test")
+                            .build();
+    persistence.save(delegate);
+
+    DelegateGroupListing delegateGroupListing =
+        delegateSetupService.listDelegateGroupDetails(TEST_ACCOUNT_ID, null, null, "test");
+
+    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
+  }
+
   private void prepareInitialData() {
     List<DelegateGroup> delegateGroups = prepareDelegateGroups();
     List<Delegate> delegates = prepareDelegates();
