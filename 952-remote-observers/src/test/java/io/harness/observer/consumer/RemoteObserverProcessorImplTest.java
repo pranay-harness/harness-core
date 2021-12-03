@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 import com.google.protobuf.ByteString;
-import java.util.Map;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -117,21 +117,25 @@ public class RemoteObserverProcessorImplTest extends CategoryTest {
   public void processInternal(Informant informant) {
     final Message consumerMessage = getMessage(informant);
 
-    Map<String, RemoteObserver> remoteObserverMap = getRemoteObserverMap();
+    Set<RemoteObserver> remoteObserverMap = getRemoteObserverMap();
     doReturn(new SampleObserverClass()).when(remoteObserverProcessor).getObserver(SampleObserverClass.class);
     final boolean response = remoteObserverProcessor.process(consumerMessage, remoteObserverMap);
     assertThat(response).isEqualTo(true);
   }
 
-  public Map<String, RemoteObserver> getRemoteObserverMap() {
-    return ImmutableMap.of(Subject.class.getName(),
-        RemoteObserver.builder().subjectCLass(Subject.class).observer(SampleObserverClass.class).build());
+  public Set<RemoteObserver> getRemoteObserverMap() {
+    return ImmutableSet.of(RemoteObserver.builder()
+                               .subjectCLass(Subject.class)
+                               .observerClass(Subject.class)
+                               .observer(SampleObserverClass.class)
+                               .build());
   }
 
   public Message getMessage(Informant informant) {
     final io.harness.eventsframework.producer.Message message =
         io.harness.eventsframework.producer.Message.newBuilder()
-            .putAllMetadata(ImmutableMap.of(RemoteObserverConstants.SUBJECT_CLASS_NAME, Subject.class.getName()))
+            .putAllMetadata(ImmutableMap.of(RemoteObserverConstants.SUBJECT_CLASS_NAME, Subject.class.getName(),
+                RemoteObserverConstants.OBSERVER_CLASS_NAME, Subject.class.getName()))
             .setData(informant.toByteString())
             .build();
     return Message.newBuilder().setMessage(message).build();

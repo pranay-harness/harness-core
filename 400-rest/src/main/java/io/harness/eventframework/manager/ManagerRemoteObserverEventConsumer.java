@@ -9,11 +9,11 @@ import io.harness.observer.consumer.AbstractRemoteObserverEventConsumer;
 import io.harness.observer.consumer.RemoteObserverProcessor;
 import io.harness.queue.QueueController;
 
-import java.util.Map;
+import java.util.Set;
 
 @OwnedBy(HarnessTeam.DEL)
 public class ManagerRemoteObserverEventConsumer extends AbstractRemoteObserverEventConsumer {
-  public ManagerRemoteObserverEventConsumer(Consumer redisConsumer, Map<String, RemoteObserver> remoteObservers,
+  public ManagerRemoteObserverEventConsumer(Consumer redisConsumer, Set<RemoteObserver> remoteObservers,
       QueueController queueController, RemoteObserverProcessor remoteObserverProcessor) {
     super(redisConsumer, remoteObservers, queueController, remoteObserverProcessor);
   }

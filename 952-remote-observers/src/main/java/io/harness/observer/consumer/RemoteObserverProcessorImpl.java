@@ -1,5 +1,6 @@
 package io.harness.observer.consumer;
 
+import static io.harness.observer.RemoteObserverConstants.OBSERVER_CLASS_NAME;
 import static io.harness.observer.RemoteObserverConstants.SUBJECT_CLASS_NAME;
 
 import io.harness.eventsframework.NgEventLogContext;
@@ -21,6 +22,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,19 +35,29 @@ public class RemoteObserverProcessorImpl implements RemoteObserverProcessor {
   KryoSerializer kryoSerializer;
 
   @Override
-  public boolean process(Message message, Map<String, RemoteObserver> remoteObserverMap) {
+  public boolean process(Message message, Set<RemoteObserver> remoteObservers) {
     try (AutoLogContext ignore1 = new NgEventLogContext(message.getId(), OverrideBehavior.OVERRIDE_ERROR)) {
       final Map<String, String> metadataMap = message.getMessage().getMetadataMap();
       final String subjectClassName = metadataMap.get(SUBJECT_CLASS_NAME);
-      final RemoteObserver remoteObserver = remoteObserverMap.getOrDefault(subjectClassName, null);
-      if (remoteObserver != null) {
-        informAllObservers(message, remoteObserver);
-      }
+      final String observerClassName = metadataMap.get(OBSERVER_CLASS_NAME);
+
+      final Set<RemoteObserver> remoteObserversOfInterest =
+          getRemoteObserversOfInterest(remoteObservers, subjectClassName, observerClassName);
+      remoteObserversOfInterest.forEach(remoteObserver -> informAllObservers(message, remoteObserver));
     } catch (Exception e) {
       log.error("Error in processing message: [{}]", message.getId());
       throw e;
     }
     return true;
+  }
+
+  private Set<RemoteObserver> getRemoteObserversOfInterest(
+      Set<RemoteObserver> remoteObservers, String subjectClassName, String observerClassName) {
+    return remoteObservers.stream()
+        .filter(remoteObserver
+            -> subjectClassName.equals(remoteObserver.getSubjectCLass().getName())
+                && observerClassName.equals(remoteObserver.getObserverClass().getName()))
+        .collect(Collectors.toSet());
   }
 
   private void informAllObservers(Message message, RemoteObserver remoteObserver) {
