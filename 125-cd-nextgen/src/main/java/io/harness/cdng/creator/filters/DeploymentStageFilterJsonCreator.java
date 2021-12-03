@@ -99,7 +99,7 @@ public class DeploymentStageFilterJsonCreator extends GenericStageFilterJsonCrea
     if (environmentRef != null && !environmentRef.isExpression()) {
       Optional<Environment> environmentEntityOptional = environmentService.get(
           filterCreationContext.getSetupMetadata().getAccountId(), filterCreationContext.getSetupMetadata().getOrgId(),
-          filterCreationContext.getSetupMetadata().getProjectId(), serviceRef.getValue(), false);
+          filterCreationContext.getSetupMetadata().getProjectId(), environmentRef.getValue(), false);
       environmentEntityOptional.ifPresent(environment -> cdFilter.environmentName(environment.getName()));
     }
 

@@ -82,6 +82,18 @@ if [[ -e proxy.config ]]; then
   fi
 fi
 
+if [ -s init.sh ]; then
+    echo "Starting initialization script for delegate"
+    source ./init.sh
+    if [ $? -eq 0 ];
+    then
+      echo "Completed executing initialization script"
+    else
+      echo "Error while executing initialization script. Delegate will not start."
+      exit 1
+    fi
+fi
+
 if [[ "$OSTYPE" == linux* ]]; then
   touch /tmp/exec-test.sh && chmod +x /tmp/exec-test.sh
   /tmp/exec-test.sh
@@ -193,7 +205,7 @@ else
   sed -i.bak "s|^upgradeCheckLocation:.*$|upgradeCheckLocation: ${watcherStorageUrl}/${watcherCheckLocation}|" config-watcher.yml
 fi
 if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
-  echo "upgradeCheckIntervalSeconds: 43200" >> config-watcher.yml
+  echo "upgradeCheckIntervalSeconds: 1200" >> config-watcher.yml
 fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
   echo "delegateCheckLocation: ${delegateStorageUrl}/${delegateCheckLocation}" >> config-watcher.yml

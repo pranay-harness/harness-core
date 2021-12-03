@@ -37,7 +37,8 @@ build_bazel_application() {
 
 if [ "${BUILD_CG_MANAGER}" == "true" ]; then
   echo "##### Building Everything #####"
-  mvn -B -T 2C clean package -e -Dbuild.number=$VERSION -DgitBranch=$BUILD_NAME -DskipTests --also-make -U #This one is used in Jenkins.
+  #mvn -B -T 2C clean package -e -Dbuild.number=$VERSION -DgitBranch=$BUILD_NAME -DskipTests --also-make -U #This one is used in Jenkins.
+  scripts/bazel/bazel_script.sh
   scripts/jenkins/portal-openjdk-bazel.sh || true
 #  # build manager
 #  build_bazel_application 360-cg-manager

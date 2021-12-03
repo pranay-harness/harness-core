@@ -13,6 +13,7 @@ import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILOS;
+import static io.harness.rule.OwnerRule.MOUNIK;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -544,10 +545,29 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ScheduledTriggerCondition) trigger.getCondition()).getCronDescription()).isNotNull();
     assertThat(((ScheduledTriggerCondition) trigger.getCondition()).getCronExpression())
         .isNotNull()
-        .isEqualTo("* * * * ?");
+        .isEqualTo("0/5 0 ? * * *");
     assertThat(savedScheduledTrigger.getNextIterations()).isNotEmpty();
     assertThat(trigger.getNextIterations()).isNotEmpty();
     verify(jobScheduler).scheduleJob(any(JobDetail.class), any(org.quartz.Trigger.class));
+  }
+
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void shouldNotSaveScheduledConditionTrigger() {
+    scheduledConditionTrigger.setCondition(ScheduledTriggerCondition.builder().cronExpression("* * * * ?").build());
+    assertThatThrownBy(() -> triggerService.save(scheduledConditionTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Deployments can be triggered only at 5 minute intervals. Cron Expression should evaluate to time intervals of at least "
+            + 300 + " seconds.");
+    scheduledConditionTrigger.setCondition(ScheduledTriggerCondition.builder().cronExpression("0/2 0 ? * * *").build());
+    assertThatThrownBy(() -> triggerService.save(scheduledConditionTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Deployments can be triggered only at 5 minute intervals. Cron Expression should evaluate to time intervals of at least "
+            + 300 + " seconds.");
+    scheduledConditionTrigger.setCondition(ScheduledTriggerCondition.builder().cronExpression("0/5 0 ? * * *").build());
   }
 
   @Test
@@ -570,13 +590,33 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ScheduledTriggerCondition) updatedTrigger.getCondition()).getCronDescription()).isNotNull();
     assertThat(((ScheduledTriggerCondition) updatedTrigger.getCondition()).getCronExpression())
         .isNotNull()
-        .isEqualTo("* * * * ?");
+        .isEqualTo("0/5 0 ? * * *");
     assertThat(updatedTrigger.getArtifactSelections())
         .isNotNull()
         .extracting(ArtifactSelection::getType)
         .contains(LAST_COLLECTED, LAST_DEPLOYED);
     assertThat(updatedTrigger.getNextIterations()).isNotEmpty();
     verify(jobScheduler).rescheduleJob(any(TriggerKey.class), any(org.quartz.Trigger.class));
+  }
+
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateScheduledConditionTrigger() {
+    scheduledConditionTrigger = triggerService.save(scheduledConditionTrigger);
+    scheduledConditionTrigger.setCondition(ScheduledTriggerCondition.builder().cronExpression("* * * * ?").build());
+    assertThatThrownBy(() -> triggerService.update(scheduledConditionTrigger, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Deployments can be triggered only at 5 minute intervals. Cron Expression should evaluate to time intervals of at least "
+            + 300 + " seconds.");
+    scheduledConditionTrigger.setCondition(ScheduledTriggerCondition.builder().cronExpression("0/2 0 ? * * *").build());
+    assertThatThrownBy(() -> triggerService.update(scheduledConditionTrigger, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Deployments can be triggered only at 5 minute intervals. Cron Expression should evaluate to time intervals of at least "
+            + 300 + " seconds.");
+    scheduledConditionTrigger.setCondition(ScheduledTriggerCondition.builder().cronExpression("0/5 0 ? * * *").build());
   }
 
   @Test
@@ -825,7 +865,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ScheduledTriggerCondition) trigger.getCondition()).getCronDescription()).isNotNull();
     assertThat(((ScheduledTriggerCondition) trigger.getCondition()).getCronExpression())
         .isNotNull()
-        .isEqualTo("* * * * ?");
+        .isEqualTo("0/5 0 ? * * *");
     assertThat(trigger.getNextIterations()).isNotEmpty();
     verify(jobScheduler).scheduleJob(any(JobDetail.class), any(org.quartz.Trigger.class));
 
@@ -865,7 +905,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ScheduledTriggerCondition) updatedTrigger.getCondition()).getCronDescription()).isNotNull();
     assertThat(((ScheduledTriggerCondition) updatedTrigger.getCondition()).getCronExpression())
         .isNotNull()
-        .isEqualTo("* * * * ?");
+        .isEqualTo("0/5 0 ? * * *");
     assertThat(updatedTrigger.getNextIterations()).isNotEmpty();
     verify(jobScheduler).scheduleJob(any(JobDetail.class), any(org.quartz.Trigger.class));
   }

@@ -2,7 +2,9 @@ package io.harness.connector.validator;
 
 import static software.wings.beans.TaskType.CVNG_CONNECTOR_VALIDATE_TASK;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -46,8 +48,10 @@ public class CVConnectorValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    List<DecryptableEntity> decryptableEntities = connectorConfig.getDecryptableEntities();
     final List<EncryptedDataDetail> encryptionDetail =
-        super.getEncryptionDetail(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier);
+        super.getEncryptionDetail(decryptableEntities.size() > 0 ? decryptableEntities.get(0) : null, accountIdentifier,
+            orgIdentifier, projectIdentifier);
     return CVConnectorTaskParams.builder()
         .connectorConfigDTO(connectorConfig)
         .encryptionDetails(encryptionDetail)
@@ -70,5 +74,11 @@ public class CVConnectorValidator extends AbstractConnectorValidator {
         .errorSummary(cvConnectorTaskResponse.getErrorMessage())
         .delegateId(getDelegateId(cvConnectorTaskResponse))
         .build();
+  }
+
+  @Override
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    return null;
   }
 }

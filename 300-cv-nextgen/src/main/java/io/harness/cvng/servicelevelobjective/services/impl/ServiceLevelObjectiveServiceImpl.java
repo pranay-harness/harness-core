@@ -10,8 +10,8 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveFilter;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.ServiceLevelObjectiveKeys;
-import io.harness.cvng.servicelevelobjective.services.ServiceLevelIndicatorService;
-import io.harness.cvng.servicelevelobjective.services.ServiceLevelObjectiveService;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.mapper.TagMapper;
@@ -142,7 +142,8 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
         ServiceLevelObjectiveKeys.healthSourceIdentifier, serviceLevelObjectiveDTO.getHealthSourceRef());
     updateOperations.set(ServiceLevelObjectiveKeys.serviceLevelIndicators,
         serviceLevelIndicatorService.update(projectParams, serviceLevelObjectiveDTO.getServiceLevelIndicators(),
-            serviceLevelObjectiveDTO.getIdentifier(), serviceLevelObjective.getServiceLevelIndicators()));
+            serviceLevelObjectiveDTO.getIdentifier(), serviceLevelObjective.getServiceLevelIndicators(),
+            serviceLevelObjective.getMonitoredServiceIdentifier(), serviceLevelObjective.getHealthSourceIdentifier()));
     updateOperations.set(ServiceLevelObjectiveKeys.sloTarget, serviceLevelObjectiveDTO.getTarget());
     hPersistence.update(serviceLevelObjective, updateOperations);
   }
@@ -191,7 +192,8 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
             .name(serviceLevelObjectiveDTO.getName())
             .desc(serviceLevelObjectiveDTO.getDescription())
             .serviceLevelIndicators(serviceLevelIndicatorService.create(projectParams,
-                serviceLevelObjectiveDTO.getServiceLevelIndicators(), serviceLevelObjectiveDTO.getIdentifier()))
+                serviceLevelObjectiveDTO.getServiceLevelIndicators(), serviceLevelObjectiveDTO.getIdentifier(),
+                serviceLevelObjectiveDTO.getMonitoredServiceRef(), serviceLevelObjectiveDTO.getHealthSourceRef()))
             .monitoredServiceIdentifier(serviceLevelObjectiveDTO.getMonitoredServiceRef())
             .healthSourceIdentifier(serviceLevelObjectiveDTO.getHealthSourceRef())
             .tags(TagMapper.convertToList(serviceLevelObjectiveDTO.getTags()))

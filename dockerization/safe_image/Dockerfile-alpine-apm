@@ -2,5 +2,11 @@ FROM us.gcr.io/platform-205701/alpine:safe-alpine3.12-sec1695
 
 RUN mkdir -p /opt/harness/
 
-# Note: Apm agent is pulled from platform gcr bucket while executing jenkins job: portal-alpine-base-apm
+# Note: Apm agent is pulled from platform gcr bucket while executing CIE job: portal-alpine-base-apm
 COPY ./AppServerAgent-20.8.0.30686.zip /opt/harness/
+
+#BT-685: Including overops image into base image
+#Note: Overops agent is pulled from platform gcr bucket while executing CIE job: portal-alpine-base-apm
+ADD ./takipi-agent-4.64.0.tar.gz /opt/harness/
+
+

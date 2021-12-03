@@ -76,6 +76,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -243,7 +244,7 @@ public class K8sTaskHelper {
         KustomizeConfig kustomizeConfig = k8sDelegateManifestConfig.getKustomizeConfig();
         String pluginRootDir = kustomizeConfig != null ? kustomizeConfig.getPluginRootDir() : null;
         return kustomizeTaskHelper.buildForApply(k8sDelegateTaskParams.getKustomizeBinaryPath(), pluginRootDir,
-            manifestFilesDirectory, filesList, executionLogCallback);
+            manifestFilesDirectory, filesList, false, Collections.emptyList(), executionLogCallback);
 
       default:
         unhandled(storeType);

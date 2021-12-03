@@ -16,6 +16,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.jira.JiraTaskNGHelper;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.HintException;
 import io.harness.jira.JiraActionNG;
 
 import com.google.inject.Inject;
@@ -51,9 +52,16 @@ public class JiraTestConnectionTaskNG extends AbstractDelegateRunnableTask {
                                                .encryptionDetails(jiraConnectionTaskParams.getEncryptionDetails())
                                                .build());
       responseBuilder.canConnect(true);
+    } catch (HintException ex) {
+      throw ex;
     } catch (Exception ex) {
       responseBuilder.canConnect(false).errorMessage(ExceptionUtils.getMessage(ex));
     }
     return responseBuilder.build();
+  }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
   }
 }

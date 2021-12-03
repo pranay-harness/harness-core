@@ -18,6 +18,7 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.ConnectorValidationParameterResponse;
 import io.harness.delegate.beans.connector.k8Connector.K8sValidationParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.task.k8s.KubernetesValidationHandler;
@@ -87,12 +88,18 @@ public class ConnectorHeartbeatPerpetualTaskExecutorTest extends DelegateTestBas
                                     .build();
     K8sValidationParams k8sValidationParams =
         K8sValidationParams.builder().kubernetesClusterConfigDTO(KubernetesClusterConfigDTO.builder().build()).build();
-    ByteString connectorConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(k8sValidationParams));
-    ConnectorHeartbeatTaskParams connectorHeartbeatTaskParams = ConnectorHeartbeatTaskParams.newBuilder()
-                                                                    .setAccountIdentifier("accountIdentifier")
-                                                                    .setConnectorIdentifier("connectorIdentifier")
-                                                                    .setConnectorValidationParams(connectorConfigBytes)
-                                                                    .build();
+    ConnectorValidationParameterResponse connectorValidationParameterResponse =
+        ConnectorValidationParameterResponse.builder()
+            .connectorValidationParams(k8sValidationParams)
+            .isInvalid(false)
+            .build();
+    ByteString connectorConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(connectorValidationParameterResponse));
+    ConnectorHeartbeatTaskParams connectorHeartbeatTaskParams =
+        ConnectorHeartbeatTaskParams.newBuilder()
+            .setAccountIdentifier("accountIdentifier")
+            .setConnectorIdentifier("connectorIdentifier")
+            .setConnectorValidationParameterResponse(connectorConfigBytes)
+            .build();
     return PerpetualTaskExecutionParams.newBuilder()
         .setCustomizedParams(Any.pack(connectorHeartbeatTaskParams))
         .build();

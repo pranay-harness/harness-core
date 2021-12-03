@@ -31,7 +31,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.lang.reflect.Field;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -49,29 +48,30 @@ public class PmsYamlSchemaHelper {
   public static final Class<StageElementConfig> STAGE_ELEMENT_CONFIG_CLASS = StageElementConfig.class;
 
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
+  private final Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypesToBeAdded;
   private final YamlSchemaGenerator yamlSchemaGenerator;
 
   @Inject
   public PmsYamlSchemaHelper(@Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
+      @Named("new-yaml-schema-subtypes-pms") Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypesToBeAdded,
       YamlSchemaGenerator yamlSchemaGenerator) {
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
+    this.newYamlSchemaSubtypesToBeAdded = newYamlSchemaSubtypesToBeAdded;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
   }
 
   public void modifyStepElementSchema(ObjectNode jsonNode) {
+    if (jsonNode == null) {
+      return;
+    }
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
     Field typedField = io.harness.yaml.utils.YamlSchemaUtils.getTypedField(STEP_ELEMENT_CONFIG_CLASS);
     Set<Class<?>> cachedSubtypes = yamlSchemaSubtypes.get(typedField.getType());
     Set<SubtypeClassMap> mapOfSubtypes = io.harness.yaml.utils.YamlSchemaUtils.toSetOfSubtypeClassMap(cachedSubtypes);
-    Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
-    classFieldSubtypeData.add(io.harness.yaml.utils.YamlSchemaUtils.getFieldSubtypeData(typedField, mapOfSubtypes));
     Set<FieldEnumData> fieldEnumData = getFieldEnumData(typedField, mapOfSubtypes);
-    swaggerDefinitionsMetaInfoMap.put(STEP_ELEMENT_CONFIG,
-        SwaggerDefinitionsMetaInfo.builder()
-            .fieldEnumData(fieldEnumData)
-            .subtypeClassMap(classFieldSubtypeData)
-            .build());
+    swaggerDefinitionsMetaInfoMap.put(
+        STEP_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().fieldEnumData(fieldEnumData).build());
     yamlSchemaGenerator.convertSwaggerToJsonSchema(
         swaggerDefinitionsMetaInfoMap, mapper, STEP_ELEMENT_CONFIG, jsonNode);
   }
@@ -111,6 +111,8 @@ public class PmsYamlSchemaHelper {
         partialSchemaDTO.getNodeName(), (ObjectNode) partialSchemaDTO.getSchema(), partialSchemaDTO.getNamespace());
 
     mergePipelineStepsIntoStage(stageDefinitionsNode, pipelineSteps, partialSchemaDTO);
+    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
+        stageDefinitionsNode.get(partialSchemaDTO.getNamespace()), newYamlSchemaSubtypesToBeAdded, "");
     mergeStageElementConfig(stageElementConfig, subtypeClassMap);
 
     pipelineDefinitions.set(partialSchemaDTO.getNamespace(), stageDefinitionsNode.get(partialSchemaDTO.getNamespace()));

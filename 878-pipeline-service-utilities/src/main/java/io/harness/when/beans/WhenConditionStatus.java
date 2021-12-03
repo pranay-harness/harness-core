@@ -2,12 +2,15 @@ package io.harness.when.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidArgumentsException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+@TargetModule(value = HarnessModule._889_YAML_COMMONS)
 @OwnedBy(PIPELINE)
 public enum WhenConditionStatus {
   @JsonProperty(WhenConditionConstants.SUCCESS) SUCCESS(WhenConditionConstants.SUCCESS),

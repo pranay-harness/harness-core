@@ -17,8 +17,6 @@ import io.harness.models.constants.TimescaleConstants;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.timescaledb.TimeScaleDBService;
 
-import software.wings.graphql.datafetcher.DataFetcherUtils;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -26,7 +24,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Calendar;
 import java.util.Map;
+import java.util.TimeZone;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +42,6 @@ public class InstanceStatsEventListener implements MessageListener {
 
   private TimeScaleDBService timeScaleDBService;
   private InstanceEventAggregator instanceEventAggregator;
-  private DataFetcherUtils utils;
 
   @Override
   public boolean handleMessage(Message message) {
@@ -126,7 +126,7 @@ public class InstanceStatsEventListener implements MessageListener {
         try {
           Map<String, String> dataMap = dataPointArray[currElementIdx].getDataMap();
           log.info("Saving the instance data in the timescale db {}", dataMap);
-          statement.setTimestamp(1, new Timestamp(eventInfo.getTimestamp()), utils.getDefaultCalendar());
+          statement.setTimestamp(1, new Timestamp(eventInfo.getTimestamp()), Calendar.getInstance(TimeZone.getTimeZone("UTC")));
           statement.setString(2, eventInfo.getAccountId());
           statement.setString(3, dataMap.get(TimescaleConstants.ORG_ID.getKey()));
           statement.setString(4, dataMap.get(TimescaleConstants.PROJECT_ID.getKey()));

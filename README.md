@@ -9,7 +9,7 @@ Portal Project Dev environment setup instructions
 ```
 
 2. Download and Install Java 8
-
+dd
 NOTE: Brew will download and install latest version of OpenJDK/JRE, its recommended to install OpenJDK/JRE_1.8.0_242 to be in sync with version everyone is using in the team. 
 
 Download OpenJDK 1.8-242 (jdk8u242-b08) JRE Installer from [Java archive downloads](https://adoptopenjdk.net/archive.html), unzip it, then set `JAVA_HOME` and `PATH` accordingly.
@@ -66,7 +66,8 @@ export JFROG_PASSWORD=<password-here>
 ### Github setup
 
 1. Create harness dedicated github account. Use your harness email.
-2. Make your email public as it is shown on the picture:
+2. Make sure to make your email public as it is shown on the picture Otherwise PR check(AuthorCheck) will fail. Since
+   the github email won't be ending with 'harness.io'':
 NOTE: This account will be used mostly in harness private repos, you should not be concerned for being over espoused.
 
 ![config image](img/github_email_setup.png)
@@ -143,9 +144,8 @@ NOTE: the data from it is used for every git operation github does on you behave
    
 4. Go to `portal` directory and run
 
-    `mvn clean install -DskipTests`
-
-    `bazel build :all`
+    `scripts/bazel/generate_credentials.sh`
+    `bazel build //...` or `bazel build :all`
 
 5. If Global Search is not required:
 

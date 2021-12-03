@@ -107,7 +107,7 @@ if [ -e init.sh ]; then
     then
       echo "Completed executing initialization script"
     else
-      echo "Error while executing initialization script. Delegate wont be started."
+      echo "Error while executing initialization script. Delegate will not start."
       exit 1
     fi
 fi
@@ -221,7 +221,7 @@ else
   sed -i.bak "s|^upgradeCheckLocation:.*$|upgradeCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION|" config-watcher.yml
 fi
 if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
-  echo "upgradeCheckIntervalSeconds: 3600" >> config-watcher.yml
+  echo "upgradeCheckIntervalSeconds: 1200" >> config-watcher.yml
 fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
   echo "delegateCheckLocation: $DELEGATE_STORAGE_URL/$DELEGATE_CHECK_LOCATION" >> config-watcher.yml

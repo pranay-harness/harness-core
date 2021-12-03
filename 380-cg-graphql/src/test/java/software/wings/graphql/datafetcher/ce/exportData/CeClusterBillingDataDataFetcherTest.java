@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.SHUBHANSHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -86,6 +87,7 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
   @Mock private DataFetchingEnvironment environment;
   @Mock private K8sWorkloadDao k8sWorkloadDao;
   @Mock CeAccountExpirationChecker accountChecker;
+  @Mock CEExportDataNodeAndPodDetailsHelper nodeAndPodDetailsHelper;
   @InjectMocks CEExportDataQueryBuilder queryBuilder;
   @Inject @InjectMocks CeClusterBillingDataDataFetcher ceClusterBillingDataDataFetcher;
 
@@ -155,6 +157,7 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
     when(mockConnection.createStatement()).thenReturn(mockStatement);
     when(mockStatement.executeQuery(anyString())).thenReturn(resultSet);
     doNothing().when(accountChecker).checkIsCeEnabled(anyString());
+    when(nodeAndPodDetailsHelper.isNodeAndPodQuery(anyList())).thenReturn(false);
     mockResultSet();
   }
 

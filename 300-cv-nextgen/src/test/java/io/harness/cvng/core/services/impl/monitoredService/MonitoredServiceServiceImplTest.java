@@ -35,6 +35,7 @@ import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.CountServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
+import io.harness.cvng.core.beans.monitoredService.MetricDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
@@ -47,12 +48,15 @@ import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceD
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.entities.AnalysisInfo.SLI;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.MonitoredService.MonitoredServiceKeys;
+import io.harness.cvng.core.entities.PrometheusCVConfig;
+import io.harness.cvng.core.entities.PrometheusCVConfig.MetricInfo;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.SetupUsageEventService;
@@ -68,8 +72,10 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
+import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ng.core.service.dto.ServiceResponse;
+import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -105,6 +111,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject HeatMapService heatMapService;
   @Inject HPersistence hPersistence;
   @Inject ServiceDependencyService serviceDependencyService;
+  @Inject HealthSourceService healthSourceService;
   @Mock NextGenService nextGenService;
   @Mock SetupUsageEventService setupUsageEventService;
   @Mock ChangeSourceService changeSourceServiceMock;
@@ -188,6 +195,44 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             String.format("Multiple Health Sources exists with the same identifier %s", healthSourceIdentifier));
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testGetSloMetrics() {
+    String monitoredServiceIdentifier = "monitoredServiceIdentifier";
+    String healthSourceIdentifier = "healthSourceIdentifier";
+    PrometheusCVConfig cvConfig = (PrometheusCVConfig) builderFactory.prometheusCVConfigBuilder()
+                                      .metricInfoList(Arrays.asList(MetricInfo.builder()
+                                                                        .metricName("metricName1")
+                                                                        .sli(SLI.builder().enabled(true).build())
+                                                                        .identifier("identifier1")
+                                                                        .build(),
+                                          MetricInfo.builder()
+                                              .metricName("metricName2")
+                                              .sli(SLI.builder().enabled(false).build())
+                                              .identifier("identifier2")
+                                              .build(),
+                                          MetricInfo.builder()
+                                              .metricName("metricName3")
+                                              .sli(SLI.builder().enabled(true).build())
+                                              .identifier("identifier3")
+                                              .build()))
+                                      .metricPack(MetricPack.builder().category(CVMonitoringCategory.ERRORS).build())
+                                      .identifier(monitoredServiceIdentifier + "/" + healthSourceIdentifier)
+                                      .build();
+    hPersistence.save(cvConfig);
+
+    List<MetricDTO> metricDTOS = monitoredServiceService.getSloMetrics(
+        builderFactory.getContext().getProjectParams(), monitoredServiceIdentifier, healthSourceIdentifier);
+    metricDTOS =
+        metricDTOS.stream().sorted(Comparator.comparing(metricDTO -> metricDTO.getMetricName())).collect(toList());
+    assertThat(metricDTOS.size()).isEqualTo(2);
+    assertThat(metricDTOS.get(0).getMetricName()).isEqualTo("metricName1");
+    assertThat(metricDTOS.get(1).getMetricName()).isEqualTo("metricName3");
+    assertThat(metricDTOS.get(0).getIdentifier()).isEqualTo("identifier1");
+    assertThat(metricDTOS.get(1).getIdentifier()).isEqualTo("identifier3");
   }
 
   @Test
@@ -1180,6 +1225,102 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(dependentHealthScores.get(1).getRiskStatus()).isEqualTo(Risk.OBSERVE);
     assertThat(dependentHealthScores.get(2).getRiskStatus()).isEqualTo(Risk.NO_DATA);
     assertThat(dependentHealthScores.get(3).getRiskStatus()).isEqualTo(Risk.NO_ANALYSIS);
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testGetMonitoredServiceFromDependencyGraph_withCorrectServiceIdentifier() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    MonitoredServiceDTO monitoredServiceOneDTO = createMonitoredServiceDTOWithCustomDependencies("service_1_local",
+        environmentParams.getServiceIdentifier(), Sets.newHashSet("service_2_local", "service_3_local"));
+    MonitoredServiceDTO monitoredServiceTwoDTO =
+        createMonitoredServiceDTOWithCustomDependencies("service_2_local", "service_2", Sets.newHashSet());
+    MonitoredServiceDTO monitoredServiceThreeDTO =
+        createMonitoredServiceDTOWithCustomDependencies("service_3_local", "service_3", Sets.newHashSet());
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceOneDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceTwoDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceThreeDTO);
+
+    when(nextGenService.listService(any(), any(), any(), any())).thenReturn(new ArrayList<ServiceResponse>() {
+      { add(ServiceResponse.builder().service(ServiceResponseDTO.builder().name("serviceName").build()).build()); }
+    });
+    when(nextGenService.listEnvironment(any(), any(), any(), any())).thenReturn(new ArrayList<EnvironmentResponse>() {
+      {
+        add(EnvironmentResponse.builder()
+                .environment(EnvironmentResponseDTO.builder().name("environmentName").build())
+                .build());
+      }
+    });
+
+    HeatMap msOneHeatMap = builderFactory.heatMapBuilder()
+                               .serviceIdentifier(environmentParams.getServiceIdentifier())
+                               .heatMapResolution(FIVE_MIN)
+                               .build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msOneHeatMap, endTime, 0.15, 0.15);
+    hPersistence.save(msOneHeatMap);
+
+    HeatMap msTwoHeatMap =
+        builderFactory.heatMapBuilder().serviceIdentifier("service_2").heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msTwoHeatMap, endTime, 0.85, 0.85);
+    hPersistence.save(msTwoHeatMap);
+
+    HeatMap msThreeHeatMap =
+        builderFactory.heatMapBuilder().serviceIdentifier("service_3").heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msThreeHeatMap, endTime, 0.50, 0.50);
+    hPersistence.save(msThreeHeatMap);
+
+    MonitoredServiceListItemDTO monitoredServiceListItemDTO =
+        monitoredServiceService.getMonitoredServiceDetails(environmentParams);
+    assertThat(monitoredServiceListItemDTO.getIdentifier()).isEqualTo("service_1_local");
+    assertThat(monitoredServiceListItemDTO.getName()).isEqualTo("service_1_local");
+    assertThat(monitoredServiceListItemDTO.getServiceRef()).isEqualTo(environmentParams.getServiceIdentifier());
+    assertThat(monitoredServiceListItemDTO.getEnvironmentRef()).isEqualTo(environmentParams.getEnvironmentIdentifier());
+    assertThat(monitoredServiceListItemDTO.getType()).isEqualTo(MonitoredServiceType.APPLICATION);
+    assertThat(monitoredServiceListItemDTO.isHealthMonitoringEnabled()).isTrue();
+    assertThat(monitoredServiceListItemDTO.getServiceName()).isEqualTo("serviceName");
+    assertThat(monitoredServiceListItemDTO.getEnvironmentName()).isEqualTo("environmentName");
+    assertThat(monitoredServiceListItemDTO.getCurrentHealthScore().getRiskStatus()).isEqualTo(Risk.HEALTHY);
+    assertThat(monitoredServiceListItemDTO.getDependentHealthScore().size()).isEqualTo(2);
+    assertThat(monitoredServiceListItemDTO.getDependentHealthScore().get(0).getRiskStatus()).isEqualTo(Risk.UNHEALTHY);
+    assertThat(monitoredServiceListItemDTO.getDependentHealthScore().get(1).getRiskStatus()).isEqualTo(Risk.OBSERVE);
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testGetMonitoredServiceFromDependencyGraph_withWrongServiceIdentifier() {
+    MonitoredServiceDTO monitoredServiceOneDTO = createMonitoredServiceDTOWithCustomDependencies(
+        "service_1_local", environmentParams.getServiceIdentifier(), Sets.newHashSet());
+    MonitoredServiceDTO monitoredServiceTwoDTO =
+        createMonitoredServiceDTOWithCustomDependencies("service_2_local", "service_2", Sets.newHashSet());
+    MonitoredServiceDTO monitoredServiceThreeDTO =
+        createMonitoredServiceDTOWithCustomDependencies("service_3_local", "service_3", Sets.newHashSet());
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceOneDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceTwoDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceThreeDTO);
+    when(nextGenService.listService(any(), any(), any(), any())).thenReturn(new ArrayList<ServiceResponse>() {
+      { add(ServiceResponse.builder().service(ServiceResponseDTO.builder().name("serviceName").build()).build()); }
+    });
+    when(nextGenService.listEnvironment(any(), any(), any(), any())).thenReturn(new ArrayList<EnvironmentResponse>() {
+      {
+        add(EnvironmentResponse.builder()
+                .environment(EnvironmentResponseDTO.builder().name("environmentName").build())
+                .build());
+      }
+    });
+    ServiceEnvironmentParams serviceEnvironmentParams =
+        ServiceEnvironmentParams.builder()
+            .accountIdentifier(environmentParams.getAccountIdentifier())
+            .orgIdentifier(environmentParams.getOrgIdentifier())
+            .projectIdentifier(environmentParams.getProjectIdentifier())
+            .serviceIdentifier("service_4")
+            .environmentIdentifier(environmentParams.getEnvironmentIdentifier())
+            .build();
+    assertThatThrownBy(() -> monitoredServiceService.getMonitoredServiceDetails(serviceEnvironmentParams))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage(String.format("Monitored service with service identifier %s does not exists",
+            serviceEnvironmentParams.getServiceIdentifier()));
   }
 
   @Test

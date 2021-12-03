@@ -14,7 +14,7 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.persistence.HPersistence;
+import io.harness.mongo.MongoPersistence;
 import io.harness.queue.QueueController;
 import io.harness.version.VersionInfoManager;
 
@@ -39,7 +39,7 @@ import org.apache.commons.codec.binary.StringUtils;
 @TargetModule(HarnessModule._960_PERSISTENCE)
 @BreakDependencyOn("software.wings.beans.ManagerConfiguration")
 public class ConfigurationController implements Managed, QueueController {
-  @Inject private HPersistence persistence;
+  @Inject private MongoPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private ExecutorService executorService;
 

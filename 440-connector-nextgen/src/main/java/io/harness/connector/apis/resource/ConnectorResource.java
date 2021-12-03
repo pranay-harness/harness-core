@@ -36,7 +36,7 @@ import io.harness.connector.utils.ConnectorAllowedFieldValues;
 import io.harness.connector.utils.FieldValues;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.ConnectorValidationParameterResponse;
 import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
@@ -373,6 +373,34 @@ public class ConnectorResource {
   }
 
   @POST
+  @InternalApi
+  @Path("testConnectionInternal/{identifier}")
+  @ApiOperation(value = "Test the connection internal api", nickname = "getTestConnectionResultInternal")
+  @Operation(operationId = "getTestConnectionResultInternal",
+      summary = "Tests the connection of the connector by Identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the connector validation result")
+      })
+  public ResponseDTO<ConnectorValidationResult>
+  testConnectionInternal(@NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
+    connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier)
+        .map(connector
+            -> connectorRbacHelper.checkSecretRuntimeAccessWithConnectorDTO(
+                connector.getConnector(), accountIdentifier))
+        .orElseThrow(()
+                         -> new ConnectorNotFoundException(
+                             String.format("No connector found with identifier %s", connectorIdentifier), USER));
+
+    return ResponseDTO.newResponse(
+        connectorService.testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+  }
+
+  @POST
   @Path("testGitRepoConnection/{identifier}")
   @ApiOperation(value = "Test the connection", nickname = "getTestGitRepoConnectionResult")
   @Operation(operationId = "getTestGitRepoConnectionResult", summary = "Tests the created Connector's connection",
@@ -456,7 +484,7 @@ public class ConnectorResource {
   @ApiOperation(hidden = true, value = "Gets connector validation params")
   @InternalApi
   @Produces("application/x-kryo")
-  public ResponseDTO<ConnectorValidationParams> getConnectorValidationParams(
+  public ResponseDTO<ConnectorValidationParameterResponse> getConnectorValidationParams(
       @Parameter(description = "Connector Identifier") @PathParam(
           NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(

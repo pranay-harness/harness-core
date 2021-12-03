@@ -12,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ngexception.NGTemplateException;
 import io.harness.filter.service.FilterService;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitSyncSdkService;
@@ -167,7 +168,7 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
 
     // Update stable template
     TemplateEntity updateStableTemplateVersion = templateService.updateStableTemplateVersion(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, "version2");
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, "version2", "");
     assertThat(updateStableTemplateVersion).isNotNull();
     assertThat(updateStableTemplateVersion.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(updateStableTemplateVersion.getOrgIdentifier()).isEqualTo(ORG_IDENTIFIER);
@@ -183,7 +184,7 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
 
     // Testing updating stable template to check the lastUpdatedBy flag
     updateStableTemplateVersion = templateService.updateStableTemplateVersion(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, "version2");
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, "version2", "");
     assertThat(updateStableTemplateVersion.isLastUpdatedTemplate()).isTrue();
 
     // delete template stable template
@@ -191,6 +192,14 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
                            -> templateService.delete(
                                ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, "version2", 1L, ""))
         .isInstanceOf(InvalidRequestException.class);
+
+    boolean markEntityInvalid = templateService.markEntityInvalid(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, "INVALID_YAML");
+    assertThat(markEntityInvalid).isTrue();
+    assertThatThrownBy(()
+                           -> templateService.getOrThrowExceptionIfInvalid(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
+                               TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, false))
+        .isInstanceOf(NGTemplateException.class);
 
     boolean delete = templateService.delete(
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, "");
@@ -310,8 +319,8 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
     assertThat(templateEntities.getContent().get(0).getVersionLabel()).isEqualTo("version2");
 
     // Update stable template
-    TemplateEntity updateStableTemplateVersion =
-        templateService.updateStableTemplateVersion(ACCOUNT_ID, ORG_IDENTIFIER, null, TEMPLATE_IDENTIFIER, "version2");
+    TemplateEntity updateStableTemplateVersion = templateService.updateStableTemplateVersion(
+        ACCOUNT_ID, ORG_IDENTIFIER, null, TEMPLATE_IDENTIFIER, "version2", "");
     assertThat(updateStableTemplateVersion).isNotNull();
     assertThat(updateStableTemplateVersion.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(updateStableTemplateVersion.getOrgIdentifier()).isEqualTo(ORG_IDENTIFIER);

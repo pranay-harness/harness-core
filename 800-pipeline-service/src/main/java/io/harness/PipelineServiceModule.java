@@ -47,10 +47,12 @@ import io.harness.opaclient.OpaClientModule;
 import io.harness.organization.OrganizationClientModule;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
-import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.plancreator.steps.StepSchemaUtils;
+import io.harness.plancreator.steps.http.HttpStepNode;
+import io.harness.plancreator.steps.http.PmsAbstractStepNode;
 import io.harness.pms.Dashboard.PMSLandingDashboardService;
 import io.harness.pms.Dashboard.PMSLandingDashboardServiceImpl;
 import io.harness.pms.approval.ApprovalResourceService;
@@ -102,6 +104,7 @@ import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServi
 import io.harness.polling.client.PollResourceClientModule;
 import io.harness.project.ProjectClientModule;
 import io.harness.redis.RedisConfig;
+import io.harness.reflection.HarnessReflections;
 import io.harness.remote.client.ClientMode;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.serializer.KryoRegistrar;
@@ -132,6 +135,7 @@ import io.harness.version.VersionInfoManager;
 import io.harness.webhook.WebhookEventClientModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
@@ -162,7 +166,6 @@ import javax.cache.expiry.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.ExecuteListener;
 import org.mongodb.morphia.converters.TypeConverter;
-import org.reflections.Reflections;
 import org.springframework.core.convert.converter.Converter;
 
 @OwnedBy(PIPELINE)
@@ -171,6 +174,10 @@ public class PipelineServiceModule extends AbstractModule {
   private final PipelineServiceConfiguration configuration;
 
   private static PipelineServiceModule instance;
+  public static Set<Class<?>> commonStepsMovedToNewSchema = new HashSet() {
+    { add(HttpStepNode.class); }
+  };
+  ;
 
   private PipelineServiceModule(PipelineServiceConfiguration configuration) {
     this.configuration = configuration;
@@ -471,19 +478,28 @@ public class PipelineServiceModule extends AbstractModule {
   @Named("yaml-schema-mapper")
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapper() {
-    return Jackson.newObjectMapper();
+    ObjectMapper objectMapper = Jackson.newObjectMapper();
+
+    PipelineServiceApplication.configureObjectMapper(objectMapper);
+    return objectMapper;
   }
 
   @Provides
   @Named("yaml-schema-subtypes")
   @Singleton
   public Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes() {
-    Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS);
-
-    Set<Class<? extends StepSpecType>> subTypesOfStepSpecType = reflections.getSubTypesOf(StepSpecType.class);
+    Set<Class<? extends StepSpecType>> subTypesOfStepSpecType =
+        HarnessReflections.get().getSubTypesOf(StepSpecType.class);
     Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
-
+    set = YamlSchemaTransientHelper.removeNewSchemaStepsSubtypes(set, StepSchemaUtils.getStepsMovedToNewSchema());
     return ImmutableMap.of(StepSpecType.class, set);
+  }
+
+  @Provides
+  @Named("new-yaml-schema-subtypes-pms")
+  @Singleton
+  public Map<Class<?>, Set<Class<?>>> newPmsYamlSchemaSubtypes() {
+    return ImmutableMap.of(PmsAbstractStepNode.class, commonStepsMovedToNewSchema);
   }
 
   @Provides

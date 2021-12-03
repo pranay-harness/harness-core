@@ -41,3 +41,10 @@ message FullSyncChangeSet {
   string account_identifier = 7;
   string commit_message = 8;
 }
+
+message FullSyncEventRequest {
+  io.harness.eventsframework.schemas.entity.EntityScopeInfo git_config_scope = 1;
+  bool createPr = 2;
+  string branch = 3;
+  string target_branch = 4;
+}

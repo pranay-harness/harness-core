@@ -12,4 +12,8 @@ public interface DelegateNgTokenService {
   DelegateTokenDetails revokeDelegateToken(String accountId, DelegateEntityOwner owner, String tokenName);
 
   List<DelegateTokenDetails> getDelegateTokens(String accountId, DelegateEntityOwner owner, DelegateTokenStatus status);
+
+  DelegateTokenDetails getDelegateToken(String accountId, DelegateEntityOwner owner, String name);
+
+  String getDelegateTokenValue(String accountId, DelegateEntityOwner owner, String name);
 }

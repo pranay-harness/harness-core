@@ -4,6 +4,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 
+import java.util.Collections;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -21,4 +23,19 @@ public class K8sRollingRollbackDeployRequest implements K8sDeployRequest {
   CommandUnitsProgress commandUnitsProgress;
   boolean useLatestKustomizeVersion;
   boolean useNewKubectlVersion;
+
+  @Override
+  public List<String> getValuesYamlList() {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<String> getKustomizePatchesList() {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<String> getOpenshiftParamList() {
+    return Collections.emptyList();
+  }
 }

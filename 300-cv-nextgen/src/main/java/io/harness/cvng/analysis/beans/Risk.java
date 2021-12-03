@@ -10,10 +10,7 @@ public enum Risk {
   HEALTHY(0),
   OBSERVE(1),
   NEED_ATTENTION(2),
-  UNHEALTHY(3),
-  LOW(4),
-  MEDIUM(5),
-  HIGH(6);
+  UNHEALTHY(3);
   private static final Map<Integer, Risk> INT_TO_RISK_MAP = new HashMap<>();
   static {
     for (Risk r : Risk.values()) {

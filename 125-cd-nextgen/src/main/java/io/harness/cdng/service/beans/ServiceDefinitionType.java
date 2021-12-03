@@ -14,7 +14,10 @@ public enum ServiceDefinitionType {
   KUBERNETES("Kubernetes",
       Lists.newArrayList(ExecutionStrategyType.ROLLING, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY,
           ExecutionStrategyType.DEFAULT),
-      ServiceSpecType.KUBERNETES);
+      ServiceSpecType.KUBERNETES),
+
+  @JsonProperty(ServiceSpecType.NATIVE_HELM)
+  NATIVE_HELM("NativeHelm", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.NATIVE_HELM);
 
   /*
   //Unsupported for now

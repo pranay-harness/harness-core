@@ -8,8 +8,8 @@ import io.harness.ng.core.dto.OrganizationResponse;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.organization.remote.OrganizationClient;
 import io.harness.overviewdashboard.rbac.service.DashboardRBACService;
+import io.harness.project.remote.ProjectClient;
 import io.harness.remote.client.NGRestUtils;
-import io.harness.userng.remote.UserNGClient;
 
 import com.google.inject.Inject;
 import java.util.HashMap;
@@ -18,12 +18,12 @@ import java.util.Map;
 
 @OwnedBy(PL)
 public class DashboardRBACServiceImpl implements DashboardRBACService {
-  @Inject private UserNGClient userNGClient;
   @Inject private OrganizationClient organizationClient;
+  @Inject private ProjectClient projectClient;
 
   @Override
   public List<ProjectDTO> listAccessibleProject(String accountIdentifier, String userId) {
-    return NGRestUtils.getResponse(userNGClient.getUserAllProjectsInfo(accountIdentifier, userId));
+    return NGRestUtils.getResponse(projectClient.getProjectList(accountIdentifier));
   }
 
   @Override

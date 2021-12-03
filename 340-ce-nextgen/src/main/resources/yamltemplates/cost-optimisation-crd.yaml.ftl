@@ -1,3 +1,9 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ccm-autostopping-clusterrole
+rules:
   - apiGroups:
       - ccm.harness.io
     resources:
@@ -44,6 +50,23 @@
     verbs:
       - patch
       - update
+  - apiGroups:
+      - apps
+      - extensions
+    resources:
+      - deployments
+      - statefulsets
+      - replicasets
+    verbs:
+      - get
+      - list
+      - watch
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: harness-autostopping
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -65,20 +88,6 @@ rules:
       - patch
       - delete
       - update
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: ce-clusterrolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: ce-clusterrole
-subjects:
-  - kind: ServiceAccount
-    name: ${serviceAccountName}
-    namespace: ${serviceAccountNamespace}
 
 ---
 apiVersion: v1
@@ -362,7 +371,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: ce-clusterrole
+  name: ccm-autostopping-clusterrole
 subjects:
   - kind: ServiceAccount
     name: harness-autostopping-sa

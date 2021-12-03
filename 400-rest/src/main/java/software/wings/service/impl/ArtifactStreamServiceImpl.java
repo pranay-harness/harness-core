@@ -39,6 +39,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactCollectionPTaskClientParams.ArtifactCollectionPTaskClientParamsKeys;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -52,12 +53,17 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ShellExecutionException;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
+import io.harness.validation.SuppressValidation;
 import io.harness.validation.Update;
 
 import software.wings.beans.AccountEvent;
@@ -178,7 +184,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private TriggerService triggerService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private EventPublishHelper eventPublishHelper;
-  @Inject @Getter private Subject<ArtifactStreamServiceObserver> subject = new Subject<>();
+  @Inject
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<ArtifactStreamServiceObserver> subject = new Subject<>();
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -588,6 +597,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     try {
       subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onSaved, artifactStream);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ArtifactStreamServiceObserver.class, "onSaved", ArtifactStream.class),
+          ArtifactStreamServiceImpl.class, artifactStream);
     } catch (Exception e) {
       log.error(EXCEPTION_OBSERVERS_OF_ARTIFACT_STREAM, e);
     }
@@ -600,6 +612,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     try {
       subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onUpdated, artifactStream);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ArtifactStreamServiceObserver.class, "onUpdated", ArtifactStream.class),
+          ArtifactStreamServiceImpl.class, artifactStream);
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Artifact Stream", e);
     }
@@ -612,6 +627,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     try {
       subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onDeleted, artifactStream);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ArtifactStreamServiceObserver.class, "onDeleted", ArtifactStream.class),
+          ArtifactStreamServiceImpl.class, artifactStream);
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Artifact Stream", e);
     }
@@ -808,6 +826,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new InvalidRequestException(
           "The Artifact Source variable should be of the format 'artifactSourceName (serviceName)'");
     }
+  }
+
+  @Override
+  public boolean deletePerpetualTaskByArtifactStream(String accountId, String artifactStreamId) {
+    log.info("Deleting perpetual task associated with artifact stream " + artifactStreamId);
+    Query<PerpetualTaskRecord> query = wingsPersistence.createQuery(PerpetualTaskRecord.class)
+                                           .field(PerpetualTaskRecordKeys.accountId)
+                                           .equal(accountId)
+                                           .field(PerpetualTaskRecordKeys.client_params + "."
+                                               + ArtifactCollectionPTaskClientParamsKeys.artifactStreamId)
+                                           .equal(artifactStreamId);
+    return wingsPersistence.delete(query);
   }
 
   @Override

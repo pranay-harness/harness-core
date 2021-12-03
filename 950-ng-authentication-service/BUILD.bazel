@@ -17,6 +17,7 @@ java_library(
         "@maven//:com_github_scribejava_scribejava_apis",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_inject_guice",
+        "@maven//:com_j256_two_factor_auth_two_factor_auth",
         "@maven//:com_squareup_okhttp3_okhttp",
         "@maven//:com_squareup_retrofit2_converter_jackson",
         "@maven//:com_squareup_retrofit2_retrofit",
@@ -27,5 +28,34 @@ java_library(
         "@maven//:org_slf4j_slf4j_api",
     ],
 )
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    data = [
+        "//950-ng-authentication-service/src/test/resources:resource",
+    ],
+    resources = [
+        "//950-ng-authentication-service/src/test/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
+        "//990-commons-test:module",
+        "@maven//:ch_qos_logback_contrib_logback_jackson",
+        "@maven//:ch_qos_logback_contrib_logback_json_classic",
+        "@maven//:ch_qos_logback_contrib_logback_json_core",
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+run_tests()
 
 run_analysis()
