@@ -203,3 +203,4 @@ bharat bandhu goel bharat.goel@harness.io
 Bharat Goel bharat.goel@harness.io
 Alexandru Ciofu alexandru.ciofu@harness.io
 Slobodan Pavic slobodan.pavic@harness.io
+Marc Batchelor marc.batchelor@harness.io
