@@ -25,7 +25,9 @@ import com.google.common.collect.ImmutableList;
 import com.sun.istack.internal.NotNull;
 import java.util.List;
 import javax.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.Singular;
@@ -97,7 +99,7 @@ public class InputSetEntity
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
-  @Wither @NonFinal Boolean isEntityInvalid;
+  @Getter(AccessLevel.NONE) @Wither @NonFinal Boolean isEntityInvalid;
 
   @Wither @Builder.Default Boolean isInvalid = Boolean.FALSE;
 
