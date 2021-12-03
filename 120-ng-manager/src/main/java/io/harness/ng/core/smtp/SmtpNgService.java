@@ -13,8 +13,8 @@ public interface SmtpNgService {
   NgSmtpDTO saveSmtpSettings(NgSmtpDTO variable) throws IOException;
   ValidationResultDTO validateSmtpSettings(String name, String accountId) throws IOException;
   NgSmtpDTO updateSmtpSettings(NgSmtpDTO variable) throws IOException;
-  ValidationResultDTO validateConnectivitySmtpSettings(NgSmtpDTO variable, String to, String subject, String body)
-      throws IOException;
+  ValidationResultDTO validateConnectivitySmtpSettings(
+      String identifier, String accountId, String to, String subject, String body) throws IOException;
   Boolean deleteSmtpSettings(String id) throws IOException;
-  NgSmtpDTO getSmtpSettings(String id) throws IOException;
+  NgSmtpDTO getSmtpSettings(String accountId) throws IOException;
 }
