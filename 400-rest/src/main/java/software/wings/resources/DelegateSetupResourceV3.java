@@ -21,6 +21,10 @@ import static software.wings.service.impl.DelegateServiceImpl.KUBERNETES_DELEGAT
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.NGCommonEntityConstants;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
@@ -30,6 +34,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
+import io.harness.delegate.beans.DelegateGroupListing;
 import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.task.DelegateLogContext;
@@ -42,6 +47,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.PublicApi;
 import io.harness.service.intfc.DelegateCache;
+import io.harness.service.intfc.DelegateSetupService;
 
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.DelegateStatus;
@@ -127,17 +133,19 @@ public class DelegateSetupResourceV3 {
   private final DownloadTokenService downloadTokenService;
   private final SubdomainUrlHelperIntfc subdomainUrlHelper;
   private final AccessControlClient accessControlClient;
+  private final DelegateSetupService delegateSetupService;
 
   @Inject
   public DelegateSetupResourceV3(DelegateService delegateService, DelegateScopeService delegateScopeService,
       DownloadTokenService downloadTokenService, SubdomainUrlHelperIntfc subdomainUrlHelper,
-      DelegateCache delegateCache, AccessControlClient accessControlClient) {
+      DelegateCache delegateCache, AccessControlClient accessControlClient, DelegateSetupService delegateSetupService) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
     this.subdomainUrlHelper = subdomainUrlHelper;
     this.delegateCache = delegateCache;
     this.accessControlClient = accessControlClient;
+    this.delegateSetupService = delegateSetupService;
   }
 
   @GET
@@ -155,7 +163,7 @@ public class DelegateSetupResourceV3 {
       })
   public RestResponse<DelegateStatus>
   listDelegateStatusWithScalingGroups(
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId) {
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getDelegateStatusWithScalingGroups(accountId));
     }
@@ -173,7 +181,7 @@ public class DelegateSetupResourceV3 {
             responseCode = "default", description = "A list of versions of all active Delegates for the account.")
       })
   public RestResponse<List<String>>
-  getAvailableVersions(@Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId) {
+  getAvailableVersions(@Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getAvailableVersions(accountId));
     }
@@ -208,7 +216,7 @@ public class DelegateSetupResourceV3 {
         ApiResponse(responseCode = "default", description = "The latest version of Delegates for the account.")
       })
   public RestResponse<String>
-  get(@Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId) {
+  get(@Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getLatestDelegateVersion(accountId));
     }
@@ -228,7 +236,7 @@ public class DelegateSetupResourceV3 {
       })
   public RestResponse<Boolean>
   validateThatDelegateNameIsUnique(
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
       @Parameter(description = "Delegate name to be validated") @QueryParam(
           "delegateName") @NotEmpty String delegateName) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -250,7 +258,7 @@ public class DelegateSetupResourceV3 {
         ApiResponse(responseCode = "default", description = "CE Delegate status.")
       })
   public RestResponse<CEDelegateStatus>
-  validateCEDelegate(@Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+  validateCEDelegate(@Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
       @Parameter(description = "Delegate name to be validated") @QueryParam(
           "delegateName") @NotEmpty String delegateName) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -271,8 +279,8 @@ public class DelegateSetupResourceV3 {
         ApiResponse(responseCode = "default", description = "Delegate profile script execution log listing.")
       })
   public RestResponse<String>
-  getProfileResult(@Parameter(description = "Delegate id") @PathParam("delegateId") String delegateId,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId) {
+  getProfileResult(@Parameter(description = "Delegate UUID") @PathParam("delegateId") String delegateId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getProfileResult(accountId, delegateId));
@@ -295,9 +303,9 @@ public class DelegateSetupResourceV3 {
   // This NG specific, switching to NG access control. AuthRule to be removed also when NG access control is fully
   // enabled.
   public RestResponse<List<DelegateSizeDetails>>
-  delegateSizes(@Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId) {
+  delegateSizes(@Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization ID") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project ID") @QueryParam("projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
 
@@ -318,12 +326,12 @@ public class DelegateSetupResourceV3 {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default", description = "Updated delegate")
       })
   public RestResponse<Delegate>
-  updateScopes(@Parameter(description = "Delegate id") @PathParam("delegateId") @NotEmpty String delegateId,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+  updateScopes(@Parameter(description = "Delegate UUID") @PathParam("delegateId") @NotEmpty String delegateId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
       @RequestBody(required = true,
           description = "Details of the scopes to be updated. "
-              + "Contains list of scope ids to be included (includeScopeIds), "
-              + "and a list of scope ids to be excluded (excludeScopeIds).") DelegateScopes delegateScopes) {
+              + "Contains list of scope UUIDs to be included (includeScopeIds), "
+              + "and a list of scope UUIDs to be excluded (excludeScopeIds).") DelegateScopes delegateScopes) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       Delegate delegate = delegateCache.get(accountId, delegateId, true);
@@ -388,8 +396,8 @@ public class DelegateSetupResourceV3 {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default", description = "Updated delegate")
       })
   public RestResponse<Delegate>
-  updateTags(@Parameter(description = "Delegate id") @PathParam("delegateId") @NotEmpty String delegateId,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+  updateTags(@Parameter(description = "Delegate UUID") @PathParam("delegateId") @NotEmpty String delegateId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
       @RequestBody(required = true, description = "List of tag values to be updated") DelegateTags delegateTags) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
@@ -423,7 +431,7 @@ public class DelegateSetupResourceV3 {
       })
   public RestResponse<List<String>>
   kubernetesDelegateNames(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId) {
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getKubernetesDelegateNames(accountId));
     }
@@ -447,7 +455,7 @@ public class DelegateSetupResourceV3 {
       })
   public RestResponse<Set<String>>
   delegateSelectors(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId) {
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getAllDelegateSelectors(accountId));
     }
@@ -468,9 +476,9 @@ public class DelegateSetupResourceV3 {
       })
   public RestResponse<Set<String>>
   delegateSelectorsUpTheHierarchy(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId) {
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization ID") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project ID") @QueryParam("projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
 
@@ -493,7 +501,7 @@ public class DelegateSetupResourceV3 {
       })
   public RestResponse<Set<String>>
   delegateTags(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId) {
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getAllDelegateSelectors(accountId));
     }
@@ -504,15 +512,15 @@ public class DelegateSetupResourceV3 {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
-  @Operation(operationId = "getDelegate", summary = "Retrieves a Delegate object by Delegate id.",
+  @Operation(operationId = "getDelegate", summary = "Retrieves a Delegate object by Delegate UUID.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(responseCode = "default", description = "Delegate object representation")
       })
   public RestResponse<Delegate>
-  get(@Parameter(description = "Delegate id") @PathParam("delegateId") @NotEmpty String delegateId,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId) {
+  get(@Parameter(description = "Delegate UUID") @PathParam("delegateId") @NotEmpty String delegateId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateCache.get(accountId, delegateId, true));
@@ -537,9 +545,9 @@ public class DelegateSetupResourceV3 {
   // enabled.
   public RestResponse<DelegateSetupDetails>
   validateKubernetesYaml(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization ID") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project ID") @QueryParam("projectId") String projectId,
       @RequestBody(
           required = true, description = "Delegate setup details, containing data for validation (from k8s yaml file)")
       DelegateSetupDetails delegateSetupDetails) {
@@ -547,7 +555,7 @@ public class DelegateSetupResourceV3 {
         Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_EDIT_PERMISSION);
 
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.validateKubernetesYaml(accountId, delegateSetupDetails));
+      return new RestResponse<>(delegateService.validateKubernetesYamlNg(accountId, delegateSetupDetails));
     }
   }
 
@@ -567,9 +575,9 @@ public class DelegateSetupResourceV3 {
   // enabled.
   public Response
   generateKubernetesYaml(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization ID") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project ID") @QueryParam("projectId") String projectId,
       @RequestBody(
           required = true, description = "Delegate setup details, containing data to populate yaml file values.")
       DelegateSetupDetails delegateSetupDetails,
@@ -614,8 +622,8 @@ public class DelegateSetupResourceV3 {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default", description = "Updated Delegate")
       })
   public RestResponse<Delegate>
-  update(@Parameter(description = "Delegate id") @PathParam("delegateId") @NotEmpty String delegateId,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+  update(@Parameter(description = "Delegate UUID") @PathParam("delegateId") @NotEmpty String delegateId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
       @RequestBody(required = true, description = "Update values for the delegate") Delegate delegate) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
@@ -644,8 +652,8 @@ public class DelegateSetupResourceV3 {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default", description = "Updated Delegate")
       })
   public RestResponse<Delegate>
-  updateDescription(@Parameter(description = "Delegate id") @PathParam("delegateId") @NotEmpty String delegateId,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+  updateDescription(@Parameter(description = "Delegate UUID") @PathParam("delegateId") @NotEmpty String delegateId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
       @Parameter(description = "New description for the delegate") @Trimmed String newDescription) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
@@ -666,8 +674,8 @@ public class DelegateSetupResourceV3 {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default", description = "Updated Delegate")
       })
   public RestResponse<Delegate>
-  updateApprovalStatus(@Parameter(description = "Delegate id") @PathParam("delegateId") @NotEmpty String delegateId,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+  updateApprovalStatus(@Parameter(description = "Delegate UUID") @PathParam("delegateId") @NotEmpty String delegateId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
       @Parameter(description = "Approval action: ACTIVATE or REJECT") @QueryParam(
           "action") @NotNull DelegateApproval action) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -688,8 +696,8 @@ public class DelegateSetupResourceV3 {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default", description = "Empty response")
       })
   public RestResponse<Void>
-  delete(@Parameter(description = "Delegate id") @PathParam("delegateId") @NotEmpty String delegateId,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId) {
+  delete(@Parameter(description = "Delegate UUID") @PathParam("delegateId") @NotEmpty String delegateId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       delegateService.delete(accountId, delegateId);
@@ -709,8 +717,8 @@ public class DelegateSetupResourceV3 {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default", description = "Empty response")
       })
   public RestResponse<Void>
-  deleteAllExcept(@Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @RequestBody(description = "List of delegate ids to retain") List<String> delegatesToRetain) {
+  deleteAllExcept(@Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
+      @RequestBody(description = "List of Delegate UUIDs to retain") List<String> delegatesToRetain) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       delegateService.retainOnlySelectedDelegatesAndDeleteRest(accountId, delegatesToRetain);
       return new RestResponse<>();
@@ -722,7 +730,7 @@ public class DelegateSetupResourceV3 {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
-  @Operation(operationId = "deleteDelegateGroup", summary = "Deletes a Delegate group by its identifier.",
+  @Operation(operationId = "deleteDelegateGroup", summary = "Deletes a Delegate group by its ID.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default", description = "Empty response")
@@ -731,10 +739,10 @@ public class DelegateSetupResourceV3 {
   // enabled.
   public RestResponse<Void>
   deleteDelegateGroup(
-      @Parameter(description = "Delegate group identifier") @PathParam("identifier") @NotEmpty String identifier,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project id") @QueryParam("projectId") String projectId) {
+      @Parameter(description = "Delegate group ID") @PathParam("identifier") @NotEmpty String identifier,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization ID") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project ID") @QueryParam("projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, identifier), DELEGATE_DELETE_PERMISSION);
 
@@ -758,7 +766,7 @@ public class DelegateSetupResourceV3 {
       })
   public RestResponse<Map<String, String>>
   downloadUrl(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId) {
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       String url = subdomainUrlHelper.getManagerUrl(request, accountId);
 
@@ -795,9 +803,9 @@ public class DelegateSetupResourceV3 {
       })
   public Response
   downloadScripts(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
       @Parameter(description = "Delegate name") @QueryParam("delegateName") String delegateName,
-      @Parameter(description = "Delegate Configuration Id") @QueryParam("delegateProfileId") String delegateProfileId,
+      @Parameter(description = "Delegate Configuration UUID") @QueryParam("delegateProfileId") String delegateProfileId,
       @Parameter(description = "token value") @QueryParam("token") @NotEmpty String token,
       @Parameter(description = "token name") @QueryParam("tokenName") String tokenName) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -826,9 +834,9 @@ public class DelegateSetupResourceV3 {
       })
   public Response
   downloadDocker(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
       @Parameter(description = "Delegate name") @QueryParam("delegateName") String delegateName,
-      @Parameter(description = "Delegate Configuration Id") @QueryParam("delegateProfileId") String delegateProfileId,
+      @Parameter(description = "Delegate Configuration UUID") @QueryParam("delegateProfileId") String delegateProfileId,
       @Parameter(description = "Token value") @QueryParam("token") @NotEmpty String token,
       @Parameter(description = "Token name") @QueryParam("tokenName") String tokenName) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -857,9 +865,9 @@ public class DelegateSetupResourceV3 {
       })
   public Response
   downloadKubernetes(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
       @Parameter(description = "Delegate name") @QueryParam("delegateName") @NotEmpty String delegateName,
-      @Parameter(description = "Delegate Configuration Id") @QueryParam("delegateProfileId") String delegateProfileId,
+      @Parameter(description = "Delegate Configuration UUID") @QueryParam("delegateProfileId") String delegateProfileId,
       @Parameter(description = "Token value") @QueryParam("token") @NotEmpty String token,
       @Parameter(description = "Is Ce enabled") @QueryParam("isCeEnabled") @DefaultValue("false") boolean isCeEnabled,
       @Parameter(description = "Token name") @QueryParam("tokenName") String tokenName) throws IOException {
@@ -890,15 +898,16 @@ public class DelegateSetupResourceV3 {
   @Path("kubernetes/account-identifier")
   @Timed
   @ExceptionMetered
-  @Operation(operationId = "getAccountIdentifierForKubernetes", summary = "Generates a Kubernetes compatible accountId",
+  @Operation(operationId = "getAccountIdentifierForKubernetes",
+      summary = "Generates a Kubernetes compatible Account UUID",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
-            description = "String value representing enhanced accountId, "
-                + "adopting kubernetes standard for identifiers ")
+            description = "String value representing enhanced Account UUID, "
+                + "adopting Kubernetes standard for UUIDs ")
       })
   public RestResponse<String>
-  getAccountIdentifier(@Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId) {
+  getAccountIdentifier(@Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(KubernetesConvention.getAccountIdentifier(accountId));
   }
 
@@ -915,12 +924,12 @@ public class DelegateSetupResourceV3 {
       })
   public Response
   downloadEcs(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
       @Parameter(description = "Delegate group name") @QueryParam(
           "delegateGroupName") @NotEmpty String delegateGroupName,
       @Parameter(description = "Is aws Vpc Mode enabled") @QueryParam("awsVpcMode") Boolean awsVpcMode,
       @Parameter(description = "Hostname") @QueryParam("hostname") String hostname,
-      @Parameter(description = "Delegate Configuration Id") @QueryParam("delegateProfileId") String delegateProfileId,
+      @Parameter(description = "Delegate Configuration UUID") @QueryParam("delegateProfileId") String delegateProfileId,
       @Parameter(description = "Token value") @QueryParam("token") @NotEmpty String token,
       @Parameter(description = "Token name") @QueryParam("tokenName") String tokenName) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -949,9 +958,9 @@ public class DelegateSetupResourceV3 {
       })
   public Response
   downloadDelegateValuesYaml(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
       @Parameter(description = "Name for a new delegate") @QueryParam("delegateName") @NotEmpty String delegateName,
-      @Parameter(description = "Delegate Configuration Id") @QueryParam("delegateProfileId") String delegateProfileId,
+      @Parameter(description = "Delegate Configuration UUID") @QueryParam("delegateProfileId") String delegateProfileId,
       @Parameter(description = "Token value") @QueryParam("token") @NotEmpty String token,
       @Parameter(description = "Token name") @QueryParam("tokenName") String tokenName) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -972,7 +981,9 @@ public class DelegateSetupResourceV3 {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
-  @Operation(operationId = "validateDockerDelegateDetails", summary = "Validates docker delegate details.",
+  @Operation(operationId = "validateDockerDelegateDetails",
+      summary = "Validates docker delegate details. "
+          + "If tokenName is specified in Delegate Setup details in the body, it will be validated as well.",
       responses =
       { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Validates docker delegate details.") })
   public RestResponse<Void>
@@ -981,7 +992,7 @@ public class DelegateSetupResourceV3 {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       DelegateSetupDetails delegateSetupDetails =
           DelegateSetupDetails.builder().delegateType(DOCKER).name(delegateName).build();
-      delegateService.validateDockerSetupDetails(accountId, delegateSetupDetails, DOCKER);
+      delegateService.validateDockerSetupDetailsNg(accountId, delegateSetupDetails, DOCKER);
 
       return new RestResponse<>();
     }
@@ -994,7 +1005,8 @@ public class DelegateSetupResourceV3 {
   @AuthRule(permissionType = LOGGED_IN)
   @Operation(operationId = "downloadNgDocker",
       summary =
-          "Generates docker-compose.yaml or launch-docker-delegate.sh file from the data specified in request body (Delegate setup details).",
+          "Generates docker-compose.yaml or launch-docker-delegate.sh file from the data specified in request body (Delegate setup details). "
+          + "If Delegate Token name is provided within Delegate Setup Details its value will be used for account secret in generated docker-compose.yaml file.",
       responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Generated yaml or sh file.") })
   public Response
   downloadNgDocker(@Context HttpServletRequest request,
@@ -1038,45 +1050,13 @@ public class DelegateSetupResourceV3 {
   }
 
   @POST
-  @Path("validate-kubernetes-yaml-with-token")
-  @Timed
-  @ExceptionMetered
-  @AuthRule(permissionType = LOGGED_IN)
-  @Operation(operationId = "validateKubernetesYaml",
-      summary = "Validates data from K8s yaml. "
-          + "Checks whether specified values passes validation checks "
-          + "used when registering a Delegate with K8s yaml file. "
-          + "Requires Delegate Token name specified in the request body.",
-      responses =
-      {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Delegate setup details from the request")
-      })
-  // This NG specific, switching to NG access control. AuthRule to be removed also when NG access control is fully
-  // enabled.
-  public RestResponse<DelegateSetupDetails>
-  validateKubernetesYamlUsingNgToken(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
-      @RequestBody(
-          required = true, description = "Delegate setup details, containing data for validation (from k8s yaml file)")
-      DelegateSetupDetails delegateSetupDetails) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
-        Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_EDIT_PERMISSION);
-
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.validateKubernetesYamlUsingNgToken(accountId, delegateSetupDetails));
-    }
-  }
-
-  @POST
-  @Path("generate-kubernetes-yaml-with-token")
+  @Path("/ng/generate-kubernetes-yaml")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
   @Operation(operationId = "generateKubernetesYaml",
-      summary = "Generates k8s yaml file from the data specified in request body (Delegate setup details).",
+      summary = "Generates k8s yaml file from the data specified in request body (Delegate Setup Details). "
+          + "If Delegate Token name is provided within Delegate Setup Details its value will be used for account secret in generated yaml file.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -1086,9 +1066,12 @@ public class DelegateSetupResourceV3 {
   // enabled.
   public Response
   generateKubernetesYamlUsingNgToken(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @RequestBody(
           required = true, description = "Delegate setup details, containing data to populate yaml file values.")
       DelegateSetupDetails delegateSetupDetails,
@@ -1099,7 +1082,7 @@ public class DelegateSetupResourceV3 {
         Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_EDIT_PERMISSION);
 
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      File delegateFile = delegateService.generateKubernetesYamlUsingNgToken(accountId, delegateSetupDetails,
+      File delegateFile = delegateService.generateKubernetesYamlNg(accountId, delegateSetupDetails,
           subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), fileFormat);
 
       if (fileFormat != null && fileFormat.equals(MediaType.TEXT_PLAIN_TYPE)) {
@@ -1119,49 +1102,29 @@ public class DelegateSetupResourceV3 {
   }
 
   @GET
-  @Path("validate-docker-delegate-details-with-token")
+  @Path("/ng")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = LOGGED_IN)
-  @Operation(operationId = "validateDockerDelegateDetails", summary = "Validates docker delegate details.",
+  @Operation(operationId = "getDelegateGroups", summary = "Lists Delegate Groups.",
       responses =
-      { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Validates docker delegate details.") })
-  public RestResponse<Void>
-  validateDockerSetupDetailsUsingToken(
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Delegate name") @QueryParam("delegateName") String delegateName) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      DelegateSetupDetails delegateSetupDetails =
-          DelegateSetupDetails.builder().delegateType(DOCKER).name(delegateName).build();
-      delegateService.validateDockerSetupDetailsUsingNgToken(accountId, delegateSetupDetails, DOCKER);
-      return new RestResponse<>();
-    }
-  }
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "A list of Delegate Groups.")
+      })
+  public RestResponse<DelegateGroupListing>
+  list(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotEmpty @QueryParam(
+           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = "Delegate Token name") String delegateTokenName) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
+        Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
 
-  @POST
-  @Path("docker-with-token")
-  @Timed
-  @ExceptionMetered
-  @AuthRule(permissionType = LOGGED_IN)
-  @Operation(operationId = "downloadNgDocker",
-      summary =
-          "Generates docker-compose.yaml or launch-docker-delegate.sh file from the data specified in request body (Delegate setup details).",
-      responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Generated yaml or sh file.") })
-  public Response
-  downloadNgDockerUsingToken(@Context HttpServletRequest request,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @RequestBody(required = true, description = "Delegate setup details, containing data to populate file values.")
-      DelegateSetupDetails delegateSetupDetails) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      String managerUrl = subdomainUrlHelper.getManagerUrl(request, accountId);
-      File delegateFile = delegateService.downloadNgDockerUsingToken(
-          managerUrl, getVerificationUrl(request), accountId, delegateSetupDetails);
-
-      return Response.ok(delegateFile)
-          .header(CONTENT_TRANSFER_ENCODING, BINARY)
-          .type("text/plain; charset=UTF-8")
-          .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + "docker-compose.yaml")
-          .build();
+      return new RestResponse<>(delegateSetupService.listDelegateGroupDetails(
+          accountId, orgIdentifier, projectIdentifier, delegateTokenName));
     }
   }
 
