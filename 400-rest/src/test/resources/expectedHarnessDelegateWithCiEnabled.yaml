@@ -150,7 +150,7 @@ spec:
           value: ""
         - name: KUBECTL_PATH
           value: ""
-        - name: ENABlE_CE
+        - name: ENABLE_CE
           value: "false"
         - name: GRPC_SERVICE_ENABLED
           value: "true"
