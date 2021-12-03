@@ -5,7 +5,8 @@ import re
 import datetime
 import util
 
-from util import create_dataset, if_tbl_exists, createTable, print_, run_batch_query, COSTAGGREGATED, UNIFIED, PREAGGREGATED, CEINTERNALDATASET
+from util import create_dataset, if_tbl_exists, createTable, print_, run_batch_query, COSTAGGREGATED, UNIFIED, \
+    PREAGGREGATED, CEINTERNALDATASET, update_connector_data_sync_status
 from calendar import monthrange
 from google.cloud import bigquery
 from google.cloud import storage
@@ -49,7 +50,7 @@ def main(event, context):
 
     # Set accountid for GCP logging
     util.ACCOUNTID_LOG = jsonData.get("accountId")
-
+    jsonData["cloudProvider"] = "AWS"
     ps = jsonData["path"].split("/")
     if len(ps) == 4:
         monthfolder = ps[-1]  # last folder in path
@@ -61,12 +62,12 @@ def main(event, context):
     jsonData["reportYear"] = monthfolder.split("-")[0][:4]
     jsonData["reportMonth"] = monthfolder.split("-")[0][4:6]
 
-    connector_id = ps[1]  # second from beginning is connector id in mongo
+    jsonData["connectorId"] = ps[1]  # second from beginning is connector id in mongo
 
     accountIdBQ = re.sub('[^0-9a-z]', '_', jsonData.get("accountId").lower())
     jsonData["datasetName"] = "BillingReport_%s" % (accountIdBQ)
     jsonData["awsCurTableSuffix"] = "%s_%s" % (jsonData["reportYear"], jsonData["reportMonth"])
-    jsonData["tableSuffix"] = "%s_%s_%s" % (connector_id, jsonData["reportYear"], jsonData["reportMonth"])
+    jsonData["tableSuffix"] = "%s_%s_%s" % (jsonData["connectorId"], jsonData["reportYear"], jsonData["reportMonth"])
     jsonData["tableName"] = f"awsBilling_{jsonData['tableSuffix']}"
     jsonData["tableId"] = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
 
@@ -76,6 +77,7 @@ def main(event, context):
     ingest_data_to_awscur(jsonData)
     ingest_data_to_preagg(jsonData)
     ingest_data_to_unified(jsonData)
+    update_connector_data_sync_status(jsonData, PROJECTID, client)
     ingest_data_to_costagg(jsonData)
     print_("Completed")
 
@@ -95,6 +97,11 @@ def create_dataset_and_tables(jsonData):
             print_("%s table does not exists, creating table..." % table_ref)
             createTable(client, table_ref)
         else:
+            # Remove these after some time.
+            if table_ref == aws_cur_table_ref:
+                alter_awscur_table(jsonData)
+            elif table_ref == unified_table_ref:
+                alter_unified_table(jsonData)
             print_("%s table exists" % table_ref)
 
 
@@ -226,10 +233,10 @@ def ingest_data_to_awscur(jsonData):
     DELETE FROM `%s` WHERE DATE(usagestartdate) >= '%s' AND DATE(usagestartdate) <= '%s' and usageaccountid IN (%s);
     INSERT INTO `%s` (resourceid, usagestartdate, productname, productfamily, servicecode, blendedrate, blendedcost, 
                     unblendedrate, unblendedcost, region, availabilityzone, usageaccountid, instancetype, usagetype, 
-                    lineitemtype, effectivecost, tags) 
+                    lineitemtype, effectivecost, billingentity, tags) 
     SELECT resourceid, usagestartdate, productname, productfamily, servicecode, blendedrate, blendedcost, 
                     unblendedrate, unblendedcost, region, availabilityzone, usageaccountid, instancetype, usagetype, 
-                    lineitemtype, effectivecost, 
+                    lineitemtype, effectivecost, billingentity, 
                     ( SELECT ARRAY_AGG(STRUCT( regexp_replace(REGEXP_EXTRACT(unpivotedData, '[^"]*'), 'TAG_' , '') AS key , 
                          regexp_replace(REGEXP_EXTRACT(unpivotedData, r':\"[^"]*'), ':"', '') AS value )) 
                          FROM UNNEST(( SELECT REGEXP_EXTRACT_ALL(json, 'TAG_' || r'[^:]+:\"[^"]+\"') FROM (SELECT TO_JSON_STRING(table) json))) unpivotedData) 
@@ -321,12 +328,12 @@ def ingest_data_to_unified(jsonData):
                     AND awsUsageAccountId IN (%s);
                INSERT INTO `%s` (product, startTime,
                     awsBlendedRate,awsBlendedCost,awsUnblendedRate, awsUnblendedCost, cost, awsServicecode,
-                    region,awsAvailabilityzone,awsUsageaccountid,awsInstancetype,awsUsagetype,cloudProvider, labels)
+                    region,awsAvailabilityzone,awsUsageaccountid,awsInstancetype,awsUsagetype,cloudProvider, awsBillingEntity, labels)
                SELECT productname AS product, TIMESTAMP_TRUNC(usagestartdate, DAY) as startTime, blendedrate AS
                     awsBlendedRate, blendedcost AS awsBlendedCost, unblendedrate AS awsUnblendedRate, unblendedcost AS
                     awsUnblendedCost, unblendedcost AS cost, productname AS awsServicecode, region, availabilityzone AS
                     awsAvailabilityzone, usageaccountid AS awsUsageaccountid, instancetype AS awsInstancetype, usagetype
-                    AS awsUsagetype, "AWS" AS cloudProvider, tags AS labels 
+                    AS awsUsagetype, "AWS" AS cloudProvider, billingentity as awsBillingEntity, tags AS labels 
                FROM `%s.awscur_%s` 
                WHERE usageaccountid IN (%s);
      """ % (tableName, date_start, date_end, jsonData["usageaccountid"], tableName, ds, jsonData["awsCurTableSuffix"],
@@ -375,3 +382,35 @@ def ingest_data_to_costagg(jsonData):
         priority=bigquery.QueryPriority.BATCH
     )
     run_batch_query(client, query, job_config, timeout=120)
+
+def alter_unified_table(jsonData):
+    print_("Altering unifiedTable Table")
+    ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
+    query = "ALTER TABLE `%s.unifiedTable` \
+        ADD COLUMN IF NOT EXISTS awsBillingEntity STRING;" % ds
+
+    try:
+        print_(query)
+        query_job = client.query(query)
+        query_job.result()
+    except Exception as e:
+        # Error Running Alter Query
+        print_(e)
+    else:
+        print_("Finished Altering unifiedTable Table")
+
+def alter_awscur_table(jsonData):
+    print_("Altering awscur Table")
+    ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
+    query = "ALTER TABLE `%s.awscur_%s` \
+        ADD COLUMN IF NOT EXISTS billingEntity STRING;" % (ds, jsonData["awsCurTableSuffix"])
+
+    try:
+        print_(query)
+        query_job = client.query(query)
+        query_job.result()
+    except Exception as e:
+        # Error Running Alter Query
+        print_(e)
+    else:
+        print_("Finished Altering awscur Table")

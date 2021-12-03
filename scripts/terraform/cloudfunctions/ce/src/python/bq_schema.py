@@ -87,6 +87,11 @@ aws_cur_table_schema = [
         "type": "FLOAT"
     },
     {
+        "mode": "NULLABLE",
+        "name": "billingentity",
+        "type": "STRING"
+    },
+    {
         "fields": [
             {
                 "mode": "NULLABLE",
@@ -449,6 +454,11 @@ unifiedTableTableSchema = [
     {
         "mode": "NULLABLE",
         "name": "awsUsagetype",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "awsBillingEntity",
         "type": "STRING"
     },
     {

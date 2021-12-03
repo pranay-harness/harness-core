@@ -22,6 +22,7 @@ delegateTokensNG {"name": "byAccountAndStatus", "background": true} {"accountId"
 delegateTokensNG {"name": "byAccountOwnerAndName", "unique": true} {"accountId": 1, "owner": 1, "name": 1}
 delegateTokensNG {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 gcpServiceAccount {"name": "account_id_service_account_email", "background": true} {"accountId": 1, "email": 1}
+gitProcessRequestSdk {"name": "accountId_repo_branch_commit_index", "background": true} {"accountId": 1, "repoUrl": 1, "branch": 1, "commitId": 1}
 instanceData {"name": "accountId_clusterId_instanceId_instanceState", "background": true} {"accountId": 1, "clusterId": 1, "instanceId": 1, "instanceState": 1}
 instanceData {"name": "accountId_clusterId_instanceName_usageStartTime", "background": true} {"accountId": 1, "clusterId": 1, "instanceName": 1, "usageStartTime": -1}
 instanceData {"name": "accountId_clusterId_instanceState_usageStartTime", "background": true} {"accountId": 1, "clusterId": 1, "instanceState": 1, "usageStartTime": 1}

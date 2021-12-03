@@ -2,6 +2,7 @@ package io.harness.connector.validator;
 
 import static software.wings.beans.TaskType.NG_AWS_TASK;
 
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
@@ -40,5 +41,11 @@ public class AwsConnectorValidator extends AbstractConnectorValidator {
     AwsValidateTaskResponse responseData = (AwsValidateTaskResponse) super.validateConnector(
         connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return responseData.getConnectorValidationResult();
+  }
+
+  @Override
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    return null;
   }
 }
