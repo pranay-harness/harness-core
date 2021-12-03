@@ -137,7 +137,7 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
         */
         // Issue with CFs
         return ConnectorValidationResult.builder()
-            .errorSummary("Error with processing data")
+            .errorSummary("Error with processing data. Please contact Harness support")
             .status(ConnectivityStatus.FAILURE)
             .build();
       }

@@ -80,7 +80,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
             */
             // Issue with CFs
             return ConnectorValidationResult.builder()
-                .errorSummary("Error with processing data")
+                .errorSummary("Error with processing data. Please contact Harness support")
                 .status(ConnectivityStatus.FAILURE)
                 .build();
           }
