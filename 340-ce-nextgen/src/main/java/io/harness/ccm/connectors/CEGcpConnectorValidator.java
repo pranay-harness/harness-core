@@ -80,7 +80,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
             */
             // Issue with CFs
             return ConnectorValidationResult.builder()
-                .errorSummary("Error with processing data")
+                .errorSummary("Error with processing data. Please contact Harness support")
                 .status(ConnectivityStatus.FAILURE)
                 .build();
           }
@@ -94,7 +94,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
           .status(ConnectivityStatus.FAILURE)
           .build();
     }
-    log.info("Validation successfull");
+    log.info("Validation successfull for connector {}", connectorIdentifier);
     return ConnectorValidationResult.builder()
         .status(ConnectivityStatus.SUCCESS)
         .testedAt(Instant.now().toEpochMilli())
@@ -140,8 +140,9 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
         if (!isTablePresent) {
           return ConnectorValidationResult.builder()
               .status(ConnectivityStatus.PARTIAL)
-              .errorSummary("Billing table " + GCP_BILLING_EXPORT_V_1 + "not yet present in"
-                  + " the dataset " + datasetId + " in project " + projectId)
+              .errorSummary("Billing table " + GCP_BILLING_EXPORT_V_1 + "_* is not yet present in"
+                  + " the dataset " + datasetId + " in GCP project " + projectId
+                  + ". Wait for some time for table to show up or check the billing export configuration in your GCP project")
               .testedAt(Instant.now().toEpochMilli())
               .build();
         }

@@ -159,11 +159,12 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
         */
         // Issue with CFs
         return ConnectorValidationResult.builder()
-            .errorSummary("Error with processing data")
+            .errorSummary("Error with processing data. Please contact Harness support")
             .status(ConnectivityStatus.FAILURE)
             .build();
       }
     }
+    log.info("Validation successfull for connector {}", connectorIdentifier);
     return ConnectorValidationResult.builder()
         .status(ConnectivityStatus.SUCCESS)
         .testedAt(Instant.now().toEpochMilli())
@@ -221,6 +222,7 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
               .build());
     }
     validateReport(report.get(), awsCurAttributesDTO.getS3BucketName(), errorList);
+    // TODO: Move S3BucketDetails to common module
     S3BucketDetails s3BucketDetails = S3BucketDetails.builder()
                                           .s3BucketName(awsCurAttributesDTO.getS3BucketName())
                                           .s3Prefix(report.get().getS3Prefix())
