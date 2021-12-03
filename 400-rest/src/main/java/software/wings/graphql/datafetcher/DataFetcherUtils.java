@@ -6,6 +6,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
@@ -53,10 +55,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(HarnessTeam.PL)
 @Slf4j
 @Singleton
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
@@ -223,6 +227,44 @@ public class DataFetcherUtils {
         }
         field.contains(idFilterValues[0]);
         break;
+      default:
+        throw new WingsException("Unknown Id operator " + operator);
+    }
+  }
+
+  public CriteriaContainerImpl getIdFilterCriteria(Query<?> query, String field, QLIdFilter idFilter) {
+    if (idFilter == null) {
+      return null;
+    }
+
+    QLIdOperator operator = idFilter.getOperator();
+    if (operator == null) {
+      throw new WingsException("Id Operator cannot be null");
+    }
+
+    String[] idFilterValues = idFilter.getValues();
+
+    if (isEmpty(idFilterValues) && operator != QLIdOperator.NOT_NULL) {
+      throw new WingsException("Values cannot be empty");
+    }
+
+    switch (operator) {
+      case IN:
+        return query.criteria(field).in(Arrays.asList(idFilterValues));
+      case EQUALS:
+        if (idFilterValues.length > 1) {
+          throw new WingsException("Only one value needs to be inputted for operator EQUALS");
+        }
+        return query.criteria(field).equal(idFilterValues[0]);
+      case NOT_NULL:
+        return query.criteria(field).notEqual(null);
+      case NOT_IN:
+        return query.criteria(field).notIn(Arrays.asList(idFilterValues));
+      case LIKE:
+        if (idFilterValues.length > 1) {
+          throw new WingsException("Only one value needs to be inputted for operator LIKE");
+        }
+        return query.criteria(field).contains(idFilterValues[0]);
       default:
         throw new WingsException("Unknown Id operator " + operator);
     }
