@@ -21,7 +21,7 @@ public abstract class AbstractRemoteInformer {
     this.eventProducer = eventProducer;
   }
 
-  public void fireInform(String methodName, Class<?> subjectClass, Object... param) {
+  public void fireInform(String methodName, Class<?> observerClass, Class<?> subjectClass, Object... param) {
     final int length = param.length;
     Informant.Builder informantBuilder = Informant.newBuilder().setMethodName(methodName);
     switch (length) {
@@ -56,7 +56,8 @@ public abstract class AbstractRemoteInformer {
     try {
       eventProducer.send(
           Message.newBuilder()
-              .putAllMetadata(ImmutableMap.of(RemoteObserverConstants.SUBJECT_CLASS_NAME, subjectClass.getName()))
+              .putAllMetadata(ImmutableMap.of(RemoteObserverConstants.SUBJECT_CLASS_NAME, subjectClass.getName(),
+                  RemoteObserverConstants.OBSERVER_CLASS_NAME, observerClass.getName()))
               .setData(informantBuilder.build().toByteString())
               .build());
     } catch (Exception e) {
@@ -65,6 +66,9 @@ public abstract class AbstractRemoteInformer {
   }
 
   private ByteString getByteString(Object object) {
+    if (object == null) {
+      return null;
+    }
     final byte[] bytes = kryoSerializer.asBytes(object);
     return ByteString.copyFrom(bytes);
   }
