@@ -8,27 +8,23 @@ import io.harness.execution.StagesExecutionMetadata;
 import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.pipeline.PipelineEntity;
-import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.stages.BasicStageInfo;
 import io.harness.pms.stages.StageExecutionSelectorHelper;
 
-import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PIPELINE)
+@UtilityClass
 @Slf4j
 public class PipelineExecutionSummaryDtoMapper {
-  @Inject PMSPipelineService pipelineService;
-
   public PipelineExecutionSummaryDTO toDto(
       PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity, EntityGitDetails entityGitDetails) {
     entityGitDetails = updateEntityGitDetails(entityGitDetails);
@@ -40,9 +36,7 @@ public class PipelineExecutionSummaryDtoMapper {
         stagesExecutionMetadata == null ? null : stagesExecutionMetadata.getStageIdentifiers();
     Map<String, String> stagesExecutedNames = null;
     if (EmptyPredicate.isNotEmpty(stageIdentifiers)) {
-      stagesExecutedNames = getStageNames(pipelineExecutionSummaryEntity.getAccountId(),
-          pipelineExecutionSummaryEntity.getOrgIdentifier(), pipelineExecutionSummaryEntity.getProjectIdentifier(),
-          pipelineExecutionSummaryEntity.getPipelineIdentifier(), stageIdentifiers);
+      stagesExecutedNames = getStageNames(stageIdentifiers, stagesExecutionMetadata.getFullPipelineYaml());
     }
     return PipelineExecutionSummaryDTO.builder()
         .name(pipelineExecutionSummaryEntity.getName())
@@ -78,24 +72,15 @@ public class PipelineExecutionSummaryDtoMapper {
         .build();
   }
 
-  private Map<String, String> getStageNames(String accountId, String orgIdentifier, String projectIdentifier,
-      String pipelineIdentifier, List<String> stageIdentifiers) {
+  private Map<String, String> getStageNames(List<String> stageIdentifiers, String pipelineYaml) {
     Map<String, String> identifierToNames = new LinkedHashMap<>();
-    Optional<PipelineEntity> pipelineEntity =
-        pipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
-    if (pipelineEntity.isPresent()) {
-      List<BasicStageInfo> stageInfoList =
-          StageExecutionSelectorHelper.getStageInfoList(pipelineEntity.get().getYaml());
-      stageInfoList.forEach(stageInfo -> {
-        String identifier = stageInfo.getIdentifier();
-        if (stageIdentifiers.contains(identifier)) {
-          identifierToNames.put(identifier, stageInfo.getName());
-        }
-      });
-      return identifierToNames;
-    }
-    log.warn(String.format("Pipeline with the given ID: %s does not exist or has been deleted", pipelineIdentifier));
-    stageIdentifiers.forEach(id -> identifierToNames.put(id, id));
+    List<BasicStageInfo> stageInfoList = StageExecutionSelectorHelper.getStageInfoList(pipelineYaml);
+    stageInfoList.forEach(stageInfo -> {
+      String identifier = stageInfo.getIdentifier();
+      if (stageIdentifiers.contains(identifier)) {
+        identifierToNames.put(identifier, stageInfo.getName());
+      }
+    });
     return identifierToNames;
   }
 

@@ -194,7 +194,14 @@ public class GitClientV2Impl implements GitClientV2 {
     // opening/updating repo
     log.info(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Do a fresh clone");
     clone(request, gitClientHelper.getRepoDirectory(request), false);
-    checkout(request);
+    try {
+      checkout(request);
+    } catch (IOException | GitAPIException ex) {
+      log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
+      throw new YamlException(format("Unable to checkout given reference: %s",
+                                  isEmpty(request.getCommitId()) ? request.getBranch() : request.getCommitId()),
+          ex, USER);
+    }
   }
 
   @VisibleForTesting
@@ -223,33 +230,26 @@ public class GitClientV2Impl implements GitClientV2 {
     }
   }
 
-  private synchronized void checkout(GitBaseRequest request) {
-    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(request)))) {
-      try {
-        if (isNotEmpty(request.getBranch())) {
-          git.checkout()
-              .setCreateBranch(true)
-              .setName(request.getBranch())
-              .setUpstreamMode(SetupUpstreamMode.TRACK)
-              .setStartPoint("origin/" + request.getBranch())
-              .call();
-        }
-
-      } catch (RefAlreadyExistsException refExIgnored) {
-        log.info(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Reference already exist do nothing.");
-        // TODO:: check gracefully instead of relying on Exception
+  private synchronized void checkout(GitBaseRequest request) throws IOException, GitAPIException {
+    Git git = Git.open(new File(gitClientHelper.getRepoDirectory(request)));
+    try {
+      if (isNotEmpty(request.getBranch())) {
+        git.checkout()
+            .setCreateBranch(true)
+            .setName(request.getBranch())
+            .setUpstreamMode(SetupUpstreamMode.TRACK)
+            .setStartPoint("origin/" + request.getBranch())
+            .call();
       }
 
-      String gitRef = request.getCommitId() != null ? request.getCommitId() : request.getBranch();
-      if (StringUtils.isNotEmpty(gitRef)) {
-        git.checkout().setName(gitRef).call();
-      }
+    } catch (RefAlreadyExistsException refExIgnored) {
+      log.info(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Reference already exist do nothing.");
+      // TODO:: check gracefully instead of relying on Exception
+    }
 
-    } catch (IOException | GitAPIException ex) {
-      log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
-      throw new YamlException(format("Unable to checkout given reference: %s",
-                                  isEmpty(request.getCommitId()) ? request.getBranch() : request.getCommitId()),
-          ex, USER);
+    String gitRef = request.getCommitId() != null ? request.getCommitId() : request.getBranch();
+    if (StringUtils.isNotEmpty(gitRef)) {
+      git.checkout().setName(gitRef).call();
     }
   }
 

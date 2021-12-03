@@ -64,8 +64,8 @@ public class TemplateMergeHelper {
 
   public String getTemplateInputs(String accountId, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, String versionLabel) {
-    Optional<TemplateEntity> optionalTemplateEntity =
-        templateService.get(accountId, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, false);
+    Optional<TemplateEntity> optionalTemplateEntity = templateService.getOrThrowExceptionIfInvalid(
+        accountId, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, false);
     if (!optionalTemplateEntity.isPresent()) {
       throw new NGTemplateException("Template to fetch template inputs does not exist.");
     }
@@ -189,9 +189,10 @@ public class TemplateMergeHelper {
           JsonNode versionLabelNode = (JsonNode) fqnToValueMap.get(FQN.builder().fqnList(fqnList).build());
           String versionLabel = "";
           if (versionLabelNode == null) {
-            Optional<TemplateEntity> templateEntity = templateService.get(templateIdentifierRef.getAccountIdentifier(),
-                templateIdentifierRef.getOrgIdentifier(), templateIdentifierRef.getProjectIdentifier(),
-                templateIdentifierRef.getIdentifier(), versionLabel, false);
+            Optional<TemplateEntity> templateEntity =
+                templateService.getOrThrowExceptionIfInvalid(templateIdentifierRef.getAccountIdentifier(),
+                    templateIdentifierRef.getOrgIdentifier(), templateIdentifierRef.getProjectIdentifier(),
+                    templateIdentifierRef.getIdentifier(), versionLabel, false);
             if (templateEntity.isPresent()) {
               versionLabel = templateEntity.get().getVersionLabel();
             }
@@ -545,9 +546,9 @@ public class TemplateMergeHelper {
     }
 
     IdentifierRef templateIdentifierRef = IdentifierRefHelper.getIdentifierRef(identifier, accountId, orgId, projectId);
-    Optional<TemplateEntity> templateEntity =
-        templateService.get(templateIdentifierRef.getAccountIdentifier(), templateIdentifierRef.getOrgIdentifier(),
-            templateIdentifierRef.getProjectIdentifier(), templateIdentifierRef.getIdentifier(), versionLabel, false);
+    Optional<TemplateEntity> templateEntity = templateService.getOrThrowExceptionIfInvalid(
+        templateIdentifierRef.getAccountIdentifier(), templateIdentifierRef.getOrgIdentifier(),
+        templateIdentifierRef.getProjectIdentifier(), templateIdentifierRef.getIdentifier(), versionLabel, false);
     if (!templateEntity.isPresent()) {
       throw new NGTemplateException(String.format(
           "The template identifier %s and version label %s does not exist. Could not replace this template",

@@ -65,22 +65,23 @@ public class RemoteObserverProcessorImpl implements RemoteObserverProcessor {
           break;
         case INFORMANT1:
           final Object param11 = kryoSerializer.asObject(informant.getInformant1().getParam1().toByteArray());
-          final Method method1 = ReflectionUtils.getMethod(observerClassObject.getClass(), methodName, param11);
+          final Method method1 =
+              ReflectionUtils.getMethod(observerClassObject.getClass(), methodName, param11.getClass());
           method1.invoke(observerClassObject, param11);
           break;
         case INFORMANT2:
           final Object param21 = kryoSerializer.asObject(informant.getInformant2().getParam1().toByteArray());
           final Object param22 = kryoSerializer.asObject(informant.getInformant2().getParam2().toByteArray());
-          final Method method2 =
-              ReflectionUtils.getMethod(observerClassObject.getClass(), methodName, param21, param22);
+          final Method method2 = ReflectionUtils.getMethod(
+              observerClassObject.getClass(), methodName, param21.getClass(), param22.getClass());
           method2.invoke(observerClassObject, param21, param22);
           break;
         case INFORMANT3:
           final Object param31 = kryoSerializer.asObject(informant.getInformant3().getParam1().toByteArray());
           final Object param32 = kryoSerializer.asObject(informant.getInformant3().getParam2().toByteArray());
           final Object param33 = kryoSerializer.asObject(informant.getInformant3().getParam3().toByteArray());
-          final Method method3 =
-              ReflectionUtils.getMethod(observerClassObject.getClass(), methodName, param31, param32, param33);
+          final Method method3 = ReflectionUtils.getMethod(
+              observerClassObject.getClass(), methodName, param31.getClass(), param32.getClass(), param33.getClass());
           method3.invoke(observerClassObject, param31, param32, param33);
           break;
         case INFORMANT4:
@@ -88,8 +89,8 @@ public class RemoteObserverProcessorImpl implements RemoteObserverProcessor {
           final Object param42 = kryoSerializer.asObject(informant.getInformant4().getParam2().toByteArray());
           final Object param43 = kryoSerializer.asObject(informant.getInformant4().getParam3().toByteArray());
           final Object param44 = kryoSerializer.asObject(informant.getInformant4().getParam4().toByteArray());
-          final Method method4 =
-              ReflectionUtils.getMethod(observerClassObject.getClass(), methodName, param41, param42, param43, param44);
+          final Method method4 = ReflectionUtils.getMethod(observerClassObject.getClass(), methodName,
+              param41.getClass(), param42.getClass(), param43.getClass(), param44.getClass());
           method4.invoke(observerClassObject, param41, param42, param43, param44);
           break;
         default:

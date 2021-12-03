@@ -1,5 +1,6 @@
 package io.harness.enforcement.client.services.impl;
 
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.ZHUO;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -83,6 +84,17 @@ public class EnforcementClientServiceImplTest extends CategoryTest {
 
     boolean result = enforcementClientService.isAvailable(featureRestrictionName, accountId);
     assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testIsEnforcementEnabled() {
+    boolean result = enforcementClientService.isEnforcementEnabled();
+    assertThat(result).isTrue();
+    when(enforcementClientConfiguration.isEnforcementCheckEnabled()).thenReturn(false);
+    result = enforcementClientService.isEnforcementEnabled();
+    assertThat(result).isFalse();
   }
 
   @Test

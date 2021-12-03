@@ -14,9 +14,11 @@ import io.harness.delegate.task.TaskLogContext;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.DelegateDriverLogContext;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateCallbackRegistry;
@@ -53,6 +55,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
 
   @Getter private Subject<DelegateTaskRetryObserver> retryObserverSubject = new Subject<>();
   @Inject @Getter private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   @Override
   public void touchExecutingTasks(String accountId, String delegateId, List<String> delegateTaskIds) {
@@ -122,6 +125,9 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
         updateDelegateTaskInsightsEvent(accountId, delegateId, taskId, response.getResponseCode());
 
         retryObserverSubject.fireInform(DelegateTaskRetryObxxxxxxxx:onTaskResponseProcessed, delegateTask, delegateId);
+        remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(DelegateTaskRetryObserver.class,
+                                             "onTaskResponseProcessed", DelegateTask.class, String.class),
+            DelegateTaskServiceImpl.class, delegateTask, delegateId);
       }
     } else {
       log.warn("No delegate task found");
@@ -198,6 +204,10 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
 
     delegateTaskStatusObserverSubject.fireInform(
         DelegateTaskStatusObxxxxxxxx:onTaskCompleted, accountId, taskId, delegateId, eventType);
+    remoteObserverInformer.sendEvent(
+        ReflectionUtils.getMethod(DelegateTaskStatusObserver.class, "onTaskCompleted", String.class, String.class,
+            String.class, DelegateTaskUsageInsightsEventType.class),
+        DelegateTaskServiceImpl.class, accountId, taskId, delegateId, eventType);
   }
 
   private DelegateTaskUsageInsightsEventType obtainDelegateTaskUsageInsightsEventType(ResponseCode taskResponseCode) {

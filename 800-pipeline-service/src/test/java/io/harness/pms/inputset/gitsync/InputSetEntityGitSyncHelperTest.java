@@ -19,6 +19,7 @@ import io.harness.beans.InputSetReference;
 import io.harness.category.element.UnitTests;
 import io.harness.common.EntityReference;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
@@ -95,14 +96,15 @@ public class InputSetEntityGitSyncHelperTest extends CategoryTest {
     doReturn(Optional.of(InputSetEntity.builder().objectIdOfYaml(objectId).build()))
         .when(pmsInputSetService)
         .get(anyString(), anyString(), anyString(), anyString(), anyString(), anyBoolean());
-    String returnedObjectId = inputSetEntityGitSyncHelper.getLastObjectIdIfExists(accountId, inputSetYaml);
+    EntityGitDetails returnedEntity =
+        inputSetEntityGitSyncHelper.getEntityDetailsIfExists(accountId, inputSetYaml).get();
     verify(pmsInputSetService, times(1))
         .get(anyString(), anyString(), anyString(), anyString(), anyString(), anyBoolean());
-    assertEquals(returnedObjectId, objectId);
-    returnedObjectId = inputSetEntityGitSyncHelper.getLastObjectIdIfExists(accountId, overLayYaml);
+    assertEquals(returnedEntity.getObjectId(), objectId);
+    returnedEntity = inputSetEntityGitSyncHelper.getEntityDetailsIfExists(accountId, overLayYaml).get();
     verify(pmsInputSetService, times(2))
         .get(anyString(), anyString(), anyString(), anyString(), anyString(), anyBoolean());
-    assertEquals(returnedObjectId, objectId);
+    assertEquals(returnedEntity.getObjectId(), objectId);
   }
 
   @Test

@@ -31,6 +31,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.notification.bean.NotificationRules;
 import io.harness.opaclient.model.OpaConstants;
+import io.harness.plancreator.steps.http.HttpStepNode;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.governance.PipelineSaveResponse;
@@ -524,5 +525,12 @@ public class PipelineResource implements YamlSchemaResource {
     }
     return ResponseDTO.newResponse(
         nodeExecutionToExecutioNodeMapper.mapNodeExecutionToExecutionNode(nodeExecutionService.get(nodeExecutionId)));
+  }
+
+  // TODO: Will delete this dummy api
+  @GET
+  @Path("/dummy-api")
+  public ResponseDTO<HttpStepNode> getStepNode() {
+    return ResponseDTO.newResponse(new HttpStepNode());
   }
 }

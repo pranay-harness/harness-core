@@ -50,10 +50,13 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.queue.QueuePublisher;
+import io.harness.reflection.ReflectionUtils;
+import io.harness.validation.SuppressValidation;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -153,12 +156,15 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject @Getter private Subject<ApplicationManifestServiceObserver> subject = new Subject<>();
+  @Inject
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<ApplicationManifestServiceObserver> subject = new Subject<>();
   @Inject private HelmChartService helmChartService;
   @Inject private SettingsService settingsService;
   @Inject private HelmHelper helmHelper;
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private TriggerService triggerService; // do not remove, needed for pruning logic.
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   private static long MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST = 50L;
 
@@ -511,7 +517,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   void createPerpetualTask(@NotNull ApplicationManifest applicationManifest) {
     try {
+      // Both subject and remote Observer are needed since in few places DMS might not be present
       subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onSaved, applicationManifest);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ApplicationManifestServiceObserver.class, "onSaved", ApplicationManifest.class),
+          ApplicationManifestServiceImpl.class, applicationManifest);
     } catch (Exception e) {
       log.error(
           "Encountered exception while informing the observers of Application Manifest on save for app manifest: {}",
@@ -522,6 +532,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   void resetPerpetualTask(@NotNull ApplicationManifest applicationManifest) {
     try {
       subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onUpdated, applicationManifest);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ApplicationManifestServiceObserver.class, "onUpdated", ApplicationManifest.class),
+          ApplicationManifestServiceImpl.class, applicationManifest);
     } catch (Exception e) {
       log.error(
           "Encountered exception while informing the observers of Application Manifest on resetfor app manifest: {}",
@@ -532,6 +545,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   void deletePerpetualTask(@NotNull ApplicationManifest applicationManifest) {
     try {
       subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onDeleted, applicationManifest);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ApplicationManifestServiceObserver.class, "onDeleted", ApplicationManifest.class),
+          ApplicationManifestServiceImpl.class, applicationManifest);
     } catch (Exception e) {
       log.error(
           "Encountered exception while informing the observers of Application Manifest on delete for app manifest: {}",

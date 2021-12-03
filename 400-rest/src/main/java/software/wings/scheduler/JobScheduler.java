@@ -34,9 +34,10 @@ public class JobScheduler extends HQuartzScheduler implements ConfigChangeListen
       if (schedulerConfig.getAutoStart().equals("true")) {
         injector.getInstance(MaintenanceController.class).register(this);
         scheduler = createScheduler(getDefaultProperties());
-        injector.getInstance(ConfigurationController.class).register(this, asList(ConfigChangeEvent.PrimaryChanged));
 
         ConfigurationController configurationController = injector.getInstance(Key.get(ConfigurationController.class));
+        configurationController.register(this, asList(ConfigChangeEvent.PrimaryChanged));
+
         if (!getMaintenanceFlag() && configurationController.isPrimary()) {
           scheduler.start();
         }

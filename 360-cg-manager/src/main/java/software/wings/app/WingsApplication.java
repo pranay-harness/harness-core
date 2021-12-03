@@ -19,6 +19,7 @@ import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMEN
 import static software.wings.common.VerificationConstants.VERIFICATION_METRIC_LABELS;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.not;
 import static com.google.inject.name.Names.named;
 import static java.time.Duration.ofHours;
@@ -65,7 +66,9 @@ import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
 import io.harness.event.reconciliation.service.DeploymentReconTask;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.eventframework.dms.DmsEventConsumerService;
+import io.harness.eventframework.dms.DmsObserverEventProducer;
 import io.harness.eventframework.manager.ManagerEventConsumerService;
+import io.harness.eventframework.manager.ManagerObserverEventProducer;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.exception.WingsException;
 import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
@@ -94,7 +97,9 @@ import io.harness.mongo.QueryFactory;
 import io.harness.mongo.tracing.TraceMode;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.observer.NoOpRemoteObserverInformerImpl;
 import io.harness.observer.RemoteObserver;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
@@ -124,6 +129,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.redis.RedisConfig;
+import io.harness.reflection.HarnessReflections;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.secret.ConfigSecretUtils;
 import io.harness.secrets.SecretMigrationEventListener;
@@ -148,6 +154,7 @@ import io.harness.timeout.TimeoutEngine;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.tracing.MongoRedisTracer;
+import io.harness.validation.SuppressValidation;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -297,14 +304,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletRegistration;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.Path;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.MetaBroadcaster;
@@ -319,9 +329,9 @@ import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.converters.TypeConverter;
-import org.reflections.Reflections;
 import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
+import ru.vyarus.guice.validator.aop.ValidationMethodInterceptor;
 
 /**
  * The main application - entry point for the entire Wings Application.
@@ -417,7 +427,6 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     List<Module> modules = new ArrayList<>();
     addModules(configuration, modules);
-    registerRemoteObserverModule(configuration, modules);
     Injector injector = Guice.createInjector(modules);
 
     initializeManagerSvc(injector, environment, configuration);
@@ -430,7 +439,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       modules.add(new AbstractRemoteObserverModule() {
         @Override
         public boolean noOpProducer() {
-          // todo(abhinav): change to false once everyone is onboarded to remote observer
+          // todo(abhinav): change to false once everyone is onboarded to remote observer.
           return true;
         }
 
@@ -443,6 +452,31 @@ public class WingsApplication extends Application<MainConfiguration> {
           //            /// todo(abhinav): register dms
           //          }
           return Collections.emptySet();
+        }
+
+        @Override
+        public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+          if (isManager()) {
+            return ManagerObserverEventProducer.class;
+          }
+          return DmsObserverEventProducer.class;
+        }
+      });
+    } else {
+      modules.add(new AbstractRemoteObserverModule() {
+        @Override
+        public boolean noOpProducer() {
+          return true;
+        }
+
+        @Override
+        public Set<RemoteObserver> observers() {
+          return Collections.emptySet();
+        }
+
+        @Override
+        public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+          return NoOpRemoteObserverInformerImpl.class;
         }
       });
     }
@@ -681,10 +715,19 @@ public class WingsApplication extends Application<MainConfiguration> {
                     }))
                     .build());
 
-    modules.add(new ValidationModule(validatorFactory));
+    modules.add(new ValidationModule(validatorFactory) {
+      @Override
+      protected void configureAop(ValidationMethodInterceptor interceptor) {
+        bindInterceptor(not(annotatedWith(SuppressValidation.class)),
+            annotatedWith(ValidateOnExecution.class).and(not(annotatedWith(SuppressValidation.class))), interceptor);
+        bindInterceptor(annotatedWith(ValidateOnExecution.class).and(not(annotatedWith(SuppressValidation.class))),
+            not(annotatedWith(SuppressValidation.class)), interceptor);
+      }
+    });
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
     modules.add(MigrationModule.getInstance());
+    registerRemoteObserverModule(configuration, modules);
     modules.add(new WingsModule(configuration, startupMode));
     modules.add(new TotpModule());
     modules.add(new ProviderModule() {
@@ -921,10 +964,15 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerResources(MainConfiguration configuration, Environment environment, Injector injector) {
-    Reflections reflections =
-        new Reflections(AppResource.class.getPackage().getName(), DelegateTaskResource.class.getPackage().getName());
+    Set<Class<?>> resourceClasses =
+        HarnessReflections.get()
+            .getTypesAnnotatedWith(Path.class)
+            .stream()
+            .filter(klazz
+                -> StringUtils.startsWithAny(klazz.getPackage().getName(), AppResource.class.getPackage().getName(),
+                    DelegateTaskResource.class.getPackage().getName()))
+            .collect(Collectors.toSet());
 
-    Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
     if (!configuration.isGraphQLEnabled()) {
       resourceClasses.remove(GraphQLResource.class);
     }

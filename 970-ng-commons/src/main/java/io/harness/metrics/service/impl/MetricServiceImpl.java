@@ -92,8 +92,10 @@ public class MetricServiceImpl implements MetricService {
   private static void initializeFromYAML() {
     List<MetricConfiguration> metricConfigDefinitions = new ArrayList<>();
     long startTime = Instant.now().toEpochMilli();
-    Reflections reflections = new Reflections("metrics.metricDefinitions", new ResourcesScanner());
-    Set<String> metricDefinitionFileNames = reflections.getResources(Pattern.compile(".*\\.yaml"));
+    Set<String> metricFiles =
+        new Reflections("metrics", new ResourcesScanner()).getResources(Pattern.compile(".*\\.yaml"));
+    Set<String> metricDefinitionFileNames =
+        metricFiles.stream().filter(f -> f.startsWith("metrics/metricDefinitions")).collect(Collectors.toSet());
     metricDefinitionFileNames.forEach(metricDefinition -> {
       try {
         String path = "/" + metricDefinition;
@@ -108,8 +110,8 @@ public class MetricServiceImpl implements MetricService {
         throw new RuntimeException("Exception occured while reading metric definition files", ex);
       }
     });
-    reflections = new Reflections("metrics.metricGroups", new ResourcesScanner());
-    Set<String> metricGroupFileNames = reflections.getResources(Pattern.compile(".*\\.yaml"));
+    Set<String> metricGroupFileNames =
+        metricFiles.stream().filter(f -> f.startsWith("metrics/metricGroups")).collect(Collectors.toSet());
     metricGroupFileNames.forEach(name -> {
       try {
         String path = "/" + name;
