@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Api("smtpConfig")
-@Path("smtpConfig")
+@Path("/smtpConfig")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 @Scope(PermissionAttribute.ResourceType.SETTING)
@@ -131,9 +131,13 @@ public class SmtpNgResource {
   @Timed
   @ExceptionMetered
   public ResponseDTO<ValidationResultDTO>
-  validateConnectivity(NgSmtpDTO variable, @NotNull @QueryParam("to") String to,
-      @NotNull @QueryParam("subject") String subject, @NotNull @QueryParam("body") String body) throws IOException {
-    ValidationResultDTO response = smtpNgService.validateConnectivitySmtpSettings(variable, to, subject, body);
+  validateConnectivity(
+      @Parameter(description = "Attribute uuid", required = true) @NotNull @QueryParam("identifier") String identifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("to") String to, @NotNull @QueryParam("subject") String subject,
+      @NotNull @QueryParam("body") String body) throws IOException {
+    ValidationResultDTO response =
+        smtpNgService.validateConnectivitySmtpSettings(identifier, accountId, to, subject, body);
     return ResponseDTO.newResponse(response);
   }
 
@@ -150,26 +154,25 @@ public class SmtpNgResource {
   @Timed
   @ExceptionMetered
   public ResponseDTO<Boolean>
-  delete(@PathParam("identifier") String identifier) throws IOException {
+  delete(@Parameter(description = "Config identifier") @PathParam("identifier") String identifier) throws IOException {
     Boolean response = smtpNgService.deleteSmtpSettings(identifier);
     return ResponseDTO.newResponse(response);
   }
 
   @GET
-  @Path("{identifier}")
-  @ApiOperation(value = "Gets Smtp config by Identifier", nickname = "getSmtpConfig")
-  @Operation(operationId = "getSmtpConfig", summary = "Gets Smtp config by Identifier",
+  @ApiOperation(value = "Gets Smtp config by accountId", nickname = "getSmtpConfig")
+  @Operation(operationId = "getSmtpConfig", summary = "Gets Smtp config by accountId",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
             description = "returns the SmtpConfig having"
-                + " Identifier as specified in request")
+                + " accountId as specified in request")
       })
   @Timed
   @ExceptionMetered
   public ResponseDTO<NgSmtpDTO>
-  get(@PathParam("identifier") String identifier) throws IOException {
-    NgSmtpDTO response = smtpNgService.getSmtpSettings(identifier);
+  get(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") String accountId) throws IOException {
+    NgSmtpDTO response = smtpNgService.getSmtpSettings(accountId);
     return ResponseDTO.newResponse(response);
   }
 }
