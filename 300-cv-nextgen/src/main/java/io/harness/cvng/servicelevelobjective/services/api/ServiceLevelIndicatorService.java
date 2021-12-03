@@ -1,6 +1,7 @@
 package io.harness.cvng.servicelevelobjective.services.api;
 
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 
@@ -19,4 +20,8 @@ public interface ServiceLevelIndicatorService {
   void deleteByIdentifier(ProjectParams projectParams, List<String> serviceLevelIndicatorIdentifier);
 
   ServiceLevelIndicator get(String sliId);
+
+  List<CVConfig> fetchCVConfigForSLI(ServiceLevelIndicator serviceLevelIndicator);
+
+  ServiceLevelIndicator getServiceLevelIndicator(ProjectParams projectParams, String identifier);
 }

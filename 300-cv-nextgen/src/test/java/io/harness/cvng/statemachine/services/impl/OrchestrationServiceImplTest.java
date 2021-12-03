@@ -3,6 +3,7 @@ package io.harness.cvng.statemachine.services.impl;
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
@@ -12,12 +13,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.DataGenerator;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
+import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrchestratorKeys;
@@ -38,6 +43,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.junit.Before;
@@ -50,7 +56,8 @@ public class OrchestrationServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject OrchestrationService orchestrationService;
   @Inject private Clock clock;
-
+  @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
+  private BuilderFactory builderFactory;
   private String cvConfigId;
   private String verificationTaskId;
   private String accountId;
@@ -59,6 +66,7 @@ public class OrchestrationServiceImplTest extends CvNextGenTestBase {
 
   @Before
   public void setup() throws Exception {
+    builderFactory = BuilderFactory.getDefault();
     cvConfigId = generateUuid();
     accountId = generateUuid();
     CVConfig cvConfig = new AppDynamicsCVConfig();
@@ -421,6 +429,36 @@ public class OrchestrationServiceImplTest extends CvNextGenTestBase {
         throw new RuntimeException(e);
       }
     });
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testQueueAnalysis_forSLIVerificationTask() {
+    List<String> serviceLevelIndicatorIdentifiers =
+        serviceLevelIndicatorService.create(builderFactory.getProjectParams(),
+            Collections.singletonList(builderFactory.getServiceLevelIndicatorDTOBuilder()), generateUuid(),
+            generateUuid(), generateUuid());
+    ServiceLevelIndicator serviceLevelIndicator = serviceLevelIndicatorService.getServiceLevelIndicator(
+        builderFactory.getProjectParams(), serviceLevelIndicatorIdentifiers.get(0));
+    String sliId = serviceLevelIndicator.getUuid();
+
+    AnalysisOrchestrator orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
+                                            .filter(AnalysisOrchestratorKeys.verificationTaskId, sliId)
+                                            .get();
+
+    assertThat(orchestrator).isNull();
+    orchestrationService.queueAnalysis(sliId, clock.instant(), clock.instant().minus(5, ChronoUnit.MINUTES));
+
+    orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
+                       .filter(AnalysisOrchestratorKeys.verificationTaskId, sliId)
+                       .get();
+
+    assertThat(orchestrator).isNotNull();
+    assertThat(orchestrator.getUuid()).isNotNull();
+    assertThat(orchestrator.getStatus().name()).isEqualTo(AnalysisStatus.CREATED.name());
+    assertThat(orchestrator.getAnalysisStateMachineQueue().get(0).getCurrentState().getType())
+        .isEqualTo(AnalysisState.StateType.SLI_METRIC_ANALYSIS);
   }
 
   private AnalysisOrchestrator getOrchestrator(String verificationTaskId) {
