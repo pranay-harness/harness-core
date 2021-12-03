@@ -29,7 +29,7 @@ import org.mongodb.morphia.query.Sort;
 public class DelegateListDataFetcher
     extends AbstractConnectionV2DataFetcher<QLDelegateFilter, QLNoOpSortCriteria, QLDelegateList> {
   @Override
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = PermissionAttribute.PermissionType.MANAGE_DELEGATES)
   protected QLDelegateList fetchConnection(List<QLDelegateFilter> qlDelegateFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<Delegate> delegateQuery = populateFilters(wingsPersistence, qlDelegateFilters, Delegate.class, true)
