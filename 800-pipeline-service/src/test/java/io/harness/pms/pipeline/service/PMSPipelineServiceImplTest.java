@@ -34,6 +34,7 @@ import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 import io.harness.repositories.pipeline.PMSPipelineRepositoryCustomImpl;
 import io.harness.rule.Owner;
+import io.harness.telemetry.TelemetryReporter;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -67,6 +68,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Mock private VariableCreatorMergeService variableCreatorMergeService;
   @Mock private PMSPipelineRepositoryCustomImpl pmsPipelineRepositoryCustom;
   @Mock private OutboxServiceImpl outboxService;
+  @Mock private TelemetryReporter telemetryReporter;
   @Mock private Subject<PipelineActionObserver> pipelineSubject;
   @InjectMocks private PMSPipelineServiceImpl pmsPipelineService;
   @Inject private PMSPipelineRepository pmsPipelineRepository;
