@@ -15,6 +15,7 @@ import io.harness.batch.processing.anomalydetection.reader.k8s.AnomalyDetectionC
 import io.harness.batch.processing.anomalydetection.reader.k8s.AnomalyDetectionNamespaceTimescaleReader;
 import io.harness.batch.processing.anomalydetection.writer.AnomalyDetectionTimeScaleWriter;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.ccm.anomaly.entities.Anomaly;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,12 +36,15 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Slf4j
 public class AnomalyDetectionConfiguration {
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
+
   @Bean
   @Qualifier(value = "anomalyDetectionInClusterDailyJob")
   public Job anomalyDetectionInClusterDailyJob(JobBuilderFactory jobBuilderFactory, Step statisticalModelClusterStep,
       Step statisticalModelNamespaceStep, Step removeDuplicatesStep) {
     return jobBuilderFactory.get(BatchJobType.ANOMALY_DETECTION_K8S.name())
         .incrementer(new RunIdIncrementer())
+        .listener(batchJobExecutionListener)
         .start(statisticalModelClusterStep)
         .next(statisticalModelNamespaceStep)
         .next(removeDuplicatesStep)
@@ -54,6 +59,7 @@ public class AnomalyDetectionConfiguration {
       Step statisticalModelAwsUsageTypeStep, Step slackNotificationStep) {
     return jobBuilderFactory.get(BatchJobType.ANOMALY_DETECTION_CLOUD.name())
         .incrementer(new RunIdIncrementer())
+        .listener(batchJobExecutionListener)
         .start(statisticalModelGcpProjectStep)
         .next(statisticalModelGcpProductStep)
         .next(statisticalModelGcpSkuStep)
