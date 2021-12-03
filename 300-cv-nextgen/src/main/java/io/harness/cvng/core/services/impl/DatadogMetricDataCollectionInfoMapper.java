@@ -18,29 +18,31 @@ public class DatadogMetricDataCollectionInfoMapper
   @Override
   public DatadogMetricsDataCollectionInfo toDataCollectionInfo(DatadogMetricCVConfig cvConfig) {
     List<MetricCollectionInfo> metricDefinitions = new ArrayList<>();
-    cvConfig.getMetricInfoList().forEach(metricInfo -> metricDefinitions.add(getMetricCollectionInfo(metricInfo)));
+    cvConfig.getMetricInfoList().forEach(
+        metricInfo -> metricDefinitions.add(getMetricCollectionInfo(metricInfo, metricInfo.getMetricName())));
     return getDataCollectionInfo(metricDefinitions, cvConfig);
   }
 
   @Override
   public DatadogMetricsDataCollectionInfo toDataCollectionInfo(
       List<DatadogMetricCVConfig> cvConfigList, ServiceLevelIndicator serviceLevelIndicator) {
-    List<String> sliMetricNames = serviceLevelIndicator.getMetricNames();
+    List<String> sliMetricIdentifiers = serviceLevelIndicator.getMetricIdentifiers();
     Preconditions.checkNotNull(cvConfigList);
     DatadogMetricCVConfig baseCvConfig = cvConfigList.get(0);
     List<MetricCollectionInfo> metricDefinitions = new ArrayList<>();
     cvConfigList.forEach(cvConfig -> cvConfig.getMetricInfoList().forEach(metricInfo -> {
-      if (sliMetricNames.contains(metricInfo.getMetricName())) {
-        metricDefinitions.add(getMetricCollectionInfo(metricInfo));
+      if (sliMetricIdentifiers.contains(metricInfo.getIdentifier())) {
+        metricDefinitions.add(getMetricCollectionInfo(metricInfo, metricInfo.getIdentifier()));
       }
     }));
 
     return getDataCollectionInfo(metricDefinitions, baseCvConfig);
   }
 
-  private MetricCollectionInfo getMetricCollectionInfo(MetricInfo metricInfo) {
+  private MetricCollectionInfo getMetricCollectionInfo(MetricInfo metricInfo, String metricName) {
+    // using identifier for sli and metricName for live monitoring to keep the behavior same
     return DatadogMetricsDataCollectionInfo.MetricCollectionInfo.builder()
-        .metricName(metricInfo.getMetricName())
+        .metricName(metricName)
         .metric(metricInfo.getMetric())
         .query(metricInfo.getQuery())
         .groupingQuery(metricInfo.getGroupingQuery())

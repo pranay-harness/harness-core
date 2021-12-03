@@ -19,30 +19,33 @@ public class PrometheusDataCollectionInfoMapper
   public PrometheusDataCollectionInfo toDataCollectionInfo(PrometheusCVConfig cvConfig) {
     Preconditions.checkNotNull(cvConfig);
     List<MetricCollectionInfo> metricCollectionInfoList = new ArrayList<>();
-    cvConfig.getMetricInfoList().forEach(
-        metricInfo -> { metricCollectionInfoList.add(getMetricCollectionInfo(metricInfo)); });
+    cvConfig.getMetricInfoList().forEach(metricInfo -> {
+      metricCollectionInfoList.add(getMetricCollectionInfo(metricInfo, metricInfo.getMetricName()));
+    });
     return getDataCollectionInfo(metricCollectionInfoList, cvConfig);
   }
 
   @Override
   public PrometheusDataCollectionInfo toDataCollectionInfo(
       List<PrometheusCVConfig> cvConfigList, ServiceLevelIndicator serviceLevelIndicator) {
-    List<String> sliMetricNames = serviceLevelIndicator.getMetricNames();
+    List<String> sliMetricIdentifiers = serviceLevelIndicator.getMetricIdentifiers();
     Preconditions.checkNotNull(cvConfigList);
     PrometheusCVConfig baseCvConfig = cvConfigList.get(0);
     List<PrometheusDataCollectionInfo.MetricCollectionInfo> metricCollectionInfoList = new ArrayList<>();
     cvConfigList.forEach(cvConfig -> cvConfig.getMetricInfoList().forEach(metricInfo -> {
-      if (sliMetricNames.contains(metricInfo.getMetricName())) {
-        metricCollectionInfoList.add(getMetricCollectionInfo(metricInfo));
+      if (sliMetricIdentifiers.contains(metricInfo.getIdentifier())) {
+        metricCollectionInfoList.add(getMetricCollectionInfo(metricInfo, metricInfo.getIdentifier()));
       }
     }));
 
     return getDataCollectionInfo(metricCollectionInfoList, baseCvConfig);
   }
 
-  private MetricCollectionInfo getMetricCollectionInfo(MetricInfo metricInfo) {
+  private MetricCollectionInfo getMetricCollectionInfo(MetricInfo metricInfo, String metricName) {
+    // using identifier for sli and metricName for live monitoring to keep the behavior same
+    // moving to identifier requires larger refactoring
     return PrometheusDataCollectionInfo.MetricCollectionInfo.builder()
-        .metricName(metricInfo.getMetricName())
+        .metricName(metricName)
         .query(metricInfo.getQuery())
         .filters(metricInfo.getFilters())
         .serviceInstanceField(metricInfo.getServiceInstanceFieldName())

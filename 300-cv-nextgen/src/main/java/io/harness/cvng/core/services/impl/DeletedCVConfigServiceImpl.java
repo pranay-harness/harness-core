@@ -42,14 +42,14 @@ import lombok.extern.slf4j.Slf4j;
 public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
   @VisibleForTesting
   static final Collection<? extends Class<? extends PersistentEntity>> ENTITIES_DELETE_BLACKLIST_BY_VERIFICATION_ID =
-      Arrays.asList();
+      Arrays.asList(SLIRecord.class);
   @VisibleForTesting
   static final List<Class<? extends PersistentEntity>> ENTITIES_TO_DELETE_BY_VERIFICATION_ID = Arrays.asList(
       ClusteredLog.class, TimeSeriesShortTermHistory.class, TimeSeriesRecord.class, AnalysisOrchestrator.class,
       AnalysisStateMachine.class, LearningEngineTask.class, LogRecord.class, HostRecord.class, LogAnalysisRecord.class,
       LogAnalysisResult.class, LogAnalysisCluster.class, DeploymentTimeSeriesAnalysis.class,
       DeploymentLogAnalysis.class, TimeSeriesRiskSummary.class, TimeSeriesAnomalousPatterns.class,
-      DataCollectionTask.class, TimeSeriesCumulativeSums.class, CVNGDemoDataIndex.class, SLIRecord.class);
+      DataCollectionTask.class, TimeSeriesCumulativeSums.class, CVNGDemoDataIndex.class);
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;

@@ -62,7 +62,7 @@ public abstract class ServiceLevelIndicator
 
   public abstract SLIMetricType getSLIMetricType();
 
-  public abstract List<String> getMetricNames();
+  public abstract List<String> getMetricIdentifiers();
 
   public abstract static class ServiceLevelIndicatorUpdatableEntity<T extends ServiceLevelIndicator, D
                                                                         extends ServiceLevelIndicator>

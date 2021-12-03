@@ -27,7 +27,7 @@ public class ThresholdServiceLevelIndicator extends ServiceLevelIndicator {
   }
 
   @Override
-  public List<String> getMetricNames() {
+  public List<String> getMetricIdentifiers() {
     List<String> metricForRatioSLI = new ArrayList<>();
     metricForRatioSLI.add(metric1);
     return metricForRatioSLI;

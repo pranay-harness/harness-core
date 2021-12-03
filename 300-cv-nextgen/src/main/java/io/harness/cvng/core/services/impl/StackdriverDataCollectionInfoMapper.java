@@ -25,13 +25,15 @@ public class StackdriverDataCollectionInfoMapper
   @Override
   public StackdriverDataCollectionInfo toDataCollectionInfo(
       List<StackdriverCVConfig> cvConfigList, ServiceLevelIndicator serviceLevelIndicator) {
-    List<String> sliMetricNames = serviceLevelIndicator.getMetricNames();
+    List<String> sliMetricIdentifiers = serviceLevelIndicator.getMetricIdentifiers();
     Preconditions.checkNotNull(cvConfigList);
     StackdriverCVConfig baseCvConfig = cvConfigList.get(0);
     List<StackDriverMetricDefinition> metricDefinitions = new ArrayList<>();
     cvConfigList.forEach(cvConfig -> cvConfig.getMetricInfoList().forEach(metricInfo -> {
-      if (sliMetricNames.contains(metricInfo.getMetricName())) {
-        metricDefinitions.add(getMetricCollectionInfo(metricInfo));
+      if (sliMetricIdentifiers.contains(metricInfo.getIdentifier())) {
+        StackDriverMetricDefinition stackDriverMetricDefinition = getMetricCollectionInfo(metricInfo);
+        stackDriverMetricDefinition.setMetricName(metricInfo.getIdentifier());
+        metricDefinitions.add(stackDriverMetricDefinition);
       }
     }));
     return getDataCollectionInfo(metricDefinitions, baseCvConfig);

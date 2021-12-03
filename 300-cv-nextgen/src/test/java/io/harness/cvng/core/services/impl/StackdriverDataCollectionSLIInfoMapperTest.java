@@ -43,12 +43,17 @@ public class StackdriverDataCollectionSLIInfoMapperTest extends CvNextGenTestBas
   @Category(UnitTests.class)
   public void testToDataCollectionInfoForSLI() {
     StackdriverCVConfig stackdriverCVConfig = StackdriverCVConfig.builder().dashboardName("dashboard").build();
-    ServiceLevelIndicator serviceLevelIndicator = ThresholdServiceLevelIndicator.builder().metric1("metric1").build();
-    StackdriverCVConfig.MetricInfo metricInfo =
-        StackdriverCVConfig.MetricInfo.builder().metricName("metric1").jsonMetricDefinition(metricDef).build();
+    ServiceLevelIndicator serviceLevelIndicator =
+        ThresholdServiceLevelIndicator.builder().metric1("metricIdentifier").identifier("sli").build();
+    StackdriverCVConfig.MetricInfo metricInfo = StackdriverCVConfig.MetricInfo.builder()
+                                                    .metricName("metric1")
+                                                    .identifier("metricIdentifier")
+                                                    .jsonMetricDefinition(metricDef)
+                                                    .build();
     stackdriverCVConfig.setMetricPack(metricPack);
     stackdriverCVConfig.setMetricInfoList(Arrays.asList(metricInfo));
     StackDriverMetricDefinition stackDriverMetricDefinition = StackDriverMetricDefinition.extractFromJson(metricDef);
+    stackDriverMetricDefinition.setMetricName("metricIdentifier");
     StackdriverDataCollectionInfo info =
         mapper.toDataCollectionInfo(Collections.singletonList(stackdriverCVConfig), serviceLevelIndicator);
 
@@ -62,9 +67,13 @@ public class StackdriverDataCollectionSLIInfoMapperTest extends CvNextGenTestBas
   @Category(UnitTests.class)
   public void testToDataCollectionInfoForSLI_withDifferentMetricName() {
     StackdriverCVConfig stackdriverCVConfig = StackdriverCVConfig.builder().dashboardName("dashboard").build();
-    ServiceLevelIndicator serviceLevelIndicator = ThresholdServiceLevelIndicator.builder().metric1("metric1").build();
-    StackdriverCVConfig.MetricInfo metricInfo =
-        StackdriverCVConfig.MetricInfo.builder().metricName("differentMetric").jsonMetricDefinition(metricDef).build();
+    ServiceLevelIndicator serviceLevelIndicator =
+        ThresholdServiceLevelIndicator.builder().metric1("metric1").identifier("metricIdentifier").build();
+    StackdriverCVConfig.MetricInfo metricInfo = StackdriverCVConfig.MetricInfo.builder()
+                                                    .metricName("differentMetric")
+                                                    .identifier("diffIdentifier")
+                                                    .jsonMetricDefinition(metricDef)
+                                                    .build();
     stackdriverCVConfig.setMetricPack(metricPack);
     stackdriverCVConfig.setMetricInfoList(Arrays.asList(metricInfo));
     StackdriverDataCollectionInfo info =
