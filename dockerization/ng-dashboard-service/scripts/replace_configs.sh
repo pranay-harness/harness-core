@@ -8,6 +8,19 @@ else
   yq delete -i $CONFIG_FILE logging.appenders[1]
 fi
 
+if [[ "" != "$LOGGING_LEVEL" ]]; then
+    yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
+fi
+
+if [[ "" != "$LOGGERS" ]]; then
+  IFS=',' read -ra LOGGER_ITEMS <<< "$LOGGERS"
+  for ITEM in "${LOGGER_ITEMS[@]}"; do
+    LOGGER=`echo $ITEM | awk -F= '{print $1}'`
+    LOGGER_LEVEL=`echo $ITEM | awk -F= '{print $2}'`
+    yq write -i $CONFIG_FILE logging.loggers.[$LOGGER] "${LOGGER_LEVEL}"
+  done
+fi
+
 # Remove the TLS connector (as ingress terminates TLS)
 yq delete -i $CONFIG_FILE connectors[0]
 
