@@ -101,6 +101,10 @@ import io.harness.ng.migration.UserMembershipMigrationProvider;
 import io.harness.ng.migration.UserMetadataMigrationProvider;
 import io.harness.ng.overview.eventGenerator.DeploymentEventGenerator;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
+import io.harness.observer.NoOpRemoteObserverInformerImpl;
+import io.harness.observer.RemoteObserver;
+import io.harness.observer.RemoteObserverInformer;
+import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
@@ -324,7 +328,22 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     } else {
       modules.add(new SCMGrpcClientModule(appConfig.getGitSdkConfiguration().getScmConnectionConfig()));
     }
+    modules.add(new AbstractRemoteObserverModule() {
+      @Override
+      public boolean noOpProducer() {
+        return true;
+      }
 
+      @Override
+      public Set<RemoteObserver> observers() {
+        return Collections.emptySet();
+      }
+
+      @Override
+      public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+        return NoOpRemoteObserverInformerImpl.class;
+      }
+    });
     // Pipeline Service Modules
     PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(appConfig);
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
