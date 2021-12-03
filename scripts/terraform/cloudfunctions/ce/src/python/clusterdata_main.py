@@ -60,6 +60,7 @@ def main(jsonData, context):
     # clusterdata-prod/WhejVM7NTJe2fZ99Pdo2YA/*.avro
     jsonData["fileName"] = filePath.split("/")[-1]
     jsonData["accountId"] = filePath.split("/")[-2]
+    jsonData["cloudProvider"] = "CLUSTER"
     if jsonData["accountId"] in os.environ.get("disable_for_accounts", "").split(","):
         print_("Execution disabled for this account :%s" % jsonData["accountId"])
         return

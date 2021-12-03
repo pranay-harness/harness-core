@@ -15,6 +15,8 @@ import io.harness.gitsync.FileChange;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
+import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.EntityDetail;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.beans.yaml.NGTemplateInfoConfig;
@@ -139,13 +141,13 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
   }
 
   @Override
-  public String getLastObjectIdIfExists(String accountIdentifier, String yaml) {
+  public Optional<EntityGitDetails> getEntityDetailsIfExists(String accountIdentifier, String yaml) {
     NGTemplateConfig yamlDTO = getYamlDTO(yaml);
     NGTemplateInfoConfig templateInfoConfig = yamlDTO.getTemplateInfoConfig();
     Optional<TemplateEntity> templateEntity = templateService.get(accountIdentifier,
         templateInfoConfig.getOrgIdentifier(), templateInfoConfig.getProjectIdentifier(),
         templateInfoConfig.getIdentifier(), templateInfoConfig.getVersionLabel(), false);
-    return templateEntity.map(TemplateEntity::getObjectIdOfYaml).orElse(null);
+    return templateEntity.map(entity -> EntityGitDetailsMapper.mapEntityGitDetails(entity));
   }
 
   // todo(archit): implement

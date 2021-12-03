@@ -11,10 +11,12 @@ import io.harness.encryption.Scope;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ngexception.NGTemplateException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.scm.EntityObjectIdUtils;
 import io.harness.repositories.NGTemplateRepository;
 import io.harness.springdata.TransactionHelper;
 import io.harness.template.TemplateFilterPropertiesDTO;
@@ -84,8 +86,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
           makePreviousLastUpdatedTemplateFalse(finalTemplateEntity.getAccountIdentifier(),
               finalTemplateEntity.getOrgIdentifier(), finalTemplateEntity.getProjectIdentifier(),
               finalTemplateEntity.getIdentifier());
-          return templateRepository.save(
-              finalTemplateEntity, NGTemplateDtoMapper.toDTO(finalTemplateEntity), finalComments);
+          return templateRepository.save(finalTemplateEntity, finalComments);
         });
       } else {
         String finalComments1 = comments;
@@ -93,8 +94,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
           makePreviousLastUpdatedTemplateFalse(finalTemplateEntity.getAccountIdentifier(),
               finalTemplateEntity.getOrgIdentifier(), finalTemplateEntity.getProjectIdentifier(),
               finalTemplateEntity.getIdentifier());
-          return templateRepository.save(
-              finalTemplateEntity, NGTemplateDtoMapper.toDTO(finalTemplateEntity), finalComments1);
+          return templateRepository.save(finalTemplateEntity, finalComments1);
         });
       }
 
@@ -229,6 +229,42 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   }
 
   @Override
+  public Optional<TemplateEntity> getOrThrowExceptionIfInvalid(String accountId, String orgIdentifier,
+      String projectIdentifier, String templateIdentifier, String versionLabel, boolean deleted) {
+    try {
+      Optional<TemplateEntity> optionalTemplate;
+      if (EmptyPredicate.isEmpty(versionLabel)) {
+        optionalTemplate =
+            templateRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndIsStableAndDeletedNot(
+                accountId, orgIdentifier, projectIdentifier, templateIdentifier, !deleted);
+        if (optionalTemplate.isPresent() && optionalTemplate.get().isEntityInvalid()) {
+          throw new NGTemplateException(
+              "Invalid Template yaml cannot be used. Please correct the template version yaml.");
+        }
+        return optionalTemplate;
+      }
+      optionalTemplate =
+          templateRepository
+              .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndVersionLabelAndDeletedNot(
+                  accountId, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, !deleted);
+      if (optionalTemplate.isPresent() && optionalTemplate.get().isEntityInvalid()) {
+        throw new NGTemplateException(
+            "Invalid Template yaml cannot be used. Please correct the template version yaml.");
+      }
+      return optionalTemplate;
+    } catch (NGTemplateException e) {
+      throw new NGTemplateException(e.getMessage(), e);
+    } catch (Exception e) {
+      log.error(String.format("Error while retrieving template with identifier [%s] and versionLabel [%s]",
+                    templateIdentifier, versionLabel),
+          e);
+      throw new InvalidRequestException(
+          String.format("Error while retrieving template with identifier [%s] and versionLabel [%s]: %s",
+              templateIdentifier, versionLabel, e.getMessage()));
+    }
+  }
+
+  @Override
   public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String templateIdentifier,
       String versionLabel, Long version, String comments) {
     List<TemplateEntity> templateEntities =
@@ -288,8 +324,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
     }
     TemplateEntity withDeleted = existingTemplate.withDeleted(true);
     try {
-      TemplateEntity deletedTemplate =
-          templateRepository.deleteTemplate(withDeleted, NGTemplateDtoMapper.toDTO(withDeleted), comments);
+      TemplateEntity deletedTemplate = templateRepository.deleteTemplate(withDeleted, comments);
       if (deletedTemplate.getDeleted()) {
         return true;
       } else {
@@ -346,6 +381,27 @@ public class NGTemplateServiceImpl implements NGTemplateService {
     }
   }
 
+  @Override
+  public boolean markEntityInvalid(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String templateIdentifier, String versionLabel, String invalidYaml) {
+    Optional<TemplateEntity> optionalTemplateEntity =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, false);
+    if (!optionalTemplateEntity.isPresent()) {
+      log.warn(String.format("Marking template [%s-%s] as invalid failed as it does not exist or has been deleted",
+          templateIdentifier, versionLabel));
+      return false;
+    }
+
+    TemplateEntity existingTemplate = optionalTemplateEntity.get();
+    TemplateEntity updatedTemplate =
+        existingTemplate.withObjectIdOfYaml(EntityObjectIdUtils.getObjectIdOfYaml(invalidYaml))
+            .withYaml(invalidYaml)
+            .withIsEntityInvalid(true);
+    templateRepository.updateTemplateYaml(
+        updatedTemplate, existingTemplate, ChangeType.NONE, "", TemplateUpdateEventType.OTHERS_EVENT, true);
+    return true;
+  }
+
   @VisibleForTesting
   String getActualComments(String accountId, String orgIdentifier, String projectIdentifier, String comments) {
     boolean gitSyncEnabled = gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier);
@@ -364,8 +420,8 @@ public class NGTemplateServiceImpl implements NGTemplateService {
       makePreviousStableTemplateFalse(
           accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, newStableTemplateVersion);
       makePreviousLastUpdatedTemplateFalse(accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier);
-      Optional<TemplateEntity> optionalTemplateEntity =
-          get(accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, newStableTemplateVersion, false);
+      Optional<TemplateEntity> optionalTemplateEntity = getOrThrowExceptionIfInvalid(
+          accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, newStableTemplateVersion, false);
       if (!optionalTemplateEntity.isPresent()) {
         throw new InvalidRequestException(format(
             "Template with identifier [%s] and versionLabel [%s] under Project[%s], Organization [%s] does not exist.",
@@ -397,8 +453,8 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   private TemplateEntity makeTemplateUpdateCall(TemplateEntity templateToUpdate, TemplateEntity oldTemplateEntity,
       ChangeType changeType, String comments, TemplateUpdateEventType templateUpdateEventType, boolean skipAudits) {
     try {
-      TemplateEntity updatedTemplate = templateRepository.updateTemplateYaml(templateToUpdate, oldTemplateEntity,
-          NGTemplateDtoMapper.toDTO(templateToUpdate), changeType, comments, templateUpdateEventType, skipAudits);
+      TemplateEntity updatedTemplate = templateRepository.updateTemplateYaml(
+          templateToUpdate, oldTemplateEntity, changeType, comments, templateUpdateEventType, skipAudits);
       if (updatedTemplate == null) {
         throw new InvalidRequestException(format(
             "Template with identifier [%s] and versionLabel [%s], under Project[%s], Organization [%s] could not be updated.",

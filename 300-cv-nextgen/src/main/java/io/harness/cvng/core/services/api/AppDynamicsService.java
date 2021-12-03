@@ -35,4 +35,7 @@ public interface AppDynamicsService extends DataSourceConnectivityChecker {
 
   AppdynamicsMetricDataResponse getMetricData(ProjectParams projectParams, String connectorIdentifier, String appName,
       String baseFolder, String tier, String metricPath, String tracingId);
+
+  String getServiceInstanceMetricPath(ProjectParams projectParams, String connectorIdentifier, String appName,
+      String baseFolder, String tier, String metricPath, String tracingId);
 }

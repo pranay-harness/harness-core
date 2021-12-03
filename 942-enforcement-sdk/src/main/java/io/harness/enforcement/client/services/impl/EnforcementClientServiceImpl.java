@@ -62,6 +62,11 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
   }
 
   @Override
+  public boolean isEnforcementEnabled() {
+    return enforcementClientConfiguration.isEnforcementCheckEnabled();
+  }
+
+  @Override
   public boolean isAvailable(FeatureRestrictionName featureRestrictionName, String accountIdentifier) {
     try {
       checkAvailability(featureRestrictionName, accountIdentifier);
@@ -96,7 +101,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
   @Override
   public void checkAvailabilityWithIncrement(
       FeatureRestrictionName featureRestrictionName, String accountIdentifier, long increment) {
-    if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
+    if (!isEnforcementEnabled()) {
       return;
     }
 
@@ -133,7 +138,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
 
   @Override
   public boolean isRemoteFeatureAvailable(FeatureRestrictionName featureRestrictionName, String accountIdentifier) {
-    if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
+    if (!isEnforcementEnabled()) {
       return true;
     }
 
@@ -162,7 +167,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
     for (FeatureRestrictionName name : featureRestrictionNames) {
       result.put(name, true);
     }
-    if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
+    if (!isEnforcementEnabled()) {
       return result;
     }
 
@@ -191,7 +196,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
       result.put(name, true);
     }
 
-    if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
+    if (!isEnforcementEnabled()) {
       return result;
     }
 
@@ -313,6 +318,10 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
           throw new FeatureNotSupportedException(
               String.format("Feature [%s] is not enabled", featureRestrictionName.name()));
         }
+        break;
+      case LICENSE_RATE_LIMIT:
+      case LICENSE_STATIC_LIMIT:
+        // bypass license type check
         break;
       default:
         throw new IllegalArgumentException("Unknown restriction type");

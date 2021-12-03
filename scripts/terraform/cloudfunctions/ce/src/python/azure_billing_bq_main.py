@@ -9,7 +9,8 @@ from google.cloud import bigquery
 from google.cloud import storage
 import datetime
 import util
-from util import create_dataset, if_tbl_exists, createTable, print_, run_batch_query, COSTAGGREGATED, UNIFIED, PREAGGREGATED, CEINTERNALDATASET
+from util import create_dataset, if_tbl_exists, createTable, print_, run_batch_query, COSTAGGREGATED, UNIFIED, \
+    PREAGGREGATED, CEINTERNALDATASET, update_connector_data_sync_status
 from calendar import monthrange
 
 """
@@ -43,7 +44,7 @@ def main(event, context):
 
     # Set the accountId for GCP logging
     util.ACCOUNTID_LOG = jsonData.get("accountId")
-
+    jsonData["cloudProvider"] = "AZURE"
     # path is folder name in this format vZYBQdFRSlesqo3CMB90Ag/myqO-niJS46aVm3b646SKA/cereportnikunj/20210201-20210228/
     # or in  vZYBQdFRSlesqo3CMB90Ag/myqO-niJS46aVm3b646SKA/<tenantid>/cereportnikunj/20210201-20210228/
     ps = jsonData["path"].split("/")
@@ -61,12 +62,12 @@ def main(event, context):
     jsonData["reportYear"] = monthfolder.split("-")[0][:4]
     jsonData["reportMonth"] = monthfolder.split("-")[0][4:6]
 
-    connector_id = ps[1]  # second from beginning is connector id in mongo
+    jsonData["connectorId"] = ps[1]  # second from beginning is connector id in mongo
 
     accountIdBQ = re.sub('[^0-9a-z]', '_', jsonData.get("accountId").lower())
     jsonData["datasetName"] = "BillingReport_%s" % (accountIdBQ)
 
-    jsonData["tableSuffix"] = "%s_%s_%s" % (jsonData["reportYear"], jsonData["reportMonth"], connector_id)
+    jsonData["tableSuffix"] = "%s_%s_%s" % (jsonData["reportYear"], jsonData["reportMonth"], jsonData["connectorId"])
     jsonData["tableName"] = f"azureBilling_{jsonData['tableSuffix']}"
     jsonData["tableId"] = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
 
@@ -112,6 +113,7 @@ def main(event, context):
     get_unique_subs_id(jsonData, azure_column_mapping)
     ingest_data_into_preagg(jsonData, azure_column_mapping)
     ingest_data_into_unified(jsonData, azure_column_mapping)
+    update_connector_data_sync_status(jsonData, PROJECTID, client)
     ingest_data_to_costagg(jsonData)
     print_("Completed")
 

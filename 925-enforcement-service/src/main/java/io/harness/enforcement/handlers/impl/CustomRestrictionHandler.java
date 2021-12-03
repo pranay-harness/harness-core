@@ -72,7 +72,8 @@ public class CustomRestrictionHandler implements RestrictionHandler {
   }
 
   @Override
-  public RestrictionMetadataDTO getMetadataDTO(Restriction restriction) {
+  public RestrictionMetadataDTO getMetadataDTO(
+      Restriction restriction, String accountIdentifier, ModuleType moduleType) {
     return CustomRestrictionMetadataDTO.builder().restrictionType(restriction.getRestrictionType()).build();
   }
 

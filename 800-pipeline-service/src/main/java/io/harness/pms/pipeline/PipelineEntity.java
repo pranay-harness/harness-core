@@ -28,8 +28,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Builder.Default;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.Singular;
 import lombok.Value;
@@ -115,7 +117,7 @@ public class PipelineEntity
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
-  @Wither @NonFinal Boolean isEntityInvalid;
+  @Getter(AccessLevel.NONE) @Wither @NonFinal Boolean isEntityInvalid;
 
   @Override
   public String getAccountIdentifier() {

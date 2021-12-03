@@ -162,7 +162,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
     CompletableFutures<PartialSchemaDTO> completableFutures = new CompletableFutures<>(executor);
     for (ModuleType enabledModule : enabledModules) {
-      completableFutures.supplyAsync(() -> schemaFetcher.fetchSchema(enabledModule));
+      completableFutures.supplyAsync(() -> schemaFetcher.fetchSchema(accountIdentifier, enabledModule));
     }
 
     try {
@@ -193,7 +193,8 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   }
 
   private void removeDuplicateIfThenFromStageElementConfig(ObjectNode stageElementConfig) {
-    ArrayNode stageElementConfigAllOfNode = (ArrayNode) stageElementConfig.get(ALL_OF_NODE);
+    ArrayNode stageElementConfigAllOfNode =
+        getAllOfNodeWithTypeAndSpec((ArrayNode) stageElementConfig.get(ONE_OF_NODE));
     if (stageElementConfigAllOfNode == null) {
       return;
     }

@@ -11,23 +11,24 @@ import java.util.Map;
 
 @OwnedBy(CV)
 public class ConnectorAllowedFieldValues {
-  public static Map<ConnectorType, FieldValues> TYPE_TO_FIELDS = new HashMap<ConnectorType, FieldValues>() {
-    {
-      put(ConnectorType.NEW_RELIC,
-          FieldValues.builder()
-              .fieldValue(
-                  "url", Arrays.asList("https://insights-api.newrelic.com/", "https://insights-api.eu.newrelic.com/"))
-              .build());
+  public static Map<ConnectorType, io.harness.connector.utils.FieldValues> TYPE_TO_FIELDS =
+      new HashMap<ConnectorType, io.harness.connector.utils.FieldValues>() {
+        {
+          put(ConnectorType.NEW_RELIC,
+              io.harness.connector.utils.FieldValues.builder()
+                  .fieldValue("url",
+                      Arrays.asList("https://insights-api.newrelic.com/", "https://insights-api.eu.newrelic.com/"))
+                  .build());
 
-      put(ConnectorType.SUMOLOGIC,
-          FieldValues.builder()
-              .fieldValue("url",
-                  Arrays.asList("https://api.us2.sumologic.com/", "https://api.sumologic.com/",
-                      "https://api.in.sumologic.com/", "https://api.jp.sumologic.com/",
-                      "https://api.fed.sumologic.com/", "https://api.eu.sumologic.com/",
-                      "https://api.de.sumologic.com/", "https://api.ca.sumologic.com/",
-                      "https://api.au.sumologic.com/"))
-              .build());
-    }
-  };
+          put(ConnectorType.SUMOLOGIC,
+              FieldValues.builder()
+                  .fieldValue("url",
+                      Arrays.asList("https://api.us2.sumologic.com/", "https://api.sumologic.com/",
+                          "https://api.in.sumologic.com/", "https://api.jp.sumologic.com/",
+                          "https://api.fed.sumologic.com/", "https://api.eu.sumologic.com/",
+                          "https://api.de.sumologic.com/", "https://api.ca.sumologic.com/",
+                          "https://api.au.sumologic.com/"))
+                  .build());
+        }
+      };
 }

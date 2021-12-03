@@ -63,7 +63,9 @@ public class HealthSourceMetricDefinition implements WithIdentifier {
     @Builder
     public static class DeploymentVerificationDTO {
       Boolean enabled;
+      // TODO: Make this HealthSource type specific
       String serviceInstanceFieldName;
+      String serviceInstanceMetricPath;
     }
   }
 

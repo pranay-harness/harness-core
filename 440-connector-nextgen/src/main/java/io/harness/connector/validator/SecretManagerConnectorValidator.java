@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.connector.ConnectivityStatus.FAILURE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.errorhandling.NGErrorHelper;
@@ -38,6 +39,12 @@ public class SecretManagerConnectorValidator implements ConnectionValidator {
           .errors(getErrorDetail(errorMessage))
           .build();
     }
+  }
+
+  @Override
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    return null;
   }
 
   private List<ErrorDetail> getErrorDetail(String errorMessage) {

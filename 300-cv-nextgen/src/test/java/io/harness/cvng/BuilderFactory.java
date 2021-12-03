@@ -139,6 +139,14 @@ public class BuilderFactory {
         .callbackId(generateUuid());
   }
 
+  public ProjectParams getProjectParams() {
+    return ProjectParams.builder()
+        .accountIdentifier(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .build();
+  }
+
   public ServiceResponseDTOBuilder serviceResponseDTOBuilder() {
     return ServiceResponseDTO.builder()
         .accountId(context.getAccountId())
@@ -235,6 +243,7 @@ public class BuilderFactory {
         .tierName("tier")
         .connectorRef(CONNECTOR_IDENTIFIER)
         .feature("Application Monitoring")
+        .metricDefinitions(Collections.emptyList())
         .metricPacks(new HashSet<MetricPackDTO>() {
           { add(MetricPackDTO.builder().identifier(cvMonitoringCategory).build()); }
         })

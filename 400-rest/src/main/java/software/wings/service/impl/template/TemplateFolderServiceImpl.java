@@ -35,6 +35,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
+import io.harness.validation.SuppressValidation;
 import io.harness.validation.Update;
 
 import software.wings.beans.Base;
@@ -244,6 +245,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   }
 
   @Override
+  @SuppressValidation
   public void loadDefaultTemplateFolders() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     notNullCheck("Harness Template gallery was deleted", templateGallery, SRE);

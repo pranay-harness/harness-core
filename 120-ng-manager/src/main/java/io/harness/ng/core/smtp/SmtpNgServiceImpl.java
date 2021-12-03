@@ -1,22 +1,20 @@
 package io.harness.ng.core.smtp;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.managerclient.SafeHttpCall;
 import io.harness.ng.core.dto.NgSmtpDTO;
 import io.harness.ng.core.dto.ValidationResultDTO;
 import io.harness.ng.core.mapper.NgSmtpDTOMapper;
 import io.harness.ng.core.mapper.ValidationResultDTOMapper;
-import io.harness.rest.RestResponse;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ValidationResult;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -26,8 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class SmtpNgServiceImpl implements SmtpNgService {
-  private NgSMTPSettingsHttpClient ngSMTPSettingsHttpClient;
-  @Inject private TimeLimiter timeLimiter;
+  private final NgSMTPSettingsHttpClient ngSMTPSettingsHttpClient;
 
   @Inject
   public SmtpNgServiceImpl(NgSMTPSettingsHttpClient ngSMTPSettingsHttpClient) {
@@ -37,17 +34,17 @@ public class SmtpNgServiceImpl implements SmtpNgService {
   @Override
   public NgSmtpDTO saveSmtpSettings(NgSmtpDTO variable) throws IOException {
     SettingAttribute settingAttribute = NgSmtpDTOMapper.getSettingAttributeFromNgSmtpDTO(variable);
-    RestResponse<SettingAttribute> response = SafeHttpCall.execute(
+    SettingAttribute response = getResponse(
         ngSMTPSettingsHttpClient.saveSmtpSettings(GLOBAL_APP_ID, variable.getAccountId(), settingAttribute));
-    return NgSmtpDTOMapper.getDTOFromSettingAttribute(response.getResource());
+    return NgSmtpDTOMapper.getDTOFromSettingAttribute(response);
   }
 
   @Override
   public ValidationResultDTO validateSmtpSettings(String name, String accountId) throws IOException {
-    RestResponse<Boolean> response = SafeHttpCall.execute(
-        ngSMTPSettingsHttpClient.validateSmtpSettings(name, accountId, GLOBAL_APP_ID, GLOBAL_ENV_ID));
-    ValidationResultDTO resultDTO = ValidationResultDTO.builder().valid(response.getResource()).build();
-    if (!response.getResource()) {
+    Boolean response =
+        getResponse(ngSMTPSettingsHttpClient.validateSmtpSettings(name, accountId, GLOBAL_APP_ID, GLOBAL_ENV_ID));
+    ValidationResultDTO resultDTO = ValidationResultDTO.builder().valid(response).build();
+    if (!response) {
       resultDTO.setErrorMessage("There already exists a connector with this name. Please try a different one.");
     }
     return resultDTO;
@@ -56,32 +53,31 @@ public class SmtpNgServiceImpl implements SmtpNgService {
   @Override
   public NgSmtpDTO updateSmtpSettings(NgSmtpDTO variable) throws IOException {
     SettingAttribute settingAttribute = NgSmtpDTOMapper.getSettingAttributeFromNgSmtpDTO(variable);
-    RestResponse<SettingAttribute> response = SafeHttpCall.execute(
-        ngSMTPSettingsHttpClient.updateSmtpSettings(variable.getUuid(), GLOBAL_APP_ID, settingAttribute));
-    return NgSmtpDTOMapper.getDTOFromSettingAttribute(response.getResource());
+    SettingAttribute response =
+        getResponse(ngSMTPSettingsHttpClient.updateSmtpSettings(variable.getUuid(), GLOBAL_APP_ID, settingAttribute));
+    return NgSmtpDTOMapper.getDTOFromSettingAttribute(response);
   }
 
   @Override
   public ValidationResultDTO validateConnectivitySmtpSettings(
-      NgSmtpDTO variable, String to, String subject, String body) throws IOException {
-    SettingAttribute settingAttribute = NgSmtpDTOMapper.getSettingAttributeFromNgSmtpDTO(variable);
-    RestResponse<ValidationResult> response =
-        SafeHttpCall.execute(ngSMTPSettingsHttpClient.validateConnectivitySmtpSettings(
-            GLOBAL_APP_ID, variable.getAccountId(), to, subject, body, settingAttribute));
-    return ValidationResultDTOMapper.getDTOFromValidationResult(response.getResource());
+      String identifier, String accountId, String to, String subject, String body) throws IOException {
+    ValidationResult response = getResponse(ngSMTPSettingsHttpClient.validateConnectivitySmtpSettings(
+        identifier, GLOBAL_APP_ID, accountId, to, subject, body));
+    return ValidationResultDTOMapper.getDTOFromValidationResult(response);
   }
 
   @Override
   public Boolean deleteSmtpSettings(String id) throws IOException {
-    RestResponse<Boolean> response =
-        SafeHttpCall.execute(ngSMTPSettingsHttpClient.deleteSmtpSettings(id, GLOBAL_APP_ID));
-    return response.getResource();
+    return getResponse(ngSMTPSettingsHttpClient.deleteSmtpSettings(id, GLOBAL_APP_ID));
   }
 
   @Override
-  public NgSmtpDTO getSmtpSettings(String id) throws IOException {
-    RestResponse<SettingAttribute> response =
-        SafeHttpCall.execute(ngSMTPSettingsHttpClient.getSmtpSettings(id, GLOBAL_APP_ID));
-    return NgSmtpDTOMapper.getDTOFromSettingAttribute(response.getResource());
+  public NgSmtpDTO getSmtpSettings(String accountId) throws IOException {
+    SettingAttribute response = getResponse(ngSMTPSettingsHttpClient.getSmtpSettings(accountId));
+    if (response == null) {
+      log.error("Smtp is not configured. Please create a new config");
+      return null;
+    }
+    return NgSmtpDTOMapper.getDTOFromSettingAttribute(response);
   }
 }

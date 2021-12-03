@@ -277,6 +277,44 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
+  public void testGetServiceInstanceMetricPath() throws IOException, IllegalAccessException {
+    String textLoad = Resources.toString(
+        AppDynamicsServiceimplTest.class.getResource("/appd/appd_file_structure_dsl_sample_output.json"),
+        Charsets.UTF_8);
+    JsonUtils.asObject(textLoad, OnboardingResponseDTO.class);
+
+    DataCollectionRequest request = AppDynamicFetchFileStructureRequest.builder()
+                                        .appName("appName")
+                                        .path("baseFolder|tier|metricPath")
+                                        .type(DataCollectionRequestType.APPDYNAMICS_FETCH_METRIC_STRUCTURE)
+                                        .build();
+
+    OnboardingRequestDTO onboardingRequestDTO =
+        OnboardingRequestDTO.builder()
+            .dataCollectionRequest(request)
+            .connectorIdentifier(connectorIdentifier)
+            .accountId(builderFactory.getContext().getProjectParams().getAccountIdentifier())
+            .tracingId("tracingId")
+            .orgIdentifier(builderFactory.getContext().getProjectParams().getOrgIdentifier())
+            .projectIdentifier(builderFactory.getContext().getProjectParams().getProjectIdentifier())
+            .build();
+
+    OnboardingService mockOnboardingService = mock(OnboardingService.class);
+    FieldUtils.writeField(appDynamicsService, "onboardingService", mockOnboardingService, true);
+    when(mockOnboardingService.getOnboardingResponse(
+             eq(builderFactory.getContext().getAccountId()), eq(onboardingRequestDTO)))
+        .thenReturn(JsonUtils.asObject(textLoad, OnboardingResponseDTO.class));
+
+    String serviceInstanceMetricPath =
+        appDynamicsService.getServiceInstanceMetricPath(builderFactory.getContext().getProjectParams(),
+            connectorIdentifier, "appName", "baseFolder", "tier", "metricPath", "tracingId");
+
+    assertThat(serviceInstanceMetricPath).isEqualTo("Individual Nodes|*|metricPath");
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
   public void testGetMetricData() throws IOException, IllegalAccessException {
     final List<MetricPackDTO> metricPacks =
         metricPackService.getMetricPacks(DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier);
