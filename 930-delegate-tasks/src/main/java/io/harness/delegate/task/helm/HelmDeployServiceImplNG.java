@@ -239,7 +239,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
         default:
           throw new InvalidRequestException("Unexpected helm request type: " + commandType);
       }
-    }  catch (HelmClientException e) {
+    } catch (HelmClientException e) {
       String errorMessage = "Failed to run helm command. Command type: " + commandType.toString() + ". ";
       logCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       throw new HelmClientRuntimeException(e);
@@ -782,10 +782,14 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     } catch (InterruptedException e) {
       log.error("Failed to get k8s resources from Helm chart", e);
       Thread.currentThread().interrupt();
+    } catch (HelmClientException e) {
+      String errorMessage = "Failed to run helm command. Command type: " + HelmCliCommandType.RENDER_CHART + ". ";
+      executionLogCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      throw new HelmClientRuntimeException(e);
     } catch (Exception e) {
-      String msg = format("Failed to print Helm chart manifest, location: %s", workingDir);
-      log.error(msg, e);
-      executionLogCallback.saveExecutionLog(msg);
+      String errorMessage = "Failed to run helm command. Command type: " + HelmCliCommandType.RENDER_CHART  + ". ";
+      executionLogCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      throw new HelmClientException(ExceptionUtils.getMessage(e), e, HelmCliCommandType.RENDER_CHART);
     }
     return helmKubernetesResources;
   }
@@ -817,7 +821,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
       String msg = format("Failed to render chart location: %s. Reason %s ", chartLocation, cliResponse.getOutput());
       executionLogCallback.saveExecutionLog(msg);
-      throw new InvalidRequestException(msg);
+      throw new HelmClientException(
+              msg + ". " + cliResponse.getOutput(), USER, HelmCliCommandType.RENDER_CHART);
     }
 
     return new HelmCommandResponseNG(cliResponse.getCommandExecutionStatus(), cliResponse.getOutput());

@@ -129,7 +129,6 @@ public class HelmClientImpl implements HelmClient {
     String errorMessagePrefix = "Failed to rollback helm chart. Executed command: ";
 
     return fetchCliResponseWithExceptionHandling(command, commandType, errorMessagePrefix);
-//    return executeHelmCLICommand(command);
   }
 
   @Override
@@ -294,6 +293,11 @@ public class HelmClientImpl implements HelmClient {
             ? new ErrorActivityOutputStream(helmCommandData.getLogCallback())
             : new LogErrorStream()) {
       return executeHelmCLICommand(command, errorStream);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new HelmClientException(ExceptionUtils.getMessage(e), USER, commandType);
+    } catch (Exception e) {
+      throw new HelmClientException(ExceptionUtils.getMessage(e), USER, commandType);
     }
   }
 
@@ -443,7 +447,7 @@ public class HelmClientImpl implements HelmClient {
 
   @Override
   public String getHelmPath(HelmVersion helmVersion) {
-    return helmVersion == HelmVersion.V3 ? k8sGlobalConfigService.getHelmPath(HelmVersion.V3) : "helm";
+    return k8sGlobalConfigService.getHelmPath(helmVersion);
   }
 
   public HelmCliResponse fetchCliResponseWithExceptionHandling(
