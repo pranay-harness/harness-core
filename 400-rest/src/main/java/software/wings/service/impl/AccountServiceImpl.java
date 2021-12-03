@@ -22,8 +22,8 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ID_KEY2;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
@@ -88,11 +88,13 @@ import io.harness.network.Http;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.account.OauthProviderType;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
+import io.harness.validation.SuppressValidation;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.app.MainConfiguration;
@@ -280,6 +282,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
   @Inject private DelegateService delegateService;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -314,7 +317,11 @@ public class AccountServiceImpl implements AccountService {
     accountDao.save(account);
 
     try (AutoLogContext logContext = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
+      // Both subject and remote Observer are needed since in few places DMS might not be present
       accountCrudSubject.fireInform(AccountCrudObxxxxxxxx:onAccountCreated, account);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(AccountCrudObserver.class, "onAccountCreated", Account.class),
+          AccountServiceImpl.class, account);
 
       // When an account is just created for import, no need to create default account entities.
       // As the import process will do all these instead.
@@ -885,6 +892,9 @@ public class AccountServiceImpl implements AccountService {
     publishAccountChangeEvent(updatedAccount);
     try (AutoLogContext logContext = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
       accountCrudSubject.fireInform(AccountCrudObxxxxxxxx:onAccountUpdated, updatedAccount);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(AccountCrudObserver.class, "onAccountUpdated", Account.class),
+          AccountServiceImpl.class, updatedAccount);
     }
     return updatedAccount;
   }
@@ -1008,6 +1018,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  @SuppressValidation
   public void updateFeatureFlagsForOnPremAccount() {
     Optional<Account> onPremAccount = getOnPremAccount();
     if (!onPremAccount.isPresent()) {

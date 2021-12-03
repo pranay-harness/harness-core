@@ -477,8 +477,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public List<TimeSeriesMetricDefinition> getMetricTemplate(String verificationTaskId) {
-    return timeSeriesRecordService.getTimeSeriesMetricDefinitions(
-        verificationTaskService.getCVConfigId(verificationTaskId));
+    Optional<String> cvConfig = verificationTaskService.maybeGetCVConfigId(verificationTaskId);
+    return cvConfig.map(s -> timeSeriesRecordService.getTimeSeriesMetricDefinitions(s)).orElse(new ArrayList<>());
   }
 
   @Override

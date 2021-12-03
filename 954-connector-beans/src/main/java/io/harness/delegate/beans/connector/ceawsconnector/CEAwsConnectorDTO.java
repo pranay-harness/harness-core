@@ -7,6 +7,7 @@ import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -20,6 +21,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("CEAwsConnector")
+@Schema(name = "CEAwsConnector", description = "This contains the cost explorer of AWS connector")
 public class CEAwsConnectorDTO extends ConnectorConfigDTO {
   @NotNull @Valid CrossAccountAccessDTO crossAccountAccess;
   @Valid AwsCurAttributesDTO curAttributes;

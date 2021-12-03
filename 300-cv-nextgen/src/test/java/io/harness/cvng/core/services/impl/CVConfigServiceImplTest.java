@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
-import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,17 +19,12 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
-import io.harness.cvng.core.beans.AppDynamicsDSConfig;
-import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
-import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.DSConfigService;
-import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.models.VerificationType;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.environment.beans.EnvironmentType;
@@ -41,7 +35,6 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -57,7 +50,6 @@ import org.mockito.Mock;
 
 public class CVConfigServiceImplTest extends CvNextGenTestBase {
   @Inject private CVConfigService cvConfigService;
-  @Inject private DSConfigService dsConfigService;
   @Mock private NextGenService nextGenService;
 
   @Mock private VerificationManagerService verificationManagerService;
@@ -389,46 +381,6 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testGetEnvToServicesList() {
-    int numOfEnv = 3;
-    for (int i = 0; i < numOfEnv; i++) {
-      AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("appd-" + i, "env-" + i);
-      dsConfigService.create(dataSourceCVConfig);
-    }
-
-    List<EnvToServicesDTO> envToServicesList =
-        cvConfigService.getEnvToServicesList(accountId, orgIdentifier, projectIdentifier);
-    assertThat(envToServicesList.size()).isEqualTo(numOfEnv);
-
-    for (int i = 0; i < numOfEnv; i++) {
-      EnvToServicesDTO envToServicesDTO = envToServicesList.get(i);
-      int envIndex = numOfEnv - i - 1;
-      assertThat(envToServicesDTO.getEnvironment().getIdentifier()).isEqualTo("env-" + envIndex);
-      assertThat(envToServicesDTO.getEnvironment().getName()).isEqualTo("env-" + envIndex);
-      assertThat(envToServicesDTO.getEnvironment().getProjectIdentifier()).isEqualTo(projectIdentifier);
-      assertThat(envToServicesDTO.getEnvironment().getOrgIdentifier()).isEqualTo(orgIdentifier);
-      assertThat(envToServicesDTO.getEnvironment().getAccountId()).isEqualTo(accountId);
-
-      assertThat(envToServicesDTO.getServices().size()).isEqualTo(2);
-      List<ServiceResponseDTO> services = new ArrayList<>(envToServicesDTO.getServices());
-      ServiceResponseDTO serviceResponseDTO = services.get(0);
-      assertThat(Sets.newHashSet("harness-qa", "harness-manager")).containsOnlyOnce(serviceResponseDTO.getIdentifier());
-      assertThat(Sets.newHashSet("harness-qa", "harness-manager")).containsOnlyOnce(serviceResponseDTO.getName());
-      assertThat(serviceResponseDTO.getProjectIdentifier()).isEqualTo(projectIdentifier);
-      assertThat(serviceResponseDTO.getOrgIdentifier()).isEqualTo(orgIdentifier);
-      assertThat(serviceResponseDTO.getAccountId()).isEqualTo(accountId);
-
-      serviceResponseDTO = services.get(1);
-      assertThat(Sets.newHashSet("harness-qa", "harness-manager")).containsOnlyOnce(serviceResponseDTO.getIdentifier());
-      assertThat(Sets.newHashSet("harness-qa", "harness-manager")).containsOnlyOnce(serviceResponseDTO.getName());
-      assertThat(serviceResponseDTO.getProjectIdentifier()).isEqualTo(projectIdentifier);
-      assertThat(serviceResponseDTO.getOrgIdentifier()).isEqualTo(orgIdentifier);
-      assertThat(serviceResponseDTO.getAccountId()).isEqualTo(accountId);
-    }
-  }
-  @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetAvailableCategories() {
@@ -495,36 +447,6 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
     List<CVConfig> cvConfigsList = cvConfigService.listByMonitoringSources(accountId, orgIdentifier, projectIdentifier,
         Arrays.asList(MONITORING_SOURCE_SUFFIX + "0", MONITORING_SOURCE_SUFFIX + "1"));
     assertThat(cvConfigsList.size()).isEqualTo(6);
-  }
-
-  private AppDynamicsDSConfig createAppDynamicsDataSourceCVConfig(String identifier, String envIdentifier) {
-    AppDynamicsDSConfig appDynamicsDSConfig = new AppDynamicsDSConfig();
-    appDynamicsDSConfig.setIdentifier(identifier);
-    appDynamicsDSConfig.setMonitoringSourceName(generateUuid());
-    appDynamicsDSConfig.setConnectorIdentifier(connectorIdentifier);
-    appDynamicsDSConfig.setProductName(productName);
-    appDynamicsDSConfig.setAccountId(accountId);
-    appDynamicsDSConfig.setProjectIdentifier(projectIdentifier);
-    appDynamicsDSConfig.setOrgIdentifier(orgIdentifier);
-    appDynamicsDSConfig.setAppConfigs(
-        Lists.newArrayList(AppdynamicsAppConfig.builder()
-                               .applicationName(identifier)
-                               .envIdentifier(envIdentifier)
-                               .metricPacks(Sets.newHashSet(MetricPack.builder()
-                                                                .accountId(accountId)
-                                                                .category(CVMonitoringCategory.INFRASTRUCTURE)
-                                                                .identifier("appd performance metric pack")
-                                                                .build()))
-                               .serviceMappings(Sets.newHashSet(AppDynamicsDSConfig.ServiceMapping.builder()
-                                                                    .serviceIdentifier("harness-manager")
-                                                                    .tierName("manager")
-                                                                    .build(),
-                                   AppDynamicsDSConfig.ServiceMapping.builder()
-                                       .serviceIdentifier("harness-qa")
-                                       .tierName("manager-qa")
-                                       .build()))
-                               .build()));
-    return appDynamicsDSConfig;
   }
 
   private void assertCommons(CVConfig actual, CVConfig expected) {
@@ -717,36 +639,6 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
     result =
         cvConfigService.findByConnectorIdentifier(accountId, orgIdentifier, projectIdentifier, "random", Scope.ACCOUNT);
     assertThat(result).isEmpty();
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testGetDataSourcetypes() {
-    List<CVConfig> cvConfigs = new ArrayList<>();
-    SplunkCVConfig cvConfig = new SplunkCVConfig();
-    cvConfig.setServiceInstanceIdentifier("serviceInstance");
-    cvConfig.setQuery("12");
-    fillCommon(cvConfig);
-    cvConfig.setServiceIdentifier("harness-manager");
-    cvConfigs.add(cvConfig);
-
-    AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("appd", "env");
-    dsConfigService.create(dataSourceCVConfig);
-
-    save(cvConfigs);
-
-    Set<DatasourceTypeDTO> dsTypes =
-        cvConfigService.getDataSourcetypes(accountId, projectIdentifier, orgIdentifier, "env", "harness-manager", null);
-
-    assertThat(dsTypes.size()).isEqualTo(2);
-
-    List<DataSourceType> types =
-        dsTypes.stream().map(DatasourceTypeDTO::getDataSourceType).collect(Collectors.toList());
-    List<VerificationType> verificationTypes =
-        dsTypes.stream().map(DatasourceTypeDTO::getVerificationType).collect(Collectors.toList());
-    assertThat(types).containsExactlyInAnyOrder(DataSourceType.SPLUNK, DataSourceType.APP_DYNAMICS);
-    assertThat(verificationTypes).containsExactlyInAnyOrder(VerificationType.TIME_SERIES, VerificationType.LOG);
   }
 
   @Test

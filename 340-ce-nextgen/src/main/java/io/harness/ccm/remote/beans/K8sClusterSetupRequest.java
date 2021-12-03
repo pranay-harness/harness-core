@@ -8,14 +8,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class K8sClusterSetupRequest {
-  @NotEmpty List<CEFeatures> featuresEnabled;
+  @Deprecated List<CEFeatures> featuresEnabled;
 
   // used by VISIBILITY feature
   String connectorIdentifier;

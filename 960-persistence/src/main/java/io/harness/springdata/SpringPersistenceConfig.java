@@ -1,6 +1,7 @@
 package io.harness.springdata;
 
 import static io.harness.mongo.MongoConfig.DOT_REPLACEMENT;
+import static io.harness.springdata.PersistenceStoreUtils.getMatchingEntities;
 
 import static com.google.inject.Key.get;
 import static com.google.inject.name.Names.named;
@@ -9,12 +10,14 @@ import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
+import io.harness.persistence.Store;
+import io.harness.reflection.HarnessReflections;
 
 import com.google.inject.Injector;
 import com.mongodb.MongoClient;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +25,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
@@ -43,11 +47,13 @@ public class SpringPersistenceConfig extends AbstractMongoConfiguration {
   protected final Injector injector;
   protected final AdvancedDatastore advancedDatastore;
   protected final List<Class<? extends Converter<?, ?>>> springConverters;
+  protected final MongoConfig mongoConfig;
 
   public SpringPersistenceConfig(Injector injector, List<Class<? extends Converter<?, ?>>> springConverters) {
     this.injector = injector;
     this.advancedDatastore = injector.getProvider(get(AdvancedDatastore.class, named("primaryDatastore"))).get();
     this.springConverters = springConverters;
+    this.mongoConfig = injector.getInstance(MongoConfig.class);
   }
 
   @Override
@@ -75,8 +81,13 @@ public class SpringPersistenceConfig extends AbstractMongoConfiguration {
   }
 
   @Override
-  protected Collection<String> getMappingBasePackages() {
-    return Collections.singleton("io.harness");
+  protected Set<Class<?>> getInitialEntitySet() {
+    Set<Class<?>> classes = HarnessReflections.get().getTypesAnnotatedWith(TypeAlias.class);
+    Store store = null;
+    if (Objects.nonNull(mongoConfig.getAliasDBName())) {
+      store = Store.builder().name(mongoConfig.getAliasDBName()).build();
+    }
+    return getMatchingEntities(classes, store);
   }
 
   @Bean

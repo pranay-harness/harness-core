@@ -17,14 +17,12 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.groupingBy;
 
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
-import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
-import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
@@ -36,6 +34,8 @@ import io.harness.cvng.core.entities.DataCollectionTask.Type;
 import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
 import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.VerificationTask.DeploymentInfo;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
@@ -45,7 +45,7 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.metrics.CVNGMetricsUtils;
 import io.harness.cvng.metrics.beans.AccountMetricContext;
-import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.cvng.statemachine.services.api.OrchestrationService;
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
@@ -63,9 +63,6 @@ import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -93,7 +90,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
-  @Inject private Injector injector;
+  @Inject private Map<DataSourceType, DataCollectionInfoMapper> dataSourceTypeDataCollectionInfoMapperMap;
   @Inject private MetricPackService metricPackService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private VerificationJobInstanceAnalysisService verificationJobInstanceAnalysisService;
@@ -189,7 +186,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     // We dont do any data collection for health verification. So just queue the analysis.
     List<CVConfig> cvConfigs = getCVConfigsForVerificationJob(verificationJobInstance.getResolvedJob());
     cvConfigs.forEach(cvConfig -> {
-      String verificationTaskId = verificationTaskService.create(
+      String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
           cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType());
       log.info("For verificationJobInstance with ID: {}, creating a new health analysis with verificationTaskID {}",
           verificationJobInstance.getUuid(), verificationTaskId);
@@ -272,7 +269,10 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     progressLog.validate();
     VerificationTask verificationTask = verificationTaskService.get(progressLog.getVerificationTaskId());
     try (AccountMetricContext accountMetricContext = new AccountMetricContext(verificationTask.getAccountId())) {
-      String verificationJobInstanceId = verificationTask.getVerificationJobInstanceId();
+      Preconditions.checkNotNull(verificationTask.getTaskInfo().getTaskType().equals(TaskType.DEPLOYMENT),
+          "VerificationTask should be of Deployment type");
+      String verificationJobInstanceId =
+          ((DeploymentInfo) verificationTask.getTaskInfo()).getVerificationJobInstanceId();
       UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
           hPersistence.createUpdateOperations(VerificationJobInstance.class)
               .addToSet(VerificationJobInstanceKeys.progressLogs, progressLog);
@@ -329,7 +329,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       List<CVConfig> cvConfigs = getCVConfigsForVerificationJob(verificationJob);
       Preconditions.checkState(isNotEmpty(cvConfigs), "No config is matching the criteria");
       cvConfigs.forEach(cvConfig -> {
-        String verificationTaskId = verificationTaskService.create(
+        String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
             cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType());
         verificationJobInstanceAnalysisService.addDemoAnalysisData(
             verificationTaskId, cvConfig, verificationJobInstance);
@@ -387,59 +387,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     return verificationJob.getPreActivityTimeRange(verificationJobInstance.getDeploymentStartTime());
   }
 
-  @Override
-  public DeploymentActivityVerificationResultDTO getAggregatedVerificationResult(
-      List<String> verificationJobInstanceIds) {
-    List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
-    List<VerificationJobInstance> postDeploymentVerificationJobInstances =
-        getPostDeploymentVerificationJobInstances(verificationJobInstances);
-    Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
-        getPreAndProductionDeploymentGroup(verificationJobInstances);
-
-    return DeploymentActivityVerificationResultDTO.builder()
-        .preProductionDeploymentSummary(
-            getActivityVerificationSummary(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction)))
-        .productionDeploymentSummary(
-            getActivityVerificationSummary(preAndProductionDeploymentGroup.get(EnvironmentType.Production)))
-        .postDeploymentSummary(getActivityVerificationSummary(postDeploymentVerificationJobInstances))
-        .build();
-  }
-
-  @Override
-  public void addResultsToDeploymentResultSummary(
-      String accountId, List<String> verificationJobInstanceIds, DeploymentResultSummary deploymentResultSummary) {
-    List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
-    List<VerificationJobInstance> postDeploymentVerificationJobInstances =
-        getPostDeploymentVerificationJobInstances(verificationJobInstances);
-    Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
-        getPreAndProductionDeploymentGroup(verificationJobInstances);
-    addDeploymentVerificationJobInstanceSummaries(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction),
-        deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries());
-    addDeploymentVerificationJobInstanceSummaries(preAndProductionDeploymentGroup.get(EnvironmentType.Production),
-        deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries());
-    addDeploymentVerificationJobInstanceSummaries(postDeploymentVerificationJobInstances,
-        deploymentResultSummary.getPostDeploymentVerificationJobInstanceSummaries());
-  }
-
-  @Override
-  public DeploymentActivityPopoverResultDTO getDeploymentVerificationPopoverResult(
-      List<String> verificationJobInstanceIds) {
-    List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
-    Preconditions.checkState(isNotEmpty(verificationJobInstances), "No VerificationJobInstance found with IDs %s",
-        verificationJobInstanceIds.toString());
-    List<VerificationJobInstance> postDeploymentVerificationJobInstances =
-        getPostDeploymentVerificationJobInstances(verificationJobInstances);
-    Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
-        getPreAndProductionDeploymentGroup(verificationJobInstances);
-
-    return DeploymentActivityPopoverResultDTO.builder()
-        .preProductionDeploymentSummary(
-            deploymentPopoverSummary(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction)))
-        .productionDeploymentSummary(
-            deploymentPopoverSummary(preAndProductionDeploymentGroup.get(EnvironmentType.Production)))
-        .postDeploymentSummary(deploymentPopoverSummary(postDeploymentVerificationJobInstances))
-        .build();
-  }
   @Override
   public List<TestVerificationBaselineExecutionDTO> getTestJobBaselineExecutions(
       String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier) {
@@ -708,31 +655,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .collect(Collectors.toList());
   }
 
-  @Nullable
-  private DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary deploymentPopoverSummary(
-      List<VerificationJobInstance> verificationJobInstances) {
-    if (isEmpty(verificationJobInstances)) {
-      return null;
-    }
-
-    List<DeploymentActivityPopoverResultDTO.VerificationResult> verificationResults =
-        verificationJobInstances.stream()
-            .map(verificationJobInstance
-                -> DeploymentActivityPopoverResultDTO.VerificationResult.builder()
-                       .status(getDeploymentVerificationStatus(verificationJobInstance))
-                       .jobName(verificationJobInstance.getResolvedJob().getJobName())
-                       .progressPercentage(verificationJobInstance.getProgressPercentage())
-                       .remainingTimeMs(verificationJobInstance.getRemainingTime(clock.instant()).toMillis())
-                       .startTime(verificationJobInstance.getStartTime().toEpochMilli())
-                       .risk(getLatestRisk(verificationJobInstance).orElse(null))
-                       .build())
-            .collect(Collectors.toList());
-    return DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary.builder()
-        .total(verificationJobInstances.size())
-        .verificationResults(verificationResults)
-        .build();
-  }
-
   private EnvironmentResponseDTO getEnvironment(VerificationJob verificationJob) {
     return nextGenService.getEnvironment(verificationJob.getAccountId(), verificationJob.getOrgIdentifier(),
         verificationJob.getProjectIdentifier(), verificationJob.getEnvIdentifier());
@@ -755,10 +677,10 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     cvConfigs.forEach(cvConfig -> {
       populateMetricPack(cvConfig);
       List<DataCollectionTask> dataCollectionTasks = new ArrayList<>();
-      String verificationTaskId = verificationTaskService.create(
+      String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
           cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType());
       DataCollectionInfoMapper dataCollectionInfoMapper =
-          injector.getInstance(Key.get(DataCollectionInfoMapper.class, Names.named(cvConfig.getType().name())));
+          dataSourceTypeDataCollectionInfoMapperMap.get(cvConfig.getType());
 
       if (preDeploymentTimeRange.isPresent()) {
         DataCollectionInfo preDeploymentDataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);

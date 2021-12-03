@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthConnectorDTO;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.connector.dynatrace.DynatraceConnectorDTO;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
@@ -13,6 +14,7 @@ import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnect
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.connector.sumologic.SumoLogicConnectorDTO;
 import io.harness.delegate.beans.cvng.appd.AppDynamicsConnectorValidationInfo;
+import io.harness.delegate.beans.cvng.customhealth.CustomHealthConnectorValidationInfo;
 import io.harness.delegate.beans.cvng.datadog.DatadogConnectorValidationInfo;
 import io.harness.delegate.beans.cvng.dynatrace.DynatraceConnectorValidationInfo;
 import io.harness.delegate.beans.cvng.newrelic.NewRelicConnectorValidationInfo;
@@ -52,6 +54,8 @@ public abstract class ConnectorValidationInfo<T extends ConnectorConfigDTO> {
       connectorValidationInfo = DynatraceConnectorValidationInfo.builder().build();
     } else if (connectorConfigDTO instanceof PagerDutyConnectorDTO) {
       connectorValidationInfo = PagerDutyConnectorValidationInfo.builder().build();
+    } else if (connectorConfigDTO instanceof CustomHealthConnectorDTO) {
+      connectorValidationInfo = CustomHealthConnectorValidationInfo.builder().build();
     } else {
       throw new IllegalStateException(
           "Class: " + connectorConfigDTO.getClass().getSimpleName() + " does not have ValidationInfo object");

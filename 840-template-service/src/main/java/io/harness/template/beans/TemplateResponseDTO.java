@@ -6,11 +6,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityName;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.gitsync.sdk.EntityValidityDetails;
 import io.harness.ng.core.template.TemplateEntityType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -24,6 +26,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("TemplateResponse")
+@Schema(name = "TemplateResponse", description = "This contains details of the Template Response")
 public class TemplateResponseDTO {
   @NotNull @NotEmpty String accountId;
   String orgIdentifier;
@@ -45,5 +48,6 @@ public class TemplateResponseDTO {
   Scope templateScope;
   Long version;
   EntityGitDetails gitDetails;
+  EntityValidityDetails entityValidityDetails;
   long lastUpdatedAt;
 }

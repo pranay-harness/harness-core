@@ -13,8 +13,8 @@ echo "Starting Format Checks" > "$logPath"
 executeWithRetry() {
   command=$1
   set +e
-  echo "mvn $MAVEN_ARGS $command -Dmaven.repo.local=$repoPath >> $logPath"
-  mvn $MAVEN_ARGS $1 -Dmaven.repo.local=$repoPath >> $logPath
+  #echo "mvn $MAVEN_ARGS $command -Dmaven.repo.local=$repoPath >> $logPath"
+  #mvn $MAVEN_ARGS $1 -Dmaven.repo.local=$repoPath >> $logPath
   result="$?"
   set -e
   if [ $result -ne 0 ]; then
@@ -22,7 +22,7 @@ executeWithRetry() {
       if [ $retryCount -lt 1 ]; then
         grep "$grepStr" "$logPath"
         printf "Installing modules and Retrying once......................"
-        mvn install -DskipTests -Dmaven.repo.local=$repoPath
+        #mvn install -DskipTests -Dmaven.repo.local=$repoPath
         echo "$command"
         retryCount=$((retryCount+1))
         executeWithRetry "$command"
@@ -55,9 +55,9 @@ validate_proto() {
   fi
 }
 
-echo "Running Sort Pom"
-executeWithRetry 'sortpom:sort'
-echo "Sort Pom Completed"
+#echo "Running Sort Pom"
+#executeWithRetry 'sortpom:sort'
+#echo "Sort Pom Completed"
 
 find . -iname "*.graphql" | xargs -L 1 prettier --write --print-width=120
 

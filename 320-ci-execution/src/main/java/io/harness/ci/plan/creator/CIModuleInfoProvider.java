@@ -55,11 +55,15 @@ import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -85,6 +89,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     String triggerRepoName = null;
     String url = null;
     CIBuildAuthor author = null;
+    Boolean isPrivateRepo = false;
     List<CIBuildCommit> triggerCommits = null;
     ExecutionTriggerInfo executionTriggerInfo = event.getAmbiance().getMetadata().getTriggerInfo();
     Ambiance ambiance = event.getAmbiance();
@@ -111,15 +116,19 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
             if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
               url = IntegrationStageUtils.getGitURLFromConnector(connectorDetails, initializeStepInfo.getCiCodebase());
             }
-            if (repoName == null) {
-              repoName = getGitRepo(connectorUtils.retrieveURL(connectorDetails));
+            if (url == null) {
+              url = connectorUtils.retrieveURL(connectorDetails);
             }
+            if (repoName == null) {
+              repoName = getGitRepo(url);
+            }
+
           } catch (Exception exception) {
             log.warn("Failed to retrieve repo");
           }
         }
       }
-
+      isPrivateRepo = isPrivateRepo(url);
       Build build = RunTimeInputHandler.resolveBuild(buildParameterField);
       if (build != null) {
         buildType = build.getType().toString();
@@ -176,6 +185,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
             .prNumber(prNumber)
             .repoName(repoName)
             .ciExecutionInfoDTO(ciWebhookInfoDTO)
+            .isPrivateRepo(isPrivateRepo)
             .build();
       }
     }
@@ -203,6 +213,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         .tag(tag)
         .repoName(repoName)
         .ciExecutionInfoDTO(getCiExecutionInfoDTO(codebaseSweepingOutput, author, prNumber, triggerCommits))
+        .isPrivateRepo(isPrivateRepo)
         .build();
   }
 
@@ -327,5 +338,20 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .build();
+  }
+
+  private boolean isPrivateRepo(String urlString) {
+    try {
+      URL url = new URL(urlString);
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("GET");
+      connection.setConnectTimeout(5000);
+      connection.connect();
+      int code = connection.getResponseCode();
+      return !Response.Status.Family.familyOf(code).equals(Response.Status.Family.SUCCESSFUL);
+    } catch (IOException e) {
+      log.warn("Failed to get repo info, assuming private. url", e);
+      return true;
+    }
   }
 }

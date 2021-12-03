@@ -9,6 +9,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
@@ -26,6 +27,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Schema(name = "LocalConnector", description = "This contains the Local connector information")
 public class LocalConnectorDTO extends ConnectorConfigDTO {
   private boolean isDefault;
   @JsonIgnore private boolean harnessManaged;

@@ -7,7 +7,7 @@ import static io.harness.rule.OwnerRule.PARDHA;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;

@@ -23,6 +23,7 @@ import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.exceptions.NGYamlParsingException;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.grpc.utils.StringValueUtils;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.utils.NGYamlUtils;
@@ -96,10 +97,8 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
   }
 
   @Override
-  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      boolean invalid, String erroneousYaml) {
-    return connectorService.markEntity(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalid, erroneousYaml);
+  public boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String erroneousYaml) {
+    return connectorService.markEntityInvalid(accountIdentifier, entityReference, erroneousYaml);
   }
 
   @Override
@@ -161,11 +160,11 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
   }
 
   @Override
-  public String getLastObjectIdIfExists(String accountIdentifier, String yaml) {
+  public Optional<EntityGitDetails> getEntityDetailsIfExists(String accountIdentifier, String yaml) {
     final ConnectorDTO connectorDTO = getYamlDTO(yaml);
     final ConnectorInfoDTO connectorInfo = connectorDTO.getConnectorInfo();
     final Optional<ConnectorResponseDTO> connectorResponseDTO = connectorService.get(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
-    return connectorResponseDTO.map(connectorResponse -> connectorResponse.getGitDetails().getObjectId()).orElse(null);
+    return connectorResponseDTO.map(ConnectorResponseDTO::getGitDetails);
   }
 }

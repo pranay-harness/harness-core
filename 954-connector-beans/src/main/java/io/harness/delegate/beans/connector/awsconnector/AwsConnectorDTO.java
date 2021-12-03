@@ -13,6 +13,7 @@ import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("AwsConnector")
+@Schema(name = "AwsConnector", description = "This contains details of the AWS connector")
 public class AwsConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @Valid @NotNull AwsCredentialDTO credential;
   Set<String> delegateSelectors;

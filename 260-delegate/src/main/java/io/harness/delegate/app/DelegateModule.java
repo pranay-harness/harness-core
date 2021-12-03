@@ -39,6 +39,7 @@ import io.harness.cistatus.service.bitbucket.BitbucketService;
 import io.harness.cistatus.service.bitbucket.BitbucketServiceImpl;
 import io.harness.cistatus.service.gitlab.GitlabService;
 import io.harness.cistatus.service.gitlab.GitlabServiceImpl;
+import io.harness.connector.helper.DecryptionHelper;
 import io.harness.connector.service.git.NGGitService;
 import io.harness.connector.service.git.NGGitServiceImpl;
 import io.harness.connector.service.scm.ScmDelegateClient;
@@ -76,6 +77,7 @@ import io.harness.delegate.exceptionhandler.handler.JGitExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SCMExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SecretExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SocketExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.TerraformRuntimeExceptionHandler;
 import io.harness.delegate.http.HttpTaskNG;
 import io.harness.delegate.k8s.K8sApplyRequestHandler;
 import io.harness.delegate.k8s.K8sBGRequestHandler;
@@ -147,10 +149,14 @@ import io.harness.delegate.task.git.GitValidationHandler;
 import io.harness.delegate.task.git.NGGitCommandTask;
 import io.harness.delegate.task.gitapi.DecryptGitAPIAccessTask;
 import io.harness.delegate.task.gitapi.GitApiTask;
+import io.harness.delegate.task.helm.HelmCommandTaskNG;
+import io.harness.delegate.task.helm.HelmDeployServiceImplNG;
+import io.harness.delegate.task.helm.HelmDeployServiceNG;
 import io.harness.delegate.task.helm.HelmValuesFetchTaskNG;
 import io.harness.delegate.task.helm.HttpHelmConnectivityDelegateTask;
 import io.harness.delegate.task.helm.HttpHelmValidationHandler;
 import io.harness.delegate.task.jira.JiraTaskNG;
+import io.harness.delegate.task.jira.JiraValidationHandler;
 import io.harness.delegate.task.jira.connection.JiraTestConnectionTaskNG;
 import io.harness.delegate.task.k8s.K8sFetchServiceAccountTask;
 import io.harness.delegate.task.k8s.K8sTaskNG;
@@ -180,6 +186,7 @@ import io.harness.delegate.task.terraform.handlers.TerraformAbstractTaskHandler;
 import io.harness.delegate.task.terraform.handlers.TerraformApplyTaskHandler;
 import io.harness.delegate.task.terraform.handlers.TerraformDestroyTaskHandler;
 import io.harness.delegate.task.terraform.handlers.TerraformPlanTaskHandler;
+import io.harness.delegate.utils.DecryptionHelperDelegate;
 import io.harness.delegatetasks.DeleteSecretTask;
 import io.harness.delegatetasks.EncryptSecretTask;
 import io.harness.delegatetasks.EncryptSecretTaskValidationHandler;
@@ -751,7 +758,7 @@ public class DelegateModule extends AbstractModule {
   @Singleton
   @Named("asyncExecutor")
   public ExecutorService asyncExecutor() {
-    ExecutorService asyncExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
+    ExecutorService asyncExecutor = ThreadPool.create(10, 400, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("async-%d").setPriority(Thread.MIN_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { asyncExecutor.shutdownNow(); }));
     return asyncExecutor;
@@ -948,7 +955,7 @@ public class DelegateModule extends AbstractModule {
     bind(AwsS3HelperServiceDelegate.class).to(AwsS3HelperServiceDelegateImpl.class);
     bind(GcbService.class).to(GcbServiceImpl.class);
     bind(CustomManifestService.class).to(CustomManifestServiceImpl.class);
-
+    bind(DecryptionHelper.class).to(DecryptionHelperDelegate.class);
     bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
 
     bind(AwsCloudWatchHelperServiceDelegate.class).to(AwsCloudWatchHelperServiceDelegateImpl.class);
@@ -958,6 +965,8 @@ public class DelegateModule extends AbstractModule {
     bind(TerraformBaseHelper.class).to(TerraformBaseHelperImpl.class);
     bind(DelegateFileManagerBase.class).to(DelegateFileManagerImpl.class);
     bind(TerraformClient.class).to(TerraformClientImpl.class);
+
+    bind(HelmDeployServiceNG.class).to(HelmDeployServiceImplNG.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
@@ -1085,6 +1094,8 @@ public class DelegateModule extends AbstractModule {
     tfTaskTypeToHandlerMap.addBinding(TFTaskType.APPLY).to(TerraformApplyTaskHandler.class);
     tfTaskTypeToHandlerMap.addBinding(TFTaskType.PLAN).to(TerraformPlanTaskHandler.class);
     tfTaskTypeToHandlerMap.addBinding(TFTaskType.DESTROY).to(TerraformDestroyTaskHandler.class);
+
+    // HelmNG Task Handlers
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(HttpService.class).to(HttpServiceImpl.class);
@@ -1424,6 +1435,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.HELM_REPO_CONFIG_VALIDATION).toInstance(HelmRepoConfigValidationTask.class);
     mapBinder.addBinding(TaskType.HELM_VALUES_FETCH).toInstance(HelmValuesFetchTask.class);
     mapBinder.addBinding(TaskType.HELM_VALUES_FETCH_NG).toInstance(HelmValuesFetchTaskNG.class);
+    mapBinder.addBinding(TaskType.HELM_COMMAND_TASK_NG).toInstance(HelmCommandTaskNG.class);
     mapBinder.addBinding(TaskType.SLACK).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.INITIALIZATION_PHASE).toInstance(CIInitializeTask.class);
     mapBinder.addBinding(TaskType.CI_EXECUTE_STEP).toInstance(CIExecuteStepTask.class);
@@ -1588,6 +1600,10 @@ public class DelegateModule extends AbstractModule {
         .to(CVConnectorValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.PAGER_DUTY.getDisplayName())
         .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.CUSTOM_HEALTH.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.JIRA.getDisplayName())
+        .to(JiraValidationHandler.class);
   }
 
   private void bindExceptionHandlers() {
@@ -1622,5 +1638,7 @@ public class DelegateModule extends AbstractModule {
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(HelmClientRuntimeExceptionHandler.class));
     KubernetesApiExceptionHandler.exceptions().forEach(
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(KubernetesApiExceptionHandler.class));
+    TerraformRuntimeExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(TerraformRuntimeExceptionHandler.class));
   }
 }

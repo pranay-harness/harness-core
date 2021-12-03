@@ -6,7 +6,7 @@ import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.PagerDutyWebhook;
 import io.harness.cvng.core.entities.Webhook;
 
-public interface WebhookService extends DeleteEntityByHandler<Webhook> {
+public interface WebhookService {
   void createPagerdutyWebhook(
       ServiceEnvironmentParams serviceEnvironmentParams, String token, String webhookId, String changeSourceId);
 

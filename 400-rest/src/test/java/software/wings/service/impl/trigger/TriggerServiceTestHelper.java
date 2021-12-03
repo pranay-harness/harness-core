@@ -162,7 +162,7 @@ public class TriggerServiceTestHelper {
         .uuid(TRIGGER_ID)
         .appId(APP_ID)
         .name(TRIGGER_NAME)
-        .condition(ScheduledTriggerCondition.builder().cronExpression("* * * * ?").build())
+        .condition(ScheduledTriggerCondition.builder().cronExpression("0/5 0 ? * * *").build())
         .build();
   }
 
@@ -239,7 +239,7 @@ public class TriggerServiceTestHelper {
         .appId(APP_ID)
         .workflowType(ORCHESTRATION)
         .name(TRIGGER_NAME)
-        .condition(ScheduledTriggerCondition.builder().cronExpression("* * * * ?").build())
+        .condition(ScheduledTriggerCondition.builder().cronExpression("0/5 0 ? * * *").build())
         .build();
   }
 

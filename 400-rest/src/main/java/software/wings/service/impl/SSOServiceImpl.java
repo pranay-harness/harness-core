@@ -11,7 +11,7 @@ import static io.harness.ng.core.account.AuthenticationMechanism.OAUTH;
 import static io.harness.ng.core.account.AuthenticationMechanism.SAML;
 import static io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import static java.util.Arrays.asList;
 
@@ -113,15 +113,11 @@ public class SSOServiceImpl implements SSOService {
 
   @Override
   public SSOConfig uploadOauthConfiguration(String accountId, String filter, Set<OauthProviderType> allowedProviders) {
-    try {
-      if (isEmpty(allowedProviders)) {
-        throw new InvalidRequestException("At least one OAuth provider must be selected.");
-      }
-      buildAndUploadOauthSettings(accountId, filter, allowedProviders);
-      return getAccountAccessManagementSettings(accountId);
-    } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_OAUTH_CONFIGURATION, e);
+    if (isEmpty(allowedProviders)) {
+      throw new InvalidRequestException("At least one OAuth provider must be selected.");
     }
+    buildAndUploadOauthSettings(accountId, filter, allowedProviders);
+    return getAccountAccessManagementSettings(accountId);
   }
 
   @Override

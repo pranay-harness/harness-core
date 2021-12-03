@@ -5,7 +5,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.USER;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEReportTemplateBuilderService;

@@ -20,6 +20,7 @@ import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
@@ -29,6 +30,10 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.observer.NoOpRemoteObserverInformerImpl;
+import io.harness.observer.RemoteObserver;
+import io.harness.observer.RemoteObserverInformer;
+import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.persistence.UserProvider;
 import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.serializer.KryoRegistrar;
@@ -39,6 +44,7 @@ import io.harness.service.intfc.DelegateTokenService;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.StreamModule;
+import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 
@@ -56,6 +62,7 @@ import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.licensing.LicenseService;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.security.authentication.totp.TotpModule;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.intfc.AccountService;
@@ -76,6 +83,7 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -116,6 +124,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     MaintenanceController.forceMaintenance(true);
 
     configuration.setSegmentConfig(SegmentConfig.builder().enabled(false).build());
+    configuration.setSegmentConfiguration(SegmentConfiguration.builder().enabled(false).build());
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
 
     List<Module> modules = new ArrayList<>();
@@ -200,7 +209,8 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new DelegateServiceModule());
     modules.add(new AlertModule());
     modules.add(new CapabilityModule());
-    modules.add(new WingsModule(configuration));
+    modules.add(new WingsModule(configuration, StartupMode.MANAGER));
+    modules.add(new TotpModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -231,7 +241,22 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
     modules.add(new AuthModule());
+    modules.add(new AbstractRemoteObserverModule() {
+      @Override
+      public boolean noOpProducer() {
+        return true;
+      }
 
+      @Override
+      public Set<RemoteObserver> observers() {
+        return Collections.emptySet();
+      }
+
+      @Override
+      public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+        return NoOpRemoteObserverInformerImpl.class;
+      }
+    });
     Injector injector = Guice.createInjector(modules);
 
     registerObservers(injector);

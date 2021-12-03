@@ -86,6 +86,7 @@ io.harness.steps.jira.update.JiraUpdateStepInfo
 io.harness.steps.section.chain.SectionChainPassThroughData
 io.harness.steps.approval.step.harness.HarnessApprovalSpecParameters
 io.harness.plancreator.steps.http.HttpStepInfo
+io.harness.plancreator.steps.http.HttpStepNode
 io.harness.ci.stdvars.BuildStandardVariables
 io.harness.steps.jira.JiraIssueOutcome
 io.harness.ngpipeline.artifact.bean.EcrArtifactOutcome

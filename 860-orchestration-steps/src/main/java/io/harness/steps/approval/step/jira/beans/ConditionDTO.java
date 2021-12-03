@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ import lombok.Data;
 @OwnedBy(CDC)
 @Data
 @Builder
+@Schema(name = "Condition", description = "This contains details of the Condition entity in Harness")
 public class ConditionDTO {
   @NotNull String key;
   @NotNull String value;

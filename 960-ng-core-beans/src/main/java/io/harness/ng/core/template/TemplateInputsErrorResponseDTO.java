@@ -3,9 +3,11 @@ package io.harness.ng.core.template;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ngexception.beans.templateservice.TemplateInputsErrorDTO;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.dto.ErrorDTO;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,6 +18,8 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.CDC)
+@Schema(
+    name = "TemplateInputsErrorResponse", description = "This contains details of the Template Inputs Error Response")
 public class TemplateInputsErrorResponseDTO extends ErrorDTO {
   String errorYaml;
   Map<String, TemplateInputsErrorDTO> errorMap;

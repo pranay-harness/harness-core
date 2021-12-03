@@ -9,9 +9,13 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface VerificationTaskService {
-  String create(String accountId, String cvConfigId, DataSourceType provider);
-  String create(String accountId, String cvConfigId, String verificationJobInstanceId, DataSourceType provider);
+  String createLiveMonitoringVerificationTask(String accountId, String cvConfigId, DataSourceType provider);
+  String createSLIVerificationTask(String accountId, String sliId);
+  String createDeploymentVerificationTask(
+      String accountId, String cvConfigId, String verificationJobInstanceId, DataSourceType provider);
   String getCVConfigId(String verificationTaskId);
+  Optional<String> maybeGetCVConfigId(String verificationTaskId);
+  String getSliId(String verificationTaskId);
   String getVerificationJobInstanceId(String verificationTaskId);
   VerificationTask get(String verificationTaskId);
   Optional<VerificationTask> maybeGet(String verificationTaskId);
@@ -25,9 +29,10 @@ public interface VerificationTaskService {
   Set<String> maybeGetVerificationTaskIds(String accountId, String verificationJobInstanceId);
 
   String getServiceGuardVerificationTaskId(String accountId, String cvConfigId);
+  String getSLIVerificationTaskId(String accountId, String sliId);
   List<String> getServiceGuardVerificationTaskIds(String accountId, List<String> cvConfigIds);
   boolean isServiceGuardId(String verificationTaskId);
-  void removeCVConfigMappings(String cvConfigId);
+  void removeCVConfigMappings(String accountId, String cvConfigId);
   List<String> getVerificationTaskIds(String cvConfigId);
   Optional<String> findBaselineVerificationTaskId(
       String currentVerificationTaskId, VerificationJobInstance verificationJobInstance);

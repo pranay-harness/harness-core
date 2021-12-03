@@ -1,5 +1,8 @@
 package io.harness.filter.resource;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
@@ -20,6 +23,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -44,6 +53,19 @@ import org.hibernate.validator.constraints.NotEmpty;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@Tag(name = "Filter", description = "This contains APIs related to Filter as defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @NextGenManagerAuth
 @OwnedBy(DX)
@@ -53,50 +75,103 @@ public class FilterResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get Filter", nickname = "getFilter")
-  public ResponseDTO<FilterDTO> get(@NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.TYPE_KEY) FilterType type) {
+  @Operation(operationId = "getFilter", summary = "Gets a Filter by identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "default", description = "Returns Filter having filterIdentifier as specified in request")
+      })
+  public ResponseDTO<FilterDTO>
+  get(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotEmpty @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "Filter Identifier") @NotNull @PathParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @Parameter(description = "Type of Filter") @NotNull @QueryParam(
+          NGCommonEntityConstants.TYPE_KEY) FilterType type) {
     return ResponseDTO.newResponse(
         filterService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier, type));
   }
 
   @GET
   @ApiOperation(value = "Get Filter", nickname = "getFilterList")
-  public ResponseDTO<PageResponse<FilterDTO>> list(
-      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+  @Operation(operationId = "getConnectorListV2",
+      summary = "Get the list of Filters satisfying the criteria (if any) in the request",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the list of Filters")
+      })
+  public ResponseDTO<PageResponse<FilterDTO>>
+  list(@Parameter(description = "Page number of navigation. If left empty, default value of 0 is assumed") @QueryParam(
+           NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+      @Parameter(description = "Number of entries per page. If left empty, default value of 100 is assumed")
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.TYPE_KEY) FilterType type) {
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "Type of Filter") @NotNull @QueryParam(
+          NGCommonEntityConstants.TYPE_KEY) FilterType type) {
     return ResponseDTO.newResponse(getNGPageResponse(
         filterService.list(page, size, accountIdentifier, orgIdentifier, projectIdentifier, null, type)));
   }
 
   @POST
   @ApiOperation(value = "Create a Filter", nickname = "postFilter")
-  public ResponseDTO<FilterDTO> create(@Valid @NotNull FilterDTO filterDTO,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+  @Operation(operationId = "postFilter", summary = "Creates a Filter",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns created Filter")
+      })
+  public ResponseDTO<FilterDTO>
+  create(@RequestBody(
+             required = true, description = "Details of the Connector to create") @Valid @NotNull FilterDTO filterDTO,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(filterService.create(accountIdentifier, filterDTO));
   }
 
   @PUT
   @ApiOperation(value = "Update a Filter", nickname = "updateFilter")
-  public ResponseDTO<FilterDTO> update(@NotNull @Valid FilterDTO filterDTO,
-      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+  @Operation(operationId = "updateFilter", summary = "Updates the Filter",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated Filter")
+      })
+  public ResponseDTO<FilterDTO>
+  update(@RequestBody(required = true,
+             description = "This is the updated Filter. This should have all the fields not just the updated ones")
+         @NotNull @Valid FilterDTO filterDTO,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotEmpty @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(filterService.update(accountIdentifier, filterDTO));
   }
 
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete a filter", nickname = "deleteFilter")
-  public ResponseDTO<Boolean> delete(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.TYPE_KEY) FilterType type) {
+  @Operation(operationId = "deleteFilter", summary = "Delete a Filter by identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Boolean status whether request was successful or not")
+      })
+  public ResponseDTO<Boolean>
+  delete(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "Filter Identifier") @NotNull @PathParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @Parameter(description = "Type of Filter") @NotNull @QueryParam(
+          NGCommonEntityConstants.TYPE_KEY) FilterType type) {
     return ResponseDTO.newResponse(
         filterService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier, type));
   }

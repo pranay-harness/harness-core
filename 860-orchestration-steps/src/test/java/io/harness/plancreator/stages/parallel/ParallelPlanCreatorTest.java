@@ -190,7 +190,7 @@ public class ParallelPlanCreatorTest extends CategoryTest {
         .isEqualTo(childrenNodeIds);
     assertThat(planForParentNode.getAdviserObtainments()).hasSize(0);
     assertThat(planForParentNode.isSkipExpressionChain()).isTrue();
-    assertThat(planForParentNode.isSkipUnresolvedExpressionsCheck()).isFalse();
+    assertThat(planForParentNode.isSkipUnresolvedExpressionsCheck()).isTrue();
   }
 
   @Test
@@ -252,6 +252,6 @@ public class ParallelPlanCreatorTest extends CategoryTest {
         .isEqualTo(childrenNodeIds);
     assertThat(planForParentNode.getAdviserObtainments()).hasSize(0);
     assertThat(planForParentNode.isSkipExpressionChain()).isTrue();
-    assertThat(planForParentNode.isSkipUnresolvedExpressionsCheck()).isFalse();
+    assertThat(planForParentNode.isSkipUnresolvedExpressionsCheck()).isTrue();
   }
 }

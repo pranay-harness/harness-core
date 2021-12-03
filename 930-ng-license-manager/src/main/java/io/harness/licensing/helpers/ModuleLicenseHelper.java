@@ -1,8 +1,11 @@
 package io.harness.licensing.helpers;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.ModuleType;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseType;
+import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.checks.ModuleLicenseState;
 import io.harness.licensing.entities.modules.CDModuleLicense;
 import io.harness.licensing.entities.modules.CEModuleLicense;
@@ -55,7 +58,7 @@ public class ModuleLicenseHelper {
   }
 
   public static ModuleLicense getLatestLicense(List<ModuleLicense> licenses) {
-    if (licenses.isEmpty()) {
+    if (isEmpty(licenses)) {
       return null;
     }
 
@@ -67,6 +70,21 @@ public class ModuleLicenseHelper {
       }
     }
     return latestLicense;
+  }
+
+  public static ModuleLicenseDTO getMostRecentUpdatedLicense(List<ModuleLicenseDTO> licenses) {
+    if (isEmpty(licenses)) {
+      return null;
+    }
+
+    ModuleLicenseDTO lastUpdatedLicense = licenses.get(0);
+    for (int i = 1; i < licenses.size(); i++) {
+      ModuleLicenseDTO compareLicense = licenses.get(i);
+      if (lastUpdatedLicense.getLastModifiedAt() < compareLicense.getLastModifiedAt()) {
+        lastUpdatedLicense = compareLicense;
+      }
+    }
+    return lastUpdatedLicense;
   }
 
   public static boolean isTrialExisted(List<ModuleLicense> licensesWithSameModuleType) {

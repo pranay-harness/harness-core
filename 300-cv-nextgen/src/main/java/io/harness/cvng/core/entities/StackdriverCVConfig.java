@@ -10,6 +10,9 @@ import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.cvng.core.beans.StackdriverDefinition;
 import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
+import io.harness.cvng.core.utils.analysisinfo.DevelopmentVerificationTransformer;
+import io.harness.cvng.core.utils.analysisinfo.LiveMonitoringTransformer;
+import io.harness.cvng.core.utils.analysisinfo.SLIMetricTransformer;
 import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -19,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -40,9 +42,9 @@ public class StackdriverCVConfig extends MetricCVConfig {
   private String dashboardPath;
 
   @Data
-  @Builder
+  @SuperBuilder
   @FieldNameConstants(innerTypeName = "MetricInfoKeys")
-  public static class MetricInfo {
+  public static class MetricInfo extends AnalysisInfo {
     private String metricName;
     private String jsonMetricDefinition;
     private List<String> tags;
@@ -89,14 +91,19 @@ public class StackdriverCVConfig extends MetricCVConfig {
 
     stackdriverDefinitions.forEach(definition -> {
       TimeSeriesMetricType metricType = definition.getRiskProfile().getMetricType();
-      metricInfoList.add(MetricInfo.builder()
-                             .metricName(definition.getMetricName())
-                             .jsonMetricDefinition(JsonUtils.asJson(definition.getJsonMetricDefinition()))
-                             .metricType(metricType)
-                             .tags(definition.getMetricTags())
-                             .isManualQuery(definition.isManualQuery())
-                             .serviceInstanceField(definition.getServiceInstanceField())
-                             .build());
+      metricInfoList.add(
+          MetricInfo.builder()
+              .metricName(definition.getMetricName())
+              .identifier(definition.getIdentifier())
+              .jsonMetricDefinition(JsonUtils.asJson(definition.getJsonMetricDefinition()))
+              .metricType(metricType)
+              .tags(definition.getMetricTags())
+              .isManualQuery(definition.isManualQuery())
+              .serviceInstanceField(definition.getServiceInstanceField())
+              .sli(SLIMetricTransformer.transformDTOtoEntity(definition.getSli()))
+              .liveMonitoring(LiveMonitoringTransformer.transformDTOtoEntity(definition.getAnalysis()))
+              .deploymentVerification(DevelopmentVerificationTransformer.transformDTOtoEntity(definition.getAnalysis()))
+              .build());
 
       // add this metric to the pack and the corresponding thresholds
       Set<TimeSeriesThreshold> thresholds = getThresholdsToCreateOnSaveForCustomProviders(

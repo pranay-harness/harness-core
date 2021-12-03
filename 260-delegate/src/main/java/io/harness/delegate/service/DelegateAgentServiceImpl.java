@@ -279,7 +279,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final long UPGRADE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
   private static final long FROZEN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
-  private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
+  private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
   private static final long DELEGATE_JRE_VERSION_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
@@ -308,7 +308,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
       : 0;
-
+  private final String delegateTokenName = System.getenv().get("DELEGATE_TOKEN_NAME");
   public static final String JAVA_VERSION = "java.version";
 
   private static volatile String delegateId;
@@ -518,6 +518,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             DELEGATE_TYPE, DELEGATE_GROUP_NAME, supportedTasks);
       }
 
+      if (isNotEmpty(delegateTokenName)) {
+        log.info("Registering Delegate with Token: {}", delegateTokenName);
+      }
+
       final DelegateParamsBuilder builder =
           DelegateParams.builder()
               .ip(getLocalHostAddress())
@@ -540,7 +544,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                              : emptyList())
               .sampleDelegate(isSample)
               .location(Paths.get("").toAbsolutePath().toString())
-              .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
+              .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")))
+              .delegateTokenName(delegateTokenName);
 
       delegateId = registerDelegate(builder);
       log.info("[New] Delegate registered in {} ms", clock.millis() - start);

@@ -91,14 +91,13 @@ public class TemplateEntity
   @CreatedBy Principal createdBy;
   @LastModifiedBy Principal lastUpdatedBy;
 
-  @Setter @NonFinal String objectIdOfYaml;
+  @Wither @Setter @NonFinal String objectIdOfYaml;
   @Setter @NonFinal Boolean isFromDefaultBranch;
   @Setter @NonFinal String branch;
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
-  @Setter @NonFinal String invalidYamlString;
-  @NonFinal Boolean isEntityInvalid;
+  @Wither @NonFinal Boolean isEntityInvalid;
 
   @Override
   public String getAccountIdentifier() {
@@ -185,5 +184,10 @@ public class TemplateEntity
   @Override
   public void setEntityInvalid(boolean isEntityInvalid) {
     this.isEntityInvalid = isEntityInvalid;
+  }
+
+  @Override
+  public String getInvalidYamlString() {
+    return yaml;
   }
 }

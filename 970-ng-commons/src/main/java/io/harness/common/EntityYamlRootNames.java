@@ -40,4 +40,5 @@ public class EntityYamlRootNames {
   public static String TEMPLATE = "template";
   public static String GIT_REPOSITORY = "gitRepository";
   public static String FEATURE_FLAGS = "featureFlags";
+  public static String HTTP = "Http";
 }

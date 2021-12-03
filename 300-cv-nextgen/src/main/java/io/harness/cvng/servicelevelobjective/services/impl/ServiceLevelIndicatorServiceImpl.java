@@ -1,17 +1,27 @@
 package io.harness.cvng.servicelevelobjective.services.impl;
 
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.api.UpdatableEntity;
+import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
+import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorKeys;
-import io.harness.cvng.servicelevelobjective.services.ServiceLevelIndicatorService;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorUpdatableEntity;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorEntityAndDTOTransformer;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -19,20 +29,31 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorService {
   @Inject private HPersistence hPersistence;
+  @Inject private Map<SLIMetricType, ServiceLevelIndicatorUpdatableEntity> serviceLevelIndicatorMapBinder;
+  @Inject private ServiceLevelIndicatorEntityAndDTOTransformer serviceLevelIndicatorEntityAndDTOTransformer;
+  @Inject private VerificationTaskService verificationTaskService;
+  @Inject private HealthSourceService healthSourceService;
 
   @Override
   public List<String> create(ProjectParams projectParams, List<ServiceLevelIndicatorDTO> serviceLevelIndicatorDTOList,
-      String serviceLevelObjectiveIdentifier) {
+      String serviceLevelObjectiveIdentifier, String monitoredServiceIndicator, String healthSourceIndicator) {
     List<String> serviceLevelIndicatorIdentifiers = new ArrayList<>();
     for (ServiceLevelIndicatorDTO serviceLevelIndicatorDTO : serviceLevelIndicatorDTOList) {
       if (Objects.isNull(serviceLevelIndicatorDTO.getName())
           && Objects.isNull(serviceLevelIndicatorDTO.getIdentifier())) {
         generateNameAndIdentifier(serviceLevelObjectiveIdentifier, serviceLevelIndicatorDTO);
       }
-      saveServiceLevelIndicatorEntity(projectParams, serviceLevelIndicatorDTO);
+      saveServiceLevelIndicatorEntity(
+          projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
       serviceLevelIndicatorIdentifiers.add(serviceLevelIndicatorDTO.getIdentifier());
     }
     return serviceLevelIndicatorIdentifiers;
+  }
+
+  @Nullable
+  @Override
+  public ServiceLevelIndicator get(@NotNull String sliId) {
+    return hPersistence.get(ServiceLevelIndicator.class, sliId);
   }
 
   private void generateNameAndIdentifier(
@@ -58,7 +79,8 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
 
   @Override
   public List<String> update(ProjectParams projectParams, List<ServiceLevelIndicatorDTO> serviceLevelIndicatorDTOList,
-      String serviceLevelObjectiveIdentifier, List<String> serviceLevelIndicatorsList) {
+      String serviceLevelObjectiveIdentifier, List<String> serviceLevelIndicatorsList, String monitoredServiceIndicator,
+      String healthSourceIndicator) {
     List<String> serviceLevelIndicatorIdentifiers = new ArrayList<>();
     for (ServiceLevelIndicatorDTO serviceLevelIndicatorDTO : serviceLevelIndicatorDTOList) {
       if (Objects.isNull(serviceLevelIndicatorDTO.getName())
@@ -68,9 +90,11 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
       ServiceLevelIndicator serviceLevelIndicator =
           getServiceLevelIndicator(projectParams, serviceLevelIndicatorDTO.getIdentifier());
       if (Objects.isNull(serviceLevelIndicator)) {
-        saveServiceLevelIndicatorEntity(projectParams, serviceLevelIndicatorDTO);
+        saveServiceLevelIndicatorEntity(
+            projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
       } else {
-        updateServiceLevelIndicatorEntity(projectParams, serviceLevelIndicatorDTO);
+        updateServiceLevelIndicatorEntity(
+            projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
       }
       serviceLevelIndicatorIdentifiers.add(serviceLevelIndicatorDTO.getIdentifier());
     }
@@ -94,33 +118,40 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
     }
   }
 
-  private void updateServiceLevelIndicatorEntity(
-      ProjectParams projectParams, ServiceLevelIndicatorDTO serviceLevelIndicatorDTO) {
+  private void updateServiceLevelIndicatorEntity(ProjectParams projectParams,
+      ServiceLevelIndicatorDTO serviceLevelIndicatorDTO, String monitoredServiceIndicator,
+      String healthSourceIndicator) {
+    UpdatableEntity<ServiceLevelIndicator, ServiceLevelIndicator> updatableEntity =
+        serviceLevelIndicatorMapBinder.get(serviceLevelIndicatorDTO.getSpec().getType());
     ServiceLevelIndicator serviceLevelIndicator =
         getServiceLevelIndicator(projectParams, serviceLevelIndicatorDTO.getIdentifier());
     UpdateOperations<ServiceLevelIndicator> updateOperations =
         hPersistence.createUpdateOperations(ServiceLevelIndicator.class);
-    updateOperations.set(ServiceLevelIndicatorKeys.type, serviceLevelIndicatorDTO.getType());
-    updateOperations.set(ServiceLevelIndicatorKeys.spec, serviceLevelIndicatorDTO.getSpec());
+    ServiceLevelIndicator updatableServiceLevelIndicator =
+        convertDTOToEntity(projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
+    updatableEntity.setUpdateOperations(updateOperations, updatableServiceLevelIndicator);
     hPersistence.update(serviceLevelIndicator, updateOperations);
   }
 
-  private void saveServiceLevelIndicatorEntity(
-      ProjectParams projectParams, ServiceLevelIndicatorDTO serviceLevelIndicatorDTO) {
-    ServiceLevelIndicator serviceLevelIndicator = ServiceLevelIndicator.builder()
-                                                      .accountId(projectParams.getAccountIdentifier())
-                                                      .orgIdentifier(projectParams.getOrgIdentifier())
-                                                      .projectIdentifier(projectParams.getProjectIdentifier())
-                                                      .spec(serviceLevelIndicatorDTO.getSpec())
-                                                      .name(serviceLevelIndicatorDTO.getName())
-                                                      .identifier(serviceLevelIndicatorDTO.getIdentifier())
-                                                      .type(serviceLevelIndicatorDTO.getType())
-                                                      .build();
-
+  private void saveServiceLevelIndicatorEntity(ProjectParams projectParams,
+      ServiceLevelIndicatorDTO serviceLevelIndicatorDTO, String monitoredServiceIndicator,
+      String healthSourceIndicator) {
+    ServiceLevelIndicator serviceLevelIndicator =
+        convertDTOToEntity(projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
     hPersistence.save(serviceLevelIndicator);
+    verificationTaskService.createSLIVerificationTask(
+        serviceLevelIndicator.getAccountId(), serviceLevelIndicator.getUuid());
   }
 
-  private ServiceLevelIndicator getServiceLevelIndicator(ProjectParams projectParams, String identifier) {
+  private ServiceLevelIndicator convertDTOToEntity(ProjectParams projectParams,
+      ServiceLevelIndicatorDTO serviceLevelIndicatorDTO, String monitoredServiceIndicator,
+      String healthSourceIndicator) {
+    return serviceLevelIndicatorEntityAndDTOTransformer.getEntity(
+        projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
+  }
+
+  @Override
+  public ServiceLevelIndicator getServiceLevelIndicator(ProjectParams projectParams, String identifier) {
     return hPersistence.createQuery(ServiceLevelIndicator.class)
         .filter(ServiceLevelIndicatorKeys.accountId, projectParams.getAccountIdentifier())
         .filter(ServiceLevelIndicatorKeys.orgIdentifier, projectParams.getOrgIdentifier())
@@ -130,11 +161,13 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
   }
 
   private ServiceLevelIndicatorDTO sliEntityToDTO(ServiceLevelIndicator serviceLevelIndicator) {
-    return ServiceLevelIndicatorDTO.builder()
-        .identifier(serviceLevelIndicator.getIdentifier())
-        .name(serviceLevelIndicator.getName())
-        .type(serviceLevelIndicator.getType())
-        .spec(serviceLevelIndicator.getSpec())
-        .build();
+    return serviceLevelIndicatorEntityAndDTOTransformer.getDto(serviceLevelIndicator);
+  }
+
+  @Override
+  public List<CVConfig> fetchCVConfigForSLI(ServiceLevelIndicator serviceLevelIndicator) {
+    return healthSourceService.getCVConfigs(serviceLevelIndicator.getAccountId(),
+        serviceLevelIndicator.getOrgIdentifier(), serviceLevelIndicator.getProjectIdentifier(),
+        serviceLevelIndicator.getMonitoredServiceIdentifier(), serviceLevelIndicator.getHealthSourceIdentifier());
   }
 }

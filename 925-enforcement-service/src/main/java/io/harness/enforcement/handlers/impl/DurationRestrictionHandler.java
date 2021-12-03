@@ -38,7 +38,8 @@ public class DurationRestrictionHandler implements RestrictionHandler {
   }
 
   @Override
-  public RestrictionMetadataDTO getMetadataDTO(Restriction restriction) {
+  public RestrictionMetadataDTO getMetadataDTO(
+      Restriction restriction, String accountIdentifier, ModuleType moduleType) {
     DurationRestriction durationRestriction = (DurationRestriction) restriction;
     return DurationRestrictionMetadataDTO.builder()
         .restrictionType(durationRestriction.getRestrictionType())

@@ -34,9 +34,13 @@ import io.harness.lock.DistributedLockImplementation;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.redis.RedisConfig;
+import io.harness.reflection.HarnessReflections;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.scheduler.SchedulerConfig;
+import io.harness.secret.SecretsConfiguration;
 import io.harness.stream.AtmosphereBroadcaster;
+import io.harness.swagger.SwaggerBundleConfigurationFactory;
+import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ThreadPoolConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
@@ -58,6 +62,7 @@ import software.wings.security.authentication.oauth.GithubConfig;
 import software.wings.security.authentication.oauth.GitlabConfig;
 import software.wings.security.authentication.oauth.GoogleConfig;
 import software.wings.security.authentication.oauth.LinkedinConfig;
+import software.wings.security.authentication.totp.TotpConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
@@ -77,13 +82,17 @@ import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import javax.ws.rs.Path;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Used to load all the application configuration.
@@ -109,6 +118,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(value = "searchEnabled") private boolean isSearchEnabled;
   @JsonProperty(value = "graphQLEnabled") private boolean isGraphQLEnabled;
   @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
+  @JsonProperty("disableResourceValidation") private boolean disableResourceValidation;
   @JsonProperty private PortalConfig portal = new PortalConfig();
   @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;
@@ -147,6 +157,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("ceSetUpConfig") private CESetUpConfig ceSetUpConfig;
   @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
+  @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
   @JsonProperty("salesforceConfig") private SalesforceConfig salesforceConfig = SalesforceConfig.builder().build();
   @JsonProperty("datadogConfig") private DatadogConfig datadogConfig;
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
@@ -198,9 +209,11 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("dmsSecret") private String dmsSecret;
   @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
   private boolean disableDelegateMgmtInManager;
+  @JsonProperty("secretsConfiguration") private SecretsConfiguration secretsConfiguration;
   @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;
   @JsonProperty("eventListenersCountConfig") private EventListenersCountConfig eventListenersCountConfig;
   @JsonProperty(value = "useGlobalKMSAsBaseAlgo", defaultValue = "false") private boolean useGlobalKMSAsBaseAlgo;
+  @JsonProperty("totp") private TotpConfig totpConfig;
 
   private int applicationPort;
   private boolean sslEnabled;
@@ -238,12 +251,24 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
    * @return the swagger bundle configuration
    */
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
-    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
+    Collection<Class<?>> resourceClasses = getResourceClasses();
+    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration =
+        SwaggerBundleConfigurationFactory.buildSwaggerBundleConfiguration(resourceClasses);
     defaultSwaggerBundleConfiguration.setResourcePackage(
         "software.wings.resources,software.wings.utils,io.harness.cvng.core.resources,io.harness.delegate.resources");
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost("{{host}}");
     return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerBundleConfiguration);
+  }
+
+  public static Collection<Class<?>> getResourceClasses() {
+    return HarnessReflections.get()
+        .getTypesAnnotatedWith(Path.class)
+        .stream()
+        .filter(klazz
+            -> StringUtils.startsWithAny(klazz.getPackage().getName(), "software.wings.resources",
+                "software.wings.utils", "io.harness.cvng.core.resources", "io.harness.delegate.resources"))
+        .collect(Collectors.toList());
   }
 
   /**

@@ -41,6 +41,7 @@ public class EncryptedTextController {
         .secretType(QLSecretType.ENCRYPTED_TEXT)
         .secretManagerId(encryptedText.getKmsId())
         .name(encryptedText.getName())
+        .secretReference(encryptedText.getPath())
         .usageScope(usageScopeController.populateUsageScope(encryptedText.getUsageRestrictions()))
         .inheritScopesFromSM(encryptedText.isInheritScopesFromSM())
         .build();

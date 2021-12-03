@@ -18,6 +18,8 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataServiceImpl;
+import io.harness.engine.executions.plan.PlanExecutionMonitorService;
+import io.harness.engine.executions.plan.PlanExecutionMonitorServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanService;
@@ -117,6 +119,8 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     }
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class).in(Singleton.class);
     bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class).in(Singleton.class);
+    bind(PlanExecutionMonitorService.class).to(PlanExecutionMonitorServiceImpl.class).in(Singleton.class);
+
     bind(PlanService.class).to(PlanServiceImpl.class).in(Singleton.class);
     bind(InterruptService.class).to(InterruptServiceImpl.class).in(Singleton.class);
     bind(OrchestrationService.class).to(OrchestrationServiceImpl.class).in(Singleton.class);

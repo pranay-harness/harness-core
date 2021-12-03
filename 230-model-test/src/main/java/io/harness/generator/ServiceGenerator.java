@@ -10,7 +10,7 @@ import static io.harness.generator.SettingGenerator.Settings.PCF_FUNCTIONAL_TEST
 import static io.harness.govern.Switch.unhandled;
 
 import static software.wings.api.DeploymentType.AZURE_WEBAPP;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.Service.builder;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM;

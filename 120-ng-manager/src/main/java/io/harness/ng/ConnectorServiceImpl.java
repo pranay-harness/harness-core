@@ -18,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.NgAutoLogContext;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
@@ -260,6 +261,9 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   private void validateTheUpdateRequestIsValid(ConnectorInfoDTO connectorInfo, String accountIdentifier) {
+    if (GitContextHelper.isFullSyncFlow()) {
+      return;
+    }
     final Optional<ConnectorResponseDTO> connectorDTO = findExistingConnector(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
     if (!connectorDTO.isPresent()) {
@@ -644,10 +648,8 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      boolean invalid, String invalidYaml) {
-    return defaultConnectorService.markEntity(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalid, invalidYaml);
+  public boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String invalidYaml) {
+    return defaultConnectorService.markEntityInvalid(accountIdentifier, entityReference, invalidYaml);
   }
 
   private ConnectorValidationResult createValidationResultWithGenericError(Exception ex) {

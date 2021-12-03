@@ -1,5 +1,6 @@
 package io.harness.connector;
 
+import static io.harness.AuthorizationServiceHeader.CE_NEXT_GEN;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -35,12 +36,21 @@ import com.google.inject.name.Names;
 public class ConnectorModule extends AbstractModule {
   private static volatile ConnectorModule instance;
   public static final String DEFAULT_CONNECTOR_SERVICE = "defaultConnectorService";
+  io.harness.remote.NextGenConfig nextGenConfig;
+  io.harness.remote.client.ServiceHttpClientConfig ceNextGenClientConfig;
 
-  private ConnectorModule() {}
+  //  private ConnectorModule() {}
+  private ConnectorModule(io.harness.remote.NextGenConfig nextGenConfig,
+      io.harness.remote.client.ServiceHttpClientConfig ceNextGenClientConfig) {
+    this.nextGenConfig = nextGenConfig;
+    this.ceNextGenClientConfig = ceNextGenClientConfig;
+  }
 
-  public static ConnectorModule getInstance() {
+  public static ConnectorModule getInstance(io.harness.remote.NextGenConfig nextGenConfig,
+      io.harness.remote.client.ServiceHttpClientConfig ceNextGenClientConfig) {
     if (instance == null) {
-      instance = new ConnectorModule();
+      // instance = new ConnectorModule();
+      instance = new ConnectorModule(nextGenConfig, ceNextGenClientConfig);
     }
 
     return instance;
@@ -50,7 +60,8 @@ public class ConnectorModule extends AbstractModule {
   protected void configure() {
     registerRequiredBindings();
     install(FiltersModule.getInstance());
-
+    install(new io.harness.ccm.manager.CENextGenResourceClientModule(
+        this.ceNextGenClientConfig, this.nextGenConfig.getCeNextGenServiceSecret(), CE_NEXT_GEN.getServiceId()));
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
     MapBinder<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapBinder =

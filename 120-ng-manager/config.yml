@@ -29,6 +29,8 @@ commonPoolConfig:
   idleTime: ${COMMON_POOL_IDLE_TIME:-500}
   timeUnit: ${COMMON_POOL_IDLE_TIME_TIME_UNIT:-MILLISECONDS}
 
+disableResourceValidation: ${DISABLE_RESOURCE_VALIDATION:-false}
+
 pmsSdkExecutionPoolConfig:
   corePoolSize: ${PMS_SDK_EXECUTION_POOL_CORE_SIZE:-20}
   maxPoolSize: ${PMS_SDK_EXECUTION_POOL_MAX_SIZE:-100}
@@ -48,6 +50,8 @@ nextGen:
   pipelineServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
   jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
+  ciManagerSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  ceNextGenServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 enableAudit: false
 
@@ -88,9 +92,6 @@ mongo:
   aliasDBName: ng-harness
   traceMode: DISABLED
 
-licenseConfig:
-  deployVariant: "SAAS"
-
 accountConfig:
   deploymentClusterName: ""
 
@@ -98,7 +99,7 @@ ngIteratorsConfig:
   ngVaultSecretManagerRenewalIteratorConfig:
     threadPoolSize: ${NG_VAULT_ITERATOR_THREAD_POOL_SIZE:-5}
   webhookEventProcessingServiceIteratorConfig:
-    threadPoolSize: ${WEBHOOK_EVENT_PROCESSING_SERVICE_THREAD_SIZE:-5}
+    threadPoolSize: ${WEBHOOK_EVENT_PROCESSING_SERVICE_THREAD_SIZE:-20}
   gitFullSyncEntityIteratorConfig:
     threadPoolSize: ${GIT_FULLSYNC_ENTITY_ITERATOR_THREAD_POOL_SIZE:-5}
 
@@ -129,6 +130,11 @@ ngManagerClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
+ciManagerClientConfig:
+  baseUrl: http://localhost:7171/ci/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
 pipelineServiceClientConfig:
   baseUrl: http://localhost:12001/api/
   connectTimeOutSeconds: 15
@@ -141,6 +147,11 @@ auditClientConfig:
 
 ceNextGenClientConfig:
   baseUrl: http://localhost:7340/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+lightwingClientConfig:
+  baseUrl: http://localhost:9595/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
@@ -277,6 +288,7 @@ segmentConfiguration:
   enabled: false
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
+  certValidationRequired: false
 
 accessControlClient:
   enableAccessControl: false

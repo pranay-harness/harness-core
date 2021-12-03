@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.GitCommit.Status.COMPLETED;
 import static software.wings.beans.GitCommit.Status.COMPLETED_WITH_ERRORS;
 import static software.wings.service.impl.GitConfigHelperService.matchesRepositoryName;

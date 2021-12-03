@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +27,7 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -129,6 +131,18 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
     List<CVConfig> cvConfigs =
         cvConfigService.list(accountId, orgIdentifier, projectIdentifier, healthSource.getIdentifier());
     assertThat(cvConfigs.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testFetchCVConfig() {
+    HealthSource healthSource = createHealthSource(CVMonitoringCategory.ERRORS);
+    healthSourceService.create(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,
+        nameSpaceIdentifier, Sets.newHashSet(healthSource), true);
+    List<CVConfig> cvConfigs = healthSourceService.getCVConfigs(
+        accountId, orgIdentifier, projectIdentifier, nameSpaceIdentifier, healthSource.getIdentifier());
+    assertThat(cvConfigs.size()).isEqualTo(1);
   }
 
   @Test
@@ -254,6 +268,7 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
             .metricPacks(Arrays.asList(MetricPackDTO.builder().identifier(cvMonitoringCategory).build())
                              .stream()
                              .collect(Collectors.toSet()))
+            .metricDefinitions(Collections.EMPTY_LIST)
             .build();
     return HealthSource.builder()
         .identifier(identifier)

@@ -25,7 +25,8 @@ public class HttpConnectionExecutionCapabilityCheck implements CapabilityCheck, 
           httpConnectionExecutionCapability.fetchConnectableUrl(), httpConnectionExecutionCapability.getHeaders());
     } else {
       if (httpConnectionExecutionCapability.isIgnoreRedirect()) {
-        valid = Http.connectableHttpUrlWithoutFollowingRedirect(httpConnectionExecutionCapability.getUrl());
+        valid =
+            Http.connectableHttpUrlWithoutFollowingRedirect(httpConnectionExecutionCapability.fetchConnectableUrl());
       } else {
         valid = Http.connectableHttpUrl(httpConnectionExecutionCapability.fetchConnectableUrl());
       }

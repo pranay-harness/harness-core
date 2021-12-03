@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = KubernetesCredentialDTODeserializer.class)
+@Schema(name = "KubernetesCredential", description = "This contains kubernetes credentials details")
 public class KubernetesCredentialDTO {
   @NotNull @JsonProperty("type") KubernetesCredentialType kubernetesCredentialType;
   @JsonProperty("spec")

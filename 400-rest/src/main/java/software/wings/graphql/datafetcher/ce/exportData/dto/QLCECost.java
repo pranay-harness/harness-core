@@ -5,4 +5,35 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-@TargetModule(HarnessModule._375_CE_GRAPHQL) @OwnedBy(CE) public enum QLCECost { TOTALCOST, IDLECOST, UNALLOCATEDCOST }
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
+public enum QLCECost {
+  TOTALCOST("billingamount"),
+  IDLECOST("idlecost"),
+  UNALLOCATEDCOST("unallocatedcost"),
+  NETWORKCOST("networkcost"),
+  SYSTEMCOST("systemcost"),
+  MEMORYCOST("memorybillingamount"),
+  MEMORYIDLECOST("memoryIdleCost"),
+  MEMORYUNALLOCATEDCOST("memoryunallocatedcost"),
+  CPUCOST("cpubillingamount"),
+  CPUIDLECOST("cpuIdleCost"),
+  CPUUNALLOCATEDCOST("cpuunallocatedcost"),
+  STORAGECOST("storagecost"),
+  STORAGEIDLECOST("storageactualidlecost"),
+  STORAGEUNALLOCATEDCOST("storageunallocatedcost");
+
+  private final String name;
+
+  QLCECost(String s) {
+    name = s;
+  }
+
+  public boolean equalsName(String otherName) {
+    return name.equals(otherName);
+  }
+
+  public String toString() {
+    return this.name;
+  }
+}

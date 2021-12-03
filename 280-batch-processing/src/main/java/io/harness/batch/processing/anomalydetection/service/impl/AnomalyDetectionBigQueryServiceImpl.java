@@ -5,7 +5,7 @@ import io.harness.batch.processing.anomalydetection.TimeSeriesMetaData;
 import io.harness.batch.processing.anomalydetection.helpers.AnomalyDetectionHelper;
 import io.harness.batch.processing.anomalydetection.helpers.TimeSeriesUtils;
 import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
 import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;

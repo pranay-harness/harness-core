@@ -10,6 +10,7 @@ import lombok.Value;
 public class BudgetSummary {
   @GraphQLNonNull String id;
   @GraphQLNonNull String name;
+  @GraphQLNonNull String perspectiveId;
   @GraphQLNonNull Double budgetAmount;
   @GraphQLNonNull Double actualCost;
   @GraphQLNonNull Double forecastCost;

@@ -13,6 +13,7 @@ import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultC
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthConnectorDTO;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.dynatrace.DynatraceConnectorDTO;
@@ -39,6 +40,7 @@ import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -74,8 +76,10 @@ import java.util.List;
       @JsonSubTypes.Type(value = GcpCloudCostConnectorDTO.class, name = "GcpCloudCost"),
       @JsonSubTypes.Type(value = HttpHelmConnectorDTO.class, name = "HttpHelmRepo"),
       @JsonSubTypes.Type(value = PagerDutyConnectorDTO.class, name = "PagerDuty"),
+      @JsonSubTypes.Type(value = CustomHealthConnectorDTO.class, name = "CustomHealth"),
 })
 @OwnedBy(DX)
+@Schema(name = "ConnectorConfig", description = "This is the view of the ConnectorConfig entity defined in Harness")
 public abstract class ConnectorConfigDTO implements DecryptableEntity {
   @JsonIgnore public abstract List<DecryptableEntity> getDecryptableEntities();
 

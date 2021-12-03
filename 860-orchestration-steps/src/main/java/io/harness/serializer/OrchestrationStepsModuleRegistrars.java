@@ -6,6 +6,7 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plancreator.pipeline.PipelineConfig;
+import io.harness.plancreator.steps.http.HttpStepNode;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
@@ -40,6 +41,7 @@ public class OrchestrationStepsModuleRegistrars {
           .addAll(NotificationClientRegistrars.kryoRegistrars)
           .addAll(RbacCoreRegistrars.kryoRegistrars)
           .addAll(NGCoreClientRegistrars.kryoRegistrars)
+          .addAll(DelegateTaskRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -50,6 +52,7 @@ public class OrchestrationStepsModuleRegistrars {
           .addAll(NotificationClientRegistrars.morphiaRegistrars)
           .addAll(RbacCoreRegistrars.morphiaRegistrars)
           .addAll(NGCoreClientRegistrars.morphiaRegistrars)
+          .addAll(DelegateTaskRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
@@ -91,6 +94,13 @@ public class OrchestrationStepsModuleRegistrars {
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
                    .clazz(ApprovalStageConfig.class)
+                   .build())
+          .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.HTTP_STEP)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(HttpStepNode.class)
                    .build())
           .build();
 }

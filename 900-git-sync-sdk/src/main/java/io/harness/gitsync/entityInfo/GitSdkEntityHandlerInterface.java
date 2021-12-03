@@ -30,8 +30,7 @@ public interface GitSdkEntityHandlerInterface<B extends GitSyncableEntity, Y ext
 
   Y update(String accountIdentifier, String yaml, ChangeType changeType);
 
-  boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      boolean invalid, String erroneousYaml);
+  boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String erroneousYaml);
 
   boolean delete(EntityReference entityReference);
 
@@ -45,7 +44,7 @@ public interface GitSdkEntityHandlerInterface<B extends GitSyncableEntity, Y ext
 
   String getBranchKey();
 
-  Y upsert(String accountIdentifier, String yaml);
+  Y upsert(String accountIdentifier, String yaml, String filePath);
 
   Y fullSyncEntity(FullSyncChangeSet fullSyncChangeSet);
 

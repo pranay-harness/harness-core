@@ -134,6 +134,8 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
     DefaultViewIdDto defaultViewIds = ceViewService.getDefaultViewIds(accountId);
     if (defaultViewIds.getClusterViewId() == null) {
       ceViewService.createDefaultView(accountId, ViewFieldIdentifier.CLUSTER);
+    } else {
+      ceViewService.updateDefaultClusterViewVisualization(defaultViewIds.getClusterViewId());
     }
   }
 

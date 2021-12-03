@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import static com.google.common.collect.ImmutableMap.of;
 

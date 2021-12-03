@@ -19,6 +19,7 @@ import io.harness.configuration.ConfigurationType;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
@@ -40,6 +41,10 @@ import io.harness.mongo.MongoModule;
 import io.harness.mongo.ObjectFactoryModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.observer.NoOpRemoteObserverInformerImpl;
+import io.harness.observer.RemoteObserver;
+import io.harness.observer.RemoteObserverInformer;
+import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.redis.RedisConfig;
@@ -55,6 +60,7 @@ import io.harness.serializer.morphia.BatchProcessingMorphiaRegistrar;
 import io.harness.serializer.morphia.EventServerMorphiaRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.springdata.SpringPersistenceModule;
+import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.testframework.framework.ManagerExecutor;
 import io.harness.testframework.framework.Setup;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -100,6 +106,7 @@ import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -293,7 +300,8 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
-    modules.add(new WingsModule((MainConfiguration) configuration));
+    modules.add(new WingsModule((MainConfiguration) configuration, StartupMode.MANAGER));
+    modules.add(new TestTotpModule());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());
     modules.add(new ManagerExecutorModule());
@@ -315,6 +323,22 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
       @Override
       public String application() {
         return "Manager";
+      }
+    });
+    modules.add(new AbstractRemoteObserverModule() {
+      @Override
+      public boolean noOpProducer() {
+        return true;
+      }
+
+      @Override
+      public Set<RemoteObserver> observers() {
+        return Collections.emptySet();
+      }
+
+      @Override
+      public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+        return NoOpRemoteObserverInformerImpl.class;
       }
     });
     modules.add(new GrpcServiceConfigurationModule(((MainConfiguration) configuration).getGrpcServerConfig(),
@@ -398,6 +422,8 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
                                            .build());
     configuration.setLdapSyncJobConfig(
         LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
+    configuration.setSegmentConfiguration(
+        SegmentConfiguration.builder().enabled(false).apiKey("dummy_api_key").url("dummy_url").build());
     return configuration;
   }
 

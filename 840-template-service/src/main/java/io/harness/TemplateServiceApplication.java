@@ -6,6 +6,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static java.util.stream.Collectors.toSet;
 
 import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.annotations.dev.OwnedBy;
@@ -32,8 +33,8 @@ import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.ng.core.template.exception.NGTemplateResolveExceptionMapper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.request.RequestContextFilter;
 import io.harness.security.NextGenAuthenticationFilter;
@@ -71,7 +72,19 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.servers.Server;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -82,6 +95,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -188,6 +202,7 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
     registerCorsFilter(templateServiceConfiguration, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
+    registerOasResource(templateServiceConfiguration, environment, injector);
     registerManagedBeans(environment, injector);
     registerHealthCheck(environment, injector);
     registerRequestContextFilter(environment);
@@ -201,6 +216,46 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
 
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerOasResource(
+      TemplateServiceConfiguration templateServiceConfiguration, Environment environment, Injector injector) {
+    OpenApiResource openApiResource = injector.getInstance(OpenApiResource.class);
+    openApiResource.setOpenApiConfiguration(getOasConfig(templateServiceConfiguration));
+    environment.jersey().register(openApiResource);
+  }
+
+  private OpenAPIConfiguration getOasConfig(TemplateServiceConfiguration templateServiceConfiguration) {
+    OpenAPI oas = new OpenAPI();
+    Info info = new Info()
+                    .title("Template Service API Reference")
+                    .description("This is the Open Api Spec 3 for the Template Service.")
+                    .termsOfService("https://harness.io/terms-of-use/")
+                    .version("3.0")
+                    .contact(new Contact().email("contact@harness.io"));
+    oas.info(info);
+    URL baseurl = null;
+    try {
+      baseurl = new URL(
+          "https", templateServiceConfiguration.getHostname(), templateServiceConfiguration.getBasePathPrefix());
+      Server server = new Server();
+      server.setUrl(baseurl.toString());
+      oas.servers(Collections.singletonList(server));
+    } catch (MalformedURLException e) {
+      log.error("failed to set baseurl for server, {}/{}", templateServiceConfiguration.hostname,
+          templateServiceConfiguration.getBasePathPrefix());
+    }
+    final Set<String> resourceClasses =
+        getOAS3ResourceClassesOnly().stream().map(Class::getCanonicalName).collect(toSet());
+    return new SwaggerConfiguration()
+        .openAPI(oas)
+        .prettyPrint(true)
+        .resourceClasses(resourceClasses)
+        .scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsAnnotationScanner");
+  }
+
+  public static Collection<Class<?>> getOAS3ResourceClassesOnly() {
+    return getResourceClasses().stream().filter(x -> x.isAnnotationPresent(Tag.class)).collect(Collectors.toList());
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
@@ -247,12 +302,12 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {
+    environment.jersey().register(JerseyViolationExceptionMapperV2.class);
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(MultiPartFeature.class);
     environment.jersey().register(NGAccessDeniedExceptionMapper.class);
-    environment.jersey().register(NGTemplateResolveExceptionMapper.class);
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {

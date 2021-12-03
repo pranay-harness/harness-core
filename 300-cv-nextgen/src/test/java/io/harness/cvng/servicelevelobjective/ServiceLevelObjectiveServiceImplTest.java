@@ -22,7 +22,7 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTargetSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
-import io.harness.cvng.servicelevelobjective.services.ServiceLevelObjectiveService;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
@@ -211,6 +211,9 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
     assertThat(serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
     ServiceLevelIndicatorDTO serviceLevelIndicatorDTO1 = sloDTO.getServiceLevelIndicators().get(0);
     serviceLevelIndicatorDTO1.setType(ServiceLevelIndicatorType.AVAILABILITY);
+    RatioSLIMetricSpec ratioSLIMetricSpec = (RatioSLIMetricSpec) serviceLevelIndicatorDTO1.getSpec().getSpec();
+    ratioSLIMetricSpec.setMetric1("newMetric");
+    serviceLevelIndicatorDTO1.getSpec().setSpec(ratioSLIMetricSpec);
     ServiceLevelIndicatorDTO serviceLevelIndicatorDTO2 = builderFactory.getServiceLevelIndicatorDTOBuilder();
     serviceLevelIndicatorDTO2.setSpec(
         ServiceLevelIndicatorSpec.builder()

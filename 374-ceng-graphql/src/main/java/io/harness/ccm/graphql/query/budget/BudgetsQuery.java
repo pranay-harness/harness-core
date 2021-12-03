@@ -90,6 +90,7 @@ public class BudgetsQuery {
     return BudgetSummary.builder()
         .id(budget.getUuid())
         .name(budget.getName())
+        .perspectiveId(BudgetUtils.getPerspectiveIdForBudget(budget))
         .budgetAmount(budget.getBudgetAmount())
         .actualCost(budget.getActualCost())
         .forecastCost(budget.getForecastCost())

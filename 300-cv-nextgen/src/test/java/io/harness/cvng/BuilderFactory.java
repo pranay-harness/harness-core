@@ -15,6 +15,7 @@ import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityBuil
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeEventDTO.ChangeEventDTOBuilder;
 import io.harness.cvng.beans.change.ChangeSourceType;
@@ -48,6 +49,10 @@ import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuilder;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.DatadogLogCVConfig;
+import io.harness.cvng.core.entities.DatadogLogCVConfig.DatadogLogCVConfigBuilder;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig.DatadogMetricCVConfigBuilder;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigBuilder;
@@ -132,6 +137,14 @@ public class BuilderFactory {
         .activityId(generateUuid())
         .status(Status.IN_PROGRESS)
         .callbackId(generateUuid());
+  }
+
+  public ProjectParams getProjectParams() {
+    return ProjectParams.builder()
+        .accountIdentifier(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .build();
   }
 
   public ServiceResponseDTOBuilder serviceResponseDTOBuilder() {
@@ -230,6 +243,7 @@ public class BuilderFactory {
         .tierName("tier")
         .connectorRef(CONNECTOR_IDENTIFIER)
         .feature("Application Monitoring")
+        .metricDefinitions(Collections.emptyList())
         .metricPacks(new HashSet<MetricPackDTO>() {
           { add(MetricPackDTO.builder().identifier(cvMonitoringCategory).build()); }
         })
@@ -281,6 +295,23 @@ public class BuilderFactory {
         .productName(generateUuid());
   }
 
+  public DatadogLogCVConfigBuilder datadogLogCVConfigBuilder() {
+    return DatadogLogCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .queryName(randomAlphabetic(10))
+        .query(randomAlphabetic(10))
+        .serviceInstanceIdentifier(randomAlphabetic(10))
+        .identifier(generateUuid())
+        .monitoringSourceName(generateUuid())
+        .connectorIdentifier("DatadogLogConnector")
+        .category(CVMonitoringCategory.PERFORMANCE)
+        .productName(generateUuid());
+  }
+
   public NewRelicCVConfigBuilder newRelicCVConfigBuilder() {
     return NewRelicCVConfig.builder()
         .accountId(context.getAccountId())
@@ -300,6 +331,19 @@ public class BuilderFactory {
         .connectorIdentifier("connectorRef")
         .category(CVMonitoringCategory.PERFORMANCE);
   }
+  public PrometheusCVConfig prometheusCVConfigWithMetricInfo() {
+    MetricPack metricPack = MetricPack.builder().dataCollectionDsl("metric-pack-dsl").build();
+    PrometheusCVConfig cvConfig = prometheusCVConfigBuilder().groupName("mygroupName").build();
+    cvConfig.setMetricPack(metricPack);
+    PrometheusCVConfig.MetricInfo metricInfo = PrometheusCVConfig.MetricInfo.builder()
+                                                   .metricName("myMetric")
+                                                   .metricType(TimeSeriesMetricType.RESP_TIME)
+                                                   .prometheusMetricName("cpu_usage_total")
+                                                   .build();
+
+    cvConfig.setMetricInfoList(Arrays.asList(metricInfo));
+    return cvConfig;
+  }
 
   public StackdriverCVConfigBuilder stackdriverMetricCVConfigBuilder() {
     return StackdriverCVConfig.builder()
@@ -309,6 +353,19 @@ public class BuilderFactory {
         .serviceIdentifier(context.getServiceIdentifier())
         .envIdentifier(context.getEnvIdentifier())
         .connectorIdentifier("connectorRef")
+        .dashboardName("dashboardName")
+        .category(CVMonitoringCategory.PERFORMANCE);
+  }
+
+  public DatadogMetricCVConfigBuilder datadogMetricCVConfigBuilder() {
+    return DatadogMetricCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .connectorIdentifier("connectorRef")
+        .dashboardId("dashboardId")
         .dashboardName("dashboardName")
         .category(CVMonitoringCategory.PERFORMANCE);
   }

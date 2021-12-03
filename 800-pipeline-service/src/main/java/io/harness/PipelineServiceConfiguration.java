@@ -1,6 +1,7 @@
 package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.swagger.SwaggerBundleConfigurationFactory.buildSwaggerBundleConfiguration;
 
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
@@ -19,6 +20,7 @@ import io.harness.ngtriggers.TriggerConfiguration;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.opaclient.OpaServiceConfiguration;
 import io.harness.redis.RedisConfig;
+import io.harness.reflection.HarnessReflections;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ThreadPoolConfig;
@@ -38,6 +40,7 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -45,11 +48,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.reflections.Reflections;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(PIPELINE)
 @Data
@@ -60,10 +64,13 @@ public class PipelineServiceConfiguration extends Configuration {
   public static final String NG_TRIGGER_RESOURCE_PACKAGE = "io.harness.ngtriggers";
   public static final String FILTER_PACKAGE = "io.harness.filter";
   public static final String ENFORCEMENT_PACKAGE = "io.harness.enforcement";
+  public static final Collection<Class<?>> HARNESS_RESOURCE_CLASSES = getResourceClasses();
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
+  @JsonProperty("orchestrationVisualizationThreadPoolConfig")
+  private ThreadPoolConfig orchestrationVisualizationThreadPoolConfig;
   @JsonProperty("pmsSdkExecutionPoolConfig") private ThreadPoolConfig pmsSdkExecutionPoolConfig;
   @JsonProperty("pmsSdkOrchestrationEventPoolConfig") private ThreadPoolConfig pmsSdkOrchestrationEventPoolConfig;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
@@ -133,8 +140,9 @@ public class PipelineServiceConfiguration extends Configuration {
   }
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
-    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-    String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
+    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration =
+        buildSwaggerBundleConfiguration(HARNESS_RESOURCE_CLASSES);
+    String resourcePackage = String.join(",", getUniquePackages(HARNESS_RESOURCE_CLASSES));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost(hostname);
@@ -145,9 +153,13 @@ public class PipelineServiceConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections =
-        new Reflections(RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE, FILTER_PACKAGE, ENFORCEMENT_PACKAGE);
-    return reflections.getTypesAnnotatedWith(Path.class);
+    return HarnessReflections.get()
+        .getTypesAnnotatedWith(Path.class)
+        .stream()
+        .filter(klazz
+            -> StringUtils.startsWithAny(klazz.getPackage().getName(), RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE,
+                FILTER_PACKAGE, ENFORCEMENT_PACKAGE))
+        .collect(Collectors.toSet());
   }
 
   private ConnectorFactory getDefaultApplicationConnectorFactory() {
@@ -178,7 +190,10 @@ public class PipelineServiceConfiguration extends Configuration {
     return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }
 
-  public static Set<String> getUniquePackagesContainingResources() {
-    return getResourceClasses().stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
+  public static Set<String> getUniquePackagesContainingOpenApiResources() {
+    return HARNESS_RESOURCE_CLASSES.stream()
+        .filter(x -> x.isAnnotationPresent(Tag.class))
+        .map(aClass -> aClass.getPackage().getName())
+        .collect(toSet());
   }
 }

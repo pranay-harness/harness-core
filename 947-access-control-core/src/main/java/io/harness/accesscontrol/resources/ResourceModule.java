@@ -13,6 +13,7 @@ import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceType
 import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypeDaoImpl;
 import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypeMorphiaRegistrar;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
+import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 
@@ -50,6 +51,7 @@ public class ResourceModule extends AbstractModule {
 
   private void registerRequiredBindings() {
     requireBinding(RoleAssignmentService.class);
+    requireBinding(ScopeService.class);
     requireBinding(TransactionTemplate.class);
   }
 }

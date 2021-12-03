@@ -59,8 +59,7 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
   }
 
   @Override
-  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      boolean invalid, String erroneousYaml) {
+  public boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String erroneousYaml) {
     return true;
   }
 
@@ -95,7 +94,7 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
   }
 
   @Override
-  public SampleBean upsert(String accountIdentifier, String yaml) {
+  public SampleBean upsert(String accountIdentifier, String yaml, String filePath) {
     return null;
   }
 

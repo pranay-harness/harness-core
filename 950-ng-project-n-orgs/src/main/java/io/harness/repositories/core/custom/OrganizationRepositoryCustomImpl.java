@@ -8,6 +8,7 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 
 import com.google.inject.Inject;
+import com.mongodb.client.result.UpdateResult;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -94,5 +95,10 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
     Query query = new Query(criteria);
     Update update = new Update().set(OrganizationKeys.deleted, Boolean.TRUE);
     return mongoTemplate.findAndModify(query, update, Organization.class);
+  }
+
+  @Override
+  public UpdateResult updateMultiple(Query query, Update update) {
+    return mongoTemplate.updateMulti(query, update, Organization.class);
   }
 }

@@ -27,7 +27,6 @@ import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
-import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingService;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingServiceImpl;
@@ -81,6 +80,7 @@ import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.datahandler.utils.AccountSummaryHelperImpl;
 import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
 import io.harness.delegate.configuration.DelegateConfiguration;
@@ -194,6 +194,8 @@ import io.harness.service.EventService;
 import io.harness.service.EventServiceImpl;
 import io.harness.service.impl.DelegateTokenServiceImpl;
 import io.harness.service.intfc.DelegateTokenService;
+import io.harness.telemetry.AbstractTelemetryModule;
+import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
@@ -201,6 +203,8 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.usermembership.UserMembershipClientModule;
+import io.harness.utils.featureflaghelper.CGFeatureFlagHelperServiceImpl;
+import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
 import io.harness.version.VersionModule;
 
 import software.wings.DataStorageMode;
@@ -780,14 +784,17 @@ import org.jetbrains.annotations.NotNull;
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private final MainConfiguration configuration;
+  private final StartupMode startupMode;
 
   /**
    * Creates a guice module for portal app.
    *
    * @param configuration Dropwizard configuration
+   * @param startupMode
    */
-  public WingsModule(MainConfiguration configuration) {
+  public WingsModule(MainConfiguration configuration, StartupMode startupMode) {
     this.configuration = configuration;
+    this.startupMode = startupMode;
   }
 
   @Provides
@@ -882,8 +889,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
 
-    install(new EventsFrameworkModule(
-        configuration.getEventsFrameworkConfiguration(), configuration.isEventsFrameworkAvailableInOnPrem()));
+    install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration(),
+        configuration.isEventsFrameworkAvailableInOnPrem(), StartupMode.DELEGATE_SERVICE.equals(startupMode)));
     install(FeatureFlagModule.getInstance());
     install(AccessControlAdminClientModule.getInstance(
         AccessControlAdminClientConfiguration.builder()
@@ -894,6 +901,13 @@ public class WingsModule extends AbstractModule implements ServersModule {
             .mockAccessControlService(false)
             .build(),
         MANAGER.getServiceId()));
+
+    install(new AbstractTelemetryModule() {
+      @Override
+      public TelemetryConfiguration telemetryConfiguration() {
+        return configuration.getSegmentConfiguration();
+      }
+    });
 
     bind(MainConfiguration.class).toInstance(configuration);
     bind(PortalConfig.class).toInstance(configuration.getPortal());
@@ -1287,7 +1301,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .annotatedWith(Names.named("TimeScaleDBConfig"))
         .toInstance(configuration.getTimeScaleDBConfig() != null ? configuration.getTimeScaleDBConfig()
                                                                  : TimeScaleDBConfig.builder().build());
-    bind(BigQueryService.class).to(BigQueryServiceImpl.class);
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
     }
@@ -1327,7 +1340,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     // End of deployment trigger dependencies
 
     install(new PerpetualTaskServiceModule());
-    install(new CESetupServiceModule());
+    install(CESetupServiceModule.getInstance());
     install(new CVNextGenCommonsServiceModule());
     try {
       install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
@@ -1384,6 +1397,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);
     install(new CVCommonsServiceModule());
     bind(CDChangeSourceIntegrationService.class).to(CDChangeSourceIntegrationServiceImpl.class);
+    bind(FeatureFlagHelperService.class).to(CGFeatureFlagHelperServiceImpl.class);
   }
 
   private void bindFeatures() {

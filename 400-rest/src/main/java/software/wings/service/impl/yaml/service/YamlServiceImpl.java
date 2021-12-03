@@ -9,7 +9,7 @@ import static io.harness.pcf.model.PcfConstants.PCF_CONFIG_FILE_EXTENSION;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.APP_SETTINGS_FILE;
 import static software.wings.beans.yaml.YamlConstants.CONN_STRINGS_FILE;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;

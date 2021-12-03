@@ -359,37 +359,31 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  private synchronized GitCheckoutResult checkout(GitOperationContext gitOperationContext) {
+  private synchronized GitCheckoutResult checkout(GitOperationContext gitOperationContext)
+      throws GitAPIException, IOException {
     GitConfig gitConfig = gitOperationContext.getGitConfig();
-
-    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
-      try {
-        if (isNotEmpty(gitConfig.getBranch())) {
-          Ref ref = git.checkout()
-                        .setCreateBranch(true)
-                        .setName(gitConfig.getBranch())
-                        .setUpstreamMode(SetupUpstreamMode.TRACK)
-                        .setStartPoint("origin/" + gitConfig.getBranch())
-                        .call();
-        }
-
-      } catch (RefAlreadyExistsException refExIgnored) {
-        log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType())
-            + "Reference already exist do nothing."); // TODO:: check gracefully instead of relying on Exception
+    Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)));
+    try {
+      if (isNotEmpty(gitConfig.getBranch())) {
+        Ref ref = git.checkout()
+                      .setCreateBranch(true)
+                      .setName(gitConfig.getBranch())
+                      .setUpstreamMode(SetupUpstreamMode.TRACK)
+                      .setStartPoint("origin/" + gitConfig.getBranch())
+                      .call();
       }
 
-      String gitRef = gitConfig.getReference() != null ? gitConfig.getReference() : gitConfig.getBranch();
-      if (StringUtils.isNotEmpty(gitRef)) {
-        git.checkout().setName(gitRef).call();
-      }
-
-      return GitCheckoutResult.builder().build();
-    } catch (IOException | GitAPIException ex) {
-      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-      throw new YamlException(format("Unable to checkout given reference: %s",
-                                  isEmpty(gitConfig.getReference()) ? gitConfig.getBranch() : gitConfig.getReference()),
-          USER);
+    } catch (RefAlreadyExistsException refExIgnored) {
+      log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType())
+          + "Reference already exist do nothing."); // TODO:: check gracefully instead of relying on Exception
     }
+
+    String gitRef = gitConfig.getReference() != null ? gitConfig.getReference() : gitConfig.getBranch();
+    if (StringUtils.isNotEmpty(gitRef)) {
+      git.checkout().setName(gitRef).call();
+    }
+
+    return GitCheckoutResult.builder().build();
   }
 
   @VisibleForTesting

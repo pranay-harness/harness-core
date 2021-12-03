@@ -19,9 +19,11 @@ import io.harness.beans.InputSetReference;
 import io.harness.category.element.UnitTests;
 import io.harness.common.EntityReference;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
+import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
@@ -41,6 +43,7 @@ import org.mockito.MockitoAnnotations;
 public class InputSetEntityGitSyncHelperTest extends CategoryTest {
   @Mock private PMSInputSetService pmsInputSetService;
   @InjectMocks InputSetEntityGitSyncHelper inputSetEntityGitSyncHelper;
+  @Mock ValidateAndMergeHelper validateAndMergeHelper;
   static String accountId = "accountId";
   static String orgId = "orgId";
   static String projectId = "projectId";
@@ -93,14 +96,15 @@ public class InputSetEntityGitSyncHelperTest extends CategoryTest {
     doReturn(Optional.of(InputSetEntity.builder().objectIdOfYaml(objectId).build()))
         .when(pmsInputSetService)
         .get(anyString(), anyString(), anyString(), anyString(), anyString(), anyBoolean());
-    String returnedObjectId = inputSetEntityGitSyncHelper.getLastObjectIdIfExists(accountId, inputSetYaml);
+    EntityGitDetails returnedEntity =
+        inputSetEntityGitSyncHelper.getEntityDetailsIfExists(accountId, inputSetYaml).get();
     verify(pmsInputSetService, times(1))
         .get(anyString(), anyString(), anyString(), anyString(), anyString(), anyBoolean());
-    assertEquals(returnedObjectId, objectId);
-    returnedObjectId = inputSetEntityGitSyncHelper.getLastObjectIdIfExists(accountId, overLayYaml);
+    assertEquals(returnedEntity.getObjectId(), objectId);
+    returnedEntity = inputSetEntityGitSyncHelper.getEntityDetailsIfExists(accountId, overLayYaml).get();
     verify(pmsInputSetService, times(2))
         .get(anyString(), anyString(), anyString(), anyString(), anyString(), anyBoolean());
-    assertEquals(returnedObjectId, objectId);
+    assertEquals(returnedEntity.getObjectId(), objectId);
   }
 
   @Test
@@ -112,6 +116,8 @@ public class InputSetEntityGitSyncHelperTest extends CategoryTest {
     InputSetYamlDTO inputSetYamlDTO = inputSetEntityGitSyncHelper.save(accountId, inputSetYaml);
     verify(pmsInputSetService, times(1)).create(any());
     assertEquals(inputSetYamlDTO, YamlUtils.read(inputSetYaml, InputSetYamlDTO.class));
+    doReturn(null).when(validateAndMergeHelper).validateInputSet(any(), any(), any(), any(), any(), any(), any());
+    doReturn(null).when(validateAndMergeHelper).validateOverlayInputSet(any(), any(), any(), any(), any());
     inputSetEntityGitSyncHelper.save(accountId, overLayYaml);
     verify(pmsInputSetService, times(2)).create(any());
   }
@@ -121,6 +127,8 @@ public class InputSetEntityGitSyncHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdate() throws IOException {
     doReturn(InputSetEntity.builder().yaml(inputSetYaml).build()).when(pmsInputSetService).update(any(), any());
+    doReturn(null).when(validateAndMergeHelper).validateInputSet(any(), any(), any(), any(), any(), any(), any());
+    doReturn(null).when(validateAndMergeHelper).validateOverlayInputSet(any(), any(), any(), any(), any());
     InputSetYamlDTO inputSetYamlDTO = inputSetEntityGitSyncHelper.update(accountId, inputSetYaml, ChangeType.NONE);
     verify(pmsInputSetService, times(1)).update(any(), any());
     assertEquals(inputSetYamlDTO, YamlUtils.read(inputSetYaml, InputSetYamlDTO.class));

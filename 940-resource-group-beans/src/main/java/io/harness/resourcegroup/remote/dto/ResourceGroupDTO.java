@@ -12,9 +12,9 @@ import io.harness.resourcegroup.model.DynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,14 +24,14 @@ import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(name = "ResourceGroup", description = "Contains information of Resource Group")
 @OwnedBy(HarnessTeam.PL)
 public class ResourceGroupDTO {
   @ApiModelProperty(required = true) @NotNull @NotEmpty String accountIdentifier;
@@ -43,24 +43,8 @@ public class ResourceGroupDTO {
   boolean fullScopeSelected;
   @Size(max = 128) Map<String, String> tags;
   @Size(max = 1024) String description;
-  @JsonIgnore Set<String> allowedScopeLevels;
+  Set<String> allowedScopeLevels;
   String color;
-
-  @Builder
-  public ResourceGroupDTO(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      String name, List<ResourceSelector> resourceSelectors, boolean fullScopeSelected, Map<String, String> tags,
-      String description, String color) {
-    this.accountIdentifier = accountIdentifier;
-    this.orgIdentifier = orgIdentifier;
-    this.projectIdentifier = projectIdentifier;
-    this.identifier = identifier;
-    this.name = name;
-    this.resourceSelectors = resourceSelectors;
-    this.fullScopeSelected = fullScopeSelected;
-    this.tags = tags;
-    this.description = description;
-    this.color = color;
-  }
 
   public Scope getScope() {
     return Scope.of(accountIdentifier, orgIdentifier, projectIdentifier);

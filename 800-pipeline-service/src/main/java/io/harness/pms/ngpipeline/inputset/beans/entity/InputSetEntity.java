@@ -25,7 +25,9 @@ import com.google.common.collect.ImmutableList;
 import com.sun.istack.internal.NotNull;
 import java.util.List;
 import javax.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.Singular;
@@ -91,14 +93,13 @@ public class InputSetEntity
   @Wither @Builder.Default Boolean deleted = Boolean.FALSE;
   @Wither @Version Long version;
 
-  @Setter @NonFinal String objectIdOfYaml;
+  @Wither @Setter @NonFinal String objectIdOfYaml;
   @Setter @NonFinal Boolean isFromDefaultBranch;
   @Setter @NonFinal String branch;
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
-  @NonFinal Boolean isEntityInvalid;
-  @Setter @NonFinal String invalidYamlString;
+  @Getter(AccessLevel.NONE) @Wither @NonFinal Boolean isEntityInvalid;
 
   @Wither @Builder.Default Boolean isInvalid = Boolean.FALSE;
 
@@ -123,5 +124,10 @@ public class InputSetEntity
   @Override
   public void setEntityInvalid(boolean isEntityInvalid) {
     this.isEntityInvalid = isEntityInvalid;
+  }
+
+  @Override
+  public String getInvalidYamlString() {
+    return yaml;
   }
 }

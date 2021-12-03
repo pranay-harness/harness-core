@@ -20,6 +20,8 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.lock.DistributedLockImplementation;
+import io.harness.lock.PersistentLockModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.opaclient.OpaServiceClient;
@@ -27,8 +29,10 @@ import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
+import io.harness.redis.RedisConfig;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
@@ -44,6 +48,7 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.user.remote.UserClient;
+import io.harness.utils.NGObjectMapperHelper;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyResponseCleaner;
@@ -140,7 +145,10 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
       @Named("yaml-schema-mapper")
       @Singleton
       public ObjectMapper getYamlSchemaObjectMapper() {
-        return Jackson.newObjectMapper();
+        ObjectMapper objectMapper = Jackson.newObjectMapper();
+        NGObjectMapperHelper.configureNGObjectMapper(objectMapper);
+        objectMapper.registerModule(new PmsBeansJacksonModule());
+        return objectMapper;
       }
 
       @Provides
@@ -150,6 +158,21 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
         return false;
       }
     });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      DistributedLockImplementation distributedLockImplementation() {
+        return DistributedLockImplementation.NOOP;
+      }
+
+      @Provides
+      @Named("lock")
+      @Singleton
+      RedisConfig redisConfig() {
+        return RedisConfig.builder().build();
+      }
+    });
+    modules.add(PersistentLockModule.getInstance());
 
     modules.add(mongoTypeModule(annotations));
 

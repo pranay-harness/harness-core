@@ -14,6 +14,8 @@ import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
+import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -49,6 +51,7 @@ import org.springframework.stereotype.Service;
 @Api("perspective")
 @Path("perspective")
 @Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @NextGenManagerAuth
 @Slf4j
 @Service
@@ -125,7 +128,7 @@ public class PerspectiveResource {
   @ExceptionMetered
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create perspective", nickname = "createPerspective")
-  //  @FeatureRestrictionCheck(FeatureRestrictionName.PERSPECTIVES)
+  @FeatureRestrictionCheck(FeatureRestrictionName.PERSPECTIVES)
   @LogAccountIdentifier
   @Operation(operationId = "createPerspective",
       description =
