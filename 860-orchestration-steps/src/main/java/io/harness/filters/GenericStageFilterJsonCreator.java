@@ -16,6 +16,7 @@ import io.harness.pms.filter.creation.FilterCreationResponse.FilterCreationRespo
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
@@ -76,7 +77,8 @@ public abstract class GenericStageFilterJsonCreator implements FilterJsonCreator
           "Execution section is required in %s stage [%s]. Please add it and try again", stageElementConfig.getType(),
           YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode())));
     }
-    creationResponse.dependencies(getDependencies(filterCreationContext.getCurrentField()));
+    creationResponse.dependencies(
+        DependenciesUtils.toDependenciesProto(getDependencies(filterCreationContext.getCurrentField())));
 
     PipelineFilter filter = getFilter(filterCreationContext, stageElementConfig);
     if (filter != null) {
