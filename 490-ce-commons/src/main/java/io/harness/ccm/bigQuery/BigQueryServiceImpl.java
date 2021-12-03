@@ -10,12 +10,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.Timestamp;
+import java.util.Date;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
 public class BigQueryServiceImpl implements BigQueryService {
   public static final String GCP_CREDENTIALS_PATH = "GOOGLE_CREDENTIALS_PATH";
+  public static String BQ_UPDATE_DATA_SYNC_STATUS_QUERY = "INSERT INTO `{}.{}.{}`" +
+          "(accountId, connectorId, lastSuccessfullExecutionAt, jobType, cloudProviderId)" +
+          "VALUES ('{}', '{}', '{}', '{}', '{}')";
 
   @Override
   public BigQuery get() {
@@ -40,5 +46,12 @@ public class BigQueryServiceImpl implements BigQueryService {
       log.error("Failed to get Google credential file for the CE service account.", e);
     }
     return credentials;
+  }
+
+  public boolean updateDataSyncStatusTable() {
+    Date date = new Date();
+    Timestamp timestamp2 = new Timestamp(date.getTime());
+    String.format(BQ_UPDATE_DATA_SYNC_STATUS_QUERY, )
+    return true;
   }
 }
