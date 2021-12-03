@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
+import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertFromBase64;
@@ -77,6 +78,7 @@ import io.harness.capability.CapabilityTaskSelectionDetails;
 import io.harness.capability.CapabilityTaskSelectionDetails.CapabilityTaskSelectionDetailsKeys;
 import io.harness.capability.service.CapabilityService;
 import io.harness.configuration.DeployMode;
+import io.harness.configuration.DeployVariant;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.AvailableDelegateSizes;
 import io.harness.delegate.beans.ConnectionMode;
@@ -3735,8 +3737,16 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   public DelegateSizeDetails fetchDefaultDelegateSize() {
-    try (InputStream inputStream =
-             this.getClass().getClassLoader().getResourceAsStream("delegatesizes/default_size.json")) {
+    String deployVersion = System.getenv(DEPLOY_VERSION);
+
+    String fileName;
+    if (DeployVariant.isCommunity(deployVersion)) {
+      fileName = "delegatesizes/default_community_size.json";
+    } else {
+      fileName = "delegatesizes/default_size.json";
+    }
+
+    try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(fileName)) {
       String fileContent = IOUtils.toString(inputStream, UTF_8);
       return JsonUtils.asObject(fileContent, DelegateSizeDetails.class);
 
