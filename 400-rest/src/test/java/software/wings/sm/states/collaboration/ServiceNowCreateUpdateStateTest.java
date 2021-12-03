@@ -9,6 +9,7 @@ package software.wings.sm.states.collaboration;
 
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.DESCRIPTION_VALUE;
+import static io.harness.rule.OwnerRule.HINGER;
 
 import static software.wings.beans.TaskType.SERVICENOW_ASYNC;
 import static software.wings.delegatetasks.servicenow.ServiceNowAction.CREATE;
@@ -194,5 +195,21 @@ public class ServiceNowCreateUpdateStateTest extends CategoryTest {
     params.setImportSetTableName(VARIABLE_NAME);
     params.setJsonBody("{\"key\": \"value\"}");
     return params;
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldQueueDelegateTaskWithCorrectSetupAbstractionsForEnvType() {
+    when(context.getEnvType()).thenReturn("PROD");
+    serviceNowCreateUpdateState.setServiceNowCreateUpdateParams(getParamsForAction(CREATE));
+    ExecutionResponse executionResponse = serviceNowCreateUpdateState.execute(context);
+
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    assertThat(delegateTaskArgumentCaptor.getValue())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("setupAbstractions.envType", "PROD");
+    verify(stateExecutionService).appendDelegateTaskDetails(eq(null), any(DelegateTaskDetails.class));
   }
 }
