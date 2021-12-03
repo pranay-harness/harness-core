@@ -13,6 +13,7 @@ import io.harness.serializer.KryoRegistrar;
 
 import software.wings.api.ContainerServiceData;
 import software.wings.api.ExecutionDataValue;
+import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorStrategy;
@@ -67,5 +68,6 @@ public class CgOrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(ApiCallLogDTO.class, 9048);
     kryo.register(ApiCallLogDTOField.class, 9049);
     kryo.register(ApiCallLogDTO.FieldType.class, 9050);
+    kryo.register(AwsInstanceFilter.class, 40092);
   }
 }
