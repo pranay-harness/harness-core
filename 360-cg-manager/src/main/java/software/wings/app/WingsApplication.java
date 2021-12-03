@@ -684,9 +684,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerEventConsumers(injector);
 
-    if (!shouldEnableRemoteObservers(configuration)) {
-      registerObservers(configuration, injector, environment);
-    }
+    registerObservers(configuration, injector, environment);
 
     if (shouldEnableDelegateMgmt) {
       registerInprocPerpetualTaskServiceClients(injector);
