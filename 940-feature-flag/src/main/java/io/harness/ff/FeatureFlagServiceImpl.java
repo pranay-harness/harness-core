@@ -29,6 +29,7 @@ import io.harness.serializer.JsonUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -52,16 +53,25 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
 public class FeatureFlagServiceImpl implements FeatureFlagService {
-  @Inject private HPersistence persistence;
-  @Inject(optional = true)
-  @Nullable
+  private final HPersistence persistence;
+  @Inject(optional = true) @Nullable private long lastEpoch;
+  private final Map<FeatureName, FeatureFlag> cache;
+  private final CfMigrationService cfMigrationService;
+  private final CfMigrationConfig cfMigrationConfig;
+  private final Provider<CfClient> cfClient;
+  private final FeatureFlagConfig featureFlagConfig;
 
-  private long lastEpoch;
-  private final Map<FeatureName, FeatureFlag> cache = new HashMap<>();
-  @Inject CfMigrationService cfMigrationService;
-  @Inject CfMigrationConfig cfMigrationConfig;
-  @Inject CfClient cfClient;
-  @Inject FeatureFlagConfig featureFlagConfig;
+  @Inject
+  public FeatureFlagServiceImpl(HPersistence hPersistence, CfMigrationService cfMigrationService,
+      CfMigrationConfig cfMigrationConfig, Provider<CfClient> cfClient, FeatureFlagConfig featureFlagConfig) {
+    this.persistence = hPersistence;
+    this.cfMigrationService = cfMigrationService;
+    this.cfMigrationConfig = cfMigrationConfig;
+    this.cfClient = cfClient;
+    this.featureFlagConfig = featureFlagConfig;
+    this.cache = new HashMap<>();
+  }
+
   @Override
   public boolean isEnabledReloadCache(FeatureName featureName, String accountId) {
     synchronized (cache) {
@@ -207,7 +217,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       accountId = FeatureFlagConstants.STATIC_ACCOUNT_ID;
     }
     Target target = Target.builder().identifier(accountId).name(accountId).build();
-    return cfClient.boolVariation(featureName.name(), target, false);
+    return cfClient.get().boolVariation(featureName.name(), target, false);
   }
 
   private boolean localFeatureFlagEvaluation(@NonNull FeatureName featureName, String accountId) {
