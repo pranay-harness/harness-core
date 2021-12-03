@@ -1,5 +1,10 @@
 package io.harness.accesscontrol.roleassignments.privileged;
 
+import static io.harness.NGConstants.DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
+
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -21,12 +26,9 @@ public class AdminPrivilegedRoleAssignmentMapper {
           .of(new AbstractMap.SimpleEntry<>("_account_admin", "_super_account_admin"),
               new AbstractMap.SimpleEntry<>("_organization_admin", "_super_organization_admin"))
           .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-  public static final String ALL_RESOURCES_RESOURCE_GROUP = "_all_resources";
-  public static final String ALL_PROJECT_LEVEL_RESOURCES = "_all_project_level_resources";
-  public static final String ALL_ORGANIZATION_LEVEL_RESOURCES = "_all_organization_level_resources";
-  public static final String ALL_ACCOUNT_LEVEL_RESOURCES = "_all_account_level_resources";
-  public static final List<String> MANAGED_RESOURCE_GROUP_IDENTIFIERS = ImmutableList.of(ALL_RESOURCES_RESOURCE_GROUP,
-      ALL_ACCOUNT_LEVEL_RESOURCES, ALL_ORGANIZATION_LEVEL_RESOURCES, ALL_PROJECT_LEVEL_RESOURCES);
+  public static final List<String> MANAGED_RESOURCE_GROUP_IDENTIFIERS =
+      ImmutableList.of(DEFAULT_RESOURCE_GROUP_IDENTIFIER, DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER,
+          DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER, DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER);
 
   public static Optional<PrivilegedRoleAssignment> buildAdminPrivilegedRoleAssignment(
       RoleAssignmentDBO roleAssignment) {

@@ -3,6 +3,7 @@ package io.harness.ng.core.user.remote;
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
+import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGE_USER_PERMISSION;
@@ -401,7 +402,7 @@ public class UserResource {
         Resource.of(USER, null), MANAGE_USER_PERMISSION);
     if (isNotEmpty(addUsersDTO.getRoleBindings())) {
       addUsersDTO.getRoleBindings().forEach(roleBinding -> {
-        if (RoleBindingMapper.ALL_RESOURCES.equals(roleBinding.getResourceGroupIdentifier())) {
+        if (DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(roleBinding.getResourceGroupIdentifier())) {
           throw new InvalidRequestException(String.format("_all_resources is deprecated, please use %s",
               RoleBindingMapper.getDefaultResourceGroupIdentifier(orgIdentifier, projectIdentifier)));
         }

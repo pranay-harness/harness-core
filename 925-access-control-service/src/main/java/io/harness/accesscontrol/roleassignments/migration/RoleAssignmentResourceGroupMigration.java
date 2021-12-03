@@ -1,5 +1,8 @@
 package io.harness.accesscontrol.roleassignments.migration;
 
+import static io.harness.NGConstants.DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -80,11 +83,11 @@ public class RoleAssignmentResourceGroupMigration implements NGMigration {
 
   private String getResourceGroupIdentifier(ScopeLevel scopeLevel) {
     if (HarnessScopeLevel.PROJECT.equals(scopeLevel)) {
-      return "_all_project_level_resources";
+      return DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
     } else if (HarnessScopeLevel.ORGANIZATION.equals(scopeLevel)) {
-      return "_all_organization_level_resources";
+      return DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
     } else {
-      return "_all_account_level_resources";
+      return DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
     }
   }
 }

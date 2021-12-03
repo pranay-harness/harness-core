@@ -1,6 +1,9 @@
 package io.harness.accesscontrol.roleassignments.api;
 
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.NGConstants.DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.accesscontrol.AccessControlPermissions.EDIT_SERVICEACCOUNT_PERMISSION;
 import static io.harness.accesscontrol.AccessControlPermissions.MANAGE_USERGROUP_PERMISSION;
 import static io.harness.accesscontrol.AccessControlPermissions.MANAGE_USER_PERMISSION;
@@ -418,11 +421,11 @@ public class RoleAssignmentResource {
 
   private String getDefaultResourceGroupIdentifier(HarnessScopeParams harnessScopeParams) {
     if (isNotEmpty(harnessScopeParams.getProjectIdentifier())) {
-      return "_all_project_level_resources";
+      return DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
     } else if (isNotEmpty(harnessScopeParams.getOrgIdentifier())) {
-      return "_all_organization_level_resources";
+      return DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
     } else {
-      return "_all_account_level_resources";
+      return DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
     }
   }
 
