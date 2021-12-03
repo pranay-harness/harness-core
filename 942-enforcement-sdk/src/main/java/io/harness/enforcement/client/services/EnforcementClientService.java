@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface EnforcementClientService {
+  boolean isEnforcementEnabled();
   /**
    * Check if available for next feature consume
    * @param featureRestrictionName
