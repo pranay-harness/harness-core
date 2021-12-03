@@ -112,8 +112,10 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
-  public List<InstanceDTO> getInstancesDeployedAfter(String accountIdentifier, long startTimestamp) {
-    return InstanceMapper.toDTO(instanceRepository.getInstancesDeployedAfter(accountIdentifier, startTimestamp));
+  public List<InstanceDTO> getInstancesModifiedInInterval(
+      String accountIdentifier, long startTimestamp, long endTimeStamp) {
+    return InstanceMapper.toDTO(
+        instanceRepository.getInstancesModifiedInInterval(accountIdentifier, startTimestamp, endTimeStamp));
   }
 
   @Override

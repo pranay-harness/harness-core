@@ -132,11 +132,14 @@ public class TimeRangeBasedFreezeConfigYamlHandler
   private TimeRange validateTimeRangeYaml(TimeRange.Yaml timeRangeYaml) {
     Validator.notNullCheck("Time Range cannot be empty", timeRangeYaml);
     Validator.notNullCheck("From time cannot be empty", timeRangeYaml.getFrom());
+    Validator.notNullCheck("Time zone cannot be empty", timeRangeYaml.getTimeZone());
     if (timeRangeYaml.isDurationBased()) {
       Validator.notNullCheck("Duration cannot be empty", timeRangeYaml.getDuration());
     } else {
       Validator.notNullCheck("To time cannot be empty", timeRangeYaml.getTo());
     }
+
+    String timeZone = timeRangeYaml.getTimeZone();
 
     long from;
     long to;
@@ -168,6 +171,6 @@ public class TimeRangeBasedFreezeConfigYamlHandler
       }
     }
     // time zone from DB document
-    return new TimeRange(null, from, to, null, durationBased, duration, endTime, freezeOccurrence, false);
+    return new TimeRange(null, from, to, timeZone, durationBased, duration, endTime, freezeOccurrence, false);
   }
 }

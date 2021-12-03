@@ -5,9 +5,12 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static com.hazelcast.util.Preconditions.checkFalse;
 
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.BillingDataPipelineConfig;
+import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
+import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpServiceAccount;
 import io.harness.connector.ConnectivityStatus;
@@ -26,6 +29,8 @@ import io.harness.utils.RestCallToNGManagerClientUtils;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.api.core.ApiFuture;
 import com.google.api.gax.paging.Page;
 import com.google.auth.Credentials;
@@ -50,8 +55,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
@@ -74,14 +79,29 @@ public class GcpSyncTasklet implements Tasklet {
   @Autowired private BatchMainConfig mainConfig;
   @Autowired private ConnectorResourceClient connectorResourceClient;
   @Autowired protected CloudToHarnessMappingService cloudToHarnessMappingService;
+  @Autowired private BatchJobScheduledDataDao batchJobScheduledDataDao;
   private JobParameters parameters;
   private static final String GOOGLE_CREDENTIALS_PATH = "GOOGLE_CREDENTIALS_PATH";
+
+  private Cache<CacheKey, Boolean> gcpSyncInfo = Caffeine.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build();
+
+  @Value
+  private static class CacheKey {
+    private String accountId;
+    private String projectId;
+    private String datasetId;
+  }
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     Long endTime = Long.parseLong(parameters.getString(CCMJobConstants.JOB_END_DATE));
+    BatchJobScheduledData batchJobScheduledData =
+        batchJobScheduledDataDao.fetchLastBatchJobScheduledData(accountId, BatchJobType.SYNC_BILLING_REPORT_GCP);
+    if (null != batchJobScheduledData) {
+      endTime = batchJobScheduledData.getEndAt().toEpochMilli();
+    }
     BillingDataPipelineConfig billingDataPipelineConfig = mainConfig.getBillingDataPipelineConfig();
 
     if (billingDataPipelineConfig.isGcpSyncEnabled()) {
@@ -136,14 +156,14 @@ public class GcpSyncTasklet implements Tasklet {
 
         Long lastModifiedTime = tableGranularData.getLastModifiedTime();
         lastModifiedTime = lastModifiedTime != null ? lastModifiedTime : table.getCreationTime();
+        log.info("Sync condition {} {}", lastModifiedTime, endTime);
         if (lastModifiedTime > endTime) {
-          try {
-            publishMessage(billingDataPipelineConfig.getGcpProjectId(),
-                billingDataPipelineConfig.getGcpSyncPubSubTopic(), dataset.getLocation(), serviceAccountEmail,
-                datasetId, projectId, accountId, connectorId, table.getTableId().getTable());
-          } catch (IOException | ExecutionException | InterruptedException e) {
-            log.error("Exception publishing Pub Sub Message: {}", e);
-          }
+          CacheKey cacheKey = new CacheKey(accountId, projectId, datasetId);
+          gcpSyncInfo.get(cacheKey,
+              key
+              -> publishMessage(billingDataPipelineConfig.getGcpProjectId(),
+                  billingDataPipelineConfig.getGcpSyncPubSubTopic(), dataset.getLocation(), serviceAccountEmail,
+                  datasetId, projectId, accountId, connectorId, table.getTableId().getTable()));
         }
       }
     });
@@ -204,9 +224,9 @@ public class GcpSyncTasklet implements Tasklet {
     }
   }
 
-  public static void publishMessage(String harnessProjectId, String topicId, String location,
+  public static boolean publishMessage(String harnessProjectId, String topicId, String location,
       String serviceAccountEmail, String datasetId, String projectId, String accountId, String connectorId,
-      String tableName) throws IOException, ExecutionException, InterruptedException {
+      String tableName) {
     TopicName topicName = TopicName.of(harnessProjectId, topicId);
     Publisher publisher = null;
 
@@ -234,12 +254,19 @@ public class GcpSyncTasklet implements Tasklet {
       ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
       String messageId = messageIdFuture.get();
       log.info("Published a message with custom attributes: " + messageId);
+    } catch (Exception ex) {
+      log.error("Exception while publishing", ex);
     } finally {
       if (publisher != null) {
         // When finished with the publisher, shutdown to free up resources.
         publisher.shutdown();
-        publisher.awaitTermination(1, TimeUnit.MINUTES);
+        try {
+          publisher.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+          log.error("InterruptedException ", e);
+        }
       }
     }
+    return true;
   }
 }

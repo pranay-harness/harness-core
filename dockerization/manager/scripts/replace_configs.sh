@@ -606,6 +606,10 @@ if [[ "$SEARCH_ENABLED" == "true" ]]; then
   yq write -i $CONFIG_FILE searchEnabled true
 fi
 
+if [[ "$GRAPHQL_ENABLED" == "false" ]]; then
+  yq write -i $CONFIG_FILE graphQLEnabled false
+fi
+
 if [[ "$MONGO_DEBUGGING_ENABLED" == "true" ]]; then
   yq write -i $CONFIG_FILE logging.loggers.[org.mongodb.morphia.query] TRACE
   yq write -i $CONFIG_FILE logging.loggers.connection TRACE
@@ -907,4 +911,20 @@ fi
 
 if [[ "" != "$USE_GLOBAL_KMS_AS_BASE_ALGO" ]]; then
   yq write -i $CONFIG_FILE useGlobalKMSAsBaseAlgo "$USE_GLOBAL_KMS_AS_BASE_ALGO"
+fi
+
+if [[ "" != "$SEGMENT_NG_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.enabled "$SEGMENT_NG_ENABLED"
+fi
+
+if [[ "" != "$SEGMENT_NG_URL" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.url "$SEGMENT_NG_URL"
+fi
+
+if [[ "" != "$SEGMENT_NG_APIKEY" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.apiKey "$SEGMENT_NG_APIKEY"
+fi
+
+if [[ "" != "$SEGMENT_NG_VERIFY_CERT" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.certValidationRequired "$SEGMENT_NG_VERIFY_CERT"
 fi

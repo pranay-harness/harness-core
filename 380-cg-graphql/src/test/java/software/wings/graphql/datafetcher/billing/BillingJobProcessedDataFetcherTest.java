@@ -10,7 +10,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.dao.BatchJobScheduledDataDao;
+import io.harness.ccm.commons.dao.BatchJobScheduledDataDao;
 import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
 import io.harness.rule.Owner;
 
@@ -33,7 +33,7 @@ public class BillingJobProcessedDataFetcherTest extends AbstractDataFetcherTestB
   @Mock private BatchJobScheduledDataDao batchJobScheduledDataDao;
 
   private final String ACCOUNT_ID = "ACCOUNT_ID";
-  private final String BATCH_JOB_TYPE = "UNALLOCATED_BILLING_HOURLY";
+  private final String BATCH_JOB_TYPE = "CLUSTER_DATA_TO_BIG_QUERY";
   private final Instant NOW = Instant.now().truncatedTo(ChronoUnit.DAYS);
   private final Instant LAST_PROCESSED_DATA_START_TIME = NOW.minus(2, ChronoUnit.DAYS);
   private final Instant LAST_PROCESSED_DATA_END_TIME = NOW.minus(1, ChronoUnit.DAYS);

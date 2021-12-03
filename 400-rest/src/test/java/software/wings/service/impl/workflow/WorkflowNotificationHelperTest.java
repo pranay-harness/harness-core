@@ -9,7 +9,7 @@ import static io.harness.rule.OwnerRule.MOUNIK;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;

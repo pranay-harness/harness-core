@@ -13,6 +13,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +29,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "BudgetKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "budgets", noClassnameStored = true)
+@Schema(name = "Budget", description = "The Cloud Cost Budget definition")
 public final class Budget implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   @NotBlank @FdIndex String accountId;

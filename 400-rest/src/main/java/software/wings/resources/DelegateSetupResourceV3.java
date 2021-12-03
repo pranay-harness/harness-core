@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.DelegateType.DOCKER;
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_DELETE_PERMISSION;
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_EDIT_PERMISSION;
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_RESOURCE_TYPE;
@@ -118,6 +119,7 @@ public class DelegateSetupResourceV3 {
   private static final String ATTACHMENT_FILENAME = "attachment; filename=";
   public static final String YAML = ".yaml";
   private static final String TAR_GZ = ".tar.gz";
+  private static final String SH = ".sh";
 
   private final DelegateService delegateService;
   private final DelegateCache delegateCache;
@@ -961,6 +963,204 @@ public class DelegateSetupResourceV3 {
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type("text/plain; charset=UTF-8")
           .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + HARNESS_DELEGATE_VALUES_YAML + YAML)
+          .build();
+    }
+  }
+
+  @GET
+  @Path("/ng/validate-docker-delegate-details")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  @Operation(operationId = "validateDockerDelegateDetails", summary = "Validates docker delegate details.",
+      responses =
+      { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Validates docker delegate details.") })
+  public RestResponse<Void>
+  validateDockerSetupDetails(@Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Delegate name") @QueryParam("delegateName") String delegateName) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      DelegateSetupDetails delegateSetupDetails =
+          DelegateSetupDetails.builder().delegateType(DOCKER).name(delegateName).build();
+      delegateService.validateDockerSetupDetails(accountId, delegateSetupDetails, DOCKER);
+
+      return new RestResponse<>();
+    }
+  }
+
+  @POST
+  @Path("/ng/docker")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  @Operation(operationId = "downloadNgDocker",
+      summary =
+          "Generates docker-compose.yaml or launch-docker-delegate.sh file from the data specified in request body (Delegate setup details).",
+      responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Generated yaml or sh file.") })
+  public Response
+  downloadNgDocker(@Context HttpServletRequest request,
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @RequestBody(required = true, description = "Delegate setup details, containing data to populate file values.")
+      DelegateSetupDetails delegateSetupDetails) throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      String managerUrl = subdomainUrlHelper.getManagerUrl(request, accountId);
+      File delegateFile =
+          delegateService.downloadNgDocker(managerUrl, getVerificationUrl(request), accountId, delegateSetupDetails);
+
+      return Response.ok(delegateFile)
+          .header(CONTENT_TRANSFER_ENCODING, BINARY)
+          .type("text/plain; charset=UTF-8")
+          .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + "docker-compose.yaml")
+          .build();
+    }
+  }
+
+  @POST
+  @Path("/ng/delegate-group")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  @Operation(operationId = "createDelegateGroup", summary = "Creates delegate group.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns HTTP 200 if delegate group was created successfully.")
+      })
+  public Response
+  createDelegateGroup(@Context HttpServletRequest request,
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @RequestBody(required = true, description = "Delegate setup details, containing data to store delegate group.")
+      DelegateSetupDetails delegateSetupDetails) throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      delegateService.createDelegateGroup(accountId, delegateSetupDetails);
+
+      return Response.ok().build();
+    }
+  }
+
+  @POST
+  @Path("validate-kubernetes-yaml-with-token")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  @Operation(operationId = "validateKubernetesYaml",
+      summary = "Validates data from K8s yaml. "
+          + "Checks whether specified values passes validation checks "
+          + "used when registering a Delegate with K8s yaml file. "
+          + "Requires Delegate Token name specified in the request body.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Delegate setup details from the request")
+      })
+  // This NG specific, switching to NG access control. AuthRule to be removed also when NG access control is fully
+  // enabled.
+  public RestResponse<DelegateSetupDetails>
+  validateKubernetesYamlUsingNgToken(@Context HttpServletRequest request,
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @RequestBody(
+          required = true, description = "Delegate setup details, containing data for validation (from k8s yaml file)")
+      DelegateSetupDetails delegateSetupDetails) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_EDIT_PERMISSION);
+
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateService.validateKubernetesYamlUsingNgToken(accountId, delegateSetupDetails));
+    }
+  }
+
+  @POST
+  @Path("generate-kubernetes-yaml-with-token")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  @Operation(operationId = "generateKubernetesYaml",
+      summary = "Generates k8s yaml file from the data specified in request body (Delegate setup details).",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Generated yaml file.")
+      })
+  // This NG specific, switching to NG access control. AuthRule to be removed also when NG access control is fully
+  // enabled.
+  public Response
+  generateKubernetesYamlUsingNgToken(@Context HttpServletRequest request,
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @RequestBody(
+          required = true, description = "Delegate setup details, containing data to populate yaml file values.")
+      DelegateSetupDetails delegateSetupDetails,
+      // text/plain
+      @Parameter(description = "File format: text/plain for .yaml file, otherwise tar.gz will be generated.")
+      @QueryParam("fileFormat") MediaType fileFormat) throws IOException {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_EDIT_PERMISSION);
+
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      File delegateFile = delegateService.generateKubernetesYamlUsingNgToken(accountId, delegateSetupDetails,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), fileFormat);
+
+      if (fileFormat != null && fileFormat.equals(MediaType.TEXT_PLAIN_TYPE)) {
+        return Response.ok(delegateFile)
+            .header(CONTENT_TRANSFER_ENCODING, BINARY)
+            .type("text/plain; charset=UTF-8")
+            .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + KUBERNETES_DELEGATE + YAML)
+            .build();
+      }
+
+      return Response.ok(delegateFile)
+          .header(CONTENT_TRANSFER_ENCODING, BINARY)
+          .type(APPLICATION_ZIP_CHARSET_BINARY)
+          .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + KUBERNETES_DELEGATE + TAR_GZ)
+          .build();
+    }
+  }
+
+  @GET
+  @Path("validate-docker-delegate-details-with-token")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  @Operation(operationId = "validateDockerDelegateDetails", summary = "Validates docker delegate details.",
+      responses =
+      { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Validates docker delegate details.") })
+  public RestResponse<Void>
+  validateDockerSetupDetailsUsingToken(
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Delegate name") @QueryParam("delegateName") String delegateName) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      DelegateSetupDetails delegateSetupDetails =
+          DelegateSetupDetails.builder().delegateType(DOCKER).name(delegateName).build();
+      delegateService.validateDockerSetupDetailsUsingNgToken(accountId, delegateSetupDetails, DOCKER);
+      return new RestResponse<>();
+    }
+  }
+
+  @POST
+  @Path("docker-with-token")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  @Operation(operationId = "downloadNgDocker",
+      summary =
+          "Generates docker-compose.yaml or launch-docker-delegate.sh file from the data specified in request body (Delegate setup details).",
+      responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Generated yaml or sh file.") })
+  public Response
+  downloadNgDockerUsingToken(@Context HttpServletRequest request,
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @RequestBody(required = true, description = "Delegate setup details, containing data to populate file values.")
+      DelegateSetupDetails delegateSetupDetails) throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      String managerUrl = subdomainUrlHelper.getManagerUrl(request, accountId);
+      File delegateFile = delegateService.downloadNgDockerUsingToken(
+          managerUrl, getVerificationUrl(request), accountId, delegateSetupDetails);
+
+      return Response.ok(delegateFile)
+          .header(CONTENT_TRANSFER_ENCODING, BINARY)
+          .type("text/plain; charset=UTF-8")
+          .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + "docker-compose.yaml")
           .build();
     }
   }

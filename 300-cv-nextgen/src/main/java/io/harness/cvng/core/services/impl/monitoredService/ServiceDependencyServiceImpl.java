@@ -6,13 +6,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
-import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
-import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.entities.ServiceDependency.Key;
 import io.harness.cvng.core.entities.ServiceDependency.ServiceDependencyKeys;
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
-import io.harness.cvng.core.utils.ServiceEnvKey;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.collect.Sets;
@@ -151,54 +148,17 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
   }
 
   @Override
-  public Map<ServiceEnvKey, List<String>> getMonitoredServiceToDependentServicesMap(
-      @NonNull ProjectParams projectParams, List<MonitoredService> monitoredServices) {
-    Map<ServiceEnvKey, List<String>> monitoredServiceToDependentServicesMap = new HashMap<>();
-    monitoredServices.forEach(monitoredService -> {
-      ServiceEnvironmentParams serviceEnvironmentParams =
-          ServiceEnvironmentParams.builder()
-              .accountIdentifier(projectParams.getAccountIdentifier())
-              .orgIdentifier(projectParams.getOrgIdentifier())
-              .projectIdentifier(projectParams.getProjectIdentifier())
-              .serviceIdentifier(monitoredService.getServiceIdentifier())
-              .environmentIdentifier(monitoredService.getEnvironmentIdentifier())
-              .build();
-      ServiceEnvKey serviceEnvKey = ServiceEnvKey.builder()
-                                        .serviceIdentifier(monitoredService.getServiceIdentifier())
-                                        .envIdentifier(monitoredService.getEnvironmentIdentifier())
-                                        .build();
+  public Map<String, List<String>> getMonitoredServiceToDependentServicesMap(
+      @NonNull ProjectParams projectParams, List<String> monitoredServiceIdentifiers) {
+    Map<String, List<String>> monitoredServiceToDependentServicesMap = new HashMap<>();
+    monitoredServiceIdentifiers.forEach(monitoredServiceIdentifier -> {
       Set<ServiceDependencyDTO> serviceDependencyDTOS =
-          getDependentServicesForMonitoredService(serviceEnvironmentParams, monitoredService.getIdentifier());
+          getDependentServicesForMonitoredService(projectParams, monitoredServiceIdentifier);
       List<String> dependentServiceIdentifiers = new ArrayList<>();
       serviceDependencyDTOS.forEach(serviceDependencyDTO
           -> dependentServiceIdentifiers.add(serviceDependencyDTO.getMonitoredServiceIdentifier()));
-      monitoredServiceToDependentServicesMap.put(serviceEnvKey, dependentServiceIdentifiers);
+      monitoredServiceToDependentServicesMap.put(monitoredServiceIdentifier, dependentServiceIdentifiers);
     });
     return monitoredServiceToDependentServicesMap;
-  }
-
-  @Override
-  public void deleteByProjectIdentifier(
-      Class<ServiceDependency> clazz, String accountId, String orgIdentifier, String projectIdentifier) {
-    Query<ServiceDependency> deleteQuery = hPersistence.createQuery(ServiceDependency.class)
-                                               .filter(ServiceDependencyKeys.accountId, accountId)
-                                               .filter(ServiceDependencyKeys.orgIdentifier, orgIdentifier)
-                                               .filter(ServiceDependencyKeys.projectIdentifier, projectIdentifier);
-    hPersistence.deleteOnServer(deleteQuery);
-  }
-
-  @Override
-  public void deleteByOrgIdentifier(Class<ServiceDependency> clazz, String accountId, String orgIdentifier) {
-    Query<ServiceDependency> deleteQuery = hPersistence.createQuery(ServiceDependency.class)
-                                               .filter(ServiceDependencyKeys.accountId, accountId)
-                                               .filter(ServiceDependencyKeys.orgIdentifier, orgIdentifier);
-    hPersistence.deleteOnServer(deleteQuery);
-  }
-
-  @Override
-  public void deleteByAccountIdentifier(Class<ServiceDependency> clazz, String accountId) {
-    Query<ServiceDependency> deleteQuery =
-        hPersistence.createQuery(ServiceDependency.class).filter(ServiceDependencyKeys.accountId, accountId);
-    hPersistence.deleteOnServer(deleteQuery);
   }
 }

@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceYaml;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.SkipAutoEvaluation;
@@ -49,7 +50,7 @@ public class ServiceStepParameters implements StepParameters {
         .identifier(service.getIdentifier())
         .name(service.getName())
         .description(service.getDescription())
-        .tags(service.getTags())
+        .tags(CollectionUtils.emptyIfNull(service.getTags()))
         .serviceRefInternal(serviceConfig.getServiceRef())
         .serviceConfigInternal(ParameterField.createValueField(serviceConfig))
         .build();

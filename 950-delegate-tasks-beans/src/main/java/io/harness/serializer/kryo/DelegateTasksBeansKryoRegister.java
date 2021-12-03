@@ -16,6 +16,7 @@ import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.capability.TestingCapability;
+import io.harness.ccm.config.CCMConfig;
 import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskDetails;
@@ -290,8 +291,17 @@ import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.delegate.task.helm.HelmCmdExecResponseNG;
 import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.helm.HelmCommandRequestNG;
 import io.harness.delegate.task.helm.HelmCommandResponse;
+import io.harness.delegate.task.helm.HelmCommandResponseNG;
+import io.harness.delegate.task.helm.HelmInstallCmdResponseNG;
+import io.harness.delegate.task.helm.HelmInstallCommandRequestNG;
+import io.harness.delegate.task.helm.HelmListReleaseResponseNG;
+import io.harness.delegate.task.helm.HelmReleaseHistoryCmdResponseNG;
+import io.harness.delegate.task.helm.HelmReleaseHistoryCommandRequestNG;
+import io.harness.delegate.task.helm.HelmRollbackCommandRequestNG;
 import io.harness.delegate.task.helm.HelmValuesFetchRequest;
 import io.harness.delegate.task.helm.HelmValuesFetchResponse;
 import io.harness.delegate.task.http.HttpStepResponse;
@@ -417,11 +427,13 @@ import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.ValueType;
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.beans.AwsConfig;
 import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.s3.S3FileRequest;
 import software.wings.beans.servicenow.ServiceNowFields;
+import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
@@ -462,6 +474,9 @@ import org.json.JSONObject;
 public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
+    kryo.register(AwsConfig.class, 5013);
+    kryo.register(ShellScriptProvisionParameters.class, 7151);
+    kryo.register(CCMConfig.class, 7248);
     kryo.register(AlwaysFalseValidationCapability.class, 19036);
     kryo.register(AppDynamicsConnectionTaskParams.class, 19107);
     kryo.register(AppDynamicsConnectionTaskResponse.class, 19108);
@@ -940,6 +955,19 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CEKubernetesConnectionTaskParams.class, 543437);
     kryo.register(CEK8sValidationParams.class, 543438);
     kryo.register(ReleaseInfo.class, 543439);
+
+    kryo.register(HelmCommandRequestNG.class, 98399);
+    kryo.register(HelmCommandRequestNG.HelmCommandType.class, 98400);
+    kryo.register(HelmInstallCommandRequestNG.class, 98401);
+    kryo.register(HelmRollbackCommandRequestNG.class, 98402);
+    kryo.register(HelmReleaseHistoryCommandRequestNG.class, 98403);
+
+    kryo.register(HelmCommandResponseNG.class, 98404);
+    kryo.register(HelmInstallCmdResponseNG.class, 98405);
+    kryo.register(HelmListReleaseResponseNG.class, 98406);
+    kryo.register(HelmReleaseHistoryCmdResponseNG.class, 98407);
+    kryo.register(HelmCmdExecResponseNG.class, 98408);
+
     kryo.register(TaskNGDataException.class, 543440);
     kryo.register(K8sCanaryDataException.class, 543441);
     kryo.register(CITaskExecutionResponse.class, 543442);

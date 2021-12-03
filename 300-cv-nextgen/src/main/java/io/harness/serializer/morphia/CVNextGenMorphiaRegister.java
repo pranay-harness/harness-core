@@ -6,7 +6,6 @@ import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.HarnessCDCurrentGenActivity;
-import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity;
@@ -37,6 +36,8 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVNGLog;
 import io.harness.cvng.core.entities.DataCollectionTask;
+import io.harness.cvng.core.entities.DatadogLogCVConfig;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
 import io.harness.cvng.core.entities.HostRecord;
@@ -68,8 +69,10 @@ import io.harness.cvng.core.entities.demo.CVNGDemoPerpetualTask;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.migration.beans.CVNGSchema;
+import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
+import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.UserJourney;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
@@ -84,6 +87,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
+
 @OwnedBy(HarnessTeam.CV)
 public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
   @Override
@@ -141,7 +145,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(ServiceGuardDataCollectionTask.class);
     set.add(LogAnalysisCluster.class);
     set.add(LogClusterLearningEngineTask.class);
-    set.add(InfrastructureActivity.class);
     set.add(LogAnalysisLearningEngineTask.class);
     set.add(LogAnalysisResult.class);
     set.add(KubernetesActivitySource.class);
@@ -159,6 +162,8 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(Comparable.class);
     set.add(PrometheusCVConfig.class);
     set.add(StackdriverLogCVConfig.class);
+    set.add(DatadogMetricCVConfig.class);
+    set.add(DatadogLogCVConfig.class);
     set.add(MonitoredService.class);
     set.add(HarnessCDChangeSource.class);
     set.add(ChangeSource.class);
@@ -176,6 +181,8 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(CVNGDemoDataIndex.class);
     set.add(CVNGDemoPerpetualTask.class);
     set.add(ServiceLevelIndicator.class);
+    set.add(RatioServiceLevelIndicator.class);
+    set.add(ThresholdServiceLevelIndicator.class);
   }
 
   @Override

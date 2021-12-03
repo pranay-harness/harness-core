@@ -81,7 +81,7 @@ public class BarrierInstance implements PersistentEntity, UuidAware, PersistentR
   @SchemaIgnore
   @FdTtlIndex
   @Builder.Default
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   @UtilityClass
   public static final class BarrierInstanceKeys {

@@ -15,6 +15,7 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.MorphiaIterator;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(PL)
 public interface SecretsDao {
@@ -43,4 +44,8 @@ public interface SecretsDao {
 
   MorphiaIterator<EncryptedData, EncryptedData> listSecretsBySecretIds(
       @NotEmpty String accountId, @NotNull Set<String> secretIds);
+
+  void updateSecret(@NotNull EncryptedData encryptedData, @NotNull UpdateOperations<EncryptedData> updateOperations);
+
+  UpdateOperations<EncryptedData> getUpdateOperations();
 }

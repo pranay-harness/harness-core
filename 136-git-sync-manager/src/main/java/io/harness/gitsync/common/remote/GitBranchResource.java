@@ -1,5 +1,16 @@
 package io.harness.gitsync.common.remote;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.APPLICATION_JSON_MEDIA_TYPE;
+import static io.harness.NGCommonEntityConstants.APPLICATION_YAML_MEDIA_TYPE;
+import static io.harness.NGCommonEntityConstants.BAD_REQUEST_CODE;
+import static io.harness.NGCommonEntityConstants.BAD_REQUEST_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.INTERNAL_SERVER_ERROR_CODE;
+import static io.harness.NGCommonEntityConstants.INTERNAL_SERVER_ERROR_MESSAGE;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PAGE_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.SIZE_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.NGCommonEntityConstants;
@@ -22,6 +33,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.constraints.Max;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -46,22 +62,51 @@ import org.hibernate.validator.constraints.NotEmpty;
 @NextGenManagerAuth
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(DX)
+@Tag(name = "Git Branches", description = "Contains APIs related to Git Sync Branch")
+@io.swagger.v3.oas.annotations.responses.
+ApiResponse(responseCode = BAD_REQUEST_CODE, description = BAD_REQUEST_PARAM_MESSAGE,
+    content =
+    {
+      @Content(mediaType = APPLICATION_JSON_MEDIA_TYPE, schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = APPLICATION_YAML_MEDIA_TYPE, schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.
+ApiResponse(responseCode = INTERNAL_SERVER_ERROR_CODE, description = INTERNAL_SERVER_ERROR_MESSAGE,
+    content =
+    {
+      @Content(mediaType = APPLICATION_JSON_MEDIA_TYPE, schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = APPLICATION_YAML_MEDIA_TYPE, schema = @Schema(implementation = ErrorDTO.class))
+    })
 public class GitBranchResource {
   private final GitBranchService gitBranchService;
 
   @GET
   @Path("listBranchesWithStatus")
-  @ApiOperation(value = "Gets list of branches with their status by Git Config Identifier",
+  @ApiOperation(value = "Gets list of branches with their status by Git Sync Config Identifier",
       nickname = "getListOfBranchesWithStatus")
+  @Operation(operationId = "getListOfBranchesWithStatus",
+      summary = "Lists branches with their status(Synced, Unsynced) by Git Sync Config Identifier for the given scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Paginated list of branches with status for the given scope")
+      })
   public ResponseDTO<GitBranchListDTO>
-  listBranchesWithStatusForRepo(@NotEmpty @QueryParam(YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigIdentifier,
-      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0") int pageNum,
-      @QueryParam(NGCommonEntityConstants.SIZE) @Max(100) int pageSize,
-      @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm,
-      @QueryParam("branchSyncStatus") BranchSyncStatus branchSyncStatus) {
+  listBranchesWithStatusForRepo(@Parameter(description = "Git Sync Config Id", required = true) @NotEmpty @QueryParam(
+                                    YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigIdentifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = PAGE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue(
+          "0") int pageNum,
+      @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE) @Max(100) int pageSize,
+      @Parameter(description = "Search Term") @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue(
+          "") String searchTerm,
+      @Parameter(description = "Used to filter out Synced and Unsynced branches") @QueryParam(
+          "branchSyncStatus") BranchSyncStatus branchSyncStatus) {
     return ResponseDTO.newResponse(gitBranchService.listBranchesWithStatus(accountIdentifier, orgIdentifier,
         projectIdentifier, yamlGitConfigIdentifier, PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(),
         searchTerm, branchSyncStatus));
@@ -70,12 +115,23 @@ public class GitBranchResource {
   @POST
   @Path("sync")
   @ApiOperation(value = "Sync the new branch into harness", nickname = "syncGitBranch")
-  public ResponseDTO<Boolean> listBranchesWithStatusForRepo(
-      @NotEmpty @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String yamlGitConfigIdentifier,
-      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branchName) {
+  @Operation(operationId = "syncGitBranch",
+      summary = "Sync the content of new Git Branch into harness with Git Sync Config Identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "True if successfully synced new Git Branch into harness")
+      })
+  public ResponseDTO<Boolean>
+  listBranchesWithStatusForRepo(@Parameter(description = "Git Sync Config Id", required = true) @NotEmpty @QueryParam(
+                                    GitSyncApiConstants.REPO_IDENTIFIER_KEY) String yamlGitConfigIdentifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = "Branch Name") @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branchName) {
     return ResponseDTO.newResponse(gitBranchService.syncNewBranch(
         accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier, branchName));
   }

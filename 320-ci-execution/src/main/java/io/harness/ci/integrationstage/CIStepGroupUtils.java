@@ -57,7 +57,7 @@ public class CIStepGroupUtils {
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public List<ExecutionWrapperConfig> createExecutionWrapperWithInitializeStep(StageElementConfig stageElementConfig,
-      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure) {
+      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure, String accountId) {
     List<ExecutionWrapperConfig> mainEngineExecutionSections = new ArrayList<>();
 
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
@@ -84,7 +84,7 @@ public class CIStepGroupUtils {
 
     if (isNotEmpty(initializeExecutionSections)) {
       ExecutionWrapperConfig liteEngineStepExecutionWrapper = fetchInitializeStepExecutionWrapper(
-          initializeExecutionSections, stageElementConfig, ciExecutionArgs, ciCodebase, infrastructure);
+          initializeExecutionSections, stageElementConfig, ciExecutionArgs, ciCodebase, infrastructure, accountId);
 
       mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
       // Also execute each step individually on main engine
@@ -99,11 +99,11 @@ public class CIStepGroupUtils {
 
   private ExecutionWrapperConfig fetchInitializeStepExecutionWrapper(
       List<ExecutionWrapperConfig> liteEngineExecutionSections, StageElementConfig integrationStage,
-      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure) {
+      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure, String accountId) {
     // TODO Do not generate new id
     InitializeStepInfo initializeStepInfo = initializeStepGenerator.createInitializeStepInfo(
         ExecutionElementConfig.builder().uuid(generateUuid()).steps(liteEngineExecutionSections).build(), ciCodebase,
-        integrationStage, ciExecutionArgs, infrastructure);
+        integrationStage, ciExecutionArgs, infrastructure, accountId);
 
     try {
       String uuid = generateUuid();

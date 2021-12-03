@@ -48,6 +48,23 @@ public interface EnforcementClientService {
       FeatureRestrictionName featureRestrictionName, String accountIdentifier, long increment);
 
   /**
+   * Used only in case checking for feature restriction status in other microservices.
+   * @param featureRestrictionName
+   * @param accountIdentifier
+   * @return
+   */
+  boolean isRemoteFeatureAvailable(FeatureRestrictionName featureRestrictionName, String accountIdentifier);
+
+  /**
+   * Used only in case checking for list of feature restriction status in other microservices.
+   * @param featureRestrictionNames
+   * @param accountIdentifier
+   * @return
+   */
+  Map<FeatureRestrictionName, Boolean> getAvailabilityForRemoteFeatures(
+      List<FeatureRestrictionName> featureRestrictionNames, String accountIdentifier);
+
+  /**
    * Get a list of availability
    * @param featureRestrictionNames
    * @param accountIdentifier

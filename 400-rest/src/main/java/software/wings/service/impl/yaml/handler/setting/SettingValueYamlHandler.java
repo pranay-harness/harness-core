@@ -2,8 +2,8 @@ package software.wings.service.impl.yaml.handler.setting;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import io.harness.beans.EncryptedData;

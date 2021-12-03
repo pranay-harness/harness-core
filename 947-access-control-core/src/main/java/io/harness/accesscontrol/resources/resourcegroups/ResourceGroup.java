@@ -25,9 +25,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class ResourceGroup {
   public static final String ALL_RESOURCES_IDENTIFIER = "*";
 
-  @NotEmpty final String scopeIdentifier;
+  final String scopeIdentifier;
   @NotEmpty final String identifier;
   @NotEmpty final String name;
+  final Set<String> allowedScopeLevels;
   @NotNull final Set<String> resourceSelectors;
   final boolean fullScopeSelected;
   final boolean managed;

@@ -22,8 +22,8 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ID_KEY2;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
@@ -202,6 +202,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.validator.routines.DomainValidator;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.Mapper;
@@ -945,9 +946,12 @@ public class AccountServiceImpl implements AccountService {
                     .filter(AccountKeys.uuid, GLOBAL_ACCOUNT_ID)
                     .project("delegateConfiguration", true)
                     .get();
+      return account.getDelegateConfiguration();
     }
-
-    return account.getDelegateConfiguration();
+    return DelegateConfiguration.builder()
+        .accountVersion(true)
+        .delegateVersions(account.getDelegateConfiguration().getDelegateVersions())
+        .build();
   }
 
   @Override
@@ -1610,11 +1614,20 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account updateWhitelistedDomains(String accountId, Set<String> whitelistedDomains) {
-    Set<String> trimmedWhitelistedDomains =
+    whitelistedDomains =
         whitelistedDomains.stream().map(String::trim).filter(EmptyPredicate::isNotEmpty).collect(Collectors.toSet());
+
+    // Filter the valid domains after trimming trailing spaces
+    Set<String> validDomains =
+        whitelistedDomains.stream().filter(DomainValidator.getInstance()::isValid).collect(Collectors.toSet());
+
+    if (whitelistedDomains.size() != validDomains.size()) {
+      throw new WingsException("Invalid domain name");
+    }
+
     UpdateOperations<Account> whitelistedDomainsUpdateOperations =
         wingsPersistence.createUpdateOperations(Account.class);
-    setUnset(whitelistedDomainsUpdateOperations, AccountKeys.whitelistedDomains, trimmedWhitelistedDomains);
+    setUnset(whitelistedDomainsUpdateOperations, AccountKeys.whitelistedDomains, validDomains);
     wingsPersistence.update(wingsPersistence.createQuery(Account.class).filter(Mapper.ID_KEY, accountId),
         whitelistedDomainsUpdateOperations);
     return get(accountId);

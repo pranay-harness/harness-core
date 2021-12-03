@@ -79,7 +79,8 @@ public class RoleAssignmentChangeConsumerImplTest extends AggregatorTestBase {
     user = getRandomString(10);
     when(roleService.get(role.getIdentifier(), role.getScopeIdentifier(), ManagedFilter.NO_FILTER))
         .thenReturn(Optional.of(role));
-    when(resourceGroupService.get(resourceGroup.getIdentifier(), resourceGroup.getScopeIdentifier()))
+    when(resourceGroupService.get(
+             resourceGroup.getIdentifier(), resourceGroup.getScopeIdentifier(), ManagedFilter.NO_FILTER))
         .thenReturn(Optional.of(resourceGroup));
     when(userGroupService.get(userGroup.getIdentifier(), userGroup.getScopeIdentifier()))
         .thenReturn(Optional.of(userGroup));
@@ -134,7 +135,8 @@ public class RoleAssignmentChangeConsumerImplTest extends AggregatorTestBase {
   public void testRoleAssignmentCreation_ResourceGroupNotFound() {
     createACLsForRoleAssignment(
         Principal.builder().principalIdentifier(userGroup.getIdentifier()).principalType(USER_GROUP).build());
-    when(resourceGroupService.get(resourceGroup.getIdentifier(), resourceGroup.getScopeIdentifier()))
+    when(resourceGroupService.get(
+             resourceGroup.getIdentifier(), resourceGroup.getScopeIdentifier(), ManagedFilter.NO_FILTER))
         .thenReturn(Optional.empty());
     RoleAssignmentDBO roleAssignmentDBO =
         createACLsForRoleAssignment(Principal.builder().principalIdentifier(user).principalType(USER).build());
@@ -189,7 +191,8 @@ public class RoleAssignmentChangeConsumerImplTest extends AggregatorTestBase {
         .findByIdentifierAndScopeIdentifier(roleAssignmentDBO.getIdentifier(), roleAssignmentDBO.getScopeIdentifier());
     verify(roleAssignmentCRUDEventHandler, times(1)).handleRoleAssignmentCreate(roleAssignmentDBO);
     verify(roleService, times(1)).get(role.getIdentifier(), role.getScopeIdentifier(), ManagedFilter.NO_FILTER);
-    verify(resourceGroupService, times(1)).get(resourceGroup.getIdentifier(), resourceGroup.getScopeIdentifier());
+    verify(resourceGroupService, times(1))
+        .get(resourceGroup.getIdentifier(), resourceGroup.getScopeIdentifier(), ManagedFilter.NO_FILTER);
     if (roleAssignmentDBO.getPrincipalType().equals(USER_GROUP)) {
       verify(userGroupService, times(1)).get(userGroup.getIdentifier(), userGroup.getScopeIdentifier());
     } else {

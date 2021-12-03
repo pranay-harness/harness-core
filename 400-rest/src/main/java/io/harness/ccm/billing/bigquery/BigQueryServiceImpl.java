@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @OwnedBy(CE)
-public class BigQueryServiceImpl implements BigQueryService {
+public class BigQueryServiceImpl implements BigQueryService, io.harness.ccm.bigQuery.BigQueryService {
   @Override
   public BigQuery get() {
     return get(null, null);

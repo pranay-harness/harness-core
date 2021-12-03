@@ -5,6 +5,7 @@ import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.metrics.beans.AccountMetricContext;
 import io.harness.cvng.metrics.beans.DataCollectionTaskMetricContext;
+import io.harness.cvng.metrics.beans.LETaskMetricContext;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.metrics.AutoMetricContext;
@@ -27,8 +28,10 @@ public class MetricContextBuilder {
     addToObjContextMap(CVNGStepTask.class, cvngStepTask -> new AccountMetricContext(cvngStepTask.getAccountId()));
     addToObjContextMap(VerificationJobInstance.class,
         verificationJobInstance -> new AccountMetricContext(verificationJobInstance.getAccountId()));
-    addToObjContextMap(
-        LearningEngineTask.class, learningEngineTask -> new AccountMetricContext(learningEngineTask.getAccountId()));
+    addToObjContextMap(LearningEngineTask.class,
+        learningEngineTask
+        -> new LETaskMetricContext(
+            learningEngineTask.getAccountId(), learningEngineTask.getType().toString().toLowerCase()));
     addToObjContextMap(AnalysisStateMachine.class,
         analysisStateMachine -> new AccountMetricContext(analysisStateMachine.getAccountId()));
   }

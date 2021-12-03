@@ -70,8 +70,8 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
     final ScmConnector scmConnector =
         gitSyncConnectorHelper.getScmConnector(accountId, orgIdentifier, projectIdentifier, connectorIdentifierRef);
     if (scmConnector instanceof ManagerExecutable) {
-      final Boolean executeOnManager = ((ManagerExecutable) scmConnector).getExecuteOnManager();
-      if (executeOnManager) {
+      final Boolean executeOnDelegate = ((ManagerExecutable) scmConnector).getExecuteOnDelegate();
+      if (executeOnDelegate == Boolean.FALSE) {
         return scmRequest.apply(scmClientManagerService);
       }
     }

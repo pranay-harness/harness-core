@@ -48,6 +48,10 @@ import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuilder;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.DatadogLogCVConfig;
+import io.harness.cvng.core.entities.DatadogLogCVConfig.DatadogLogCVConfigBuilder;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig.DatadogMetricCVConfigBuilder;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigBuilder;
@@ -281,6 +285,23 @@ public class BuilderFactory {
         .productName(generateUuid());
   }
 
+  public DatadogLogCVConfigBuilder datadogLogCVConfigBuilder() {
+    return DatadogLogCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .queryName(randomAlphabetic(10))
+        .query(randomAlphabetic(10))
+        .serviceInstanceIdentifier(randomAlphabetic(10))
+        .identifier(generateUuid())
+        .monitoringSourceName(generateUuid())
+        .connectorIdentifier("DatadogLogConnector")
+        .category(CVMonitoringCategory.PERFORMANCE)
+        .productName(generateUuid());
+  }
+
   public NewRelicCVConfigBuilder newRelicCVConfigBuilder() {
     return NewRelicCVConfig.builder()
         .accountId(context.getAccountId())
@@ -309,6 +330,19 @@ public class BuilderFactory {
         .serviceIdentifier(context.getServiceIdentifier())
         .envIdentifier(context.getEnvIdentifier())
         .connectorIdentifier("connectorRef")
+        .dashboardName("dashboardName")
+        .category(CVMonitoringCategory.PERFORMANCE);
+  }
+
+  public DatadogMetricCVConfigBuilder datadogMetricCVConfigBuilder() {
+    return DatadogMetricCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .connectorIdentifier("connectorRef")
+        .dashboardId("dashboardId")
         .dashboardName("dashboardName")
         .category(CVMonitoringCategory.PERFORMANCE);
   }

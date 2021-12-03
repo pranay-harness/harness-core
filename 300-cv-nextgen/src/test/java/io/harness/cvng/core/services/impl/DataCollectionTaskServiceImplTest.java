@@ -932,8 +932,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
     verificationJobInstance.setUuid(((TestVerificationJob) verificationJob).getBaselineVerificationJobInstanceId());
 
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
+    verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
     return verificationJobInstance;
   }
   private VerificationJobDTO newVerificationJobDTO() {

@@ -7,19 +7,4 @@ metrics:
     type: Duration
     distribution: [ 0m, 15s, 30s, 1m, 2m, 4m, 8m, 16m, 32m]
     unit: "ms"
-  - metricName: learning_engine_task_total_time
-    metricDefinition: Time taken to finish from the time when it becomes elligible to finish.
-    type: Duration
-    distribution: [ 0m, 15s, 30s, 1m, 2m, 4m, 8m, 16m, 32m]
-    unit: "ms"
-  - metricName: learning_engine_task_wait_time
-    metricDefinition: Wait time after it becomes elligible to finish.
-    type: Duration
-    distribution: [ 0m, 15s, 30s, 1m, 2m, 4m, 8m, 16m, 32m]
-    unit: "ms"
-  - metricName: learning_engine_task_running_time
-    metricDefinition: Running time after the task is picked up.
-    type: Duration
-    distribution: [ 0m, 15s, 30s, 1m, 2m, 4m, 8m, 16m, 32m]
-    unit: "ms"
 

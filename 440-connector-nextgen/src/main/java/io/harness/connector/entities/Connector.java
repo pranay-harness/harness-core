@@ -86,9 +86,10 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
   String yamlGitConfigRef;
   String filePath;
   String rootFolder;
-  Boolean executeOnManager = Boolean.FALSE;
+  Boolean executeOnDelegate = Boolean.TRUE;
   @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) Boolean isEntityInvalid;
-  String invalidYamlString;
+  String invalidYamlString; // TODO: remove this field after RenameInvalidYamlStringToYamlMigration runs
+  String yaml;
 
   public void setEntityInvalid(boolean isEntityInvalid) {
     this.isEntityInvalid = isEntityInvalid;

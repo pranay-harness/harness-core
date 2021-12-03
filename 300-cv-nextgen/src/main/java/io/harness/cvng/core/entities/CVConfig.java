@@ -1,5 +1,6 @@
 package io.harness.cvng.core.entities;
 
+import static io.harness.cvng.CVConstants.CREATE_TIME_MINUTES_FOR_DEMO_CVCONFIG;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -135,7 +136,7 @@ public abstract class CVConfig
     Preconditions.checkState(getCreatedAt() != 0, "CreatedAt needs to be set to get the baseline");
     Instant startTime = Instant.ofEpochMilli(getCreatedAt());
     if (isDemo()) {
-      startTime = startTime.minus(2, ChronoUnit.HOURS);
+      startTime = startTime.minus(CREATE_TIME_MINUTES_FOR_DEMO_CVCONFIG, ChronoUnit.MINUTES);
     }
     return startTime;
   }

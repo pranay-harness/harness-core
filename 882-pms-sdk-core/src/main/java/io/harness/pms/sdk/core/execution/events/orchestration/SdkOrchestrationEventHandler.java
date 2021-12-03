@@ -16,6 +16,7 @@ import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.common.collect.ImmutableMap;
@@ -84,6 +85,8 @@ public class SdkOrchestrationEventHandler extends PmsBaseEventHandler<Orchestrat
             RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class))
         .serviceName(event.getServiceName())
         .triggerPayload(event.getTriggerPayload())
+        .endTs(event.getEndTs())
+        .moduleInfo(RecastOrchestrationUtils.fromJson(event.getModuleInfo().toStringUtf8(), PipelineModuleInfo.class))
         .tags(generateTagList(event))
         .build();
   }

@@ -13,6 +13,7 @@ public enum ManifestConfigType {
   @JsonProperty(ManifestType.HelmChart) HELM_CHART(ManifestType.HelmChart),
   @JsonProperty(ManifestType.K8Manifest) K8_MANIFEST(ManifestType.K8Manifest),
   @JsonProperty(ManifestType.Kustomize) KUSTOMIZE(ManifestType.Kustomize),
+  @JsonProperty(ManifestType.KustomizePatches) KUSTOMIZE_PATCHES(ManifestType.KustomizePatches),
   @JsonProperty(ManifestType.OpenshiftParam) OPEN_SHIFT_PARAM(ManifestType.OpenshiftParam),
   @JsonProperty(ManifestType.OpenshiftTemplate) OPEN_SHIFT_TEMPLATE(ManifestType.OpenshiftTemplate),
   @JsonProperty(ManifestType.VALUES) VALUES(ManifestType.VALUES);

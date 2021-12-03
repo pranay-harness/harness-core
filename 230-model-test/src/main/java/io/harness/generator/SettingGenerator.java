@@ -23,8 +23,8 @@ import static io.harness.testframework.framework.utils.SettingUtils.createTerraf
 import static io.harness.testframework.framework.utils.SettingUtils.createTerraformMainGitAcSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createTerraformMainGitRepoSetting;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;

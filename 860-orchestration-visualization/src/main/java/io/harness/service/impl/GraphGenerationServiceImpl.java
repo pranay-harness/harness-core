@@ -32,8 +32,10 @@ import io.harness.skip.service.VertexSkipperService;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,7 +58,6 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Override
   public void updateGraph(String planExecutionId) {
     long startTs = System.currentTimeMillis();
-
     Long lastUpdatedAt = mongoStore.getEntityUpdatedAt(
         OrchestrationGraph.ALGORITHM_ID, OrchestrationGraph.STRUCTURE_HASH, planExecutionId, null);
     if (lastUpdatedAt == null) {
@@ -73,6 +74,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
       if (unprocessedEventLogs.size() > THRESHOLD_LOG) {
         log.warn("[PMS_GRAPH] Found [{}] unprocessed event logs", unprocessedEventLogs.size());
       }
+      Set<String> processedNodeExecutionIds = new HashSet<>();
       for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
         OrchestrationEventType orchestrationEventType = orchestrationEventLog.getOrchestrationEventType();
         if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
@@ -82,6 +84,10 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
               planExecutionId, orchestrationEventLog.getNodeExecutionId(), orchestrationGraph);
         } else {
           String nodeExecutionId = orchestrationEventLog.getNodeExecutionId();
+          if (processedNodeExecutionIds.contains(nodeExecutionId)) {
+            continue;
+          }
+          processedNodeExecutionIds.add(nodeExecutionId);
           orchestrationGraph = graphStatusUpdateHelper.handleEvent(
               planExecutionId, nodeExecutionId, orchestrationEventType, orchestrationGraph);
         }

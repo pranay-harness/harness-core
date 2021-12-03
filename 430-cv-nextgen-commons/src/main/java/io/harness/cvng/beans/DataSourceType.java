@@ -13,7 +13,9 @@ public enum DataSourceType {
   STACKDRIVER_LOG("Stackdriver Log", VerificationType.LOG, "splunk"),
   KUBERNETES("Kubernetes", VerificationType.TIME_SERIES, "prometheus"),
   NEW_RELIC("New Relic", VerificationType.TIME_SERIES, "appdynamics"),
-  PROMETHEUS("Prometheus", VerificationType.TIME_SERIES, "prometheus");
+  PROMETHEUS("Prometheus", VerificationType.TIME_SERIES, "prometheus"),
+  DATADOG_METRICS("DatadogMetrics", VerificationType.TIME_SERIES, "datadog_metrics"),
+  DATADOG_LOG("DatadogLog", VerificationType.LOG, "datadog_log");
 
   private String displayName;
   private VerificationType verificationType;
@@ -35,7 +37,7 @@ public enum DataSourceType {
   }
 
   public static List<DataSourceType> getTimeSeriesTypes() {
-    return new ArrayList<>(EnumSet.of(APP_DYNAMICS, STACKDRIVER, NEW_RELIC, PROMETHEUS));
+    return new ArrayList<>(EnumSet.of(APP_DYNAMICS, STACKDRIVER, NEW_RELIC, PROMETHEUS, DATADOG_METRICS));
   }
 
   public String getDemoTemplatePrefix() {

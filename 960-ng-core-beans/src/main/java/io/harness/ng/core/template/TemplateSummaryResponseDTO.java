@@ -10,6 +10,7 @@ import io.harness.gitsync.sdk.EntityGitDetails;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import javax.validation.constraints.Size;
 import lombok.Builder;
@@ -21,6 +22,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("TemplateSummaryResponse")
+@Schema(name = "TemplateSummaryResponse", description = "This contains details of the Template Summary Response")
 @OwnedBy(CDC)
 public class TemplateSummaryResponseDTO {
   @NotEmpty String accountId;

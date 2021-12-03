@@ -1,9 +1,6 @@
 package io.harness.delegate.event.handler;
 
-import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.beans.FeatureName.TRIGGER_PROFILE_SCRIPT_EXECUTION_WF;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.util.stream.Collectors.toSet;
@@ -36,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 
 @Slf4j
 @Singleton
@@ -66,28 +62,6 @@ public class DelegateProfileEventHandler implements DelegateProfileObserver {
         }
       }
     }
-
-    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, updatedProfile.getAccountId())) {
-      boolean selectorsChanged = (isEmpty(originalProfile.getSelectors()) && isNotEmpty(updatedProfile.getSelectors()))
-          || (isNotEmpty(originalProfile.getSelectors()) && isEmpty(updatedProfile.getSelectors()))
-          || (isNotEmpty(originalProfile.getSelectors()) && isNotEmpty(updatedProfile.getSelectors())
-              && !CollectionUtils.isEqualCollection(originalProfile.getSelectors(), updatedProfile.getSelectors()));
-
-      boolean scopingRulesChanged =
-          (isEmpty(originalProfile.getScopingRules()) && isNotEmpty(updatedProfile.getScopingRules()))
-          || (isNotEmpty(originalProfile.getScopingRules()) && isEmpty(updatedProfile.getScopingRules()))
-          || (isNotEmpty(originalProfile.getScopingRules()) && isNotEmpty(updatedProfile.getScopingRules())
-              && !CollectionUtils.isEqualCollection(
-                  originalProfile.getScopingRules(), updatedProfile.getScopingRules()));
-
-      if (selectorsChanged || scopingRulesChanged) {
-        Set<String> delegateIds = fetchProfileDelegateIds(updatedProfile.getAccountId(), updatedProfile.getUuid());
-
-        for (String delegateId : delegateIds) {
-          delegateService.regenerateCapabilityPermissions(updatedProfile.getAccountId(), delegateId);
-        }
-      }
-    }
   }
 
   @Override
@@ -103,10 +77,6 @@ public class DelegateProfileEventHandler implements DelegateProfileObserver {
         triggerProfileScriptWorkflowExecution(accountId, delegateId, appliedProfile.getStartupScript());
       }
     }
-
-    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
-      delegateService.regenerateCapabilityPermissions(accountId, delegateId);
-    }
   }
 
   @Override
@@ -119,15 +89,7 @@ public class DelegateProfileEventHandler implements DelegateProfileObserver {
     processProfileScopeAndSelectorChanges(accountId, profileId);
   }
 
-  private void processProfileScopeAndSelectorChanges(String accountId, String profileId) {
-    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
-      Set<String> delegateIds = fetchProfileDelegateIds(accountId, profileId);
-
-      for (String delegateId : delegateIds) {
-        delegateService.regenerateCapabilityPermissions(accountId, delegateId);
-      }
-    }
-  }
+  private void processProfileScopeAndSelectorChanges(String accountId, String profileId) {}
 
   private Set<String> fetchProfileDelegateIds(String accountId, String profileId) {
     return persistence.createQuery(Delegate.class)

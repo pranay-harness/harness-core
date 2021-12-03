@@ -9,34 +9,29 @@ RUN microdnf update \
  && microdnf install --nodocs \
     unzip \
     procps \
-    shadow-utils \
     hostname \
     lsof \
     findutils \
  && rm -rf /var/cache/yum \
- && groupadd -r harness -g 1000560000 \
- && adduser --no-log-init -m -r -u 1000560000 -g harness harness \
- && microdnf remove shadow-utils libsemanage \
- && microdnf clean all
+ && microdnf clean all \
+ && mkdir -p /opt/harness-delegate/
 
-RUN mkdir -p /opt/harness-delegate/
 COPY scripts /opt/harness-delegate/
-
-RUN chmod +x /opt/harness-delegate/*.sh \
- && chown harness /opt/harness-delegate /opt/harness-delegate/*.sh \
- && chgrp harness /opt/harness-delegate /opt/harness-delegate/*.sh
-
-USER harness
-
-RUN mkdir -p /home/harness/bin
-ENV PATH="/home/harness/bin:${PATH}"
 
 WORKDIR /opt/harness-delegate
 
-COPY --from=adoptopenjdk/openjdk8:jre8u242-b08-ubi-minimal /opt/java/openjdk/ ./jdk8u242-b08-jre/
+ARG disable_client_tools
+ENV CLIENT_TOOLS_DOWNLOAD_DISABLED=$disable_client_tools
+RUN if [[ ( -z "$disable_client_tools") || ("$disable_client_tools" = "false") ]]; then ./client_tools.sh; fi \
+    && chmod -R 755 /opt/harness-delegate \
+    && chgrp -R 0 /opt/harness-delegate  \
+    && chmod -R g=u /opt/harness-delegate
 
+ENV HOME=/opt/harness-delegate
 ARG watcher_version
 RUN curl -#k https://app.harness.io/public/shared/watchers/builds/openjdk-8u242/$watcher_version/watcher.jar -o watcher.jar
+COPY --from=adoptopenjdk/openjdk8:jre8u242-b08-ubi-minimal /opt/java/openjdk/ ./jdk8u242-b08-jre/
+USER 1001
 CMD ./entrypoint.sh && bash -c ' \
     while [[ ! -e watcher.log ]]; do sleep 1s; done; tail -F watcher.log & \
     while [[ ! -e delegate.log ]]; do sleep 1s; done; tail -F delegate.log'

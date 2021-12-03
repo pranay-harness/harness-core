@@ -31,7 +31,7 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
-import software.wings.beans.Application;
+import software.wings.beans.CGConstants;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
@@ -302,7 +302,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                            .repositoryName(REPOSITORY_NAME)
                                            .gitConnectorId(SETTING_ID)
                                            .build();
-    gitSyncError2.setAppId(Application.GLOBAL_APP_ID);
+    gitSyncError2.setAppId(CGConstants.GLOBAL_APP_ID);
     gitSyncError2.setStatus(null);
     final String savedGitSyncError2 = persistence.save(gitSyncError2);
 
@@ -316,7 +316,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                            .repositoryName(REPOSITORY_NAME)
                                            .gitConnectorId(SETTING_ID)
                                            .build();
-    gitSyncError3.setAppId(Application.GLOBAL_APP_ID);
+    gitSyncError3.setAppId(CGConstants.GLOBAL_APP_ID);
     final String savedGitSyncError3 = persistence.save(gitSyncError3);
 
     final GitSyncError gitSyncError4 = GitSyncError.builder()
@@ -357,7 +357,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
             .repositoryName(REPOSITORY_NAME)
             .gitConnectorId(SETTING_ID)
             .build();
-    gitSyncError6.setAppId(Application.GLOBAL_APP_ID);
+    gitSyncError6.setAppId(CGConstants.GLOBAL_APP_ID);
     persistence.save(gitSyncError6);
 
     final GitSyncError gitSyncError7 =
@@ -371,7 +371,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
             .repositoryName(REPOSITORY_NAME)
             .gitConnectorId(SETTING_ID)
             .build();
-    gitSyncError7.setAppId(Application.GLOBAL_APP_ID);
+    gitSyncError7.setAppId(CGConstants.GLOBAL_APP_ID);
     persistence.save(gitSyncError7);
 
     final long _30_days_millis = System.currentTimeMillis() - Duration.ofDays(30).toMillis();

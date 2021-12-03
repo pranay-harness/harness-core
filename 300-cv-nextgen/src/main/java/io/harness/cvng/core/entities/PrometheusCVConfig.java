@@ -11,6 +11,9 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.beans.PrometheusMetricDefinition;
 import io.harness.cvng.core.beans.PrometheusMetricDefinition.PrometheusFilter;
+import io.harness.cvng.core.utils.analysisinfo.DevelopmentVerificationTransformer;
+import io.harness.cvng.core.utils.analysisinfo.LiveMonitoringTransformer;
+import io.harness.cvng.core.utils.analysisinfo.SLIMetricTransformer;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
@@ -18,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -38,9 +40,9 @@ public class PrometheusCVConfig extends MetricCVConfig {
   private List<MetricInfo> metricInfoList;
 
   @Data
-  @Builder
+  @SuperBuilder
   @FieldNameConstants(innerTypeName = "MetricInfoKeys")
-  public static class MetricInfo {
+  public static class MetricInfo extends AnalysisInfo {
     private String metricName;
     private String query;
     private String prometheusMetricName;
@@ -109,18 +111,23 @@ public class PrometheusCVConfig extends MetricCVConfig {
 
     metricDefinitions.forEach(prometheusMetricDefinition -> {
       TimeSeriesMetricType metricType = prometheusMetricDefinition.getRiskProfile().getMetricType();
-      metricInfoList.add(MetricInfo.builder()
-                             .metricName(prometheusMetricDefinition.getMetricName())
-                             .serviceFilter(prometheusMetricDefinition.getServiceFilter())
-                             .envFilter(prometheusMetricDefinition.getEnvFilter())
-                             .query(prometheusMetricDefinition.getQuery())
-                             .isManualQuery(prometheusMetricDefinition.isManualQuery())
-                             .metricType(metricType)
-                             .additionalFilters(prometheusMetricDefinition.getAdditionalFilters())
-                             .serviceInstanceFieldName(prometheusMetricDefinition.getServiceInstanceFieldName())
-                             .prometheusMetricName(prometheusMetricDefinition.getPrometheusMetric())
-                             .aggregation(prometheusMetricDefinition.getAggregation())
-                             .build());
+      metricInfoList.add(
+          MetricInfo.builder()
+              .metricName(prometheusMetricDefinition.getMetricName())
+              .serviceFilter(prometheusMetricDefinition.getServiceFilter())
+              .envFilter(prometheusMetricDefinition.getEnvFilter())
+              .query(prometheusMetricDefinition.getQuery())
+              .isManualQuery(prometheusMetricDefinition.isManualQuery())
+              .metricType(metricType)
+              .additionalFilters(prometheusMetricDefinition.getAdditionalFilters())
+              .serviceInstanceFieldName(prometheusMetricDefinition.getServiceInstanceFieldName())
+              .prometheusMetricName(prometheusMetricDefinition.getPrometheusMetric())
+              .aggregation(prometheusMetricDefinition.getAggregation())
+              .sli(SLIMetricTransformer.transformDTOtoEntity(prometheusMetricDefinition.getSli()))
+              .liveMonitoring(LiveMonitoringTransformer.transformDTOtoEntity(prometheusMetricDefinition.getAnalysis()))
+              .deploymentVerification(
+                  DevelopmentVerificationTransformer.transformDTOtoEntity(prometheusMetricDefinition.getAnalysis()))
+              .build());
 
       // add the relevant thresholds to metricPack
       Set<TimeSeriesThreshold> thresholds =

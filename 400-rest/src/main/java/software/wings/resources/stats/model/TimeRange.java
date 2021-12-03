@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.governance.TimeRangeOccurrence;
 import io.harness.time.CalendarUtils;
 import io.harness.yaml.BaseYaml;
@@ -85,6 +86,9 @@ public class TimeRange {
     if (endTime != null && freezeOccurrence != null) {
       yaml.setEndTime(String.valueOf(this.getEndTime()));
       yaml.setFreezeOccurrence(this.getFreezeOccurrence().name());
+    }
+    if (EmptyPredicate.isNotEmpty(this.getTimeZone())) {
+      yaml.setTimeZone(this.getTimeZone());
     }
     return yaml;
   }

@@ -41,6 +41,7 @@ import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.TaskFailureReason;
 import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
@@ -162,31 +163,20 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       return false;
     }
 
-    // Applicable only in case of targeting delegate for the purpose of delegate profile script execution
-    if (isNotBlank(task.getMustExecuteOnDelegateId())) {
-      if (delegateId.equals(task.getMustExecuteOnDelegateId())) {
-        delegateSelectionLogsService.logMustExecuteOnDelegateMatched(batch, task.getAccountId(), delegateId);
-        return true;
-      } else {
-        delegateSelectionLogsService.logMustExecuteOnDelegateNotMatched(batch, task.getAccountId(), delegateId);
-        return false;
-      }
-    }
-
     boolean canAssignCgNg = canAssignCgNg(delegate, task.getSetupAbstractions());
     if (!canAssignCgNg) {
-      log.info("can not assign canAssignCgNg {}", canAssignCgNg);
+      log.debug("can not assign canAssignCgNg {}", canAssignCgNg);
       return canAssignCgNg;
     }
     boolean canAssignOwner = canAssignOwner(batch, delegate, task.getSetupAbstractions());
     if (!canAssignOwner) {
-      log.info("can not assign canAssignOwner {}", canAssignOwner);
+      log.debug("can not assign canAssignOwner {}", canAssignOwner);
       return canAssignOwner;
     }
 
     boolean canAssignDelegateScopes = canAssignDelegateScopes(batch, delegate, task);
     if (!canAssignDelegateScopes) {
-      log.info("can not assign canAssignDelegateScopes {}", canAssignDelegateScopes);
+      log.debug("can not assign canAssignDelegateScopes {}", canAssignDelegateScopes);
       return canAssignDelegateScopes;
     }
 
@@ -194,13 +184,13 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         canAssignDelegateProfileScopes(batch, delegate, task.getSetupAbstractions());
 
     if (!canAssignDelegateProfileScopes) {
-      log.info("can not assign canAssignDelegateProfileScopes {}", canAssignDelegateProfileScopes);
+      log.debug("can not assign canAssignDelegateProfileScopes {}", canAssignDelegateProfileScopes);
       return canAssignDelegateProfileScopes;
     }
 
     boolean canAssignSelectors = canAssignSelectors(batch, delegate, task.getExecutionCapabilities());
     if (!canAssignSelectors) {
-      log.info("can not assign canAssignSelectors {}", canAssignSelectors);
+      log.debug("can not assign canAssignSelectors {}", canAssignSelectors);
       return canAssignSelectors;
     }
 
@@ -514,14 +504,16 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
       } else {
         if (isNotBlank(appId) && isNotBlank(envId)) {
-          Environment environment = environmentService.get(appId, envId, false);
-          if (environment == null) {
-            log.info("Environment {} referenced by scope {} does not exist.", envId, scope.getName());
+          try {
+            Environment environment = environmentService.get(appId, envId, false);
+            scopeMatchResult =
+                environment != null && scope.getEnvironmentTypes().contains(environment.getEnvironmentType())
+                ? ScopeMatchResult.SCOPE_MATCHED
+                : ScopeMatchResult.SCOPE_NOT_MATCHED;
+          } catch (InvalidRequestException ex) {
+            log.error("Environment {} referenced by scope {} does not exist.", envId, scope.getName());
+            throw ex;
           }
-          scopeMatchResult =
-              environment != null && scope.getEnvironmentTypes().contains(environment.getEnvironmentType())
-              ? ScopeMatchResult.SCOPE_MATCHED
-              : ScopeMatchResult.SCOPE_NOT_MATCHED;
         } else {
           scopeMatchResult = ScopeMatchResult.SCOPE_NOT_MATCHED;
         }

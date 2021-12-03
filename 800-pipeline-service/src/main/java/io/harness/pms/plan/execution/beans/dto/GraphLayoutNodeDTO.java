@@ -12,6 +12,7 @@ import io.harness.pms.execution.ExecutionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -26,6 +27,7 @@ import org.bson.Document;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("GraphLayoutNode")
 @OwnedBy(PIPELINE)
+@Schema(name = "GraphLayoutNode", description = "This is the view of the Graph for execution of the Pipeline.")
 public class GraphLayoutNodeDTO {
   String nodeType;
   String nodeGroup;

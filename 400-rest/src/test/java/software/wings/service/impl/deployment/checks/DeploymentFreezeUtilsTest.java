@@ -2,7 +2,7 @@ package software.wings.service.impl.deployment.checks;
 
 import static io.harness.rule.OwnerRule.PRABU;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.FREEZE_ACTIVATION_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.FREEZE_DEACTIVATION_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.PIPELINE_FREEZE_NOTIFICATION;

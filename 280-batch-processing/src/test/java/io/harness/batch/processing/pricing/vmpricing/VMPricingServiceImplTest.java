@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -18,7 +19,6 @@ import io.harness.rule.Owner;
 
 import java.io.IOException;
 import java.util.Arrays;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -28,7 +28,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 import retrofit2.Response;
 
-@Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class VMPricingServiceImplTest extends CategoryTest {
   @InjectMocks private VMPricingServiceImpl vmPricingService;
@@ -138,13 +137,38 @@ public class VMPricingServiceImplTest extends CategoryTest {
     assertThat(fargatePricingInfo.getMemoryPrice()).isGreaterThan(0d);
   }
 
-  private Response createPricingResponse() {
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testFetchInstancePriceShouldIgnoreCase() throws IOException {
+    Call<ProductDetailsResponse> pricingInfoCall = mock(Call.class);
+    when(pricingInfoCall.execute())
+        .thenReturn(
+            createPricingResponse(ProductDetails.builder().type("Standard_D16s_v3").onDemandPrice(10D).build()));
+    when(banzaiPricingClient.getPricingInfo(
+             eq(CloudProvider.AZURE.getCloudProviderName()), eq(COMPUTE_SERVICE), eq(REGION)))
+        .thenReturn(pricingInfoCall);
+
+    ProductDetails pricingInfo =
+        vmPricingService.getComputeVMPricingInfo("standard_d16s_v3", REGION, CloudProvider.AZURE);
+
+    assertThat(pricingInfo).isNotNull();
+    assertThat(pricingInfo.getType()).isEqualTo("Standard_D16s_v3");
+    assertThat(pricingInfo.getOnDemandPrice()).isEqualTo(10D);
+  }
+
+  private static Response createPricingResponse() {
     ProductDetails productDetails = ProductDetails.builder()
                                         .cpusPerVm(DEFAULT_INSTANCE_CPU)
                                         .memPerVm(DEFAULT_INSTANCE_MEMORY)
                                         .onDemandPrice(DEFAULT_INSTANCE_PRICE)
                                         .type(DEFAULT_INSTANCE_FAMILY)
                                         .build();
+
+    return createPricingResponse(productDetails);
+  }
+
+  private static Response createPricingResponse(ProductDetails productDetails) {
     ProductDetailsResponse pricingResponse =
         ProductDetailsResponse.builder().products(Arrays.asList(productDetails)).build();
     return Response.success(pricingResponse);

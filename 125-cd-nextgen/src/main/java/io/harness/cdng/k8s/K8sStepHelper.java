@@ -1,9 +1,7 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
 import static io.harness.beans.FeatureName.OPTIMIZED_GIT_FETCH_FILES;
-import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
 import static io.harness.common.ParameterFieldHelper.getBooleanParameterFieldValue;
@@ -57,6 +55,7 @@ import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome.K8sManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome.KustomizeManifestOutcomeKeys;
+import io.harness.cdng.manifest.yaml.KustomizePatchesManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome.OpenshiftManifestOutcomeKeys;
@@ -126,7 +125,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionEvaluatorUtils;
-import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.helm.HelmSubCommandType;
@@ -160,7 +158,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.validation.ExpressionUtils;
-import io.harness.remote.client.RestClientUtils;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -204,6 +201,7 @@ public class K8sStepHelper {
       ImmutableSet.of(ManifestType.K8Manifest, ManifestType.HelmChart);
 
   public static final String RELEASE_NAME = "Release Name";
+  public static final String PATCH_YAML_ID = "Patches YAML with Id [%s]";
   public static final String MISSING_INFRASTRUCTURE_ERROR = "Infrastructure section is missing or is not configured";
   public static final String RELEASE_NAME_VALIDATION_REGEX =
       "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*";
@@ -221,7 +219,6 @@ public class K8sStepHelper {
   @Inject private PipelineRbacHelper pipelineRbacHelper;
   @Inject private SdkGraphVisualizationDataService sdkGraphVisualizationDataService;
   @Inject private K8sEntityHelper k8sEntityHelper;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private AccountClient accountClient;
   @Inject private CDFeatureFlagHelper cdFeatureFlagHelper;
 
@@ -404,8 +401,8 @@ public class K8sStepHelper {
           .awsConnector((AwsConnectorDTO) awsConnectorDTO.getConnectorConfig())
           .encryptedDataDetails(
               k8sEntityHelper.getEncryptionDataDetails(awsConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
-          .useLatestChartMuseumVersion(
-              featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, AmbianceUtils.getAccountId(ambiance)))
+          .useLatestChartMuseumVersion(cdFeatureFlagHelper.isEnabled(
+              AmbianceUtils.getAccountId(ambiance), FeatureName.USE_LATEST_CHARTMUSEUM_VERSION))
           .build();
     }
 
@@ -423,8 +420,8 @@ public class K8sStepHelper {
           .gcpConnector((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
           .encryptedDataDetails(
               k8sEntityHelper.getEncryptionDataDetails(gcpConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
-          .useLatestChartMuseumVersion(
-              featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, AmbianceUtils.getAccountId(ambiance)))
+          .useLatestChartMuseumVersion(cdFeatureFlagHelper.isEnabled(
+              AmbianceUtils.getAccountId(ambiance), FeatureName.USE_LATEST_CHARTMUSEUM_VERSION))
           .build();
     }
 
@@ -632,6 +629,20 @@ public class K8sStepHelper {
     return renderedValuesFileContents;
   }
 
+  public List<String> renderPatches(
+      ManifestOutcome manifestOutcome, Ambiance ambiance, List<String> patchesFileContents) {
+    if (!isUseLatestKustomizeVersion(AmbianceUtils.getAccountId(ambiance)) || null == manifestOutcome) {
+      return emptyList();
+    }
+
+    if (isEmpty(patchesFileContents) || !ManifestType.Kustomize.equals(manifestOutcome.getType())) {
+      return emptyList();
+    }
+    return patchesFileContents.stream()
+        .map(patchesFileContent -> engineExpressionService.renderExpression(ambiance, patchesFileContent))
+        .collect(Collectors.toList());
+  }
+
   public TaskChainResponse executeValuesFetchTask(Ambiance ambiance, StepElementParameters stepElementParameters,
       InfrastructureOutcome infrastructure, ManifestOutcome k8sManifestOutcome,
       List<ValuesManifestOutcome> aggregatedValuesManifests, String helmValuesYamlContent) {
@@ -671,6 +682,19 @@ public class K8sStepHelper {
 
     return getGitFetchFileTaskChainResponse(
         ambiance, gitFetchFilesConfigs, stepElementParameters, k8sStepPassThroughData, true);
+  }
+
+  public TaskChainResponse prepareKustomizePatchesFetchTask(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
+      StepElementParameters stepElementParameters, InfrastructureOutcome infrastructure,
+      ManifestOutcome k8sManifestOutcome, List<KustomizePatchesManifestOutcome> kustomizePatchesManifests) {
+    StoreConfig storeConfig = k8sManifestOutcome.getStore();
+    if (ManifestStoreType.isInGitSubset(storeConfig.getKind())) {
+      return prepareGitFetchPatchesTaskChainResponse(
+          ambiance, stepElementParameters, infrastructure, k8sManifestOutcome, kustomizePatchesManifests);
+    }
+
+    return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
+        K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build(), true, null);
   }
 
   public TaskChainResponse prepareValuesFetchTask(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
@@ -725,6 +749,24 @@ public class K8sStepHelper {
         ambiance, gitFetchFilesConfigs, stepElementParameters, k8sStepPassThroughData, true);
   }
 
+  private TaskChainResponse prepareGitFetchPatchesTaskChainResponse(Ambiance ambiance,
+      StepElementParameters stepElementParameters, InfrastructureOutcome infrastructure,
+      ManifestOutcome k8sManifestOutcome, List<KustomizePatchesManifestOutcome> kustomizePathcesManifests) {
+    LinkedList<KustomizePatchesManifestOutcome> orderedPatchesManifests = new LinkedList<>(kustomizePathcesManifests);
+    List<GitFetchFilesConfig> gitFetchFilesConfigs =
+        mapPatchesManifestToGitFetchFileConfig(kustomizePathcesManifests, ambiance);
+
+    K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
+                                                        .k8sManifestOutcome(k8sManifestOutcome)
+                                                        .kustomizePatchesManifestOutcomes(orderedPatchesManifests)
+                                                        .openshiftParamManifestOutcomes(emptyList())
+                                                        .infrastructure(infrastructure)
+                                                        .build();
+
+    return getGitFetchFileTaskChainResponse(
+        ambiance, gitFetchFilesConfigs, stepElementParameters, k8sStepPassThroughData, true);
+  }
+
   private GitFetchFilesConfig mapK8sOrHelmValuesManifestToGitFetchFileConfig(
       ValuesManifestOutcome valuesManifestOutcome, Ambiance ambiance, ManifestOutcome k8sManifestOutcome) {
     String validationMessage = format("Values YAML with Id [%s]", valuesManifestOutcome.getIdentifier());
@@ -739,6 +781,16 @@ public class K8sStepHelper {
         .map(valuesManifestOutcome
             -> getGitFetchFilesConfig(ambiance, valuesManifestOutcome.getStore(),
                 format("Values YAML with Id [%s]", valuesManifestOutcome.getIdentifier()), valuesManifestOutcome))
+        .collect(Collectors.toList());
+  }
+
+  private List<GitFetchFilesConfig> mapPatchesManifestToGitFetchFileConfig(
+      List<KustomizePatchesManifestOutcome> aggregatedPatchesManifests, Ambiance ambiance) {
+    return aggregatedPatchesManifests.stream()
+        .filter(patchesManifestOutcome -> ManifestStoreType.isInGitSubset(patchesManifestOutcome.getStore().getKind()))
+        .map(patchesManifestOutcome
+            -> getGitFetchFilesConfig(ambiance, patchesManifestOutcome.getStore(),
+                format(PATCH_YAML_ID, patchesManifestOutcome.getIdentifier()), patchesManifestOutcome))
         .collect(Collectors.toList());
   }
 
@@ -880,8 +932,14 @@ public class K8sStepHelper {
 
     ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(manifestsOutcome.values());
     if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
-      return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
-          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true, null);
+      if (isUseLatestKustomizeVersion(AmbianceUtils.getAccountId(ambiance))) {
+        return prepareKustomizeTemplateWithPatchesManifest(k8sStepExecutor,
+            getOrderedManifestOutcome(manifestsOutcome.values()), k8sManifestOutcome, ambiance, stepElementParameters,
+            infrastructureOutcome);
+      } else {
+        return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
+            K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true, null);
+      }
     }
 
     if (VALUES_YAML_SUPPORTED_MANIFEST_TYPES.contains(k8sManifestOutcome.getType())) {
@@ -929,6 +987,23 @@ public class K8sStepHelper {
 
     return prepareOpenshiftParamFetchTask(
         ambiance, stepElementParameters, infrastructureOutcome, k8sManifestOutcome, openshiftParamManifests);
+  }
+
+  private TaskChainResponse prepareKustomizeTemplateWithPatchesManifest(K8sStepExecutor k8sStepExecutor,
+      List<ManifestOutcome> manifestOutcomes, ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
+      StepElementParameters stepElementParameters, InfrastructureOutcome infrastructureOutcome) {
+    List<KustomizePatchesManifestOutcome> kustomizePatchesManifests = getKustomizePatchesManifests(manifestOutcomes);
+
+    if (isNotEmpty(kustomizePatchesManifests) && !isAnyRemoteStore(kustomizePatchesManifests)) {
+      List<String> kustomizePatchesContentsForLocalStore =
+          getPatchesFileContentsForLocalStore(kustomizePatchesManifests);
+      return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters,
+          kustomizePatchesContentsForLocalStore,
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true, null);
+    }
+
+    return prepareKustomizePatchesFetchTask(k8sStepExecutor, ambiance, stepElementParameters, infrastructureOutcome,
+        k8sManifestOutcome, kustomizePatchesManifests);
   }
 
   private TaskChainResponse prepareK8sOrHelmWithValuesManifests(K8sStepExecutor k8sStepExecutor,
@@ -983,6 +1058,22 @@ public class K8sStepHelper {
     return aggregateValuesManifests;
   }
 
+  public List<KustomizePatchesManifestOutcome> getKustomizePatchesManifests(
+      @NotEmpty List<ManifestOutcome> manifestOutcomeList) {
+    List<KustomizePatchesManifestOutcome> kustomizePatchesManifests = new ArrayList<>();
+
+    List<KustomizePatchesManifestOutcome> servicePatchesManifests =
+        manifestOutcomeList.stream()
+            .filter(manifestOutcome -> ManifestType.KustomizePatches.equals(manifestOutcome.getType()))
+            .map(manifestOutcome -> (KustomizePatchesManifestOutcome) manifestOutcome)
+            .collect(Collectors.toList());
+
+    if (isNotEmpty(servicePatchesManifests)) {
+      kustomizePatchesManifests.addAll(servicePatchesManifests);
+    }
+    return kustomizePatchesManifests;
+  }
+
   @VisibleForTesting
   public List<OpenshiftParamManifestOutcome> getOpenshiftParamManifests(
       @NotEmpty List<ManifestOutcome> manifestOutcomeList) {
@@ -1005,6 +1096,12 @@ public class K8sStepHelper {
     return emptyList();
   }
 
+  private List<String> getPatchesFileContentsForLocalStore(
+      List<KustomizePatchesManifestOutcome> kustomizePatchesManifests) {
+    // TODO: implement when local store is available
+    return emptyList();
+  }
+
   private List<ManifestOutcome> getOrderedManifestOutcome(Collection<ManifestOutcome> manifestOutcomes) {
     return manifestOutcomes.stream()
         .sorted(Comparator.comparingInt(ManifestOutcome::getOrder))
@@ -1016,7 +1113,7 @@ public class K8sStepHelper {
         openshiftParamManifest -> ManifestStoreType.isInGitSubset(openshiftParamManifest.getStore().getKind()));
   }
 
-  private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifestOutcome> aggregatedValuesManifests) {
+  private boolean isAnyRemoteStore(@NotEmpty List<? extends ManifestOutcome> aggregatedValuesManifests) {
     return aggregatedValuesManifests.stream().anyMatch(
         valuesManifest -> ManifestStoreType.isInGitSubset(valuesManifest.getStore().getKind()));
   }
@@ -1150,6 +1247,10 @@ public class K8sStepHelper {
       List<? extends ManifestOutcome> openshiftParamManifestOutcomes =
           k8sStepPassThroughData.getOpenshiftParamManifestOutcomes();
       return getManifestFilesContents(gitFetchFilesResultMap, openshiftParamManifestOutcomes);
+    } else if (ManifestType.Kustomize.equals(k8sManifest.getType())) {
+      List<? extends ManifestOutcome> kustomizePatchesManifestOutcomes =
+          k8sStepPassThroughData.getKustomizePatchesManifestOutcomes();
+      return getManifestFilesContents(gitFetchFilesResultMap, kustomizePatchesManifestOutcomes);
     } else {
       List<? extends ManifestOutcome> valuesManifests = k8sStepPassThroughData.getValuesManifestOutcomes();
       return getManifestFilesContents(gitFetchFilesResultMap, valuesManifests);
@@ -1179,6 +1280,11 @@ public class K8sStepHelper {
       case ManifestType.VALUES:
         ValuesManifestOutcome valuesManifestOutcome = (ValuesManifestOutcome) manifestOutcome;
         return valuesManifestOutcome.getStore();
+
+      case ManifestType.KustomizePatches:
+        KustomizePatchesManifestOutcome kustomizePatchesManifestOutcome =
+            (KustomizePatchesManifestOutcome) manifestOutcome;
+        return kustomizePatchesManifestOutcome.getStore();
 
       case ManifestType.OpenshiftParam:
         OpenshiftParamManifestOutcome openshiftParamManifestOutcome = (OpenshiftParamManifestOutcome) manifestOutcome;
@@ -1401,11 +1507,10 @@ public class K8sStepHelper {
   }
 
   public boolean isUseLatestKustomizeVersion(String accountId) {
-    return RestClientUtils.getResponse(
-        accountClient.isFeatureFlagEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE.name(), accountId));
+    return cdFeatureFlagHelper.isEnabled(accountId, FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE);
   }
 
   public boolean isUseNewKubectlVersion(String accountId) {
-    return featureFlagService.isEnabled(NEW_KUBECTL_VERSION, accountId);
+    return cdFeatureFlagHelper.isEnabled(accountId, FeatureName.NEW_KUBECTL_VERSION);
   }
 }
