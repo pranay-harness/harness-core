@@ -1,8 +1,10 @@
 package io.harness.cvng.servicelevelobjective.services.impl;
 
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
@@ -30,6 +32,7 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
   @Inject private Map<SLIMetricType, ServiceLevelIndicatorUpdatableEntity> serviceLevelIndicatorMapBinder;
   @Inject private ServiceLevelIndicatorEntityAndDTOTransformer serviceLevelIndicatorEntityAndDTOTransformer;
   @Inject private VerificationTaskService verificationTaskService;
+  @Inject private HealthSourceService healthSourceService;
 
   @Override
   public List<String> create(ProjectParams projectParams, List<ServiceLevelIndicatorDTO> serviceLevelIndicatorDTOList,
@@ -147,7 +150,8 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
         projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
   }
 
-  private ServiceLevelIndicator getServiceLevelIndicator(ProjectParams projectParams, String identifier) {
+  @Override
+  public ServiceLevelIndicator getServiceLevelIndicator(ProjectParams projectParams, String identifier) {
     return hPersistence.createQuery(ServiceLevelIndicator.class)
         .filter(ServiceLevelIndicatorKeys.accountId, projectParams.getAccountIdentifier())
         .filter(ServiceLevelIndicatorKeys.orgIdentifier, projectParams.getOrgIdentifier())
@@ -158,5 +162,12 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
 
   private ServiceLevelIndicatorDTO sliEntityToDTO(ServiceLevelIndicator serviceLevelIndicator) {
     return serviceLevelIndicatorEntityAndDTOTransformer.getDto(serviceLevelIndicator);
+  }
+
+  @Override
+  public List<CVConfig> fetchCVConfigForSLI(ServiceLevelIndicator serviceLevelIndicator) {
+    return healthSourceService.getCVConfigs(serviceLevelIndicator.getAccountId(),
+        serviceLevelIndicator.getOrgIdentifier(), serviceLevelIndicator.getProjectIdentifier(),
+        serviceLevelIndicator.getMonitoredServiceIdentifier(), serviceLevelIndicator.getHealthSourceIdentifier());
   }
 }

@@ -223,6 +223,7 @@ import io.harness.cvng.statemachine.services.api.DeploymentLogAnalysisStateExecu
 import io.harness.cvng.statemachine.services.api.DeploymentLogClusterStateExecutor;
 import io.harness.cvng.statemachine.services.api.OrchestrationService;
 import io.harness.cvng.statemachine.services.api.PreDeploymentLogClusterStateExecutor;
+import io.harness.cvng.statemachine.services.api.SLIMetricAnalysisStateExecutor;
 import io.harness.cvng.statemachine.services.api.ServiceGuardLogAnalysisStateExecutor;
 import io.harness.cvng.statemachine.services.api.ServiceGuardLogClusterStateExecutor;
 import io.harness.cvng.statemachine.services.api.ServiceGuardTimeSeriesAnalysisStateExecutor;
@@ -608,6 +609,8 @@ public class CVServiceModule extends AbstractModule {
         .to(ServiceGuardLogClusterStateExecutor.class);
     stateTypeAnalysisStateExecutorMap.addBinding(StateType.SERVICE_GUARD_TREND_ANALYSIS)
         .to(ServiceGuardTrendAnalysisStateExecutor.class);
+    stateTypeAnalysisStateExecutorMap.addBinding(StateType.SLI_METRIC_ANALYSIS)
+        .to(SLIMetricAnalysisStateExecutor.class);
   }
 
   private void bindDataSourceConnectivityChecker() {

@@ -13,7 +13,6 @@ import io.harness.cvng.core.services.api.DataCollectionTaskManagementService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 
@@ -33,7 +32,6 @@ public class SLIDataCollectionTaskServiceImpl implements DataCollectionTaskManag
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
-  @Inject private HealthSourceService healthSourceService;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
 
   @Override
@@ -59,7 +57,7 @@ public class SLIDataCollectionTaskServiceImpl implements DataCollectionTaskManag
   }
 
   private void enqueueFirstTask(ServiceLevelIndicator serviceLevelIndicator) {
-    List<CVConfig> cvConfigList = fetchCVConfigForSLI(serviceLevelIndicator);
+    List<CVConfig> cvConfigList = serviceLevelIndicatorService.fetchCVConfigForSLI(serviceLevelIndicator);
     cvConfigList.forEach(cvConfig -> dataCollectionTaskService.populateMetricPack(cvConfig));
     TimeRange dataCollectionRange = cvConfigList.get(0).getFirstTimeDataCollectionTimeRange();
     DataCollectionTask dataCollectionTask = getDataCollectionTaskForSLI(
@@ -77,7 +75,7 @@ public class SLIDataCollectionTaskServiceImpl implements DataCollectionTaskManag
       log.info("ServiceLevelIndicator no longer exists for verificationTaskId {}", prevSLITask.getVerificationTaskId());
       return;
     }
-    List<CVConfig> cvConfigList = fetchCVConfigForSLI(serviceLevelIndicator);
+    List<CVConfig> cvConfigList = serviceLevelIndicatorService.fetchCVConfigForSLI(serviceLevelIndicator);
     cvConfigList.forEach(cvConfig -> dataCollectionTaskService.populateMetricPack(cvConfig));
     Instant nextTaskStartTime = prevSLITask.getEndTime();
     Instant currentTime = clock.instant();
@@ -93,12 +91,6 @@ public class SLIDataCollectionTaskServiceImpl implements DataCollectionTaskManag
     }
     dataCollectionTaskService.validateIfAlreadyExists(dataCollectionTask);
     dataCollectionTaskService.save(dataCollectionTask);
-  }
-
-  private List<CVConfig> fetchCVConfigForSLI(ServiceLevelIndicator serviceLevelIndicator) {
-    return healthSourceService.getCVConfigs(serviceLevelIndicator.getAccountId(),
-        serviceLevelIndicator.getOrgIdentifier(), serviceLevelIndicator.getProjectIdentifier(),
-        serviceLevelIndicator.getMonitoredServiceIdentifier(), serviceLevelIndicator.getHealthSourceIdentifier());
   }
 
   private DataCollectionTask getDataCollectionTaskForSLI(
