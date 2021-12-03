@@ -544,7 +544,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                              : emptyList())
               .sampleDelegate(isSample)
               .location(Paths.get("").toAbsolutePath().toString())
-              .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")))
+              .ceEnabled(Boolean.parseBoolean(System.getenv("ENABLE_CE")))
               .delegateTokenName(delegateTokenName);
 
       delegateId = registerDelegate(builder);
