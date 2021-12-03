@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
-import static software.wings.beans.SettingAttribute.SettingCategory.SETTING;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -25,12 +24,14 @@ import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.security.auth.SettingAuthHandler;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.validation.SmtpConnectivityValidationAttributes;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -57,6 +58,7 @@ public class SettingResourceNg {
   @Inject private SettingValidationService settingValidationService;
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private SecretManager secretManager;
+  static final String NG_SMTP_SETTINGS_PREFIX = "ngSmtpConfig-";
 
   @POST
   @Timed
@@ -78,6 +80,7 @@ public class SettingResourceNg {
     settingAuthHandler.authorize(variable, appId);
     SettingAttribute savedSettingAttribute = settingsService.saveWithPruning(variable, appId, accountId);
     settingServiceHelper.updateSettingAttributeBeforeResponse(savedSettingAttribute, false);
+    secretManager.maskEncryptedFields((EncryptableSetting) savedSettingAttribute.getValue());
     return new RestResponse<>(savedSettingAttribute);
   }
 
@@ -97,29 +100,39 @@ public class SettingResourceNg {
   @Timed
   @ExceptionMetered
   @InternalApi
-  public RestResponse<ValidationResult> validateConnectivity(
+  public RestResponse<ValidationResult> validateConnectivity(@QueryParam("attrId") String attrId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
-      @QueryParam("to") String to, @QueryParam("subject") String subject, @QueryParam("body") String body,
-      SettingAttribute variable) {
-    variable.setCategory(SETTING);
+      @QueryParam("to") String to, @QueryParam("subject") String subject, @QueryParam("body") String body) {
+    SettingAttribute existingAttribute = settingsService.get(appId, attrId);
     SmtpConnectivityValidationAttributes smtpAttr =
         SmtpConnectivityValidationAttributes.builder().to(to).body(body).subject(subject).build();
-    variable.setValidationAttributes(smtpAttr);
-    settingAuthHandler.authorize(variable, appId);
-    return new RestResponse<>(settingsService.validateConnectivityWithPruning(variable, appId, accountId));
+    existingAttribute.setValidationAttributes(smtpAttr);
+    settingAuthHandler.authorize(existingAttribute, appId);
+    ValidationResult response = settingsService.validateConnectivityWithPruning(existingAttribute, appId, accountId);
+    return new RestResponse<>(response);
   }
 
   @GET
-  @Path("{attrId}")
   @Timed
   @ExceptionMetered
   @InternalApi
-  public RestResponse<SettingAttribute> get(
-      @PathParam("attrId") String attrId, @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId) {
-    SettingAttribute result = settingsService.get(appId, attrId);
-    settingServiceHelper.updateSettingAttributeBeforeResponse(result, true);
-    secretManager.maskEncryptedFields((EncryptableSetting) result.getValue());
-    return new RestResponse<>(result);
+  public RestResponse<SettingAttribute> get(@QueryParam("accountId") String accountId) {
+    List<SettingAttribute> smtpAttribute =
+        settingsService.getGlobalSettingAttributesByType(accountId, SettingVariableTypes.SMTP.name());
+    SettingAttribute existingConfigWithNgSmtpSettingsPrefix = null;
+    for (SettingAttribute settingAttribute : smtpAttribute) {
+      String smtpAttributeName = settingAttribute.getName();
+      if (smtpAttributeName != null && smtpAttributeName.length() >= 13
+          && smtpAttributeName.startsWith(NG_SMTP_SETTINGS_PREFIX)) {
+        existingConfigWithNgSmtpSettingsPrefix = settingAttribute;
+        break;
+      }
+    }
+    if (existingConfigWithNgSmtpSettingsPrefix != null) {
+      settingServiceHelper.updateSettingAttributeBeforeResponse(existingConfigWithNgSmtpSettingsPrefix, true);
+      secretManager.maskEncryptedFields((EncryptableSetting) existingConfigWithNgSmtpSettingsPrefix.getValue());
+    }
+    return new RestResponse<>(existingConfigWithNgSmtpSettingsPrefix);
   }
 
   @PUT
@@ -148,6 +161,7 @@ public class SettingResourceNg {
     settingAuthHandler.authorize(variable, appId);
     SettingAttribute updatedSettingAttribute = settingsService.updateWithSettingFields(variable, attrId, appId);
     settingServiceHelper.updateSettingAttributeBeforeResponse(updatedSettingAttribute, false);
+    secretManager.maskEncryptedFields((EncryptableSetting) updatedSettingAttribute.getValue());
     return new RestResponse<>(updatedSettingAttribute);
   }
 
