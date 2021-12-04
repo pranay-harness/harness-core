@@ -19,11 +19,14 @@ public class RatioServiceLevelIndicatorTransformer
         .orgIdentifier(projectParams.getOrgIdentifier())
         .projectIdentifier(projectParams.getProjectIdentifier())
         .identifier(serviceLevelIndicatorDTO.getIdentifier())
+        .sliMissingDataType(serviceLevelIndicatorDTO.getSliMissingDataType())
         .name(serviceLevelIndicatorDTO.getName())
         .type(serviceLevelIndicatorDTO.getType())
         .metric1(ratioSLIMetricSpec.getMetric1())
         .metric2(ratioSLIMetricSpec.getMetric2())
         .eventType(ratioSLIMetricSpec.getEventType())
+        .thresholdValue(ratioSLIMetricSpec.getThresholdValue())
+        .thresholdType(ratioSLIMetricSpec.getThresholdType())
         .monitoredServiceIdentifier(monitoredServiceIndicator)
         .healthSourceIdentifier(healthSourceIndicator)
         .build();
@@ -37,6 +40,8 @@ public class RatioServiceLevelIndicatorTransformer
                   .eventType(serviceLevelIndicator.getEventType())
                   .metric1(serviceLevelIndicator.getMetric1())
                   .metric2(serviceLevelIndicator.getMetric2())
+                  .thresholdValue(serviceLevelIndicator.getThresholdValue())
+                  .thresholdType(serviceLevelIndicator.getThresholdType())
                   .build())
         .build();
   }

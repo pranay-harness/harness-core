@@ -1,5 +1,6 @@
 package io.harness.cvng.servicelevelobjective.beans.slimetricspec;
 
+import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -19,6 +20,10 @@ public class RatioSLIMetricSpec extends SLIMetricSpec {
   @NotNull String eventType;
   @NotNull String metric1;
   @NotNull String metric2;
+  // TODO Not null constraint post UI changes
+  Double thresholdValue;
+  // TODO Not null constraint post UI changes
+  TimeSeriesThresholdType thresholdType;
 
   @Override
   public SLIMetricType getType() {
