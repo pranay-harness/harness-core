@@ -1,8 +1,10 @@
 package io.harness.enforcement.client.services.impl;
 
+import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import io.harness.ModuleType;
+import io.harness.configuration.DeployVariant;
 import io.harness.enforcement.beans.CustomRestrictionEvaluationDTO;
 import io.harness.enforcement.beans.details.FeatureRestrictionDetailListRequestDTO;
 import io.harness.enforcement.beans.details.FeatureRestrictionDetailRequestDTO;
@@ -51,6 +53,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
 
   private static final String ENABLED = "enabled";
   private static final String MESSAGE = "message";
+  private static String deployVersion = System.getenv().get(DEPLOY_VERSION);
 
   @Inject
   public EnforcementClientServiceImpl(EnforcementClient enforcementClient,
@@ -63,7 +66,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
 
   @Override
   public boolean isEnforcementEnabled() {
-    return enforcementClientConfiguration.isEnforcementCheckEnabled();
+    return enforcementClientConfiguration.isEnforcementCheckEnabled() || DeployVariant.isCommunity(deployVersion);
   }
 
   @Override

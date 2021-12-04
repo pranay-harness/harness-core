@@ -8,6 +8,7 @@ import io.harness.serializer.KryoSerializer;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
+import java.lang.reflect.Method;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.DEL)
@@ -21,25 +22,36 @@ public abstract class AbstractRemoteInformer {
     this.eventProducer = eventProducer;
   }
 
-  public void fireInform(String methodName, Class<?> observerClass, Class<?> subjectClass, Object... param) {
+  public void fireInform(Method method, Class<?> subjectClass, Object... param) {
     final int length = param.length;
+    final String methodName = method.getName();
     Informant.Builder informantBuilder = Informant.newBuilder().setMethodName(methodName);
     switch (length) {
       case 0:
         informantBuilder.setInformant0(Informant0.newBuilder().build());
         break;
       case 1:
-        informantBuilder.setInformant1(Informant1.newBuilder().setParam1(getByteString(param[0])).build());
+        informantBuilder.setInformant1(Informant1.newBuilder()
+                                           .setParam1(getByteString(param[0]))
+                                           .setType1(method.getParameterTypes()[0].getName())
+                                           .build());
         break;
       case 2:
-        informantBuilder.setInformant2(
-            Informant2.newBuilder().setParam1(getByteString(param[0])).setParam2(getByteString(param[1])).build());
+        informantBuilder.setInformant2(Informant2.newBuilder()
+                                           .setParam1(getByteString(param[0]))
+                                           .setParam2(getByteString(param[1]))
+                                           .setType1(method.getParameterTypes()[0].getName())
+                                           .setType2(method.getParameterTypes()[1].getName())
+                                           .build());
         break;
       case 3:
         informantBuilder.setInformant3(Informant3.newBuilder()
                                            .setParam1(getByteString(param[0]))
                                            .setParam2(getByteString(param[1]))
-                                           .setParam3(getByteString(param[3]))
+                                           .setParam3(getByteString(param[2]))
+                                           .setType1(method.getParameterTypes()[0].getName())
+                                           .setType2(method.getParameterTypes()[1].getName())
+                                           .setType3(method.getParameterTypes()[2].getName())
                                            .build());
         break;
       case 4:
@@ -48,6 +60,10 @@ public abstract class AbstractRemoteInformer {
                                            .setParam2(getByteString(param[1]))
                                            .setParam3(getByteString(param[2]))
                                            .setParam4(getByteString(param[3]))
+                                           .setType1(method.getParameterTypes()[0].getName())
+                                           .setType2(method.getParameterTypes()[1].getName())
+                                           .setType3(method.getParameterTypes()[2].getName())
+                                           .setType4(method.getParameterTypes()[3].getName())
                                            .build());
         break;
       default:
@@ -57,7 +73,7 @@ public abstract class AbstractRemoteInformer {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of(RemoteObserverConstants.SUBJECT_CLASS_NAME, subjectClass.getName(),
-                  RemoteObserverConstants.OBSERVER_CLASS_NAME, observerClass.getName()))
+                  RemoteObserverConstants.OBSERVER_CLASS_NAME, method.getDeclaringClass().getName()))
               .setData(informantBuilder.build().toByteString())
               .build());
     } catch (Exception e) {
@@ -67,7 +83,7 @@ public abstract class AbstractRemoteInformer {
 
   private ByteString getByteString(Object object) {
     if (object == null) {
-      return null;
+      return ByteString.EMPTY;
     }
     final byte[] bytes = kryoSerializer.asBytes(object);
     return ByteString.copyFrom(bytes);

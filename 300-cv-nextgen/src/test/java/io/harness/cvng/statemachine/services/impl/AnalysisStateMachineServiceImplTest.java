@@ -5,6 +5,7 @@ import static io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStat
 import static io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus.TIMEOUT;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
@@ -28,7 +29,11 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.VerificationTask.DeploymentInfo;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
+import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.ActivityVerificationState;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
@@ -51,6 +56,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +70,8 @@ public class AnalysisStateMachineServiceImplTest extends CvNextGenTestBase {
   @Inject HPersistence hPersistence;
   @Inject private VerificationJobService verificationJobService;
   @Inject private CVConfigService cvConfigService;
+  @Inject private VerificationTaskService verificationTaskService;
+  @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
 
   private final DataGenerator dataGenerator = DataGenerator.builder().accountId(generateUuid()).build();
   private String cvConfigId;
@@ -101,6 +110,30 @@ public class AnalysisStateMachineServiceImplTest extends CvNextGenTestBase {
 
     AnalysisStateMachine stateMachine = stateMachineService.createStateMachine(inputs);
     assertThat(stateMachine).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testCreateStateMachine_forSLI() {
+    List<String> serviceLevelIndicatorIdentifiers =
+        serviceLevelIndicatorService.create(builderFactory.getProjectParams(),
+            Collections.singletonList(builderFactory.getServiceLevelIndicatorDTOBuilder()), generateUuid(),
+            generateUuid(), generateUuid());
+    ServiceLevelIndicator serviceLevelIndicator = serviceLevelIndicatorService.getServiceLevelIndicator(
+        builderFactory.getProjectParams(), serviceLevelIndicatorIdentifiers.get(0));
+    String sliId = serviceLevelIndicator.getUuid();
+    verificationTaskService.createSLIVerificationTask(generateUuid(), sliId);
+    AnalysisInput inputs = AnalysisInput.builder()
+                               .verificationTaskId(sliId)
+                               .startTime(Instant.now().minus(5, ChronoUnit.MINUTES))
+                               .endTime(Instant.now())
+                               .build();
+
+    AnalysisStateMachine stateMachine = stateMachineService.createStateMachine(inputs);
+    assertThat(stateMachine).isNotNull();
+    assertThat(stateMachine.getCurrentState().getType()).isEqualTo(AnalysisState.StateType.SLI_METRIC_ANALYSIS);
+    assertThat(stateMachine.getStatus()).isEqualTo(AnalysisStatus.CREATED);
   }
 
   @Test
