@@ -16,4 +16,5 @@ public class NextGenConfig {
   String jwtAuthSecret;
   String jwtIdentityServiceSecret;
   String ciManagerSecret;
+  String ceNextGenServiceSecret;
 }

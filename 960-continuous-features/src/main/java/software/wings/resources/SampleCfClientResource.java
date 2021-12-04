@@ -8,6 +8,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import io.swagger.annotations.Api;
 import javax.annotation.Nullable;
 import javax.ws.rs.GET;
@@ -22,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Path("/cf-feature")
 @Produces(MediaType.APPLICATION_JSON)
 public class SampleCfClientResource {
-  @Inject @Nullable private CfClient cfClient;
+  @Inject @Nullable private Provider<CfClient> cfClient;
 
   @GET
   @Timed
@@ -32,6 +33,6 @@ public class SampleCfClientResource {
     Target target = Target.builder()
                         .attributes(new ImmutableMap.Builder<String, Object>().put("accountId", accountId).build())
                         .build();
-    return new RestResponse<>(cfClient.boolVariation(featureIdentifier, target, false));
+    return new RestResponse<>(cfClient.get().boolVariation(featureIdentifier, target, false));
   }
 }

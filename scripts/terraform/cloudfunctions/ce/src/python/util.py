@@ -1,6 +1,7 @@
 import json
 import bq_schema
 import time
+import datetime
 
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
@@ -24,6 +25,7 @@ COSTAGGREGATED = "costAggregated"
 CEINTERNALDATASET = "CE_INTERNAL"
 GCPINSTANCEINVENTORY = "gcpInstanceInventory"
 GCPDISKINVENTORY = "gcpDiskInventory"
+CONNECTORDATASYNCSTATUSTABLE = "connectorDataSyncStatus"
 
 
 def print_(message, severity="INFO"):
@@ -210,3 +212,18 @@ def run_batch_query(client, query, job_config, timeout=120):
     except Exception as e:
         print_(query, "ERROR")
         print_(e)
+
+def update_connector_data_sync_status(jsonData, PROJECTID, client):
+    query = """INSERT INTO `%s.%s.%s` (accountId, connectorId, lastSuccessfullExecutionAt, jobType, cloudProviderId) 
+                VALUES ('%s', '%s', '%s', '%s', '%s')
+            """ % ( PROJECTID, CEINTERNALDATASET, CONNECTORDATASYNCSTATUSTABLE,
+                    jsonData["accountId"], jsonData["connectorId"], datetime.datetime.utcnow(), 'cloudfunction', jsonData['cloudProvider']
+    )
+
+    try:
+        print_(query)
+        query_job = client.query(query)
+        query_job.result()  # wait for job to complete
+    except Exception as e:
+        print_("  Failed to update connector data sync status", "WARN")
+        raise e

@@ -62,8 +62,9 @@ message YamlFieldBlob {
 }
 
 message FilterCreationBlobRequest {
-  map<string, YamlFieldBlob> dependencies = 1;
+  map<string, YamlFieldBlob> dependencies = 1 [deprecated = true];
   SetupMetadata setupMetadata = 2;
+  Dependencies deps = 3;
 }
 
 message FilterCreationResponse {
@@ -76,15 +77,18 @@ message FilterCreationResponse {
 message FilterCreationBlobResponse {
   string filter = 1;
   uint32 stageCount = 2;
-  map<string, YamlFieldBlob> dependencies = 3;
-  map<string, YamlFieldBlob> resolvedDependencies = 4;
+  map<string, YamlFieldBlob> dependencies = 3 [deprecated = true];
+  map<string, YamlFieldBlob> resolvedDependencies = 4 [deprecated = true];
   string startingNodeId = 6;
   repeated io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO referredEntities = 7;
   repeated string stageNames = 8;
+  Dependencies deps = 9;
+  YamlUpdates yamlUpdates = 10;
+  Dependencies resolvedDeps = 11;
 }
 
 message VariablesCreationBlobRequest {
-  map<string, YamlFieldBlob> dependencies = 1;
+  map<string, YamlFieldBlob> dependencies = 1 [deprecated = true];
   VariablesCreationMetadata metadata = 2;
   Dependencies deps = 3;
 }

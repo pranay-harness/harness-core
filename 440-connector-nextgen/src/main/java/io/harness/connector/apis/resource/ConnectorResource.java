@@ -373,6 +373,34 @@ public class ConnectorResource {
   }
 
   @POST
+  @InternalApi
+  @Path("testConnectionInternal/{identifier}")
+  @ApiOperation(value = "Test the connection internal api", nickname = "getTestConnectionResultInternal")
+  @Operation(operationId = "getTestConnectionResultInternal",
+      summary = "Tests the connection of the connector by Identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the connector validation result")
+      })
+  public ResponseDTO<ConnectorValidationResult>
+  testConnectionInternal(@NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
+    connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier)
+        .map(connector
+            -> connectorRbacHelper.checkSecretRuntimeAccessWithConnectorDTO(
+                connector.getConnector(), accountIdentifier))
+        .orElseThrow(()
+                         -> new ConnectorNotFoundException(
+                             String.format("No connector found with identifier %s", connectorIdentifier), USER));
+
+    return ResponseDTO.newResponse(
+        connectorService.testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+  }
+
+  @POST
   @Path("testGitRepoConnection/{identifier}")
   @ApiOperation(value = "Test the connection", nickname = "getTestGitRepoConnectionResult")
   @Operation(operationId = "getTestGitRepoConnectionResult", summary = "Tests the created Connector's connection",

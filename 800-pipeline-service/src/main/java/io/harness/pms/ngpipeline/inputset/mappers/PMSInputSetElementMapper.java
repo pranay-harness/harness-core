@@ -5,6 +5,7 @@ import static io.harness.pms.merger.helpers.InputSetYamlHelper.getPipelineCompon
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
+import io.harness.gitsync.sdk.EntityValidityDetails;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.merger.helpers.InputSetYamlHelper;
@@ -97,6 +98,9 @@ public class PMSInputSetElementMapper {
         .version(entity.getVersion())
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
         .isOutdated(entity.getIsInvalid())
+        .entityValidityDetails(entity.isEntityInvalid()
+                ? EntityValidityDetails.builder().valid(false).invalidYaml(entity.getYaml()).build()
+                : EntityValidityDetails.builder().valid(true).build())
         .build();
   }
 
@@ -122,6 +126,9 @@ public class PMSInputSetElementMapper {
         .invalidInputSetReferences(invalidReferences)
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
         .isOutdated(entity.getIsInvalid())
+        .entityValidityDetails(entity.isEntityInvalid()
+                ? EntityValidityDetails.builder().valid(false).invalidYaml(entity.getYaml()).build()
+                : EntityValidityDetails.builder().valid(true).build())
         .build();
   }
 
@@ -141,6 +148,9 @@ public class PMSInputSetElementMapper {
         .isOutdated(entity.getIsInvalid())
         .inputSetErrorDetails(inputSetErrorDetails)
         .overlaySetErrorDetails(overlaySetErrorDetails)
+        .entityValidityDetails(entity.isEntityInvalid()
+                ? EntityValidityDetails.builder().valid(false).invalidYaml(entity.getYaml()).build()
+                : EntityValidityDetails.builder().valid(true).build())
         .build();
   }
 }

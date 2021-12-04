@@ -101,6 +101,6 @@ public class PMSPipelineTemplateHelperTest extends CategoryTest {
     assertThatThrownBy(
         () -> pipelineTemplateHelper.resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_ID, PROJECT_ID, GIVEN_YAML))
         .isInstanceOf(NGTemplateResolveException.class)
-        .hasMessage("Exception in resolving template refs in given pipeline yaml.");
+        .hasMessage("Exception in resolving template refs in given yaml.");
   }
 }
