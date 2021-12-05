@@ -41,6 +41,7 @@ import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.GitFile;
 import io.harness.git.model.GitRepositoryType;
 
+import com.cronutils.utils.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -331,8 +332,23 @@ public class GitClientHelper {
     if ((ex instanceof GitAPIException && ex.getCause() instanceof TransportException)
         || ex instanceof JGitInternalException || ex instanceof MissingObjectException
         || ex instanceof RefNotFoundException) {
-      throw new GitConnectionDelegateException(GIT_CONNECTION_ERROR, ex.getCause(), ex.getMessage(), USER_ADMIN);
+      // Not sending the cause as it might contain some sensitive information
+      throw new GitConnectionDelegateException(
+          GIT_CONNECTION_ERROR, null, sanitizeTheErrorMessage(ex.getMessage()), USER_ADMIN);
     }
+  }
+
+  public static String sanitizeTheErrorMessage(String message) {
+    if (errorMsgContainsTheUserToken(message)) {
+      return maskUserTokenInMessage(message);
+    }
+    return null;
+  }
+
+  private static String maskUserTokenInMessage(String message) {}
+
+  public static boolean errorMsgContainsTheUserToken(String message) {
+    return false;
   }
 
   public void checkIfMissingCommitIdIssue(Exception ex, String commitId) {

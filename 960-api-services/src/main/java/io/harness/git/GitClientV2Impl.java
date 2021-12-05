@@ -16,6 +16,8 @@ import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 import static io.harness.git.Constants.HARNESS_IO_KEY_;
 import static io.harness.git.Constants.HARNESS_SUPPORT_EMAIL_KEY;
 import static io.harness.git.Constants.PATH_DELIMITER;
+import static io.harness.git.GitClientHelper.errorMsgContainsTheUserToken;
+import static io.harness.git.GitClientHelper.sanitizeTheErrorMessage;
 import static io.harness.git.model.PushResultGit.pushResultBuilder;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notEmptyCheck;
@@ -174,7 +176,8 @@ public class GitClientV2Impl implements GitClientV2 {
             log.info(
                 gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Hard reset failed for branch [{}]",
                 request.getBranch());
-            log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
+            log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING,
+                sanitizeTheException(ex));
             gitClientHelper.checkIfGitConnectivityIssue(ex);
           }
         }
@@ -205,6 +208,16 @@ public class GitClientV2Impl implements GitClientV2 {
   }
 
   @VisibleForTesting
+  private Throwable sanitizeTheException(Exception ex) {
+    if (ex instanceof TransportException) {
+      if (errorMsgContainsTheUserToken(ex.getMessage())) {
+        return null;
+      }
+    }
+    return ex;
+  }
+
+  @VisibleForTesting
   synchronized void clone(GitBaseRequest request, String gitRepoDirectory, boolean noCheckout) {
     try {
       if (new File(gitRepoDirectory).exists()) {
@@ -224,7 +237,7 @@ public class GitClientV2Impl implements GitClientV2 {
                        .setNoCheckout(noCheckout)
                        .call()) {
     } catch (GitAPIException ex) {
-      log.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: ", sanitizeTheException(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in cloning repo", USER);
     }
@@ -388,7 +401,7 @@ public class GitClientV2Impl implements GitClientV2 {
       }
 
     } catch (IOException | GitAPIException ex) {
-      log.error(GIT_YAML_LOG_PREFIX + EXCEPTION_STRING, ex);
+      log.error(GIT_YAML_LOG_PREFIX + EXCEPTION_STRING, sanitizeTheException(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in getting commit diff", ADMIN_SRE);
     }
@@ -790,15 +803,16 @@ public class GitClientV2Impl implements GitClientV2 {
         throw new YamlException(errorMsg, ADMIN_SRE);
       }
     } catch (IOException | GitAPIException ex) {
-      log.error(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType()) + EXCEPTION_STRING, ex);
-      String errorMsg = getMessage(ex);
+      log.error(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType()) + EXCEPTION_STRING,
+          sanitizeTheException(ex));
+      String errorMsg = sanitizeTheErrorMessage(getMessage(ex));
       if (ex instanceof InvalidRemoteException || ex.getCause() instanceof NoRemoteRepositoryException) {
         errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:"
             + commitAndPushRequest.getRepoUrl();
       }
 
       gitClientHelper.checkIfGitConnectivityIssue(ex);
-      throw new YamlException(errorMsg, ex, USER);
+      throw new YamlException(errorMsg, sanitizeTheException(ex), USER);
     }
   }
 
@@ -821,7 +835,8 @@ public class GitClientV2Impl implements GitClientV2 {
       checkoutCommand.call();
       log.info("Successfully Checked out commitId: " + request.getNewCommitId());
     } catch (Exception ex) {
-      log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
+      log.error(
+          gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, sanitizeTheException(ex));
       gitClientHelper.checkIfMissingCommitIdIssue(ex, request.getNewCommitId());
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + request.getNewCommitId(), USER);
@@ -1068,7 +1083,8 @@ public class GitClientV2Impl implements GitClientV2 {
       resetCommand.call();
       log.info("Resetting repo completed successfully");
     } catch (Exception ex) {
-      log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
+      log.error(
+          gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, sanitizeTheException(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in resetting repo", USER);
     }
@@ -1202,7 +1218,8 @@ public class GitClientV2Impl implements GitClientV2 {
         } else {
           log.info(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Hard reset failed for branch [{}]",
               request.getBranch());
-          log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
+          log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING,
+              sanitizeTheException(ex));
           gitClientHelper.checkIfGitConnectivityIssue(ex);
         }
       } finally {
