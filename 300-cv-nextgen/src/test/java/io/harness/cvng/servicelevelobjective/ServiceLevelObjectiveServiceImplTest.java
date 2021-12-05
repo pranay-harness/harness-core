@@ -8,10 +8,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
 import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
@@ -215,11 +217,17 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
     ratioSLIMetricSpec.setMetric1("newMetric");
     serviceLevelIndicatorDTO1.getSpec().setSpec(ratioSLIMetricSpec);
     ServiceLevelIndicatorDTO serviceLevelIndicatorDTO2 = builderFactory.getServiceLevelIndicatorDTOBuilder();
-    serviceLevelIndicatorDTO2.setSpec(
-        ServiceLevelIndicatorSpec.builder()
-            .type(SLIMetricType.RATIO)
-            .spec(RatioSLIMetricSpec.builder().eventType("Bad").metric1("metric4").metric2("metric5").build())
-            .build());
+    serviceLevelIndicatorDTO2.setSliMissingDataType(SLIMissingDataType.GOOD);
+    serviceLevelIndicatorDTO2.setSpec(ServiceLevelIndicatorSpec.builder()
+                                          .type(SLIMetricType.RATIO)
+                                          .spec(RatioSLIMetricSpec.builder()
+                                                    .thresholdValue(20.0)
+                                                    .thresholdType(TimeSeriesThresholdType.ACT_WHEN_HIGHER)
+                                                    .eventType("Bad")
+                                                    .metric1("metric4")
+                                                    .metric2("metric5")
+                                                    .build())
+                                          .build());
     List<ServiceLevelIndicatorDTO> serviceLevelIndicatorDTOList = new ArrayList<>();
     serviceLevelIndicatorDTOList.add(serviceLevelIndicatorDTO1);
     serviceLevelIndicatorDTOList.add(serviceLevelIndicatorDTO2);
