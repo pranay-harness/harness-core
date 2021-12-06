@@ -80,7 +80,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -413,12 +412,8 @@ public class PipelineResource implements YamlSchemaResource {
     Criteria criteria = pmsPipelineService.formCriteria(accountId, orgId, projectId, filterIdentifier,
         (PipelineFilterPropertiesDto) filterProperties, false, module, searchTerm);
 
-    Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
-      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.lastUpdatedAt));
-    } else {
-      pageRequest = PageUtils.getPageRequest(page, size, sort);
-    }
+    Pageable pageRequest =
+        PageUtils.getPageRequest(page, size, sort, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.lastUpdatedAt));
 
     Page<PMSPipelineSummaryResponseDTO> pipelines =
         pmsPipelineService.list(criteria, pageRequest, accountId, orgId, projectId, getDistinctFromBranches)
