@@ -6,6 +6,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -22,6 +23,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("CEAzureConnector")
+@Schema(name = "CEAzureConnector", description = "This contains the cost explorer of Azure connector")
 public class CEAzureConnectorDTO extends ConnectorConfigDTO {
   @NotEmpty(message = "FeaturesEnabled can't be empty") List<CEFeatures> featuresEnabled;
 

@@ -10,5 +10,5 @@ message ConnectorHeartbeatTaskParams {
   google.protobuf.StringValue org_identifier = 2;
   google.protobuf.StringValue project_identifier = 3;
   string connector_identifier = 4;
-  bytes connector_validation_params = 5;
+  bytes connector_validation_parameter_response = 5;
 }

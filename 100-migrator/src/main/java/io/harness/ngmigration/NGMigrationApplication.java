@@ -613,7 +613,7 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
     modules.add(MigrationModule.getInstance());
-    modules.add(new WingsModule(configuration));
+    modules.add(new WingsModule(configuration, StartupMode.MANAGER));
     modules.add(new TotpModule());
     modules.add(new ProviderModule() {
       @Provides

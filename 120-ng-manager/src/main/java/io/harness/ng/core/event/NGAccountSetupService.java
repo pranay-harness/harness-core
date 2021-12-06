@@ -103,7 +103,7 @@ public class NGAccountSetupService {
     }
     OrganizationDTO createOrganizationDTO = OrganizationDTO.builder().build();
     createOrganizationDTO.setIdentifier(DEFAULT_ORG_IDENTIFIER);
-    createOrganizationDTO.setName("Default");
+    createOrganizationDTO.setName("default");
     createOrganizationDTO.setTags(emptyMap());
     createOrganizationDTO.setDescription("Default Organization");
     createOrganizationDTO.setHarnessManaged(true);

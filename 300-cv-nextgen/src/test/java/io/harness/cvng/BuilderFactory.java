@@ -15,6 +15,7 @@ import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityBuil
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeEventDTO.ChangeEventDTOBuilder;
 import io.harness.cvng.beans.change.ChangeSourceType;
@@ -82,6 +83,7 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO.ServiceLevelObjectiveDTOBuilder;
 import io.harness.cvng.servicelevelobjective.beans.UserJourneyDTO;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
@@ -138,6 +140,14 @@ public class BuilderFactory {
         .callbackId(generateUuid());
   }
 
+  public ProjectParams getProjectParams() {
+    return ProjectParams.builder()
+        .accountIdentifier(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .build();
+  }
+
   public ServiceResponseDTOBuilder serviceResponseDTOBuilder() {
     return ServiceResponseDTO.builder()
         .accountId(context.getAccountId())
@@ -176,14 +186,14 @@ public class BuilderFactory {
         .description(generateUuid())
         .serviceRef(context.getServiceIdentifier())
         .environmentRef(context.getEnvIdentifier())
+        .tags(new HashMap<>())
         .dependencies(Sets.newHashSet(ServiceDependencyDTO.builder().monitoredServiceIdentifier("service1").build(),
             ServiceDependencyDTO.builder().monitoredServiceIdentifier("service2").build()))
         .sources(
             MonitoredServiceDTO.Sources.builder()
                 .healthSources(
                     Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
-                .changeSources(Sets.newHashSet(getPagerDutyChangeSourceDTOBuilder().build(),
-                    getHarnessCDChangeSourceDTOBuilder().build(), getKubernetesChangeSourceDTOBuilder().build()))
+                .changeSources(Sets.newHashSet(getHarnessCDChangeSourceDTOBuilder().build()))
                 .build());
   }
 
@@ -234,6 +244,7 @@ public class BuilderFactory {
         .tierName("tier")
         .connectorRef(CONNECTOR_IDENTIFIER)
         .feature("Application Monitoring")
+        .metricDefinitions(Collections.emptyList())
         .metricPacks(new HashSet<MetricPackDTO>() {
           { add(MetricPackDTO.builder().identifier(cvMonitoringCategory).build()); }
         })
@@ -320,6 +331,19 @@ public class BuilderFactory {
         .envIdentifier(context.getEnvIdentifier())
         .connectorIdentifier("connectorRef")
         .category(CVMonitoringCategory.PERFORMANCE);
+  }
+  public PrometheusCVConfig prometheusCVConfigWithMetricInfo() {
+    MetricPack metricPack = MetricPack.builder().dataCollectionDsl("metric-pack-dsl").build();
+    PrometheusCVConfig cvConfig = prometheusCVConfigBuilder().groupName("mygroupName").build();
+    cvConfig.setMetricPack(metricPack);
+    PrometheusCVConfig.MetricInfo metricInfo = PrometheusCVConfig.MetricInfo.builder()
+                                                   .metricName("myMetric")
+                                                   .metricType(TimeSeriesMetricType.RESP_TIME)
+                                                   .prometheusMetricName("cpu_usage_total")
+                                                   .build();
+
+    cvConfig.setMetricInfoList(Arrays.asList(metricInfo));
+    return cvConfig;
   }
 
   public StackdriverCVConfigBuilder stackdriverMetricCVConfigBuilder() {
@@ -602,7 +626,7 @@ public class BuilderFactory {
         .type(changeSourceType);
   }
 
-  public ServiceLevelObjectiveDTO getServiceLevelObjectiveDTOBuilder() {
+  public ServiceLevelObjectiveDTOBuilder getServiceLevelObjectiveDTOBuilder() {
     return ServiceLevelObjectiveDTO.builder()
         .identifier("sloIdentifier")
         .name("sloName")
@@ -621,8 +645,7 @@ public class BuilderFactory {
         .serviceLevelIndicators(Collections.singletonList(getServiceLevelIndicatorDTOBuilder()))
         .healthSourceRef("healthSourceIdentifier")
         .monitoredServiceRef(context.serviceIdentifier + "_" + context.getEnvIdentifier())
-        .userJourneyRef("userJourney")
-        .build();
+        .userJourneyRef("userJourney");
   }
 
   public UserJourneyDTO getUserJourneyDTOBuilder() {

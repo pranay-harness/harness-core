@@ -25,4 +25,6 @@ public interface CEViewService {
 
   Double getLastMonthCostForPerspective(String accountId, String perspectiveId);
   Double getForecastCostForPerspective(String accountId, String perspectiveId);
+
+  void updateDefaultClusterViewVisualization(String viewId);
 }

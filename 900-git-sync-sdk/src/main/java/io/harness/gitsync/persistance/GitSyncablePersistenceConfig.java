@@ -1,9 +1,11 @@
 package io.harness.gitsync.persistance;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.springdata.PersistenceStoreUtils.getMatchingEntities;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
+import io.harness.persistence.Store;
 import io.harness.reflection.HarnessReflections;
 import io.harness.springdata.HMongoTemplate;
 
@@ -13,11 +15,11 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
+import java.util.Objects;
 import java.util.Set;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
@@ -29,8 +31,8 @@ import org.springframework.guice.annotation.GuiceModule;
 
 @Configuration
 @GuiceModule
-@EnableMongoRepositories(basePackages = {"io.harness.repositories"},
-    includeFilters = @ComponentScan.Filter(GitSyncableHarnessRepo.class), mongoTemplateRef = "primary")
+@EnableMongoRepositories(
+    basePackages = {"io.harness.repositories"}, includeFilters = @ComponentScan.Filter(GitSyncableHarnessRepo.class))
 @EnableMongoAuditing
 @OwnedBy(DX)
 public class GitSyncablePersistenceConfig extends AbstractMongoConfiguration {
@@ -62,8 +64,7 @@ public class GitSyncablePersistenceConfig extends AbstractMongoConfiguration {
     return new MongoClientURI(mongoConfig.getUri()).getDatabase();
   }
 
-  @Bean(name = "primary")
-  @Primary
+  @Bean
   public MongoTemplate mongoTemplate() throws Exception {
     return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter(), mongoConfig.getTraceMode());
   }
@@ -75,7 +76,12 @@ public class GitSyncablePersistenceConfig extends AbstractMongoConfiguration {
 
   @Override
   protected Set<Class<?>> getInitialEntitySet() {
-    return HarnessReflections.get().getTypesAnnotatedWith(TypeAlias.class);
+    Set<Class<?>> classes = HarnessReflections.get().getTypesAnnotatedWith(TypeAlias.class);
+    Store store = null;
+    if (Objects.nonNull(mongoConfig.getAliasDBName())) {
+      store = Store.builder().name(mongoConfig.getAliasDBName()).build();
+    }
+    return getMatchingEntities(classes, store);
   }
 
   @Override

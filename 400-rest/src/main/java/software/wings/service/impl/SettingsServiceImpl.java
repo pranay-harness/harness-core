@@ -76,12 +76,15 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.observer.Rejection;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.validation.Create;
+import io.harness.validation.SuppressValidation;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.APMVerificationConfig;
@@ -244,10 +247,13 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private AzureCEConfigValidationService azureCEConfigValidationService;
   @Inject @Named(CeCloudAccountFeature.FEATURE_NAME) private UsageLimitedFeature ceCloudAccountFeature;
 
-  @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
-  @Inject @Getter private Subject<SettingAttributeObserver> artifactStreamSubject = new Subject<>();
+  @Inject @Getter(onMethod = @__(@SuppressValidation)) private Subject<CloudProviderObserver> subject = new Subject<>();
+  @Inject
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<SettingAttributeObserver> artifactStreamSubject = new Subject<>();
   @Inject private SettingAttributeDao settingAttributeDao;
   @Inject private CEMetadataRecordDao ceMetadataRecordDao;
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   private static final String OPEN_SSH = "OPENSSH";
 
@@ -837,7 +843,10 @@ public class SettingsServiceImpl implements SettingsService {
 
     try {
       if (CLOUD_PROVIDER == settingAttribute.getCategory()) {
-        subject.fireInform(SettingAttributeObxxxxxxxx:onSaved, newSettingAttribute);
+        subject.fireInform(CloudProviderObxxxxxxxx:onSaved, newSettingAttribute);
+        remoteObserverInformer.sendEvent(
+            ReflectionUtils.getMethod(CloudProviderObserver.class, "onSaved", SettingAttribute.class),
+            SettingsServiceImpl.class, newSettingAttribute);
       }
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Cloud Providers.", e);
@@ -845,6 +854,9 @@ public class SettingsServiceImpl implements SettingsService {
 
     syncCEInfra(settingAttribute);
     artifactStreamSubject.fireInform(SettingAttributeObxxxxxxxx:onSaved, newSettingAttribute);
+    remoteObserverInformer.sendEvent(
+        ReflectionUtils.getMethod(SettingAttributeObserver.class, "onSaved", SettingAttribute.class),
+        SettingsServiceImpl.class, newSettingAttribute);
     return newSettingAttribute;
   }
 
@@ -1217,13 +1229,19 @@ public class SettingsServiceImpl implements SettingsService {
 
     try {
       if (CLOUD_PROVIDER == settingAttribute.getCategory()) {
-        subject.fireInform(SettingAttributeObxxxxxxxx:onUpdated, prevSettingAttribute, settingAttribute);
+        subject.fireInform(CloudProviderObxxxxxxxx:onUpdated, prevSettingAttribute, settingAttribute);
+        remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(CloudProviderObserver.class, "onUpdated",
+                                             SettingAttribute.class, SettingAttribute.class),
+            SettingsServiceImpl.class, prevSettingAttribute, settingAttribute);
       }
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Cloud Providers.", e);
     }
 
     artifactStreamSubject.fireInform(SettingAttributeObxxxxxxxx:onUpdated, prevSettingAttribute, settingAttribute);
+    remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(SettingAttributeObserver.class, "onUpdated",
+                                         SettingAttribute.class, SettingAttribute.class),
+        SettingsServiceImpl.class, prevSettingAttribute, settingAttribute);
     return updatedSettingAttribute;
   }
 
@@ -1317,7 +1335,10 @@ public class SettingsServiceImpl implements SettingsService {
     try {
       if (CLOUD_PROVIDER == settingAttribute.getCategory()) {
         log.info("Deleted the cloud provider with id={}", settingAttribute.getUuid());
-        subject.fireInform(SettingAttributeObxxxxxxxx:onDeleted, settingAttribute);
+        subject.fireInform(CloudProviderObxxxxxxxx:onDeleted, settingAttribute);
+        remoteObserverInformer.sendEvent(
+            ReflectionUtils.getMethod(CloudProviderObserver.class, "onDeleted", SettingAttribute.class),
+            SettingsServiceImpl.class, settingAttribute);
       }
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Cloud Providers.", e);
@@ -1331,6 +1352,9 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     artifactStreamSubject.fireInform(SettingAttributeObxxxxxxxx:onDeleted, settingAttribute);
+    remoteObserverInformer.sendEvent(
+        ReflectionUtils.getMethod(SettingAttributeObserver.class, "onDeleted", SettingAttribute.class),
+        SettingsServiceImpl.class, settingAttribute);
   }
 
   /**

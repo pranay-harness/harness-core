@@ -34,6 +34,7 @@ import io.harness.lock.DistributedLockImplementation;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.redis.RedisConfig;
+import io.harness.reflection.HarnessReflections;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.secret.SecretsConfiguration;
@@ -87,10 +88,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.reflections.Reflections;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Used to load all the application configuration.
@@ -116,6 +118,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(value = "searchEnabled") private boolean isSearchEnabled;
   @JsonProperty(value = "graphQLEnabled") private boolean isGraphQLEnabled;
   @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
+  @JsonProperty("disableResourceValidation") private boolean disableResourceValidation;
   @JsonProperty private PortalConfig portal = new PortalConfig();
   @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;
@@ -259,9 +262,13 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections("software.wings.resources", "software.wings.utils",
-        "io.harness.cvng.core.resources", "io.harness.delegate.resources");
-    return reflections.getTypesAnnotatedWith(Path.class);
+    return HarnessReflections.get()
+        .getTypesAnnotatedWith(Path.class)
+        .stream()
+        .filter(klazz
+            -> StringUtils.startsWithAny(klazz.getPackage().getName(), "software.wings.resources",
+                "software.wings.utils", "io.harness.cvng.core.resources", "io.harness.delegate.resources"))
+        .collect(Collectors.toList());
   }
 
   /**

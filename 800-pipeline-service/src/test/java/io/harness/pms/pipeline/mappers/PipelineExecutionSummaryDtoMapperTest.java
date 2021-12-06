@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doReturn;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
@@ -14,8 +13,6 @@ import io.harness.engine.executions.retry.RetryExecutionMetadata;
 import io.harness.execution.StagesExecutionMetadata;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.pipeline.PipelineEntity;
-import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.EdgeLayoutListDTO;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
@@ -25,17 +22,11 @@ import io.harness.rule.Owner;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
 @OwnedBy(PIPELINE)
 public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBase {
-  @InjectMocks PipelineExecutionSummaryDtoMapper pipelineExecutionSummaryDtoMapper;
-  @Mock PMSPipelineService pipelineService;
-
   String accountId = "acc";
   String orgId = "org";
   String projId = "proj";
@@ -61,13 +52,13 @@ public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBa
                                                                 .planExecutionId(planId)
                                                                 .build();
     PipelineExecutionSummaryDTO executionSummaryDTO =
-        pipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, null);
+        PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, null);
     assertThat(executionSummaryDTO).isNotNull();
     assertThat(executionSummaryDTO.getGitDetails()).isNull();
 
     EntityGitDetails entityGitDetails =
         EntityGitDetails.builder().branch(branch).repoIdentifier(repo).objectId(objectId).build();
-    executionSummaryDTO = pipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, entityGitDetails);
+    executionSummaryDTO = PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, entityGitDetails);
     assertThat(executionSummaryDTO).isNotNull();
     assertThat(executionSummaryDTO.getGitDetails()).isNotNull();
     assertThat(executionSummaryDTO.getGitDetails().getBranch()).isEqualTo(branch);
@@ -83,7 +74,7 @@ public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBa
                            .rootFolder("__default__")
                            .filePath("__default__")
                            .build();
-    executionSummaryDTO = pipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, entityGitDetails);
+    executionSummaryDTO = PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, entityGitDetails);
     assertThat(executionSummaryDTO).isNotNull();
     assertThat(executionSummaryDTO.getGitDetails()).isNotNull();
     assertThat(executionSummaryDTO.getGitDetails().getBranch()).isEqualTo(branch);
@@ -99,7 +90,7 @@ public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBa
                            .rootFolder(rootFolder)
                            .filePath(file)
                            .build();
-    executionSummaryDTO = pipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, entityGitDetails);
+    executionSummaryDTO = PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, entityGitDetails);
     assertThat(executionSummaryDTO).isNotNull();
     assertThat(executionSummaryDTO.getGitDetails()).isNotNull();
     assertThat(executionSummaryDTO.getGitDetails().getBranch()).isEqualTo(branch);
@@ -113,10 +104,6 @@ public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBa
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testToDtoForStagesExecutionMetadata() {
-    doReturn(Optional.of(PipelineEntity.builder().yaml(getPipelineYaml()).build()))
-        .when(pipelineService)
-        .get(accountId, orgId, projId, pipelineId, false);
-
     PipelineExecutionSummaryEntity executionSummaryEntity = PipelineExecutionSummaryEntity.builder()
                                                                 .accountId(accountId)
                                                                 .orgIdentifier(orgId)
@@ -126,7 +113,7 @@ public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBa
                                                                 .planExecutionId(planId)
                                                                 .build();
     PipelineExecutionSummaryDTO executionSummaryDTO =
-        pipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, null);
+        PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, null);
     assertThat(executionSummaryDTO.isStagesExecution()).isFalse();
     assertThat(executionSummaryDTO.getStagesExecuted()).isNull();
 
@@ -141,10 +128,11 @@ public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBa
             .stagesExecutionMetadata(StagesExecutionMetadata.builder()
                                          .isStagesExecution(true)
                                          .stageIdentifiers(Collections.singletonList("s1"))
+                                         .fullPipelineYaml(getPipelineYaml())
                                          .build())
             .build();
     PipelineExecutionSummaryDTO executionSummaryDTOWithStages =
-        pipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntityWithStages, null);
+        PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntityWithStages, null);
     assertThat(executionSummaryDTOWithStages.isStagesExecution()).isTrue();
     assertThat(executionSummaryDTOWithStages.getStagesExecuted()).hasSize(1);
     assertThat(executionSummaryDTOWithStages.getStagesExecuted().contains("s1")).isTrue();
@@ -179,7 +167,7 @@ public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBa
 
     // when isLatest is notSet (default value is true)
     PipelineExecutionSummaryDTO executionSummaryDTO =
-        pipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, null);
+        PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, null);
     assertThat(executionSummaryDTO.isCanRetry()).isEqualTo(true);
     assertThat(executionSummaryDTO.isShowRetryHistory()).isEqualTo(false);
 
@@ -195,7 +183,7 @@ public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBa
             .isLatestExecution(false)
             .planExecutionId(planId)
             .build();
-    executionSummaryDTO = pipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntityWithRootParentId, null);
+    executionSummaryDTO = PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntityWithRootParentId, null);
     assertThat(executionSummaryDTO.isCanRetry()).isEqualTo(false);
     assertThat(executionSummaryDTO.isShowRetryHistory()).isEqualTo(true);
 
@@ -211,7 +199,7 @@ public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBa
             .retryExecutionMetadata(RetryExecutionMetadata.builder().rootExecutionId("rootParentId").build())
             .planExecutionId(planId)
             .build();
-    executionSummaryDTO = pipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntityWithIsLatest, null);
+    executionSummaryDTO = PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntityWithIsLatest, null);
     assertThat(executionSummaryDTO.isCanRetry()).isEqualTo(true);
     assertThat(executionSummaryDTO.isShowRetryHistory()).isEqualTo(true);
   }
@@ -236,7 +224,7 @@ public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBa
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
     layoutNodeDTOMap.put(startingNodeId, startingNode);
     layoutNodeDTOMap.put(otherNodeId, otherNode);
-    int stagesCount = pipelineExecutionSummaryDtoMapper.getStagesCount(layoutNodeDTOMap, startingNodeId);
+    int stagesCount = PipelineExecutionSummaryDtoMapper.getStagesCount(layoutNodeDTOMap, startingNodeId);
     assertThat(stagesCount).isEqualTo(2);
   }
 
@@ -263,7 +251,7 @@ public class PipelineExecutionSummaryDtoMapperTest extends PipelineServiceTestBa
     layoutNodeDTOMap.put(startingNodeId, startingNode);
     layoutNodeDTOMap.put(otherNodeId, otherNode);
     int stagesCount =
-        pipelineExecutionSummaryDtoMapper.getStagesCount(layoutNodeDTOMap, startingNodeId, ExecutionStatus.ABORTED);
+        PipelineExecutionSummaryDtoMapper.getStagesCount(layoutNodeDTOMap, startingNodeId, ExecutionStatus.ABORTED);
     assertThat(stagesCount).isEqualTo(1);
   }
 }

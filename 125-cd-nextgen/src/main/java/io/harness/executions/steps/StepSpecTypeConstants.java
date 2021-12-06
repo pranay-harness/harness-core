@@ -22,4 +22,7 @@ public interface StepSpecTypeConstants {
   String TERRAFORM_ROLLBACK = "TerraformRollback";
 
   String PLACEHOLDER = "Placeholder";
+
+  String HELM_DEPLOY = "HelmDeploy";
+  String HELM_ROLLBACK = "HelmRollback";
 }

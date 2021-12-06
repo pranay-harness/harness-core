@@ -200,7 +200,8 @@ public class ViewsQueryBuilder {
     selectQuery.addCustomGroupings(new CustomSql("column_name"));
 
     // Adding table name filter
-    selectQuery.addCondition(BinaryCondition.equalTo(new CustomSql("table_name"), table));
+    // Note that condition is 'like'
+    selectQuery.addCondition(BinaryCondition.like(new CustomSql("table_name"), table + "%"));
 
     log.info("Information schema query for table {}", selectQuery.toString());
     return selectQuery;

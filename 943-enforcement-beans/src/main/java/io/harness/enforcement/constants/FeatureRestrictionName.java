@@ -10,10 +10,13 @@ public enum FeatureRestrictionName {
   TEST3,
   TEST4,
   TEST5,
+  TEST6,
+  TEST7,
 
   // CCM Features
   PERSPECTIVES,
   CCM_K8S_CLUSTERS,
+  CCM_AUTOSTOPPING_RULES,
 
   // All Features
   MULTIPLE_ORGANIZATIONS,

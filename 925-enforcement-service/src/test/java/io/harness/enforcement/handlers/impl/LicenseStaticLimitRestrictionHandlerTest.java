@@ -1,0 +1,94 @@
+package io.harness.enforcement.handlers.impl;
+
+import static io.harness.rule.OwnerRule.ZHUO;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import io.harness.CategoryTest;
+import io.harness.ModuleType;
+import io.harness.category.element.UnitTests;
+import io.harness.enforcement.bases.LicenseStaticLimitRestriction;
+import io.harness.enforcement.beans.FeatureRestrictionUsageDTO;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailsDTO;
+import io.harness.enforcement.beans.metadata.LicenseStaticLimitRestrictionMetadataDTO;
+import io.harness.enforcement.beans.metadata.RestrictionMetadataDTO;
+import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.enforcement.constants.RestrictionType;
+import io.harness.enforcement.services.impl.EnforcementSdkClient;
+import io.harness.licensing.Edition;
+import io.harness.licensing.LicenseType;
+import io.harness.licensing.beans.summary.CDLicenseSummaryDTO;
+import io.harness.licensing.services.LicenseService;
+import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.rule.Owner;
+
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import retrofit2.Call;
+import retrofit2.Response;
+
+public class LicenseStaticLimitRestrictionHandlerTest extends CategoryTest {
+  private LicenseStaticLimitRestrictionHandler handler;
+  private LicenseService licenseService;
+  private FeatureRestrictionName featureRestrictionName = FeatureRestrictionName.TEST1;
+  private LicenseStaticLimitRestriction restriction;
+  private EnforcementSdkClient client;
+  private String accountIdentifier = "accountId";
+  private ModuleType moduleType = ModuleType.CD;
+  private Edition edition = Edition.ENTERPRISE;
+
+  @Before
+  public void setup() throws IOException {
+    licenseService = mock(LicenseService.class);
+    when(licenseService.getLicenseSummary(accountIdentifier, moduleType))
+        .thenReturn(CDLicenseSummaryDTO.builder()
+                        .totalWorkload(10)
+                        .edition(Edition.ENTERPRISE)
+                        .maxExpiryTime(Integer.MAX_VALUE)
+                        .licenseType(LicenseType.TRIAL)
+                        .build());
+
+    handler = new LicenseStaticLimitRestrictionHandler(licenseService);
+    client = mock(EnforcementSdkClient.class);
+    Call<ResponseDTO<FeatureRestrictionUsageDTO>> usageCall = mock(Call.class);
+    when(usageCall.execute())
+        .thenReturn(Response.success(ResponseDTO.newResponse(FeatureRestrictionUsageDTO.builder().count(10).build())));
+    when(client.getRestrictionUsage(any(), any(), any())).thenReturn(usageCall);
+    restriction = new LicenseStaticLimitRestriction(RestrictionType.LICENSE_STATIC_LIMIT, "totalWorkload", client);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testCheck() {
+    handler.check(featureRestrictionName, restriction, accountIdentifier, moduleType, edition);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testFillRestrictionDTO() {
+    FeatureRestrictionDetailsDTO dto = FeatureRestrictionDetailsDTO.builder().moduleType(ModuleType.CD).build();
+    handler.fillRestrictionDTO(featureRestrictionName, restriction, accountIdentifier, edition, dto);
+
+    assertThat(dto.getRestrictionType()).isEqualTo(RestrictionType.LICENSE_STATIC_LIMIT);
+    assertThat(dto.getRestriction()).isNotNull();
+    assertThat(dto.isAllowed()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testGetMetadataDTO() {
+    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction, accountIdentifier, moduleType);
+
+    LicenseStaticLimitRestrictionMetadataDTO dto = (LicenseStaticLimitRestrictionMetadataDTO) metadataDTO;
+    assertThat(dto.getRestrictionType()).isEqualTo(RestrictionType.LICENSE_STATIC_LIMIT);
+    assertThat(dto.getLimit()).isEqualTo(10);
+  }
+}

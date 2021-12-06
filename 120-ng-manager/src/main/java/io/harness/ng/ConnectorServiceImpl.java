@@ -18,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.NgAutoLogContext;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
@@ -647,10 +648,8 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public boolean markEntityInvalid(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml) {
-    return defaultConnectorService.markEntityInvalid(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalidYaml);
+  public boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String invalidYaml) {
+    return defaultConnectorService.markEntityInvalid(accountIdentifier, entityReference, invalidYaml);
   }
 
   private ConnectorValidationResult createValidationResultWithGenericError(Exception ex) {

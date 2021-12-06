@@ -737,12 +737,12 @@ public class ArtifactCollectionUtils {
     return requestType;
   }
 
-  public DelegateTask prepareValidateTask(String artifactStreamId) {
+  public DelegateTask prepareValidateTask(String artifactStreamId, String accountId) {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream == null) {
+      artifactStreamService.deletePerpetualTaskByArtifactStream(accountId, artifactStreamId);
       throw new InvalidRequestException("Artifact stream does not exist");
     }
-    String accountId = artifactStream.getAccountId();
     BuildSourceParametersBuilder parametersBuilder = BuildSourceParameters.builder()
                                                          .appId(artifactStream.getAppId())
                                                          .artifactStreamType(artifactStream.getArtifactStreamType());
@@ -761,6 +761,7 @@ public class ArtifactCollectionUtils {
     } else {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       if (settingAttribute == null) {
+        artifactStreamService.deletePerpetualTaskByArtifactStream(accountId, artifactStreamId);
         throw new InvalidRequestException("Connector / Cloud Provider associated to Artifact Stream was deleted");
       }
       settingValue = settingAttribute.getValue();

@@ -106,7 +106,7 @@ public abstract class DataCollectionTask
 
   public abstract Instant getNextValidAfter(Instant currentTime);
 
-  public enum Type { SERVICE_GUARD, DEPLOYMENT }
+  public enum Type { SERVICE_GUARD, DEPLOYMENT, SLI }
   public Duration totalTime(Instant currentTime) {
     return Duration.between(validAfter, currentTime);
   }

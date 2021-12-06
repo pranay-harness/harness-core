@@ -18,6 +18,10 @@ buildMinorVersion=$(getProperty "build.properties" "build.minorVersion")
 patch=$(getProperty "build.properties" "build.patch")
 timestamp=$( date +'%y%m%d-%H%M')
 
+echo "----------------------------------------------------------------------------"
+echo $buildNo $GIT_COMMIT $GIT_BRANCH $timestamp $patch $buildMajorVersion $buildMinorVersion
+echo "----------------------------------------------------------------------------"
+
 sed -i.bak "s|\${build.number}|${buildNo}|g"  "980-commons/src/main/resources-filtered/versionInfo.yaml"
 sed -i.bak "s|\${gitCommitId}|${GIT_COMMIT}|g"  "980-commons/src/main/resources-filtered/versionInfo.yaml"
 sed -i.bak "s|\${gitBranch}|${GIT_BRANCH}|g"  "980-commons/src/main/resources-filtered/versionInfo.yaml"

@@ -1,6 +1,7 @@
 package io.harness.template.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.ng.core.utils.NGUtils.validate;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.NGTemplateReference;
@@ -9,6 +10,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
+import io.harness.gitsync.sdk.EntityValidityDetails;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ng.core.template.TemplateSummaryResponseDTO;
@@ -43,6 +45,9 @@ public class NGTemplateDtoMapper {
         .version(templateEntity.getVersion())
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(templateEntity))
         .lastUpdatedAt(templateEntity.getLastUpdatedAt())
+        .entityValidityDetails(templateEntity.isEntityInvalid()
+                ? EntityValidityDetails.builder().valid(false).invalidYaml(templateEntity.getYaml()).build()
+                : EntityValidityDetails.builder().valid(true).build())
         .build();
   }
 
@@ -64,6 +69,9 @@ public class NGTemplateDtoMapper {
         .version(templateEntity.getVersion())
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(templateEntity))
         .lastUpdatedAt(templateEntity.getLastUpdatedAt())
+        .entityValidityDetails(templateEntity.isEntityInvalid()
+                ? EntityValidityDetails.builder().valid(false).invalidYaml(templateEntity.getYaml()).build()
+                : EntityValidityDetails.builder().valid(true).build())
         .build();
   }
 
@@ -170,6 +178,7 @@ public class NGTemplateDtoMapper {
   }
 
   private void validateTemplateYaml(NGTemplateConfig templateConfig, String orgIdentifier, String projectIdentifier) {
+    validate(templateConfig.getTemplateInfoConfig());
     if (EmptyPredicate.isNotEmpty(templateConfig.getTemplateInfoConfig().getProjectIdentifier())
         && !templateConfig.getTemplateInfoConfig().getProjectIdentifier().equals(projectIdentifier)) {
       throw new InvalidRequestException("ProjectIdentifier for template is not matching as in template yaml.");
@@ -192,16 +201,6 @@ public class NGTemplateDtoMapper {
       return Scope.PROJECT;
     }
     if (EmptyPredicate.isNotEmpty(templateInfoConfig.getOrgIdentifier())) {
-      return Scope.ORG;
-    }
-    return Scope.ACCOUNT;
-  }
-
-  public Scope getScopeFromMetadata(String orgIdentifier, String projectIdentifier) {
-    if (EmptyPredicate.isNotEmpty(projectIdentifier)) {
-      return Scope.PROJECT;
-    }
-    if (EmptyPredicate.isNotEmpty(orgIdentifier)) {
       return Scope.ORG;
     }
     return Scope.ACCOUNT;

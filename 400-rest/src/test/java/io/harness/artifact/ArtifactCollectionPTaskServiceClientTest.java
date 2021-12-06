@@ -78,9 +78,10 @@ public class ArtifactCollectionPTaskServiceClientTest extends WingsBaseTest {
   public void shouldGetValidationTask() {
     PerpetualTaskClientContext perpetualTaskClientContext =
         PerpetualTaskClientContext.builder().clientParams(clientParamsMap).build();
-    when(artifactCollectionUtils.prepareValidateTask(artifactStreamId)).thenReturn(DelegateTask.builder().build());
+    when(artifactCollectionUtils.prepareValidateTask(artifactStreamId, accountId))
+        .thenReturn(DelegateTask.builder().build());
     assertThat(artifactCollectionPTaskServiceClient.getValidationTask(perpetualTaskClientContext, accountId))
         .isNotNull();
-    verify(artifactCollectionUtils).prepareValidateTask(artifactStreamId);
+    verify(artifactCollectionUtils).prepareValidateTask(artifactStreamId, accountId);
   }
 }

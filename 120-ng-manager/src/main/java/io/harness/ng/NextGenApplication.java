@@ -101,6 +101,10 @@ import io.harness.ng.migration.UserMembershipMigrationProvider;
 import io.harness.ng.migration.UserMetadataMigrationProvider;
 import io.harness.ng.overview.eventGenerator.DeploymentEventGenerator;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
+import io.harness.observer.NoOpRemoteObserverInformerImpl;
+import io.harness.observer.RemoteObserver;
+import io.harness.observer.RemoteObserverInformer;
+import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
@@ -216,6 +220,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.Resource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -323,7 +328,22 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     } else {
       modules.add(new SCMGrpcClientModule(appConfig.getGitSdkConfiguration().getScmConnectionConfig()));
     }
+    modules.add(new AbstractRemoteObserverModule() {
+      @Override
+      public boolean noOpProducer() {
+        return true;
+      }
 
+      @Override
+      public Set<RemoteObserver> observers() {
+        return Collections.emptySet();
+      }
+
+      @Override
+      public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+        return NoOpRemoteObserverInformerImpl.class;
+      }
+    });
     // Pipeline Service Modules
     PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(appConfig);
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
@@ -335,7 +355,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);
-    registerResources(environment, injector);
+    registerResources(appConfig, environment, injector);
     registerJerseyProviders(environment, injector);
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
@@ -605,13 +625,15 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
   }
 
-  private void registerResources(Environment environment, Injector injector) {
+  private void registerResources(NextGenConfiguration appConfig, Environment environment, Injector injector) {
     for (Class<?> resource : HARNESS_RESOURCE_CLASSES) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
     environment.jersey().register(injector.getInstance(VersionInfoResource.class));
+    environment.jersey().property(
+        ServerProperties.RESOURCE_VALIDATION_DISABLE, appConfig.isDisableResourceValidation());
   }
 
   private OpenAPIConfiguration getOasConfig(NextGenConfiguration appConfig) {
@@ -770,6 +792,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                 ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
                     .put(FeatureRestrictionName.TEST2, ExampleStaticLimitUsageImpl.class)
                     .put(FeatureRestrictionName.TEST3, ExampleRateLimitUsageImpl.class)
+                    .put(FeatureRestrictionName.TEST6, ExampleRateLimitUsageImpl.class)
+                    .put(FeatureRestrictionName.TEST7, ExampleStaticLimitUsageImpl.class)
                     .put(FeatureRestrictionName.MULTIPLE_PROJECTS, ProjectRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.MULTIPLE_ORGANIZATIONS, OrgRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.SERVICES, ServiceRestrictionsUsageImpl.class)

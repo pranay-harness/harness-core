@@ -522,7 +522,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private LicenseInfo licenseInfo;
     private CeLicenseInfo ceLicenseInfo;
     private boolean emailSentToSales;
-    private Set<String> whitelistedDomains;
+    private Set<String> whitelistedDomains = new HashSet<>();
     private long lastLicenseExpiryReminderSentAt;
     private List<Long> licenseExpiryRemindersSentAt;
     private boolean oauthEnabled;

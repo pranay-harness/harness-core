@@ -48,16 +48,22 @@ public class PmsYamlSchemaHelper {
   public static final Class<StageElementConfig> STAGE_ELEMENT_CONFIG_CLASS = StageElementConfig.class;
 
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
+  private final Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypesToBeAdded;
   private final YamlSchemaGenerator yamlSchemaGenerator;
 
   @Inject
   public PmsYamlSchemaHelper(@Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
+      @Named("new-yaml-schema-subtypes-pms") Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypesToBeAdded,
       YamlSchemaGenerator yamlSchemaGenerator) {
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
+    this.newYamlSchemaSubtypesToBeAdded = newYamlSchemaSubtypesToBeAdded;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
   }
 
   public void modifyStepElementSchema(ObjectNode jsonNode) {
+    if (jsonNode == null) {
+      return;
+    }
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
     Field typedField = io.harness.yaml.utils.YamlSchemaUtils.getTypedField(STEP_ELEMENT_CONFIG_CLASS);
@@ -105,6 +111,8 @@ public class PmsYamlSchemaHelper {
         partialSchemaDTO.getNodeName(), (ObjectNode) partialSchemaDTO.getSchema(), partialSchemaDTO.getNamespace());
 
     mergePipelineStepsIntoStage(stageDefinitionsNode, pipelineSteps, partialSchemaDTO);
+    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
+        stageDefinitionsNode.get(partialSchemaDTO.getNamespace()), newYamlSchemaSubtypesToBeAdded, "");
     mergeStageElementConfig(stageElementConfig, subtypeClassMap);
 
     pipelineDefinitions.set(partialSchemaDTO.getNamespace(), stageDefinitionsNode.get(partialSchemaDTO.getNamespace()));

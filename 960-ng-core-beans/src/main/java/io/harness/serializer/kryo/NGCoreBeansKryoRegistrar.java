@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
+import io.harness.ng.core.account.ServiceAccountConfig;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.user.UserMembershipUpdateMechanism;
 import io.harness.serializer.KryoRegistrar;
@@ -18,5 +19,6 @@ public class NGCoreBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DefaultExperience.class, 20101);
     kryo.register(UserMembershipUpdateMechanism.class, 20102);
     kryo.register(AuthenticationMechanism.class, 20103);
+    kryo.register(ServiceAccountConfig.class, 20104);
   }
 }

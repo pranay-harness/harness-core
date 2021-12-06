@@ -36,4 +36,9 @@ public class JiraTaskNG extends AbstractDelegateRunnableTask {
     JiraTaskNGParameters taskParameters = (JiraTaskNGParameters) parameters;
     return jiraTaskNGHelper.getJiraTaskResponse(taskParameters);
   }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
+  }
 }

@@ -3,7 +3,7 @@ accountSecret: 2f6b0988b6fb3370073c3d0505baee59
 managerUrl: https://app.harness.io/api
 doUpgrade: false
 upgradeCheckLocation: https://ci.harness.io/storage/wingswatchers/watcherci.txt
-upgradeCheckIntervalSeconds: 43200
+upgradeCheckIntervalSeconds: 1200
 queueFilePath: ../eventQueue
 fileHandlesMonitoringEnabled: false
 fileHandlesMonitoringIntervalInMinutes: 15

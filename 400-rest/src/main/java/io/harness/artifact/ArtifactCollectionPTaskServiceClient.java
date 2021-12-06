@@ -41,6 +41,6 @@ public class ArtifactCollectionPTaskServiceClient implements PerpetualTaskServic
   @Override
   public DelegateTask getValidationTask(PerpetualTaskClientContext clientContext, String accountId) {
     Map<String, String> clientParams = clientContext.getClientParams();
-    return artifactCollectionUtils.prepareValidateTask(clientParams.get(ARTIFACT_STREAM_ID));
+    return artifactCollectionUtils.prepareValidateTask(clientParams.get(ARTIFACT_STREAM_ID), accountId);
   }
 }
