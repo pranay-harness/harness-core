@@ -107,9 +107,7 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
 
   private void validate(String accountIdentifier, PipelineEntity entity) {
     TemplateMergeResponseDTO templateMergeResponseDTO = pipelineTemplateHelper.resolveTemplateRefsInPipeline(entity);
-    if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
-      entity.setTemplateReference(true);
-    }
+    entity.setTemplateReference(EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries()));
     pmsYamlSchemaService.validateYamlSchema(accountIdentifier, entity.getOrgIdentifier(), entity.getProjectIdentifier(),
         templateMergeResponseDTO.getMergedPipelineYaml());
     // validate unique fqn in resolveTemplateRefsInPipeline
