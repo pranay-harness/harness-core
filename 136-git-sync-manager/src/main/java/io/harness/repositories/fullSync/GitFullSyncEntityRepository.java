@@ -11,6 +11,7 @@ import org.springframework.data.repository.CrudRepository;
 
 @HarnessRepo
 @OwnedBy(DX)
-public interface FullSyncRepository extends CrudRepository<GitFullSyncEntityInfo, String>, FullSyncRepositoryCustom {
-  List<GitFullSyncEntityInfo> findByAccountIdentifierAndFullSyncJobId(String accountIdentifier, String fullSyncJobId);
+public interface GitFullSyncEntityRepository
+    extends CrudRepository<GitFullSyncEntityInfo, String>, GitFullSyncEntityRepositoryCustom {
+    List<GitFullSyncEntityInfo> findByAccountIdentifierAndFullSyncJobId(String accountIdentifier, String fullSyncJobId);
 }
