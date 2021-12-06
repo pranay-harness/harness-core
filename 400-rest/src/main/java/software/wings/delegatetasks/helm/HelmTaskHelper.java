@@ -9,12 +9,17 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.helm.HelmConstants.CHARTS_YAML_KEY;
+import static io.harness.helm.HelmConstants.HELM_CACHE_HOME_PLACEHOLDER;
+import static io.harness.helm.HelmConstants.REPO_NAME;
+import static io.harness.helm.HelmConstants.V3Commands.HELM_CACHE_HOME;
+import static io.harness.helm.HelmConstants.V3Commands.HELM_CACHE_HOME_PATH;
 import static io.harness.helm.HelmConstants.VALUES_YAML;
 import static io.harness.helm.HelmConstants.WORKING_DIR_BASE;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -63,6 +68,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -75,6 +81,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.jetbrains.annotations.NotNull;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -227,6 +234,7 @@ public class HelmTaskHelper {
       throws Exception {
     ChartMuseumServer chartMuseumServer = null;
     String resourceDirectory = null;
+    boolean useRepoFlags = false;
 
     try {
       resourceDirectory = createNewDirectoryAtPath(RESOURCE_DIR_BASE);
@@ -245,8 +253,8 @@ public class HelmTaskHelper {
       if (chartMuseumServer != null) {
         chartMuseumClient.stopChartMuseumServer(chartMuseumServer.getStartedProcess());
       }
-      removeRepo(
-          helmChartConfigParams.getRepoName(), chartDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis);
+      removeRepo(helmChartConfigParams.getRepoName(), chartDirectory, helmChartConfigParams.getHelmVersion(),
+          timeoutInMillis, useRepoFlags, EMPTY);
       cleanup(resourceDirectory);
     }
   }
@@ -327,6 +335,12 @@ public class HelmTaskHelper {
   }
 
   public void addRepo(String repoName, String repoDisplayName, String chartRepoUrl, String username, char[] password,
+      String chartDirectory, HelmVersion helmVersion, long timeoutInMillis, boolean useRepoFlags, String tempDir) {
+    helmTaskHelperBase.addRepo(repoName, repoDisplayName, chartRepoUrl, username, password, chartDirectory, helmVersion,
+        timeoutInMillis, useRepoFlags, tempDir);
+  }
+
+  public void addRepo(String repoName, String repoDisplayName, String chartRepoUrl, String username, char[] password,
       String chartDirectory, HelmVersion helmVersion, long timeoutInMillis) {
     helmTaskHelperBase.addRepo(
         repoName, repoDisplayName, chartRepoUrl, username, password, chartDirectory, helmVersion, timeoutInMillis);
@@ -365,8 +379,13 @@ public class HelmTaskHelper {
     }
   }
 
+  public void removeRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis,
+      boolean useRepoFlag, String tempDir) {
+    helmTaskHelperBase.removeRepo(repoName, workingDirectory, helmVersion, timeoutInMillis, useRepoFlag, tempDir);
+  }
+
   public void removeRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
-    helmTaskHelperBase.removeRepo(repoName, workingDirectory, helmVersion, timeoutInMillis);
+    helmTaskHelperBase.removeRepo(repoName, workingDirectory, helmVersion, timeoutInMillis, false, EMPTY);
   }
 
   public void updateRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
@@ -443,16 +462,29 @@ public class HelmTaskHelper {
       String destinationDirectory, long timeoutInMillis, String workingDirectory) throws IOException {
     HelmChartConfigParams helmChartConfigParams = helmChartCollectionParams.getHelmChartConfigParams();
     HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmChartConfigParams.getHelmRepoConfig();
-    removeRepo(
-        helmChartConfigParams.getRepoName(), workingDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis);
+    boolean useRepoFlags = helmChartCollectionParams.isUseRepoFlags();
+    Map<String, String> environment = new HashMap<>();
+    String tempDir = EMPTY;
+    if (useRepoFlags) {
+      tempDir = Files.createTempDirectory("charts").toAbsolutePath().toString();
+    }
+    removeRepo(helmChartConfigParams.getRepoName(), workingDirectory, helmChartConfigParams.getHelmVersion(),
+        timeoutInMillis, useRepoFlags, tempDir);
     addRepo(helmChartConfigParams.getRepoName(), helmChartConfigParams.getRepoDisplayName(),
         httpHelmRepoConfig.getChartRepoUrl(), httpHelmRepoConfig.getUsername(), httpHelmRepoConfig.getPassword(),
-        destinationDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis);
+        destinationDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis, useRepoFlags, tempDir);
 
-    String commandOutput = executeCommandWithLogOutput(
-        fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(), helmChartConfigParams.getChartName(),
-            helmChartConfigParams.getRepoName(), destinationDirectory),
-        workingDirectory, "Helm chart fetch versions command failed ", HelmCliCommandType.FETCH_ALL_VERSIONS);
+    String command = fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(),
+        helmChartConfigParams.getChartName(), helmChartConfigParams.getRepoName(), destinationDirectory);
+    if (useRepoFlags) {
+      environment.putIfAbsent(HELM_CACHE_HOME,
+          HELM_CACHE_HOME_PATH.replace(REPO_NAME, helmChartConfigParams.getRepoName())
+              .replace(HELM_CACHE_HOME_PLACEHOLDER, tempDir));
+      command = fetchHelmChartVersionsCommandWithRepoFlags(helmChartConfigParams.getHelmVersion(),
+          helmChartConfigParams.getChartName(), helmChartConfigParams.getRepoName(), destinationDirectory, tempDir);
+    }
+    String commandOutput = executeCommandWithLogOutput(environment, command, workingDirectory,
+        "Helm chart fetch versions command failed ", HelmCliCommandType.FETCH_ALL_VERSIONS);
     if (log.isDebugEnabled()) {
       log.debug("Result of the helm repo search command: {}, chart name: {}", commandOutput,
           helmChartCollectionParams.getHelmChartConfigParams().getChartName());
@@ -504,7 +536,6 @@ public class HelmTaskHelper {
   private List<HelmChart> fetchVersionsUsingChartMuseumServer(HelmChartCollectionParams helmChartCollectionParams,
       String chartDirectory, long timeoutInMillis) throws Exception {
     HelmChartConfigParams helmChartConfigParams = helmChartCollectionParams.getHelmChartConfigParams();
-
     String resourceDirectory = createNewDirectoryAtPath(RESOURCE_DIR_BASE);
 
     ChartMuseumServer chartMuseumServer = chartMuseumClient.startChartMuseumServer(
@@ -516,10 +547,10 @@ public class HelmTaskHelper {
           helmChartConfigParams.getRepoDisplayName(), chartMuseumServer.getPort(), chartDirectory,
           helmChartConfigParams.getHelmVersion(), timeoutInMillis);
 
-      String commandOutput = executeCommandWithLogOutput(
-          fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(), helmChartConfigParams.getChartName(),
-              helmChartConfigParams.getRepoName(), chartDirectory),
-          chartDirectory, "Helm chart fetch versions command failed ", HelmCliCommandType.FETCH_ALL_VERSIONS);
+      String command = fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(),
+          helmChartConfigParams.getChartName(), helmChartConfigParams.getRepoName(), chartDirectory);
+      String commandOutput = executeCommandWithLogOutput(Collections.emptyMap(), command, chartDirectory,
+          "Helm chart fetch versions command failed ", HelmCliCommandType.FETCH_ALL_VERSIONS);
       return parseHelmVersionFetchOutput(commandOutput, helmChartCollectionParams);
     } finally {
       chartMuseumClient.stopChartMuseumServer(chartMuseumServer.getStartedProcess());
@@ -531,11 +562,22 @@ public class HelmTaskHelper {
     return helmTaskHelperBase.fetchHelmChartVersionsCommand(helmVersion, chartName, repoName, workingDirectory);
   }
 
-  String executeCommandWithLogOutput(
-      String command, String chartDirectory, String errorMessage, HelmCliCommandType helmCliCommandType) {
-    StringBuilder sb = new StringBuilder();
-    ProcessExecutor processExecutor = createProcessExecutorWithRedirectOutput(command, chartDirectory, sb);
+  private String fetchHelmChartVersionsCommandWithRepoFlags(
+      HelmVersion helmVersion, String chartName, String repoName, String workingDirectory, String tempDir) {
+    return helmTaskHelperBase.fetchHelmChartVersionsCommandWithRepoFlags(
+        helmVersion, chartName, repoName, workingDirectory, tempDir);
+  }
 
+  String executeCommandWithLogOutput(Map<String, String> environment, String command, String chartDirectory,
+      String errorMessage, HelmCliCommandType helmCliCommandType) {
+    StringBuilder sb = new StringBuilder();
+    ProcessExecutor processExecutor = createProcessExecutorWithRedirectOutput(environment, command, chartDirectory, sb);
+    return executeCommandWithLogOutput(command, errorMessage, helmCliCommandType, sb, processExecutor);
+  }
+
+  @NotNull
+  private String executeCommandWithLogOutput(String command, String errorMessage, HelmCliCommandType helmCliCommandType,
+      StringBuilder sb, ProcessExecutor processExecutor) {
     log.info("Helm command executed on delegate: {}", command);
 
     try {
@@ -555,11 +597,12 @@ public class HelmTaskHelper {
   }
 
   ProcessExecutor createProcessExecutorWithRedirectOutput(
-      String helmFetchCommand, String chartDirectory, StringBuilder sb) {
+      Map<String, String> environment, String helmFetchCommand, String chartDirectory, StringBuilder sb) {
     return new ProcessExecutor()
         .commandSplit(helmFetchCommand)
         .directory(new File(chartDirectory))
         .readOutput(true)
+        .environment(environment)
         .redirectOutput(new LogOutputStream() {
           @Override
           protected void processLine(String line) {
