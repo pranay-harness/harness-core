@@ -28,6 +28,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.security.annotations.PublicApi;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -56,7 +57,8 @@ import retrofit2.http.Body;
 @Path("monitored-service")
 @Produces("application/json")
 @ExposeInternalException
-@NextGenManagerAuth
+//@NextGenManagerAuth
+@PublicApi
 @OwnedBy(HarnessTeam.CV)
 public class MonitoredServiceResource {
   @Inject MonitoredServiceService monitoredServiceService;
