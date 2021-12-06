@@ -95,11 +95,14 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
 
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     calendarSloTarget = SLOTarget.builder()
-                            .type(SLOTargetType.ROLLING)
+                            .type(SLOTargetType.CALENDER)
                             .sloTargetPercentage(80.0)
                             .spec(CalenderSLOTargetSpec.builder()
-                                      .startDate(sdf.parse("2021-12-01"))
-                                      .endDate(sdf.parse("2021-12-31"))
+                                      .type(CalenderSLOTargetSpec.CalenderType.WEEKLY)
+                                      .spec(CalenderSLOTargetSpec.WeeklyCalendarSpec.builder()
+                                                .dayOfWeek(CalenderSLOTargetSpec.WeeklyCalendarSpec.DayOfWeek.MONDAY)
+                                                .build())
+
                                       .build())
                             .build();
     userJourneyIdentifier = "userJourney";

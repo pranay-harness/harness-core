@@ -45,18 +45,16 @@ public class ServiceLevelObjectiveResource {
   @POST
   @Timed
   @ExceptionMetered
-  @Path("/create")
   @ApiOperation(value = "saves slo data", nickname = "saveSLOData")
   public RestResponse<ServiceLevelObjectiveResponse> saveSLOData(
       @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
-      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @Valid @Body ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
+                                      .orgIdentifier(serviceLevelObjectiveDTO.getOrgIdentifier())
+                                      .projectIdentifier(serviceLevelObjectiveDTO.getProjectIdentifier())
                                       .build();
+    // TODO: change this api signature
     return new RestResponse<>(serviceLevelObjectiveService.create(projectParams, serviceLevelObjectiveDTO));
   }
 
