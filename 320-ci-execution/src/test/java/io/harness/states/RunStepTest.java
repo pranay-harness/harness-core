@@ -32,7 +32,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.serializer.RunStepProtobufSerializer;
-import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
+import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;

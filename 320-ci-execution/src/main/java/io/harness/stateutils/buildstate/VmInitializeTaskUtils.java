@@ -10,7 +10,7 @@ import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.sweepingoutputs.VmStageInfraDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml;
-import io.harness.delegate.beans.ci.awsvm.CIVmInitializeTaskParams;
+import io.harness.delegate.beans.ci.vm.CIVmInitializeTaskParams;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;

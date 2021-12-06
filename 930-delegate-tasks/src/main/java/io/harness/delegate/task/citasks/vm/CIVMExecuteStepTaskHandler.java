@@ -1,15 +1,15 @@
-package io.harness.delegate.task.citasks.awsvm;
+package io.harness.delegate.task.citasks.vm;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
-import io.harness.delegate.beans.ci.awsvm.CIVmExecuteStepTaskParams;
-import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
-import io.harness.delegate.beans.ci.awsvm.runner.ExecuteStepResponse;
+import io.harness.delegate.beans.ci.vm.CIVmExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
+import io.harness.delegate.beans.ci.vm.runner.ExecuteStepResponse;
 import io.harness.delegate.task.citasks.CIExecuteStepTaskHandler;
-import io.harness.delegate.task.citasks.awsvm.helper.HttpHelper;
+import io.harness.delegate.task.citasks.vm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
 
 import com.google.inject.Inject;

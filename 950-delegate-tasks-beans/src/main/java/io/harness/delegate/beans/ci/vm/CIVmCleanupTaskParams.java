@@ -1,4 +1,4 @@
-package io.harness.delegate.beans.ci.awsvm;
+package io.harness.delegate.beans.ci.vm;
 
 import io.harness.delegate.beans.ci.CICleanupTaskParams;
 
