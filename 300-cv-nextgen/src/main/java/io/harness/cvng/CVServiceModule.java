@@ -203,12 +203,14 @@ import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorUpdatableEntity;
 import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator.ThresholdServiceLevelIndicatorUpdatableEntity;
 import io.harness.cvng.servicelevelobjective.services.api.SLIAnalyserService;
+import io.harness.cvng.servicelevelobjective.services.api.SLIDataProcessorService;
 import io.harness.cvng.servicelevelobjective.services.api.SLIRecordService;
 import io.harness.cvng.servicelevelobjective.services.api.SLODashboardService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.cvng.servicelevelobjective.services.api.UserJourneyService;
 import io.harness.cvng.servicelevelobjective.services.impl.RatioAnalyserServiceImpl;
+import io.harness.cvng.servicelevelobjective.services.impl.SLIDataProcessorServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.SLIRecordServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.SLODashboardServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelIndicatorServiceImpl;
@@ -390,6 +392,8 @@ public class CVServiceModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), DataSourceType.class, DataCollectionSLIInfoMapper.class);
     dataSourceTypeDataCollectionSLIInfoMapperMapBinder.addBinding(DataSourceType.PROMETHEUS)
         .to(PrometheusDataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionSLIInfoMapperMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
+        .to(AppDynamicsDataCollectionInfoMapper.class);
     dataSourceTypeDataCollectionSLIInfoMapperMapBinder.addBinding(DataSourceType.DATADOG_METRICS)
         .to(DatadogMetricDataCollectionInfoMapper.class);
     dataSourceTypeDataCollectionSLIInfoMapperMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
@@ -542,6 +546,7 @@ public class CVServiceModule extends AbstractModule {
     bind(ServiceLevelObjectiveService.class).to(ServiceLevelObjectiveServiceImpl.class);
     bind(UserJourneyService.class).to(UserJourneyServiceImpl.class);
     bind(ServiceLevelIndicatorService.class).to(ServiceLevelIndicatorServiceImpl.class);
+    bind(SLIDataProcessorService.class).to(SLIDataProcessorServiceImpl.class);
     bind(ServiceLevelIndicatorEntityAndDTOTransformer.class);
     MapBinder<SLIMetricType, ServiceLevelIndicatorTransformer> serviceLevelIndicatorTransformerMapBinder =
         MapBinder.newMapBinder(binder(), SLIMetricType.class, ServiceLevelIndicatorTransformer.class);

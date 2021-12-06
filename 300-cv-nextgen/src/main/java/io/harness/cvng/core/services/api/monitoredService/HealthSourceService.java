@@ -17,7 +17,7 @@ public interface HealthSourceService {
       List<String> identifiers);
   void update(String accountId, String orgIdentifier, String projectIdentifier, String environmentRef,
       String serviceRef, String nameSpaceIdentifier, Set<HealthSource> healthSource);
-  static String getNameSpacedIdentifier(String nameSpace, String identifier) {
+  public static String getNameSpacedIdentifier(String nameSpace, String identifier) {
     return nameSpace + "/" + identifier;
   }
   void setHealthMonitoringFlag(String accountId, String orgIdentifier, String projectIdentifier, String namespace,

@@ -16,6 +16,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeEventDTO.ChangeEventDTOBuilder;
 import io.harness.cvng.beans.change.ChangeSourceType;
@@ -72,6 +73,7 @@ import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource.KubernetesChangeSourceBuilder;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource.PagerDutyChangeSourceBuilder;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
@@ -81,12 +83,15 @@ import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
 import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO.ServiceLevelIndicatorDTOBuilder;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO.ServiceLevelObjectiveDTOBuilder;
 import io.harness.cvng.servicelevelobjective.beans.UserJourneyDTO;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdSLIMetricSpec;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdSLIMetricSpec.ThresholdSLIMetricSpecBuilder;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
@@ -272,7 +277,7 @@ public class BuilderFactory {
         .envIdentifier(context.getEnvIdentifier())
         .identifier(generateUuid())
         .monitoringSourceName(generateUuid())
-        .metricPack(MetricPack.builder().build())
+        .metricPack(MetricPack.builder().identifier(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER).build())
         .applicationName(generateUuid())
         .tierName(generateUuid())
         .connectorIdentifier("AppDynamics Connector")
@@ -669,6 +674,21 @@ public class BuilderFactory {
                             .build())
                   .build())
         .build();
+  }
+
+  public ServiceLevelIndicatorDTOBuilder getThresholdServiceLevelIndicatorDTOBuilder() {
+    return ServiceLevelIndicatorDTO.builder()
+        .type(ServiceLevelIndicatorType.LATENCY)
+        .healthSourceIdentifier("healthSourceIdentifier")
+        .sliMissingDataType(SLIMissingDataType.GOOD)
+        .spec(ServiceLevelIndicatorSpec.builder()
+                  .type(SLIMetricType.THRESHOLD)
+                  .spec(ThresholdSLIMetricSpec.builder()
+                            .metric1("Calls per Minute")
+                            .thresholdValue(500.0)
+                            .thresholdType(ThresholdType.GREATER_THAN_EQUAL_TO)
+                            .build())
+                  .build());
   }
 
   private VerificationJob getVerificationJob() {

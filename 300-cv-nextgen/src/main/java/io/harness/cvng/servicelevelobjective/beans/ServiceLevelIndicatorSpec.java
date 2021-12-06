@@ -20,4 +20,11 @@ public class ServiceLevelIndicatorSpec {
   @Valid
   @NotNull
   SLIMetricSpec spec;
+
+  public SLIMetricType getType() {
+    if (type == null) {
+      return spec.getType();
+    }
+    return type;
+  }
 }

@@ -25,6 +25,7 @@ import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("APP_DYNAMICS")
@@ -103,9 +104,17 @@ public class AppDynamicsCVConfig extends MetricCVConfig {
   @SuperBuilder
   @FieldDefaults(level = AccessLevel.PRIVATE)
   public static class MetricInfo extends AnalysisInfo {
+    String identifier;
     String metricName;
     String baseFolder;
     String metricPath;
     TimeSeriesMetricType metricType;
+
+    public String getIdentifier() {
+      if (StringUtils.isEmpty(identifier)) {
+        return metricName;
+      }
+      return identifier;
+    }
   }
 }

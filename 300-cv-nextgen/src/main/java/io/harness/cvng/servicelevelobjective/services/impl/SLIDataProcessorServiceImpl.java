@@ -32,6 +32,7 @@ public class SLIDataProcessorServiceImpl implements SLIDataProcessorService {
         Map<String, Double> analysisRequest =
             sliProcessRequestMap.getOrDefault(sliAnalyseRequest.getTimeStamp(), new HashMap<>());
         analysisRequest.put(entry.getKey(), sliAnalyseRequest.getMetricValue());
+        sliProcessRequestMap.put(sliAnalyseRequest.getTimeStamp(), analysisRequest);
       }
     }
     SLIState sliState;
