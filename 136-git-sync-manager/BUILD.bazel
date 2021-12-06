@@ -82,6 +82,7 @@ java_library(
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
+        "@maven//:io_github_benas_random_beans"
     ],
 )
 

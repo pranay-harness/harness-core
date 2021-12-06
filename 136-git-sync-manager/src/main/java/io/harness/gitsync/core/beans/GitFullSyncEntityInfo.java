@@ -4,10 +4,17 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.CollationLocale;
+import io.harness.mongo.CollationStrength;
+import io.harness.mongo.index.Collation;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.EntityDetail.EntityDetailKeys;
 import io.harness.persistence.PersistentEntity;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -70,5 +77,24 @@ public class GitFullSyncEntityInfo implements PersistentEntity, PersistentRegula
       return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("account_org_project_entityType_status_filePath_name_repo_branch_idx")
+                 .field(GitFullSyncEntityInfoKeys.accountIdentifier)
+                 .field(GitFullSyncEntityInfoKeys.orgIdentifier)
+                 .field(GitFullSyncEntityInfoKeys.projectIdentifier)
+                 .field(GitFullSyncEntityInfoKeys.entityDetail + "." + EntityDetailKeys.type)
+                 .field(GitFullSyncEntityInfoKeys.syncStatus)
+                 .field(GitFullSyncEntityInfoKeys.filePath)
+                 .field(GitFullSyncEntityInfoKeys.entityDetail + "." + EntityDetailKeys.name)
+                 .field(GitFullSyncEntityInfoKeys.entityDetail + "." + EntityDetailKeys.entityRef + ".repoIdentifier")
+                 .field(GitFullSyncEntityInfoKeys.entityDetail + "." + EntityDetailKeys.entityRef + ".branch")
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
+                 .build())
+        .build();
   }
 }
