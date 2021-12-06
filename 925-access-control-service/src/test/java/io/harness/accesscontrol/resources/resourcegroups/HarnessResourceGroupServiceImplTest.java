@@ -83,9 +83,8 @@ public class HarnessResourceGroupServiceImplTest extends AccessControlTestBase {
     harnessResourceGroupService.sync(identifier, scope);
 
     verify(resourceGroupClient, times(1)).getResourceGroup(any(), any(), any(), any());
-    verify(resourceGroupFactory, times(1)).buildResourceGroup(any(), any());
     verify(resourceGroupFactory, times(1)).buildResourceGroup(any());
-    verify(resourceGroupService, times(2)).upsert(any());
+    verify(resourceGroupService, times(1)).upsert(any());
   }
 
   @Test
@@ -107,9 +106,8 @@ public class HarnessResourceGroupServiceImplTest extends AccessControlTestBase {
     harnessResourceGroupService.sync(identifier, null);
 
     verify(resourceGroupClient, times(1)).getResourceGroup(any(), any(), any(), any());
-    verify(resourceGroupFactory, times(1)).buildResourceGroup(any(), any());
     verify(resourceGroupFactory, times(1)).buildResourceGroup(any());
-    verify(resourceGroupService, times(2)).upsert(any());
+    verify(resourceGroupService, times(1)).upsert(any());
   }
 
   @Test
