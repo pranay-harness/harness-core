@@ -4,11 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import static java.time.Duration.ofSeconds;
+import static org.springframework.data.domain.Sort.Direction.ASC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
-import io.harness.gitsync.core.beans.GitFullSyncEntityInfo.GitFullSyncEntityInfoKeys;
-import io.harness.gitsync.core.beans.GitFullSyncEntityInfo.SyncStatus;
+import io.harness.gitsync.core.fullsync.entity.GitFullSyncJob;
+import io.harness.gitsync.core.fullsync.entity.GitFullSyncJob.GitFullSyncJobKeys;
+import io.harness.gitsync.core.fullsync.entity.GitFullSyncJob.SyncStatus;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
@@ -17,15 +18,18 @@ import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Arrays;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(DX)
-public class GitFullSyncEntityIterator implements Handler<GitFullSyncEntityInfo> {
+public class GitFullSyncEntityIterator implements Handler<GitFullSyncJob> {
   private final PersistenceIteratorFactory persistenceIteratorFactory;
   private final MongoTemplate mongoTemplate;
   private final GitFullSyncProcessorService gitFullSyncProcessorService;
@@ -36,8 +40,8 @@ public class GitFullSyncEntityIterator implements Handler<GitFullSyncEntityInfo>
   }
 
   @Override
-  public void handle(GitFullSyncEntityInfo entity) {
-    gitFullSyncProcessorService.processFile(entity);
+  public void handle(GitFullSyncJob entity) {
+    gitFullSyncProcessorService.performFullSync(entity);
   }
 
   private void registerIteratorWithFactory(int threadPoolSize, @NotNull SpringFilterExpander filterExpander) {
@@ -47,13 +51,13 @@ public class GitFullSyncEntityIterator implements Handler<GitFullSyncEntityInfo>
             .poolSize(threadPoolSize)
             .interval(ofSeconds(5))
             .build(),
-        GitFullSyncEntityInfo.class,
-        MongoPersistenceIterator.<GitFullSyncEntityInfo, SpringFilterExpander>builder()
-            .clazz(GitFullSyncEntityInfo.class)
-            .fieldName(GitFullSyncEntityInfoKeys.nextRuntime)
+        GitFullSyncJob.class,
+        MongoPersistenceIterator.<GitFullSyncJob, SpringFilterExpander>builder()
+            .clazz(GitFullSyncJob.class)
+            .fieldName(GitFullSyncJobKeys.nextRuntime)
             .targetInterval(ofSeconds(120))
-            .acceptableExecutionTime(ofSeconds(100))
-            .acceptableNoAlertDelay(ofSeconds(120))
+            .acceptableExecutionTime(ofSeconds(240))
+            .acceptableNoAlertDelay(ofSeconds(300))
             .filterExpander(filterExpander)
             .handler(this)
             .schedulingType(REGULAR)
@@ -63,8 +67,11 @@ public class GitFullSyncEntityIterator implements Handler<GitFullSyncEntityInfo>
 
   private SpringFilterExpander getFilterQuery() {
     return query -> {
-      Criteria criteria = Criteria.where(GitFullSyncEntityInfoKeys.syncStatus).is(SyncStatus.QUEUED.name());
+      Criteria criteria = Criteria.where(GitFullSyncJobKeys.syncStatus)
+                              .in(Arrays.asList(SyncStatus.QUEUED.name(), SyncStatus.FAILED_WITH_RETRIES_LEFT.name()));
       query.addCriteria(criteria);
+      query.with(Sort.by(ASC, GitFullSyncJobKeys.lastUpdatedAt));
+      query.with(PageRequest.of(0, 1));
     };
   }
 }
