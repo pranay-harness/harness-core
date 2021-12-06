@@ -55,8 +55,6 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
         return Optional.ofNullable(response);
       });
       if (resourceGroupResponse.isPresent()) {
-        resourceGroupService.upsert(resourceGroupFactory.buildResourceGroup(
-            resourceGroupResponse.get(), scope == null ? null : scope.toString()));
         resourceGroupService.upsert(resourceGroupFactory.buildResourceGroup(resourceGroupResponse.get()));
       } else {
         deleteIfPresent(identifier, scope);

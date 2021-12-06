@@ -5,6 +5,9 @@ import static io.harness.NGConstants.DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_I
 import static io.harness.NGConstants.DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.threading.Morpheus.sleep;
+
+import static java.time.Duration.ofMinutes;
 
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO.RoleAssignmentDBOKeys;
@@ -17,7 +20,6 @@ import io.harness.migration.NGMigration;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -50,22 +52,17 @@ public class RoleAssignmentResourceGroupMigration implements NGMigration {
                             .is(scopeLevel.toString())
                             .and(RoleAssignmentDBOKeys.resourceGroupIdentifier)
                             .is(ALL_RESOURCES_RESOURCE_GROUP_IDENTIFIER);
-    try {
-      do {
-        List<RoleAssignmentDBO> roleAssignmentList = roleAssignmentRepository.findAll(criteria, pageable).getContent();
-        if (isEmpty(roleAssignmentList)) {
-          return;
-        }
-        for (RoleAssignmentDBO roleAssignment : roleAssignmentList) {
-          roleAssignmentRepository.save(buildRoleAssignmentDBO(scopeLevel, roleAssignment));
-          roleAssignmentRepository.deleteById(roleAssignment.getId());
-        }
-        TimeUnit.MINUTES.sleep(2);
-      } while (true);
-    } catch (InterruptedException exception) {
-      log.error("InterruptedException occurred.", exception);
-      Thread.currentThread().interrupt();
-    }
+    do {
+      List<RoleAssignmentDBO> roleAssignmentList = roleAssignmentRepository.findAll(criteria, pageable).getContent();
+      if (isEmpty(roleAssignmentList)) {
+        return;
+      }
+      for (RoleAssignmentDBO roleAssignment : roleAssignmentList) {
+        roleAssignmentRepository.save(buildRoleAssignmentDBO(scopeLevel, roleAssignment));
+        roleAssignmentRepository.deleteById(roleAssignment.getId());
+      }
+      sleep(ofMinutes(2));
+    } while (true);
   }
 
   private RoleAssignmentDBO buildRoleAssignmentDBO(ScopeLevel scopeLevel, RoleAssignmentDBO roleAssignmentDBO) {
