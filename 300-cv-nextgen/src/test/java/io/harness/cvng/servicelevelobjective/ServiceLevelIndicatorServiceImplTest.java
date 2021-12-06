@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
-import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
@@ -16,6 +15,7 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdSLIMetricSpec;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.rule.Owner;
 
@@ -32,7 +32,7 @@ public class ServiceLevelIndicatorServiceImplTest extends CvNextGenTestBase {
 
   @Before
   public void setup() {
-    builderFactory = BuilderFactory.builder().build();
+    builderFactory = BuilderFactory.getDefault();
   }
 
   @Test
@@ -92,7 +92,7 @@ public class ServiceLevelIndicatorServiceImplTest extends CvNextGenTestBase {
                   .spec(ThresholdSLIMetricSpec.builder()
                             .metric1("metric1")
                             .thresholdValue(50.0)
-                            .thresholdType(TimeSeriesThresholdType.ACT_WHEN_LOWER)
+                            .thresholdType(ThresholdType.GREATER_THAN)
                             .build())
                   .build())
         .build();
