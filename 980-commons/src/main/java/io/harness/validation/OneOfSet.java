@@ -23,4 +23,11 @@ public @interface OneOfSet {
    * fields = {"a, b, c", "e, f"}
    */
   String[] fields() default {};
+
+  /**
+   * Provide java field names which are to marked required in schema.
+   * This is needed because there might be few fields on which we can't put @NotNull annotation as they could be in
+   * oneOf sets.
+   */
+  String[] requiredFieldNames() default {};
 }
