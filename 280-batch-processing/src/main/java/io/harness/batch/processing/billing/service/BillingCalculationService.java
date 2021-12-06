@@ -216,7 +216,7 @@ public class BillingCalculationService {
   public IdleCostData getIdleCostForResource(
       BillingAmountBreakup billingDataForResource, UtilizationData utilizationData, InstanceData instanceData) {
     if (instanceData.getInstanceId().equals("ac984c4b1bdc4ed692bf36d2268a57c5")) {
-      log.info("ac984c4b1bdc4ed692bf36d2268a57c5 inside idle cost {} ", billingDataForResource);
+      log.info("ac984c4b1bdc4ed692bf36d2268a57c5 inside idle cost {} : {}", billingDataForResource, utilizationData);
     }
     if (instanceData.getInstanceType() == InstanceType.ECS_TASK_FARGATE || utilizationData == null) {
       return new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
@@ -228,14 +228,21 @@ public class BillingCalculationService {
     if (utilizationData.getAvgCpuUtilization() < 1) {
       cpuIdleCost = BigDecimal.valueOf(
           billingDataForResource.getCpuBillingAmount().doubleValue() * (1 - utilizationData.getAvgCpuUtilization()));
+      if (instanceData.getInstanceId().equals("ac984c4b1bdc4ed692bf36d2268a57c5")) {
+        log.info("ac984c4b1bdc4ed692bf36d2268a57c5 cpu idle cost {} : {} : {}", cpuIdleCost, billingDataForResource.getCpuBillingAmount().doubleValue(), utilizationData.getAvgCpuUtilization());
+      }
     }
     if (utilizationData.getAvgMemoryUtilization() < 1) {
       memoryIdleCost = BigDecimal.valueOf(billingDataForResource.getMemoryBillingAmount().doubleValue()
           * (1 - utilizationData.getAvgMemoryUtilization()));
+      if (instanceData.getInstanceId().equals("ac984c4b1bdc4ed692bf36d2268a57c5")) {
+        log.info("ac984c4b1bdc4ed692bf36d2268a57c5 memory idle cost {} : {} : {}", memoryIdleCost, billingDataForResource.getMemoryBillingAmount().doubleValue(), utilizationData.getAvgMemoryUtilization());
+      }
     }
 
     if (instanceData.getInstanceId().equals("ac984c4b1bdc4ed692bf36d2268a57c5")) {
       log.info("ac984c4b1bdc4ed692bf36d2268a57c5 cpu {} memory  idle cost {} ", cpuIdleCost, memoryIdleCost);
+      log.info("ac984c4b1bdc4ed692bf36d2268a57c5 cpu {} memory  idle cost {} ", utilizationData.getAvgCpuUtilization(), utilizationData.getAvgCpuUtilization());
     }
     double storageRequest = utilizationData.getMaxStorageRequestValue();
     double storageUsage = utilizationData.getMaxStorageUsageValue();
