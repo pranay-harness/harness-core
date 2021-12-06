@@ -1,9 +1,7 @@
 package io.harness.accesscontrol.commons.migration;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
-
+import com.google.common.collect.ImmutableList;
 import io.harness.accesscontrol.resources.resourcegroups.migration.MultipleManagedResourceGroupMigration;
-import io.harness.accesscontrol.resources.resourcegroups.migration.MultipleManagedResourceGroupMigrationV2;
 import io.harness.accesscontrol.roleassignments.migration.PrivilegedRoleAssignmentMigration;
 import io.harness.accesscontrol.roleassignments.migration.RoleAssignmentResourceGroupMigration;
 import io.harness.accesscontrol.roleassignments.migration.RoleAssignmentScopeAdditionMigration;
@@ -12,10 +10,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.migration.MigrationDetails;
 import io.harness.migration.NGMigration;
 import io.harness.migration.beans.MigrationType;
-
-import com.google.common.collect.ImmutableList;
-import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.List;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 @OwnedBy(PL)
 public class AccessControlMongoBackgroundMigrationDetails implements MigrationDetails {
@@ -38,7 +37,6 @@ public class AccessControlMongoBackgroundMigrationDetails implements MigrationDe
         .add(Pair.of(5, PrivilegedRoleAssignmentMigration.class))
         .add(Pair.of(6, MultipleManagedResourceGroupMigration.class))
         .add(Pair.of(7, RoleAssignmentResourceGroupMigration.class))
-        .add(Pair.of(8, MultipleManagedResourceGroupMigrationV2.class))
         .build();
   }
 }
