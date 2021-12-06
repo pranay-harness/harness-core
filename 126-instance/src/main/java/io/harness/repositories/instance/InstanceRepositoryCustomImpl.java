@@ -64,11 +64,11 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
   }
 
   @Override
-  public List<Instance> getInstancesModifiedInInterval(
+  public List<Instance> getInstancesDeployedInInterval(
       String accountIdentifier, long startTimestamp, long endTimeStamp) {
     Criteria criteria = Criteria.where(InstanceKeys.accountIdentifier)
                             .is(accountIdentifier)
-                            .and(InstanceKeys.lastModifiedAt)
+                            .and(InstanceKeys.lastDeployedAt)
                             .gte(startTimestamp)
                             .lte(endTimeStamp);
 
