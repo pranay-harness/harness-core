@@ -11,6 +11,7 @@ import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_EXPI
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_INVALID;
 import static io.harness.ng.core.invites.mapper.InviteMapper.toInviteList;
 import static io.harness.ng.core.invites.mapper.InviteMapper.writeDTO;
+import static io.harness.ng.core.invites.mapper.RoleBindingMapper.sanitizeRoleBindings;
 import static io.harness.ng.core.user.UserMembershipUpdateSource.ACCEPTED_INVITE;
 
 import static java.lang.Boolean.FALSE;
@@ -50,7 +51,6 @@ import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.invites.dto.RoleBinding.RoleBindingKeys;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
-import io.harness.ng.core.invites.mapper.RoleBindingMapper;
 import io.harness.ng.core.invites.utils.InviteUtils;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
@@ -203,14 +203,7 @@ public class InviteServiceImpl implements InviteService {
 
   private void preCreateInvite(Invite invite) {
     List<RoleBinding> roleBindings = invite.getRoleBindings();
-    roleBindings.forEach(roleBinding -> {
-      if (isBlank(roleBinding.getResourceGroupIdentifier())) {
-        roleBinding.setResourceGroupIdentifier(RoleBindingMapper.getDefaultResourceGroupIdentifier(
-            invite.getOrgIdentifier(), invite.getProjectIdentifier()));
-        roleBinding.setResourceGroupName(
-            RoleBindingMapper.getDefaultResourceGroupName(invite.getOrgIdentifier(), invite.getProjectIdentifier()));
-      }
-    });
+    sanitizeRoleBindings(roleBindings, invite.getOrgIdentifier(), invite.getProjectIdentifier());
   }
 
   private boolean checkIfUserAlreadyAdded(Invite invite) {

@@ -1,6 +1,7 @@
 package io.harness.ng.accesscontrol.migrations.services;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.core.invites.mapper.RoleBindingMapper.getDefaultResourceGroupIdentifier;
 
 import static java.util.Collections.emptyList;
 
@@ -234,7 +235,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
 
     log.info("Created {} NON-MANAGED role assignments from UserMembership for scope: {}",
         createRoleAssignments(scope, false,
-            buildRoleAssignments(users, getManagedAdminRole(scope), getManagedResourceGroupIdentifier(scope))),
+            buildRoleAssignments(users, getManagedAdminRole(scope), getDefaultResourceGroupIdentifier(scope))),
         scope);
   }
 
@@ -251,7 +252,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     log.info("Created {} NON-MANAGED role assignments from CG Users for scope: {}",
         createRoleAssignments(scope, false,
             buildRoleAssignments(
-                currentGenUsers, getManagedAdminRole(scope), getManagedResourceGroupIdentifier(scope))),
+                currentGenUsers, getManagedAdminRole(scope), getDefaultResourceGroupIdentifier(scope))),
         scope);
   }
 
@@ -276,16 +277,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
       return "_organization_admin";
     } else {
       return "_account_admin";
-    }
-  }
-
-  private static String getManagedResourceGroupIdentifier(Scope scope) {
-    if (!StringUtils.isEmpty(scope.getProjectIdentifier())) {
-      return "_all_project_level_resources";
-    } else if (!StringUtils.isEmpty(scope.getOrgIdentifier())) {
-      return "_all_organization_level_resources";
-    } else {
-      return "_all_account_level_resources";
     }
   }
 

@@ -3,6 +3,7 @@ package io.harness.ng.core.invites.remote;
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
+import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
@@ -226,7 +227,7 @@ public class InviteResource {
       String finalOrgIdentifier = orgIdentifier;
       String finalProjectIdentifier = projectIdentifier;
       createInviteDTO.getRoleBindings().forEach(roleBinding -> {
-        if (RoleBindingMapper.ALL_RESOURCES.equals(roleBinding.getResourceGroupIdentifier())) {
+        if (DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(roleBinding.getResourceGroupIdentifier())) {
           throw new InvalidRequestException(String.format("_all_resources is deprecated, please use %s",
               RoleBindingMapper.getDefaultResourceGroupIdentifier(finalOrgIdentifier, finalProjectIdentifier)));
         }

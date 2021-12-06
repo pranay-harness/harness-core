@@ -1,5 +1,8 @@
 package io.harness.ng.core.invites.mapper;
 
+import static io.harness.NGConstants.DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -22,8 +25,6 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(PL)
 @UtilityClass
 public class RoleBindingMapper {
-  public static String ALL_RESOURCES = "_all_resources";
-
   public static io.harness.audit.beans.custom.user.RoleBinding toAuditRoleBinding(RoleBinding roleBinding) {
     return io.harness.audit.beans.custom.user.RoleBinding.builder()
         .roleIdentifier(roleBinding.getRoleIdentifier())
@@ -46,12 +47,7 @@ public class RoleBindingMapper {
     }
     return roleBindings.stream()
         .map(roleBinding -> {
-          if (isBlank(roleBinding.getResourceGroupIdentifier())) {
-            roleBinding.setResourceGroupIdentifier(
-                getDefaultResourceGroupIdentifier(scope.getOrgIdentifier(), scope.getProjectIdentifier()));
-            roleBinding.setResourceGroupName(
-                getDefaultResourceGroupName(scope.getOrgIdentifier(), scope.getProjectIdentifier()));
-          }
+          sanitizeRoleBinding(roleBinding, scope.getOrgIdentifier(), scope.getProjectIdentifier());
           return RoleAssignmentDTO.builder()
               .roleIdentifier(roleBinding.getRoleIdentifier())
               .resourceGroupIdentifier(roleBinding.getResourceGroupIdentifier())
@@ -62,14 +58,31 @@ public class RoleBindingMapper {
         .collect(Collectors.toList());
   }
 
+  public static void sanitizeRoleBindings(
+      List<RoleBinding> roleBindings, String orgIdentifier, String projectIdentifier) {
+    roleBindings.forEach(roleBinding -> sanitizeRoleBinding(roleBinding, orgIdentifier, projectIdentifier));
+  }
+
+  public static void sanitizeRoleBinding(RoleBinding roleBinding, String orgIdentifier, String projectIdentifier) {
+    if (isBlank(roleBinding.getResourceGroupIdentifier())) {
+      roleBinding.setResourceGroupIdentifier(
+          RoleBindingMapper.getDefaultResourceGroupIdentifier(orgIdentifier, projectIdentifier));
+      roleBinding.setResourceGroupName(RoleBindingMapper.getDefaultResourceGroupName(orgIdentifier, projectIdentifier));
+    }
+  }
+
   public static String getDefaultResourceGroupIdentifier(String orgIdentifier, String projectIdentifier) {
     if (isNotEmpty(projectIdentifier)) {
-      return "_all_project_level_resources";
+      return DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
     } else if (isNotEmpty(orgIdentifier)) {
-      return "_all_organization_level_resources";
+      return DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
     } else {
-      return "_all_account_level_resources";
+      return DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
     }
+  }
+
+  public static String getDefaultResourceGroupIdentifier(Scope scope) {
+    return getDefaultResourceGroupIdentifier(scope.getOrgIdentifier(), scope.getProjectIdentifier());
   }
 
   public String getDefaultResourceGroupName(String orgIdentifier, String projectIdentifier) {

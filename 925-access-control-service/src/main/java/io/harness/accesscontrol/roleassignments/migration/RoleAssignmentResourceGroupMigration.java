@@ -1,5 +1,8 @@
 package io.harness.accesscontrol.roleassignments.migration;
 
+import static io.harness.NGConstants.DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -15,10 +18,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@Slf4j
 @Singleton
 @OwnedBy(PL)
 public class RoleAssignmentResourceGroupMigration implements NGMigration {
@@ -58,6 +63,7 @@ public class RoleAssignmentResourceGroupMigration implements NGMigration {
         TimeUnit.MINUTES.sleep(2);
       } while (true);
     } catch (InterruptedException exception) {
+      log.error("InterruptedException occurred.", exception);
       Thread.currentThread().interrupt();
     }
   }
@@ -80,11 +86,11 @@ public class RoleAssignmentResourceGroupMigration implements NGMigration {
 
   private String getResourceGroupIdentifier(ScopeLevel scopeLevel) {
     if (HarnessScopeLevel.PROJECT.equals(scopeLevel)) {
-      return "_all_project_level_resources";
+      return DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
     } else if (HarnessScopeLevel.ORGANIZATION.equals(scopeLevel)) {
-      return "_all_organization_level_resources";
+      return DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
     } else {
-      return "_all_account_level_resources";
+      return DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
     }
   }
 }
