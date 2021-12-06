@@ -1,11 +1,11 @@
-package io.harness.delegate.task.citasks.awsvm.helper;
+package io.harness.delegate.task.citasks.vm.helper;
 
-import static io.harness.delegate.task.citasks.awsvm.helper.CIVMConstants.RUNNER_CONNECT_TIMEOUT_SECS;
-import static io.harness.delegate.task.citasks.awsvm.helper.CIVMConstants.RUNNER_URL;
+import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.RUNNER_CONNECT_TIMEOUT_SECS;
+import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.RUNNER_URL;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ci.awsvm.runner.ExecuteStepResponse;
+import io.harness.delegate.beans.ci.vm.runner.ExecuteStepResponse;
 import io.harness.network.Http;
 
 import com.google.inject.Singleton;

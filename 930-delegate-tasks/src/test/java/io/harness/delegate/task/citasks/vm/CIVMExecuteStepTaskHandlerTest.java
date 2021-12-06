@@ -1,4 +1,4 @@
-package io.harness.delegate.task.citasks.awsvm;
+package io.harness.delegate.task.citasks.vm;
 
 import static io.harness.rule.OwnerRule.SHUBHAM;
 
@@ -10,10 +10,10 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ci.awsvm.CIVmExecuteStepTaskParams;
-import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
-import io.harness.delegate.beans.ci.awsvm.runner.ExecuteStepResponse;
-import io.harness.delegate.task.citasks.awsvm.helper.HttpHelper;
+import io.harness.delegate.beans.ci.vm.CIVmExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
+import io.harness.delegate.beans.ci.vm.runner.ExecuteStepResponse;
+import io.harness.delegate.task.citasks.vm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
@@ -31,7 +31,7 @@ import retrofit2.Response;
 @OwnedBy(HarnessTeam.CI)
 public class CIVMExecuteStepTaskHandlerTest extends CategoryTest {
   @Mock private HttpHelper httpHelper;
-  @InjectMocks private CIVMExecuteStepTaskHandler CIVMExecuteStepTaskHandler;
+  @InjectMocks private io.harness.delegate.task.citasks.vm.CIVMExecuteStepTaskHandler CIVMExecuteStepTaskHandler;
 
   @Before
   public void setUp() {

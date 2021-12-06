@@ -1,6 +1,6 @@
-package io.harness.delegate.task.citasks.awsvm.helper;
+package io.harness.delegate.task.citasks.vm.helper;
 
-import io.harness.delegate.beans.ci.awsvm.runner.ExecuteStepResponse;
+import io.harness.delegate.beans.ci.vm.runner.ExecuteStepResponse;
 
 import java.util.Map;
 import retrofit2.Call;

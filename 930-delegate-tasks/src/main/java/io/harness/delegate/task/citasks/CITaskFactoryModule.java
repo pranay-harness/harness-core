@@ -1,12 +1,12 @@
 package io.harness.delegate.task.citasks;
 
-import io.harness.delegate.task.citasks.awsvm.CIVMExecuteStepTaskHandler;
-import io.harness.delegate.task.citasks.awsvm.CIVmCleanupTaskHandler;
-import io.harness.delegate.task.citasks.awsvm.CIVmInitializeTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.CIK8CleanupTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.CIK8ExecuteStepTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.CIK8InitializeTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.K8ExecuteCommandTaskHandler;
+import io.harness.delegate.task.citasks.vm.CIVMExecuteStepTaskHandler;
+import io.harness.delegate.task.citasks.vm.CIVmCleanupTaskHandler;
+import io.harness.delegate.task.citasks.vm.CIVmInitializeTaskHandler;
 import io.harness.threading.Sleeper;
 import io.harness.threading.ThreadSleeper;
 import io.harness.time.ClockTimer;

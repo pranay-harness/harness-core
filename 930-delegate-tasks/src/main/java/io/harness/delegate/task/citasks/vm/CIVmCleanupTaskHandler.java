@@ -1,12 +1,12 @@
-package io.harness.delegate.task.citasks.awsvm;
+package io.harness.delegate.task.citasks.vm;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.CICleanupTaskParams;
-import io.harness.delegate.beans.ci.awsvm.CIVmCleanupTaskParams;
-import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
+import io.harness.delegate.beans.ci.vm.CIVmCleanupTaskParams;
+import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
 import io.harness.delegate.task.citasks.CICleanupTaskHandler;
-import io.harness.delegate.task.citasks.awsvm.helper.HttpHelper;
+import io.harness.delegate.task.citasks.vm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
 
 import com.google.inject.Inject;

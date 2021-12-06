@@ -1,13 +1,13 @@
-package io.harness.delegate.task.citasks.awsvm;
+package io.harness.delegate.task.citasks.vm;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.CIInitializeTaskParams;
-import io.harness.delegate.beans.ci.awsvm.CIVmInitializeTaskParams;
-import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
+import io.harness.delegate.beans.ci.vm.CIVmInitializeTaskParams;
+import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.citasks.CIInitializeTaskHandler;
-import io.harness.delegate.task.citasks.awsvm.helper.HttpHelper;
+import io.harness.delegate.task.citasks.vm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
 
 import com.google.inject.Inject;
@@ -31,8 +31,8 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
   public VmTaskExecutionResponse executeTaskInternal(
       CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient) {
     CIVmInitializeTaskParams CIVmInitializeTaskParams = (CIVmInitializeTaskParams) ciInitializeTaskParams;
-    log.info("Received request to initialize stage with stage runtime ID {}",
-        CIVmInitializeTaskParams.getStageRuntimeId());
+    log.info(
+        "Received request to initialize stage with stage runtime ID {}", CIVmInitializeTaskParams.getStageRuntimeId());
     return callRunnerForSetup(CIVmInitializeTaskParams.getStageRuntimeId());
   }
 
