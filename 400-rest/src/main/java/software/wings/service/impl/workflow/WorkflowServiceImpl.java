@@ -2678,8 +2678,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())
         .filter(WorkflowExecutionKeys.appId, workflow.getAppId())
         .filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())
-        .field(WorkflowExecutionKeys.serviceIds)
-        .contains(serviceId)
+        .filter(WorkflowExecutionKeys.serviceIds, serviceId)
         .filter(WorkflowExecutionKeys.status, SUCCESS)
         .order(Sort.descending(WorkflowExecutionKeys.createdAt))
         .get();
