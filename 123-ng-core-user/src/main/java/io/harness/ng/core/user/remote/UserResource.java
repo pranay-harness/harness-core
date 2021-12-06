@@ -3,12 +3,12 @@ package io.harness.ng.core.user.remote;
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
-import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGE_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
+import static io.harness.ng.core.invites.mapper.RoleBindingMapper.validateRoleBindings;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Boolean.TRUE;
@@ -34,7 +34,6 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.invites.mapper.RoleBindingMapper;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.AddUsersDTO;
 import io.harness.ng.core.user.AddUsersResponse;
@@ -400,14 +399,7 @@ public class UserResource {
       String projectIdentifier, @NotNull @Valid AddUsersDTO addUsersDTO) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USER, null), MANAGE_USER_PERMISSION);
-    if (isNotEmpty(addUsersDTO.getRoleBindings())) {
-      addUsersDTO.getRoleBindings().forEach(roleBinding -> {
-        if (DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(roleBinding.getResourceGroupIdentifier())) {
-          throw new InvalidRequestException(String.format("_all_resources is deprecated, please use %s",
-              RoleBindingMapper.getDefaultResourceGroupIdentifier(orgIdentifier, projectIdentifier)));
-        }
-      });
-    }
+    validateRoleBindings(addUsersDTO.getRoleBindings(), orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(
         ngUserService.addUsers(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), addUsersDTO));
   }
