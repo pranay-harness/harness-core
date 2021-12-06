@@ -41,6 +41,7 @@ import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.principals.users.HarnessUserService;
 import io.harness.accesscontrol.principals.users.UserService;
 import io.harness.accesscontrol.resourcegroups.api.ResourceGroupDTO;
+import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupConstants;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.api.ResourceGroupDTOMapper;
@@ -71,6 +72,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.outbox.api.OutboxService;
+import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
 import io.harness.security.annotations.InternalApi;
 
 import com.google.common.collect.Sets;
@@ -165,8 +167,6 @@ public class RoleAssignmentResource {
   AccessControlClient accessControlClient;
 
   RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
-  String ALL_RESOURCES = "_all_resources";
-  String ALL_RESOURCES_DEPRECATED_ERROR_MESSAGE = "_all_resources is deprecated, please use _all_%s_resources.";
 
   @Inject
   public RoleAssignmentResource(RoleAssignmentService roleAssignmentService,
@@ -315,10 +315,7 @@ public class RoleAssignmentResource {
   public ResponseDTO<RoleAssignmentResponseDTO>
   create(@BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentDTO roleAssignmentDTO) {
     Scope scope = ScopeMapper.fromParams(harnessScopeParams);
-    if (ALL_RESOURCES.equals(roleAssignmentDTO.getResourceGroupIdentifier())) {
-      throw new InvalidRequestException(
-          String.format(ALL_RESOURCES_DEPRECATED_ERROR_MESSAGE, scope.getLevel().toString()));
-    }
+    validateDeprecatedResourceGroupNotUsed(roleAssignmentDTO.getResourceGroupIdentifier(), scope.getLevel().toString());
     RoleAssignment roleAssignment = fromDTO(scope, roleAssignmentDTO);
     syncDependencies(roleAssignment, scope);
     checkUpdatePermission(harnessScopeParams, roleAssignment);
@@ -329,6 +326,13 @@ public class RoleAssignmentResource {
           response.getScope().getAccountIdentifier(), response.getRoleAssignment(), response.getScope()));
       return ResponseDTO.newResponse(response);
     }));
+  }
+
+  private static void validateDeprecatedResourceGroupNotUsed(String resourceGroupIdentifier, String scopeLevel) {
+    if (HarnessResourceGroupConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(resourceGroupIdentifier)) {
+      throw new InvalidRequestException(
+          String.format("_all_resources is deprecated, please use _all_%s_level_resources.", scopeLevel));
+    }
   }
 
   @PUT
@@ -345,10 +349,7 @@ public class RoleAssignmentResource {
     if (!identifier.equals(roleAssignmentDTO.getIdentifier())) {
       throw new InvalidRequestException("Role Assignment identifier in the request body and the url do not match.");
     }
-    if (ALL_RESOURCES.equals(roleAssignmentDTO.getResourceGroupIdentifier())) {
-      throw new InvalidRequestException(
-          String.format(ALL_RESOURCES_DEPRECATED_ERROR_MESSAGE, scope.getLevel().toString()));
-    }
+    validateDeprecatedResourceGroupNotUsed(roleAssignmentDTO.getResourceGroupIdentifier(), scope.getLevel().toString());
     RoleAssignment roleAssignmentUpdate = fromDTO(scope, roleAssignmentDTO);
     checkUpdatePermission(harnessScopeParams, roleAssignmentUpdate);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
@@ -377,10 +378,8 @@ public class RoleAssignmentResource {
       @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
     Scope scope = ScopeMapper.fromParams(harnessScopeParams);
     roleAssignmentCreateRequestDTO.getRoleAssignments().forEach(roleAssignmentDTO -> {
-      if (ALL_RESOURCES.equals(roleAssignmentDTO.getResourceGroupIdentifier())) {
-        throw new InvalidRequestException(
-            String.format(ALL_RESOURCES_DEPRECATED_ERROR_MESSAGE, scope.getLevel().toString()));
-      }
+      validateDeprecatedResourceGroupNotUsed(
+          roleAssignmentDTO.getResourceGroupIdentifier(), scope.getLevel().toString());
     });
     return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false));
   }
@@ -401,7 +400,8 @@ public class RoleAssignmentResource {
       @QueryParam("managed") @DefaultValue("false") Boolean managed) {
     List<RoleAssignmentDTO> roleAssignmentDTOs = new ArrayList<>();
     roleAssignmentCreateRequestDTO.getRoleAssignments().forEach(roleAssignmentDTO -> {
-      if (ALL_RESOURCES.equals(roleAssignmentDTO.getResourceGroupIdentifier())) {
+      if (HarnessResourceGroupConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(
+              roleAssignmentDTO.getResourceGroupIdentifier())) {
         roleAssignmentDTOs.add(RoleAssignmentDTO.builder()
                                    .disabled(roleAssignmentDTO.isDisabled())
                                    .identifier(roleAssignmentDTO.getIdentifier())
