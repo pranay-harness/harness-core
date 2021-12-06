@@ -558,7 +558,14 @@ permissions:
     - account
     - organization
     - project
-  - identifier: pm_governance_create_edit
+  - identifier: pm_governance_view
+    name: View Policies and Policy Sets
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: pm_governance_edit
     name: Create or edit Policies and Policy Sets
     status: ACTIVE
     allowedScopeLevels:
@@ -567,6 +574,13 @@ permissions:
       - project
   - identifier: pm_governance_delete
     name: Delete Policies and Policy Sets
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: pm_governance_evaluate
+    name: Create and view new evaluations
     status: ACTIVE
     allowedScopeLevels:
       - account

@@ -69,8 +69,10 @@ roles:
         - core_template_delete
         - core_template_edit
         - core_template_view
-        - pm_governance_create_edit
+        - pm_governance_view
+        - pm_governance_edit
         - pm_governance_delete
+        - pm_governance_evaluate
       allowedScopeLevels:
         - project
       managed: true
@@ -295,7 +297,10 @@ roles:
       name: Governance Manage Role
       description: Can edit and view existing policies and policy sets
       permissions:
-        - pm_governance_create_edit
+        - pm_governance_view
+        - pm_governance_edit
+        - pm_governance_delete
+        - pm_governance_evaluate
       managed: true
       allowedScopeLevels:
         - account
