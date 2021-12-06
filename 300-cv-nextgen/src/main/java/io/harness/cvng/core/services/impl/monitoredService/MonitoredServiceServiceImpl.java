@@ -319,21 +319,16 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
             .field(MonitoredServiceKeys.identifier)
             .in(identifierSet)
             .asList();
-
-    if (monitoredServices != null) {
-      List<MonitoredServiceResponse> monitoredServiceResponseList = new ArrayList<>();
-
-      monitoredServices.forEach(monitoredService -> {
-        ServiceEnvironmentParams environmentParams =
-            builderWithProjectParams(projectParams)
-                .serviceIdentifier(monitoredService.getServiceIdentifier())
-                .environmentIdentifier(monitoredService.getEnvironmentIdentifier())
-                .build();
-        monitoredServiceResponseList.add(createMonitoredServiceDTOFromEntity(monitoredService, environmentParams));
-      });
-      return monitoredServiceResponseList;
-    }
-    return null;
+    List<MonitoredServiceResponse> monitoredServiceResponseList = new ArrayList<>();
+    monitoredServices.forEach(monitoredService -> {
+      ServiceEnvironmentParams environmentParams =
+          builderWithProjectParams(projectParams)
+              .serviceIdentifier(monitoredService.getServiceIdentifier())
+              .environmentIdentifier(monitoredService.getEnvironmentIdentifier())
+              .build();
+      monitoredServiceResponseList.add(createMonitoredServiceDTOFromEntity(monitoredService, environmentParams));
+    });
+    return monitoredServiceResponseList;
   }
 
   @Override
