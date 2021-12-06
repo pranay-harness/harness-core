@@ -30,3 +30,4 @@ services:
       - USE_CDN=${useCdn}
       - CDN_URL=${cdnUrl}
       - VERSION_CHECK_DISABLED=${versionCheckDisabled}
+      - INIT_SCRIPT=echo "Docker delegate init script executed."
