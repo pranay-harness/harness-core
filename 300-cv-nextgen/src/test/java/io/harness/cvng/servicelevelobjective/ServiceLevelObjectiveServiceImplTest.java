@@ -262,7 +262,7 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   }
 
   private ServiceLevelObjectiveDTO createSLOBuilder() {
-    return builderFactory.getServiceLevelObjectiveDTOBuilder();
+    return builderFactory.getServiceLevelObjectiveDTOBuilder().build();
   }
 
   private void createMonitoredService() {
