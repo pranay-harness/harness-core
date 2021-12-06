@@ -8,12 +8,12 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
-import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdSLIMetricSpec;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
+import io.harness.cvng.servicelevelobjective.entities.SLIRecord.SLIState;
 import io.harness.cvng.servicelevelobjective.services.impl.ThresholdAnalyserServiceImpl;
 import io.harness.rule.Owner;
 
@@ -42,9 +42,9 @@ public class SLIAnalyserServiceImplTest extends CvNextGenTestBase {
     ServiceLevelIndicatorDTO serviceLevelIndicatorDTO = createThresholdServiceLevelIndicator();
     Map<String, Double> requestMap = new HashMap<>();
     requestMap.put("metric1", 225.0);
-    SLIMissingDataType sliMissingDataType = thresholdAnalyserServiceImpl.analyse(
+    SLIState sliState = thresholdAnalyserServiceImpl.analyse(
         requestMap, (ThresholdSLIMetricSpec) serviceLevelIndicatorDTO.getSpec().getSpec());
-    assertThat(SLIMissingDataType.GOOD).isEqualTo(sliMissingDataType);
+    assertThat(SLIState.GOOD).isEqualTo(sliState);
   }
 
   @Test
@@ -55,7 +55,7 @@ public class SLIAnalyserServiceImplTest extends CvNextGenTestBase {
     Map<String, Double> requestMap = new HashMap<>();
     requestMap.put("metric2", 225.0);
     try {
-      SLIMissingDataType sliMissingDataType = thresholdAnalyserServiceImpl.analyse(
+      SLIState sliState = thresholdAnalyserServiceImpl.analyse(
           requestMap, (ThresholdSLIMetricSpec) serviceLevelIndicatorDTO.getSpec().getSpec());
     } catch (NullPointerException ex) {
       assertThat(ex.getMessage()).isEqualTo("metric value for metric identifier metric1 not found.");
