@@ -16,7 +16,6 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
-import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeEventDTO.ChangeEventDTOBuilder;
 import io.harness.cvng.beans.change.ChangeSourceType;
@@ -87,6 +86,7 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.UserJourneyDTO;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -661,7 +661,7 @@ public class BuilderFactory {
         .spec(ServiceLevelIndicatorSpec.builder()
                   .type(SLIMetricType.RATIO)
                   .spec(RatioSLIMetricSpec.builder()
-                            .thresholdType(TimeSeriesThresholdType.ACT_WHEN_HIGHER)
+                            .thresholdType(ThresholdType.GREATER_THAN)
                             .thresholdValue(20.0)
                             .eventType("Good")
                             .metric1("metric1")

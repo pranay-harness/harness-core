@@ -1,17 +1,26 @@
 package io.harness.cvng.servicelevelobjective.services.impl;
 
-import io.harness.cvng.servicelevelobjective.beans.SLIAnalyseRequest;
-import io.harness.cvng.servicelevelobjective.beans.SLIAnalyseResponse;
+import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
 import io.harness.cvng.servicelevelobjective.services.api.SLIAnalyserService;
 
-import java.util.List;
+import com.google.common.base.Preconditions;
 import java.util.Map;
 
 public class RatioAnalyserServiceImpl implements SLIAnalyserService<RatioSLIMetricSpec> {
   @Override
-  public List<SLIAnalyseResponse> analyse(
-      Map<String, List<SLIAnalyseRequest>> sliAnalyseRequest, RatioSLIMetricSpec sliSpec) {
-    return null;
+  public SLIMissingDataType analyse(Map<String, Double> sliAnalyseRequest, RatioSLIMetricSpec sliSpec) {
+    Double metricValue1 = sliAnalyseRequest.get(sliSpec.getMetric1());
+    Preconditions.checkNotNull(
+        metricValue1, "metric value for metric identifier " + sliSpec.getMetric1() + " not found.");
+    Double metricValue2 = sliAnalyseRequest.get(sliSpec.getMetric2());
+    Preconditions.checkNotNull(
+        metricValue2, "metric value for metric identifier " + sliSpec.getMetric2() + " not found.");
+    double metricValue = metricValue1 / metricValue2;
+    if (sliSpec.getThresholdType().compute(metricValue, sliSpec.getThresholdValue())) {
+      return SLIMissingDataType.GOOD;
+    } else {
+      return SLIMissingDataType.BAD;
+    }
   }
 }

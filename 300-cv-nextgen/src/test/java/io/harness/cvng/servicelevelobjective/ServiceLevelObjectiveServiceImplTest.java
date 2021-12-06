@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
-import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
@@ -22,6 +21,7 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTargetSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
@@ -222,7 +222,7 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
                                           .type(SLIMetricType.RATIO)
                                           .spec(RatioSLIMetricSpec.builder()
                                                     .thresholdValue(20.0)
-                                                    .thresholdType(TimeSeriesThresholdType.ACT_WHEN_HIGHER)
+                                                    .thresholdType(ThresholdType.GREATER_THAN)
                                                     .eventType("Bad")
                                                     .metric1("metric4")
                                                     .metric2("metric5")

@@ -1,7 +1,7 @@
 package io.harness.cvng.servicelevelobjective.entities;
 
-import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ public class RatioServiceLevelIndicator extends ServiceLevelIndicator {
   String metric1;
   String metric2;
   Double thresholdValue;
-  TimeSeriesThresholdType thresholdType;
+  ThresholdType thresholdType;
 
   @Override
   public SLIMetricType getSLIMetricType() {
