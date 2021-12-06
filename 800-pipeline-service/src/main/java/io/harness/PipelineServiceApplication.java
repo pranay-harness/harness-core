@@ -445,8 +445,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(ExecutionSummaryUpdateEventHandler.class)));
     nodeExecutionService.getNodeUpdateObserverSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
-    nodeExecutionService.getNodeUpdateObserverSubject().register(
-        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
 
     // NodeExecutionStartObserver
     nodeExecutionService.getNodeExecutionStartSubject().register(

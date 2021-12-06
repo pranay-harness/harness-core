@@ -35,6 +35,7 @@ import io.harness.plancreator.steps.http.HttpStepNode;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.governance.PipelineSaveResponse;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
@@ -61,6 +62,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -116,6 +118,7 @@ public class PipelineResource implements YamlSchemaResource {
   private final NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
   private final PMSPipelineTemplateHelper pipelineTemplateHelper;
   private final GovernanceService governanceService;
+  private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   private PipelineEntity createPipelineInternal(String accountId, String orgId, String projectId, String yaml)
       throws IOException {
@@ -532,5 +535,25 @@ public class PipelineResource implements YamlSchemaResource {
   @Path("/dummy-api")
   public ResponseDTO<HttpStepNode> getStepNode() {
     return ResponseDTO.newResponse(new HttpStepNode());
+  }
+
+  @GET
+  @Path("/refreshFFCache")
+  @ApiOperation(value = "Refresh the feature flag cache", nickname = "refreshFFCache")
+  @Operation(operationId = "refreshFFCache", summary = "Refresh the feature flag cache",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Refresh the feature flag cache")
+      })
+  public ResponseDTO<Boolean>
+  refreshFFCache(@NotNull @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE,
+      required = true) @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId) {
+    try {
+      return ResponseDTO.newResponse(pmsFeatureFlagHelper.refreshCacheForGivenAccountId(accountId));
+    } catch (ExecutionException e) {
+      log.error("Execution exception occurred while updating cache: " + e.getMessage());
+    }
+    return ResponseDTO.newResponse(false);
   }
 }
