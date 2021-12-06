@@ -40,6 +40,7 @@ public class FullSyncMessageListener implements MessageListener {
       if (accountId == null
           || !RestClientUtils.getResponse(
               accountClient.isFeatureFlagEnabled(FeatureName.NG_GIT_FULL_SYNC.name(), accountId))) {
+        log.info("The feature flag for the full sync is not enabled");
         return true;
       }
 

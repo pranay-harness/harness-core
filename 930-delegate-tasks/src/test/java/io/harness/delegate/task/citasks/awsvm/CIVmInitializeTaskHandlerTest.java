@@ -11,8 +11,8 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ci.awsvm.AwsVmTaskExecutionResponse;
-import io.harness.delegate.beans.ci.awsvm.CIAWSVmInitializeTaskParams;
+import io.harness.delegate.beans.ci.awsvm.CIVmInitializeTaskParams;
+import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.citasks.awsvm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
@@ -31,10 +31,10 @@ import retrofit2.Response;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
-public class CIAwsVmInitializeTaskHandlerTest extends CategoryTest {
+public class CIVmInitializeTaskHandlerTest extends CategoryTest {
   @Mock private HttpHelper httpHelper;
   @Mock private ILogStreamingTaskClient logStreamingTaskClient;
-  @InjectMocks private CIAwsVmInitializeTaskHandler ciAwsVmInitializeTaskHandler;
+  @InjectMocks private CIVmInitializeTaskHandler ciVmInitializeTaskHandler;
 
   @Before
   public void setUp() {
@@ -45,11 +45,10 @@ public class CIAwsVmInitializeTaskHandlerTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void executeTaskInternal() throws IOException {
-    CIAWSVmInitializeTaskParams params = CIAWSVmInitializeTaskParams.builder().stageRuntimeId("stage").build();
+    CIVmInitializeTaskParams params = CIVmInitializeTaskParams.builder().stageRuntimeId("stage").build();
     Response<Void> setupResponse = Response.success(null);
     when(httpHelper.setupStageWithRetries(anyMap())).thenReturn(setupResponse);
-    AwsVmTaskExecutionResponse response =
-        ciAwsVmInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient);
+    VmTaskExecutionResponse response = ciVmInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 
@@ -57,12 +56,11 @@ public class CIAwsVmInitializeTaskHandlerTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void executeTaskInternalFailure() throws IOException {
-    CIAWSVmInitializeTaskParams params = CIAWSVmInitializeTaskParams.builder().stageRuntimeId("stage").build();
+    CIVmInitializeTaskParams params = CIVmInitializeTaskParams.builder().stageRuntimeId("stage").build();
     ResponseBody body = mock(ResponseBody.class);
     Response<Void> setupResponse = Response.error(400, body);
     when(httpHelper.setupStageWithRetries(anyMap())).thenReturn(setupResponse);
-    AwsVmTaskExecutionResponse response =
-        ciAwsVmInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient);
+    VmTaskExecutionResponse response = ciVmInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient);
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 }

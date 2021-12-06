@@ -13,12 +13,12 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @Value
 @Builder
-@TypeAlias("awsVmBuildJobInfo")
-public class AwsVmBuildJobInfo implements BuildJobEnvInfo {
+@TypeAlias("vmBuildJobInfo")
+public class VmBuildJobInfo implements BuildJobEnvInfo {
   @NotEmpty private String workDir;
 
   @Override
   public Type getType() {
-    return Type.AWS_VM;
+    return Type.VM;
   }
 }

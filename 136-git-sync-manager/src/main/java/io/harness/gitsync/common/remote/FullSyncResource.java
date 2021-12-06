@@ -93,8 +93,9 @@ public class FullSyncResource {
       responses =
       { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Successfully triggered Full Sync") })
   public ResponseDTO<TriggerFullSyncResponseDTO>
-  create(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
-             NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
+  create(
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @OrgIdentifier @QueryParam(
           NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @ProjectIdentifier @QueryParam(

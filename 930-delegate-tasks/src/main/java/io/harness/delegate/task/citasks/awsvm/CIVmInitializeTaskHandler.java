@@ -3,8 +3,8 @@ package io.harness.delegate.task.citasks.awsvm;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.CIInitializeTaskParams;
-import io.harness.delegate.beans.ci.awsvm.AwsVmTaskExecutionResponse;
-import io.harness.delegate.beans.ci.awsvm.CIAWSVmInitializeTaskParams;
+import io.harness.delegate.beans.ci.awsvm.CIVmInitializeTaskParams;
+import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.citasks.CIInitializeTaskHandler;
 import io.harness.delegate.task.citasks.awsvm.helper.HttpHelper;
@@ -19,8 +19,8 @@ import retrofit2.Response;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
-public class CIAwsVmInitializeTaskHandler implements CIInitializeTaskHandler {
-  @NotNull private Type type = CIInitializeTaskHandler.Type.AWS_VM;
+public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
+  @NotNull private Type type = CIInitializeTaskHandler.Type.VM;
   @Inject private HttpHelper httpHelper;
 
   @Override
@@ -28,15 +28,15 @@ public class CIAwsVmInitializeTaskHandler implements CIInitializeTaskHandler {
     return type;
   }
 
-  public AwsVmTaskExecutionResponse executeTaskInternal(
+  public VmTaskExecutionResponse executeTaskInternal(
       CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient) {
-    CIAWSVmInitializeTaskParams ciawsVmInitializeTaskParams = (CIAWSVmInitializeTaskParams) ciInitializeTaskParams;
+    CIVmInitializeTaskParams CIVmInitializeTaskParams = (CIVmInitializeTaskParams) ciInitializeTaskParams;
     log.info("Received request to initialize stage with stage runtime ID {}",
-        ciawsVmInitializeTaskParams.getStageRuntimeId());
-    return callRunnerForSetup(ciawsVmInitializeTaskParams.getStageRuntimeId());
+        CIVmInitializeTaskParams.getStageRuntimeId());
+    return callRunnerForSetup(CIVmInitializeTaskParams.getStageRuntimeId());
   }
 
-  private AwsVmTaskExecutionResponse callRunnerForSetup(String stageExecutionId) {
+  private VmTaskExecutionResponse callRunnerForSetup(String stageExecutionId) {
     Map<String, String> params = new HashMap<>();
     params.put("stage_id", stageExecutionId);
 
@@ -53,9 +53,6 @@ public class CIAwsVmInitializeTaskHandler implements CIInitializeTaskHandler {
       errMessage = e.getMessage();
     }
 
-    return AwsVmTaskExecutionResponse.builder()
-        .errorMessage(errMessage)
-        .commandExecutionStatus(executionStatus)
-        .build();
+    return VmTaskExecutionResponse.builder().errorMessage(errMessage).commandExecutionStatus(executionStatus).build();
   }
 }

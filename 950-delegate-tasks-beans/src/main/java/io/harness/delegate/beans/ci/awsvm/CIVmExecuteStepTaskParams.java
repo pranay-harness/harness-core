@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CIAWSVmExecuteStepTaskParams implements CIExecuteStepTaskParams {
+public class CIVmExecuteStepTaskParams implements CIExecuteStepTaskParams {
   @NotNull private String poolId;
   @NotNull private String stageRuntimeId;
 
@@ -23,7 +23,7 @@ public class CIAWSVmExecuteStepTaskParams implements CIExecuteStepTaskParams {
   @NotNull String logToken;
   @NotNull String logStreamUrl;
 
-  @Builder.Default private static final Type type = Type.AWS_VM;
+  @Builder.Default private static final Type type = Type.VM;
 
   @Override
   public Type getType() {
