@@ -218,7 +218,7 @@ public class BillingCalculationService {
     if (instanceData.getInstanceId().equals("ac984c4b1bdc4ed692bf36d2268a57c5")) {
       log.info("ac984c4b1bdc4ed692bf36d2268a57c5 inside idle cost {} : {}", billingDataForResource, utilizationData);
     }
-    if (instanceData.getInstanceType() == InstanceType.ECS_TASK_FARGATE || utilizationData == null) {
+    if (utilizationData == null) {
       return new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
     }
     BigDecimal cpuIdleCost = BigDecimal.ZERO;
