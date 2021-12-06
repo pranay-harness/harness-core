@@ -158,6 +158,7 @@ public class NewRelicHealthSourceSpec extends HealthSourceSpec {
   public static class NewRelicMetricDefinition extends HealthSourceMetricDefinition {
     String groupName;
     String nrql;
+    MetricResponseMapping responseMapping;
   }
 
   @Value

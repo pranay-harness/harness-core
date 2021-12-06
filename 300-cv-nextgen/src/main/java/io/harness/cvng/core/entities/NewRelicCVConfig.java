@@ -7,6 +7,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.MetricResponseMapping;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.NewRelicHealthSourceSpec.NewRelicMetricDefinition;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.utils.analysisinfo.DevelopmentVerificationTransformer;
@@ -76,6 +77,7 @@ public class NewRelicCVConfig extends MetricCVConfig {
                                       .identifier(md.getIdentifier())
                                       .metricName(md.getMetricName())
                                       .nrql(md.getNrql())
+                                      .responseMapping(md.getResponseMapping())
                                       .sli(SLIMetricTransformer.transformDTOtoEntity(md.getSli()))
                                       .liveMonitoring(LiveMonitoringTransformer.transformDTOtoEntity(md.getAnalysis()))
                                       .deploymentVerification(
@@ -103,5 +105,6 @@ public class NewRelicCVConfig extends MetricCVConfig {
     String metricName;
     String nrql;
     TimeSeriesMetricType metricType;
+    MetricResponseMapping responseMapping;
   }
 }
