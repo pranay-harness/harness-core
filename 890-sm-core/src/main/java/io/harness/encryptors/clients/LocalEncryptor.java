@@ -40,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 public class LocalEncryptor implements KmsEncryptor {
   private static final AwsCrypto crypto = AwsCrypto.standard();
-  @Inject @Named(SecretKeyConstants.AES_SECRET_KEY) private SecretKeyService secretKeyService;
   @Inject private FeatureFlagHelperService featureFlagService;
 
   @Override
