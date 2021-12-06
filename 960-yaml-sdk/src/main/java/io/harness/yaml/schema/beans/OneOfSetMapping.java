@@ -15,4 +15,5 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(HarnessTeam.CDC)
 public class OneOfSetMapping {
   Set<Set<String>> oneOfSets;
+  Set<String> requiredFieldNames;
 }

@@ -175,7 +175,7 @@
       } ]
     }, {
       "type" : "object",
-      "required" : [ "identifier", "name" ],
+      "required" : [ "identifier", "name", "template" ],
       "properties" : {
         "description" : {
           "type" : "string"
@@ -1892,7 +1892,7 @@
             } ]
           }, {
             "type" : "object",
-            "required" : [ "identifier", "name" ],
+            "required" : [ "identifier", "name", "template" ],
             "properties" : {
               "description" : {
                 "type" : "string"
