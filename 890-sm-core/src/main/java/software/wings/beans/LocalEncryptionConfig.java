@@ -7,6 +7,7 @@ import static io.harness.helpers.GlobalSecretManagerUtils.isNgHarnessSecretManag
 import static io.harness.mappers.SecretManagerConfigMapper.updateNGSecretManagerMetadata;
 import static io.harness.security.encryption.SecretManagerType.KMS;
 
+import io.harness.beans.SecretKey;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -39,6 +40,8 @@ import lombok.experimental.SuperBuilder;
 public class LocalEncryptionConfig extends SecretManagerConfig {
   public static final String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Secrets Manager";
   @Builder.Default private String name = HARNESS_DEFAULT_SECRET_MANAGER;
+
+  private SecretKey secretKey;
 
   @Override
   public String getEncryptionServiceUrl() {
@@ -84,5 +87,10 @@ public class LocalEncryptionConfig extends SecretManagerConfig {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.emptyList();
+  }
+
+  @Override
+  public SecretKey getSecretKey() {
+    return secretKey;
   }
 }
