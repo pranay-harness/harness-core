@@ -58,10 +58,10 @@ import io.harness.delegate.beans.ci.CIInitializeTaskParams;
 import io.harness.delegate.beans.ci.CITaskExecutionResponse;
 import io.harness.delegate.beans.ci.ExecuteCommandTaskParams;
 import io.harness.delegate.beans.ci.ShellScriptType;
-import io.harness.delegate.beans.ci.awsvm.AwsVmTaskExecutionResponse;
-import io.harness.delegate.beans.ci.awsvm.CIAWSVmExecuteStepTaskParams;
-import io.harness.delegate.beans.ci.awsvm.CIAWSVmInitializeTaskParams;
-import io.harness.delegate.beans.ci.awsvm.CIAwsVmCleanupTaskParams;
+import io.harness.delegate.beans.ci.awsvm.CIVmInitializeTaskParams;
+import io.harness.delegate.beans.ci.awsvm.CIVmCleanupTaskParams;
+import io.harness.delegate.beans.ci.awsvm.CIVmExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
 import io.harness.delegate.beans.ci.k8s.CIK8ExecuteStepTaskParams;
@@ -974,10 +974,10 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(TaskNGDataException.class, 543440);
     kryo.register(K8sCanaryDataException.class, 543441);
     kryo.register(CITaskExecutionResponse.class, 543442);
-    kryo.register(CIAWSVmInitializeTaskParams.class, 543443);
-    kryo.register(CIAWSVmExecuteStepTaskParams.class, 543444);
-    kryo.register(CIAwsVmCleanupTaskParams.class, 543445);
-    kryo.register(AwsVmTaskExecutionResponse.class, 543446);
+    kryo.register(CIVmInitializeTaskParams.class, 543443);
+    kryo.register(CIVmExecuteStepTaskParams.class, 543444);
+    kryo.register(CIVmCleanupTaskParams.class, 543445);
+    kryo.register(VmTaskExecutionResponse.class, 543446);
     kryo.register(JiraValidationParams.class, 543447);
   }
 }

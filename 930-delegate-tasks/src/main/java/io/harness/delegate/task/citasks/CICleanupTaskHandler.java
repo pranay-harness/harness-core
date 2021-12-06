@@ -4,7 +4,7 @@ import io.harness.delegate.beans.ci.CICleanupTaskParams;
 import io.harness.delegate.beans.ci.CITaskExecutionResponse;
 
 public interface CICleanupTaskHandler {
-  enum Type { GCP_K8, AWS_VM }
+  enum Type { GCP_K8, VM }
 
   CICleanupTaskHandler.Type getType();
 
