@@ -22,6 +22,7 @@ public final class HelmConstants {
   public static final String HELM_COMMAND_FLAG_PLACEHOLDER = "${COMMAND_FLAGS}";
   public static final String ADD_COMMAND_FOR_REPOSITORY = "helm repo add command for repository ";
   public static final String REPO_NAME = "${REPO_NAME}";
+  public static final String HELM_CACHE_HOME_PLACEHOLDER = "${HELM_CACHE_HOME}";
   public static final String REPO_URL = "${REPO_URL}";
   public static final String USERNAME = "${USERNAME}";
   public static final String PASSWORD = "${PASSWORD}";
@@ -107,6 +108,9 @@ public final class HelmConstants {
     public static final String HELM_VERSION_COMMAND_TEMPLATE = "${HELM_PATH} version --short ${COMMAND_FLAGS}";
     public static final String HELM_FETCH_ALL_VERSIONS_COMMAND_TEMPLATE =
         "${HELM_PATH} search repo ${REPO_NAME}/${CHART_NAME} -l --devel --max-col-width 300";
+    public static final String HELM_REPO_FLAGS = " --repository-config ${HELM_CACHE_HOME}/repo-${REPO_NAME}.yaml";
+    public static final String HELM_CACHE_HOME = "XDG_CACHE_HOME";
+    public static final String HELM_CACHE_HOME_PATH = "${HELM_CACHE_HOME}/repo-${REPO_NAME}";
 
     private V3Commands() {
       throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
