@@ -13,13 +13,13 @@
     "infrastructure": {
       "oneOf": [
         {
-          "$ref": "#/definitions/AwsVmInfraYaml"
-        },
-        {
           "$ref": "#/definitions/K8sDirectInfraYaml"
         },
         {
           "$ref": "#/definitions/UseFromStageInfraYaml"
+        },
+        {
+          "$ref": "#/definitions/VmInfraYaml"
         }
       ]
     },
@@ -277,62 +277,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "AwsVmBuildJobInfo": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/BuildJobEnvInfo"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "workDir": {
-              "type": "string"
-            }
-          }
-        }
-      ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "AwsVmInfraYaml": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/Infrastructure"
-        },
-        {
-          "type": "object",
-          "required": [
-            "spec",
-            "type"
-          ],
-          "properties": {
-            "spec": {
-              "$ref": "#/definitions/AwsVmInfraYamlSpec"
-            },
-            "type": {
-              "type": "string",
-              "enum": [
-                "KubernetesDirect",
-                "UseFromStage",
-                "AwsVm"
-              ]
-            }
-          }
-        }
-      ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "AwsVmInfraYamlSpec": {
-      "type": "object",
-      "required": [
-        "poolId"
-      ],
-      "properties": {
-        "poolId": {
-          "type": "string"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "BarrierStepInfo": {
       "allOf": [
         {
@@ -400,7 +344,7 @@
           "type": "string",
           "enum": [
             "K8",
-            "AWS_VM"
+            "VM"
           ]
         }
       },
@@ -1573,7 +1517,7 @@
           "enum": [
             "KubernetesDirect",
             "UseFromStage",
-            "AwsVm"
+            "VM"
           ]
         }
       },
@@ -1652,13 +1596,13 @@
         "infrastructure": {
           "oneOf": [
             {
-              "$ref": "#/definitions/AwsVmInfraYaml"
-            },
-            {
               "$ref": "#/definitions/K8sDirectInfraYaml"
             },
             {
               "$ref": "#/definitions/UseFromStageInfraYaml"
+            },
+            {
+              "$ref": "#/definitions/VmInfraYaml"
             }
           ]
         },
@@ -2010,7 +1954,7 @@
               "enum": [
                 "KubernetesDirect",
                 "UseFromStage",
-                "AwsVm"
+                "VM"
               ]
             }
           }
@@ -4604,6 +4548,62 @@
         "weight": {
           "type": "integer",
           "format": "int32"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VmBuildJobInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BuildJobEnvInfo"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "workDir": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VmInfraYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Infrastructure"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "$ref": "#/definitions/VmInfraYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "KubernetesDirect",
+                "UseFromStage",
+                "VM"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VmInfraYamlSpec": {
+      "type": "object",
+      "required": [
+        "poolId"
+      ],
+      "properties": {
+        "poolId": {
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"

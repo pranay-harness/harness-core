@@ -12,10 +12,10 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CIAWSVmInitializeTaskParams extends ConnectorTaskParams implements CIInitializeTaskParams {
+public class CIVmInitializeTaskParams extends ConnectorTaskParams implements CIInitializeTaskParams {
   @NotNull private String poolId;
   @NotNull private String stageRuntimeId;
-  @Builder.Default private static final Type type = Type.AWS_VM;
+  @Builder.Default private static final Type type = Type.VM;
 
   @Override
   public Type getType() {

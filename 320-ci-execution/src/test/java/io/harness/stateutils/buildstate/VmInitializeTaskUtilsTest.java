@@ -9,10 +9,10 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.StageDetails;
-import io.harness.beans.yaml.extended.infrastrucutre.AwsVmInfraYaml;
-import io.harness.beans.yaml.extended.infrastrucutre.AwsVmInfraYaml.AwsVmInfraYamlSpec;
+import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml.VmInfraYamlSpec;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ci.awsvm.CIAWSVmInitializeTaskParams;
+import io.harness.delegate.beans.ci.awsvm.CIVmInitializeTaskParams;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
@@ -29,9 +29,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class AWSVmInitializeTaskUtilsTest extends CIExecutionTestBase {
+public class VmInitializeTaskUtilsTest extends CIExecutionTestBase {
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
-  @InjectMocks private AWSVmInitializeTaskUtils awsVmInitializeTaskUtils;
+  @InjectMocks private VmInitializeTaskUtils vmInitializeTaskUtils;
   private Ambiance ambiance;
 
   @Before
@@ -50,7 +50,7 @@ public class AWSVmInitializeTaskUtilsTest extends CIExecutionTestBase {
     String stageRuntimeId = "test";
     InitializeStepInfo initializeStepInfo =
         InitializeStepInfo.builder()
-            .infrastructure(AwsVmInfraYaml.builder().spec(AwsVmInfraYamlSpec.builder().poolId(poolId).build()).build())
+            .infrastructure(VmInfraYaml.builder().spec(VmInfraYamlSpec.builder().poolId(poolId).build()).build())
             .build();
     when(executionSweepingOutputResolver.consume(any(), any(), any(), any())).thenReturn("");
     when(executionSweepingOutputResolver.resolveOptional(
@@ -59,8 +59,8 @@ public class AWSVmInitializeTaskUtilsTest extends CIExecutionTestBase {
                         .found(true)
                         .output(StageDetails.builder().stageRuntimeID(stageRuntimeId).build())
                         .build());
-    CIAWSVmInitializeTaskParams response =
-        awsVmInitializeTaskUtils.getInitializeTaskParams(initializeStepInfo, ambiance, "");
+    CIVmInitializeTaskParams response =
+        vmInitializeTaskUtils.getInitializeTaskParams(initializeStepInfo, ambiance, "");
     assertThat(response.getStageRuntimeId()).isEqualTo(stageRuntimeId);
   }
 }

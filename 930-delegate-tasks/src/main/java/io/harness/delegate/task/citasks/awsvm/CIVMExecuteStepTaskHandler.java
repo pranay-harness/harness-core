@@ -5,8 +5,8 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
-import io.harness.delegate.beans.ci.awsvm.AwsVmTaskExecutionResponse;
-import io.harness.delegate.beans.ci.awsvm.CIAWSVmExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.awsvm.CIVmExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
 import io.harness.delegate.beans.ci.awsvm.runner.ExecuteStepResponse;
 import io.harness.delegate.task.citasks.CIExecuteStepTaskHandler;
 import io.harness.delegate.task.citasks.awsvm.helper.HttpHelper;
@@ -21,9 +21,9 @@ import retrofit2.Response;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
-public class CIAwsVmExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
+public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   @Inject private HttpHelper httpHelper;
-  @NotNull private Type type = Type.AWS_VM;
+  @NotNull private Type type = Type.VM;
 
   @Override
   public Type getType() {
@@ -31,14 +31,14 @@ public class CIAwsVmExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   }
 
   @Override
-  public AwsVmTaskExecutionResponse executeTaskInternal(CIExecuteStepTaskParams ciExecuteStepTaskParams) {
-    CIAWSVmExecuteStepTaskParams ciawsVmExecuteStepTaskParams = (CIAWSVmExecuteStepTaskParams) ciExecuteStepTaskParams;
+  public VmTaskExecutionResponse executeTaskInternal(CIExecuteStepTaskParams ciExecuteStepTaskParams) {
+    CIVmExecuteStepTaskParams CIVmExecuteStepTaskParams = (CIVmExecuteStepTaskParams) ciExecuteStepTaskParams;
     log.info(
-        "Received request to execute step with stage runtime ID {}", ciawsVmExecuteStepTaskParams.getStageRuntimeId());
-    return callRunnerForStepExecution(ciawsVmExecuteStepTaskParams);
+        "Received request to execute step with stage runtime ID {}", CIVmExecuteStepTaskParams.getStageRuntimeId());
+    return callRunnerForStepExecution(CIVmExecuteStepTaskParams);
   }
 
-  private AwsVmTaskExecutionResponse callRunnerForStepExecution(CIAWSVmExecuteStepTaskParams taskParams) {
+  private VmTaskExecutionResponse callRunnerForStepExecution(CIVmExecuteStepTaskParams taskParams) {
     Map<String, String> params = new HashMap<>();
     params.put("stage_id", taskParams.getStageRuntimeId());
     params.put("stepId", taskParams.getStepId());
@@ -52,20 +52,20 @@ public class CIAwsVmExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     try {
       Response<ExecuteStepResponse> response = httpHelper.executeStepWithRetries(params);
       if (!response.isSuccessful()) {
-        return AwsVmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+        return VmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
       }
 
       if (response.body().getExitCode() == 0) {
-        return AwsVmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+        return VmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
       } else {
-        return AwsVmTaskExecutionResponse.builder()
+        return VmTaskExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(format("Exit code: %d", response.body().getExitCode()))
             .build();
       }
     } catch (Exception e) {
       log.error("Failed to execute step in runner", e);
-      return AwsVmTaskExecutionResponse.builder()
+      return VmTaskExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(e.getMessage())
           .build();

@@ -12,3 +12,4 @@ config:
     - "scripts/jenkins/*"
     - "product/**/*"
     - "commons/**/*"
+    - "**/*.hash"

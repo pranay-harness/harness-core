@@ -5,8 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.environment.AwsVmBuildJobInfo;
 import io.harness.beans.environment.BuildJobEnvInfo;
+import io.harness.beans.environment.VmBuildJobInfo;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.stepinfo.InitializeStepInfo;
@@ -44,8 +44,8 @@ public class BuildJobEnvInfoBuilder {
       return initializeStepInfoBuilder.getInitializeStepInfoBuilder(
           stageElementConfig, ciExecutionArgs, steps, accountId);
     } // TODO (shubham): Handle Use from stage for AWS VM
-    else if (infrastructure.getType() == Type.AWS_VM) {
-      return AwsVmBuildJobInfo.builder().workDir(STEP_WORK_DIR).build();
+    else if (infrastructure.getType() == Type.VM) {
+      return VmBuildJobInfo.builder().workDir(STEP_WORK_DIR).build();
     } else {
       throw new IllegalArgumentException("Input infrastructure type is not of type kubernetes");
     }

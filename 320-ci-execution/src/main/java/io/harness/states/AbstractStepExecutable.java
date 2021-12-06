@@ -39,8 +39,8 @@ import io.harness.ci.serializer.RunTestsStepProtobufSerializer;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
-import io.harness.delegate.beans.ci.awsvm.AwsVmTaskExecutionResponse;
-import io.harness.delegate.beans.ci.awsvm.CIAWSVmExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.awsvm.CIVmExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.CIK8ExecuteStepTaskParams;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
@@ -143,8 +143,8 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     if (stageInfraType == StageInfraDetails.Type.K8) {
       return executeK8AsyncAfterRbac(ambiance, stepIdentifier, runtimeId, ciStepInfo, stepParametersName, accountId,
           logKey, timeoutInMillis, stringTimeout);
-    } else if (stageInfraType == StageInfraDetails.Type.AWS_VM) {
-      return executeAwsVmAsyncAfterRbac(ambiance, stepIdentifier, ciStepInfo, accountId, logKey, timeoutInMillis);
+    } else if (stageInfraType == StageInfraDetails.Type.VM) {
+      return executeVmAsyncAfterRbac(ambiance, stepIdentifier, ciStepInfo, accountId, logKey, timeoutInMillis);
     } else {
       throw new CIStageExecutionException(format("Invalid infra type: %s", stageInfraType));
     }
@@ -169,11 +169,11 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
         .build();
   }
 
-  private AsyncExecutableResponse executeAwsVmAsyncAfterRbac(Ambiance ambiance, String stepIdentifier,
+  private AsyncExecutableResponse executeVmAsyncAfterRbac(Ambiance ambiance, String stepIdentifier,
       CIStepInfo ciStepInfo, String accountId, String logKey, long timeoutInMillis) {
     if (ciStepInfo.getNonYamlInfo().getStepInfoType() != CIStepInfoType.RUN) {
       throw new CIStageExecutionException(
-          format("Unsupported step type for AWS VM %s", ciStepInfo.getNonYamlInfo().getStepInfoType()));
+          format("Unsupported step type for VM %s", ciStepInfo.getNonYamlInfo().getStepInfoType()));
     }
 
     RunStepInfo runStepInfo = (RunStepInfo) ciStepInfo;
@@ -190,15 +190,15 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     }
 
     StageDetails stageDetails = (StageDetails) optionalSweepingOutput.getOutput();
-    CIAWSVmExecuteStepTaskParams params = CIAWSVmExecuteStepTaskParams.builder()
-                                              .stageRuntimeId(stageDetails.getStageRuntimeID())
-                                              .stepId(stepIdentifier)
-                                              .accountId(accountId)
-                                              .command(command)
-                                              .image(image)
-                                              .logKey(logKey)
-                                              .logStreamUrl(logServiceBaseUrl)
-                                              .build();
+    CIVmExecuteStepTaskParams params = CIVmExecuteStepTaskParams.builder()
+                                           .stageRuntimeId(stageDetails.getStageRuntimeID())
+                                           .stepId(stepIdentifier)
+                                           .accountId(accountId)
+                                           .command(command)
+                                           .image(image)
+                                           .logKey(logKey)
+                                           .logStreamUrl(logServiceBaseUrl)
+                                           .build();
     String taskId = queueDelegateTask(ambiance, timeoutInMillis, accountId, ciDelegateTaskExecutor, params);
     return AsyncExecutableResponse.newBuilder()
         .addCallbackIds(taskId)
@@ -239,8 +239,8 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     StageInfraDetails.Type stageInfraType = getStageInfraType(ambiance);
     if (stageInfraType == StageInfraDetails.Type.K8) {
       return handleK8AsyncResponse(ambiance, stepParameters, responseDataMap);
-    } else if (stageInfraType == StageInfraDetails.Type.AWS_VM) {
-      return handleAwsVmStepResponse(stepIdentifier, responseDataMap);
+    } else if (stageInfraType == StageInfraDetails.Type.VM) {
+      return handleVmStepResponse(stepIdentifier, responseDataMap);
     } else {
       throw new CIStageExecutionException(format("Invalid infra type: %s", stageInfraType));
     }
@@ -263,8 +263,8 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     return buildAndReturnStepResponse(stepStatusTaskResponseData, ambiance, stepParameters, stepIdentifier);
   }
 
-  private StepResponse handleAwsVmStepResponse(String stepIdentifier, Map<String, ResponseData> responseDataMap) {
-    AwsVmTaskExecutionResponse taskResponse = filterAwsVmStepResponse(responseDataMap);
+  private StepResponse handleVmStepResponse(String stepIdentifier, Map<String, ResponseData> responseDataMap) {
+    VmTaskExecutionResponse taskResponse = filterVmStepResponse(responseDataMap);
     if (taskResponse == null) {
       log.error("stepStatusTaskResponseData should not be null for step {}", stepIdentifier);
       return StepResponse.builder()
@@ -464,13 +464,13 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
         .orElse(null);
   }
 
-  private AwsVmTaskExecutionResponse filterAwsVmStepResponse(Map<String, ResponseData> responseDataMap) {
+  private VmTaskExecutionResponse filterVmStepResponse(Map<String, ResponseData> responseDataMap) {
     // Filter final response from step
     return responseDataMap.entrySet()
         .stream()
-        .filter(entry -> entry.getValue() instanceof AwsVmTaskExecutionResponse)
+        .filter(entry -> entry.getValue() instanceof VmTaskExecutionResponse)
         .findFirst()
-        .map(obj -> (AwsVmTaskExecutionResponse) obj.getValue())
+        .map(obj -> (VmTaskExecutionResponse) obj.getValue())
         .orElse(null);
   }
 
