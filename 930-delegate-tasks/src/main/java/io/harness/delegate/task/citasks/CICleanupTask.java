@@ -22,7 +22,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class CICleanupTask extends AbstractDelegateRunnableTask {
-  @Inject @Named(CITaskConstants.CLEANUP_AWS_VM) private CICleanupTaskHandler ciAwsVmCleanupTaskHandler;
+  @Inject @Named(CITaskConstants.CLEANUP_VM) private CICleanupTaskHandler ciVmCleanupTaskHandler;
   @Inject @Named(CITaskConstants.CLEANUP_K8) private CICleanupTaskHandler ciK8CleanupTaskHandler;
 
   public CICleanupTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
@@ -40,8 +40,8 @@ public class CICleanupTask extends AbstractDelegateRunnableTask {
     CICleanupTaskParams ciCleanupTaskParams = (CICleanupTaskParams) parameters;
     if (ciCleanupTaskParams.getType() == CICleanupTaskParams.Type.GCP_K8) {
       return ciK8CleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams);
-    } else if (ciCleanupTaskParams.getType() == CICleanupTaskParams.Type.AWS_VM) {
-      return ciAwsVmCleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams);
+    } else if (ciCleanupTaskParams.getType() == CICleanupTaskParams.Type.VM) {
+      return ciVmCleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams);
     } else {
       throw new CIStageExecutionException(
           String.format("Invalid infra type for cleanup step", ciCleanupTaskParams.getType()));

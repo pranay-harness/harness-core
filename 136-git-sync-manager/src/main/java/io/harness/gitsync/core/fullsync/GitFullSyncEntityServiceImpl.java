@@ -8,6 +8,7 @@ import io.harness.gitsync.core.beans.GitFullSyncEntityInfo.GitFullSyncEntityInfo
 import io.harness.repositories.fullSync.FullSyncRepository;
 
 import com.google.inject.Inject;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -42,6 +43,14 @@ public class GitFullSyncEntityServiceImpl implements GitFullSyncEntityService {
     update.set(GitFullSyncEntityInfoKeys.syncStatus, GitFullSyncEntityInfo.SyncStatus.PUSHED);
     update.push(GitFullSyncEntityInfoKeys.errorMessage, null);
     fullSyncRepository.update(criteria, update);
+  }
+
+  @Override
+  public List<GitFullSyncEntityInfo> list(String accountIdentifier, String fullSyncJobId) {
+    Criteria criteria = new Criteria();
+    criteria.and(GitFullSyncEntityInfoKeys.accountIdentifier).is(accountIdentifier);
+    criteria.and(GitFullSyncEntityInfoKeys.fullSyncJobId).is(fullSyncJobId);
+    return fullSyncRepository.findByAccountIdentifierAndFullSyncJobId(accountIdentifier, fullSyncJobId);
   }
 
   private void markFailed(String uuid, String accountId, String errorMsg) {

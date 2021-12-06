@@ -12,6 +12,7 @@ import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.core.beans.GitFullSyncConfig;
 import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
+import io.harness.gitsync.core.fullsync.entity.GitFullSyncJob;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
@@ -36,6 +37,7 @@ public class GitSyncMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(GitToHarnessProgress.class);
     set.add(GitFullSyncEntityInfo.class);
     set.add(GitFullSyncConfig.class);
+    set.add(GitFullSyncJob.class);
   }
 
   @Override

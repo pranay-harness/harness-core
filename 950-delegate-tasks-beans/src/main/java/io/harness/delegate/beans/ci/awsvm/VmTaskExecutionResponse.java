@@ -9,11 +9,11 @@ import lombok.Data;
 
 @Data
 @Builder
-public class AwsVmTaskExecutionResponse implements CITaskExecutionResponse {
+public class VmTaskExecutionResponse implements CITaskExecutionResponse {
   private DelegateMetaInfo delegateMetaInfo;
   private String errorMessage;
   private CommandExecutionStatus commandExecutionStatus;
-  @Builder.Default private static final CITaskExecutionResponse.Type type = Type.AWS_VM;
+  @Builder.Default private static final CITaskExecutionResponse.Type type = Type.VM;
 
   @Override
   public CITaskExecutionResponse.Type getType() {

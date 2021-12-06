@@ -3,8 +3,8 @@ package io.harness.delegate.task.citasks.awsvm;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.CICleanupTaskParams;
-import io.harness.delegate.beans.ci.awsvm.AwsVmTaskExecutionResponse;
-import io.harness.delegate.beans.ci.awsvm.CIAwsVmCleanupTaskParams;
+import io.harness.delegate.beans.ci.awsvm.CIVmCleanupTaskParams;
+import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
 import io.harness.delegate.task.citasks.CICleanupTaskHandler;
 import io.harness.delegate.task.citasks.awsvm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
@@ -18,8 +18,8 @@ import retrofit2.Response;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
-public class CIAwsVmCleanupTaskHandler implements CICleanupTaskHandler {
-  @NotNull private Type type = CICleanupTaskHandler.Type.AWS_VM;
+public class CIVmCleanupTaskHandler implements CICleanupTaskHandler {
+  @NotNull private Type type = CICleanupTaskHandler.Type.VM;
   @Inject private HttpHelper httpHelper;
 
   @Override
@@ -27,13 +27,13 @@ public class CIAwsVmCleanupTaskHandler implements CICleanupTaskHandler {
     return type;
   }
 
-  public AwsVmTaskExecutionResponse executeTaskInternal(CICleanupTaskParams ciCleanupTaskParams) {
-    CIAwsVmCleanupTaskParams params = (CIAwsVmCleanupTaskParams) ciCleanupTaskParams;
-    log.info("Received request to clean AWS VM with stage runtime ID {}", params.getStageRuntimeId());
+  public VmTaskExecutionResponse executeTaskInternal(CICleanupTaskParams ciCleanupTaskParams) {
+    CIVmCleanupTaskParams params = (CIVmCleanupTaskParams) ciCleanupTaskParams;
+    log.info("Received request to clean VM with stage runtime ID {}", params.getStageRuntimeId());
     return callRunnerForCleanup(params.getStageRuntimeId());
   }
 
-  private AwsVmTaskExecutionResponse callRunnerForCleanup(String stageExecutionId) {
+  private VmTaskExecutionResponse callRunnerForCleanup(String stageExecutionId) {
     Map<String, String> params = new HashMap<>();
     params.put("stage_id", stageExecutionId);
 
@@ -49,9 +49,6 @@ public class CIAwsVmCleanupTaskHandler implements CICleanupTaskHandler {
       errMessage = e.getMessage();
     }
 
-    return AwsVmTaskExecutionResponse.builder()
-        .errorMessage(errMessage)
-        .commandExecutionStatus(executionStatus)
-        .build();
+    return VmTaskExecutionResponse.builder().errorMessage(errMessage).commandExecutionStatus(executionStatus).build();
   }
 }

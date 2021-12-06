@@ -29,9 +29,10 @@ public interface GitSyncErrorService {
 
   List<GitSyncErrorDTO> saveAll(List<GitSyncErrorDTO> gitSyncErrorDTOList);
 
-  void markOverriddenErrors(String accountId, String repoUrl, String branchName, Set<String> filePaths);
+  void overrideGitToHarnessErrors(String accountId, String repoUrl, String branchName, Set<String> filePaths);
 
-  void markResolvedErrors(String accountId, String repoUrl, String branchName, Set<String> filePaths, String commitId);
+  void resolveGitToHarnessErrors(
+      String accountId, String repoUrl, String branchName, Set<String> filePaths, String commitId);
 
   Optional<GitSyncErrorDTO> getGitToHarnessError(
       String accountId, String commitId, String repoUrl, String branchName, String filePath);
@@ -46,4 +47,6 @@ public interface GitSyncErrorService {
 
   GitSyncErrorCountDTO getErrorCount(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String searchTerm, String repoId, String branch);
+
+  void resolveConnectivityErrors(String accountIdentifier, String repoUrl, String branchName);
 }

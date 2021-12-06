@@ -1,18 +1,10 @@
 package ci.pipeline.execution;
 
-import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
-import static io.harness.rule.OwnerRule.HARSH;
-import static io.harness.rule.OwnerRule.SHUBHAM;
-
-import static junit.framework.TestCase.assertEquals;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
-
-import io.harness.beans.sweepingoutputs.AwsVmStageInfraDetails;
+import com.google.inject.Inject;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
 import io.harness.beans.sweepingoutputs.StageDetails;
+import io.harness.beans.sweepingoutputs.VmStageInfraDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.CICleanupTaskParams;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -23,10 +15,6 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.rule.Owner;
 import io.harness.stateutils.buildstate.ConnectorUtils;
-
-import com.google.inject.Inject;
-import java.io.IOException;
-import java.util.ArrayList;
 import org.apache.groovy.util.Maps;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -35,6 +23,17 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
+import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
+import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.SHUBHAM;
+import static junit.framework.TestCase.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 public class StageCleanupUtilityTest extends CIExecutionTestBase {
   @Mock private ConnectorUtils connectorUtils;
@@ -82,7 +81,7 @@ public class StageCleanupUtilityTest extends CIExecutionTestBase {
              ambiance, RefObjectUtils.getSweepingOutputRefObject(STAGE_INFRA_DETAILS)))
         .thenReturn(OptionalSweepingOutput.builder()
                         .found(true)
-                        .output(AwsVmStageInfraDetails.builder().poolId(poolId).build())
+                        .output(VmStageInfraDetails.builder().poolId(poolId).build())
                         .build());
     when(executionSweepingOutputResolver.resolveOptional(
              ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails)))
@@ -94,6 +93,6 @@ public class StageCleanupUtilityTest extends CIExecutionTestBase {
     CICleanupTaskParams cleanupTaskParams = stageCleanupUtility.buildAndfetchCleanUpParameters(ambiance);
 
     assertThat(cleanupTaskParams).isNotNull();
-    assertEquals(cleanupTaskParams.getType(), CICleanupTaskParams.Type.AWS_VM);
+    assertEquals(cleanupTaskParams.getType(), CICleanupTaskParams.Type.VM);
   }
 }

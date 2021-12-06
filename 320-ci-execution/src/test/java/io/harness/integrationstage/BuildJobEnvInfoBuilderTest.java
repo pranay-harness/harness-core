@@ -6,8 +6,8 @@ import static io.harness.rule.OwnerRule.SHUBHAM;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.environment.AwsVmBuildJobInfo;
 import io.harness.beans.environment.BuildJobEnvInfo;
+import io.harness.beans.environment.VmBuildJobInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.integrationstage.BuildJobEnvInfoBuilder;
 import io.harness.executionplan.CIExecutionTestBase;
@@ -20,7 +20,7 @@ import org.junit.experimental.categories.Category;
 
 public class BuildJobEnvInfoBuilderTest extends CIExecutionTestBase {
   @Inject BuildJobEnvInfoBuilder buildJobEnvInfoBuilder;
-  @Inject AwsVmBuildJobTestHelper awsVmBuildJobTestHelper;
+  @Inject VmBuildJobTestHelper vmBuildJobTestHelper;
 
   @Test
   @Owner(developers = ALEKSANDAR)
@@ -42,10 +42,10 @@ public class BuildJobEnvInfoBuilderTest extends CIExecutionTestBase {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void getAwsVmBuildJobEnvInfo() {
-    StageElementConfig stageElementConfig = awsVmBuildJobTestHelper.getAwsVmStage("test");
+  public void getVmBuildJobEnvInfo() {
+    StageElementConfig stageElementConfig = vmBuildJobTestHelper.getVmStage("test");
 
-    BuildJobEnvInfo expected = AwsVmBuildJobInfo.builder().workDir(STEP_WORK_DIR).build();
+    BuildJobEnvInfo expected = VmBuildJobInfo.builder().workDir(STEP_WORK_DIR).build();
     BuildJobEnvInfo actual = buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(stageElementConfig, null, null, null);
     assertThat(actual).isEqualTo(expected);
   }

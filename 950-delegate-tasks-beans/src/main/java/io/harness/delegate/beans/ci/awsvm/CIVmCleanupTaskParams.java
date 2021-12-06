@@ -11,9 +11,9 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CIAwsVmCleanupTaskParams implements CICleanupTaskParams {
+public class CIVmCleanupTaskParams implements CICleanupTaskParams {
   @NotNull private String stageRuntimeId;
-  @Builder.Default private static final CICleanupTaskParams.Type type = CICleanupTaskParams.Type.AWS_VM;
+  @Builder.Default private static final CICleanupTaskParams.Type type = CICleanupTaskParams.Type.VM;
 
   @Override
   public CICleanupTaskParams.Type getType() {

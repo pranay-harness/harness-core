@@ -64,7 +64,6 @@ import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DuplicateFieldException;
-import io.harness.exception.InvalidEntityException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -538,7 +537,16 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         getConnectorOrThrowException(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connector);
     if (!connectorDTO.getEntityValidityDetails().isValid()) {
-      throw new InvalidEntityException("Invalid connector yaml", USER);
+      return ConnectorValidationResult.builder()
+          .status(FAILURE)
+          .testedAt(System.currentTimeMillis())
+          .errorSummary("Invalid connector yaml")
+          .errors(Collections.singletonList(ErrorDetail.builder()
+                                                .message("Invalid connector yaml")
+                                                .reason("Invalid connector yaml")
+                                                .code(400)
+                                                .build()))
+          .build();
     }
     ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
     return validateConnector(connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier,
