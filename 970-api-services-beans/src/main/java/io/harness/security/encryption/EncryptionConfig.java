@@ -2,7 +2,6 @@ package io.harness.security.encryption;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.SecretKey;
 
 @TargetModule(HarnessModule._980_COMMONS)
 public interface EncryptionConfig {
@@ -70,7 +69,7 @@ public interface EncryptionConfig {
   /**
    * Get secret key, currently added for local encryption
    */
-  default SecretKey getSecretKey() {
+  default SecretKeyDTO getSecretKeySpec() {
     throw new UnsupportedOperationException("Secret Key isn't supported for this type of encryption");
   }
 }

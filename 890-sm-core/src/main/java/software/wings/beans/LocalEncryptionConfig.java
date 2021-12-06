@@ -7,7 +7,6 @@ import static io.harness.helpers.GlobalSecretManagerUtils.isNgHarnessSecretManag
 import static io.harness.mappers.SecretManagerConfigMapper.updateNGSecretManagerMetadata;
 import static io.harness.security.encryption.SecretManagerType.KMS;
 
-import io.harness.beans.SecretKey;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -15,6 +14,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.secretmanagerclient.dto.LocalConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.security.encryption.SecretKeyDTO;
 import io.harness.security.encryption.SecretManagerType;
 
 import com.google.common.collect.Lists;
@@ -41,7 +41,7 @@ public class LocalEncryptionConfig extends SecretManagerConfig {
   public static final String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Secrets Manager";
   @Builder.Default private String name = HARNESS_DEFAULT_SECRET_MANAGER;
 
-  private SecretKey secretKey;
+  private SecretKeyDTO secretKey;
 
   @Override
   public String getEncryptionServiceUrl() {
@@ -90,7 +90,7 @@ public class LocalEncryptionConfig extends SecretManagerConfig {
   }
 
   @Override
-  public SecretKey getSecretKey() {
+  public SecretKeyDTO getSecretKeySpec() {
     return secretKey;
   }
 }

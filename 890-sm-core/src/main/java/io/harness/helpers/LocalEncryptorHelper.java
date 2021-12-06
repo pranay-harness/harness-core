@@ -3,12 +3,12 @@ package io.harness.helpers;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
-import io.harness.beans.SecretKey;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.exception.UnexpectedException;
 import io.harness.secretkey.SecretKeyConstants;
 import io.harness.secretkey.SecretKeyService;
 import io.harness.security.encryption.EncryptedRecord;
+import io.harness.security.encryption.SecretKeyDTO;
 import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
 
 import software.wings.beans.LocalEncryptionConfig;
@@ -25,7 +25,7 @@ public class LocalEncryptorHelper {
   @Inject private FeatureFlagHelperService featureFlagService;
 
   public void populateConfigForEncryption(SecretManagerConfig secretManagerConfig) {
-    SecretKey secretKey = secretKeyService.createSecretKey();
+    SecretKeyDTO secretKey = secretKeyService.createSecretKey();
     ((LocalEncryptionConfig) secretManagerConfig).setSecretKey(secretKey);
   }
 
@@ -40,7 +40,7 @@ public class LocalEncryptorHelper {
       return;
     }
 
-    Optional<SecretKey> secretKey = secretKeyService.getSecretKey(secretKeyUuid);
+    Optional<SecretKeyDTO> secretKey = secretKeyService.getSecretKey(secretKeyUuid);
     if (!secretKey.isPresent()) {
       throw new UnexpectedException(String.format("secret key not found for secret key id: %s", secretKeyUuid));
     }

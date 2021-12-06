@@ -26,6 +26,7 @@ import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.encryptors.VaultEncryptorsRegistry;
+import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
@@ -79,6 +80,7 @@ public class SecretTextTest extends SMCoreTestBase {
   private SecretsFileService mockSecretsFileService;
   private SecretsAuditService mockSecretsAuditService;
   private SecretService secretService;
+  private LocalEncryptorHelper localEncryptorHelper;
 
   @Before
   public void setup() {
