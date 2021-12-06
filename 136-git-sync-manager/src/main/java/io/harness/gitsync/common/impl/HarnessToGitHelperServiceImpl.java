@@ -150,7 +150,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
 
   private void markResolvedErrors(PushInfo pushInfo, YamlGitConfigDTO yamlGitConfigDTO) {
     String completeFilePath = ScmGitUtils.createFilePath(pushInfo.getFolderPath(), pushInfo.getFilePath());
-    gitSyncErrorService.markResolvedErrors(pushInfo.getAccountId(), yamlGitConfigDTO.getRepo(),
+    gitSyncErrorService.resolveGitToHarnessErrors(pushInfo.getAccountId(), yamlGitConfigDTO.getRepo(),
         pushInfo.getBranchName(), new HashSet<>(Collections.singleton(completeFilePath)), pushInfo.getCommitId());
   }
 
