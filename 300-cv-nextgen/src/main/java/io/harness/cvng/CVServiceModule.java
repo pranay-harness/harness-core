@@ -202,15 +202,18 @@ import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator.RatioServiceLevelIndicatorUpdatableEntity;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorUpdatableEntity;
 import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator.ThresholdServiceLevelIndicatorUpdatableEntity;
+import io.harness.cvng.servicelevelobjective.services.api.SLIAnalyserService;
 import io.harness.cvng.servicelevelobjective.services.api.SLIRecordService;
 import io.harness.cvng.servicelevelobjective.services.api.SLODashboardService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.cvng.servicelevelobjective.services.api.UserJourneyService;
+import io.harness.cvng.servicelevelobjective.services.impl.RatioAnalyserServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.SLIRecordServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.SLODashboardServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelIndicatorServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelObjectiveServiceImpl;
+import io.harness.cvng.servicelevelobjective.services.impl.ThresholdAnalyserServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.UserJourneyServiceImpl;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.RatioServiceLevelIndicatorTransformer;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorEntityAndDTOTransformer;
@@ -564,6 +567,11 @@ public class CVServiceModule extends AbstractModule {
     changeTypeMetaDataTransformerMapBinder.addBinding(ChangeSourceType.HARNESS_CD_CURRENT_GEN)
         .to(HarnessCDCurrentGenChangeEventTransformer.class)
         .in(Scopes.SINGLETON);
+
+    MapBinder<SLIMetricType, SLIAnalyserService> sliAnalyserServiceMapBinder =
+        MapBinder.newMapBinder(binder(), SLIMetricType.class, SLIAnalyserService.class);
+    sliAnalyserServiceMapBinder.addBinding(SLIMetricType.RATIO).to(RatioAnalyserServiceImpl.class);
+    sliAnalyserServiceMapBinder.addBinding(SLIMetricType.THRESHOLD).to(ThresholdAnalyserServiceImpl.class);
   }
 
   private void bindChangeSourceUpdatedEntity() {
