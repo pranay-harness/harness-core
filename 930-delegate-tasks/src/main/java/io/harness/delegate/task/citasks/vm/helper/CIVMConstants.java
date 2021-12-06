@@ -1,4 +1,4 @@
-package io.harness.delegate.task.citasks.awsvm.helper;
+package io.harness.delegate.task.citasks.vm.helper;
 
 public class CIVMConstants {
   public static final String RUNNER_URL = "http://127.0.0.1:3000/";
