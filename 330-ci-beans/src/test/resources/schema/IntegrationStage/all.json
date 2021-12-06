@@ -4102,7 +4102,8 @@
           "type": "object",
           "required": [
             "identifier",
-            "name"
+            "name",
+            "template"
           ],
           "properties": {
             "description": {

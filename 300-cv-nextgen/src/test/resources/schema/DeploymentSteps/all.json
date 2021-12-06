@@ -192,7 +192,8 @@
       "type": "object",
       "required": [
         "identifier",
-        "name"
+        "name",
+        "template"
       ],
       "properties": {
         "description": {
@@ -2368,7 +2369,8 @@
           "type": "object",
           "required": [
             "identifier",
-            "name"
+            "name",
+            "template"
           ],
           "properties": {
             "description": {
