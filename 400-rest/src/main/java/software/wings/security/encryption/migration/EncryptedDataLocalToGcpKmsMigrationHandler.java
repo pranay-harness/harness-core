@@ -121,22 +121,22 @@ public class EncryptedDataLocalToGcpKmsMigrationHandler implements Handler<Encry
 
   private MorphiaFilterExpander<EncryptedData> getFilterQueryWithAccountIdsFilter(Set<String> accountIds) {
     return query
-            -> query.field(EncryptedDataKeys.accountId)
-            .hasAnyOf(accountIds)
-            .field(EncryptedDataKeys.type)
-            .in(secretTypes)
-            .field(EncryptedDataKeys.encryptionType)
-            .equal(LOCAL)
-            .field(EncryptedDataKeys.ngMetadata)
-            .equal(null);
+        -> query.field(EncryptedDataKeys.accountId)
+               .hasAnyOf(accountIds)
+               .field(EncryptedDataKeys.type)
+               .in(secretTypes)
+               .field(EncryptedDataKeys.encryptionType)
+               .equal(LOCAL)
+               .field(EncryptedDataKeys.ngMetadata)
+               .equal(null);
   }
 
   @Override
   public void handle(@NotNull EncryptedData encryptedData) {
     if (!featureFlagService.isEnabled(ACTIVE_MIGRATION_FROM_LOCAL_TO_GCP_KMS, encryptedData.getAccountId())) {
       log.info(
-              "Feature flag {} is not enabled hence not processing encryptedData {} for accountId {} for Local Secret Manager to GCP KMS migration ",
-              ACTIVE_MIGRATION_FROM_LOCAL_TO_GCP_KMS, encryptedData.getUuid(), encryptedData.getAccountId());
+          "Feature flag {} is not enabled hence not processing encryptedData {} for accountId {} for Local Secret Manager to GCP KMS migration ",
+          ACTIVE_MIGRATION_FROM_LOCAL_TO_GCP_KMS, encryptedData.getUuid(), encryptedData.getAccountId());
       return;
     }
     int retryCount = 0;
@@ -144,18 +144,18 @@ public class EncryptedDataLocalToGcpKmsMigrationHandler implements Handler<Encry
     while (!isMigrationSuccessful && retryCount < MAX_RETRY_COUNT) {
       if (encryptedData.getEncryptedValue() == null) {
         log.info("EncryptedValue value was null for encrypted record {} hence just updating encryption type info only",
-                encryptedData.getUuid());
+            encryptedData.getUuid());
         isMigrationSuccessful = updateEncryptionInfo(encryptedData);
       } else {
         log.info(
-                "Executing Local Secret Manager to GCP KMS migration for encrypted record {}", encryptedData.getUuid());
+            "Executing Local Secret Manager to GCP KMS migration for encrypted record {}", encryptedData.getUuid());
         isMigrationSuccessful = migrateToGcpKMS(encryptedData);
       }
       retryCount++;
     }
     if (!isMigrationSuccessful) {
       log.error("Could not migrate encrypted record {} from Local Secret Manager to GCP KMS for after 3 retries",
-              encryptedData.getUuid());
+          encryptedData.getUuid());
     }
   }
 

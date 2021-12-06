@@ -12,6 +12,7 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
 import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
@@ -20,6 +21,7 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTargetSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
@@ -218,11 +220,17 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
     ratioSLIMetricSpec.setMetric1("newMetric");
     serviceLevelIndicatorDTO1.getSpec().setSpec(ratioSLIMetricSpec);
     ServiceLevelIndicatorDTO serviceLevelIndicatorDTO2 = builderFactory.getServiceLevelIndicatorDTOBuilder();
-    serviceLevelIndicatorDTO2.setSpec(
-        ServiceLevelIndicatorSpec.builder()
-            .type(SLIMetricType.RATIO)
-            .spec(RatioSLIMetricSpec.builder().eventType("Bad").metric1("metric4").metric2("metric5").build())
-            .build());
+    serviceLevelIndicatorDTO2.setSliMissingDataType(SLIMissingDataType.GOOD);
+    serviceLevelIndicatorDTO2.setSpec(ServiceLevelIndicatorSpec.builder()
+                                          .type(SLIMetricType.RATIO)
+                                          .spec(RatioSLIMetricSpec.builder()
+                                                    .thresholdValue(20.0)
+                                                    .thresholdType(ThresholdType.GREATER_THAN)
+                                                    .eventType("Bad")
+                                                    .metric1("metric4")
+                                                    .metric2("metric5")
+                                                    .build())
+                                          .build());
     List<ServiceLevelIndicatorDTO> serviceLevelIndicatorDTOList = new ArrayList<>();
     serviceLevelIndicatorDTOList.add(serviceLevelIndicatorDTO1);
     serviceLevelIndicatorDTOList.add(serviceLevelIndicatorDTO2);
