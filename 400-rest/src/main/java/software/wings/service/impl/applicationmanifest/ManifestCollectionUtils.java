@@ -79,6 +79,11 @@ public class ManifestCollectionUtils {
     HelmChartConfigParamsBuilder helmChartConfigParamsBuilder = constructHelmChartConfigParamsBuilder(
         appId, helmChartConfig, service.getHelmVersion(), appManifest.getPerpetualTaskId(), appManifestId, accountId);
 
+    boolean useRepoFlags = false;
+    if (featureFlagService.isEnabled(FeatureName.USE_HELM_REPO_FLAGS, accountId)) {
+      useRepoFlags = true;
+    }
+
     return HelmChartCollectionParams.builder()
         .accountId(accountId)
         .appId(appId)
@@ -86,6 +91,7 @@ public class ManifestCollectionUtils {
         .serviceId(appManifest.getServiceId())
         .publishedVersions(getPublishedVersionsForAppManifest(accountId, appManifestId))
         .helmChartConfigParams(helmChartConfigParamsBuilder.build())
+        .useRepoFlags(useRepoFlags)
         .build();
   }
 
