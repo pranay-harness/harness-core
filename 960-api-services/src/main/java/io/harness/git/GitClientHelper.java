@@ -74,6 +74,7 @@ public class GitClientHelper {
   private static final String GIT_URL_REGEX =
       "(http|https|git|ssh)(:\\/\\/|@)([^\\/:]+(:\\d+)?)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
   private static final String GIT_URL_REGEX_NO_OWNER = "(http|https|git|ssh)(:\\/\\/|@)([^\\/:]+(:\\d+)?)";
+  private static final String regexForUserNameTokenMatch = "https://(.*?)@";
   private static final Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
   private static final Pattern GIT_URL_NO_OWNER = Pattern.compile(GIT_URL_REGEX_NO_OWNER);
   private static final Integer OWNER_GROUP = 5;
@@ -345,10 +346,20 @@ public class GitClientHelper {
     return null;
   }
 
-  private static String maskUserTokenInMessage(String message) {}
+  private static String maskUserTokenInMessage(String message) {
+    Matcher m = Pattern.compile(regexForUserNameTokenMatch).matcher(message);
+    String output = null;
+    while (m.find()) {
+      output = m.replaceFirst("######");
+      // s now contains "BAR"
+    }
+    return output;
+  }
 
   public static boolean errorMsgContainsTheUserToken(String message) {
-    return false;
+    // This fix is for the security issue https://harness.atlassian.net/browse/PL-21128
+
+    return Pattern.compile(regexForUserNameTokenMatch).matcher(message).find();
   }
 
   public void checkIfMissingCommitIdIssue(Exception ex, String commitId) {
