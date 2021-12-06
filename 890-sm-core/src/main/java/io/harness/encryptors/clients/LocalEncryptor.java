@@ -46,26 +46,25 @@ public class LocalEncryptor implements KmsEncryptor {
   @Override
   public EncryptedRecord encryptSecret(String accountId, String value, EncryptionConfig encryptionConfig) {
     if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)) {
-      SecretKey secretKey = secretKeyService.createSecretKey();
-      final byte[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
+      final byte[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, encryptionConfig.getSecretKey());
       return EncryptedRecordData.builder()
-          .encryptionKey(secretKey.getUuid())
+          .encryptionKey(encryptionConfig.getSecretKey().getUuid())
           .encryptedValueBytes(awsEncryptedSecret)
           .encryptedMech(EncryptedMech.AWS_ENCRYPTION_SDK_CRYPTO)
           .build();
     }
     final char[] localJavaEncryptedSecret = getLocalJavaEncryptedSecret(accountId, value);
     if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_MULTI_CRYPTO_MODE)) {
-      SecretKey secretKey = secretKeyService.createSecretKey();
-      final byte[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
+      final byte[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, encryptionConfig.getSecretKey());
       return EncryptedRecordData.builder()
           .encryptionKey(accountId)
           .encryptedValue(localJavaEncryptedSecret)
           .encryptedMech(EncryptedMech.MULTI_CRYPTO)
-          .additionalMetadata(AdditionalMetadata.builder()
-                                  .value(AdditionalMetadata.SECRET_KEY_UUID_KEY, secretKey.getUuid())
-                                  .value(AdditionalMetadata.AWS_ENCRYPTED_SECRET, awsEncryptedSecret)
-                                  .build())
+          .additionalMetadata(
+              AdditionalMetadata.builder()
+                  .value(AdditionalMetadata.SECRET_KEY_UUID_KEY, encryptionConfig.getSecretKey().getUuid())
+                  .value(AdditionalMetadata.AWS_ENCRYPTED_SECRET, awsEncryptedSecret)
+                  .build())
           .build();
     }
     return EncryptedRecordData.builder().encryptionKey(accountId).encryptedValue(localJavaEncryptedSecret).build();
@@ -94,11 +93,11 @@ public class LocalEncryptor implements KmsEncryptor {
       return getLocalJavaDecryptedSecret(encryptedRecord);
     }
 
-    Optional<SecretKey> secretKey = secretKeyService.getSecretKey(secretKeyUuid);
-    if (!secretKey.isPresent()) {
-      throw new UnexpectedException(String.format("secret key not found for secret key id: %s", secretKeyUuid));
-    }
-    return getAwsDecryptedSecret(accountId, encryptedSecret, secretKey.get()).toCharArray();
+    //    Optional<SecretKey> secretKey = secretKeyService.getSecretKey(secretKeyUuid);
+    //    if (!secretKey.isPresent()) {
+    //      throw new UnexpectedException(String.format("secret key not found for secret key id: %s", secretKeyUuid));
+    //    }
+    return getAwsDecryptedSecret(accountId, encryptedSecret, encryptionConfig.getSecretKey()).toCharArray();
   }
 
   @Override
