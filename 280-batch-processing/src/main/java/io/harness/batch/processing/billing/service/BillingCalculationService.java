@@ -54,6 +54,9 @@ public class BillingCalculationService {
   public BillingData getInstanceBillingAmount(InstanceData instanceData, UtilizationData utilizationData,
       Double parentInstanceActiveSecond, Instant startTime, Instant endTime) {
     double instanceActiveSeconds = getInstanceActiveSeconds(instanceData, startTime, endTime);
+    if (instanceData.getInstanceId().equals("ac984c4b1bdc4ed692bf36d2268a57c5")) {
+      log.info("ac984c4b1bdc4ed692bf36d2268a57c5 Util data for instannce {}", utilizationData);
+    }
     if (instanceActiveSeconds == 0) {
       return new BillingData(BillingAmountBreakup.builder()
                                  .billingAmount(BigDecimal.ZERO)
@@ -71,6 +74,10 @@ public class BillingCalculationService {
         log.warn("Instance parent active time is 0 {} {}", instanceData.getInstanceId(), startTime);
         parentInstanceActiveSecond = 24 * 3600D;
       }
+    }
+
+    if (instanceData.getInstanceId().equals("ac984c4b1bdc4ed692bf36d2268a57c5")) {
+      log.info("ac984c4b1bdc4ed692bf36d2268a57c5 parent instance sec {}", parentInstanceActiveSecond);
     }
 
     io.harness.batch.processing.pricing.PricingData pricingData =
@@ -205,6 +212,9 @@ public class BillingCalculationService {
   @VisibleForTesting
   public IdleCostData getIdleCostForResource(
       BillingAmountBreakup billingDataForResource, UtilizationData utilizationData, InstanceData instanceData) {
+    if (instanceData.getInstanceId().equals("ac984c4b1bdc4ed692bf36d2268a57c5")) {
+      log.info("ac984c4b1bdc4ed692bf36d2268a57c5 inside idle cost");
+    }
     if (instanceData.getInstanceType() == InstanceType.ECS_TASK_FARGATE || utilizationData == null) {
       return new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
     }
