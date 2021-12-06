@@ -1,4 +1,4 @@
-package io.harness.delegate.beans.ci.awsvm.runner;
+package io.harness.delegate.beans.ci.vm.runner;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

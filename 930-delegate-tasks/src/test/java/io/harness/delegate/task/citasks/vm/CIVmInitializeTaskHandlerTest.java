@@ -1,4 +1,4 @@
-package io.harness.delegate.task.citasks.awsvm;
+package io.harness.delegate.task.citasks.vm;
 
 import static io.harness.rule.OwnerRule.SHUBHAM;
 
@@ -11,10 +11,10 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ci.awsvm.CIVmInitializeTaskParams;
-import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
+import io.harness.delegate.beans.ci.vm.CIVmInitializeTaskParams;
+import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.task.citasks.awsvm.helper.HttpHelper;
+import io.harness.delegate.task.citasks.vm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
