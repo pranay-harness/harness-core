@@ -9,8 +9,6 @@ import io.harness.beans.SecretKey;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.exception.UnexpectedException;
-import io.harness.secretkey.SecretKeyConstants;
-import io.harness.secretkey.SecretKeyService;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedMech;
@@ -26,11 +24,9 @@ import com.amazonaws.encryptionsdk.CryptoResult;
 import com.amazonaws.encryptionsdk.jce.JceMasterKey;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,22 +76,15 @@ public class LocalEncryptor implements KmsEncryptor {
       return getLocalJavaDecryptedSecret(encryptedRecord);
     }
 
-    String secretKeyUuid = null;
     byte[] encryptedSecret = null;
     if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)) {
-      secretKeyUuid = encryptedRecord.getEncryptionKey();
       encryptedSecret = encryptedRecord.getEncryptedValueBytes();
     } else if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_MULTI_CRYPTO_MODE)) {
-      secretKeyUuid = encryptedRecord.getAdditionalMetadata().getSecretKeyUuid();
       encryptedSecret = encryptedRecord.getAdditionalMetadata().getAwsEncryptedSecret();
     } else {
       return getLocalJavaDecryptedSecret(encryptedRecord);
     }
 
-    //    Optional<SecretKey> secretKey = secretKeyService.getSecretKey(secretKeyUuid);
-    //    if (!secretKey.isPresent()) {
-    //      throw new UnexpectedException(String.format("secret key not found for secret key id: %s", secretKeyUuid));
-    //    }
     return getAwsDecryptedSecret(accountId, encryptedSecret, encryptionConfig.getSecretKey()).toCharArray();
   }
 
