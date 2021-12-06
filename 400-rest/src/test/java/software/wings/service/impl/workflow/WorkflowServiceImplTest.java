@@ -183,8 +183,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.appId, workflow.getAppId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())).thenReturn(query);
-    when(query.field(any())).thenReturn(fieldEnd);
-    when(fieldEnd.contains(any())).thenReturn(query);
+    when(query.filter(WorkflowExecutionKeys.serviceIds, SERVICE_ID)).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(query);
     when(query.order(any(Sort.class))).thenReturn(query);
     when(query.get()).thenReturn(workflowExecution);
@@ -226,11 +225,10 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.appId, workflow.getAppId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())).thenReturn(query);
-    when(emptyQuery.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(emptyQuery);
-    when(query.field(WorkflowExecutionKeys.serviceIds)).thenReturn(fieldEnd);
-    when(fieldEnd.contains(any())).thenReturn(emptyQuery);
-    when(emptyQuery.order(any(Sort.class))).thenReturn(emptyQuery);
-    when(emptyQuery.get()).thenReturn(null);
+    when(query.filter(WorkflowExecutionKeys.serviceIds, SERVICE_ID)).thenReturn(query);
+    when(query.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(query);
+    when(query.order(any(Sort.class))).thenReturn(query);
+    when(query.get()).thenReturn(null);
     WorkflowServiceImpl workflowServiceImpl = (WorkflowServiceImpl) workflowService;
     LastDeployedArtifactInformation artifactInformation = workflowServiceImpl.fetchLastDeployedArtifact(
         workflow, asList(ARTIFACT_STREAM_ID, ARTIFACT_STREAM_ID_ARTIFACTORY), SERVICE_ID);
@@ -407,8 +405,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.appId, workflow.getAppId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())).thenReturn(query);
-    when(query.field(any())).thenReturn(fieldEnd);
-    when(fieldEnd.contains(any())).thenReturn(query);
+    when(query.filter(WorkflowExecutionKeys.serviceIds, SERVICE_ID)).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(query);
     when(query.order(any(Sort.class))).thenReturn(query);
     when(query.get()).thenReturn(workflowExecution);
@@ -712,8 +709,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.appId, workflow.getAppId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())).thenReturn(query);
-    when(query.field(WorkflowExecutionKeys.serviceIds)).thenReturn(fieldEnd);
-    when(fieldEnd.contains(SERVICE_ID)).thenReturn(query);
+    when(query.filter(WorkflowExecutionKeys.serviceIds, SERVICE_ID)).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(query);
     when(query.order(any(Sort.class))).thenReturn(query);
     when(query.get()).thenReturn(workflowExecution);
