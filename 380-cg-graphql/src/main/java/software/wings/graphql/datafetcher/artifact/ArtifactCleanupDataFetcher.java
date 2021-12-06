@@ -8,7 +8,6 @@ import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 
 import software.wings.beans.User;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.artifact.ArtifactCleanUpPayload;
@@ -16,10 +15,10 @@ import software.wings.graphql.schema.mutation.artifact.ArtifactCleanupInput;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuthService;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,11 +47,7 @@ public class ArtifactCleanupDataFetcher extends BaseMutatorDataFetcher<ArtifactC
       return new ArtifactCleanUpPayload("Artifact stream not found for the id: " + parameter.getArtifactStreamId());
     }
 
-    if (!ImmutableSet
-             .of(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.AMI.name(), ArtifactStreamType.ARTIFACTORY.name(),
-                 ArtifactStreamType.ECR.name(), ArtifactStreamType.GCR.name(), ArtifactStreamType.ACR.name(),
-                 ArtifactStreamType.NEXUS.name(), ArtifactStreamType.AZURE_MACHINE_IMAGE.name())
-             .contains(artifactStream.getArtifactStreamType())) {
+    if (!ArtifactCollectionUtils.supportsCleanup(artifactStream.getArtifactStreamType())) {
       return new ArtifactCleanUpPayload(
           "Clean up not supported for artifact Stream type: " + artifactStream.getArtifactStreamType());
     }
