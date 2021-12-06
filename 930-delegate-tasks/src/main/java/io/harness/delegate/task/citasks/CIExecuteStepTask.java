@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 import org.apache.commons.lang3.NotImplementedException;
 
 public class CIExecuteStepTask extends AbstractDelegateRunnableTask {
-  @Inject @Named(CITaskConstants.EXECUTE_STEP_AWS_VM) private CIExecuteStepTaskHandler ciAwsVmExecuteStepTaskHandler;
+  @Inject @Named(CITaskConstants.EXECUTE_STEP_VM) private CIExecuteStepTaskHandler ciVmExecuteStepTaskHandler;
   @Inject @Named(CITaskConstants.EXECUTE_STEP_K8) private CIExecuteStepTaskHandler ciK8ExecuteStepTaskHandler;
 
   public CIExecuteStepTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
@@ -36,8 +36,8 @@ public class CIExecuteStepTask extends AbstractDelegateRunnableTask {
     CIExecuteStepTaskParams ciExecuteStepTaskParams = (CIExecuteStepTaskParams) parameters;
     if (ciExecuteStepTaskParams.getType() == CIExecuteStepTaskParams.Type.K8) {
       return ciK8ExecuteStepTaskHandler.executeTaskInternal(ciExecuteStepTaskParams);
-    } else if (ciExecuteStepTaskParams.getType() == CIExecuteStepTaskParams.Type.AWS_VM) {
-      return ciAwsVmExecuteStepTaskHandler.executeTaskInternal(ciExecuteStepTaskParams);
+    } else if (ciExecuteStepTaskParams.getType() == CIExecuteStepTaskParams.Type.VM) {
+      return ciVmExecuteStepTaskHandler.executeTaskInternal(ciExecuteStepTaskParams);
     } else {
       throw new CIStageExecutionException(
           format("Invalid infra type for executing step", ciExecuteStepTaskParams.getType()));

@@ -1,7 +1,7 @@
 package io.harness.delegate.task.citasks.awsvm.helper;
 
-import static io.harness.delegate.task.citasks.awsvm.helper.CIAwsVmConstants.RUNNER_CONNECT_TIMEOUT_SECS;
-import static io.harness.delegate.task.citasks.awsvm.helper.CIAwsVmConstants.RUNNER_URL;
+import static io.harness.delegate.task.citasks.awsvm.helper.CIVMConstants.RUNNER_CONNECT_TIMEOUT_SECS;
+import static io.harness.delegate.task.citasks.awsvm.helper.CIVMConstants.RUNNER_URL;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

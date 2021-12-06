@@ -16,18 +16,18 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonTypeName("AwsVm")
-@TypeAlias("AwsVmInfraYaml")
+@JsonTypeName("VM")
+@TypeAlias("VmInfraYaml")
 @OwnedBy(CI)
-public class AwsVmInfraYaml implements Infrastructure {
-  @Builder.Default @NotNull private Type type = Type.AWS_VM;
-  @NotNull private AwsVmInfraYamlSpec spec;
+public class VmInfraYaml implements Infrastructure {
+  @Builder.Default @NotNull private Type type = Type.VM;
+  @NotNull private VmInfraYamlSpec spec;
 
   @Data
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  public static class AwsVmInfraYamlSpec {
+  public static class VmInfraYamlSpec {
     @NotNull private String poolId;
   }
 }

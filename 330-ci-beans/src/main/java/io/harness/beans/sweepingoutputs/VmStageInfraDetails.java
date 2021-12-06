@@ -16,15 +16,15 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@TypeAlias("awsVmStageInfraDetails")
-@JsonTypeName("awsVmStageInfraDetails")
+@TypeAlias("vmStageInfraDetails")
+@JsonTypeName("vmStageInfraDetails")
 @OwnedBy(CI)
-@RecasterAlias("io.harness.beans.sweepingoutputs.AwsVmStageInfraDetails")
-public class AwsVmStageInfraDetails implements StageInfraDetails {
+@RecasterAlias("io.harness.beans.sweepingoutputs.VmStageInfraDetails")
+public class VmStageInfraDetails implements StageInfraDetails {
   String poolId;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
-  @Builder.Default @NotNull private Type type = Type.AWS_VM;
+  @Builder.Default @NotNull private Type type = Type.VM;
 
   @Override
   public StageInfraDetails.Type getType() {

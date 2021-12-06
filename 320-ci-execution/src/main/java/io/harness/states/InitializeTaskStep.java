@@ -27,7 +27,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIInitializeTaskParams;
 import io.harness.delegate.beans.ci.CITaskExecutionResponse;
-import io.harness.delegate.beans.ci.awsvm.AwsVmTaskExecutionResponse;
+import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
@@ -146,8 +146,8 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
     CITaskExecutionResponse ciTaskExecutionResponse = responseSupplier.get();
     if (ciTaskExecutionResponse.getType() == CITaskExecutionResponse.Type.K8) {
       return handleK8TaskResponse(ambiance, stepElementParameters, ciTaskExecutionResponse);
-    } else if (ciTaskExecutionResponse.getType() == CITaskExecutionResponse.Type.AWS_VM) {
-      return handleAwsVmTaskResponse(ambiance, stepElementParameters, ciTaskExecutionResponse);
+    } else if (ciTaskExecutionResponse.getType() == CITaskExecutionResponse.Type.VM) {
+      return handleVmTaskResponse(ambiance, stepElementParameters, ciTaskExecutionResponse);
     } else {
       throw new CIStageExecutionException(
           format("Invalid infra type for task response: %s", ciTaskExecutionResponse.getType()));
@@ -195,10 +195,10 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
     }
   }
 
-  private StepResponse handleAwsVmTaskResponse(
+  private StepResponse handleVmTaskResponse(
       Ambiance ambiance, StepElementParameters stepElementParameters, CITaskExecutionResponse ciTaskExecutionResponse) {
-    AwsVmTaskExecutionResponse awsVmTaskExecutionResponse = (AwsVmTaskExecutionResponse) ciTaskExecutionResponse;
-    if (awsVmTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
+    VmTaskExecutionResponse vmTaskExecutionResponse = (VmTaskExecutionResponse) ciTaskExecutionResponse;
+    if (vmTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       return StepResponse.builder().status(Status.SUCCEEDED).build();
     } else {
       return StepResponse.builder().status(Status.FAILED).build();
@@ -316,7 +316,7 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
       throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
     // TODO (shubham): Add entity details for aws vm
-    if (infrastructure.getType() == Infrastructure.Type.AWS_VM) {
+    if (infrastructure.getType() == Infrastructure.Type.VM) {
       return new ArrayList<>();
     }
 
