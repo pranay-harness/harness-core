@@ -9,14 +9,14 @@ public enum ThresholdType {
   @JsonProperty("<=") LESS_THAN_EQUAL_TO;
 
   public boolean compute(Double inputValue, Double comparedTo) {
-    switch (this.name()) {
-      case "GREATER_THAN":
+    switch (this) {
+      case GREATER_THAN:
         return inputValue > comparedTo;
-      case "LESS_THAN":
+      case LESS_THAN:
         return inputValue < comparedTo;
-      case "GREATER_THAN_EQUAL_TO":
+      case GREATER_THAN_EQUAL_TO:
         return inputValue >= comparedTo;
-      case "LESS_THAN_EQUAL_TO":
+      case LESS_THAN_EQUAL_TO:
         return inputValue <= comparedTo;
       default:
         throw new IllegalArgumentException("Invalid state");

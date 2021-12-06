@@ -16,7 +16,10 @@ public class RatioAnalyserServiceImpl implements SLIAnalyserService<RatioSLIMetr
     Double metricValue2 = sliAnalyseRequest.get(sliSpec.getMetric2());
     Preconditions.checkNotNull(
         metricValue2, "metric value for metric identifier " + sliSpec.getMetric2() + " not found.");
-    double metricValue = metricValue1 / metricValue2;
+    if (metricValue2 == 0) {
+      return SLIState.NO_DATA;
+    }
+    double metricValue = (metricValue1 / metricValue2) * 100;
     if (sliSpec.getThresholdType().compute(metricValue, sliSpec.getThresholdValue())) {
       return SLIState.GOOD;
     } else {
