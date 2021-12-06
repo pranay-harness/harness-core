@@ -18,7 +18,6 @@ import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
@@ -84,7 +83,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -485,12 +483,10 @@ public class InputSetResourcePMS {
         pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
     Criteria criteria = PMSInputSetFilterHelper.createCriteriaForGetList(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetListType, searchTerm, false);
-    Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
-      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, InputSetEntityKeys.createdAt));
-    } else {
-      pageRequest = PageUtils.getPageRequest(page, size, sort);
-    }
+
+    Pageable pageRequest =
+        PageUtils.getPageRequest(page, size, sort, Sort.by(Sort.Direction.DESC, InputSetEntityKeys.createdAt));
+
     Page<InputSetSummaryResponseDTOPMS> inputSetList =
         pmsInputSetService.list(criteria, pageRequest, accountId, orgIdentifier, projectIdentifier)
             .map(inputSetEntity -> {
