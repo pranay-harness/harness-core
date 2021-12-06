@@ -135,6 +135,9 @@ public class BillingCalculationService {
     BillingAmountBreakup billingAmountForResource = getBillingAmountBreakupForResource(
         instanceData, billingAmount, cpuUnit, memoryMb, storageMb, instanceActiveSeconds, pricingData);
     IdleCostData idleCostData = getIdleCostForResource(billingAmountForResource, utilizationData, instanceData);
+    if (instanceData.getInstanceId().equals("ac984c4b1bdc4ed692bf36d2268a57c5")) {
+      log.info("ac984c4b1bdc4ed692bf36d2268a57c5 inside idle cost {} ", idleCostData);
+    }
     SystemCostData systemCostData = getSystemCostForResource(billingAmountForResource, instanceData);
 
     return new BillingData(billingAmountForResource, idleCostData, systemCostData, instanceActiveSeconds,
@@ -213,7 +216,7 @@ public class BillingCalculationService {
   public IdleCostData getIdleCostForResource(
       BillingAmountBreakup billingDataForResource, UtilizationData utilizationData, InstanceData instanceData) {
     if (instanceData.getInstanceId().equals("ac984c4b1bdc4ed692bf36d2268a57c5")) {
-      log.info("ac984c4b1bdc4ed692bf36d2268a57c5 inside idle cost");
+      log.info("ac984c4b1bdc4ed692bf36d2268a57c5 inside idle cost {} ", billingDataForResource);
     }
     if (instanceData.getInstanceType() == InstanceType.ECS_TASK_FARGATE || utilizationData == null) {
       return new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
@@ -231,6 +234,9 @@ public class BillingCalculationService {
           * (1 - utilizationData.getAvgMemoryUtilization()));
     }
 
+    if (instanceData.getInstanceId().equals("ac984c4b1bdc4ed692bf36d2268a57c5")) {
+      log.info("ac984c4b1bdc4ed692bf36d2268a57c5 cpu {} memory  idle cost {} ", cpuIdleCost, memoryIdleCost);
+    }
     double storageRequest = utilizationData.getMaxStorageRequestValue();
     double storageUsage = utilizationData.getMaxStorageUsageValue();
     StorageResource storageResource = instanceData.getStorageResource();

@@ -299,7 +299,10 @@ public class InstanceBillingDataTasklet implements Tasklet {
     BillingData billingData = billingCalculationService.getInstanceBillingAmount(
         instanceData, utilizationData, parentInstanceActiveSecond, startTime, endTime);
 
-    log.trace("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
+
+    if (instanceData.getInstanceId().equals("ac984c4b1bdc4ed692bf36d2268a57c5")) {
+      log.info("ac984c4b1bdc4ed692bf36d2268a57c5 Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
+    }
 
     HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(instanceData);
     HarnessServiceInfoNG harnessServiceInfoNG = getHarnessServiceInfoNG(instanceData);
