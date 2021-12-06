@@ -226,7 +226,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
                                         .startTime(startTime)
                                         .endTime(endTime)
                                         .metricPath(getCompletePath(baseFolder, tier, metricPath))
-                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_METRIC_DATA)
+                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_SINGLE_METRIC_DATA)
                                         .build();
 
     OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()

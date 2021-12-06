@@ -55,14 +55,20 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
 
     long startInterval = getEpochMilliNDaysAgo(timestamp, TIME_PERIOD_IN_DAYS);
 
+    List<InstanceDTO> activeInstancesByAccount =
+        instanceService.getInstancesDeployedInInterval(accountIdentifier, startInterval, timestamp);
+    Table<Record3<String, String, String>> serviceTableFromInstances =
+        cdLicenseUsageHelper.getOrgProjectServiceTableFromInstances(activeInstancesByAccount);
+
     List<AggregateServiceUsageInfo> activeServicesUsageInfo =
         cdLicenseUsageHelper.getActiveServicesInfoWithPercentileServiceInstanceCount(
-            accountIdentifier, PERCENTILE, startInterval, timestamp);
+            accountIdentifier, PERCENTILE, startInterval, timestamp, serviceTableFromInstances);
 
-    UsageDataDTO activeServices = getActiveServicesUsageDTO(activeServicesUsageInfo, accountIdentifier);
+    UsageDataDTO activeServices =
+        getActiveServicesUsageDTO(activeServicesUsageInfo, accountIdentifier, serviceTableFromInstances);
     UsageDataDTO serviceLicenseUsed = getServiceLicenseUsedDTO(usageRequest, activeServicesUsageInfo);
     UsageDataDTO activeServiceInstances =
-        getActiveServiceInstancesDTO(accountIdentifier, activeServicesUsageInfo, startInterval, timestamp);
+        getActiveServiceInstancesDTO(accountIdentifier, activeServicesUsageInfo, activeInstancesByAccount);
 
     switch (usageRequest.getCdLicenseType()) {
       case SERVICES:
@@ -99,11 +105,9 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
   }
 
   private UsageDataDTO getActiveServiceInstancesDTO(String accountIdentifier,
-      List<AggregateServiceUsageInfo> activeServicesUsageInfo, long startInterval, long timestamp) {
+      List<AggregateServiceUsageInfo> activeServicesUsageInfo, List<InstanceDTO> activeInstancesByAccount) {
     long aggregatedPercentileInstanceCount = getAggregatedServiceInstanceCount(activeServicesUsageInfo);
 
-    List<InstanceDTO> activeInstancesByAccount =
-        instanceService.getInstancesModifiedInInterval(accountIdentifier, startInterval, timestamp);
     return createActiveServiceInstancesUsageDTO(activeInstancesByAccount, aggregatedPercentileInstanceCount);
   }
 
@@ -135,8 +139,8 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
     return (activeInstanceCount + LICENSE_INSTANCE_LIMIT - 1) / LICENSE_INSTANCE_LIMIT;
   }
 
-  private UsageDataDTO getActiveServicesUsageDTO(
-      List<AggregateServiceUsageInfo> activeServiceUsageInfoList, String accountIdentifier) {
+  private UsageDataDTO getActiveServicesUsageDTO(List<AggregateServiceUsageInfo> activeServiceUsageInfoList,
+      String accountIdentifier, Table<Record3<String, String, String>> orgProjectServiceTable) {
     if (isEmpty(activeServiceUsageInfoList)) {
       return UsageDataDTO.builder()
           .count(0)
@@ -145,8 +149,6 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
           .build();
     }
 
-    Table<Record3<String, String, String>> orgProjectServiceTable =
-        cdLicenseUsageHelper.getOrgProjectServiceTable(activeServiceUsageInfoList);
     List<Services> services = cdLicenseUsageHelper.getServiceEntities(accountIdentifier, orgProjectServiceTable);
     List<ReferenceDTO> activeServiceReferenceDTOList =
         services.stream()

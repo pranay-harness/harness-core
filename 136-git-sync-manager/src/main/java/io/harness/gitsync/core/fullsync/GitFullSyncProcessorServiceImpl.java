@@ -1,6 +1,7 @@
 package io.harness.gitsync.core.fullsync;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
@@ -11,10 +12,14 @@ import io.harness.gitsync.FullSyncServiceGrpc;
 import io.harness.gitsync.common.helper.GitSyncGrpcClientUtils;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
+import io.harness.gitsync.core.fullsync.beans.GitFullSyncEntityProcessingResponse;
+import io.harness.gitsync.core.fullsync.entity.GitFullSyncJob;
+import io.harness.gitsync.core.fullsync.service.FullSyncJobService;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
 
 import com.google.inject.Inject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,12 +30,13 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
   Map<Microservice, FullSyncServiceGrpc.FullSyncServiceBlockingStub> fullSyncServiceBlockingStubMap;
   YamlGitConfigService yamlGitConfigService;
   EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
-  io.harness.gitsync.core.fullsync.GitFullSyncEntityService gitFullSyncEntityService;
+  GitFullSyncEntityService gitFullSyncEntityService;
+  FullSyncJobService fullSyncJobService;
 
   private static int MAX_RETRY_COUNT = 2;
 
   @Override
-  public void processFile(GitFullSyncEntityInfo entityInfo) {
+  public GitFullSyncEntityProcessingResponse processFile(GitFullSyncEntityInfo entityInfo) {
     boolean failed = false;
     FullSyncResponse fullSyncResponse = null;
     try {
@@ -46,8 +52,10 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
       }
       gitFullSyncEntityService.markQueuedOrFailed(entityInfo.getUuid(), entityInfo.getAccountIdentifier(),
           entityInfo.getRetryCount(), MAX_RETRY_COUNT, errorMsg);
+      return GitFullSyncEntityProcessingResponse.builder().syncStatus(GitFullSyncEntityInfo.SyncStatus.FAILED).build();
     } else {
       gitFullSyncEntityService.markSuccessful(entityInfo.getUuid(), entityInfo.getAccountIdentifier());
+      return GitFullSyncEntityProcessingResponse.builder().syncStatus(GitFullSyncEntityInfo.SyncStatus.PUSHED).build();
     }
   }
 
@@ -80,5 +88,38 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
   private String getCommitMessageForTheFullSyncFlow(String filePath) {
     return "Harness Full Sync: "
         + "Add file " + filePath;
+  }
+
+  @Override
+  public void performFullSync(GitFullSyncJob fullSyncJob) {
+    List<GitFullSyncEntityInfo> allEntitiesToBeSynced =
+        gitFullSyncEntityService.list(fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid());
+    boolean processingFailed = false;
+    for (GitFullSyncEntityInfo gitFullSyncEntityInfo : emptyIfNull(allEntitiesToBeSynced)) {
+      if (gitFullSyncEntityInfo.getSyncStatus().equals(GitFullSyncEntityInfo.SyncStatus.PUSHED.name())) {
+        continue;
+      }
+      final GitFullSyncEntityProcessingResponse gitFullSyncEntityProcessingResponse =
+          processFile(gitFullSyncEntityInfo);
+      if (gitFullSyncEntityProcessingResponse.getSyncStatus() != GitFullSyncEntityInfo.SyncStatus.PUSHED) {
+        processingFailed = true;
+      }
+    }
+
+    updateTheStatusOfJob(processingFailed, fullSyncJob);
+  }
+
+  private void updateTheStatusOfJob(boolean processingFailed, GitFullSyncJob fullSyncJob) {
+    if (processingFailed) {
+      if (fullSyncJob.getRetryCount() >= MAX_RETRY_COUNT) {
+        fullSyncJobService.markFullSyncJobAsFailed(
+            fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid(), GitFullSyncJob.SyncStatus.FAILED);
+      } else {
+        fullSyncJobService.markFullSyncJobAsFailed(fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid(),
+            GitFullSyncJob.SyncStatus.FAILED_WITH_RETRIES_LEFT);
+      }
+    } else {
+      fullSyncJobService.markFullSyncJobAsSuccess(fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid());
+    }
   }
 }

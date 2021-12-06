@@ -75,4 +75,12 @@ public class PmsFeatureFlagHelper implements PmsFeatureFlagService {
       featureFlagCache.get(accountId).add(featureName);
     }
   }
+
+  public boolean refreshCacheForGivenAccountId(String accountId) throws ExecutionException {
+    if (!featureFlagCache.asMap().containsKey(accountId)) {
+      return true;
+    }
+    featureFlagCache.refresh(accountId);
+    return true;
+  }
 }

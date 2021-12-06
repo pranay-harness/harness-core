@@ -178,13 +178,13 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Test
   @Owner(developers = BHAVYA)
   @Category(UnitTests.class)
-  public void test_markOverriddenErrors() {
+  public void test_overrideGitToHarnessErrors() {
     GitSyncErrorDTO dto = buildDTO("filePath", additionalErrorDetailsDTO);
     gitSyncErrorService.save(dto);
     Set<String> filePathsHavingError = new HashSet<>();
     filePathsHavingError.add("filePath");
     filePathsHavingError.add("filePath1");
-    gitSyncErrorService.markOverriddenErrors(accountId, repoUrl, branch, filePathsHavingError);
+    gitSyncErrorService.overrideGitToHarnessErrors(accountId, repoUrl, branch, filePathsHavingError);
     Optional<GitSyncErrorDTO> savedError =
         gitSyncErrorService.getGitToHarnessError(accountId, commitId, repoUrl, branch, "filePath");
     assertThat(savedError.isPresent()).isEqualTo(true);
@@ -194,13 +194,13 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Test
   @Owner(developers = BHAVYA)
   @Category(UnitTests.class)
-  public void test_markResolvedErrors() {
+  public void test_resolveGitToHarnessErrors() {
     GitSyncErrorDTO dto = buildDTO("filePath", additionalErrorDetailsDTO);
     gitSyncErrorService.save(dto);
     Set<String> filePathsWithoutError = new HashSet<>();
     filePathsWithoutError.add("filePath");
     filePathsWithoutError.add("filePath1");
-    gitSyncErrorService.markResolvedErrors(accountId, repoUrl, branch, filePathsWithoutError, "commitId1");
+    gitSyncErrorService.resolveGitToHarnessErrors(accountId, repoUrl, branch, filePathsWithoutError, "commitId1");
     Optional<GitSyncErrorDTO> savedError =
         gitSyncErrorService.getGitToHarnessError(accountId, commitId, repoUrl, branch, "filePath");
     assertThat(savedError.isPresent()).isEqualTo(true);
@@ -302,5 +302,21 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
         accountId, orgId, projectId, null, null, new PageRequest(0, 10, new ArrayList<>()));
     assertThat(gitSyncErrorList.getContent()).isNotEmpty();
     assertThat(gitSyncErrorList.getContent()).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = BHAVYA)
+  @Category(UnitTests.class)
+  public void test_resolveConnectivityErrors() {
+    gitSyncErrorService.recordConnectivityError(
+        accountId, orgId, projectId, repoUrl, branch, "Unable to connect to git provider");
+    gitSyncErrorService.recordConnectivityError(
+        accountId, "org1", "proj1", repoUrl, branch, "Unable to connect to git provider");
+    when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
+    gitSyncErrorService.resolveConnectivityErrors(accountId, repoUrl, branch);
+    PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
+        accountId, orgId, projectId, null, null, new PageRequest(0, 10, new ArrayList<>()));
+    assertThat(gitSyncErrorList.getContent()).isEmpty();
   }
 }
