@@ -1,6 +1,5 @@
 package io.harness.pms.plan.creation;
 
-import io.harness.OrchestrationStepTypes;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.pipeline.CfExecutionPMSPlanCreator;
@@ -34,6 +33,7 @@ import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvide
 import io.harness.pms.sdk.core.variables.VariableCreator;
 import io.harness.pms.utils.InjectorUtils;
 import io.harness.pms.variables.HTTPStepVariableCreator;
+import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.cf.FlagConfigurationStep;
 import io.harness.steps.shellscript.ShellScriptStepVariableCreator;
 
@@ -97,7 +97,7 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
   public List<StepInfo> getStepInfo() {
     StepInfo k8sRolling = StepInfo.newBuilder()
                               .setName(FlagConfigurationStep.STEP_NAME)
-                              .setType(OrchestrationStepTypes.FLAG_CONFIGURATION)
+                              .setType(StepSpecTypeConstants.FLAG_CONFIGURATION)
                               .setStepMetaData(StepMetaData.newBuilder()
                                                    .addCategory(FlagConfigurationStep.STEP_CATEGORY)
                                                    .addFolderPaths("Feature Flags")

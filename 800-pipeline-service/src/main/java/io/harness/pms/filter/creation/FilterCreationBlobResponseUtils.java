@@ -2,9 +2,12 @@ package io.harness.pms.filter.creation;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
+import io.harness.pms.contracts.plan.YamlUpdates;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
@@ -21,6 +24,7 @@ public class FilterCreationBlobResponseUtils {
     updateStageCount(builder, response.getResponse());
     mergeReferredEntities(builder, response.getResponse());
     mergeStageNames(builder, response.getResponse());
+    addYamlUpdates(builder, response.getResponse());
   }
 
   public void updateStageCount(
@@ -48,21 +52,32 @@ public class FilterCreationBlobResponseUtils {
 
   public void mergeResolvedDependencies(
       FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse response) {
-    if (isNotEmpty(response.getResolvedDependenciesMap())) {
-      response.getResolvedDependenciesMap().forEach((key, value) -> {
-        builder.putResolvedDependencies(key, value);
-        builder.removeDependencies(key);
+    if (isNotEmpty(response.getResolvedDeps().getDependenciesMap())) {
+      response.getResolvedDeps().getDependenciesMap().forEach((key, value) -> {
+        builder.setResolvedDeps(builder.getResolvedDeps().toBuilder().putDependencies(key, value));
+        builder.setDeps(builder.getDeps().toBuilder().removeDependencies(key));
       });
     }
   }
 
   public void mergeDependencies(FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse response) {
-    if (isNotEmpty(response.getDependenciesMap())) {
-      response.getDependenciesMap().forEach((key, value) -> {
-        if (!builder.containsResolvedDependencies(key)) {
-          builder.putDependencies(key, value);
+    if (isNotEmpty(response.getDeps().getDependenciesMap())) {
+      response.getDeps().getDependenciesMap().forEach((key, value) -> {
+        if (!builder.getResolvedDeps().containsDependencies(key)) {
+          builder.setDeps(builder.getDeps().toBuilder().putDependencies(key, value));
         }
       });
     }
+  }
+
+  public FilterCreationBlobResponse addYamlUpdates(
+      FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse currResponse) {
+    if (EmptyPredicate.isEmpty(currResponse.getYamlUpdates().getFqnToYamlMap())) {
+      return builder.build();
+    }
+    Map<String, String> yamlUpdateFqnMap = new HashMap<>(builder.getYamlUpdates().getFqnToYamlMap());
+    yamlUpdateFqnMap.putAll(currResponse.getYamlUpdates().getFqnToYamlMap());
+    builder.setYamlUpdates(YamlUpdates.newBuilder().putAllFqnToYaml(yamlUpdateFqnMap).build());
+    return builder.build();
   }
 }

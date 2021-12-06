@@ -148,7 +148,6 @@ public class CENextGenConfiguration extends Configuration {
     oas.info(info);
 
     List<Server> serversList = new ArrayList<>();
-    serversList.add(new Server().url(SERVICE_ROOT_PATH));
 
     try {
       URL baseurl = new URL("https", hostname, basePathPrefix);

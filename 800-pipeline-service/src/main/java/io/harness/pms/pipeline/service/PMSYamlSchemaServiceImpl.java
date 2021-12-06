@@ -162,7 +162,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
     CompletableFutures<PartialSchemaDTO> completableFutures = new CompletableFutures<>(executor);
     for (ModuleType enabledModule : enabledModules) {
-      completableFutures.supplyAsync(() -> schemaFetcher.fetchSchema(enabledModule));
+      completableFutures.supplyAsync(() -> schemaFetcher.fetchSchema(accountIdentifier, enabledModule));
     }
 
     try {

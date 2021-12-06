@@ -6,7 +6,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: 768M
+          memory: 2048M
     image: harness/delegate:latest
     environment:
       - ACCOUNT_ID=ACCOUNT_ID

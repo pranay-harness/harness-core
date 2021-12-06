@@ -39,25 +39,7 @@ public abstract class BaseCreatorService<R extends CreatorResponse, M> {
     return initialDependencies;
   }
 
-  public R processNodesRecursively(Map<String, YamlField> initialDependencies, M metadata, R finalResponse) {
-    if (isEmpty(initialDependencies)) {
-      return finalResponse;
-    }
-
-    Map<String, YamlField> dependencies = new HashMap<>(initialDependencies);
-    while (!dependencies.isEmpty()) {
-      processNodes(dependencies, finalResponse, metadata);
-      initialDependencies.keySet().forEach(dependencies::remove);
-    }
-
-    if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies())) {
-      initialDependencies.keySet().forEach(k -> finalResponse.getDependencies().remove(k));
-    }
-
-    return finalResponse;
-  }
-
-  public R processNodesRecursivelyForVariable(Dependencies initialDependencies, M metadata, R finalResponse) {
+  public R processNodesRecursively(Dependencies initialDependencies, M metadata, R finalResponse) {
     if (isEmpty(initialDependencies.getDependenciesMap())) {
       return finalResponse;
     }
@@ -66,41 +48,22 @@ public abstract class BaseCreatorService<R extends CreatorResponse, M> {
                                             .setYaml(initialDependencies.getYaml())
                                             .putAllDependencies(initialDependencies.getDependenciesMap());
     while (!dependencies.getDependenciesMap().isEmpty()) {
-      processNodesForVariable(dependencies, finalResponse, metadata);
+      processNodes(dependencies, finalResponse, metadata);
       for (Map.Entry<String, String> entry : initialDependencies.getDependenciesMap().entrySet()) {
         dependencies.removeDependencies(entry.getKey());
       }
     }
 
-    if (EmptyPredicate.isNotEmpty(finalResponse.getDependenciesForVariable().getDependenciesMap())) {
+    if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies().getDependenciesMap())) {
       for (Map.Entry<String, String> entry : initialDependencies.getDependenciesMap().entrySet()) {
-        finalResponse.getDependenciesForVariable().toBuilder().removeDependencies(entry.getKey()).build();
+        finalResponse.getDependencies().toBuilder().removeDependencies(entry.getKey()).build();
       }
     }
 
     return finalResponse;
   }
 
-  private void processNodes(Map<String, YamlField> dependencies, R finalResponse, M metadata) {
-    List<YamlField> dependenciesList = new ArrayList<>(dependencies.values());
-    dependencies.clear();
-
-    for (YamlField yamlField : dependenciesList) {
-      R response = processNodeInternal(metadata, yamlField);
-
-      if (response == null) {
-        finalResponse.addDependency(yamlField);
-        continue;
-      }
-      mergeResponses(finalResponse, response);
-      finalResponse.addResolvedDependency(yamlField);
-      if (isNotEmpty(response.getDependencies())) {
-        response.getDependencies().values().forEach(field -> dependencies.put(field.getNode().getUuid(), field));
-      }
-    }
-  }
-
-  private void processNodesForVariable(Dependencies.Builder dependencies, R finalResponse, M metadata) {
+  private void processNodes(Dependencies.Builder dependencies, R finalResponse, M metadata) {
     List<String> yamlPathList = new ArrayList<>(dependencies.getDependenciesMap().values());
     String currentYaml = dependencies.getYaml();
     dependencies.clearDependencies();
@@ -120,8 +83,8 @@ public abstract class BaseCreatorService<R extends CreatorResponse, M> {
       }
       mergeResponses(finalResponse, response);
       finalResponse.addResolvedDependency(currentYaml, yamlField.getNode().getUuid(), yamlPath);
-      if (isNotEmpty(response.getDependenciesForVariable().getDependenciesMap())) {
-        for (Map.Entry<String, String> entry : response.getDependenciesForVariable().getDependenciesMap().entrySet()) {
+      if (isNotEmpty(response.getDependencies().getDependenciesMap())) {
+        for (Map.Entry<String, String> entry : response.getDependencies().getDependenciesMap().entrySet()) {
           dependencies.putDependencies(entry.getKey(), entry.getValue());
         }
       }

@@ -1,25 +1,28 @@
-package io.harness.connector.validator;
+package io.harness.ccm;
 
-import static io.harness.connector.utils.AWSConnectorTestHelper.createNonEmptyObjectListing;
-import static io.harness.connector.utils.AWSConnectorTestHelper.createReportDefinition;
+import static io.harness.ccm.AWSConnectorTestHelper.createNonEmptyObjectListing;
+import static io.harness.ccm.AWSConnectorTestHelper.createReportDefinition;
 import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsClient;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.config.AwsConfig;
+import io.harness.ccm.connectors.CEAWSConnectorValidator;
+import io.harness.ccm.connectors.CEConnectorsHelper;
 import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
-import io.harness.connector.utils.AWSConnectorTestHelper;
 import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
-import io.harness.remote.CEAwsSetupConfig;
 import io.harness.rule.Owner;
 
 import com.amazonaws.services.costandusagereport.model.ReportDefinition;
@@ -44,8 +47,10 @@ import org.mockito.Spy;
 @OwnedBy(HarnessTeam.CE)
 public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Mock AwsClient awsClient;
-  @Mock CEAwsSetupConfig ceAwsSetupConfig;
-  @Spy @InjectMocks private CEAwsConnectorValidator connectorValidator;
+  @Mock AwsConfig awsConfig;
+  @Mock CENextGenConfiguration ceNextGenConfiguration;
+  @Mock CEConnectorsHelper ceConnectorsHelper;
+  @Spy @InjectMocks private CEAWSConnectorValidator connectorValidator;
 
   private static final String REASON = "implicitDeny";
   private static final String ACTION = "s3:PutObject";
@@ -55,6 +60,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   private static final EvaluationResult DENY_EVALUATION_RESULT = new EvaluationResult();
 
   private CEAwsConnectorDTO ceAwsConnectorDTO;
+  private ConnectorResponseDTO ceawsConnectorResponseDTO;
 
   @BeforeClass
   public static void init() {
@@ -64,11 +70,12 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-
+    awsConfig.setDestinationBucket(CUSTOMER_BILLING_DATA_DEV);
     ceAwsConnectorDTO = AWSConnectorTestHelper.createCEAwsConnectorDTO();
-
-    doReturn(CUSTOMER_BILLING_DATA_DEV).when(ceAwsSetupConfig).getDestinationBucket();
+    ceawsConnectorResponseDTO = AWSConnectorTestHelper.getCEAwsConnectorResponseDTO(ceAwsConnectorDTO);
+    doReturn(awsConfig).when(ceNextGenConfiguration).getAwsConfig();
     doReturn(null).when(connectorValidator).getCredentialProvider(any());
+    when(ceConnectorsHelper.isDataSyncCheck(any(), any(), any(), any())).thenReturn(true);
     doReturn(Collections.singletonList(new EvaluationResult().withEvalDecision("allowed")))
         .when(awsClient)
         .simulatePrincipalPolicy(any(), any(), any(), any());
@@ -85,7 +92,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     doReturn(Optional.of(report)).when(awsClient).getReportDefinition(any(), any());
     doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceawsConnectorResponseDTO, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
     assertThat(result.getErrors()).isNullOrEmpty();
@@ -98,8 +105,8 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   public void testValidateEventsSuccess() {
     ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEFeatures.VISIBILITY));
     ceAwsConnectorDTO.setCurAttributes(null);
-
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
+    ceawsConnectorResponseDTO = AWSConnectorTestHelper.getCEAwsConnectorResponseDTO(ceAwsConnectorDTO);
+    ConnectorValidationResult result = connectorValidator.validate(ceawsConnectorResponseDTO, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
     assertThat(result.getErrors()).isNullOrEmpty();
@@ -112,12 +119,12 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   public void testValidateEventsPermissionMissing() {
     ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEFeatures.VISIBILITY));
     ceAwsConnectorDTO.setCurAttributes(null);
-
+    ceawsConnectorResponseDTO = AWSConnectorTestHelper.getCEAwsConnectorResponseDTO(ceAwsConnectorDTO);
     doReturn(Collections.singletonList(DENY_EVALUATION_RESULT))
         .when(awsClient)
         .simulatePrincipalPolicy(any(), any(), any(), any());
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceawsConnectorResponseDTO, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
     assertThat(result.getErrors()).hasSize(1);
@@ -133,13 +140,14 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateCurSuccess() throws NoSuchFieldException, IllegalAccessException {
     ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEFeatures.BILLING));
+    ceawsConnectorResponseDTO = AWSConnectorTestHelper.getCEAwsConnectorResponseDTO(ceAwsConnectorDTO);
     ReportDefinition report = createReportDefinition();
     ObjectListing s3Object = createNonEmptyObjectListing();
 
     doReturn(Optional.of(report)).when(awsClient).getReportDefinition(any(), any());
     doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceawsConnectorResponseDTO, null);
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
     assertThat(result.getErrors()).isNullOrEmpty();
     assertThat(result.getTestedAt()).isLessThanOrEqualTo(Instant.now().toEpochMilli());
@@ -150,12 +158,13 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateReportNotPresent() throws NoSuchFieldException, IllegalAccessException {
     ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEFeatures.BILLING));
+    ceawsConnectorResponseDTO = AWSConnectorTestHelper.getCEAwsConnectorResponseDTO(ceAwsConnectorDTO);
     ObjectListing s3Object = createNonEmptyObjectListing();
 
     doReturn(Optional.empty()).when(awsClient).getReportDefinition(any(), any());
     doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceawsConnectorResponseDTO, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
     assertThat(result.getErrors()).hasSize(1);
@@ -168,12 +177,13 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateBucketIsPresentIgnoringObjects() {
     ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEFeatures.BILLING));
+    ceawsConnectorResponseDTO = AWSConnectorTestHelper.getCEAwsConnectorResponseDTO(ceAwsConnectorDTO);
     ReportDefinition report = createReportDefinition();
 
     doReturn(Optional.of(report)).when(awsClient).getReportDefinition(any(), any());
     doReturn(null).when(awsClient).getBucket(any(), any(), any());
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceawsConnectorResponseDTO, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
     assertThat(result.getErrors()).isNull();
@@ -185,6 +195,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateCurPermissionMissing() throws NoSuchFieldException, IllegalAccessException {
     ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEFeatures.BILLING));
+    ceawsConnectorResponseDTO = AWSConnectorTestHelper.getCEAwsConnectorResponseDTO(ceAwsConnectorDTO);
     ReportDefinition report = createReportDefinition();
     ObjectListing s3Object = createNonEmptyObjectListing();
 
@@ -194,7 +205,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     doReturn(Optional.of(report)).when(awsClient).getReportDefinition(any(), any());
     doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceawsConnectorResponseDTO, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
     assertThat(result.getErrors()).isNotEmpty();
@@ -210,8 +221,8 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateOptimizationSuccess() {
     ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEFeatures.OPTIMIZATION));
-
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
+    ceawsConnectorResponseDTO = AWSConnectorTestHelper.getCEAwsConnectorResponseDTO(ceAwsConnectorDTO);
+    ConnectorValidationResult result = connectorValidator.validate(ceawsConnectorResponseDTO, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
     assertThat(result.getErrors()).isNullOrEmpty();
@@ -223,11 +234,11 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateOptimizationPermissionMissing() {
     ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEFeatures.OPTIMIZATION));
-
+    ceawsConnectorResponseDTO = AWSConnectorTestHelper.getCEAwsConnectorResponseDTO(ceAwsConnectorDTO);
     doReturn(Collections.singletonList(DENY_EVALUATION_RESULT))
         .when(awsClient)
         .simulatePrincipalPolicy(any(), any(), any(), any());
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceawsConnectorResponseDTO, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
     assertThat(result.getTestedAt()).isLessThanOrEqualTo(Instant.now().toEpochMilli());
@@ -245,7 +256,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     doThrow(new AmazonIdentityManagementException(MESSAGE))
         .when(awsClient)
         .simulatePrincipalPolicy(any(), any(), any(), any());
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceawsConnectorResponseDTO, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
     assertThat(result.getErrorSummary()).contains("iam:SimulatePrincipalPolicy");

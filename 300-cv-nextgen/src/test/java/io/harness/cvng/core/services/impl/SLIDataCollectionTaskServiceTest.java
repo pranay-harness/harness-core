@@ -150,7 +150,7 @@ public class SLIDataCollectionTaskServiceTest extends CvNextGenTestBase {
   }
 
   private ServiceLevelIndicator createSLI() {
-    ServiceLevelObjectiveDTO sloDTO = builderFactory.getServiceLevelObjectiveDTOBuilder();
+    ServiceLevelObjectiveDTO sloDTO = builderFactory.getServiceLevelObjectiveDTOBuilder().build();
     createMonitoredService();
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)

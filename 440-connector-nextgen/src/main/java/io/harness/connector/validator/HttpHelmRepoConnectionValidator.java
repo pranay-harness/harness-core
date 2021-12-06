@@ -2,6 +2,7 @@ package io.harness.connector.validator;
 
 import static software.wings.beans.TaskType.HTTP_HELM_CONNECTIVITY_TASK;
 
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthCredentialsDTO;
@@ -40,5 +41,11 @@ public class HttpHelmRepoConnectionValidator extends AbstractConnectorValidator 
     HttpHelmConnectivityTaskResponse responseData = (HttpHelmConnectivityTaskResponse) super.validateConnector(
         connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return responseData.getConnectorValidationResult();
+  }
+
+  @Override
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    return null;
   }
 }

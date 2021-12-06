@@ -21,6 +21,14 @@ export VERSION_FILE=build.properties
 export VERSION=`cat ${VERSION_FILE} |\
     grep 'build.number=' |\
     sed -e 's: *build.number=::g'`
+DV=`cat ${VERSION_FILE} | grep 'delegate.version=' | sed -e 's: *delegate.version=::g'`
+YEAR=$(date +%y)
+MONTH=$(date +%m)
+yy="$(echo "$DV" | cut -d'.' -f1)"
+mm="$(echo "$DV" | cut -d'.' -f2)"
+mv="$(echo "$DV" | cut -d'.' -f3)"
+if [ "$MONTH" -gt "$mm" ] || [ "$YEAR" -gt "$yy" ]; then NEWDELEGATEVERSION="10"; else NEWDELEGATEVERSION=$((${mv}+1)); fi
+export NEWDELEGATEVERSION
 export VERSION=${VERSION%??}
 export NEW_VERSION=$(( ${VERSION}+1 ))
 
@@ -35,6 +43,7 @@ scripts/jenkins/release-branch-update-jira_status.sh
 git checkout ${BRANCH}
 
 sed -i "s:build.number=${VERSION}00:build.number=${NEW_VERSION}00:g" ${VERSION_FILE}
+sed -i "s#${DV}#${YEAR}.${MONTH}.${NEWDELEGATEVERSION}#g" ${VERSION_FILE}
 git add ${VERSION_FILE}
 git commit -m "Branching to release/${PURPOSE}/${VERSION}xx. New version ${NEW_VERSION}xx"
 

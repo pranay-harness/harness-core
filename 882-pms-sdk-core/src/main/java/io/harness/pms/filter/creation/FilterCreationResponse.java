@@ -8,14 +8,12 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
+import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.sdk.core.pipeline.creators.CreatorResponse;
-import io.harness.pms.yaml.YamlField;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -26,10 +24,15 @@ import lombok.Data;
 public class FilterCreationResponse implements CreatorResponse {
   PipelineFilter pipelineFilter;
   int stageCount;
-  @Default Map<String, YamlField> dependencies = new HashMap<>();
-  @Default Map<String, YamlField> resolvedDependencies = new HashMap<>();
   @Default List<EntityDetailProtoDTO> referredEntities = new ArrayList<>();
   @Default List<String> stageNames = new ArrayList<>();
+  @Default Dependencies dependencies = Dependencies.newBuilder().build();
+  @Default Dependencies resolvedDependencies = Dependencies.newBuilder().build();
+  YamlUpdates yamlUpdates;
+
+  public Dependencies getDependencies() {
+    return dependencies;
+  }
 
   public void addReferredEntities(List<EntityDetailProtoDTO> refferedEntities) {
     if (EmptyPredicate.isEmpty(refferedEntities)) {
@@ -51,50 +54,35 @@ public class FilterCreationResponse implements CreatorResponse {
     this.stageNames.addAll(stageNames);
   }
 
-  public void addResolvedDependency(YamlField yamlField) {
+  public void addResolvedDependency(String yaml, String nodeId, String yamlPath) {
     if (resolvedDependencies == null) {
-      resolvedDependencies = new HashMap<>();
-    } else if (!(resolvedDependencies instanceof HashMap)) {
-      resolvedDependencies = new HashMap<>(resolvedDependencies);
+      resolvedDependencies = Dependencies.newBuilder().setYaml(yaml).build();
     }
 
-    resolvedDependencies.put(yamlField.getNode().getUuid(), yamlField);
+    resolvedDependencies = resolvedDependencies.toBuilder().putDependencies(nodeId, yamlPath).build();
     if (dependencies != null) {
-      dependencies.remove(yamlField.getNode().getUuid());
+      dependencies = dependencies.toBuilder().removeDependencies(nodeId).build();
     }
   }
 
-  @Override
-  public void addResolvedDependency(String yaml, String nodeId, String yamlPath) {}
-
-  public void addDependencies(Map<String, YamlField> fields) {
-    if (EmptyPredicate.isEmpty(fields)) {
+  public void addDependencies(Dependencies dependencies) {
+    if (dependencies == null || EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
       return;
     }
-    fields.values().forEach(this::addDependency);
+    dependencies.getDependenciesMap().forEach((key, value) -> { addDependency(dependencies.getYaml(), key, value); });
   }
 
-  @Override
-  public Dependencies getDependenciesForVariable() {
-    return null;
-  }
-
-  public void addDependency(YamlField field) {
-    String nodeId = field.getNode().getUuid();
-    if (dependencies != null && dependencies.containsKey(nodeId)) {
+  public void addDependency(String yaml, String nodeId, String yamlPath) {
+    if (dependencies != null && dependencies.getDependenciesMap().containsKey(nodeId)) {
       return;
     }
 
     if (dependencies == null) {
-      dependencies = new HashMap<>();
-    } else if (!(dependencies instanceof HashMap)) {
-      dependencies = new HashMap<>(dependencies);
+      dependencies = Dependencies.newBuilder().setYaml(yaml).putDependencies(nodeId, yamlPath).build();
+      return;
     }
-    dependencies.put(nodeId, field);
+    dependencies = dependencies.toBuilder().putDependencies(nodeId, yamlPath).build();
   }
-
-  @Override
-  public void addDependency(String yaml, String nodeId, String yamlPath) {}
 
   public FilterCreationBlobResponse toBlobResponse() {
     FilterCreationBlobResponse.Builder finalBlobResponseBuilder = FilterCreationBlobResponse.newBuilder();
@@ -102,16 +90,12 @@ public class FilterCreationResponse implements CreatorResponse {
       finalBlobResponseBuilder.setFilter(pipelineFilter.toJson());
     }
 
-    if (isNotEmpty(dependencies)) {
-      for (Map.Entry<String, YamlField> dependency : dependencies.entrySet()) {
-        finalBlobResponseBuilder.putDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
-      }
+    if (dependencies != null && isNotEmpty(dependencies.getDependenciesMap())) {
+      finalBlobResponseBuilder.setDeps(dependencies);
     }
 
-    if (isNotEmpty(resolvedDependencies)) {
-      for (Map.Entry<String, YamlField> dependency : resolvedDependencies.entrySet()) {
-        finalBlobResponseBuilder.putResolvedDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
-      }
+    if (resolvedDependencies != null && isNotEmpty(resolvedDependencies.getDependenciesMap())) {
+      finalBlobResponseBuilder.setResolvedDeps(resolvedDependencies);
     }
 
     if (isNotEmpty(referredEntities)) {

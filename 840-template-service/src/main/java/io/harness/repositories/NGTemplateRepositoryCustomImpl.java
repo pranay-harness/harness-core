@@ -9,7 +9,6 @@ import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxService;
-import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.events.TemplateCreateEvent;
@@ -40,7 +39,7 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
   OutboxService outboxService;
 
   @Override
-  public TemplateEntity save(TemplateEntity templateToSave, NGTemplateConfig templateConfig, String comments) {
+  public TemplateEntity save(TemplateEntity templateToSave, String comments) {
     Supplier<OutboxEvent> supplier = null;
     if (shouldLogAudits(
             templateToSave.getAccountId(), templateToSave.getOrgIdentifier(), templateToSave.getProjectIdentifier())) {
@@ -112,8 +111,7 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
 
   @Override
   public TemplateEntity updateTemplateYaml(TemplateEntity templateToUpdate, TemplateEntity oldTemplateEntity,
-      NGTemplateConfig templateConfig, ChangeType changeType, String comments,
-      TemplateUpdateEventType templateUpdateEventType, boolean skipAudits) {
+      ChangeType changeType, String comments, TemplateUpdateEventType templateUpdateEventType, boolean skipAudits) {
     Supplier<OutboxEvent> supplier = null;
     if (shouldLogAudits(templateToUpdate.getAccountId(), templateToUpdate.getOrgIdentifier(),
             templateToUpdate.getProjectIdentifier())
@@ -129,8 +127,7 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
   }
 
   @Override
-  public TemplateEntity deleteTemplate(
-      TemplateEntity templateToDelete, NGTemplateConfig templateConfig, String comments) {
+  public TemplateEntity deleteTemplate(TemplateEntity templateToDelete, String comments) {
     Supplier<OutboxEvent> supplier = null;
     if (shouldLogAudits(templateToDelete.getAccountId(), templateToDelete.getOrgIdentifier(),
             templateToDelete.getProjectIdentifier())) {

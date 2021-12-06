@@ -11,7 +11,6 @@ import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.pms.sdk.core.pipeline.creators.CreatorResponse;
-import io.harness.pms.yaml.YamlField;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,12 +28,8 @@ public class VariableCreationResponse implements CreatorResponse {
   @Builder.Default Dependencies resolvedDependencies = Dependencies.newBuilder().build();
   YamlUpdates yamlUpdates;
 
-  public Dependencies getDependenciesForVariable() {
+  public Dependencies getDependencies() {
     return dependencies;
-  }
-
-  public Map<String, YamlField> getDependencies() {
-    return null;
   }
 
   public void addResolvedDependencies(Dependencies resolvedDependencies) {
@@ -63,9 +58,6 @@ public class VariableCreationResponse implements CreatorResponse {
     dependencies.getDependenciesMap().forEach((key, value) -> { addDependency(dependencies.getYaml(), key, value); });
   }
 
-  @Override
-  public void addDependency(YamlField field) {}
-
   public void addDependency(String yaml, String nodeId, String yamlPath) {
     if (dependencies != null && dependencies.getDependenciesMap().containsKey(nodeId)) {
       return;
@@ -77,9 +69,6 @@ public class VariableCreationResponse implements CreatorResponse {
     }
     dependencies = dependencies.toBuilder().putDependencies(nodeId, yamlPath).build();
   }
-
-  @Override
-  public void addResolvedDependency(YamlField yamlField) {}
 
   public void addYamlProperties(Map<String, YamlProperties> yamlProperties) {
     if (EmptyPredicate.isEmpty(yamlProperties)) {

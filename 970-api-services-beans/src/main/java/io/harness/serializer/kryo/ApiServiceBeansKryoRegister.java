@@ -77,6 +77,7 @@ import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.manifest.CustomManifestSource;
+import io.harness.manifest.CustomSourceConfig;
 import io.harness.manifest.CustomSourceFile;
 import io.harness.nexus.NexusRequest;
 import io.harness.pcf.model.CfCliVersion;
@@ -369,5 +370,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(JobDetails.class, 5121);
     kryo.register(AzureDevopsProject.class, 7285);
     kryo.register(AzureArtifactsPackage.class, 7287);
+    kryo.register(CustomSourceConfig.class, 97100);
   }
 }

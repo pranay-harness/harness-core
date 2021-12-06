@@ -18,7 +18,9 @@ public class ServiceGuardDataCollectionTaskCreateNextTaskHandler
 
   @Override
   public void handle(CVConfig entity) {
-    Preconditions.checkArgument(dataCollectionTaskManagementServiceMapBinder.containsKey(DataCollectionTask.Type.SLI));
-    dataCollectionTaskManagementServiceMapBinder.get(DataCollectionTask.Type.SLI).handleCreateNextTask(entity);
+    Preconditions.checkArgument(
+        dataCollectionTaskManagementServiceMapBinder.containsKey(DataCollectionTask.Type.SERVICE_GUARD));
+    dataCollectionTaskManagementServiceMapBinder.get(DataCollectionTask.Type.SERVICE_GUARD)
+        .handleCreateNextTask(entity);
   }
 }

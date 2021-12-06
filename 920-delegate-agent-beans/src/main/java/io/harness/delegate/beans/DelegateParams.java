@@ -45,4 +45,6 @@ public class DelegateParams {
 
   List<String> currentlyExecutingDelegateTasks;
   List<String> tags;
+
+  String delegateTokenName;
 }

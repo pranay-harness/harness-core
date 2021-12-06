@@ -21,8 +21,11 @@ public class RestCallToNGManagerClientUtils {
     try {
       Response<ResponseDTO<T>> response = request.execute();
       if (response.isSuccessful()) {
+        log.info("response raw {}, body {}", response.raw(), response.body().getData());
         return response.body().getData();
       } else {
+        log.error("response {}, request {}, request body {}", response.body(), request.request(),
+            request.request().body().toString());
         // todo @Nikhil Add the error message here, currently the error message is not stored in responsedto ?
         throw new InvalidRequestException("Error occurred while performing this operation");
       }
