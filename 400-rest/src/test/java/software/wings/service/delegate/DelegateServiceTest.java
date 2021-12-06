@@ -3579,20 +3579,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(id).isNotNull();
   }
 
-  @Test
-  @Owner(developers = BOJAN)
-  @Category(UnitTests.class)
-  public void testFetchDefaultDelegateSize() {
-    DelegateSizeDetails delegateSizeDetails = delegateService.fetchDefaultDelegateSize();
-
-    assertThat(delegateSizeDetails.getCpu()).isEqualTo(0.5);
-    assertThat(delegateSizeDetails.getLabel()).isEqualTo("Default");
-    assertThat(delegateSizeDetails.getRam()).isEqualTo(768);
-    assertThat(delegateSizeDetails.getTaskLimit()).isEqualTo(50);
-    assertThat(delegateSizeDetails.getReplicas()).isEqualTo(0);
-    assertThat(delegateSizeDetails.getSize()).isNull();
-  }
-
   private CapabilityRequirement buildCapabilityRequirement() {
     return CapabilityRequirement.builder()
         .accountId(generateUuid())

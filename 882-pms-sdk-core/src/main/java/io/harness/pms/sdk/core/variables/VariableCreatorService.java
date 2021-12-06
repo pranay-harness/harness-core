@@ -42,7 +42,7 @@ public class VariableCreatorService extends BaseCreatorService<VariableCreationR
 
     try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
              request.getMetadata().getGitSyncBranchContext(), true)) {
-      VariableCreationResponse response = processNodesRecursivelyForVariable(
+      VariableCreationResponse response = processNodesRecursively(
           initialDependencies, SetupMetadata.newBuilder().build(), VariableCreationResponse.builder().build());
       return response.toBlobResponse();
     }

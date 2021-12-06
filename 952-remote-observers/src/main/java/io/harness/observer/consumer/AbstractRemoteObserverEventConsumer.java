@@ -11,7 +11,7 @@ import io.harness.security.dto.ServicePrincipal;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,12 +19,12 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AbstractRemoteObserverEventConsumer implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
-  private final Map<String, RemoteObserver> remoteObservers;
+  private final Set<RemoteObserver> remoteObservers;
   private final QueueController queueController;
   private final RemoteObserverProcessor remoteObserverProcessor;
 
   @Inject
-  public AbstractRemoteObserverEventConsumer(Consumer redisConsumer, Map<String, RemoteObserver> remoteObservers,
+  public AbstractRemoteObserverEventConsumer(Consumer redisConsumer, Set<RemoteObserver> remoteObservers,
       QueueController queueController, RemoteObserverProcessor remoteObserverProcessor) {
     this.redisConsumer = redisConsumer;
     this.remoteObservers = remoteObservers;

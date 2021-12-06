@@ -2,6 +2,7 @@ package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.billing.tasklet.BillingDataGeneratedMailTasklet;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.tasklet.ClusterDataToBigQueryTasklet;
 
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,8 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class ClusterDataToBigQueryConfiguration {
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
+
   @Bean
   public Tasklet clusterDataToBigQueryTasklet() {
     return new ClusterDataToBigQueryTasklet();
@@ -42,6 +45,7 @@ public class ClusterDataToBigQueryConfiguration {
   public Job clusterDataToBigQueryJob(JobBuilderFactory jobBuilderFactory, Step clusterDataToBigQueryStep) {
     return jobBuilderFactory.get(BatchJobType.CLUSTER_DATA_TO_BIG_QUERY.name())
         .incrementer(new RunIdIncrementer())
+        .listener(batchJobExecutionListener)
         .start(clusterDataToBigQueryStep)
         .build();
   }
@@ -65,6 +69,7 @@ public class ClusterDataToBigQueryConfiguration {
       Step billingDataGeneratedNotificationStep) {
     return jobBuilderFactory.get(BatchJobType.CLUSTER_DATA_HOURLY_TO_BIG_QUERY.name())
         .incrementer(new RunIdIncrementer())
+        .listener(batchJobExecutionListener)
         .start(clusterDataHourlyToBigQueryStep)
         .next(billingDataGeneratedNotificationStep)
         .build();

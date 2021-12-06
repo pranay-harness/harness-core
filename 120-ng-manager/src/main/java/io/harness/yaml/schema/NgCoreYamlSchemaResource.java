@@ -49,7 +49,8 @@ public class NgCoreYamlSchemaResource implements YamlSchemaResource {
       @QueryParam("subtype") ConnectorType entitySubtype,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope,
-      @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
+      @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     JsonNode schema = yamlSchemaProvider.getYamlSchema(entityType, orgIdentifier, projectIdentifier, scope);
     if (schema == null) {
       throw new NotFoundException(String.format("No schema found for entity type %s ", entityType.getYamlName()));

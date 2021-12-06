@@ -15,6 +15,7 @@ import retrofit2.http.Query;
 @OwnedBy(DX)
 public interface YamlSchemaClient {
   @GET("partial-yaml-schema")
-  Call<ResponseDTO<PartialSchemaDTO>> get(@Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+  Call<ResponseDTO<PartialSchemaDTO>> get(@Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Query("scope") Scope scope);
 }

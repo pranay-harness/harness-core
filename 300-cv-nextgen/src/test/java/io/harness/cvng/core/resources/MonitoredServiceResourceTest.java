@@ -1,6 +1,7 @@
 package io.harness.cvng.core.resources;
 
 import static io.harness.rule.OwnerRule.ABHIJITH;
+import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
 import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,7 +9,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.HealthSourceMetricDefinition;
+import io.harness.cvng.core.beans.PrometheusMetricDefinition;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
@@ -104,6 +107,37 @@ public class MonitoredServiceResourceTest extends CvNextGenTestBase {
     // assertThat(healthSourceMetricDefinition.getIdentifier()).isEqualTo("prometheus_metric123");
     assertThat(healthSourceMetricDefinition.getIdentifier())
         .isEqualTo("PrometheusMetric"); // TODO: remove this after enabling validation.
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testSaveMonitoredService_withOnlySLIEnabled() throws IOException {
+    String monitoredServiceYaml = getResource("monitoredservice/monitored-service-prometheus-only-sli.yaml");
+
+    Response response = RESOURCES.client()
+                            .target("http://localhost:9998/monitored-service/")
+                            .queryParam("accountId", builderFactory.getContext().getAccountId())
+                            .request(MediaType.APPLICATION_JSON_TYPE)
+                            .post(Entity.json(convertToJson(monitoredServiceYaml)));
+    assertThat(response.getStatus()).isEqualTo(200);
+    RestResponse<MonitoredServiceResponse> restResponse =
+        response.readEntity(new GenericType<RestResponse<MonitoredServiceResponse>>() {});
+    MonitoredServiceDTO monitoredServiceDTO = restResponse.getResource().getMonitoredServiceDTO();
+    assertThat(monitoredServiceDTO.getSources().getHealthSources()).hasSize(1);
+    PrometheusMetricDefinition metricDefinition = ((PrometheusHealthSourceSpec) monitoredServiceDTO.getSources()
+                                                       .getHealthSources()
+                                                       .stream()
+                                                       .findAny()
+                                                       .get()
+                                                       .getSpec())
+                                                      .getMetricDefinitions()
+                                                      .get(0);
+    assertThat(metricDefinition.getSli().getEnabled()).isTrue();
+    assertThat(metricDefinition.getAnalysis().getRiskProfile().getThresholdTypes()).isEmpty();
+    // TODO Need to be remove the default behaviour
+    assertThat(metricDefinition.getAnalysis().getRiskProfile().getCategory()).isEqualTo(CVMonitoringCategory.ERRORS);
+    assertThat(metricDefinition.getAnalysis().getLiveMonitoring().getEnabled()).isFalse();
   }
 
   @Test

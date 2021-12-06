@@ -46,4 +46,11 @@ public interface ConnectorResourceClient {
       @Query(NGResourceFilterConstants.PAGE_KEY) int page, @Query(NGResourceFilterConstants.SIZE_KEY) int size,
       @Body ConnectorFilterPropertiesDTO connectorListFilter,
       @Query("getDistinctFromBranches") Boolean getDistinctFromBranches);
+
+  @POST(CONNECTORS_API + "/testConnectionInternal/{identifier}")
+  Call<ResponseDTO<ConnectorValidationResult>> testConnectionInternal(
+      @Path(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
+      @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
 }

@@ -444,6 +444,7 @@ public class AuthenticationManager {
             authService.getUserPermissionInfo(account.getUuid(), user, false), account.getUuid())) {
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.LOGIN);
     return user;
   }
 

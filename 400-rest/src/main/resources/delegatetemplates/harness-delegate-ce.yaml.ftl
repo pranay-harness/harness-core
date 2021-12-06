@@ -236,7 +236,7 @@ spec:
           value: ""
         - name: KUBECTL_PATH
           value: ""
-        - name: ENABlE_CE
+        - name: ENABLE_CE
           value: "${enableCE}"
         - name: VERSION_CHECK_DISABLED
           value: "${versionCheckDisabled}"

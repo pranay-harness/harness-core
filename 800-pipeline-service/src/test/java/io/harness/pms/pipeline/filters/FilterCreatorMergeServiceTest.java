@@ -16,10 +16,10 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.SetupMetadata;
-import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.filter.creation.FilterCreatorMergeService;
 import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
@@ -28,6 +28,9 @@ import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
+import io.harness.pms.yaml.DependenciesUtils;
+import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -147,11 +150,13 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testValidateFilterCreationBlobResponse() {
-    Map<String, YamlFieldBlob> dependencies = new HashMap<>();
-    dependencies.put("pipeline", YamlFieldBlob.newBuilder().build());
+  public void testValidateFilterCreationBlobResponse() throws IOException {
+    Map<String, YamlField> yamlFieldDependencies = new HashMap<>();
+    yamlFieldDependencies.put("pipeline", YamlUtils.readTree(pipelineYaml));
     FilterCreationBlobResponse filterCreationBlobResponse =
-        FilterCreationBlobResponse.newBuilder().putAllDependencies(dependencies).build();
+        FilterCreationBlobResponse.newBuilder()
+            .setDeps(DependenciesUtils.toDependenciesProto(yamlFieldDependencies))
+            .build();
     assertThatThrownBy(() -> filterCreatorMergeService.validateFilterCreationBlobResponse(filterCreationBlobResponse))
         .isInstanceOf(RuntimeException.class);
   }
@@ -164,9 +169,10 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
     services.put("cd", new PlanCreatorServiceInfo(new HashMap<>(), null));
 
     FilterCreationBlobResponse response = filterCreatorMergeService.obtainFiltersRecursively(
-        services, new HashMap<>(), new HashMap<>(), SetupMetadata.newBuilder().build());
+        services, Dependencies.newBuilder().build(), new HashMap<>(), SetupMetadata.newBuilder().build());
 
-    assertThat(response).isEqualTo(FilterCreationBlobResponse.newBuilder().build());
+    assertThat(response).isEqualTo(
+        FilterCreationBlobResponse.newBuilder().setDeps(Dependencies.newBuilder().build()).build());
   }
 
   @Test
@@ -175,8 +181,9 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   public void testObtainFiltersRecursivelyNoServices() throws IOException {
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     FilterCreationBlobResponse response = filterCreatorMergeService.obtainFiltersRecursively(
-        services, new HashMap<>(), new HashMap<>(), SetupMetadata.newBuilder().build());
-    assertThat(response).isEqualTo(FilterCreationBlobResponse.newBuilder().build());
+        services, Dependencies.newBuilder().build(), new HashMap<>(), SetupMetadata.newBuilder().build());
+    assertThat(response).isEqualTo(
+        FilterCreationBlobResponse.newBuilder().setDeps(Dependencies.newBuilder().build()).build());
   }
 
   @Test
@@ -185,18 +192,18 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   public void testObtainFiltersRecursively() throws IOException {
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     services.put("cd", new PlanCreatorServiceInfo(new HashMap<>(), null));
-    Map<String, YamlFieldBlob> dependencies = new HashMap<>();
-    dependencies.put("pipeline", YamlFieldBlob.newBuilder().build());
+    Map<String, YamlField> dependencies = new HashMap<>();
+    dependencies.put("pipeline", YamlUtils.readTree(pipelineYaml));
 
-    doReturn(FilterCreationBlobResponse.newBuilder().putAllResolvedDependencies(dependencies).build())
+    Dependencies initialDependencies = DependenciesUtils.toDependenciesProto(dependencies);
+    doReturn(FilterCreationBlobResponse.newBuilder().setResolvedDeps(initialDependencies).build())
         .when(filterCreatorMergeService)
-        .obtainFiltersPerIteration(services, dependencies, new HashMap<>(), SetupMetadata.newBuilder().build());
+        .obtainFiltersPerIteration(any(), any(), any(), any());
 
     FilterCreationBlobResponse response = filterCreatorMergeService.obtainFiltersRecursively(
-        services, dependencies, new HashMap<>(), SetupMetadata.newBuilder().build());
+        services, initialDependencies, new HashMap<>(), SetupMetadata.newBuilder().build());
 
-    assertThat(response).isEqualTo(
-        FilterCreationBlobResponse.newBuilder().putAllResolvedDependencies(dependencies).build());
+    assertThat(response.getResolvedDeps()).isEqualTo(initialDependencies);
 
     verify(filterCreatorMergeService).obtainFiltersPerIteration(any(), any(), any(), any());
   }
@@ -204,19 +211,20 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testObtainFiltersRecursivelyWithUnresolvedDependencies() {
+  public void testObtainFiltersRecursivelyWithUnresolvedDependencies() throws IOException {
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     services.put("cd", new PlanCreatorServiceInfo(new HashMap<>(), null));
-    Map<String, YamlFieldBlob> dependencies = new HashMap<>();
-    dependencies.put("pipeline", YamlFieldBlob.newBuilder().build());
+    Map<String, YamlField> dependencies = new HashMap<>();
+    dependencies.put("pipeline", YamlUtils.readTree(pipelineYaml));
 
+    Dependencies initialDependencies = DependenciesUtils.toDependenciesProto(dependencies);
     doReturn(FilterCreationBlobResponse.newBuilder().build())
         .when(filterCreatorMergeService)
-        .obtainFiltersPerIteration(services, dependencies, new HashMap<>(), SetupMetadata.newBuilder().build());
+        .obtainFiltersPerIteration(any(), any(), any(), any());
 
     assertThatThrownBy(()
                            -> filterCreatorMergeService.obtainFiltersRecursively(
-                               services, dependencies, new HashMap<>(), SetupMetadata.newBuilder().build()))
+                               services, initialDependencies, new HashMap<>(), SetupMetadata.newBuilder().build()))
         .isInstanceOf(RuntimeException.class);
 
     verify(filterCreatorMergeService).obtainFiltersPerIteration(any(), any(), any(), any());
