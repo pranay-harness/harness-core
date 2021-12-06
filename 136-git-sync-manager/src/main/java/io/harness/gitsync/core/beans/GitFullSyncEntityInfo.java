@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class GitFullSyncEntityInfo implements PersistentEntity, PersistentRegularIterable {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id String uuid;
   String messageId;
+  String fullSyncJobId;
   @NotEmpty @NotNull String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;

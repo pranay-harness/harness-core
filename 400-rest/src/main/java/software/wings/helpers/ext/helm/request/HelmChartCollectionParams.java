@@ -25,6 +25,7 @@ public class HelmChartCollectionParams implements ManifestCollectionParams {
   private String serviceId;
   private HelmChartConfigParams helmChartConfigParams;
   private Set<String> publishedVersions;
+  private boolean useRepoFlags;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

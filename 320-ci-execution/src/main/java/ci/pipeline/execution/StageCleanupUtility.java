@@ -13,7 +13,7 @@ import io.harness.beans.sweepingoutputs.StageInfraDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.delegate.beans.ci.CICleanupTaskParams;
-import io.harness.delegate.beans.ci.awsvm.CIAwsVmCleanupTaskParams;
+import io.harness.delegate.beans.ci.awsvm.CIVmCleanupTaskParams;
 import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.exception.ngexception.CIStageExecutionException;
@@ -58,8 +58,8 @@ public class StageCleanupUtility {
     if (stageInfraDetails.getType() == StageInfraDetails.Type.K8) {
       K8StageInfraDetails k8StageInfraDetails = (K8StageInfraDetails) stageInfraDetails;
       return buildK8CleanupParameters(k8StageInfraDetails, ambiance);
-    } else if (stageInfraDetails.getType() == StageInfraDetails.Type.AWS_VM) {
-      return buildAwsVmCleanupParameters(ambiance);
+    } else if (stageInfraDetails.getType() == StageInfraDetails.Type.VM) {
+      return buildVmCleanupParameters(ambiance);
     } else {
       throw new CIStageExecutionException("Unknown infra type");
     }
@@ -92,7 +92,7 @@ public class StageCleanupUtility {
         .build();
   }
 
-  public CIAwsVmCleanupTaskParams buildAwsVmCleanupParameters(Ambiance ambiance) {
+  public CIVmCleanupTaskParams buildVmCleanupParameters(Ambiance ambiance) {
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputResolver.resolveOptional(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails));
     if (!optionalSweepingOutput.isFound()) {
@@ -100,6 +100,6 @@ public class StageCleanupUtility {
     }
 
     StageDetails stageDetails = (StageDetails) optionalSweepingOutput.getOutput();
-    return CIAwsVmCleanupTaskParams.builder().stageRuntimeId(stageDetails.getStageRuntimeID()).build();
+    return CIVmCleanupTaskParams.builder().stageRuntimeId(stageDetails.getStageRuntimeID()).build();
   }
 }

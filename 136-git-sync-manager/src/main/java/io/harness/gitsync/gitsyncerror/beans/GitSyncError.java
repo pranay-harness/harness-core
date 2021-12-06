@@ -94,9 +94,10 @@ public class GitSyncError
         .<MongoIndex>builder()
         // for gitToHarness errors
         .add(SortCompoundMongoIndex.builder()
-                 .name("accountId_errorType_repo_branch_status_sort_Index")
+                 .name("accountId_errorType_repo_branch_filepath_status_sort_Index")
                  .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.errorType,
-                     GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName, GitSyncErrorKeys.status))
+                     GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName, GitSyncErrorKeys.completeFilePath,
+                     GitSyncErrorKeys.status))
                  .descSortField(GitSyncErrorKeys.createdAt)
                  .build())
         .add(CompoundMongoIndex.builder()
@@ -104,11 +105,6 @@ public class GitSyncError
                  .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.gitCommitId,
                      GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName, GitSyncErrorKeys.completeFilePath))
                  .unique(true)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("accountId_repo_branch_filePath_status_Index")
-                 .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.repoUrl,
-                     GitSyncErrorKeys.branchName, GitSyncErrorKeys.completeFilePath, GitSyncErrorKeys.status))
                  .build())
         // for full sync and connectivity issue errors
         .add(SortCompoundMongoIndex.builder()

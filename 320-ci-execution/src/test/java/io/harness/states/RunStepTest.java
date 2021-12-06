@@ -20,7 +20,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
 import io.harness.beans.steps.outcome.CIStepOutcome;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.sweepingoutputs.AwsVmStageInfraDetails;
 import io.harness.beans.sweepingoutputs.CodeBaseConnectorRefSweepingOutput;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
@@ -28,11 +27,12 @@ import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
 import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
+import io.harness.beans.sweepingoutputs.VmStageInfraDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.serializer.RunStepProtobufSerializer;
-import io.harness.delegate.beans.ci.awsvm.AwsVmTaskExecutionResponse;
+import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
@@ -265,7 +265,7 @@ public class RunStepTest extends CIExecutionTestBase {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void shouldExecuteAsyncAwsVm() {
+  public void shouldExecuteAsyncVm() {
     Map<String, List<String>> logKeys = new HashMap<>();
     String key =
         "accountId:accountId/orgId:orgId/projectId:projectId/pipelineId:pipelineId/runSequence:1/level0:runStepId_1";
@@ -275,8 +275,7 @@ public class RunStepTest extends CIExecutionTestBase {
 
     when(executionSweepingOutputResolver.resolveOptional(
              ambiance, RefObjectUtils.getSweepingOutputRefObject(STAGE_INFRA_DETAILS)))
-        .thenReturn(
-            OptionalSweepingOutput.builder().found(true).output(AwsVmStageInfraDetails.builder().build()).build());
+        .thenReturn(OptionalSweepingOutput.builder().found(true).output(VmStageInfraDetails.builder().build()).build());
     when(executionSweepingOutputResolver.resolveOptional(eq(ambiance), eq(refObject)))
         .thenReturn(OptionalSweepingOutput.builder().found(true).output(codeBaseConnectorRefSweepingOutput).build());
     when(logServiceUtils.getLogServiceConfig())
@@ -299,13 +298,12 @@ public class RunStepTest extends CIExecutionTestBase {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void shouldHandleSuccessAwsVmAsyncResponse() {
+  public void shouldHandleSuccessVmAsyncResponse() {
     responseDataMap.put(STEP_RESPONSE,
-        AwsVmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build());
+        VmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build());
     when(executionSweepingOutputResolver.resolveOptional(
              ambiance, RefObjectUtils.getSweepingOutputRefObject(STAGE_INFRA_DETAILS)))
-        .thenReturn(
-            OptionalSweepingOutput.builder().found(true).output(AwsVmStageInfraDetails.builder().build()).build());
+        .thenReturn(OptionalSweepingOutput.builder().found(true).output(VmStageInfraDetails.builder().build()).build());
     StepResponse stepResponse = runStep.handleAsyncResponse(ambiance, stepElementParameters, responseDataMap);
 
     assertThat(stepResponse).isEqualTo(StepResponse.builder().status(Status.SUCCEEDED).build());

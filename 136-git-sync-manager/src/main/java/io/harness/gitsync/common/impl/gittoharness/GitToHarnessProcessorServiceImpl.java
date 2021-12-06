@@ -95,6 +95,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   public GitToHarnessProgressStatus processFiles(String accountId,
       List<GitToHarnessFileProcessingRequest> fileContentsList, String branchName, String repoUrl, String commitId,
       String gitToHarnessProgressRecordId, String changeSetId, String commitMessage) {
+    gitSyncErrorService.resolveConnectivityErrors(accountId, repoUrl, branchName);
     final List<YamlGitConfigDTO> yamlGitConfigs = yamlGitConfigService.getByRepo(repoUrl);
 
     GitToHarnessProcessingInfo gitToHarnessProcessingInfo =
@@ -128,7 +129,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
         gitToHarnessProcessingInfo, groupedFilesByMicroservices, gitToHarnessErrors, filePathsHavingError);
     gitToHarnessProcessingResponses.addAll(processNotFoundFiles(changeSetsWithYamlStatus, accountId));
     Set<String> filePathsWithoutError = getFilePathsWithoutError(gitToHarnessProcessingResponses);
-    gitSyncErrorService.markResolvedErrors(accountId, repoUrl, branchName, filePathsWithoutError, commitId);
+    gitSyncErrorService.resolveGitToHarnessErrors(accountId, repoUrl, branchName, filePathsWithoutError, commitId);
     updateCommit(commitId, accountId, branchName, repoUrl, gitToHarnessProcessingResponses, invalidChangeSets);
     return updateTheGitToHarnessStatus(gitToHarnessProgressRecordId, gitToHarnessProcessingResponses);
   }
@@ -290,7 +291,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
           gitToHarnessProcessingInfo.getGitToHarnessProgressRecordId(), gitToHarnessResponse);
       log.info("Completed for microservice {}", entry.getKey());
     }
-    gitSyncErrorService.markOverriddenErrors(gitToHarnessProcessingInfo.getAccountId(),
+    gitSyncErrorService.overrideGitToHarnessErrors(gitToHarnessProcessingInfo.getAccountId(),
         gitToHarnessProcessingInfo.getRepoUrl(), gitToHarnessProcessingInfo.getBranchName(), filePathsHavingError);
     gitSyncErrorService.saveAll(gitToHarnessErrors);
     return gitToHarnessProcessingResponses;
