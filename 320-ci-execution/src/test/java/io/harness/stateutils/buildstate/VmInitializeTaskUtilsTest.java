@@ -59,8 +59,7 @@ public class VmInitializeTaskUtilsTest extends CIExecutionTestBase {
                         .found(true)
                         .output(StageDetails.builder().stageRuntimeID(stageRuntimeId).build())
                         .build());
-    CIVmInitializeTaskParams response =
-        vmInitializeTaskUtils.getInitializeTaskParams(initializeStepInfo, ambiance, "");
+    CIVmInitializeTaskParams response = vmInitializeTaskUtils.getInitializeTaskParams(initializeStepInfo, ambiance, "");
     assertThat(response.getStageRuntimeId()).isEqualTo(stageRuntimeId);
   }
 }

@@ -267,7 +267,6 @@ import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 
-import lombok.RequiredArgsConstructor;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
@@ -579,6 +578,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 @OwnedBy(HarnessTeam.DEL)
@@ -595,7 +595,6 @@ import java.util.concurrent.TimeUnit;
 @BreakDependencyOn("software.wings.beans.AzureConfig")
 @RequiredArgsConstructor
 public class DelegateModule extends AbstractModule {
-
   private final DelegateConfiguration configuration;
 
   @Provides
@@ -925,8 +924,7 @@ public class DelegateModule extends AbstractModule {
     bind(ContainerDeploymentDelegateHelper.class);
     bind(MessageService.class)
         .toInstance(
-            new MessageServiceImpl("", Clock.systemUTC(), MessengerType.DELEGATE, DelegateApplication
-                .getProcessId()));
+            new MessageServiceImpl("", Clock.systemUTC(), MessengerType.DELEGATE, DelegateApplication.getProcessId()));
     bind(CfCliClient.class).to(CfCliClientImpl.class);
     bind(CfSdkClient.class).to(CfSdkClientImpl.class);
     bind(CfDeploymentManager.class).to(CfDeploymentManagerImpl.class);
