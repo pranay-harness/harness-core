@@ -112,7 +112,7 @@ def main(jsonData, context):
 
 
 def create_dataset_and_tables(jsonData):
-    create_dataset(client, jsonData["datasetName"])
+    create_dataset(client, jsonData["datasetName"], jsonData.get("accountId"))
     dataset = client.dataset(jsonData["datasetName"])
 
     cluster_data_table_ref = dataset.table(jsonData["tableName"])
