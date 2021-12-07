@@ -1,5 +1,6 @@
 package io.harness.delegate.task.citasks.vm;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.RUNTEST_STEP_KIND;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.RUN_STEP_KIND;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.WORKDIR_VOLUME_NAME;
@@ -56,7 +57,7 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
         return VmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
       }
 
-      if (response.body().getError().equals("")) {
+      if (isEmpty(response.body().getError())) {
         return VmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
       } else {
         return VmTaskExecutionResponse.builder()

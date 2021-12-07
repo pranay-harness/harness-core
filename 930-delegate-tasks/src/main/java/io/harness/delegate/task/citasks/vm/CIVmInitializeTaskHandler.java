@@ -11,6 +11,8 @@ import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.NETWORK_I
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.WORKDIR_VOLUME_ID;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.WORKDIR_VOLUME_NAME;
 
+import static java.lang.String.format;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.CIInitializeTaskParams;
@@ -51,23 +53,27 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
   }
 
   private VmTaskExecutionResponse callRunnerForSetup(CIVmInitializeTaskParams ciVmInitializeTaskParams) {
-    CommandExecutionStatus executionStatus = CommandExecutionStatus.FAILURE;
     String errMessage = "";
-
     try {
       Response<SetupVmResponse> response = httpHelper.setupStageWithRetries(convert(ciVmInitializeTaskParams));
       if (response.isSuccessful()) {
-        executionStatus = CommandExecutionStatus.SUCCESS;
+        return VmTaskExecutionResponse.builder()
+            .ipAddress(response.body().getIpAddress())
+            .errorMessage("")
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .build();
       } else {
-        errMessage = response.message();
+        errMessage = format("failed with code: %d, message: %s", response.code(), response.errorBody());
       }
     } catch (Exception e) {
       log.error("Failed to setup VM in runner", e);
-      executionStatus = CommandExecutionStatus.FAILURE;
       errMessage = e.getMessage();
     }
 
-    return VmTaskExecutionResponse.builder().errorMessage(errMessage).commandExecutionStatus(executionStatus).build();
+    return VmTaskExecutionResponse.builder()
+        .errorMessage(errMessage)
+        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+        .build();
   }
 
   private SetupVmRequest convert(CIVmInitializeTaskParams params) {

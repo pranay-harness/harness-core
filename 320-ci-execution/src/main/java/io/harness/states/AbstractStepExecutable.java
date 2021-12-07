@@ -203,7 +203,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     if (!optionalInfraSweepingOutput.isFound()) {
       throw new CIStageExecutionException("Stage infra details sweeping output cannot be empty");
     }
-    VmStageInfraDetails vmStageInfraDetails = (VmStageInfraDetails) optionalSweepingOutput.getOutput();
+    VmStageInfraDetails vmStageInfraDetails = (VmStageInfraDetails) optionalInfraSweepingOutput.getOutput();
 
     CIVmExecuteStepTaskParams params = CIVmExecuteStepTaskParams.builder()
                                            .ipAddress(vmDetailsOutcome.getIpAddress())

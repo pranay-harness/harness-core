@@ -13,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.vm.CIVmExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
 import io.harness.delegate.beans.ci.vm.runner.ExecuteStepResponse;
+import io.harness.delegate.beans.ci.vm.steps.VmRunStep;
 import io.harness.delegate.task.citasks.vm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -42,7 +43,8 @@ public class CIVMExecuteStepTaskHandlerTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void executeTaskInternal() throws IOException {
-    CIVmExecuteStepTaskParams params = CIVmExecuteStepTaskParams.builder().stageRuntimeId("stage").build();
+    CIVmExecuteStepTaskParams params =
+        CIVmExecuteStepTaskParams.builder().stageRuntimeId("stage").stepInfo(VmRunStep.builder().build()).build();
     Response<ExecuteStepResponse> executeStepResponse =
         Response.success(ExecuteStepResponse.builder().error("").build());
     when(httpHelper.executeStepWithRetries(any())).thenReturn(executeStepResponse);

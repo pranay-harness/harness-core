@@ -85,7 +85,7 @@ public class VmInitializeTaskUtils {
     RetryPolicy<Object> retryPolicy =
         getRetryPolicy(format("[Retrying failed call to fetch log service token attempt: {}"),
             format("Failed to fetch log service token after retrying {} times"));
-    return Failsafe.with(retryPolicy).get(() -> { return logServiceUtils.getLogServiceToken(accountID); });
+    return Failsafe.with(retryPolicy).get(() -> logServiceUtils.getLogServiceToken(accountID));
   }
 
   private String getTISvcToken(String accountID) {
