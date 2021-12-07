@@ -835,6 +835,12 @@ public class StateMachineExecutor implements StateInspectionListener {
       StateMachine stateMachine, StateExecutionInstance stateExecutionInstance, ExecutionContext context) {
     State state =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    if (state == null) {
+      stateExecutionInstance.setDebugger_line("EUREKA");
+      stateMachine.clearCache();
+      state =
+          stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    }
     Integer executionInstanceTimeout = getDefaultTimeout(state, context);
     final Query<StateExecutionInstance> stateExecutionInstanceQuery =
         wingsPersistence.createQuery(StateExecutionInstance.class)

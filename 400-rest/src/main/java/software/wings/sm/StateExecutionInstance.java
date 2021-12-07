@@ -92,6 +92,7 @@ public class StateExecutionInstance implements PersistentEntity, AccountDataRete
   private String displayName;
   private String stateName;
   private String stateType;
+  private String debugger_line;
   private ContextElement contextElement;
   private boolean contextTransition;
   private boolean rollback;
