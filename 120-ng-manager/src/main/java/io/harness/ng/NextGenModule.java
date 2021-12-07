@@ -181,7 +181,6 @@ import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
 import io.harness.pipeline.PipelineRemoteClientModule;
-import io.harness.plancreator.steps.StepSchemaUtils;
 import io.harness.plancreator.steps.http.PmsAbstractStepNode;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.polling.service.impl.PollingPerpetualTaskServiceImpl;
@@ -222,7 +221,6 @@ import io.harness.utils.featureflaghelper.NGFeatureFlagHelperServiceImpl;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
-import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import software.wings.security.ThreadLocalUserProvider;
@@ -359,7 +357,6 @@ public class NextGenModule extends AbstractModule {
     Set<Class<? extends StepSpecType>> subTypesOfStepSpecType =
         HarnessReflections.get().getSubTypesOf(StepSpecType.class);
     Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
-    set = YamlSchemaTransientHelper.removeNewSchemaStepsSubtypes(set, StepSchemaUtils.getStepsMovedToNewSchema());
     return ImmutableMap.of(StepSpecType.class, set);
   }
 
