@@ -1,10 +1,6 @@
 package io.harness.delegate.logging;
 
-import static io.harness.delegate.app.DelegateApplication.getConfiguration;
 import static io.harness.network.SafeHttpCall.execute;
-
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.substringBetween;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -17,6 +13,8 @@ import io.harness.rest.RestResponse;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.time.Duration;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -28,28 +26,16 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
   private static DelegateAgentManagerClient delegateAgentManagerClient;
   private static String delegateId;
 
-  private String accountId = "";
-  private String managerHost = "";
+  @Getter
+  @Setter
+  private String accountId;
+  @Getter
+  @Setter
+  private String managerHost;
 
   @Override
   protected String getAppName() {
     return APP_NAME;
-  }
-
-  @Override
-  protected String getAccountId() {
-    if (isBlank(accountId) && getConfiguration() != null) {
-      accountId = getConfiguration().getAccountId();
-    }
-    return accountId;
-  }
-
-  @Override
-  protected String getManagerHost() {
-    if (isBlank(managerHost) && getConfiguration() != null) {
-      managerHost = substringBetween(getConfiguration().getManagerUrl(), "://", "/api/");
-    }
-    return managerHost;
   }
 
   @Override
