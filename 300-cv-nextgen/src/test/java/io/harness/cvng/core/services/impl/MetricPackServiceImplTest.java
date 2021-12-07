@@ -121,7 +121,7 @@ public class MetricPackServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetMetricPack_withExistingCategory() {
     MetricPack metricPack = metricPackService.getMetricPack(
-        accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, CVMonitoringCategory.ERRORS);
+        accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, ERRORS_PACK_IDENTIFIER);
     assertThat(metricPack.getAccountId()).isEqualTo(accountId);
     assertThat(metricPack.getOrgIdentifier()).isEqualTo(orgIdentifier);
     assertThat(metricPack.getProjectIdentifier()).isEqualTo(projectIdentifier);

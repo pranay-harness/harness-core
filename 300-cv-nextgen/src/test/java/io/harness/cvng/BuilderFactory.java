@@ -253,7 +253,7 @@ public class BuilderFactory {
         .feature("Application Monitoring")
         .metricDefinitions(Collections.emptyList())
         .metricPacks(new HashSet<MetricPackDTO>() {
-          { add(MetricPackDTO.builder().identifier(cvMonitoringCategory).build()); }
+          { add(MetricPackDTO.builder().identifier(cvMonitoringCategory.getDisplayName()).build()); }
         })
         .build();
   }
