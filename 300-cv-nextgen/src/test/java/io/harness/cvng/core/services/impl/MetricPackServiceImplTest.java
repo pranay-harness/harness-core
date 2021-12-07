@@ -26,6 +26,7 @@ import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -108,6 +109,11 @@ public class MetricPackServiceImplTest extends CvNextGenTestBase {
         assertThat(metricDefinition.getPath()).isNotEmpty();
       });
     });
+    // Validate APPD Custom metric pack is hidden
+    assertThat(metricPacks.stream()
+                   .filter(metricPack -> metricPack.getIdentifier().equals(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER))
+                   .filter(metricPack -> metricPack.getDataSourceType().equals(DataSourceType.APP_DYNAMICS)))
+        .hasSize(0);
   }
 
   @Test
