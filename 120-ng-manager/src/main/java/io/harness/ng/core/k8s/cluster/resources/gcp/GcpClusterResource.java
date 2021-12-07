@@ -1,6 +1,7 @@
 package io.harness.ng.core.k8s.cluster.resources.gcp;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.GCP_CONNECTOR_IDENTIFIER;
 import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -73,7 +74,8 @@ public class GcpClusterResource {
         ApiResponse(responseCode = "default", description = "Returns list of gcp cluster names")
       })
   public ResponseDTO<GcpResponseDTO>
-  getClusterNames(@QueryParam("connectorRef") String gcpConnectorIdentifier,
+  getClusterNames(@Parameter(description = GCP_CONNECTOR_IDENTIFIER) @NotNull @QueryParam(
+                      "connectorRef") String gcpConnectorIdentifier,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @Parameter(description = ORG_PARAM_MESSAGE) @NotNull @QueryParam(
