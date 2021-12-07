@@ -46,6 +46,7 @@ import io.harness.cvng.beans.appd.AppDynamicsFetchTiersRequest;
 import io.harness.cvng.beans.appd.AppDynamicsFileDefinition;
 import io.harness.cvng.beans.appd.AppDynamicsMetricDataValidationRequest;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.customhealth.CustomHealthFetchSampleDataRequest;
 import io.harness.cvng.beans.datadog.DatadogActiveMetricsRequest;
 import io.harness.cvng.beans.datadog.DatadogDashboardDetailsRequest;
 import io.harness.cvng.beans.datadog.DatadogDashboardListRequest;
@@ -158,5 +159,6 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     // TODO: Check all sub classes of DataCollectionInfo is added to Kyro
     kryo.register(DataCollectionInfo.class, 9079);
     kryo.register(AppMetricInfoDTO.class, 9080);
+    kryo.register(CustomHealthFetchSampleDataRequest.class, 9081);
   }
 }
