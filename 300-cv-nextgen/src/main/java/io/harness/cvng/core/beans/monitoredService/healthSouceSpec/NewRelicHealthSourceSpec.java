@@ -87,6 +87,8 @@ public class NewRelicHealthSourceSpec extends HealthSourceSpec {
       String environmentRef, String serviceRef, String identifier, String name, MetricPackService metricPackService) {
     List<NewRelicCVConfig> cvConfigs = new ArrayList<>();
     metricPacks.forEach(metricPack -> {
+      MetricPack metricPackFromDb =
+          metricPack.toMetricPack(accountId, orgIdentifier, projectIdentifier, getType(), metricPackService);
       NewRelicCVConfig newRelicCVConfig = NewRelicCVConfig.builder()
                                               .accountId(accountId)
                                               .orgIdentifier(orgIdentifier)
@@ -98,9 +100,8 @@ public class NewRelicHealthSourceSpec extends HealthSourceSpec {
                                               .applicationId(Long.valueOf(applicationId))
                                               .envIdentifier(environmentRef)
                                               .serviceIdentifier(serviceRef)
-                                              .metricPack(metricPack.toMetricPack(accountId, orgIdentifier,
-                                                  projectIdentifier, getType(), metricPackService))
-                                              .category(metricPack.getIdentifier())
+                                              .metricPack(metricPackFromDb)
+                                              .category(metricPackFromDb.getCategory())
                                               .productName(feature)
                                               .build();
       cvConfigs.add(newRelicCVConfig);
