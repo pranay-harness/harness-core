@@ -46,6 +46,7 @@ import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.execution.ExecutionHelper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
@@ -74,6 +75,7 @@ public class TriggerExecutionHelper {
   private final PMSExecutionService pmsExecutionService;
   private final PMSYamlSchemaService pmsYamlSchemaService;
   private final ExecutionHelper executionHelper;
+  private final PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   public PlanExecution resolveRuntimeInputAndSubmitExecutionReques(
       TriggerDetails triggerDetails, TriggerPayload triggerPayload) {
@@ -144,6 +146,15 @@ public class TriggerExecutionHelper {
               InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
         }
       }
+      if (pipelineEntityToExecute.get().getTemplateReference() != null
+          && pipelineEntityToExecute.get().getTemplateReference()) {
+        pipelineYaml = pipelineTemplateHelper
+                           .resolveTemplateRefsInPipeline(pipelineEntityToExecute.get().getAccountId(),
+                               pipelineEntityToExecute.get().getOrgIdentifier(),
+                               pipelineEntityToExecute.get().getProjectIdentifier(), pipelineYaml)
+                           .getMergedPipelineYaml();
+      }
+
       planExecutionMetadataBuilder.yaml(pipelineYaml);
       planExecutionMetadataBuilder.processedYaml(YamlUtils.injectUuid(pipelineYaml));
       planExecutionMetadataBuilder.triggerPayload(triggerPayload);

@@ -36,7 +36,7 @@ public interface NgSMTPSettingsHttpClient {
 
   @PUT(UPDATE_SETTINGS_ATTRIBUTE)
   Call<RestResponse<SettingAttribute>> updateSmtpSettings(
-      @Path("attrId") String accountId, @Query("appId") String appId, @Body SettingAttribute variable);
+      @Path("attrId") String attrId, @Query("appId") String appId, @Body SettingAttribute variable);
 
   @DELETE(DELETE_SETTING_ATTRIBUTE)
   Call<RestResponse<Boolean>> deleteSmtpSettings(@Path("attrId") String attrId, @Query("appId") String appId);

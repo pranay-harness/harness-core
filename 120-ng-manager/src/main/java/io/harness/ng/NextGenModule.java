@@ -53,6 +53,8 @@ import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
 import io.harness.connector.ConnectorModule;
 import io.harness.connector.events.ConnectorEventHandler;
+import io.harness.connector.helper.DecryptionHelper;
+import io.harness.connector.helper.DecryptionHelperViaManager;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -179,7 +181,6 @@ import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
 import io.harness.pipeline.PipelineRemoteClientModule;
-import io.harness.plancreator.steps.StepSchemaUtils;
 import io.harness.plancreator.steps.http.PmsAbstractStepNode;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.polling.service.impl.PollingPerpetualTaskServiceImpl;
@@ -220,7 +221,6 @@ import io.harness.utils.featureflaghelper.NGFeatureFlagHelperServiceImpl;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
-import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import software.wings.security.ThreadLocalUserProvider;
@@ -357,7 +357,6 @@ public class NextGenModule extends AbstractModule {
     Set<Class<? extends StepSpecType>> subTypesOfStepSpecType =
         HarnessReflections.get().getSubTypesOf(StepSpecType.class);
     Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
-    set = YamlSchemaTransientHelper.removeNewSchemaStepsSubtypes(set, StepSchemaUtils.getStepsMovedToNewSchema());
     return ImmutableMap.of(StepSpecType.class, set);
   }
 
@@ -626,9 +625,9 @@ public class NextGenModule extends AbstractModule {
         appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
     install(CeLicenseClientModule.getInstance(appConfig.getManagerClientConfig(),
         appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
+    bind(DecryptionHelper.class).to(DecryptionHelperViaManager.class);
     install(new NgSMTPSettingsHttpClientModule(
         this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
-
     bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
     bind(SmtpNgService.class).to(SmtpNgServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);

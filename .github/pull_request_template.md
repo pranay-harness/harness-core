@@ -3,9 +3,9 @@ You can use the following comments to re-trigger PR Checks
 - runMavenBuild: `trigger mavenbuild`
 - runAeriformCheck: `trigger AeriformCheck`
 - runClangFormatCheck: `trigger code_format`
-- runMessageMetadataCheck: `trigger message_metadata`
+- MessageMetadata: `trigger messagecheck`
 - runRecencyCheck: `trigger recencycheck`
-- runBuildNumberMetadataCheck: `trigger build_number_metadata`
+- BuildNumberMetadata: `trigger buildnum`
 - runDockerizationCheck: `trigger dockerizationcheck`
 - runAuthorCheck: `trigger authorcheck`
 - runCheckstyleCheck: `trigger checkstylecheck`
@@ -22,4 +22,4 @@ You can use the following comments to re-trigger PR Checks
 - runUnitTests4: `trigger unittest4`
 - runFunctionalTests_1: `trigger ft1`
 - runFunctionalTests_2: `trigger ft2`
-- runCodeBaseHashCheck: `trigger codebasehashcheck`
+- CodeBaseHash: `trigger codebasehash`

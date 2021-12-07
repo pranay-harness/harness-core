@@ -19,6 +19,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.LinkedHashMap;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -88,7 +89,7 @@ public class NewRelicResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get sample data for given nrql", nickname = "getSampleDataForNRQL")
-  public ResponseDTO<String> getSampleDataForNRQL(@QueryParam("accountId") @NotNull String accountId,
+  public ResponseDTO<LinkedHashMap> getSampleDataForNRQL(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("connectorIdentifier") @NotNull String connectorIdentifier,

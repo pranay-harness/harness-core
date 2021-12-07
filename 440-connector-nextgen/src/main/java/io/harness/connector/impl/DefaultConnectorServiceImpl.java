@@ -34,6 +34,7 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
+import io.harness.connector.ManagerExecutable;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.events.ConnectorCreateEvent;
@@ -386,18 +387,27 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
     setGitDetails(existingConnector, newConnector);
 
+    final boolean executeOnDelegate = checkConnectorExecutableOnDelegate(connector);
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
+        newConnector.getOrgIdentifier(), newConnector.getProjectIdentifier(), newConnector.getIdentifier());
+
     if (existingConnector.getIsFromDefaultBranch() == null || existingConnector.getIsFromDefaultBranch()) {
       if (existingConnector.getHeartbeatPerpetualTaskId() == null
-          && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
+          && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector) && executeOnDelegate) {
         PerpetualTaskId connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
             accountIdentifier, existingConnector.getOrgIdentifier(), existingConnector.getProjectIdentifier(),
             existingConnector.getIdentifier());
         newConnector.setHeartbeatPerpetualTaskId(
             connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
       } else if (existingConnector.getHeartbeatPerpetualTaskId() != null) {
-        connectorHeartbeatService.resetPerpetualTask(
-            accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
-        newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+        if (executeOnDelegate) {
+          connectorHeartbeatService.resetPerpetualTask(
+              accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
+          newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+        } else {
+          connectorHeartbeatService.deletePerpetualTask(
+              accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId(), fullyQualifiedIdentifier);
+        }
       }
     }
     try {
@@ -843,5 +853,18 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       connectorHeartbeatService.resetPerpetualTask(accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
     }
     return true;
+  }
+  @Override
+  public boolean checkConnectorExecutableOnDelegate(ConnectorInfoDTO connectorInfo) {
+    final ConnectorConfigDTO connectorConfig = connectorInfo.getConnectorConfig();
+    if (connectorConfig instanceof ManagerExecutable) {
+      final Boolean executeOnDelegate = ((ManagerExecutable) connectorConfig).getExecuteOnDelegate();
+      if (executeOnDelegate == null) {
+        return Boolean.TRUE;
+      } else {
+        return executeOnDelegate;
+      }
+    }
+    return Boolean.TRUE;
   }
 }

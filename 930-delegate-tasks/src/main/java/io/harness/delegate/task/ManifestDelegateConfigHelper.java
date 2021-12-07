@@ -3,6 +3,7 @@ package io.harness.delegate.task;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.task.git.GitDecryptionHelper;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
@@ -10,7 +11,6 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
-import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.security.encryption.SecretDecryptionService;
 
