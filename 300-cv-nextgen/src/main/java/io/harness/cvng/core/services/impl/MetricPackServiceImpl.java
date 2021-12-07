@@ -128,6 +128,10 @@ public class MetricPackServiceImpl implements MetricPackService {
       DataSourceType dataSourceType, String accountId, String orgIdentifier, String projectIdentifier) {
     return getMetricPacks(accountId, orgIdentifier, projectIdentifier, dataSourceType)
         .stream()
+        // hack to remove Custom metric pack from APPD in UI
+        .filter(metricPack
+            -> !(metricPack.getDataSourceType().equals(DataSourceType.APP_DYNAMICS)
+                && metricPack.getIdentifier().equals(CUSTOM_PACK_IDENTIFIER)))
         .map(MetricPack::toDTO)
         .collect(Collectors.toList());
   }
