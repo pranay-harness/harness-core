@@ -16,6 +16,7 @@ public class JsonExpansionService extends JsonExpansionServiceImplBase {
   @Override
   public void expand(ExpansionRequestBatch request, StreamObserver<ExpansionResponseBatch> responseObserver) {
     // todo(@NamanVerma): add a proper implementation
-    super.expand(request, responseObserver);
+    responseObserver.onNext(ExpansionResponseBatch.getDefaultInstance());
+    responseObserver.onCompleted();
   }
 }

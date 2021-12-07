@@ -22,6 +22,7 @@ import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHe
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.rule.Owner;
 
@@ -71,7 +72,8 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
 
     identifier = "identifier";
     name = "some-name";
-    metricPackDTOS = Arrays.asList(MetricPackDTO.builder().identifier(CVMonitoringCategory.ERRORS).build());
+    metricPackDTOS =
+        Arrays.asList(MetricPackDTO.builder().identifier(CVNextGenConstants.ERRORS_PACK_IDENTIFIER).build());
     appDynamicsHealthSourceSpec =
         AppDynamicsHealthSourceSpec.builder()
             .applicationName(applicationName)
@@ -219,8 +221,8 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void getCVConfigUpdateResult_checkUpdated() {
     List<CVConfig> cvConfigs = new ArrayList<>();
-    cvConfigs.add(createCVConfig(metricPackService.getMetricPack(
-        accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, CVMonitoringCategory.ERRORS)));
+    cvConfigs.add(createCVConfig(metricPackService.getMetricPack(accountId, orgIdentifier, projectIdentifier,
+        DataSourceType.APP_DYNAMICS, CVNextGenConstants.ERRORS_PACK_IDENTIFIER)));
     CVConfigUpdateResult result = appDynamicsHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier,
         projectIdentifier, envIdentifier, serviceIdentifier, identifier, name, cvConfigs, metricPackService);
     assertThat(result.getUpdated()).hasSize(1);
