@@ -55,8 +55,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
     Preconditions.checkArgument(identifier.equals(serviceLevelObjectiveDTO.getIdentifier()),
         String.format("Identifier %s does not match with path identifier %s", serviceLevelObjectiveDTO.getIdentifier(),
             identifier));
-    ServiceLevelObjective serviceLevelObjective =
-        getServiceLevelObjective(projectParams, serviceLevelObjectiveDTO.getIdentifier());
+    ServiceLevelObjective serviceLevelObjective = getEntity(projectParams, serviceLevelObjectiveDTO.getIdentifier());
     if (serviceLevelObjective == null) {
       throw new InvalidRequestException(String.format(
           "SLO  with identifier %s, accountId %s, orgIdentifier %s and projectIdentifier %s  is not present",
@@ -70,7 +69,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
 
   @Override
   public boolean delete(ProjectParams projectParams, String identifier) {
-    ServiceLevelObjective serviceLevelObjective = getServiceLevelObjective(projectParams, identifier);
+    ServiceLevelObjective serviceLevelObjective = getEntity(projectParams, identifier);
     if (serviceLevelObjective == null) {
       throw new InvalidRequestException(String.format(
           "SLO  with identifier %s, accountId %s, orgIdentifier %s and projectIdentifier %s  is not present",
@@ -125,7 +124,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
 
   @Override
   public ServiceLevelObjectiveResponse get(ProjectParams projectParams, String identifier) {
-    ServiceLevelObjective serviceLevelObjective = getServiceLevelObjective(projectParams, identifier);
+    ServiceLevelObjective serviceLevelObjective = getEntity(projectParams, identifier);
     if (Objects.isNull(serviceLevelObjective)) {
       return null;
     }
@@ -141,8 +140,8 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
             .userJourneys(filter.getUserJourneyIdentifiers())
             .build());
   }
-
-  private ServiceLevelObjective getServiceLevelObjective(ProjectParams projectParams, String identifier) {
+  @Override
+  public ServiceLevelObjective getEntity(ProjectParams projectParams, String identifier) {
     return hPersistence.createQuery(ServiceLevelObjective.class)
         .filter(ServiceLevelObjectiveKeys.accountId, projectParams.getAccountIdentifier())
         .filter(ServiceLevelObjectiveKeys.orgIdentifier, projectParams.getOrgIdentifier())
@@ -175,7 +174,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
   }
 
   private ServiceLevelObjectiveResponse getSLOResponse(String identifier, ProjectParams projectParams) {
-    ServiceLevelObjective serviceLevelObjective = getServiceLevelObjective(projectParams, identifier);
+    ServiceLevelObjective serviceLevelObjective = getEntity(projectParams, identifier);
 
     return sloEntityToSLOResponse(serviceLevelObjective);
   }

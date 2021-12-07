@@ -7,6 +7,5 @@ COPY ./AppServerAgent-20.8.0.30686.zip /opt/harness/
 
 #BT-685: Including overops image into base image
 #Note: Overops agent is pulled from platform gcr bucket while executing CIE job: portal-alpine-base-apm
-ADD ./takipi-agent-4.64.0.tar.gz /opt/harness/
-
-
+ADD ./takipi-agent-latest.tar.gz /opt/harness/
+RUN chmod -R +x /opt/harness/takipi

@@ -1,6 +1,7 @@
 package io.harness.cvng.servicelevelobjective.entities;
 
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
@@ -19,10 +20,11 @@ import org.mongodb.morphia.query.UpdateOperations;
 @FieldNameConstants(innerTypeName = "RatioServiceLevelIndicatorKeys")
 @EqualsAndHashCode(callSuper = true)
 public class RatioServiceLevelIndicator extends ServiceLevelIndicator {
-  String cvConfigIdentifier1;
   String eventType;
   String metric1;
   String metric2;
+  Double thresholdValue;
+  ThresholdType thresholdType;
 
   @Override
   public SLIMetricType getSLIMetricType() {
@@ -45,7 +47,9 @@ public class RatioServiceLevelIndicator extends ServiceLevelIndicator {
       setCommonOperations(updateOperations, ratioServiceLevelIndicator);
       updateOperations.set(RatioServiceLevelIndicatorKeys.eventType, ratioServiceLevelIndicator.getEventType())
           .set(RatioServiceLevelIndicatorKeys.metric1, ratioServiceLevelIndicator.getMetric1())
-          .set(RatioServiceLevelIndicatorKeys.metric2, ratioServiceLevelIndicator.getMetric2());
+          .set(RatioServiceLevelIndicatorKeys.metric2, ratioServiceLevelIndicator.getMetric2())
+          .set(RatioServiceLevelIndicatorKeys.thresholdValue, ratioServiceLevelIndicator.getThresholdValue())
+          .set(RatioServiceLevelIndicatorKeys.thresholdType, ratioServiceLevelIndicator.getThresholdType());
     }
   }
 }

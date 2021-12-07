@@ -332,4 +332,9 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   public boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String invalidYaml) {
     return defaultConnectorService.markEntityInvalid(accountIdentifier, entityReference, invalidYaml);
   }
+
+  @Override
+  public boolean checkConnectorExecutableOnDelegate(ConnectorInfoDTO connectorInfo) {
+    return defaultConnectorService.checkConnectorExecutableOnDelegate(connectorInfo);
+  }
 }

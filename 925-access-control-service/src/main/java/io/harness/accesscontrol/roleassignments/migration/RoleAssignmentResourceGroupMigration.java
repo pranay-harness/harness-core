@@ -5,9 +5,6 @@ import static io.harness.NGConstants.DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_I
 import static io.harness.NGConstants.DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.threading.Morpheus.sleep;
-
-import static java.time.Duration.ofMinutes;
 
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO.RoleAssignmentDBOKeys;
@@ -61,7 +58,6 @@ public class RoleAssignmentResourceGroupMigration implements NGMigration {
         roleAssignmentRepository.save(buildRoleAssignmentDBO(scopeLevel, roleAssignment));
         roleAssignmentRepository.deleteById(roleAssignment.getId());
       }
-      sleep(ofMinutes(2));
     } while (true);
   }
 

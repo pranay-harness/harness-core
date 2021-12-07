@@ -12,7 +12,7 @@ import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml.VmInfraYamlSpec;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ci.awsvm.CIVmInitializeTaskParams;
+import io.harness.delegate.beans.ci.vm.CIVmInitializeTaskParams;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;

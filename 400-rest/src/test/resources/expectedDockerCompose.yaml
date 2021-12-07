@@ -30,3 +30,4 @@ services:
       - USE_CDN=false
       - CDN_URL=http://localhost:9500
       - VERSION_CHECK_DISABLED=false
+      - INIT_SCRIPT=echo "Docker delegate init script executed."

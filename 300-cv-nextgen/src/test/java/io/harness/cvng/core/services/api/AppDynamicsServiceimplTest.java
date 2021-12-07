@@ -329,7 +329,7 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
                                         .endTime(builderFactory.getClock().instant())
                                         .startTime(builderFactory.getClock().instant().minus(Duration.ofHours(1)))
                                         .metricPath("baseFolder|tier|metricPath")
-                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_METRIC_DATA)
+                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_SINGLE_METRIC_DATA)
                                         .build();
 
     OnboardingRequestDTO onboardingRequestDTO =
@@ -379,7 +379,7 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
                                         .endTime(builderFactory.getClock().instant())
                                         .startTime(builderFactory.getClock().instant().minus(Duration.ofHours(1)))
                                         .metricPath("baseFolder|tier|metricPath")
-                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_METRIC_DATA)
+                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_SINGLE_METRIC_DATA)
                                         .build();
 
     OnboardingRequestDTO onboardingRequestDTO =

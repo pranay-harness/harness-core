@@ -77,6 +77,7 @@ import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
 import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
@@ -86,6 +87,7 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO.ServiceLevelObjectiveDTOBuilder;
 import io.harness.cvng.servicelevelobjective.beans.UserJourneyDTO;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -655,9 +657,16 @@ public class BuilderFactory {
   public ServiceLevelIndicatorDTO getServiceLevelIndicatorDTOBuilder() {
     return ServiceLevelIndicatorDTO.builder()
         .type(ServiceLevelIndicatorType.LATENCY)
+        .sliMissingDataType(SLIMissingDataType.GOOD)
         .spec(ServiceLevelIndicatorSpec.builder()
                   .type(SLIMetricType.RATIO)
-                  .spec(RatioSLIMetricSpec.builder().eventType("Good").metric1("metric1").metric2("metric2").build())
+                  .spec(RatioSLIMetricSpec.builder()
+                            .thresholdType(ThresholdType.GREATER_THAN)
+                            .thresholdValue(20.0)
+                            .eventType("Good")
+                            .metric1("metric1")
+                            .metric2("metric2")
+                            .build())
                   .build())
         .build();
   }

@@ -66,7 +66,6 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.Status;
 import io.harness.beans.EmbeddedUser;
-import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -1092,14 +1091,12 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateScripts getDelegateScripts(String accountId, String version, String managerHost,
       String verificationHost, String delegateName) throws IOException {
     String delegateTokenName = EMPTY;
-    if (featureFlagService.isEnabled(FeatureName.USE_CUSTOM_DELEGATE_TOKENS, accountId)) {
-      DelegateTokenGlobalContextData delegateTokenGlobalContextData =
-          GlobalContextManager.get(DelegateTokenGlobalContextData.TOKEN_NAME);
-      if (delegateTokenGlobalContextData != null) {
-        delegateTokenName = delegateTokenGlobalContextData.getTokenName();
-      } else {
-        log.warn("DelegateTokenGlobalContextData was found null in getDelegateScripts()");
-      }
+    DelegateTokenGlobalContextData delegateTokenGlobalContextData =
+        GlobalContextManager.get(DelegateTokenGlobalContextData.TOKEN_NAME);
+    if (delegateTokenGlobalContextData != null) {
+      delegateTokenName = delegateTokenGlobalContextData.getTokenName();
+    } else {
+      log.warn("DelegateTokenGlobalContextData was found null in GlobalContextManager");
     }
 
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
