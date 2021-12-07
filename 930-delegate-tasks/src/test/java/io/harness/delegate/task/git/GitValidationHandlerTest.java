@@ -18,7 +18,10 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.helper.DecryptionHelper;
 import io.harness.connector.task.git.GitCommandTaskHandler;
+import io.harness.connector.task.git.GitDecryptionHelper;
+import io.harness.connector.task.git.GitValidationHandler;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
@@ -32,7 +35,6 @@ import io.harness.encryption.SecretRefData;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.shell.SshSessionConfig;
 
 import org.junit.Before;
@@ -45,8 +47,8 @@ import org.mockito.MockitoAnnotations;
 @OwnedBy(DX)
 public class GitValidationHandlerTest extends CategoryTest {
   @Mock private GitCommandTaskHandler gitCommandTaskHandler;
-  @Mock private SecretDecryptionService decryptionService;
   @Mock private GitDecryptionHelper gitDecryptionHelper;
+  @Mock private DecryptionHelper decryptionHelper;
   @InjectMocks GitValidationHandler gitValidationHandler;
 
   private SshSessionConfig sshSessionConfig;
@@ -62,7 +64,7 @@ public class GitValidationHandlerTest extends CategoryTest {
         .when(gitDecryptionHelper)
         .getSSHSessionConfig(any(SSHKeySpecDTO.class), anyListOf(EncryptedDataDetail.class));
     doReturn(decryptableEntity)
-        .when(decryptionService)
+        .when(decryptionHelper)
         .decrypt(any(DecryptableEntity.class), anyListOf(EncryptedDataDetail.class));
   }
 
@@ -84,7 +86,7 @@ public class GitValidationHandlerTest extends CategoryTest {
     ConnectorValidationResult validationResult =
         gitValidationHandler.validate(gitValidationParameters, "accountIdentifier");
     assertThat(validationResult.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
-    verify(decryptionService, times(0)).decrypt(any(DecryptableEntity.class), anyListOf(EncryptedDataDetail.class));
+    verify(decryptionHelper, times(0)).decrypt(any(DecryptableEntity.class), anyListOf(EncryptedDataDetail.class));
     verify(gitDecryptionHelper, times(0))
         .decryptGitConfig(any(GitConfigDTO.class), anyListOf(EncryptedDataDetail.class));
   }
@@ -110,6 +112,5 @@ public class GitValidationHandlerTest extends CategoryTest {
         gitValidationHandler.validate(gitValidationParameters, "accountIdentifier");
 
     assertThat(validationResult.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
-    verify(decryptionService, times(1)).decrypt(any(DecryptableEntity.class), anyListOf(EncryptedDataDetail.class));
   }
 }
