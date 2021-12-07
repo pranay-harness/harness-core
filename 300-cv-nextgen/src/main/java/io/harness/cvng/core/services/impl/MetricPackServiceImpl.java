@@ -8,7 +8,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
@@ -164,16 +163,15 @@ public class MetricPackServiceImpl implements MetricPackService {
 
   @Override
   public MetricPack getMetricPack(String accountId, String orgIdentifier, String projectIdentifier,
-      DataSourceType dataSourceType, CVMonitoringCategory cvMonitoringCategory) {
+      DataSourceType dataSourceType, String identifier) {
     MetricPack metricPackFromDb = hPersistence.createQuery(MetricPack.class, excludeAuthority)
                                       .filter(MetricPackKeys.accountId, accountId)
                                       .filter(MetricPackKeys.projectIdentifier, projectIdentifier)
                                       .filter(MetricPackKeys.orgIdentifier, orgIdentifier)
                                       .filter(MetricPackKeys.dataSourceType, dataSourceType)
-                                      .filter(MetricPackKeys.category, cvMonitoringCategory)
+                                      .filter(MetricPackKeys.identifier, identifier)
                                       .get();
-    Preconditions.checkNotNull(
-        metricPackFromDb, String.format("No Metric Packs found for Category %s", cvMonitoringCategory));
+    Preconditions.checkNotNull(metricPackFromDb, String.format("No Metric Packs found for identifier %s", identifier));
     return metricPackFromDb;
   }
 
