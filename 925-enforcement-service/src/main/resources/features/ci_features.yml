@@ -3,9 +3,6 @@ clients:
   - name: cimanager
     clientConfig: ciManagerClientConfig
     secretConfig: nextGenConfig.ciManagerSecret
-  - name: pipelineService
-    clientConfig: pipelineServiceClientConfig
-    secretConfig: nextGenConfig.pipelineServiceSecret
 features:
   - name: MAX_BUILDS_PER_MONTH
     description: Max build per month
@@ -16,7 +13,7 @@ features:
         timeUnit:
           unit: MONTHS
           numberOfUnits: 1
-        clientName: pipelineService
+        clientName: cimanager
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true
@@ -28,8 +25,8 @@ features:
     restrictions:
       FREE:
         restrictionType: STATIC_LIMIT
-        limit: 2600
-        clientName: pipelineService
+        limit: 2500
+        clientName: cimanager
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true
@@ -73,7 +70,7 @@ features:
     restrictions:
       FREE:
         restrictionType: CUSTOM
-        clientName: pipelineService
+        clientName: cimanager
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true

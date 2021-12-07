@@ -2114,10 +2114,10 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams
-                  .toString(new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegateImmutable.yaml")))
-                  .replaceAll("8888", "" + port));
+          .isEqualTo(CharStreams
+                         .toString(new InputStreamReader(
+                             getClass().getResourceAsStream("/expectedHarnessDelegateImmutable.yaml")))
+                         .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
@@ -2288,8 +2288,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateSetupDetails validatedSetupDetails = delegateService.validateKubernetesYaml(accountId, setupDetails);
     assertThat(validatedSetupDetails).isEqualTo(setupDetails);
   }
-
-
 
   @Test
   @Owner(developers = MARKO)
@@ -2497,15 +2495,14 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(CharStreams
-              .toString(new InputStreamReader(
-                  getClass().getResourceAsStream("/expectedHarnessDelegateNgClusterAdminImmutable.yaml")))
-              .replaceAll("8888", "" + port));
+                         .toString(new InputStreamReader(
+                             getClass().getResourceAsStream("/expectedHarnessDelegateNgClusterAdminImmutable.yaml")))
+                         .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
     }
   }
-
 
   @Test
   @Owner(developers = MARKO)
@@ -2542,9 +2539,9 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(CharStreams
-              .toString(new InputStreamReader(
-                  getClass().getResourceAsStream("/expectedHarnessDelegateNgClusterViewerImmutable.yaml")))
-              .replaceAll("8888", "" + port));
+                         .toString(new InputStreamReader(
+                             getClass().getResourceAsStream("/expectedHarnessDelegateNgClusterViewerImmutable.yaml")))
+                         .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
@@ -2560,19 +2557,19 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegateProfileService.get(ACCOUNT_ID, "delConfigId")).thenReturn(DelegateProfile.builder().build());
     featureTestHelper.enableFeatureFlag(USE_IMMUTABLE_DELEGATE);
     DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
-        .orgIdentifier("9S5HMP0xROugl3_QgO62rQO")
-        .projectIdentifier("9S5HMP0xROugl3_QgO62rQP")
-        .delegateConfigurationId("delConfigId")
-        .name("harness-delegate")
-        .identifier("_delegateGroupId1")
-        .size(DelegateSize.LARGE)
-        .description("desc")
-        .delegateType(DelegateType.KUBERNETES)
-        .k8sConfigDetails(K8sConfigDetails.builder()
-            .k8sPermissionType(K8sPermissionType.NAMESPACE_ADMIN)
-            .namespace("test-namespace")
-            .build())
-        .build();
+                                            .orgIdentifier("9S5HMP0xROugl3_QgO62rQO")
+                                            .projectIdentifier("9S5HMP0xROugl3_QgO62rQP")
+                                            .delegateConfigurationId("delConfigId")
+                                            .name("harness-delegate")
+                                            .identifier("_delegateGroupId1")
+                                            .size(DelegateSize.LARGE)
+                                            .description("desc")
+                                            .delegateType(DelegateType.KUBERNETES)
+                                            .k8sConfigDetails(K8sConfigDetails.builder()
+                                                                  .k8sPermissionType(K8sPermissionType.NAMESPACE_ADMIN)
+                                                                  .namespace("test-namespace")
+                                                                  .build())
+                                            .build();
 
     File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
         "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
@@ -2588,9 +2585,9 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(CharStreams
-              .toString(new InputStreamReader(
-                  getClass().getResourceAsStream("/expectedHarnessDelegateNgNamespaceAdminImmutable.yaml")))
-              .replaceAll("8888", "" + port));
+                         .toString(new InputStreamReader(
+                             getClass().getResourceAsStream("/expectedHarnessDelegateNgNamespaceAdminImmutable.yaml")))
+                         .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");

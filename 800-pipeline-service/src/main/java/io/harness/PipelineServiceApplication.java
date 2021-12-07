@@ -16,15 +16,6 @@ import io.harness.cache.CacheModule;
 import io.harness.consumers.GraphUpdateRedisConsumer;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
-import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
-import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
-import io.harness.enforcement.client.custom.CustomRestrictionInterface;
-import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
-import io.harness.enforcement.client.usage.RestrictionUsageInterface;
-import io.harness.enforcement.constants.FeatureRestrictionName;
-import io.harness.enforcement.executions.BuildRestrictionUsageImpl;
-import io.harness.enforcement.executions.CIMonthlyBuildImpl;
-import io.harness.enforcement.executions.CITotalBuildImpl;
 import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
@@ -160,7 +151,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -327,7 +317,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerObservers(injector);
     registerRequestContextFilter(environment);
     registerOasResource(appConfig, environment, injector);
-    initializeEnforcementFramework(injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     PipelineServiceIteratorsConfig iteratorsConfig = appConfig.getIteratorsConfig();
@@ -745,25 +734,5 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
           { add(PipelineCoreMigrationProvider.class); } // Add all migration provider classes here
         })
         .build();
-  }
-
-  private void initializeEnforcementFramework(Injector injector) {
-    RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
-        RestrictionUsageRegisterConfiguration.builder()
-            .restrictionNameClassMap(
-                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
-                    .put(FeatureRestrictionName.MAX_TOTAL_BUILDS, CITotalBuildImpl.class)
-                    .put(FeatureRestrictionName.MAX_BUILDS_PER_MONTH, CIMonthlyBuildImpl.class)
-                    .build())
-            .build();
-    CustomRestrictionRegisterConfiguration customConfig =
-        CustomRestrictionRegisterConfiguration.builder()
-            .customRestrictionMap(
-                ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
-                    .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
-                    .build())
-            .build();
-    injector.getInstance(EnforcementSdkRegisterService.class)
-        .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }
 }
