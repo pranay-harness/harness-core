@@ -4,10 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
+import io.harness.cvng.beans.AppDynamicsDataCollectionInfo.AppMetricInfoDTO;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
+import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.beans.DataCollectionType;
@@ -21,8 +23,10 @@ import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.beans.SplunkValidationResponse.SplunkSampleResponse;
 import io.harness.cvng.beans.StackdriverDataCollectionInfo;
 import io.harness.cvng.beans.StackdriverLogDataCollectionInfo;
+import io.harness.cvng.beans.SyncDataCollectionRequest;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
+import io.harness.cvng.beans.TimeSeriesDataCollectionInfo;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
 import io.harness.cvng.beans.TimeSeriesThresholdComparisonType;
@@ -149,5 +153,10 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DatadogLogDataCollectionInfo.class, 9074);
     kryo.register(DatadogLogIndexesRequest.class, 9075);
     kryo.register(NewRelicFetchSampleDataRequest.class, 9076);
+    kryo.register(SyncDataCollectionRequest.class, 9077);
+    kryo.register(TimeSeriesDataCollectionInfo.class, 9078);
+    // TODO: Check all sub classes of DataCollectionInfo is added to Kyro
+    kryo.register(DataCollectionInfo.class, 9079);
+    kryo.register(AppMetricInfoDTO.class, 9080);
   }
 }
