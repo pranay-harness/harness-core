@@ -1,4 +1,4 @@
-package software.wings.security.annotations;
+package io.harness.security.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
