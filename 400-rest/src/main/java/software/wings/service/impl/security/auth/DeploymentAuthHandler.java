@@ -159,7 +159,8 @@ public class DeploymentAuthHandler {
 
   private void checkPermissionToDeployEnv(String appId, WorkflowExecution workflowExecution) {
     if (workflowExecution != null && StringUtils.isNotEmpty(workflowExecution.getEnvId())) {
-      if (ORCHESTRATION == workflowExecution.getWorkflowType()) {
+      // workflow execution is direct workflow execution and not part of any pipeline
+      if (ORCHESTRATION == workflowExecution.getWorkflowType() && workflowExecution.getPipelineSummary() == null) {
         authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, workflowExecution.getEnvId());
       } else {
         authService.checkIfUserAllowedToDeployPipelineToEnv(appId, workflowExecution.getEnvId());
