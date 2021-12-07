@@ -14,6 +14,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.helper.DecryptionHelper;
+import io.harness.connector.task.git.GitDecryptionHelper;
 import io.harness.connector.task.shell.SshSessionConfigMapper;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
@@ -40,6 +42,7 @@ public class GitDecryptionHelperTest extends CategoryTest {
   @Mock private SecretDecryptionService decryptionService;
   @Mock private SshSessionConfigMapper sshSessionConfigMapper;
   @InjectMocks GitDecryptionHelper gitDecryptionHelper;
+  @Mock private DecryptionHelper decryptionHelper;
 
   @Before
   public void setUp() {
@@ -51,7 +54,7 @@ public class GitDecryptionHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testDecryptGitConfig() {
     gitDecryptionHelper.decryptGitConfig(GitConfigDTO.builder().build(), new ArrayList<>());
-    verify(decryptionService, times(1)).decrypt(any(GitConfigDTO.class), anyListOf(EncryptedDataDetail.class));
+    verify(decryptionHelper, times(1)).decrypt(any(GitConfigDTO.class), anyListOf(EncryptedDataDetail.class));
   }
 
   @Test
@@ -90,6 +93,6 @@ public class GitDecryptionHelperTest extends CategoryTest {
         .decrypt(any(DecryptableEntity.class), anyListOf(EncryptedDataDetail.class));
 
     gitDecryptionHelper.decryptApiAccessConfig(connector, new ArrayList<>());
-    verify(decryptionService, times(1)).decrypt(any(DecryptableEntity.class), anyListOf(EncryptedDataDetail.class));
+    verify(decryptionHelper, times(1)).decrypt(any(DecryptableEntity.class), anyListOf(EncryptedDataDetail.class));
   }
 }
