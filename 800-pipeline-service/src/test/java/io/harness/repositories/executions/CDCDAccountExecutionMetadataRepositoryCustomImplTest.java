@@ -25,7 +25,6 @@ import org.mockito.Mockito;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class CDCDAccountExecutionMetadataRepositoryCustomImplTest extends PipelineServiceTestBase {
   private static final String ACCOUNT_ID = "accountId";
-
   @Inject PersistentLocker persistentLocker;
   @Inject AccountExecutionMetadataRepository accountExecutionMetadataRepository;
 

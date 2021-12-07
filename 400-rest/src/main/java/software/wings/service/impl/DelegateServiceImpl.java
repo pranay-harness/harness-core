@@ -1072,7 +1072,8 @@ public class DelegateServiceImpl implements DelegateService {
             .verificationHost(verificationHost)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateXmx(delegateXmx)
-            .build(), true);
+            .build(),
+        true);
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
@@ -1116,7 +1117,8 @@ public class DelegateServiceImpl implements DelegateService {
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(delegateTokenName)
             .delegateName(StringUtils.defaultString(delegateName))
-            .build(), false);
+            .build(),
+        false);
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
@@ -1193,13 +1195,13 @@ public class DelegateServiceImpl implements DelegateService {
     private String delegateTags;
   }
 
-  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(final ScriptRuntimeParamMapInquiry inquiry, final boolean isNgDelegate) {
+  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
+      final ScriptRuntimeParamMapInquiry inquiry, final boolean isNgDelegate) {
     return getJarAndScriptRunTimeParamMap(inquiry, false, isNgDelegate);
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
       final ScriptRuntimeParamMapInquiry inquiry, final boolean useNgToken, final boolean isNgDelegate) {
-
     final CdnConfig cdnConfig = mainConfiguration.getCdnConfig();
     final boolean useCDN =
         featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, inquiry.getAccountId()) && cdnConfig != null;
@@ -1377,7 +1379,6 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateGroupId", "");
       }
 
-
       params.put("delegateNamespace", getDelegateNamespace(inquiry.getDelegateNamespace(), isNgDelegate));
 
       boolean versionCheckEnabled = hasVersionCheckDisabled(inquiry.accountId);
@@ -1387,7 +1388,8 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateTokenName", inquiry.getDelegateTokenName());
       }
 
-      params.put("isImmutable", String.valueOf(featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, inquiry.getAccountId())));
+      params.put(
+          "isImmutable", String.valueOf(featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, inquiry.getAccountId())));
 
       return params.build();
     }
@@ -1403,14 +1405,12 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private boolean isCiEnabled(final ScriptRuntimeParamMapInquiry inquiry) {
-    return inquiry.isCiEnabled()
-        && isNotEmpty(mainConfiguration.getPortal().getJwtNextGenManagerSecret())
+    return inquiry.isCiEnabled() && isNotEmpty(mainConfiguration.getPortal().getJwtNextGenManagerSecret())
         && nonNull(delegateGrpcConfig.getPort());
   }
 
-  private String getDelegateStorageUrl(final CdnConfig cdnConfig, final boolean useCDN,
-      final String delegateMetadataUrl) {
-
+  private String getDelegateStorageUrl(
+      final CdnConfig cdnConfig, final boolean useCDN, final String delegateMetadataUrl) {
     if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES && useCDN) {
       log.info("Using CDN delegateStorageUrl {}", cdnConfig.getUrl());
       return cdnConfig.getUrl();
@@ -1551,7 +1551,8 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateType(SHELL_SCRIPT)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .build(), false);
+              .build(),
+          false);
 
       if (isEmpty(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
@@ -1688,7 +1689,8 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateType(DOCKER)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .build(), false);
+              .build(),
+          false);
 
       if (isEmpty(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
@@ -1766,7 +1768,8 @@ public class DelegateServiceImpl implements DelegateService {
               .ciEnabled(isCiEnabled)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .build(), false);
+              .build(),
+          false);
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
       saveProcessedTemplate(scriptParams, yaml, getCgK8SDelegateTemplate(false));
@@ -1817,7 +1820,8 @@ public class DelegateServiceImpl implements DelegateService {
             .ceEnabled(true)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(tokenName)
-            .build(), false);
+            .build(),
+        false);
 
     File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
     saveProcessedTemplate(scriptParams, yaml, getCgK8SDelegateTemplate(true));
@@ -1865,7 +1869,8 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateType(HELM_DELEGATE)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(tokenName)
-            .build(), false);
+            .build(),
+        false);
 
     File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, YAML);
     saveProcessedTemplate(params, yaml, "delegate-helm-values.yaml.ftl");
@@ -1907,7 +1912,8 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateGroupId(delegateGroup.getUuid())
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .build(), false);
+              .build(),
+          false);
 
       scriptParams = updateMapForEcsDelegate(awsVpcMode, hostname, delegateGroupName, scriptParams);
 
@@ -2988,7 +2994,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private boolean hasVersionCheckDisabled(String accountId) {
-    return accountService.getAccountPrimaryDelegateVersion(accountId) != null || featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, accountId);
+    return accountService.getAccountPrimaryDelegateVersion(accountId) != null
+        || featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, accountId);
   }
 
   @Override
@@ -3959,7 +3966,8 @@ public class DelegateServiceImpl implements DelegateService {
             .ceEnabled(false)
             .build();
 
-    ImmutableMap<String, String> paramMap = getJarAndScriptRunTimeParamMap(scriptRuntimeParamMapInquiry, useNgToken, true);
+    ImmutableMap<String, String> paramMap =
+        getJarAndScriptRunTimeParamMap(scriptRuntimeParamMapInquiry, useNgToken, true);
 
     if (isEmpty(paramMap)) {
       throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));

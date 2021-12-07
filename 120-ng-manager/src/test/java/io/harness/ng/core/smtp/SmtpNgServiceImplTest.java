@@ -46,11 +46,8 @@ public class SmtpNgServiceImplTest extends CategoryTest {
   @Before
   public void setup() {
     initMocks(this);
-    SmtpConfig smtpConfig = SmtpConfig.builder()
-                                .username(USER_NAME)
-                                .fromAddress("noreply@harness.io")
-                                .host("HOST")
-                                .build();
+    SmtpConfig smtpConfig =
+        SmtpConfig.builder().username(USER_NAME).fromAddress("noreply@harness.io").host("HOST").build();
     smtpConfig.setType(SettingVariableTypes.SMTP.name());
     settingAttribute = Builder.aSettingAttribute()
                            .withAccountId(ACCOUNT_ID)

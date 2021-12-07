@@ -26,12 +26,8 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
   private static DelegateAgentManagerClient delegateAgentManagerClient;
   private static String delegateId;
 
-  @Getter
-  @Setter
-  private String accountId;
-  @Getter
-  @Setter
-  private String managerHost;
+  @Getter @Setter private String accountId;
+  @Getter @Setter private String managerHost;
 
   @Override
   protected String getAppName() {

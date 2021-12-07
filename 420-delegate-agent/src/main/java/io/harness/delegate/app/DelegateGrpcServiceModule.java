@@ -1,6 +1,5 @@
 package io.harness.delegate.app;
 
-import com.google.common.collect.ImmutableList;
 import io.harness.expression.app.ExpressionServiceModule;
 import io.harness.expression.service.ExpressionEvaulatorServiceGrpc;
 import io.harness.expression.service.ExpressionServiceImpl;
@@ -10,6 +9,7 @@ import io.harness.grpc.server.GrpcServerModule;
 import io.harness.task.service.TaskServiceGrpc;
 import io.harness.task.service.impl.TaskServiceImpl;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
