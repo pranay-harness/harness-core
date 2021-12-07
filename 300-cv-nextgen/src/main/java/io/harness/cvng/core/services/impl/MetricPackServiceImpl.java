@@ -391,10 +391,21 @@ public class MetricPackServiceImpl implements MetricPackService {
         metricPack.setDataCollectionDsl(DATADOG_DSL);
         break;
       case NEW_RELIC:
-        metricPack.setDataCollectionDsl(NEW_RELIC_DSL);
+        metricPack.setDataCollectionDsl(getNewRelicMetricPackDsl(metricPack));
         break;
       default:
         throw new IllegalArgumentException("Invalid type " + dataSourceType);
+    }
+  }
+
+  private String getNewRelicMetricPackDsl(MetricPack metricPack) {
+    switch (metricPack.getIdentifier()) {
+      case PERFORMANCE_PACK_IDENTIFIER:
+        return NEW_RELIC_DSL;
+      case CUSTOM_PACK_IDENTIFIER:
+        return APPDYNAMICS_CUSTOM_PACK_DSL;
+      default:
+        throw new IllegalArgumentException("Invalid identifier " + metricPack.getIdentifier());
     }
   }
 

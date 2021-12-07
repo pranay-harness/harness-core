@@ -9,9 +9,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
@@ -68,5 +70,14 @@ public class NewRelicDataCollectionInfo extends TimeSeriesDataCollectionInfo<New
   @Override
   public Map<String, String> collectionParams(NewRelicConnectorDTO newRelicConnectorDTO) {
     return Collections.emptyMap();
+  }
+
+  @Data
+  @Builder
+  @FieldDefaults(level = AccessLevel.PRIVATE)
+  public static class NewRelicMetricInfoDTO {
+    String nrql;
+    String metricName;
+    MetricResponseMappingDTO responseMapping;
   }
 }
