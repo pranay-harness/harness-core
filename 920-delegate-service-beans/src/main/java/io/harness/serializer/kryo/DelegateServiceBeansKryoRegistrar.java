@@ -4,6 +4,7 @@ import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
+import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.serializer.KryoRegistrar;
 
@@ -19,5 +20,6 @@ public class DelegateServiceBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DelegateProfile.class, 73984);
     kryo.register(DelegateEntityOwner.class, 73985);
     kryo.register(DelegateSizeDetails.class, 73986);
+    kryo.register(DelegateSize.class, 73987);
   }
 }

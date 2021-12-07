@@ -11,8 +11,10 @@ import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.api.CloudProviderType;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.ExecutionDataValue;
+import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
@@ -22,6 +24,8 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Log;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.VMSSAuthType;
+import software.wings.beans.VMSSDeploymentType;
 import software.wings.beans.VariableType;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.artifact.ArtifactSummary;
@@ -69,5 +73,9 @@ public class CgOrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(ApiCallLogDTOField.class, 9049);
     kryo.register(ApiCallLogDTO.FieldType.class, 9050);
     kryo.register(AwsInstanceFilter.class, 40092);
+    kryo.register(VMSSDeploymentType.class, 400124);
+    kryo.register(VMSSAuthType.class, 400127);
+    kryo.register(AmiDeploymentType.class, 400125);
+    kryo.register(CloudProviderType.class, 400126);
   }
 }
