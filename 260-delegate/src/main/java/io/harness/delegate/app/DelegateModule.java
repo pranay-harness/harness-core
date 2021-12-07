@@ -1496,11 +1496,6 @@ public class DelegateModule extends AbstractModule {
     bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
     bind(DelegateDecryptionService.class).to(DelegateDecryptionServiceImpl.class);
     bind(EncryptDecryptHelper.class).to(EncryptDecryptHelperImpl.class);
-    bind(FeatureFlagHelperService.class).to(CGFeatureFlagHelperServiceImpl.class);
-    binder()
-        .bind(SecretKeyService.class)
-        .annotatedWith(Names.named(SecretKeyConstants.AES_SECRET_KEY))
-        .to(AESSecretKeyServiceImpl.class);
 
     binder()
         .bind(VaultEncryptor.class)

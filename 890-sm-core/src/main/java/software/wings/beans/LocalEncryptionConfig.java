@@ -19,7 +19,9 @@ import io.harness.security.encryption.SecretManagerType;
 
 import com.google.common.collect.Lists;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -42,6 +44,8 @@ public class LocalEncryptionConfig extends SecretManagerConfig {
   @Builder.Default private String name = HARNESS_DEFAULT_SECRET_MANAGER;
 
   private SecretKeyDTO secretKey;
+
+  private Map<String, Boolean> encryptionFeatureFlagStatus;
 
   @Override
   public String getEncryptionServiceUrl() {
@@ -92,5 +96,10 @@ public class LocalEncryptionConfig extends SecretManagerConfig {
   @Override
   public SecretKeyDTO getSecretKeySpec() {
     return secretKey;
+  }
+
+  @Override
+  public Map<String, Boolean> getEncryptionFeatureFlagStatus() {
+    return encryptionFeatureFlagStatus == null ? new HashMap<>() : encryptionFeatureFlagStatus;
   }
 }

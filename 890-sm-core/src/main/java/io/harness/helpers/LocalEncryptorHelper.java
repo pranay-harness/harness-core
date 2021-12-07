@@ -16,25 +16,28 @@ import software.wings.beans.LocalEncryptionConfig;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.Map;
 import java.util.Optional;
 
 @OwnedBy(HarnessTeam.PL)
 @Singleton
 public class LocalEncryptorHelper {
   @Inject @Named(SecretKeyConstants.AES_SECRET_KEY) private SecretKeyService secretKeyService;
-  @Inject private FeatureFlagHelperService featureFlagService;
+  @Inject private FeatureFlagHelperService featureFlagHelperService;
 
   public void populateConfigForEncryption(SecretManagerConfig secretManagerConfig) {
+    populateFeatureFlagStatus(secretManagerConfig);
     SecretKeyDTO secretKey = secretKeyService.createSecretKey();
     ((LocalEncryptionConfig) secretManagerConfig).setSecretKey(secretKey);
   }
 
   public void populateConfigForDecryption(EncryptedRecord encryptedRecord, SecretManagerConfig secretManagerConfig) {
+    populateFeatureFlagStatus(secretManagerConfig);
     String accountId = secretManagerConfig.getAccountId();
     String secretKeyUuid = null;
-    if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)) {
+    if (featureFlagHelperService.isEnabled(accountId, FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)) {
       secretKeyUuid = encryptedRecord.getEncryptionKey();
-    } else if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_MULTI_CRYPTO_MODE)) {
+    } else if (featureFlagHelperService.isEnabled(accountId, FeatureName.LOCAL_MULTI_CRYPTO_MODE)) {
       secretKeyUuid = encryptedRecord.getAdditionalMetadata().getSecretKeyUuid();
     } else {
       return;
@@ -46,5 +49,17 @@ public class LocalEncryptorHelper {
     }
 
     ((LocalEncryptionConfig) secretManagerConfig).setSecretKey(secretKey.get());
+  }
+
+  private void populateFeatureFlagStatus(SecretManagerConfig secretManagerConfig) {
+    Map<String, Boolean> flagStatus = secretManagerConfig.getEncryptionFeatureFlagStatus();
+    if (featureFlagHelperService.isEnabled(
+            secretManagerConfig.getAccountId(), FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)) {
+      flagStatus.put(FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE.name(), Boolean.TRUE);
+    }
+    if (featureFlagHelperService.isEnabled(secretManagerConfig.getAccountId(), FeatureName.LOCAL_MULTI_CRYPTO_MODE)) {
+      flagStatus.put(FeatureName.LOCAL_MULTI_CRYPTO_MODE.name(), Boolean.TRUE);
+    }
+    ((LocalEncryptionConfig) secretManagerConfig).setEncryptionFeatureFlagStatus(flagStatus);
   }
 }
