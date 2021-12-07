@@ -1,5 +1,6 @@
 package io.harness.delegate.task.citasks.vm;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_COMMIT_BRANCH;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_COMMIT_LINK;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_COMMIT_SHA;
@@ -24,6 +25,7 @@ import io.harness.logging.CommandExecutionStatus;
 
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -51,10 +53,13 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
   private VmTaskExecutionResponse callRunnerForSetup(CIVmInitializeTaskParams ciVmInitializeTaskParams) {
     CommandExecutionStatus executionStatus = CommandExecutionStatus.FAILURE;
     String errMessage = "";
+
     try {
       Response<SetupVmResponse> response = httpHelper.setupStageWithRetries(convert(ciVmInitializeTaskParams));
       if (response.isSuccessful()) {
         executionStatus = CommandExecutionStatus.SUCCESS;
+      } else {
+        errMessage = response.message();
       }
     } catch (Exception e) {
       log.error("Failed to setup VM in runner", e);
@@ -66,7 +71,10 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
   }
 
   private SetupVmRequest convert(CIVmInitializeTaskParams params) {
-    Map<String, String> env = params.getEnvironment();
+    Map<String, String> env = new HashMap<>();
+    if (isNotEmpty(params.getEnvironment())) {
+      env = params.getEnvironment();
+    }
 
     SetupVmRequest.TIConfig tiConfig = SetupVmRequest.TIConfig.builder()
                                            .url(params.getTiUrl())
