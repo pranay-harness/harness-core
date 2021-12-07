@@ -41,7 +41,7 @@ public class NgSmtpDTOMapper {
     SmtpConfigDTO smtpConfigDTO = new SmtpConfigDTO();
     smtpConfigDTO.setHost(smtpConfig.getHost());
     smtpConfigDTO.setPort(smtpConfig.getPort());
-    smtpConfigDTO.setFromAddress(smtpConfigDTO.getFromAddress());
+    smtpConfigDTO.setFromAddress(smtpConfig.getFromAddress());
     smtpConfigDTO.setUseSSL(smtpConfig.isUseSSL());
     smtpConfigDTO.setStartTLS(smtpConfig.isStartTLS());
     smtpConfigDTO.setUsername(smtpConfig.getUsername());
