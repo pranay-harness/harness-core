@@ -1,4 +1,4 @@
-package io.harness.delegate.app;
+package io.harness.delegate.app.modules;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -14,15 +14,6 @@ import com.google.inject.AbstractModule;
 
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class NGDelegateModule extends AbstractModule {
-  private static volatile NGDelegateModule instance;
-
-  public static NGDelegateModule getInstance() {
-    if (instance == null) {
-      instance = new NGDelegateModule();
-    }
-    return instance;
-  }
-
   @Override
   protected void configure() {
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);

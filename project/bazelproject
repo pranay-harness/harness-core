@@ -15,6 +15,7 @@ import_run_configurations:
   project/run-configurations/CVNGApp.xml
   project/run-configurations/DataGenApp.xml
   project/run-configurations/DelegateApp.xml
+  project/run-configurations/DelegateAgentApp.xml
   project/run-configurations/DelegateServiceApp.xml
   project/run-configurations/EventsFrameworkTest.xml
   project/run-configurations/GitSyncTestApp.xml

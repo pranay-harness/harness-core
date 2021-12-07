@@ -673,6 +673,13 @@ java_binary(
     runtime_deps = [":module"],
 )
 
+# Temporary target while we have two entrypoints. Once old is deleted remove this target.
+java_binary(
+    name = "executedw",
+    main_class = "io.harness.delegate.app.DelegateAgentApplication",
+    runtime_deps = [":module"],
+)
+
 springboot(
     name = "module_deploy",
     boot_app_class = "io.harness.delegate.app.DelegateApplication",

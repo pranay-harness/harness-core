@@ -1,5 +1,6 @@
 package io.harness.delegate.app;
 
+import com.google.common.collect.ImmutableList;
 import io.harness.expression.app.ExpressionServiceModule;
 import io.harness.expression.service.ExpressionEvaulatorServiceGrpc;
 import io.harness.expression.service.ExpressionServiceImpl;
@@ -20,7 +21,6 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -60,8 +60,7 @@ public class DelegateGrpcServiceModule extends AbstractModule {
   }
 
   private List<Connector> getConnectors() {
-    List<Connector> connectors = new ArrayList<>();
-    connectors.add(Connector.builder().port(servicePort).build());
-    return connectors;
+    final Connector connector = Connector.builder().port(servicePort).build();
+    return ImmutableList.of(connector);
   }
 }
