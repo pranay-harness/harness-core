@@ -1,4 +1,4 @@
-package io.harness.delegate.app;
+package io.harness.delegate.app.modules;
 
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
@@ -53,6 +53,7 @@ import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
+import io.harness.delegate.app.DelegateApplication;
 import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.cf.PcfApplicationDetailsCommandTaskHandler;
@@ -66,6 +67,7 @@ import io.harness.delegate.cf.PcfRunPluginCommandTaskHandler;
 import io.harness.delegate.cf.PcfValidationCommandTaskHandler;
 import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
+import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.exceptionhandler.handler.AmazonClientExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.AmazonServiceExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.AuthenticationExceptionHandler;
@@ -576,6 +578,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 @OwnedBy(HarnessTeam.DEL)
@@ -590,15 +593,9 @@ import java.util.concurrent.TimeUnit;
 @BreakDependencyOn("software.wings.api.DeploymentType")
 @BreakDependencyOn("software.wings.beans.AwsConfig")
 @BreakDependencyOn("software.wings.beans.AzureConfig")
+@RequiredArgsConstructor
 public class DelegateModule extends AbstractModule {
-  private static volatile DelegateModule instance;
-
-  public static DelegateModule getInstance() {
-    if (instance == null) {
-      instance = new DelegateModule();
-    }
-    return instance;
-  }
+  private final DelegateConfiguration configuration;
 
   @Provides
   @Singleton
@@ -606,7 +603,7 @@ public class DelegateModule extends AbstractModule {
   public ScheduledExecutorService heartbeatExecutor() {
     ScheduledExecutorService heartbeatExecutor = new ScheduledThreadPoolExecutor(
         1, new ThreadFactoryBuilder().setNameFormat("heartbeat-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { heartbeatExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(heartbeatExecutor::shutdownNow));
     return heartbeatExecutor;
   }
 
@@ -616,7 +613,7 @@ public class DelegateModule extends AbstractModule {
   public ScheduledExecutorService localHeartbeatExecutor() {
     ScheduledExecutorService localHeartbeatExecutor = new ScheduledThreadPoolExecutor(
         1, new ThreadFactoryBuilder().setNameFormat("localHeartbeat-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { localHeartbeatExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(localHeartbeatExecutor::shutdownNow));
     return localHeartbeatExecutor;
   }
 
@@ -626,7 +623,7 @@ public class DelegateModule extends AbstractModule {
   public ScheduledExecutorService watcherUpgradeExecutor() {
     ScheduledExecutorService watcherUpgradeExecutor = new ScheduledThreadPoolExecutor(
         1, new ThreadFactoryBuilder().setNameFormat("watcherUpgrade-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { watcherUpgradeExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(watcherUpgradeExecutor::shutdownNow));
     return watcherUpgradeExecutor;
   }
 
@@ -636,7 +633,7 @@ public class DelegateModule extends AbstractModule {
   public ScheduledExecutorService upgradeExecutor() {
     ScheduledExecutorService upgradeExecutor = new ScheduledThreadPoolExecutor(
         1, new ThreadFactoryBuilder().setNameFormat("upgrade-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { upgradeExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(upgradeExecutor::shutdownNow));
     return upgradeExecutor;
   }
 
@@ -646,7 +643,7 @@ public class DelegateModule extends AbstractModule {
   public ScheduledExecutorService inputExecutor() {
     ScheduledThreadPoolExecutor inputExecutor = new ScheduledThreadPoolExecutor(
         1, new ThreadFactoryBuilder().setNameFormat("input-%d").setPriority(Thread.NORM_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { inputExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(inputExecutor::shutdownNow));
     return inputExecutor;
   }
 
@@ -656,7 +653,7 @@ public class DelegateModule extends AbstractModule {
   public ScheduledExecutorService installCheckExecutor() {
     ScheduledExecutorService installCheckExecutor = new ScheduledThreadPoolExecutor(
         1, new ThreadFactoryBuilder().setNameFormat("installCheck-%d").setPriority(Thread.NORM_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { installCheckExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(installCheckExecutor::shutdownNow));
     return installCheckExecutor;
   }
 
@@ -666,7 +663,7 @@ public class DelegateModule extends AbstractModule {
   public ScheduledExecutorService rescheduleExecutor() {
     ScheduledExecutorService rescheduleExecutor = new ScheduledThreadPoolExecutor(
         1, new ThreadFactoryBuilder().setNameFormat("reschedule-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { rescheduleExecutor.shutdown(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(rescheduleExecutor::shutdown));
     return rescheduleExecutor;
   }
 
@@ -676,7 +673,7 @@ public class DelegateModule extends AbstractModule {
   public ScheduledExecutorService verificationExecutor() {
     ScheduledExecutorService verificationExecutor = new ScheduledThreadPoolExecutor(
         2, new ThreadFactoryBuilder().setNameFormat("verification-%d").setPriority(Thread.NORM_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { verificationExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(verificationExecutor::shutdownNow));
     return verificationExecutor;
   }
 
@@ -689,7 +686,7 @@ public class DelegateModule extends AbstractModule {
             .setNameFormat("verificationDataCollector-%d")
             .setPriority(Thread.MIN_PRIORITY)
             .build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> verificationDataCollectorExecutor.shutdownNow()));
+    Runtime.getRuntime().addShutdownHook(new Thread(verificationDataCollectorExecutor::shutdownNow));
     return verificationDataCollectorExecutor;
   }
 
@@ -700,7 +697,7 @@ public class DelegateModule extends AbstractModule {
     ExecutorService cvngParallelExecutor = ThreadPool.create(1, CVNextGenConstants.CVNG_MAX_PARALLEL_THREADS, 5,
         TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("cvngParallelExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> cvngParallelExecutor.shutdownNow()));
+    Runtime.getRuntime().addShutdownHook(new Thread(cvngParallelExecutor::shutdownNow));
     return cvngParallelExecutor;
   }
 
@@ -710,7 +707,7 @@ public class DelegateModule extends AbstractModule {
   public ExecutorService cvngSyncCallExecutor() {
     ExecutorService cvngSyncCallExecutor = ThreadPool.create(1, 5, 5, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("cvngSyncCallExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> cvngSyncCallExecutor.shutdownNow()));
+    Runtime.getRuntime().addShutdownHook(new Thread(cvngSyncCallExecutor::shutdownNow));
     return cvngSyncCallExecutor;
   }
 
@@ -720,7 +717,7 @@ public class DelegateModule extends AbstractModule {
   public ExecutorService alternativeExecutor() {
     ExecutorService alternativeExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("alternative-%d").setPriority(Thread.MIN_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { alternativeExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(alternativeExecutor::shutdownNow));
     return alternativeExecutor;
   }
 
@@ -730,7 +727,7 @@ public class DelegateModule extends AbstractModule {
   public ExecutorService systemExecutor() {
     ExecutorService systemExecutor = ThreadPool.create(4, 9, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("system-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { systemExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(systemExecutor::shutdownNow));
     return systemExecutor;
   }
 
@@ -740,7 +737,7 @@ public class DelegateModule extends AbstractModule {
   public ExecutorService grpcServiceExecutor() {
     ExecutorService grpcServiceExecutor = Executors.newFixedThreadPool(
         1, new ThreadFactoryBuilder().setNameFormat("grpc-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { grpcServiceExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(grpcServiceExecutor::shutdownNow));
     return grpcServiceExecutor;
   }
 
@@ -750,7 +747,7 @@ public class DelegateModule extends AbstractModule {
   public ExecutorService taskProgressExecutor() {
     ExecutorService taskProgressExecutor = Executors.newFixedThreadPool(
         10, new ThreadFactoryBuilder().setNameFormat("taskProgress-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { taskProgressExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(taskProgressExecutor::shutdownNow));
     return taskProgressExecutor;
   }
 
@@ -760,7 +757,7 @@ public class DelegateModule extends AbstractModule {
   public ExecutorService asyncExecutor() {
     ExecutorService asyncExecutor = ThreadPool.create(10, 400, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("async-%d").setPriority(Thread.MIN_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { asyncExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(asyncExecutor::shutdownNow));
     return asyncExecutor;
   }
 
@@ -770,7 +767,7 @@ public class DelegateModule extends AbstractModule {
   public ExecutorService artifactExecutor() {
     ExecutorService artifactExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("artifact-%d").setPriority(Thread.MIN_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { artifactExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(artifactExecutor::shutdownNow));
     return artifactExecutor;
   }
 
@@ -780,7 +777,7 @@ public class DelegateModule extends AbstractModule {
   public ExecutorService timeoutExecutor() {
     ExecutorService timeoutExecutor = ThreadPool.create(10, 40, 7, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("timeout-%d").setPriority(Thread.NORM_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { timeoutExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(timeoutExecutor::shutdownNow));
     return timeoutExecutor;
   }
 
@@ -790,7 +787,7 @@ public class DelegateModule extends AbstractModule {
   public ExecutorService taskPollExecutor() {
     ExecutorService taskPollExecutorService = ThreadPool.create(4, 10, 3, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("task-poll-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { taskPollExecutorService.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(taskPollExecutorService::shutdownNow));
     return taskPollExecutorService;
   }
 
@@ -800,7 +797,7 @@ public class DelegateModule extends AbstractModule {
   public ExecutorService asyncTaskDispatchExecutor() {
     ExecutorService asyncTaskDispatchExecutor = ThreadPool.create(10, 10, 3, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("async-task-dispatch-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { asyncTaskDispatchExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(asyncTaskDispatchExecutor::shutdownNow));
     return asyncTaskDispatchExecutor;
   }
 
@@ -810,7 +807,7 @@ public class DelegateModule extends AbstractModule {
   public ExecutorService jenkinsExecutor() {
     ExecutorService jenkinsExecutor = ThreadPool.create(1, 40, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("jenkins-%d").setPriority(Thread.NORM_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { jenkinsExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(jenkinsExecutor::shutdownNow));
     return jenkinsExecutor;
   }
 
@@ -820,7 +817,7 @@ public class DelegateModule extends AbstractModule {
   public ExecutorService perpetualTaskExecutor() {
     ExecutorService perpetualTaskExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("perpetual-task-%d").setPriority(Thread.NORM_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { perpetualTaskExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(perpetualTaskExecutor::shutdownNow));
     return perpetualTaskExecutor;
   }
 
@@ -833,7 +830,7 @@ public class DelegateModule extends AbstractModule {
             .setNameFormat("perpetual-task-timeout-%d")
             .setPriority(Thread.NORM_PRIORITY)
             .build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { perpetualTaskTimeoutExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(perpetualTaskTimeoutExecutor::shutdownNow));
     return perpetualTaskTimeoutExecutor;
   }
 
@@ -843,8 +840,10 @@ public class DelegateModule extends AbstractModule {
 
     install(VersionModule.getInstance());
     install(TimeModule.getInstance());
-    install(NGDelegateModule.getInstance());
+    install(new NGDelegateModule());
     install(ExceptionModule.getInstance());
+
+    bind(DelegateConfiguration.class).toInstance(configuration);
 
     bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
     bind(SecretsDelegateCacheHelperService.class).to(SecretsDelegateCacheHelperServiceImpl.class);

@@ -3,6 +3,7 @@ package io.harness.pms.sdk.core.governance;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.contracts.governance.ExpansionPlacement;
 
 import lombok.Builder;
 import lombok.Value;
@@ -13,7 +14,7 @@ import lombok.Value;
 public class ExpansionResponse {
   String key;
   String value;
-  // todo: add the enum for expansion placement strategy here when the proto file is defined
+  ExpansionPlacement placement;
   boolean success;
   String errorMessage;
 }

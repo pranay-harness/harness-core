@@ -101,6 +101,7 @@ import io.harness.migrations.all.MigratePipelineStagesToUseDisableAssertion;
 import io.harness.migrations.all.MigrateServiceNowCriteriaInPipelines;
 import io.harness.migrations.all.MigrateServiceNowCriteriaInWorkflows;
 import io.harness.migrations.all.MigrateTimeSeriesRawDataToGoogle;
+import io.harness.migrations.all.MigrationSMCredentialsFromLocalToGlobalKMS;
 import io.harness.migrations.all.MoveDelegateNameToDelegateSelectorsMigration;
 import io.harness.migrations.all.NoOpMigration;
 import io.harness.migrations.all.RemoveDeletedAppIdsFromUserGroups;
@@ -348,6 +349,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(205, ManageApplicationTemplatePermissionMigration.class))
         .add(Pair.of(206, CDPaidLicenseToNGMigration.class))
         .add(Pair.of(207, DeleteDelegateAlertsExceptDelegateDown.class))
+        .add(Pair.of(208, MigrationSMCredentialsFromLocalToGlobalKMS.class))
         .build();
   }
 }

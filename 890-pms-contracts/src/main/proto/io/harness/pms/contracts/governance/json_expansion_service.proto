@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.governance;
+
+option java_multiple_files = true;
+
+service JsonExpansionService {
+  rpc expand(ExpansionRequestBatch) returns (ExpansionResponseBatch);
+}
+
+message ExpansionRequestBatch {
+  repeated ExpansionRequestProto expansionRequestProto = 1;
+}
+
+message ExpansionRequestProto {
+  string fqn = 1;
+  bytes value = 2;
+}
+
+message ExpansionResponseBatch {
+  repeated ExpansionResponseProto expansionResponseProto = 1;
+}
+
+message ExpansionResponseProto {
+  string fqn = 1;
+  string key = 2;
+  string value = 3;
+  ExpansionPlacement placement = 4;
+  bool success = 5;
+  string errorMessage = 6;
+}
+
+enum ExpansionPlacement {
+  REPLACE = 0;
+  PARALLEL = 1;
+  MOVE_UP = 2;
+}

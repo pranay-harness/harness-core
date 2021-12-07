@@ -83,16 +83,15 @@ def main(event, context):
 
 
 def create_dataset_and_tables(jsonData):
-    create_dataset(client, jsonData["datasetName"])
+    create_dataset(client, jsonData["datasetName"], jsonData.get("accountId"))
     dataset = client.dataset(jsonData["datasetName"])
     create_table_from_manifest(jsonData)
 
     aws_cur_table_ref = dataset.table("awscur_%s" % (jsonData["awsCurTableSuffix"]))
     pre_aggragated_table_ref = dataset.table(PREAGGREGATED)
     unified_table_ref = dataset.table(UNIFIED)
-    cost_aggregated_table_ref = client.dataset(CEINTERNALDATASET).table(COSTAGGREGATED)
 
-    for table_ref in [aws_cur_table_ref, pre_aggragated_table_ref, unified_table_ref, cost_aggregated_table_ref]:
+    for table_ref in [aws_cur_table_ref, pre_aggragated_table_ref, unified_table_ref]:
         if not if_tbl_exists(client, table_ref):
             print_("%s table does not exists, creating table..." % table_ref)
             createTable(client, table_ref)

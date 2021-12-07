@@ -5,7 +5,7 @@ import os
 import util
 import re
 from util import create_dataset, print_, if_tbl_exists, createTable, run_batch_query, COSTAGGREGATED, UNIFIED, \
-    CEINTERNALDATASET, update_connector_data_sync_status
+    CEINTERNALDATASET, update_connector_data_sync_status, GCPCONNECTORINFOTABLE
 from google.cloud import bigquery
 from google.cloud import secretmanager
 from google.oauth2 import service_account
@@ -67,9 +67,11 @@ def main(event, context):
     jsonData = json.loads(data)
     jsonData["cloudProvider"] = "GCP"
     print(jsonData)
-    if jsonData.get("dataSourceId"):
+    if jsonData.get("dataSourceId") == "cross_region_copy":
         # Event is from BQ DT service. Ingest in unified and preaggregated
         jsonData["datasetName"] = jsonData["destinationDatasetId"]
+        jsonData["accountId"] = get_accountid(jsonData)
+        jsonData["connectorId"] = get_connectorid(jsonData)
         util.ACCOUNTID_LOG = jsonData["destinationDatasetId"].split("BillingReport_")[-1]
         get_source_table_name(jsonData)
         get_unique_billingaccount_id(jsonData)
@@ -88,14 +90,12 @@ def main(event, context):
     jsonData["accountIdBQ"] = re.sub('[^0-9a-z]', '_', jsonData.get("accountId").lower())
     jsonData["datasetName"] = "BillingReport_%s" % jsonData["accountIdBQ"]
     jsonData["tableName"] = "gcp_billing_export_%s" % jsonData["connectorId"]
-    create_dataset(client, jsonData["datasetName"])
+    create_dataset(client, jsonData["datasetName"], jsonData.get("accountId"))
     dataset = client.dataset(jsonData["datasetName"])
     preAggragatedTableRef = dataset.table("preAggregated")
     preAggregatedTableTableName = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], "preAggregated")
     unifiedTableRef = dataset.table("unifiedTable")
     unifiedTableTableName = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], "unifiedTable")
-    cost_aggregated_table_ref = client.dataset(CEINTERNALDATASET).table(COSTAGGREGATED)
-    cost_aggregated_table_name = "%s.%s.%s" % (PROJECTID, CEINTERNALDATASET, COSTAGGREGATED)
 
     if not if_tbl_exists(client, unifiedTableRef):
         print_("%s table does not exists, creating table..." % unifiedTableRef)
@@ -109,12 +109,6 @@ def main(event, context):
     else:
         print_("%s table exists" % preAggregatedTableTableName)
 
-    if not if_tbl_exists(client, cost_aggregated_table_ref):
-        print_("%s table does not exists, creating table..." % cost_aggregated_table_ref)
-        createTable(client, cost_aggregated_table_ref)
-    else:
-        print_("%s table exists" % cost_aggregated_table_name)
-
     get_impersonated_credentials(jsonData)
 
     # Sync dataset
@@ -123,6 +117,36 @@ def main(event, context):
     print_("Completed")
     return
 
+def get_accountid(jsonData):
+    #TODO: Use gcpConnectorInfo table to get the account id
+    try:
+        dataset = client.get_dataset(jsonData["datasetName"])
+        desc = dataset.description
+        if desc:
+            print("Dataset description: ", desc)
+            accountid = re.search(r"AccountId: (.*) \],", desc).group(1)
+            print("Found accountid: ", accountid)
+            return accountid
+        else:
+            return ""
+    except Exception as e:
+        print("Error ", e)
+        return ""
+
+def get_connectorid(jsonData):
+    #TODO: Use gcpConnectorInfo table to get the connector id
+    try:
+        # we need to get name of the transfer config from the transfer run name of format
+        # 'projects/422469283168/locations/us/transferConfigs/617aed90-0000-2557-91a4-883d24f9001c/runs/6277305d-0000-2370-925b-14c14eea0504'
+        dt_name = jsonData["name"].replace(re.search("/runs/.*", jsonData["name"]).group(), "")
+        dtjob = bigquery_datatransfer_v1.GetTransferConfigRequest(name=dt_name)
+        dtjob = dt_client.get_transfer_config(dtjob)
+        connectorid = re.split("_", dtjob.display_name)[-1]
+        print("Found connectorid: ", connectorid)
+        return connectorid
+    except Exception as e:
+        print(e)
+        return ""
 
 def get_impersonated_credentials(jsonData):
     # Get source credentials
@@ -147,12 +171,16 @@ def get_source_table_name(jsonData):
     resp = dt_client.list_transfer_logs(parent=jsonData["name"])
     for msg in resp:
         # Assuming only one such table exists in the source dataset
-        if "gcp_billing_export_v1" in msg.message_text:
-            i = re.search("gcp_billing_export_v1_[a-zA-Z0-9_]+", msg.message_text).group()
+        # Has the format gcp_billing_export_v1_0173B9_A91712_9CE987
+        i = re.search("gcp_billing_export_v1_[A-Z0-9]{6}_[A-Z0-9]{6}_[A-Z0-9]{6} ", msg.message_text)
+        if i:
+            i = i.group().strip()
             print_("Found gcp export table at source: %s" % i)
             jsonData["sourceGcpTableName"] = jsonData["tableName"] = i
             break
-
+    if not jsonData.get("tableName"):
+        print_("Couldnt find source table name", "ERROR")
+        raise
 
 def get_secret_key():
     client = secretmanager.SecretManagerServiceClient()
@@ -200,8 +228,8 @@ def syncDataset(jsonData):
     destination = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
     if jsonData["isFreshSync"]:
         # Fresh sync. Sync only for 45 days.
-        query = """  SELECT * FROM `%s.%s.gcp_billing_export_v1_*` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(@run_date, INTERVAL 52 DAY) AND DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 45 DAY);
-        """ % (jsonData["sourceGcpProjectId"], jsonData["sourceDataSetId"])
+        query = """  SELECT * FROM `%s.%s.%s` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(@run_date, INTERVAL 52 DAY) AND DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 45 DAY);
+        """ % (jsonData["sourceGcpProjectId"], jsonData["sourceDataSetId"], jsonData["sourceGcpTableName"])
         # Configure the query job.
         print_(" Destination :%s" % destination)
         job_config = bigquery.QueryJobConfig(
@@ -221,10 +249,11 @@ def syncDataset(jsonData):
         query = """  DELETE FROM `%s` 
                 WHERE DATE(_PARTITIONTIME) >= DATE_SUB(@run_date, INTERVAL 10 DAY) and DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY); 
             INSERT INTO `%s` (billing_account_id,service,sku,usage_start_time,usage_end_time,project,labels,system_labels,location,export_time,cost,currency,currency_conversion_rate,usage,credits,invoice,cost_type,adjustment_info)
-                SELECT billing_account_id,service,sku,usage_start_time,usage_end_time,project,labels,system_labels,location,export_time,cost,currency,currency_conversion_rate,usage,credits,invoice,cost_type,adjustment_info FROM `%s.%s.gcp_billing_export_v1_*`
+                SELECT billing_account_id,service,sku,usage_start_time,usage_end_time,project,labels,system_labels,location,export_time,cost,currency,currency_conversion_rate,usage,credits,invoice,cost_type,adjustment_info 
+                FROM `%s.%s.%s`
                 WHERE DATE(_PARTITIONTIME) >= DATE_SUB(@run_date, INTERVAL 10 DAY) AND DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY);
         """ % (destination, destination,
-               jsonData["sourceGcpProjectId"], jsonData["sourceDataSetId"])
+               jsonData["sourceGcpProjectId"], jsonData["sourceDataSetId"], jsonData["sourceGcpTableName"])
 
         # Configure the query job.
         job_config = bigquery.QueryJobConfig(
@@ -309,6 +338,7 @@ def doBQTransfer(jsonData):
         resp = imdt_client.create_transfer_config(transfer_config=transfer_config, parent=parent)
         print_("  Created transfer config %s" % resp)
         jsonData["dtName"] = resp.name
+        update_datatransfer_job_config(jsonData)
     # Trigger manual transfer run
     print_("  Triggering manual transfer run")
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -445,3 +475,17 @@ def ingest_data_to_costagg(jsonData):
     )
 
     run_batch_query(client, query, job_config, timeout=120)
+
+def update_datatransfer_job_config(jsonData):
+    query = """INSERT INTO `%s.%s.%s` (accountId, connectorId, dataTransferConfig, createdAt) 
+                VALUES ('%s', '%s', '%s', '%s')
+            """ % ( PROJECTID, CEINTERNALDATASET, GCPCONNECTORINFOTABLE,
+                    jsonData["accountId"], jsonData["connectorId"], jsonData["dtName"], datetime.datetime.utcnow())
+
+    try:
+        print_(query)
+        query_job = client.query(query)
+        query_job.result()  # wait for job to complete
+    except Exception as e:
+        print_("  Failed to update connector info", "WARN")
+        raise e
