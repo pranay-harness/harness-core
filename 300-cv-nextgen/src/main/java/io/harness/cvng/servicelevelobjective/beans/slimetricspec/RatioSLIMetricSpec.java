@@ -19,6 +19,10 @@ public class RatioSLIMetricSpec extends SLIMetricSpec {
   @NotNull String eventType;
   @NotNull String metric1;
   @NotNull String metric2;
+  // TODO Not null constraint post UI changes
+  Double thresholdValue;
+  // TODO Not null constraint post UI changes
+  ThresholdType thresholdType;
 
   @Override
   public SLIMetricType getType() {

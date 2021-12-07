@@ -1,5 +1,21 @@
 package io.harness.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.beans.outcomes.LiteEnginePodDetailsOutcome.POD_DETAILS_OUTCOME;
+import static io.harness.beans.steps.stepinfo.InitializeStepInfo.CALLBACK_IDS;
+import static io.harness.beans.steps.stepinfo.InitializeStepInfo.LOG_KEYS;
+import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_CONNECTOR_REF;
+import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
+import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
+import static io.harness.rule.OwnerRule.ALEKSANDAR;
+import static io.harness.rule.OwnerRule.SHUBHAM;
+
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
 import io.harness.beans.steps.outcome.CIStepOutcome;
@@ -16,7 +32,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.serializer.RunStepProtobufSerializer;
-import io.harness.delegate.beans.ci.awsvm.VmTaskExecutionResponse;
+import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
@@ -44,13 +60,6 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,21 +68,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static io.harness.annotations.dev.HarnessTeam.CI;
-import static io.harness.beans.outcomes.LiteEnginePodDetailsOutcome.POD_DETAILS_OUTCOME;
-import static io.harness.beans.steps.stepinfo.InitializeStepInfo.CALLBACK_IDS;
-import static io.harness.beans.steps.stepinfo.InitializeStepInfo.LOG_KEYS;
-import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_CONNECTOR_REF;
-import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
-import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
-import static io.harness.rule.OwnerRule.ALEKSANDAR;
-import static io.harness.rule.OwnerRule.SHUBHAM;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 @OwnedBy(CI)
 public class RunStepTest extends CIExecutionTestBase {

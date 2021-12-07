@@ -12,6 +12,7 @@ pkg_tar(
         "manual",
         "no-cache",
         "no-ide",
+        "oss",
     ],
     visibility = ["//visibility:public"],
 )

@@ -18,6 +18,6 @@ public class DecryptionHelperViaManager implements DecryptionHelper {
   public DecryptableEntity decrypt(DecryptableEntity decryptableEntity, List<EncryptedDataDetail> encryptionDetails) {
     final DecryptableEntityWithEncryptionConsumers build =
         decryptableEntityHelper.buildDecryptableEntityWithEncryptionConsumers(decryptableEntity, encryptionDetails);
-    return restClientExecutor.getResponse(ngSecretDecryptionClient.decryptEncryptedDetails(build, null));
+    return restClientExecutor.getResponse(ngSecretDecryptionClient.decryptEncryptedDetails(build, "random"));
   }
 }

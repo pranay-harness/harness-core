@@ -2,7 +2,9 @@
 
 set -e
 
-cd ..
+SCRIPT_DIR=$(dirname $0)
+
+cd "$SCRIPT_DIR/.."
 BAZEL_BIN=`bazel info bazel-bin`
 
 bazel build `bazel query 'attr(tags, "oss", //...:*)'`
@@ -15,8 +17,7 @@ bazel run //800-pipeline-service/container:pipeline_service
 
 bazel run //820-platform-service/container:platform_service
 
-export VERSION_FILE=build.properties
-export VERSION=`cat ${VERSION_FILE} | grep 'build.number=' | sed -e 's: *build.number=::g'`
+export VERSION=$(grep 'build.number=' build.properties | cut -d= -f2)
 echo $VERSION
 
 mkdir -p destination/dist/delegate/

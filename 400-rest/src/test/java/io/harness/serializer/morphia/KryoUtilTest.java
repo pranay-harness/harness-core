@@ -11,7 +11,7 @@ import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.WingsBaseTest;
-import software.wings.sm.status.StateStatusUpdateInfo;
+import software.wings.beans.appmanifest.ApplicationManifest;
 
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
@@ -27,7 +27,7 @@ import org.reflections.Reflections;
 public class KryoUtilTest extends WingsBaseTest {
   @Inject KryoSerializer kryoSerializer;
 
-  Class<?> classToRunTest = StateStatusUpdateInfo.class;
+  Class<?> classToRunTest = ApplicationManifest.class;
 
   @Test
   @Owner(developers = ABHINAV)
@@ -80,7 +80,10 @@ public class KryoUtilTest extends WingsBaseTest {
 
   public boolean checkIfClassShouldBeTraversed(Class<?> clazz) {
     // Generating only for harness classes hence checking if package is software.wings or io.harness.
-    return !clazz.isPrimitive() && !clazz.isEnum()
+    if (clazz.getCanonicalName() == null) {
+      return false;
+    }
+    return !clazz.isPrimitive()
         && (clazz.getCanonicalName().startsWith("io.harness") || clazz.getCanonicalName().startsWith("software.wings"));
   }
 }
