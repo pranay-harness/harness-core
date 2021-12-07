@@ -11,4 +11,7 @@ public class ServiceLevelIndicatorDTO {
   String identifier;
   @NotNull ServiceLevelIndicatorType type;
   @NotNull ServiceLevelIndicatorSpec spec;
+  // TODO Not null constraint post UI changes
+  SLIMissingDataType sliMissingDataType;
+  String healthSourceIdentifier;
 }

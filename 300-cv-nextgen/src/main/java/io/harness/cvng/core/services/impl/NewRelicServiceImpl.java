@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -111,7 +112,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   }
 
   @Override
-  public String fetchSampleData(
+  public LinkedHashMap fetchSampleData(
       ProjectParams projectParams, String connectorIdentifier, String query, String tracingId) {
     try {
       DataCollectionRequest request = NewRelicFetchSampleDataRequest.builder()
@@ -130,7 +131,9 @@ public class NewRelicServiceImpl implements NewRelicService {
       OnboardingResponseDTO response =
           onboardingService.getOnboardingResponse(projectParams.getAccountIdentifier(), onboardingRequestDTO);
 
-      return response.getResult().toString();
+      final Gson gson = new Gson();
+      Type type = new TypeToken<LinkedHashMap>() {}.getType();
+      return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
     } catch (DataCollectionException ex) {
       return null;
     }

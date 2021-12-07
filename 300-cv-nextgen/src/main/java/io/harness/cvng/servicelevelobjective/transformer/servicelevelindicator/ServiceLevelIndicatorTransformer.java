@@ -16,6 +16,7 @@ public abstract class ServiceLevelIndicatorTransformer<E extends ServiceLevelInd
         .name(serviceLevelIndicator.getName())
         .identifier(serviceLevelIndicator.getIdentifier())
         .type(serviceLevelIndicator.getType())
+        .sliMissingDataType(serviceLevelIndicator.getSliMissingDataType())
         .build();
   }
 

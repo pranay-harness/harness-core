@@ -1,9 +1,12 @@
 package io.harness.cvng.servicelevelobjective.services.api;
 
+import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.servicelevelobjective.beans.SLODashboardApiFilter;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveFilter;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
 import io.harness.ng.beans.PageResponse;
 
 public interface ServiceLevelObjectiveService {
@@ -18,4 +21,8 @@ public interface ServiceLevelObjectiveService {
       ServiceLevelObjectiveFilter serviceLevelObjectiveFilter);
 
   ServiceLevelObjectiveResponse get(ProjectParams projectParams, String identifier);
+  ServiceLevelObjective getEntity(ProjectParams projectParams, String identifier);
+
+  PageResponse<ServiceLevelObjectiveResponse> getSLOForDashboard(
+      ProjectParams projectParams, SLODashboardApiFilter filter, PageParams pageParams);
 }

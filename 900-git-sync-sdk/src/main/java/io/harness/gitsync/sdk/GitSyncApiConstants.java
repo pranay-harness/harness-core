@@ -21,6 +21,8 @@ public class GitSyncApiConstants {
   public static final String DEFAULT_FROM_OTHER_REPO = "getDefaultFromOtherRepo";
   public static final String BASE_BRANCH = "baseBranch";
   public static final String PR_TITLE = "prTitle";
+  public static final String ENTITY_TYPE = "entityType";
+  public static final String SYNC_STATUS = "syncStatus";
 
   public static final String BRANCH_PARAM_MESSAGE = "Branch Name";
   public static final String FILEPATH_PARAM_MESSAGE = "File Path";
@@ -28,4 +30,6 @@ public class GitSyncApiConstants {
   public static final String FOLDER_PATH_PARAM_MESSAGE = "Default Folder Path";
   public static final String COMMIT_MESSAGE_PARAM_MESSAGE = "Commit Message";
   public static final String DEFAULT_BRANCH_PARAM_MESSAGE = "Default Branch";
+  public static final String ENTITY_TYPE_PARAM_MESSAGE = "Entity Type";
+  public static final String SYNC_STATUS_PARAM_MESSAGE = "Sync Status";
 }

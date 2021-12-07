@@ -1,6 +1,7 @@
 package io.harness.cvng.servicelevelobjective.entities;
 
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
@@ -20,6 +21,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 @EqualsAndHashCode(callSuper = true)
 public class ThresholdServiceLevelIndicator extends ServiceLevelIndicator {
   String metric1;
+  Double thresholdValue;
+  ThresholdType thresholdType;
 
   @Override
   public SLIMetricType getSLIMetricType() {
@@ -40,6 +43,10 @@ public class ThresholdServiceLevelIndicator extends ServiceLevelIndicator {
         ThresholdServiceLevelIndicator thresholdServiceLevelIndicator) {
       setCommonOperations(updateOperations, thresholdServiceLevelIndicator);
       updateOperations.set(ThresholdServiceLevelIndicatorKeys.metric1, thresholdServiceLevelIndicator.getMetric1());
+      updateOperations.set(
+          ThresholdServiceLevelIndicatorKeys.thresholdValue, thresholdServiceLevelIndicator.getThresholdValue());
+      updateOperations.set(
+          ThresholdServiceLevelIndicatorKeys.thresholdType, thresholdServiceLevelIndicator.getThresholdType());
     }
   }
 }

@@ -17,6 +17,10 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ThresholdSLIMetricSpec extends SLIMetricSpec {
   @NotNull String metric1;
+  // TODO Not null constraint post UI changes
+  Double thresholdValue;
+  // TODO Not null constraint post UI changes
+  ThresholdType thresholdType;
 
   @Override
   public SLIMetricType getType() {

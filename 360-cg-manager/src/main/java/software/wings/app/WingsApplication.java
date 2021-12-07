@@ -221,6 +221,7 @@ import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.security.authentication.totp.TotpModule;
+import software.wings.security.encryption.migration.EncryptedDataLocalToGcpKmsMigrationHandler;
 import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
@@ -684,9 +685,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerEventConsumers(injector);
 
-    if (!shouldEnableRemoteObservers(configuration)) {
-      registerObservers(configuration, injector, environment);
-    }
+    registerObservers(configuration, injector, environment);
 
     if (shouldEnableDelegateMgmt) {
       registerInprocPerpetualTaskServiceClients(injector);
@@ -1463,6 +1462,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(AccessRequestHandler.class).registerIterators();
     injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
     injector.getInstance(LdapGroupScheduledHandler.class).registerIterators();
+    injector.getInstance(EncryptedDataLocalToGcpKmsMigrationHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

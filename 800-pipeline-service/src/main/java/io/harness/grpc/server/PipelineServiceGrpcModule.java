@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.InterruptGrpcService;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.pms.contracts.expression.RemoteFunctorServiceGrpc;
+import io.harness.pms.contracts.governance.JsonExpansionServiceGrpc;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.plan.execution.data.service.expressions.EngineExpressionGrpcServiceImpl;
@@ -94,6 +95,20 @@ public class PipelineServiceGrpcModule extends AbstractModule {
     for (Map.Entry<String, GrpcClientConfig> entry : configuration.getGrpcClientConfigs().entrySet()) {
       map.put(ModuleType.fromString(entry.getKey()),
           RemoteFunctorServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
+    }
+
+    return map;
+  }
+
+  @Provides
+  @Singleton
+  public Map<ModuleType, JsonExpansionServiceGrpc.JsonExpansionServiceBlockingStub> getJsonExpansionHandlerClients(
+      PipelineServiceConfiguration configuration) throws SSLException {
+    Map<ModuleType, JsonExpansionServiceGrpc.JsonExpansionServiceBlockingStub> map = new HashMap<>();
+
+    for (Map.Entry<String, GrpcClientConfig> entry : configuration.getGrpcClientConfigs().entrySet()) {
+      map.put(ModuleType.fromString(entry.getKey()),
+          JsonExpansionServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
     }
 
     return map;

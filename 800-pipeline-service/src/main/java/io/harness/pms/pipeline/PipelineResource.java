@@ -35,6 +35,7 @@ import io.harness.plancreator.steps.http.HttpStepNode;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.governance.PipelineSaveResponse;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
@@ -61,6 +62,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -78,7 +80,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -116,6 +117,7 @@ public class PipelineResource implements YamlSchemaResource {
   private final NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
   private final PMSPipelineTemplateHelper pipelineTemplateHelper;
   private final GovernanceService governanceService;
+  private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   private PipelineEntity createPipelineInternal(String accountId, String orgId, String projectId, String yaml)
       throws IOException {
@@ -130,9 +132,8 @@ public class PipelineResource implements YamlSchemaResource {
     pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, resolveTemplateRefsInPipeline);
     // validate unique fqn in resolveTemplateRefsInPipeline
     pmsYamlSchemaService.validateUniqueFqn(resolveTemplateRefsInPipeline);
-    if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
-      pipelineEntity.setTemplateReference(true);
-    }
+    pipelineEntity.setTemplateReference(
+        EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries()));
     return pmsPipelineService.create(pipelineEntity);
   }
 
@@ -275,9 +276,8 @@ public class PipelineResource implements YamlSchemaResource {
     if (!pipelineEntity.getIdentifier().equals(pipelineId)) {
       throw new InvalidRequestException("Pipeline identifier in URL does not match pipeline identifier in yaml");
     }
-    if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
-      pipelineEntity.setTemplateReference(true);
-    }
+    pipelineEntity.setTemplateReference(
+        EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries()));
 
     PipelineEntity withVersion = pipelineEntity.withVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     return pmsPipelineService.updatePipelineYaml(withVersion, ChangeType.MODIFY);
@@ -410,12 +410,8 @@ public class PipelineResource implements YamlSchemaResource {
     Criteria criteria = pmsPipelineService.formCriteria(accountId, orgId, projectId, filterIdentifier,
         (PipelineFilterPropertiesDto) filterProperties, false, module, searchTerm);
 
-    Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
-      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.lastUpdatedAt));
-    } else {
-      pageRequest = PageUtils.getPageRequest(page, size, sort);
-    }
+    Pageable pageRequest =
+        PageUtils.getPageRequest(page, size, sort, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.lastUpdatedAt));
 
     Page<PMSPipelineSummaryResponseDTO> pipelines =
         pmsPipelineService.list(criteria, pageRequest, accountId, orgId, projectId, getDistinctFromBranches)
@@ -532,5 +528,25 @@ public class PipelineResource implements YamlSchemaResource {
   @Path("/dummy-api")
   public ResponseDTO<HttpStepNode> getStepNode() {
     return ResponseDTO.newResponse(new HttpStepNode());
+  }
+
+  @GET
+  @Path("/refreshFFCache")
+  @ApiOperation(value = "Refresh the feature flag cache", nickname = "refreshFFCache")
+  @Operation(operationId = "refreshFFCache", summary = "Refresh the feature flag cache",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Refresh the feature flag cache")
+      })
+  public ResponseDTO<Boolean>
+  refreshFFCache(@NotNull @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE,
+      required = true) @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId) {
+    try {
+      return ResponseDTO.newResponse(pmsFeatureFlagHelper.refreshCacheForGivenAccountId(accountId));
+    } catch (ExecutionException e) {
+      log.error("Execution exception occurred while updating cache: " + e.getMessage());
+    }
+    return ResponseDTO.newResponse(false);
   }
 }

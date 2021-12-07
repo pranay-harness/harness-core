@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.VLAD;
 
+import static software.wings.utils.WingsTestConstants.ACCOUNT1_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,7 +22,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateNgToken;
 import io.harness.delegate.beans.DelegateToken;
@@ -49,7 +49,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -78,6 +77,7 @@ public class DelegateTokenAuthenticatorImplTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldValidateDelegateToken() {
+    createPersistenceMocksForDelegateToken(null);
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
     delegateTokenAuthenticator.validateDelegateToken(
         ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname"));
@@ -94,20 +94,7 @@ public class DelegateTokenAuthenticatorImplTest extends WingsBaseTest {
                                       .status(DelegateTokenStatus.ACTIVE)
                                       .build();
 
-    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
-
-    Query mockQuery = mock(Query.class);
-    FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
-
-    MorphiaIterator<DelegateToken, DelegateToken> morphiaIterator = mock(MorphiaIterator.class);
-
-    doReturn(mockQuery).when(persistence).createQuery(DelegateToken.class);
-    doReturn(fieldEnd).when(mockQuery).field(anyString());
-    doReturn(mockQuery).when(fieldEnd).equal(any());
-
-    when(morphiaIterator.hasNext()).thenReturn(true).thenReturn(false);
-    when(morphiaIterator.next()).thenReturn(delegateToken);
-    when(mockQuery.fetch()).thenReturn(morphiaIterator);
+    createPersistenceMocksForDelegateToken(delegateToken);
 
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
 
@@ -125,28 +112,15 @@ public class DelegateTokenAuthenticatorImplTest extends WingsBaseTest {
                                       .value(accountKey)
                                       .status(DelegateTokenStatus.REVOKED)
                                       .build();
+    when(keyCache.get(ACCOUNT1_ID)).thenReturn("2f6b0987b6fb3370073c3d0505baee59");
 
-    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
-
-    Query mockQuery = mock(Query.class);
-    FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
-
-    MorphiaIterator<DelegateToken, DelegateToken> morphiaIterator = mock(MorphiaIterator.class);
-
-    doReturn(mockQuery).when(persistence).createQuery(DelegateToken.class);
-    doReturn(mockQuery).when(persistence).createQuery(DelegateNgToken.class);
-    doReturn(fieldEnd).when(mockQuery).field(anyString());
-    doReturn(mockQuery).when(fieldEnd).equal(any());
-
-    when(morphiaIterator.hasNext()).thenReturn(false);
-    when(morphiaIterator.next()).thenReturn(delegateToken);
-    when(mockQuery.fetch()).thenReturn(morphiaIterator);
+    createPersistenceMocksForDelegateToken(null);
 
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
 
     assertThatThrownBy(()
                            -> delegateTokenAuthenticator.validateDelegateToken(
-                               ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
+                               ACCOUNT1_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
         .isInstanceOf(InvalidTokenException.class);
   }
 
@@ -160,8 +134,6 @@ public class DelegateTokenAuthenticatorImplTest extends WingsBaseTest {
                                              .value(accountKey)
                                              .status(DelegateTokenStatus.REVOKED)
                                              .build();
-    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
-
     Query mockQuery = mock(Query.class);
     FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
 
@@ -182,40 +154,6 @@ public class DelegateTokenAuthenticatorImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = LUCAS)
-  @Category(UnitTests.class)
-  public void shouldValidateDelegateToken_FailToDecrypt() {
-    DelegateToken delegateTokenActive = DelegateToken.builder()
-                                            .accountId(ACCOUNT_ID)
-                                            .name("TokenName")
-                                            .value("InvalidTokenValue")
-                                            .status(DelegateTokenStatus.ACTIVE)
-                                            .build();
-    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
-
-    Query mockQuery = mock(Query.class);
-    FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
-
-    MorphiaIterator<DelegateToken, DelegateToken> morphiaIterator = mock(MorphiaIterator.class);
-
-    doReturn(mockQuery).when(persistence).createQuery(DelegateToken.class);
-    doReturn(mockQuery).when(persistence).createQuery(DelegateNgToken.class);
-    doReturn(fieldEnd).when(mockQuery).field(anyString());
-    doReturn(mockQuery).when(fieldEnd).equal(any());
-
-    when(morphiaIterator.hasNext()).thenReturn(true).thenReturn(false);
-    when(morphiaIterator.next()).thenReturn(delegateTokenActive);
-    when(mockQuery.fetch()).thenReturn(morphiaIterator);
-
-    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
-
-    assertThatThrownBy(()
-                           -> delegateTokenAuthenticator.validateDelegateToken(
-                               ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
-        .isInstanceOf(InvalidTokenException.class);
-  }
-
-  @Test
   @Owner(developers = VLAD)
   @Category(UnitTests.class)
   public void shouldValidateDelegateToken_validateNgToken() {
@@ -225,21 +163,7 @@ public class DelegateTokenAuthenticatorImplTest extends WingsBaseTest {
                                             .value("InvalidTokenValue")
                                             .status(DelegateTokenStatus.ACTIVE)
                                             .build();
-    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
-
-    Query mockQuery = mock(Query.class);
-    FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
-
-    MorphiaIterator<DelegateToken, DelegateToken> morphiaIterator = mock(MorphiaIterator.class);
-
-    doReturn(mockQuery).when(persistence).createQuery(DelegateToken.class);
-    doReturn(mockQuery).when(persistence).createQuery(DelegateNgToken.class);
-    doReturn(fieldEnd).when(mockQuery).field(anyString());
-    doReturn(mockQuery).when(fieldEnd).equal(any());
-
-    when(morphiaIterator.hasNext()).thenReturn(true).thenReturn(false);
-    when(morphiaIterator.next()).thenReturn(delegateTokenActive);
-    when(mockQuery.fetch()).thenReturn(morphiaIterator);
+    createPersistenceMocksForDelegateToken(delegateTokenActive);
 
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
 
@@ -274,6 +198,7 @@ public class DelegateTokenAuthenticatorImplTest extends WingsBaseTest {
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldNotValidateDelegateToken() {
+    createPersistenceMocksForDelegateToken(null);
     TokenGenerator tokenGenerator = new TokenGenerator(GLOBAL_ACCOUNT_ID, accountKey);
     assertThatThrownBy(()
                            -> delegateTokenAuthenticator.validateDelegateToken(
@@ -286,6 +211,8 @@ public class DelegateTokenAuthenticatorImplTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldNotValidateExpiredDelegateToken() {
+    createPersistenceMocksForDelegateToken(null);
+
     String expiredToken =
         "eyJlbmMiOiJBMTI4R0NNIiwiYWxnIjoiZGlyIn0..SFvYSml0znPxoa7K.JcsFw5GiYevubqqzjy-nQyDMzjtA64YhxZjnQz6VH7lRCAGP5JML9Ov86rSRV1V7Kb-a12UvTNzqEqdJ4PCLv4R7GA5SzCwxLEYrlTLtUWX40r0GKuRGoiJVJqax2bBy3gOqDftETZCm_90lD3NxDeJ__RICl4osp9IxCKmlfGyoqriAswoEvkVtu0wjRlvBS-FtY42AeyCf9XIH5rppw-AsXoHH40M6_8FN-mFkilfqv3QKPaGL6Zph.1ipAjbMS834AKSotvHy4sg";
     assertThatThrownBy(() -> delegateTokenAuthenticator.validateDelegateToken(ACCOUNT_ID, expiredToken))
@@ -297,6 +224,7 @@ public class DelegateTokenAuthenticatorImplTest extends WingsBaseTest {
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldThrowDenyAccessWhenAccountIdNullForDelegate() {
+    createPersistenceMocksForDelegateToken(null);
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
     assertThatThrownBy(()
                            -> delegateTokenAuthenticator.validateDelegateToken(
@@ -309,6 +237,7 @@ public class DelegateTokenAuthenticatorImplTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldThrowDenyAccessWhenAccountIdNotFoundForDelegate() {
+    createPersistenceMocksForDelegateToken(null);
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
     assertThatThrownBy(()
                            -> delegateTokenAuthenticator.validateDelegateToken(
@@ -329,8 +258,26 @@ public class DelegateTokenAuthenticatorImplTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenUnableToDecryptToken() {
+    createPersistenceMocksForDelegateToken(null);
+
     assertThatThrownBy(() -> delegateTokenAuthenticator.validateDelegateToken(ACCOUNT_ID, getDelegateToken()))
         .isInstanceOf(InvalidTokenException.class);
+  }
+
+  private void createPersistenceMocksForDelegateToken(DelegateToken delegateToken) {
+    Query mockQuery = mock(Query.class);
+    FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
+
+    MorphiaIterator<DelegateToken, DelegateToken> morphiaIterator = mock(MorphiaIterator.class);
+
+    doReturn(mockQuery).when(persistence).createQuery(DelegateToken.class);
+    doReturn(mockQuery).when(persistence).createQuery(DelegateNgToken.class);
+    doReturn(fieldEnd).when(mockQuery).field(anyString());
+    doReturn(mockQuery).when(fieldEnd).equal(any());
+
+    when(morphiaIterator.hasNext()).thenReturn(delegateToken != null).thenReturn(false);
+    when(morphiaIterator.next()).thenReturn(delegateToken);
+    when(mockQuery.fetch()).thenReturn(morphiaIterator);
   }
 
   private String getDelegateToken() {

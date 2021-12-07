@@ -231,7 +231,7 @@ public class GcpSecretsManagerServiceV2Impl extends AbstractSecretServiceImpl im
       String encryptedDataId = String.copyValueOf(currentConfig.getCredentials());
       EncryptedData secretData = wingsPersistence.get(EncryptedData.class, encryptedDataId);
       Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + gcpSecretsManagerConfig);
-      gcpSecretsManagerConfig.setCredentials(decryptUsingBaseAlgo(secretData));
+      gcpSecretsManagerConfig.setCredentials(decryptUsingAlgoOfSecret(secretData));
     }
   }
 

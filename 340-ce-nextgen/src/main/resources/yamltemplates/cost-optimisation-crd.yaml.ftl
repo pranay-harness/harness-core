@@ -47,17 +47,10 @@ rules:
     resources:
       - deployments
       - statefulsets
+      - replicasets
     verbs:
       - patch
       - update
-  - apiGroups:
-      - apps
-      - extensions
-    resources:
-      - deployments
-      - statefulsets
-      - replicasets
-    verbs:
       - get
       - list
       - watch
