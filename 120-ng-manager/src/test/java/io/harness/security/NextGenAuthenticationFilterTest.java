@@ -2,7 +2,9 @@ package io.harness.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.RAJ;
 import static io.harness.rule.OwnerRule.SOWMYA;
+import static io.harness.security.NextGenAuthenticationFilter.AUTHORIZATION_HEADER;
 import static io.harness.security.NextGenAuthenticationFilter.X_API_KEY;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,20 +15,23 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder.BCryptVersion.$2A;
 
-import io.harness.ApiKeyFilterTestBase;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.common.beans.ApiKeyType;
 import io.harness.ng.core.dto.TokenDTO;
+import io.harness.ng.scim.resource.NGScimUserResource;
+import io.harness.ng.serviceaccounts.resource.ServiceAccountResource;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.rule.Owner;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.PrincipalType;
 import io.harness.token.remote.TokenClient;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -57,13 +62,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class NextGenAuthenticationFilterTest extends ApiKeyFilterTestBase {
   private static final String accountIdentifier = "accountIdentifier";
 
-  private NextGenAuthenticationFilter authenticationFilter;
   private TokenClient tokenClient;
   private ContainerRequestContext containerRequestContext;
   private String apiKey;
+  private ResourceInfo resourceInfo = null;
+  private NextGenAuthenticationFilter authenticationFilter;
 
   @Before
-  public void setup() throws IllegalAccessException {
+  public void setup() throws IllegalAccessException, NoSuchMethodException {
     MockitoAnnotations.initMocks(this);
     Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
         new Predicate<Pair<ResourceInfo, ContainerRequestContext>>() {
@@ -72,10 +78,14 @@ public class NextGenAuthenticationFilterTest extends ApiKeyFilterTestBase {
             return true;
           }
         };
+    resourceInfo = mock(ResourceInfo.class);
+    when(resourceInfo.getResourceClass()).thenReturn(getDefaultMockResourceClass());
+    when(resourceInfo.getResourceMethod()).thenReturn(getDefaultMockResourceMethod());
     Map<String, String> serviceToSecretMapping = new HashMap<>();
     serviceToSecretMapping.put("Bearer", apiKey);
     authenticationFilter =
         Mockito.spy(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping, tokenClient));
+    authenticationFilter.setResourceInfo(resourceInfo);
     tokenClient = Mockito.mock(TokenClient.class);
     containerRequestContext = Mockito.mock(ContainerRequestContext.class);
 
@@ -86,6 +96,49 @@ public class NextGenAuthenticationFilterTest extends ApiKeyFilterTestBase {
     when(mockUriInfo.getQueryParameters()).thenReturn(queryParams);
 
     FieldUtils.writeField(authenticationFilter, "tokenClient", tokenClient, true);
+  }
+
+  private Class getDefaultMockResourceClass() {
+    return ServiceAccountResource.class;
+  }
+
+  private Method getDefaultMockResourceMethod() {
+    try {
+      return getDefaultMockResourceClass().getMethod(
+          "listServiceAccounts", String.class, String.class, String.class, List.class);
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  private Class getMockResourceClass() {
+    return NGScimUserResource.class;
+  }
+
+  private Method getMockResourceMethod() {
+    try {
+      return getMockResourceClass().getMethod("getUser", String.class, String.class);
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  @Test
+  @Owner(developers = RAJ)
+  @Category(UnitTests.class)
+  public void testFilter_scimAPI() {
+    when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
+    when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
+    authenticationFilter.setResourceInfo(resourceInfo);
+    String delimiter = ".";
+    String uuid = generateUuid();
+    String rawPassword = generateUuid();
+    apiKey = "sat" + delimiter + uuid + delimiter + rawPassword;
+    when(containerRequestContext.getHeaderString(AUTHORIZATION_HEADER)).thenReturn("Bearer: " + apiKey);
+    when(authenticationFilter.testRequestPredicate(containerRequestContext)).thenReturn(true);
+    PowerMockito.mockStatic(NGRestUtils.class);
+    assertThatThrownBy(() -> authenticationFilter.filter(containerRequestContext))
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

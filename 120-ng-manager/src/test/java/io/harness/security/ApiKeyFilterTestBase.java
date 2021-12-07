@@ -1,7 +1,8 @@
-package io.harness;
+package io.harness.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.rule.LifecycleRule;
 
