@@ -51,6 +51,6 @@ public class CIVmCleanupTaskHandler implements CICleanupTaskHandler {
   }
 
   private DestroyVmRequest convert(CIVmCleanupTaskParams params) {
-    return DestroyVmRequest.builder().poolID(params.getPoolId()).instanceID(params.getInstanceId()).build();
+    return DestroyVmRequest.builder().poolID(params.getPoolId()).id(params.getStageRuntimeId()).build();
   }
 }

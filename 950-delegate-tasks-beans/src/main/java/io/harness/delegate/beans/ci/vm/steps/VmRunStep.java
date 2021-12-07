@@ -11,7 +11,7 @@ import lombok.Value;
 @Data
 @Builder
 @Value
-public class RunStep implements StepInfo {
+public class VmRunStep implements VmStepInfo {
   private String image;
   private ConnectorDetails imageConnector;
   private String pullPolicy; // always, if-not-exists or never
@@ -22,10 +22,11 @@ public class RunStep implements StepInfo {
   private String command;
   private List<String> outputVariables;
   private Map<String, String> envVariables;
-  private UnitTestReport unitTestReport;
+  private VmUnitTestReport unitTestReport;
+  private long timeoutSecs;
 
   @Override
-  public StepInfo.Type getType() {
+  public VmStepInfo.Type getType() {
     return Type.RUN;
   }
 }

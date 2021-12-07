@@ -13,6 +13,7 @@ import lombok.Data;
 public class SetupVmRequest {
   @JsonProperty("correlation_id") String correlationID;
   @JsonProperty("pool_id") String poolID;
+  @JsonProperty("id") String id;
   @JsonProperty("setup_request") Config config;
 
   @Data

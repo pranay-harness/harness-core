@@ -10,7 +10,7 @@ import lombok.Value;
 @Data
 @Builder
 @Value
-public class PluginStep implements StepInfo {
+public class VmPluginStep implements VmStepInfo {
   private String image;
   private ConnectorDetails connector;
   private String pullPolicy;
@@ -18,10 +18,11 @@ public class PluginStep implements StepInfo {
   private String runAsUser;
 
   private Map<String, String> envVariables;
-  private UnitTestReport unitTestReport;
+  private VmUnitTestReport unitTestReport;
+  private int timeoutSecs;
 
   @Override
-  public StepInfo.Type getType() {
-    return StepInfo.Type.PLUGIN;
+  public VmStepInfo.Type getType() {
+    return VmStepInfo.Type.PLUGIN;
   }
 }

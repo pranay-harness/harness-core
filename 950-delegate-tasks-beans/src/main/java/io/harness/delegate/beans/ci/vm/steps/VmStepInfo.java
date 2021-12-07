@@ -1,6 +1,6 @@
 package io.harness.delegate.beans.ci.vm.steps;
 
-public interface UnitTestReport {
-  enum Type { JUNIT }
+public interface VmStepInfo {
+  enum Type { RUN, PLUGIN, RUN_TEST }
   Type getType();
 }

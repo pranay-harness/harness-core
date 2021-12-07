@@ -14,12 +14,12 @@ import io.harness.delegate.beans.ci.vm.runner.ExecuteStepRequest.Config.ConfigBu
 import io.harness.delegate.beans.ci.vm.runner.ExecuteStepRequest.JunitReport;
 import io.harness.delegate.beans.ci.vm.runner.ExecuteStepRequest.TestReport;
 import io.harness.delegate.beans.ci.vm.runner.ExecuteStepResponse;
-import io.harness.delegate.beans.ci.vm.steps.JunitTestReport;
-import io.harness.delegate.beans.ci.vm.steps.PluginStep;
-import io.harness.delegate.beans.ci.vm.steps.RunStep;
-import io.harness.delegate.beans.ci.vm.steps.RunTestStep;
-import io.harness.delegate.beans.ci.vm.steps.StepInfo;
-import io.harness.delegate.beans.ci.vm.steps.UnitTestReport;
+import io.harness.delegate.beans.ci.vm.steps.VmJunitTestReport;
+import io.harness.delegate.beans.ci.vm.steps.VmPluginStep;
+import io.harness.delegate.beans.ci.vm.steps.VmRunStep;
+import io.harness.delegate.beans.ci.vm.steps.VmRunTestStep;
+import io.harness.delegate.beans.ci.vm.steps.VmStepInfo;
+import io.harness.delegate.beans.ci.vm.steps.VmUnitTestReport;
 import io.harness.delegate.task.citasks.CIExecuteStepTaskHandler;
 import io.harness.delegate.task.citasks.vm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
@@ -82,22 +82,25 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
                                       .name(params.getStepId())
                                       .logKey(params.getLogKey())
                                       .workingDir(params.getWorkingDir())
-                                      .timeout(params.getTimeoutSecs())
                                       .volumeMounts(Collections.singletonList(workdirVol));
-    if (params.getStepInfo().getType() == StepInfo.Type.RUN) {
-      RunStep runStep = (RunStep) params.getStepInfo();
+    if (params.getStepInfo().getType() == VmStepInfo.Type.RUN) {
+      VmRunStep runStep = (VmRunStep) params.getStepInfo();
       setRunConfig(runStep, configBuilder);
-    } else if (params.getStepInfo().getType() == StepInfo.Type.PLUGIN) {
-      PluginStep pluginStep = (PluginStep) params.getStepInfo();
+    } else if (params.getStepInfo().getType() == VmStepInfo.Type.PLUGIN) {
+      VmPluginStep pluginStep = (VmPluginStep) params.getStepInfo();
       setPluginConfig(pluginStep, configBuilder);
-    } else if (params.getStepInfo().getType() == StepInfo.Type.RUN_TEST) {
-      RunTestStep runTestStep = (RunTestStep) params.getStepInfo();
+    } else if (params.getStepInfo().getType() == VmStepInfo.Type.RUN_TEST) {
+      VmRunTestStep runTestStep = (VmRunTestStep) params.getStepInfo();
       setRunTestConfig(runTestStep, configBuilder);
     }
-    return ExecuteStepRequest.builder().ipAddress(params.getIpAddress()).config(configBuilder.build()).build();
+    return ExecuteStepRequest.builder()
+        .poolId(params.getPoolId())
+        .ipAddress(params.getIpAddress())
+        .config(configBuilder.build())
+        .build();
   }
 
-  private void setRunConfig(RunStep runStep, ConfigBuilder configBuilder) {
+  private void setRunConfig(VmRunStep runStep, ConfigBuilder configBuilder) {
     configBuilder.kind(RUN_STEP_KIND)
         .runConfig(ExecuteStepRequest.RunConfig.builder()
                        .command(Collections.singletonList(runStep.getCommand()))
@@ -109,10 +112,11 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
         .envs(runStep.getEnvVariables())
         .privileged(runStep.isPrivileged())
         .outputVars(runStep.getOutputVariables())
-        .testReport(convertTestReport(runStep.getUnitTestReport()));
+        .testReport(convertTestReport(runStep.getUnitTestReport()))
+        .timeout(runStep.getTimeoutSecs());
   }
 
-  private void setPluginConfig(PluginStep pluginStep, ConfigBuilder configBuilder) {
+  private void setPluginConfig(VmPluginStep pluginStep, ConfigBuilder configBuilder) {
     configBuilder.kind(RUN_STEP_KIND)
         .runConfig(ExecuteStepRequest.RunConfig.builder().build())
         .image(pluginStep.getImage())
@@ -120,10 +124,11 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
         .user(pluginStep.getRunAsUser())
         .envs(pluginStep.getEnvVariables())
         .privileged(pluginStep.isPrivileged())
-        .testReport(convertTestReport(pluginStep.getUnitTestReport()));
+        .testReport(convertTestReport(pluginStep.getUnitTestReport()))
+        .timeout(pluginStep.getTimeoutSecs());
   }
 
-  private void setRunTestConfig(RunTestStep runTestStep, ConfigBuilder configBuilder) {
+  private void setRunTestConfig(VmRunTestStep runTestStep, ConfigBuilder configBuilder) {
     configBuilder.kind(RUNTEST_STEP_KIND)
         .runTestConfig(ExecuteStepRequest.RunTestConfig.builder()
                            .args(runTestStep.getArgs())
@@ -142,19 +147,20 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
         .envs(runTestStep.getEnvVariables())
         .privileged(runTestStep.isPrivileged())
         .outputVars(runTestStep.getOutputVariables())
-        .testReport(convertTestReport(runTestStep.getUnitTestReport()));
+        .testReport(convertTestReport(runTestStep.getUnitTestReport()))
+        .timeout(runTestStep.getTimeoutSecs());
   }
 
-  private TestReport convertTestReport(UnitTestReport unitTestReport) {
+  private TestReport convertTestReport(VmUnitTestReport unitTestReport) {
     if (unitTestReport == null) {
       return null;
     }
 
-    if (unitTestReport.getType() != UnitTestReport.Type.JUNIT) {
+    if (unitTestReport.getType() != VmUnitTestReport.Type.JUNIT) {
       return null;
     }
 
-    JunitTestReport junitTestReport = (JunitTestReport) unitTestReport;
+    VmJunitTestReport junitTestReport = (VmJunitTestReport) unitTestReport;
     return TestReport.builder()
         .kind("Junit")
         .junitReport(JunitReport.builder().paths(junitTestReport.getPaths()).build())

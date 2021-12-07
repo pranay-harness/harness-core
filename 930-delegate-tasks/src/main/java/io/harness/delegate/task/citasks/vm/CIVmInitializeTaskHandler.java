@@ -70,7 +70,7 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
 
     SetupVmRequest.TIConfig tiConfig = SetupVmRequest.TIConfig.builder()
                                            .url(params.getTiUrl())
-                                           .token(params.getTiToken())
+                                           .token(params.getTiSvcToken())
                                            .accountID(params.getAccountID())
                                            .orgID(params.getOrgID())
                                            .projectID(params.getProjectID())
@@ -104,6 +104,6 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
                                        .tiConfig(tiConfig)
                                        .volumes(Collections.singletonList(workdirVol))
                                        .build();
-    return SetupVmRequest.builder().poolID(params.getPoolId()).config(config).build();
+    return SetupVmRequest.builder().id(params.getStageRuntimeId()).poolID(params.getPoolID()).config(config).build();
   }
 }

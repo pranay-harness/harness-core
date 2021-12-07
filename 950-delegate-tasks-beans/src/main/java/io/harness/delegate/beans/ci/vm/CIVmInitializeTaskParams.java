@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CIVmInitializeTaskParams extends ConnectorTaskParams implements CIInitializeTaskParams {
-  @NotNull private String poolId;
+  @NotNull private String poolID;
   @NotNull private String workingDir;
 
   @NotNull private String logStreamUrl;
@@ -24,7 +24,7 @@ public class CIVmInitializeTaskParams extends ConnectorTaskParams implements CII
   @NotNull private boolean logSvcIndirectUpload;
 
   @NotNull private String tiUrl;
-  @NotNull private String tiToken;
+  @NotNull private String tiSvcToken;
 
   @NotNull private String accountID;
   @NotNull private String orgID;

@@ -12,6 +12,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExecuteStepRequest {
   @JsonProperty("ip_address") String ipAddress;
+  @JsonProperty("pool_id") String poolId;
   @JsonProperty("start_step_request") Config config;
 
   @Data
@@ -30,7 +31,7 @@ public class ExecuteStepRequest {
     @JsonProperty("run_test") RunTestConfig runTestConfig;
     @JsonProperty("output_vars") List<String> outputVars;
     @JsonProperty("test_report") TestReport testReport;
-    @JsonProperty("timeout") int timeout;
+    @JsonProperty("timeout") long timeout;
     @JsonProperty("image") String image;
     @JsonProperty("pull") String pull;
     @JsonProperty("privileged") boolean privileged;

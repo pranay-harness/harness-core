@@ -11,5 +11,5 @@ import lombok.Data;
 public class DestroyVmRequest {
   @JsonProperty("correlation_id") String correlationID;
   @JsonProperty("pool_id") String poolID;
-  @JsonProperty("instance_id") String instanceID;
+  @JsonProperty("id") String id;
 }

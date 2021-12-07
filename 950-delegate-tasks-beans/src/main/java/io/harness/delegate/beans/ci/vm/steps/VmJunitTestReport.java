@@ -8,7 +8,7 @@ import lombok.Value;
 @Data
 @Builder
 @Value
-public class JunitTestReport implements UnitTestReport {
+public class VmJunitTestReport implements VmUnitTestReport {
   private List<String> paths;
 
   @Override
