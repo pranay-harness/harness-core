@@ -57,4 +57,7 @@ public interface PMSPipelineService {
       PipelineFilterPropertiesDto filterProperties, boolean deleted, String module, String searchTerm);
 
   boolean deleteAllPipelinesInAProject(String accountId, String orgId, String projectId);
+
+  String fetchExpandedPipelineJSON(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
 }

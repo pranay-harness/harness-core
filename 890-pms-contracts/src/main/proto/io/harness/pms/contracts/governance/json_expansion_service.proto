@@ -25,12 +25,12 @@ message ExpansionResponseProto {
   string fqn = 1;
   string key = 2;
   string value = 3;
-  ExpansionPlacement placement = 4;
+  ExpansionPlacementStrategy placement = 4;
   bool success = 5;
   string errorMessage = 6;
 }
 
-enum ExpansionPlacement {
+enum ExpansionPlacementStrategy {
   REPLACE = 0;
   PARALLEL = 1;
   MOVE_UP = 2;
