@@ -1,4 +1,4 @@
-package io.harness;
+package io.harness.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
