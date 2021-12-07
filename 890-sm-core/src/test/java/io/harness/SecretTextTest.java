@@ -80,7 +80,7 @@ public class SecretTextTest extends SMCoreTestBase {
   private SecretsFileService mockSecretsFileService;
   private SecretsAuditService mockSecretsAuditService;
   private SecretService secretService;
-  private LocalEncryptorHelper localEncryptorHelper;
+  @Inject private LocalEncryptorHelper localEncryptorHelper;
 
   @Before
   public void setup() {
