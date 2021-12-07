@@ -3,7 +3,7 @@ package io.harness.pms.sdk.core.governance;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.contracts.governance.ExpansionPlacement;
+import io.harness.pms.contracts.governance.ExpansionPlacementStrategy;
 
 import lombok.Builder;
 import lombok.Value;
@@ -14,7 +14,7 @@ import lombok.Value;
 public class ExpansionResponse {
   String key;
   String value;
-  ExpansionPlacement placement;
+  ExpansionPlacementStrategy placement;
   boolean success;
   String errorMessage;
 }
