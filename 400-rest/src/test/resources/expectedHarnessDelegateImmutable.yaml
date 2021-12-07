@@ -1,37 +1,21 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: test-namespace
+  name: harness-delegate
 
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRoleBinding
 metadata:
-  name: harness-namespace-admin
-  namespace: test-namespace
-rules:
-  - apiGroups:
-    - '*'
-    resources:
-    - '*'
-    verbs:
-    - '*'
-
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: test-namespace-harness-namespace-admin
-  namespace: test-namespace
+  name: harness-delegate-cluster-admin
 subjects:
   - kind: ServiceAccount
     name: default
-    namespace: test-namespace
+    namespace: harness-delegate
 roleRef:
-  kind: Role
-  name: harness-namespace-admin
+  kind: ClusterRole
+  name: cluster-admin
   apiGroup: rbac.authorization.k8s.io
 
 ---
@@ -40,7 +24,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: harness-delegate-proxy
-  namespace: test-namespace
+  namespace: harness-delegate
 type: Opaque
 data:
   # Enter base64 encoded username and password, if needed
@@ -53,19 +37,25 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
+    harness.io/app: harness-delegate
+    harness.io/account: accoun
     harness.io/name: harness-delegate
-  name: harness-delegate
-  namespace: test-namespace
+  # Name must contain the six letter account identifier: accoun
+  name: harness-delegate-accoun
+  namespace: harness-delegate
 spec:
-  replicas: 8
-  podManagementPolicy: Parallel
+  replicas: 1
   selector:
     matchLabels:
+      harness.io/app: harness-delegate
+      harness.io/account: accoun
       harness.io/name: harness-delegate
   serviceName: ""
   template:
     metadata:
       labels:
+        harness.io/app: harness-delegate
+        harness.io/account: accoun
         harness.io/name: harness-delegate
     spec:
       containers:
@@ -74,11 +64,8 @@ spec:
         name: harness-delegate-instance
         resources:
           limits:
-            cpu: "0.5"
-            memory: "2048Mi"
-          requests:
-            cpu: "0.5"
-            memory: "2048Mi"
+            cpu: "1"
+            memory: "8Gi"
         readinessProbe:
           exec:
             command:
@@ -140,50 +127,14 @@ spec:
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "0"
         - name: VERSION_CHECK_DISABLED
-          value: "false"
+          value: "true"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: DELEGATE_DESCRIPTION
-          value: "desc"
-        - name: DELEGATE_TAGS
+        - name: DELEGATE_PROFILE
           value: ""
-        - name: DELEGATE_TASK_LIMIT
-          value: "50"
-        - name: DELEGATE_ORG_IDENTIFIER
-          value: "9S5HMP0xROugl3_QgO62rQO"
-        - name: DELEGATE_PROJECT_IDENTIFIER
-          value: "9S5HMP0xROugl3_QgO62rQP"
-        - name: INIT_SCRIPT
-          value: ""
-        - name: NEXT_GEN
+        - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
           value: "true"
-        - name: WATCHER_STORAGE_URL
-          value: http://localhost:8888
-        - name: WATCHER_CHECK_LOCATION
-          value: watcherci.txt
-        - name: REMOTE_WATCHER_URL_CDN
-          value: http://localhost:9500/builds
-        - name: DELEGATE_STORAGE_URL
-          value: http://localhost:8888
-        - name: DELEGATE_CHECK_LOCATION
-          value: delegateci.txt
-        - name: HELM_DESIRED_VERSION
-          value: ""
-        - name: USE_CDN
-          value: "false"
-        - name: CDN_URL
-          value: http://localhost:9500
-        - name: JRE_VERSION
-          value: 1.8.0_242
-        - name: HELM3_PATH
-          value: ""
-        - name: HELM_PATH
-          value: ""
-        - name: KUSTOMIZE_PATH
-          value: ""
-        - name: KUBECTL_PATH
-          value: ""
       restartPolicy: Always
 

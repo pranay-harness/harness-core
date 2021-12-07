@@ -1,0 +1,50 @@
+#!/bin/bash -e
+
+if [ ! -e proxy.config ]; then
+  echo "PROXY_HOST=$PROXY_HOST" > proxy.config
+  echo "PROXY_PORT=$PROXY_PORT" >> proxy.config
+  echo "PROXY_SCHEME=$PROXY_SCHEME" >> proxy.config
+  echo "PROXY_USER=$PROXY_USER" >> proxy.config
+  echo "PROXY_PASSWORD=$PROXY_PASSWORD" >> proxy.config
+  echo "NO_PROXY=$NO_PROXY" >> proxy.config
+  echo "PROXY_MANAGER=${PROXY_MANAGER:-true}" >> proxy.config
+fi
+
+source proxy.config
+if [[ $PROXY_HOST != "" ]]; then
+  echo "Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT"
+  if [[ $PROXY_USER != "" ]]; then
+    export PROXY_USER
+    export PROXY_PASSWORD
+    echo "using proxy auth config"
+    export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
+  else
+    export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_HOST:$PROXY_PORT
+    export http_proxy=$PROXY_SCHEME://$PROXY_HOST:$PROXY_PORT
+    export https_proxy=$PROXY_SCHEME://$PROXY_HOST:$PROXY_PORT
+  fi
+  PROXY_SYS_PROPS="-DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
+fi
+
+if [[ $PROXY_MANAGER == "true" || $PROXY_MANAGER == "" ]]; then
+  export MANAGER_PROXY_CURL=$PROXY_CURL
+else
+  HOST_AND_PORT_ARRAY=(${MANAGER_HOST_AND_PORT//:/ })
+  MANAGER_HOST="${HOST_AND_PORT_ARRAY[1]}"
+  MANAGER_HOST="${MANAGER_HOST:2}"
+  echo "No proxy for Harness manager at $MANAGER_HOST"
+  if [[ $NO_PROXY == "" ]]; then
+    NO_PROXY=$MANAGER_HOST
+  else
+    NO_PROXY="$NO_PROXY,$MANAGER_HOST"
+  fi
+fi
+
+if [[ $NO_PROXY != "" ]]; then
+  echo "No proxy for domain suffixes $NO_PROXY"
+  export no_proxy=$NO_PROXY
+  SYSTEM_PROPERTY_NO_PROXY=`echo $NO_PROXY | sed "s/\,/|*/g"`
+  PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
+fi
+
+export $PROXY_SYS_PROPS

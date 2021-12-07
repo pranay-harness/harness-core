@@ -140,7 +140,7 @@ spec:
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "0"
         - name: VERSION_CHECK_DISABLED
-          value: "false"
+          value: "true"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:
@@ -159,31 +159,7 @@ spec:
           value: ""
         - name: NEXT_GEN
           value: "true"
-        - name: WATCHER_STORAGE_URL
-          value: http://localhost:8888
-        - name: WATCHER_CHECK_LOCATION
-          value: watcherci.txt
-        - name: REMOTE_WATCHER_URL_CDN
-          value: http://localhost:9500/builds
-        - name: DELEGATE_STORAGE_URL
-          value: http://localhost:8888
-        - name: DELEGATE_CHECK_LOCATION
-          value: delegateci.txt
-        - name: HELM_DESIRED_VERSION
-          value: ""
-        - name: USE_CDN
-          value: "false"
-        - name: CDN_URL
-          value: http://localhost:9500
-        - name: JRE_VERSION
-          value: 1.8.0_242
-        - name: HELM3_PATH
-          value: ""
-        - name: HELM_PATH
-          value: ""
-        - name: KUSTOMIZE_PATH
-          value: ""
-        - name: KUBECTL_PATH
-          value: ""
+        - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
+          value: "true"
       restartPolicy: Always
 
