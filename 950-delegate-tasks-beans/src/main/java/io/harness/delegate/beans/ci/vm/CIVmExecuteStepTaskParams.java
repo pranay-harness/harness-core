@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.ci.vm;
 
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.vm.steps.StepInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import javax.validation.constraints.NotNull;
@@ -12,16 +13,16 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CIVmExecuteStepTaskParams implements CIExecuteStepTaskParams {
-  @NotNull private String poolId;
-  @NotNull private String stageRuntimeId;
+  @NotNull private String ipAddress;
+  @NotNull private String stepRuntimeId;
+  @NotNull private String stepId;
+  @NotNull private StepInfo stepInfo;
+  @NotNull private String logKey;
+  @NotNull private String workingDir;
+  private int timeoutSecs;
 
-  @NotNull String stepId;
-  String command;
-  String image;
-  @NotNull String logKey;
-  @NotNull String accountId;
-  @NotNull String logToken;
-  @NotNull String logStreamUrl;
+  private String poolId;
+  private String stageRuntimeId;
 
   @Builder.Default private static final Type type = Type.VM;
 
