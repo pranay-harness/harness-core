@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.enforcement.client.EnforcementClientConfiguration;
 import io.harness.platform.audit.AuditServiceConfiguration;
 import io.harness.platform.notification.NotificationServiceConfiguration;
+import io.harness.reflection.HarnessReflections;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.ResourceGroupServiceConfig;
 import io.harness.threading.ThreadPoolConfig;
@@ -23,11 +24,13 @@ import io.dropwizard.request.logging.LogbackAccessRequestLogFactory;
 import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 import lombok.Getter;
 import lombok.Setter;
-import org.reflections.Reflections;
+import org.apache.commons.lang3.StringUtils;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -59,31 +62,45 @@ public class PlatformConfiguration extends Configuration {
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
 
-  public static Collection<Class<?>> getNotificationServiceResourceClasses() {
-    Reflections reflections = new Reflections(NOTIFICATION_RESOURCE_PACKAGE);
-    return reflections.getTypesAnnotatedWith(Path.class);
+  public static final Collection<Class<?>> ALL_HARNESS_RESOURCES = getAllResources();
+  public static final Collection<Class<?>> NOTIFICATION_SERVICE_RESOURCES = getNotificationServiceResourceClasses();
+  public static final Collection<Class<?>> AUDIT_SERVICE_RESOURCES = getAuditServiceResourceClasses();
+  public static final Collection<Class<?>> RESOURCE_GROUP_RESOURCES = getResourceGroupServiceResourceClasses();
+
+  private static Collection<Class<?>> getAllResources() {
+    return HarnessReflections.get().getTypesAnnotatedWith(Path.class);
   }
 
-  public static Collection<Class<?>> getAuditServiceResourceClasses() {
-    Reflections reflections = new Reflections(AUDIT_RESOURCE_PACKAGE, FILTER_RESOURCE_PACKAGE);
-    return reflections.getTypesAnnotatedWith(Path.class);
+  private static Collection<Class<?>> getNotificationServiceResourceClasses() {
+    return ALL_HARNESS_RESOURCES.stream()
+        .filter(clazz -> StringUtils.startsWithAny(clazz.getPackage().getName(), NOTIFICATION_RESOURCE_PACKAGE))
+        .collect(Collectors.toSet());
   }
 
-  public static Collection<Class<?>> getResourceGroupServiceResourceClasses() {
-    Reflections reflections = new Reflections(RESOURCEGROUP_PACKAGE);
-    return reflections.getTypesAnnotatedWith(Path.class);
+  private static Collection<Class<?>> getAuditServiceResourceClasses() {
+    return ALL_HARNESS_RESOURCES.stream()
+        .filter(clazz
+            -> StringUtils.startsWithAny(clazz.getPackage().getName(), AUDIT_RESOURCE_PACKAGE, FILTER_RESOURCE_PACKAGE))
+        .collect(Collectors.toSet());
+  }
+
+  private static Collection<Class<?>> getResourceGroupServiceResourceClasses() {
+    return ALL_HARNESS_RESOURCES.stream()
+        .filter(clazz -> StringUtils.startsWithAny(clazz.getPackage().getName(), RESOURCEGROUP_PACKAGE))
+        .collect(Collectors.toSet());
   }
 
   public static Collection<Class<?>> getPlatformServiceCombinedResourceClasses(PlatformConfiguration appConfig) {
-    Collection<Class<?>> resources = getNotificationServiceResourceClasses();
+    Collection<Class<?>> resources = new HashSet<>(NOTIFICATION_SERVICE_RESOURCES);
     if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
-      resources.addAll(getAuditServiceResourceClasses());
+      resources.addAll(AUDIT_SERVICE_RESOURCES);
     }
     if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
-      resources.addAll(getResourceGroupServiceResourceClasses());
+      resources.addAll(RESOURCE_GROUP_RESOURCES);
     }
-    Reflections reflections = new Reflections(ENFORCEMENT_PACKAGE);
-    resources.addAll(reflections.getTypesAnnotatedWith(Path.class));
+    resources.addAll(ALL_HARNESS_RESOURCES.stream()
+                         .filter(clazz -> StringUtils.startsWithAny(clazz.getPackage().getName(), ENFORCEMENT_PACKAGE))
+                         .collect(Collectors.toSet()));
     return resources;
   }
 

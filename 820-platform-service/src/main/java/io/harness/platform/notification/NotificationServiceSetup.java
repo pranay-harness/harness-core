@@ -1,7 +1,7 @@
 package io.harness.platform.notification;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.platform.PlatformConfiguration.getNotificationServiceResourceClasses;
+import static io.harness.platform.PlatformConfiguration.NOTIFICATION_SERVICE_RESOURCES;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.controller.PrimaryVersionChangeScheduler;
@@ -69,7 +69,7 @@ public class NotificationServiceSetup {
   }
 
   private void registerResources(Environment environment, Injector injector) {
-    for (Class<?> resource : getNotificationServiceResourceClasses()) {
+    for (Class<?> resource : NOTIFICATION_SERVICE_RESOURCES) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
