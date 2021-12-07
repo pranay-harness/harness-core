@@ -12,6 +12,7 @@ import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
@@ -101,6 +102,10 @@ public class PmsYamlSchemaHelper {
 
   public void processPartialStageSchema(ObjectNode pipelineDefinitions, ObjectNode pipelineSteps,
       ObjectNode stageElementConfig, PartialSchemaDTO partialSchemaDTO) {
+    YamlSchemaTransientHelper.removeV2StepEnumsFromStepElementConfig(partialSchemaDTO.getSchema()
+                                                                          .get(DEFINITIONS_NODE)
+                                                                          .get(partialSchemaDTO.getNamespace())
+                                                                          .get(STEP_ELEMENT_CONFIG));
     SubtypeClassMap subtypeClassMap =
         SubtypeClassMap.builder()
             .subTypeDefinitionKey(partialSchemaDTO.getNamespace() + "/" + partialSchemaDTO.getNodeName())
