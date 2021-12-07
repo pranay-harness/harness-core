@@ -26,7 +26,7 @@ CEINTERNALDATASET = "CE_INTERNAL"
 GCPINSTANCEINVENTORY = "gcpInstanceInventory"
 GCPDISKINVENTORY = "gcpDiskInventory"
 CONNECTORDATASYNCSTATUSTABLE = "connectorDataSyncStatus"
-
+GCPCONNECTORINFOTABLE = "gcpConnectorInfo"
 
 def print_(message, severity="INFO"):
     # Set account id in the beginning of your CF call
@@ -35,11 +35,12 @@ def print_(message, severity="INFO"):
     except:
         print(message)
 
-def create_dataset(client, datasetName):
+def create_dataset(client, datasetName, accountid=""):
     dataset_id = "{}.{}".format(client.project, datasetName)
     dataset = bigquery.Dataset(dataset_id)
     dataset.location = "US"
-    dataset.description = "Dataset for [ AccountId: %s ]" % (ACCOUNTID_LOG)
+    # Do not change this format for description
+    dataset.description = "Dataset for [ AccountId: %s ]" % (accountid)
 
     # Send the dataset to the API for creation, with an explicit timeout.
     # Raises google.api_core.exceptions.Conflict if the Dataset already
@@ -48,7 +49,14 @@ def create_dataset(client, datasetName):
         dataset = client.create_dataset(dataset, timeout=30)  # Make an API request.
         print_("Created dataset {}.{}".format(client.project, dataset.dataset_id))
     except Exception as e:
-        print_("Dataset {} already exists {}".format(dataset_id, e), "WARN")
+        print_("Dataset {} description {}, already exists {}".format(dataset_id, dataset.description, e), "WARN")
+        if not dataset.description:
+            # Do not change this format for description
+            dataset.description = "Dataset for [ AccountId: %s ]" % (accountid)
+            try:
+                client.update_dataset(dataset, ["description"])
+            except:
+                pass
 
 
 def if_tbl_exists(client, table_ref):
