@@ -18,8 +18,8 @@ import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
-import static software.wings.service.impl.DelegateServiceImpl.TASK_CATEGORY_MAP;
-import static software.wings.service.impl.DelegateServiceImpl.TASK_SELECTORS;
+import static software.wings.service.impl.DelegateTaskServiceClassicImpl.TASK_CATEGORY_MAP;
+import static software.wings.service.impl.DelegateTaskServiceClassicImpl.TASK_SELECTORS;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
