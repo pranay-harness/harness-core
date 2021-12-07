@@ -58,6 +58,7 @@ public class NGCommonEntityConstants {
   public static final String ACCOUNT_PARAM_MESSAGE = "Account Identifier for the entity";
   public static final String ORG_PARAM_MESSAGE = "Organization Identifier for the entity";
   public static final String PROJECT_PARAM_MESSAGE = "Project Identifier for the entity";
+  public static final String GCP_CONNECTOR_IDENTIFIER = "GCP Connector Identifier";
 
   public static final String PAGE_PARAM_MESSAGE = "The number of the page to fetch";
   public static final String SIZE_PARAM_MESSAGE = "The number of the elements to fetch";
