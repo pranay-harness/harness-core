@@ -7,11 +7,14 @@ import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceServic
 import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardApiFilter;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
 import io.harness.cvng.servicelevelobjective.services.api.SLIRecordService;
 import io.harness.cvng.servicelevelobjective.services.api.SLODashboardService;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.common.beans.NGTag;
@@ -36,6 +39,7 @@ public class SLODashboardServiceImpl implements SLODashboardService {
   @Inject private ServiceLevelObjectiveService serviceLevelObjectiveService;
   @Inject private MonitoredServiceService monitoredServiceService;
   @Inject private SLIRecordService sliRecordService;
+  @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Inject private Clock clock;
   @Override
   public PageResponse<SLODashboardWidget> getSloDashboardWidgets(
@@ -56,6 +60,11 @@ public class SLODashboardServiceImpl implements SLODashboardService {
               Preconditions.checkState(
                   sloResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators().size() == 1,
                   "Only one service level indicator is supported");
+              ServiceLevelIndicatorDTO serviceLevelIndicatorDTO =
+                  sloResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators().get(0);
+              ServiceLevelIndicator serviceLevelIndicator = serviceLevelIndicatorService.getServiceLevelIndicator(
+                  projectParams, serviceLevelIndicatorDTO.getIdentifier());
+
               ServiceLevelObjectiveDTO slo = sloResponse.getServiceLevelObjectiveDTO();
               ServiceLevelObjective serviceLevelObjective =
                   serviceLevelObjectiveService.getEntity(projectParams, slo.getIdentifier());
@@ -70,6 +79,9 @@ public class SLODashboardServiceImpl implements SLODashboardService {
                                .value(i)
                                .build());
               }
+              List<SLODashboardWidget.Point> sloPerformanceTrend =
+                  sliRecordService.sliPerformanceTrend(serviceLevelIndicator.getUuid(),
+                      timePeriod.getStartDate().atStartOfDay().toInstant(ZoneOffset.UTC), currentTimeMinute);
               return SLODashboardWidget.builder()
                   .title(slo.getName())
                   .monitoredServiceIdentifier(slo.getMonitoredServiceRef())
@@ -79,7 +91,7 @@ public class SLODashboardServiceImpl implements SLODashboardService {
                   .tags(getNGTags(slo.getTags()))
                   .type(slo.getServiceLevelIndicators().get(0).getType())
                   .burnRate(SLODashboardWidget.BurnRate.builder().currentRatePercentage(10).build())
-                  .sloPerformanceTrend(points)
+                  .sloPerformanceTrend(sloPerformanceTrend)
                   .errorBudgetBurndown(points)
                   .timeRemainingDays(timePeriod.getRemainingDays(currentLocalDate).getDays())
                   .build();
