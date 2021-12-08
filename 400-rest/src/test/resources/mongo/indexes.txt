@@ -539,9 +539,9 @@ pipelineExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
 pipelineExecutions {"name": "pipelineId_1", "background": true} {"pipelineId": 1}
 pipelineGovernanceConfigs {"name": "accountId_1", "background": true} {"accountId": 1}
 pipelines {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": -1}
-pipelines {"name": "accountId_1", "background": true} {"accountId": 1}
 pipelines {"name": "accountId_name", "background": true} {"accountId": 1, "name": 1}
 pipelines {"name": "appId_1", "background": true} {"appId": 1}
+pipelines {"name": "appId_name", "background": true} {"appId": 1, "name": 1}
 pipelines {"name": "createdAt_1", "background": true} {"createdAt": 1}
 preferences {"name": "appId_1", "background": true} {"appId": 1}
 preferences {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -865,10 +865,10 @@ workflowVerificationResults {"name": "lastUpdatedAt_1", "background": true} {"la
 workflowVerificationResults {"name": "stateExecutionId_1", "unique": true} {"stateExecutionId": 1}
 workflowVerificationResults {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 workflows {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": -1}
-workflows {"name": "accountId_1", "background": true} {"accountId": 1}
 workflows {"name": "accountId_name", "background": true} {"accountId": 1, "name": 1}
 workflows {"name": "account_orchestrationWorkflowTypeIndex", "background": true} {"accountId": 1, "orchestration.orchestrationWorkflowType": 1}
 workflows {"name": "appId_1", "background": true} {"appId": 1}
+workflows {"name": "appId_name", "background": true} {"appId": 1, "name": 1}
 workflows {"name": "createdAt_1", "background": true} {"createdAt": 1}
 workflows {"name": "linkedArtifactStreamIds_1", "background": true} {"linkedArtifactStreamIds": 1}
 workflows {"name": "linkedTemplateUuids_1", "background": true} {"linkedTemplateUuids": 1}
