@@ -109,7 +109,7 @@ public class LocalEncryptorTest extends SMCoreTestBase {
   }
 
   private SecretManagerConfig getLocalEncryptionConfig() {
-    SecretManagerConfig secretManagerConfig = LocalEncryptionConfig.builder().build();
+    SecretManagerConfig secretManagerConfig = LocalEncryptionConfig.builder().accountId(ACCOUNTID).build();
     localEncryptorHelper.populateConfigForEncryption(secretManagerConfig);
     return secretManagerConfig;
   }

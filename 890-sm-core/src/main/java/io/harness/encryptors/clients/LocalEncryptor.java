@@ -37,7 +37,8 @@ public class LocalEncryptor implements KmsEncryptor {
 
   @Override
   public EncryptedRecord encryptSecret(String accountId, String value, EncryptionConfig encryptionConfig) {
-    if (encryptionConfig.getEncryptionFeatureFlagStatus().get(FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE.name())) {
+    if (Boolean.TRUE.equals(
+            encryptionConfig.getEncryptionFeatureFlagStatus().get(FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE.name()))) {
       final byte[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, encryptionConfig.getSecretKeySpec());
       return EncryptedRecordData.builder()
           .encryptionKey(encryptionConfig.getSecretKeySpec().getUuid())
@@ -46,7 +47,8 @@ public class LocalEncryptor implements KmsEncryptor {
           .build();
     }
     final char[] localJavaEncryptedSecret = getLocalJavaEncryptedSecret(accountId, value);
-    if (encryptionConfig.getEncryptionFeatureFlagStatus().get(FeatureName.LOCAL_MULTI_CRYPTO_MODE.name())) {
+    if (Boolean.TRUE.equals(
+            encryptionConfig.getEncryptionFeatureFlagStatus().get(FeatureName.LOCAL_MULTI_CRYPTO_MODE.name()))) {
       final byte[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, encryptionConfig.getSecretKeySpec());
       return EncryptedRecordData.builder()
           .encryptionKey(accountId)
@@ -74,9 +76,11 @@ public class LocalEncryptor implements KmsEncryptor {
     }
 
     byte[] encryptedSecret = null;
-    if (encryptionConfig.getEncryptionFeatureFlagStatus().get(FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE.name())) {
+    if (Boolean.TRUE.equals(
+            encryptionConfig.getEncryptionFeatureFlagStatus().get(FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE.name()))) {
       encryptedSecret = encryptedRecord.getEncryptedValueBytes();
-    } else if (encryptionConfig.getEncryptionFeatureFlagStatus().get(FeatureName.LOCAL_MULTI_CRYPTO_MODE.name())) {
+    } else if (Boolean.TRUE.equals(
+                   encryptionConfig.getEncryptionFeatureFlagStatus().get(FeatureName.LOCAL_MULTI_CRYPTO_MODE.name()))) {
       encryptedSecret = encryptedRecord.getAdditionalMetadata().getAwsEncryptedSecret();
     } else {
       return getLocalJavaDecryptedSecret(encryptedRecord);
