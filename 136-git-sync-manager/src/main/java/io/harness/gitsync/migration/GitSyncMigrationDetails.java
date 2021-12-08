@@ -25,6 +25,7 @@ public class GitSyncMigrationDetails implements MigrationDetails {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends NGMigration>>>()
         .add(Pair.of(1, YamlGitConfigMigration.class))
         .add(Pair.of(2, RenameInvalidYamlStringToYamlMigration.class))
+        .add(Pair.of(3, GitSyncErrorMigration.class))
         .build();
   }
 }
