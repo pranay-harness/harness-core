@@ -288,6 +288,12 @@ public class NGTemplateServiceImpl implements NGTemplateService {
           "Template with identifier [%s] and versionLabel [%s] under Project[%s], Organization [%s], Account [%s] does not exist.",
           templateIdentifier, deleteVersionLabel, projectIdentifier, orgIdentifier, accountId));
     }
+    if (stableTemplate != null && stableTemplate.getVersionLabel().equals(deleteVersionLabel)
+        && templateEntities.size() != 1) {
+      throw new InvalidRequestException(format(
+          "Template with identifier [%s] and versionLabel [%s] under Project[%s], Organization [%s], Account [%s] cannot delete the stable template",
+          templateIdentifier, deleteVersionLabel, projectIdentifier, orgIdentifier, accountId));
+    }
 
     return deleteMultipleTemplatesHelper(accountId, orgIdentifier, projectIdentifier,
         Collections.singletonList(templateToDelete), version, comments, templateEntities.size() == 1, stableTemplate);
@@ -308,6 +314,13 @@ public class NGTemplateServiceImpl implements NGTemplateService {
       if (templateEntity.isStableTemplate()) {
         stableTemplate = templateEntity;
       }
+    }
+
+    if (stableTemplate != null && deleteTemplateVersions.contains(stableTemplate.getVersionLabel())
+        && !canDeleteStableTemplate) {
+      throw new InvalidRequestException(format(
+          "Template with identifier [%s] and versionLabel [%s] under Project[%s], Organization [%s], Account [%s] cannot delete the stable template",
+          templateIdentifier, stableTemplate.getVersionLabel(), projectIdentifier, orgIdentifier, accountId));
     }
 
     return deleteMultipleTemplatesHelper(accountId, orgIdentifier, projectIdentifier, templateToDeleteList, null,
