@@ -38,7 +38,7 @@ public class GcpSecretManager implements SecretStorage {
   @Override
   public Optional<String> getSecretBy(String secretReference) throws IOException {
     try {
-      log.info("Accessing secret '{}' in project '{}'...", project, secretReference);
+      log.info("Accessing secret '{}' in project '{}'...", secretReference, project);
 
       SecretVersionName secretVersionName = SecretVersionName.of(project, secretReference, LATEST_VERSION);
 
@@ -49,5 +49,10 @@ public class GcpSecretManager implements SecretStorage {
       log.error("Failed to access the secret. Project='{}', SecretReference='{}'", project, secretReference, e);
       return Optional.empty();
     }
+  }
+
+  @Override
+  public void close() throws Exception {
+    client.close();
   }
 }
