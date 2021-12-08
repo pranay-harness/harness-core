@@ -5,7 +5,6 @@ import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.ConnectorTaskParams;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;

@@ -9,8 +9,8 @@ import lombok.Data;
 import lombok.Value;
 
 @Data
-@Builder
 @Value
+@Builder
 public class VmRunTestStep implements VmStepInfo {
   private String image;
   private ConnectorDetails connector;

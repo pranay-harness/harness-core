@@ -1,6 +1,5 @@
 package io.harness.delegate.beans.ci.vm.runner;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 import lombok.Builder;

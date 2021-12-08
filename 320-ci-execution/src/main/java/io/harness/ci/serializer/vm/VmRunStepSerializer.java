@@ -1,6 +1,10 @@
 package io.harness.ci.serializer.vm;
 
-import com.google.inject.Singleton;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.lang.String.format;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.serializer.RunTimeInputHandler;
@@ -10,21 +14,19 @@ import io.harness.beans.yaml.extended.reports.JUnitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReportType;
 import io.harness.delegate.beans.ci.vm.steps.VmJunitTestReport;
 import io.harness.delegate.beans.ci.vm.steps.VmRunStep;
+import io.harness.delegate.beans.ci.vm.steps.VmRunStep.VmRunStepBuilder;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.core.variables.OutputNGVariable;
 
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
 
 @Singleton
 @OwnedBy(HarnessTeam.CI)
@@ -58,12 +60,13 @@ public class VmRunStepSerializer {
       throw new CIStageExecutionException(format("Invalid shell type: %s", shellType));
     }
 
-    VmRunStep.VmRunStepBuilder runStepBuilder = VmRunStep.builder().image(image)
-            .entrypoint(entrypoint)
-            .command(command)
-            .outputVariables(outputVarNames)
-            .envVariables(envVars)
-            .timeoutSecs(timeout);
+    VmRunStepBuilder runStepBuilder = VmRunStep.builder()
+                                          .image(image)
+                                          .entrypoint(entrypoint)
+                                          .command(command)
+                                          .outputVariables(outputVarNames)
+                                          .envVariables(envVars)
+                                          .timeoutSecs(timeout);
 
     if (runStepInfo.getReports() != null) {
       if (runStepInfo.getReports().getType() == UnitTestReportType.JUNIT) {

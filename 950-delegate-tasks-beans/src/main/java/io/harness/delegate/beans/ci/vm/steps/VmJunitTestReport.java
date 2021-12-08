@@ -6,8 +6,8 @@ import lombok.Data;
 import lombok.Value;
 
 @Data
-@Builder
 @Value
+@Builder
 public class VmJunitTestReport implements VmUnitTestReport {
   private List<String> paths;
 

@@ -8,8 +8,8 @@ import lombok.Data;
 import lombok.Value;
 
 @Data
-@Builder
 @Value
+@Builder
 public class VmPluginStep implements VmStepInfo {
   private String image;
   private ConnectorDetails connector;
