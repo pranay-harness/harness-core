@@ -12,6 +12,7 @@ import lombok.Getter;
  */
 @OwnedBy(HarnessTeam.PL)
 public enum FeatureName {
+  AUDIT_TRAIL_WEB_INTERFACE,
   APP_TELEMETRY,
   APPD_CV_TASK,
   ARGO_PHASE1,
