@@ -12,6 +12,28 @@ replace_key_value () {
   fi
 }
 
+write_mongo_hosts_and_ports() {
+  IFS=',' read -ra HOST_AND_PORT <<< "$2"
+  for INDEX in "${!HOST_AND_PORT[@]}"; do
+    HOST=$(cut -d: -f 1 <<< "${HOST_AND_PORT[$INDEX]}")
+    PORT=$(cut -d: -f 2 -s <<< "${HOST_AND_PORT[$INDEX]}")
+
+    yq write -i $CONFIG_FILE $1.hosts[$INDEX].host "$HOST"
+    if [[ "" != "$PORT" ]]; then
+      yq write -i $CONFIG_FILE $1.hosts[$INDEX].port "$PORT"
+    fi
+  done
+}
+
+write_mongo_params() {
+  IFS='&' read -ra PARAMS <<< "$2"
+  for PARAM_PAIR in "${PARAMS[@]}"; do
+    NAME=$(cut -d= -f 1 <<< "$PARAM_PAIR")
+    VALUE=$(cut -d= -f 2 <<< "$PARAM_PAIR")
+    yq write -i $CONFIG_FILE $1.params.$NAME "$VALUE"
+  done
+}
+
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
 yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
 
@@ -76,6 +98,16 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE mongo.uri
+  yq write -i $CONFIG_FILE mongo.username "$MONGO_USERNAME"
+  yq write -i $CONFIG_FILE mongo.password "$MONGO_PASSWORD"
+  yq write -i $CONFIG_FILE mongo.database "$MONGO_DATABASE"
+  yq write -i $CONFIG_FILE mongo.schema "$MONGO_SCHEMA"
+  write_mongo_hosts_and_ports mongo "$MONGO_HOSTS_AND_PORTS"
+  write_mongo_params mongo "$MONGO_PARAMS"
+fi
+
 if [[ "" != "$MONGO_TRACE_MODE" ]]; then
   yq write -i $CONFIG_FILE mongo.traceMode $MONGO_TRACE_MODE
 fi
@@ -119,7 +151,17 @@ fi
 if [[ "" != "$EVENTS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE events-mongo.uri "$EVENTS_MONGO_URI"
 else
-  yq delete -i $CONFIG_FILE events-mongo
+  if [[ "" != "$EVENTS_MONGO_HOSTS_AND_PORTS" ]]; then
+    yq delete -i $CONFIG_FILE events-mongo.uri
+    yq write -i $CONFIG_FILE events-mongo.username "$EVENTS_MONGO_USERNAME"
+    yq write -i $CONFIG_FILE events-mongo.password "$EVENTS_MONGO_PASSWORD"
+    yq write -i $CONFIG_FILE events-mongo.database "$EVENTS_MONGO_DATABASE"
+    yq write -i $CONFIG_FILE events-mongo.schema "$EVENTS_MONGO_SCHEMA"
+    write_mongo_hosts_and_ports events-mongo "$EVENTS_MONGO_HOSTS_AND_PORTS"
+    write_mongo_params events-mongo "$EVENTS_MONGO_PARAMS"
+  else
+    yq delete -i $CONFIG_FILE events-mongo
+  fi
 fi
 
 if [[ "" != "$CF_CLIENT_API_KEY" ]]; then
@@ -895,6 +937,14 @@ fi
 
 if [[ "" != "$DISABLE_DELEGATE_MGMT_IN_MANAGER" ]]; then
   yq write -i $CONFIG_FILE disableDelegateMgmtInManager "$DISABLE_DELEGATE_MGMT_IN_MANAGER"
+fi
+
+if [[ "" != "$GCP_SECRET_MANAGER_PROJECT" ]]; then
+  yq write -i $CONFIG_FILE secretsConfiguration.gcpSecretManagerProject "$GCP_SECRET_MANAGER_PROJECT"
+fi
+
+if [[ "" != "$RESOLVE_SECRETS" ]]; then
+  yq write -i $CONFIG_FILE secretsConfiguration.secretResolutionEnabled "$RESOLVE_SECRETS"
 fi
 
 if [[ "" != "$LDAP_GROUP_SYNC_INTERVAL" ]]; then
