@@ -52,6 +52,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.PatternSyntaxException;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -130,14 +131,18 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
 
     Criteria searchCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
-      searchCriteria.orOperator(where(PlanExecutionSummaryKeys.pipelineIdentifier)
-                                    .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(PlanExecutionSummaryKeys.name)
-              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
-              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
-              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+      try {
+        searchCriteria.orOperator(where(PlanExecutionSummaryKeys.pipelineIdentifier)
+                                      .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+            where(PlanExecutionSummaryKeys.name)
+                .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+            where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
+                .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+            where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
+                .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+      } catch (PatternSyntaxException pex) {
+        throw new InvalidRequestException(pex.getMessage() + " Use \\\\ for special character", pex);
+      }
     }
 
     Criteria gitCriteria = new Criteria();
