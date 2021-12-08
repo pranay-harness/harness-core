@@ -1,6 +1,7 @@
 package io.harness.resourcegroup.framework.service.impl;
 
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.NESTED_DYNAMIC;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import io.harness.beans.Scope;
@@ -8,6 +9,7 @@ import io.harness.beans.ScopeLevel;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
 import io.harness.resourcegroup.model.DynamicResourceSelector;
+import io.harness.resourcegroup.model.NestedDynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.ResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector;
@@ -52,10 +54,26 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
           iterator.remove();
           updated = true;
         }
+      } else if (resourceSelector instanceof NestedDynamicResourceSelector) {
+        NestedDynamicResourceSelector nestedDynamicResourceSelector = (NestedDynamicResourceSelector) resourceSelector;
+        if (!isValidNestedDynamicResourceSelector(scope, nestedDynamicResourceSelector)) {
+          iterator.remove();
+          updated = true;
+        }
       }
     }
     resourceGroup.setResourceSelectors(newResourceSelectors);
     return updated;
+  }
+
+  private boolean isValidNestedDynamicResourceSelector(Scope scope, NestedDynamicResourceSelector resourceSelector) {
+    String resourceType = resourceSelector.getResourceType();
+    ScopeLevel scopeLevel =
+        ScopeLevel.of(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
+
+    return resourceMap.containsKey(resourceType)
+        && resourceMap.get(resourceType).getValidScopeLevels().contains(scopeLevel)
+        && resourceMap.get(resourceType).getSelectorKind().contains(NESTED_DYNAMIC);
   }
 
   private boolean isValidDynamicResourceSelector(Scope scope, DynamicResourceSelector resourceSelector) {

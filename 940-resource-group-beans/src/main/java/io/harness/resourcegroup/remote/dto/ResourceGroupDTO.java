@@ -9,12 +9,14 @@ import io.harness.beans.Scope;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.resourcegroup.model.DynamicResourceSelector;
+import io.harness.resourcegroup.model.NestedDynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,12 +57,24 @@ public class ResourceGroupDTO {
     if (getResourceSelectors() == null) {
       return;
     }
-    List<ResourceSelector> sanitizedResourceSelectors = getResourceSelectors()
-                                                            .stream()
-                                                            .filter(DynamicResourceSelector.class ::isInstance)
-                                                            .map(DynamicResourceSelector.class ::cast)
-                                                            .distinct()
-                                                            .collect(toList());
+    List<ResourceSelector> sanitizedResourceSelectors = new ArrayList<>();
+    List<ResourceSelector> sanitizedDynamicResourceSelectors = getResourceSelectors()
+                                                                   .stream()
+                                                                   .filter(DynamicResourceSelector.class ::isInstance)
+                                                                   .map(DynamicResourceSelector.class ::cast)
+                                                                   .distinct()
+                                                                   .collect(toList());
+
+    List<ResourceSelector> sanitizedNestedDynamicResourceSelectors =
+        getResourceSelectors()
+            .stream()
+            .filter(NestedDynamicResourceSelector.class ::isInstance)
+            .map(NestedDynamicResourceSelector.class ::cast)
+            .distinct()
+            .collect(toList());
+
+    sanitizedResourceSelectors.addAll(sanitizedDynamicResourceSelectors);
+    sanitizedResourceSelectors.addAll(sanitizedNestedDynamicResourceSelectors);
 
     Map<String, List<String>> staticResources =
         getResourceSelectors()
