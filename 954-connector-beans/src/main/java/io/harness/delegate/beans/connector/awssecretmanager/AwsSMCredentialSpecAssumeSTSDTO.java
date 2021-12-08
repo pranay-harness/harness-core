@@ -19,7 +19,9 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(AwsSecretManagerConstants.ASSUME_STS_ROLE)
 @ApiModel("AwsSMCredentialSpecAssumeSTS")
-@Schema(name = "AwsSMCredentialSpecAssumeSTS", description = "This contains the credential spec of AWS SM for STS role")
+@Schema(name = "AwsSMCredentialSpecAssumeSTS",
+    description =
+        "Returns credentials like RoleArn and externalId and STS role duration specific to IAM role for the AWS Secret Manager.")
 public class AwsSMCredentialSpecAssumeSTSDTO implements AwsSecretManagerCredentialSpecDTO {
   @ApiModelProperty(dataType = "string") @NotNull private String roleArn;
   @ApiModelProperty(dataType = "string") private String externalId;

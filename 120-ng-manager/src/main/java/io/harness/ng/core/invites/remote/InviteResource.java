@@ -48,6 +48,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -152,7 +153,7 @@ public class InviteResource {
       })
   @NGAccessControlCheck(resourceType = USER, permission = VIEW_USER_PERMISSION)
   public ResponseDTO<PageResponse<InviteDTO>>
-  getInvites(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+  getInvites(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @QueryParam(
                  "accountIdentifier") @NotNull @AccountIdentifier String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam("projectIdentifier")
@@ -226,6 +227,7 @@ public class InviteResource {
   }
 
   @GET
+  @Hidden
   @Path("accept")
   @ApiOperation(value = "Verify user invite", nickname = "verifyInvite", hidden = true)
   public ResponseDTO<InviteAcceptResponse> accept(@QueryParam("token") @NotNull String jwtToken) {
@@ -233,6 +235,7 @@ public class InviteResource {
   }
 
   @GET
+  @Hidden
   @Path("verify")
   @ApiOperation(
       value = "Verify user invite with the new NG Auth UI flow", nickname = "verifyInviteViaNGAuthUi", hidden = true)
@@ -251,6 +254,7 @@ public class InviteResource {
   }
 
   @GET
+  @Hidden
   @Path("complete")
   @ApiOperation(value = "Complete user invite", nickname = "completeInvite", hidden = true)
   @Operation(operationId = "completeInvite", summary = "Complete the User Invite",
@@ -277,7 +281,8 @@ public class InviteResource {
   public ResponseDTO<Optional<InviteDTO>>
   updateInvite(@Parameter(description = "Invite id") @PathParam("inviteId") @NotNull String inviteId,
       @RequestBody(required = true, description = "Details of the Updated Invite") @NotNull @Valid InviteDTO inviteDTO,
-      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountIdentifier") String accountIdentifier) {
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @QueryParam(
+          "accountIdentifier") String accountIdentifier) {
     NGAccess ngAccess = BaseNGAccess.builder().accountIdentifier(accountIdentifier).build();
     Invite invite = InviteMapper.toInvite(inviteDTO, ngAccess);
     invite.setId(inviteId);
