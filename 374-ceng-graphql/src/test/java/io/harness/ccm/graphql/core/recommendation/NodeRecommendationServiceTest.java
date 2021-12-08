@@ -14,7 +14,7 @@ import io.harness.ccm.commons.beans.recommendation.K8sServiceProvider;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
 import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
 import io.harness.ccm.commons.beans.recommendation.models.NodePool;
-import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequestDTO;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
@@ -62,7 +62,7 @@ public class NodeRecommendationServiceTest extends CategoryTest {
                                         .region("us-west-1")
                                         .build())
             .recommendClusterRequest(
-                RecommendClusterRequest.builder().sumCpu(4D).sumMem(64D).minNodes(3L).maxNodes(10L).build())
+                RecommendClusterRequestDTO.builder().sumCpu(4D).sumMem(64D).minNodes(3L).maxNodes(10L).build())
             .recommendation(RecommendationResponse.builder()
                                 .service(CloudProvider.GCP.getK8sService())
                                 .provider(CloudProvider.GCP.getCloudProviderName())
@@ -110,7 +110,7 @@ public class NodeRecommendationServiceTest extends CategoryTest {
                         .maxmemory(8D * 1024D)
                         .build());
 
-    RecommendClusterRequest request = nodeRecommendationService.constructRecommendationRequest(ACCOUNT_ID,
+    RecommendClusterRequestDTO request = nodeRecommendationService.constructRecommendationRequest(ACCOUNT_ID,
         NodePoolId.builder().clusterid("cId").nodepoolname("npName").build(), OffsetDateTime.now(),
         OffsetDateTime.now());
 

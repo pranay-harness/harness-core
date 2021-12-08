@@ -27,11 +27,11 @@ import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.beans.recommendation.K8sServiceProvider;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId.NodePoolIdKeys;
-import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
+import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStatsDTO;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.ccm.commons.beans.recommendation.ResourceType;
 import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
-import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequestDTO;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
@@ -129,14 +129,14 @@ public class K8sRecommendationDAO {
   }
 
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
-  public RecommendationOverviewStats fetchRecommendationsOverviewStats(
+  public RecommendationOverviewStatsDTO fetchRecommendationsOverviewStats(
       @NonNull String accountId, @Nullable Condition condition) {
     return dslContext
         .select(sum(CE_RECOMMENDATIONS.MONTHLYCOST).as("totalMonthlyCost"),
             sum(CE_RECOMMENDATIONS.MONTHLYSAVING).as("totalMonthlySaving"))
         .from(CE_RECOMMENDATIONS)
         .where(CE_RECOMMENDATIONS.ACCOUNTID.eq(accountId).and(firstNonNull(condition, DSL.noCondition())))
-        .fetchOneInto(RecommendationOverviewStats.class);
+        .fetchOneInto(RecommendationOverviewStatsDTO.class);
   }
 
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
@@ -327,7 +327,7 @@ public class K8sRecommendationDAO {
   }
 
   public String insertNodeRecommendationResponse(JobConstants jobConstants, NodePoolId nodePoolId,
-      RecommendClusterRequest recommendClusterRequest, K8sServiceProvider serviceProvider,
+      RecommendClusterRequestDTO recommendClusterRequest, K8sServiceProvider serviceProvider,
       RecommendationResponse recommendation) {
     Query<K8sNodeRecommendation> query =
         hPersistence.createQuery(K8sNodeRecommendation.class)
@@ -376,7 +376,7 @@ public class K8sRecommendationDAO {
 
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void upsertCeRecommendation(String entityUuid, @NonNull JobConstants jobConstants,
-      @NonNull NodePoolId nodePoolId, String clusterName, @NonNull RecommendationOverviewStats stats,
+      @NonNull NodePoolId nodePoolId, String clusterName, @NonNull RecommendationOverviewStatsDTO stats,
       Instant lastReceivedUntilAt) {
     dslContext.insertInto(CE_RECOMMENDATIONS)
         .set(CE_RECOMMENDATIONS.ACCOUNTID, jobConstants.getAccountId())

@@ -1,6 +1,6 @@
 package io.harness.ccm.commons.beans.recommendation;
 
-import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequestDTO;
 import io.harness.exception.InvalidRequestException;
 
 import lombok.NonNull;
@@ -8,7 +8,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class RecommendationUtils {
-  public RecommendClusterRequest constructNodeRecommendationRequest(TotalResourceUsage totalResourceUsage) {
+  public RecommendClusterRequestDTO constructNodeRecommendationRequest(TotalResourceUsage totalResourceUsage) {
     if (!isResourceConsistent(totalResourceUsage)) {
       throw new InvalidRequestException(String.format("Inconsistent TotalResourceUsage: %s", totalResourceUsage));
     }
@@ -22,7 +22,7 @@ public class RecommendationUtils {
       minNodes = maxNodesPossible;
     }
 
-    return RecommendClusterRequest.builder()
+    return RecommendClusterRequestDTO.builder()
         .maxNodes(maxNodesPossible)
         .minNodes(minNodes)
         .sumCpu(totalResourceUsage.getSumcpu() / 1024.0D)

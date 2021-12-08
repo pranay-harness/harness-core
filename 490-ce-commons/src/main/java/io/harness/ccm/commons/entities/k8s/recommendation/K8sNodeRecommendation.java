@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.recommendation.K8sServiceProvider;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId.NodePoolIdKeys;
-import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequestDTO;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -60,7 +60,7 @@ public final class K8sNodeRecommendation
   String accountId;
   NodePoolId nodePoolId;
 
-  RecommendClusterRequest recommendClusterRequest;
+  RecommendClusterRequestDTO recommendClusterRequest;
 
   K8sServiceProvider currentServiceProvider;
 

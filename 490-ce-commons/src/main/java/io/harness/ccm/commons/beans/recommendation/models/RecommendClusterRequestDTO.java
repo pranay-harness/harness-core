@@ -1,6 +1,7 @@
 package io.harness.ccm.commons.beans.recommendation.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.leangen.graphql.annotations.types.GraphQLType;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
@@ -8,7 +9,8 @@ import lombok.Value;
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RecommendClusterRequest {
+@GraphQLType(name = "RecommendClusterRequest")
+public class RecommendClusterRequestDTO {
   Boolean allowBurst;
   Boolean allowOlderGen;
   List<String> category;

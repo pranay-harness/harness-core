@@ -7,7 +7,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.JobConstants;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
-import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
+import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStatsDTO;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
 
@@ -41,7 +41,7 @@ public class RecommendationCrudServiceImpl implements RecommendationCrudService 
 
   @Override
   public void upsertNodeRecommendation(String entityUuid, JobConstants jobConstants, NodePoolId nodePoolId,
-      String clusterName, RecommendationOverviewStats stats) {
+      String clusterName, RecommendationOverviewStatsDTO stats) {
     k8sRecommendationDAO.upsertCeRecommendation(
         entityUuid, jobConstants, nodePoolId, clusterName, stats, Instant.ofEpochMilli(jobConstants.getJobEndTime()));
   }

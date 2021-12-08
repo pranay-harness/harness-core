@@ -12,7 +12,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
+import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStatsDTO;
 import io.harness.ccm.commons.beans.recommendation.ResourceType;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
 import io.harness.ccm.graphql.dto.recommendation.FilterStatsDTO;
@@ -111,13 +111,15 @@ public class RecommendationServiceTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testGetStats() {
-    final RecommendationOverviewStats expectedStats =
-        RecommendationOverviewStats.builder().totalMonthlySaving(MONTHLY_SAVING).totalMonthlyCost(MONTHLY_COST).build();
+    final RecommendationOverviewStatsDTO expectedStats = RecommendationOverviewStatsDTO.builder()
+                                                             .totalMonthlySaving(MONTHLY_SAVING)
+                                                             .totalMonthlyCost(MONTHLY_COST)
+                                                             .build();
 
     when(k8sRecommendationDAO.fetchRecommendationsOverviewStats(eq(ACCOUNT_ID), eq(DSL.noCondition())))
         .thenReturn(expectedStats);
 
-    final RecommendationOverviewStats stats = recommendationService.getStats(ACCOUNT_ID, DSL.noCondition());
+    final RecommendationOverviewStatsDTO stats = recommendationService.getStats(ACCOUNT_ID, DSL.noCondition());
     Assertions.assertThat(stats.getTotalMonthlyCost()).isEqualTo(MONTHLY_COST);
     Assertions.assertThat(stats.getTotalMonthlySaving()).isEqualTo(MONTHLY_SAVING);
   }

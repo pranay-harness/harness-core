@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
+import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStatsDTO;
 import io.harness.ccm.commons.beans.recommendation.ResourceType;
 import io.harness.ccm.graphql.core.recommendation.RecommendationService;
 import io.harness.ccm.graphql.dto.recommendation.FilterStatsDTO;
@@ -41,17 +41,23 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import graphql.com.google.common.collect.ImmutableList;
+import graphql.com.google.common.collect.ImmutableMap;
+import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.DataFetchingEnvironmentImpl;
+import io.leangen.graphql.execution.ResolutionEnvironment;
 import java.util.Collections;
 import java.util.List;
 import org.jooq.Condition;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class RecommendationsOverviewQueryV2Test extends CategoryTest {
   private static final String ACCOUNT_ID = "accountId";
   private static final String NAME = "name";
@@ -75,8 +81,6 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
 
   @Before
   public void setUp() throws Exception {
-    MockitoAnnotations.initMocks(this);
-
     when(graphQLUtils.getAccountIdentifier(any())).thenReturn(ACCOUNT_ID);
 
     conditionCaptor = ArgumentCaptor.forClass(Condition.class);
@@ -425,9 +429,9 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
   @Category(UnitTests.class)
   public void testRecommendationStats() {
     when(recommendationService.getStats(eq(ACCOUNT_ID), any()))
-        .thenReturn(RecommendationOverviewStats.builder().totalMonthlyCost(100D).totalMonthlySaving(100D).build());
+        .thenReturn(RecommendationOverviewStatsDTO.builder().totalMonthlyCost(100D).totalMonthlySaving(100D).build());
 
-    RecommendationOverviewStats stats =
+    RecommendationOverviewStatsDTO stats =
         overviewQuery.recommendationStats(K8sRecommendationFilterDTO.builder().build(), null);
 
     verify(recommendationService, times(1)).getStats(any(), conditionCaptor.capture());
@@ -435,6 +439,42 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
     assertThat(stats).isNotNull();
     assertThat(stats.getTotalMonthlyCost()).isCloseTo(100D, offset(0.5D));
     assertThat(stats.getTotalMonthlySaving()).isCloseTo(100D, offset(0.5D));
+
+    assertCommonCondition(conditionCaptor.getValue());
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testRecommendationCountQueryInRecommendationOverviewStatsContext() {
+    DataFetchingEnvironment dataFetchingEnvironment =
+        new DataFetchingEnvironmentImpl.Builder().variables(ImmutableMap.of()).build();
+    ResolutionEnvironment resolutionEnvironment =
+        new ResolutionEnvironment(null, dataFetchingEnvironment, null, null, null, null);
+
+    when(recommendationService.getRecommendationsCount(any(), conditionCaptor.capture())).thenReturn(10);
+
+    int count = overviewQuery.count(RecommendationOverviewStatsDTO.builder().build(), resolutionEnvironment);
+
+    assertThat(count).isEqualTo(10);
+
+    assertCommonCondition(conditionCaptor.getValue());
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testRecommendationCountInRecommendationsDTOContext() {
+    DataFetchingEnvironment dataFetchingEnvironment =
+        new DataFetchingEnvironmentImpl.Builder().variables(ImmutableMap.of()).build();
+    ResolutionEnvironment resolutionEnvironment =
+        new ResolutionEnvironment(null, dataFetchingEnvironment, null, null, null, null);
+
+    when(recommendationService.getRecommendationsCount(any(), conditionCaptor.capture())).thenReturn(10);
+
+    int count = overviewQuery.count(RecommendationsDTO.builder().build(), resolutionEnvironment);
+
+    assertThat(count).isEqualTo(10);
 
     assertCommonCondition(conditionCaptor.getValue());
   }

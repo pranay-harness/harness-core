@@ -15,7 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.JobConstants;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
-import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
+import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStatsDTO;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
 import io.harness.rule.Owner;
@@ -97,8 +97,8 @@ public class RecommendationCrudServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpsertNodeRecommendation() throws Exception {
     final NodePoolId nodePoolId = NodePoolId.builder().clusterid(CLUSTER_ID).build();
-    final RecommendationOverviewStats stats =
-        RecommendationOverviewStats.builder().totalMonthlySaving(1D).totalMonthlyCost(2D).build();
+    final RecommendationOverviewStatsDTO stats =
+        RecommendationOverviewStatsDTO.builder().totalMonthlySaving(1D).totalMonthlyCost(2D).build();
 
     ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
 

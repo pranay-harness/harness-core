@@ -13,7 +13,7 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Collections.emptyList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
+import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStatsDTO;
 import io.harness.ccm.graphql.core.recommendation.RecommendationService;
 import io.harness.ccm.graphql.dto.recommendation.FilterStatsDTO;
 import io.harness.ccm.graphql.dto.recommendation.K8sRecommendationFilterDTO;
@@ -62,11 +62,14 @@ public class RecommendationsOverviewQueryV2 {
   @Inject private CEViewService viewService;
   @Inject private RecommendationService recommendationService;
 
+  private static final String FILTER_DOCS = "The filter to drill down a set of Recommendations";
   private static final Gson GSON = new Gson();
 
-  @GraphQLQuery(name = "recommendationsV2", description = "The list of all types of recommendations for overview page")
-  public RecommendationsDTO recommendations(
-      @GraphQLArgument(name = "filter", defaultValue = "{\"offset\":0,\"limit\":10}") K8sRecommendationFilterDTO filter,
+  @GraphQLQuery(name = "recommendationsV2",
+      description = "The list of all types of Recommendations available with Cloud Cost Management")
+  public RecommendationsDTO
+  recommendations(@GraphQLArgument(name = "filter", defaultValue = "{\"offset\":0,\"limit\":10, \"minSaving\": 0}",
+                      description = FILTER_DOCS) K8sRecommendationFilterDTO filter,
       @GraphQLEnvironment final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
 
@@ -77,10 +80,11 @@ public class RecommendationsOverviewQueryV2 {
     return RecommendationsDTO.builder().items(items).offset(filter.getOffset()).limit(filter.getLimit()).build();
   }
 
-  @GraphQLQuery(name = "recommendationStatsV2", description = "Top panel stats API, aggregated")
-  public RecommendationOverviewStats recommendationStats(
-      @GraphQLArgument(name = "filter", defaultValue = "{}") K8sRecommendationFilterDTO filter,
-      @GraphQLEnvironment final ResolutionEnvironment env) {
+  @GraphQLQuery(name = "recommendationStatsV2",
+      description = "The stats containing total monthly cost and saving associated for the filter selected")
+  public RecommendationOverviewStatsDTO
+  recommendationStats(@GraphQLArgument(name = "filter", defaultValue = "{\"minSaving\": 0}", description = FILTER_DOCS)
+                      K8sRecommendationFilterDTO filter, @GraphQLEnvironment final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
 
     Condition condition = applyAllFilters(filter);
@@ -89,14 +93,14 @@ public class RecommendationsOverviewQueryV2 {
   }
 
   // TODO(UTSAV): Add unit test
-  @GraphQLQuery(name = "count", description = "generic count query RecommendationOverviewStats context")
+  @GraphQLQuery(name = "count", description = "generic count query in RecommendationOverviewStats context")
   public int count(
-      @GraphQLContext RecommendationOverviewStats xyz, @GraphQLEnvironment final ResolutionEnvironment env) {
+      @GraphQLContext RecommendationOverviewStatsDTO xyz, @GraphQLEnvironment final ResolutionEnvironment env) {
     return genericCountQuery(env);
   }
 
   // TODO(UTSAV): Add unit test
-  @GraphQLQuery(name = "count", description = "generic count query RecommendationsDTO context")
+  @GraphQLQuery(name = "count", description = "generic count query in RecommendationsDTO context")
   public int count(@GraphQLContext RecommendationsDTO xyz, @GraphQLEnvironment final ResolutionEnvironment env) {
     return genericCountQuery(env);
   }
@@ -119,9 +123,10 @@ public class RecommendationsOverviewQueryV2 {
 
   @GraphQLQuery(name = "recommendationFilterStatsV2", description = "Possible filter values for each key")
   public List<FilterStatsDTO> recommendationFilterStats(
-      @GraphQLArgument(name = "keys", defaultValue = "[]") List<String> columns,
-      @GraphQLArgument(name = "filter", defaultValue = "{}") K8sRecommendationFilterDTO filter,
-      @GraphQLEnvironment final ResolutionEnvironment env) {
+      @GraphQLArgument(name = "keys", defaultValue = "[]",
+          description = "Keys for which we want the possible filter values") List<String> columns,
+      @GraphQLArgument(name = "filter", defaultValue = "{}", description = FILTER_DOCS)
+      K8sRecommendationFilterDTO filter, @GraphQLEnvironment final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
 
     Condition condition = applyAllFilters(filter);

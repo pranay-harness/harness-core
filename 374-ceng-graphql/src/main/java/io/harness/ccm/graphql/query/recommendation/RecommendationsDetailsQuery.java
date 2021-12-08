@@ -7,7 +7,7 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
 import io.harness.ccm.commons.beans.recommendation.ResourceType;
-import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequestDTO;
 import io.harness.ccm.graphql.core.recommendation.NodeRecommendationService;
 import io.harness.ccm.graphql.core.recommendation.WorkloadRecommendationService;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationDetailsDTO;
@@ -43,7 +43,7 @@ public class RecommendationsDetailsQuery {
    * we can use {@code CompletableFuture<RecommendationDetailsDTO>} to parallelize it,
    * with optional dataLoader to make 1+1 db calls instead of n+1.
    */
-  @GraphQLQuery(description = "recommendation details/drillDown")
+  @GraphQLQuery(description = "Recommendation details")
   public RecommendationDetailsDTO recommendationDetails(@GraphQLContext RecommendationItemDTO nodeDTO,
       @GraphQLArgument(name = "startTime", description = "defaults to Now().minusDays(7)") OffsetDateTime startTime,
       @GraphQLArgument(name = "endTime", description = "defaults to Now()") OffsetDateTime endTime,
@@ -54,9 +54,11 @@ public class RecommendationsDetailsQuery {
         accountIdentifier, nodeDTO.getResourceType(), nodeDTO.getId(), startTime, endTime);
   }
 
-  @GraphQLQuery(description = "recommendation details/drillDown")
-  public RecommendationDetailsDTO recommendationDetails(@GraphQLNonNull @GraphQLArgument(name = "id") String id,
-      @GraphQLNonNull @GraphQLArgument(name = "resourceType") ResourceType resourceType,
+  @GraphQLQuery(description = "Recommendation details")
+  public RecommendationDetailsDTO recommendationDetails(
+      @GraphQLNonNull @GraphQLArgument(name = "id", description = "The identifier of the Recommendation") String id,
+      @GraphQLNonNull @GraphQLArgument(
+          name = "resourceType", description = "Recommendation type") ResourceType resourceType,
       @GraphQLArgument(name = "startTime", description = "defaults to Now().minusDays(7)") OffsetDateTime startTime,
       @GraphQLArgument(name = "endTime", description = "defaults to Now()") OffsetDateTime endTime,
       @GraphQLEnvironment final ResolutionEnvironment env) {
@@ -66,7 +68,7 @@ public class RecommendationsDetailsQuery {
   }
 
   @GraphQLQuery(name = "nodeRecommendationRequest")
-  public RecommendClusterRequest nodeRecommendationRequest(
+  public RecommendClusterRequestDTO nodeRecommendationRequest(
       @GraphQLNonNull @GraphQLArgument(name = "nodePoolId") NodePoolId nodePoolId,
       @GraphQLArgument(name = "startTime", description = "defaults to Now().minusDays(7)") OffsetDateTime startTime,
       @GraphQLArgument(name = "endTime", description = "defaults to Now()") OffsetDateTime endTime,

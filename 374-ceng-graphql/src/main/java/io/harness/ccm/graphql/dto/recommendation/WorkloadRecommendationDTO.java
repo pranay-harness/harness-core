@@ -4,6 +4,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerReco
 import software.wings.graphql.datafetcher.ce.recommendation.entity.Cost;
 
 import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
@@ -11,6 +12,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@GraphQLType(name = "WorkloadRecommendation")
 public class WorkloadRecommendationDTO implements RecommendationDetailsDTO {
   String id;
   @GraphQLQuery(description = "use items.containerRecommendation", deprecationReason = "")

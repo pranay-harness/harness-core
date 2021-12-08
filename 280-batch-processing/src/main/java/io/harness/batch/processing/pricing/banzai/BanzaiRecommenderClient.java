@@ -1,6 +1,6 @@
 package io.harness.batch.processing.pricing.banzai;
 
-import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequestDTO;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 
 import retrofit2.Call;
@@ -14,5 +14,5 @@ public interface BanzaiRecommenderClient {
 
   @POST("/api/v1/recommender/provider/{provider}/service/{service}/region/{region}/cluster")
   Call<RecommendationResponse> getRecommendation(@Path("provider") String provider, @Path("service") String service,
-      @Path("region") String region, @Body RecommendClusterRequest request);
+      @Path("region") String region, @Body RecommendClusterRequestDTO request);
 }

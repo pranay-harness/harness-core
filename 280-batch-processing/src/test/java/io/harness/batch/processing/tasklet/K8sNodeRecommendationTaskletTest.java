@@ -18,9 +18,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.beans.recommendation.K8sServiceProvider;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
-import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
+import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStatsDTO;
 import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
-import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequestDTO;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
@@ -69,8 +69,8 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
   public void setUp() throws Exception {
     TotalResourceUsage resourceUsage =
         TotalResourceUsage.builder().maxcpu(1).maxmemory(3).sumcpu(8).summemory(64).build();
-    RecommendClusterRequest request =
-        RecommendClusterRequest.builder().sumCpu(8D).sumMem(3D).maxNodes(7L).minNodes(3L).build();
+    RecommendClusterRequestDTO request =
+        RecommendClusterRequestDTO.builder().sumCpu(8D).sumMem(3D).maxNodes(7L).minNodes(3L).build();
 
     nodePoolId = NodePoolId.builder().clusterid(CLUSTER_ID).nodepoolname(NODE_POOL_NAME).build();
     k8sServiceProvider = K8sServiceProvider.builder()
@@ -186,12 +186,12 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     // detailed recommendation saved in mongo DB
     verify(k8sRecommendationDAO, times(1)).insertNodeRecommendationResponse(any(), any(), any(), any(), any());
     // savings stats as 0 in timescaleDB
-    ArgumentCaptor<RecommendationOverviewStats> statsCaptor =
-        ArgumentCaptor.forClass(RecommendationOverviewStats.class);
+    ArgumentCaptor<RecommendationOverviewStatsDTO> statsCaptor =
+        ArgumentCaptor.forClass(RecommendationOverviewStatsDTO.class);
     verify(recommendationCrudService, times(1))
         .upsertNodeRecommendation(any(), any(), any(), any(), statsCaptor.capture());
 
-    final RecommendationOverviewStats stats = statsCaptor.getValue();
+    final RecommendationOverviewStatsDTO stats = statsCaptor.getValue();
     assertThat(stats).isNotNull();
     assertThat(stats.getTotalMonthlyCost()).isEqualTo(0D);
     assertThat(stats.getTotalMonthlySaving()).isNotZero();
@@ -221,7 +221,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     TotalResourceUsage totalResourceUsage =
         TotalResourceUsage.builder().sumcpu(16D).summemory(64D).maxcpu(0.9D).maxmemory(4.1D).build();
 
-    RecommendClusterRequest request = captureRequest(totalResourceUsage);
+    RecommendClusterRequestDTO request = captureRequest(totalResourceUsage);
 
     assertThat(request).isNotNull();
     assertThat(request.getMinNodes()).isEqualTo(3L);
@@ -237,7 +237,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     TotalResourceUsage totalResourceUsage =
         TotalResourceUsage.builder().sumcpu(16D).summemory(64D).maxcpu(8.1D).maxmemory(4.1D).build();
 
-    RecommendClusterRequest request = captureRequest(totalResourceUsage);
+    RecommendClusterRequestDTO request = captureRequest(totalResourceUsage);
 
     assertThat(request).isNotNull();
     assertThat(request.getMinNodes()).isEqualTo(1L);
@@ -252,11 +252,12 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
   public void testCalculateCostAndSaving() throws Exception {
     assertThat(tasklet.execute(null, chunkContext)).isNull();
 
-    ArgumentCaptor<RecommendationOverviewStats> captor = ArgumentCaptor.forClass(RecommendationOverviewStats.class);
+    ArgumentCaptor<RecommendationOverviewStatsDTO> captor =
+        ArgumentCaptor.forClass(RecommendationOverviewStatsDTO.class);
 
     verify(recommendationCrudService, times(1)).upsertNodeRecommendation(any(), any(), any(), any(), captor.capture());
 
-    RecommendationOverviewStats stats = captor.getValue();
+    RecommendationOverviewStatsDTO stats = captor.getValue();
     assertThat(stats).isNotNull();
     // $2 per node * 6 nodes * 24 hrs * 30 days
     assertThat(stats.getTotalMonthlyCost()).isCloseTo(2D * 6 * 24 * 30, offset(0.5D));
@@ -364,10 +365,10 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     assertThat(serviceProvider.getMemPerVm()).isEqualTo(64D);
   }
 
-  private RecommendClusterRequest captureRequest(TotalResourceUsage totalResourceUsage) throws Exception {
+  private RecommendClusterRequestDTO captureRequest(TotalResourceUsage totalResourceUsage) throws Exception {
     when(k8sRecommendationDAO.maxResourceOfAllTimeBucketsForANodePool(any(), any())).thenReturn(totalResourceUsage);
 
-    ArgumentCaptor<RecommendClusterRequest> captor = ArgumentCaptor.forClass(RecommendClusterRequest.class);
+    ArgumentCaptor<RecommendClusterRequestDTO> captor = ArgumentCaptor.forClass(RecommendClusterRequestDTO.class);
 
     assertThat(tasklet.execute(null, chunkContext)).isNull();
 

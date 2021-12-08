@@ -4,7 +4,7 @@ import io.harness.ccm.commons.beans.recommendation.NodePoolId;
 import io.harness.ccm.commons.beans.recommendation.RecommendationUtils;
 import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
 import io.harness.ccm.commons.beans.recommendation.models.NodePool;
-import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequestDTO;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.ccm.commons.beans.recommendation.models.VirtualMachine;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
@@ -62,7 +62,7 @@ public class NodeRecommendationService {
         .build();
   }
 
-  public RecommendClusterRequest constructRecommendationRequest(@NonNull String accountIdentifier,
+  public RecommendClusterRequestDTO constructRecommendationRequest(@NonNull String accountIdentifier,
       @NonNull NodePoolId nodePoolId, @NonNull OffsetDateTime startTime, @NonNull OffsetDateTime endTime) {
     final TotalResourceUsage totalResourceUsage =
         k8sRecommendationDAO.aggregateTotalResourceRequirement(accountIdentifier, nodePoolId, startTime, endTime);

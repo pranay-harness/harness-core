@@ -16,7 +16,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
 import io.harness.ccm.commons.beans.recommendation.ResourceType;
 import io.harness.ccm.commons.beans.recommendation.models.NodePool;
-import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequestDTO;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.ccm.commons.beans.recommendation.models.VirtualMachine;
 import io.harness.ccm.graphql.core.recommendation.NodeRecommendationService;
@@ -247,7 +247,7 @@ public class RecommendationsDetailsQueryTest extends CategoryTest {
   public void testNodeRecommendationRequest() throws Exception {
     NodePoolId nodePoolId = NodePoolId.builder().clusterid("cId").nodepoolname("npName").build();
     when(nodeRecommendationService.constructRecommendationRequest(eq(ACCOUNT_ID), eq(nodePoolId), any(), any()))
-        .thenReturn(RecommendClusterRequest.builder()
+        .thenReturn(RecommendClusterRequestDTO.builder()
                         .sumCpu(20D)
                         .sumMem(64D)
                         .maxNodes(7L)
@@ -255,7 +255,7 @@ public class RecommendationsDetailsQueryTest extends CategoryTest {
                         .onDemandPct(100L)
                         .build());
 
-    final RecommendClusterRequest request = detailsQuery.nodeRecommendationRequest(nodePoolId, null, null, null);
+    final RecommendClusterRequestDTO request = detailsQuery.nodeRecommendationRequest(nodePoolId, null, null, null);
 
     assertThat(request).isNotNull();
     assertThat(request.getMinNodes()).isEqualTo(3L);
@@ -286,8 +286,8 @@ public class RecommendationsDetailsQueryTest extends CategoryTest {
         .build();
   }
 
-  private static RecommendClusterRequest createRequest() {
-    return RecommendClusterRequest.builder()
+  private static RecommendClusterRequestDTO createRequest() {
+    return RecommendClusterRequestDTO.builder()
         .maxNodes(10L)
         .minNodes(3L)
         .onDemandPct(100L)

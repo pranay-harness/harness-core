@@ -13,10 +13,10 @@ import io.harness.ccm.commons.beans.JobConstants;
 import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.beans.recommendation.K8sServiceProvider;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
-import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
+import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStatsDTO;
 import io.harness.ccm.commons.beans.recommendation.RecommendationUtils;
 import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
-import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequestDTO;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
@@ -97,7 +97,7 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
     K8sServiceProvider serviceProvider = getCurrentNodePoolConfiguration(nodePoolId);
     log.info("serviceProvider: {}", serviceProvider);
 
-    RecommendClusterRequest request = RecommendationUtils.constructNodeRecommendationRequest(totalResourceUsage);
+    RecommendClusterRequestDTO request = RecommendationUtils.constructNodeRecommendationRequest(totalResourceUsage);
     log.info("RecommendClusterRequest: {}", request);
 
     RecommendationResponse recommendation = getRecommendation(serviceProvider, request);
@@ -106,7 +106,7 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
     String mongoEntityId = k8sRecommendationDAO.insertNodeRecommendationResponse(
         jobConstants, nodePoolId, request, serviceProvider, recommendation);
 
-    RecommendationOverviewStats stats = getMonthlyCostAndSaving(serviceProvider, recommendation);
+    RecommendationOverviewStatsDTO stats = getMonthlyCostAndSaving(serviceProvider, recommendation);
     log.info("The monthly stat is: {}", stats);
 
     final String clusterName = clusterHelper.fetchClusterName(nodePoolId.getClusterid());
@@ -123,7 +123,7 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
 
   @SneakyThrows
   private RecommendationResponse getRecommendation(
-      K8sServiceProvider serviceProvider, RecommendClusterRequest request) {
+      K8sServiceProvider serviceProvider, RecommendClusterRequestDTO request) {
     Response<RecommendationResponse> response =
         banzaiRecommenderClient
             .getRecommendation(serviceProvider.getCloudProvider().getCloudProviderName(),
@@ -150,13 +150,13 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
   }
 
   @NotNull
-  private RecommendationOverviewStats getMonthlyCostAndSaving(
+  private RecommendationOverviewStatsDTO getMonthlyCostAndSaving(
       @NonNull K8sServiceProvider serviceProvider, @NonNull RecommendationResponse recommendation) {
     double currentHourlyCost = serviceProvider.getCategoryAwareCost() * (double) serviceProvider.getNodeCount();
     double recommendedHourlyCost = recommendation.getAccuracy().getTotalPrice();
 
     final double toMonthly = 24 * 30;
-    return RecommendationOverviewStats.builder()
+    return RecommendationOverviewStatsDTO.builder()
         .totalMonthlyCost(currentHourlyCost * toMonthly)
         .totalMonthlySaving((currentHourlyCost - recommendedHourlyCost) * toMonthly)
         .build();
