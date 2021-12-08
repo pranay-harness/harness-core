@@ -16,7 +16,7 @@ import java.util.Collections;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class MongoConfigUriUnitTest extends CategoryTest {
+public class MongoConfigUriTest extends CategoryTest {
   @Test
   @Owner(developers = FILIP)
   @Category(UnitTests.class)
@@ -176,5 +176,15 @@ public class MongoConfigUriUnitTest extends CategoryTest {
                              .build();
 
     assertThat(config.getUri()).isEqualTo("mongodb://user:pass@host_1:111,host_2:222,host_3/db");
+  }
+
+  @Test
+  @Owner(developers = FILIP)
+  @Category(UnitTests.class)
+  public void shouldReturnUriWithSpecifiedSchema() {
+    MongoConfig config =
+        MongoConfig.builder().schema("mongodb+srv").hosts(singletonList(HostAndPort.of("some-host", 123))).build();
+
+    assertThat(config.getUri()).isEqualTo("mongodb+srv://some-host:123");
   }
 }
