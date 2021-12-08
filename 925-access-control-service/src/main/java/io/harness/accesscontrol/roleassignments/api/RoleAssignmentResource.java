@@ -48,7 +48,6 @@ import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.principals.users.HarnessUserService;
 import io.harness.accesscontrol.principals.users.UserService;
 import io.harness.accesscontrol.resourcegroups.api.ResourceGroupDTO;
-import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupConstants;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.api.ResourceGroupDTOMapper;
@@ -328,7 +327,6 @@ public class RoleAssignmentResource {
       @RequestBody(description = "These are details for the role assignment to create.",
           required = true) @Body RoleAssignmentDTO roleAssignmentDTO) {
     Scope scope = ScopeMapper.fromParams(harnessScopeParams);
-    validateDeprecatedResourceGroupNotUsed(roleAssignmentDTO.getResourceGroupIdentifier(), scope.getLevel().toString());
     RoleAssignment roleAssignment = fromDTO(scope, roleAssignmentDTO);
     syncDependencies(roleAssignment, scope);
     checkUpdatePermission(harnessScopeParams, roleAssignment);
@@ -339,13 +337,6 @@ public class RoleAssignmentResource {
           response.getScope().getAccountIdentifier(), response.getRoleAssignment(), response.getScope()));
       return ResponseDTO.newResponse(response);
     }));
-  }
-
-  private static void validateDeprecatedResourceGroupNotUsed(String resourceGroupIdentifier, String scopeLevel) {
-    if (HarnessResourceGroupConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(resourceGroupIdentifier)) {
-      throw new InvalidRequestException(
-          String.format("_all_resources is deprecated, please use _all_%s_level_resources.", scopeLevel));
-    }
   }
 
   @PUT
@@ -368,7 +359,6 @@ public class RoleAssignmentResource {
     if (!identifier.equals(roleAssignmentDTO.getIdentifier())) {
       throw new InvalidRequestException("Role assignment identifier in the request body and the url do not match.");
     }
-    validateDeprecatedResourceGroupNotUsed(roleAssignmentDTO.getResourceGroupIdentifier(), scope.getLevel().toString());
     RoleAssignment roleAssignmentUpdate = fromDTO(scope, roleAssignmentDTO);
     checkUpdatePermission(harnessScopeParams, roleAssignmentUpdate);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
@@ -396,11 +386,6 @@ public class RoleAssignmentResource {
   create(@BeanParam HarnessScopeParams harnessScopeParams,
       @RequestBody(description = "List of role assignments to create",
           required = true) @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
-    Scope scope = ScopeMapper.fromParams(harnessScopeParams);
-    roleAssignmentCreateRequestDTO.getRoleAssignments().forEach(roleAssignmentDTO -> {
-      validateDeprecatedResourceGroupNotUsed(
-          roleAssignmentDTO.getResourceGroupIdentifier(), scope.getLevel().toString());
-    });
     return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false));
   }
 
@@ -418,24 +403,6 @@ public class RoleAssignmentResource {
   create(@BeanParam HarnessScopeParams harnessScopeParams,
       @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO,
       @QueryParam("managed") @DefaultValue("false") Boolean managed) {
-    List<RoleAssignmentDTO> roleAssignmentDTOs = new ArrayList<>();
-    roleAssignmentCreateRequestDTO.getRoleAssignments().forEach(roleAssignmentDTO -> {
-      if (HarnessResourceGroupConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(
-              roleAssignmentDTO.getResourceGroupIdentifier())) {
-        roleAssignmentDTOs.add(RoleAssignmentDTO.builder()
-                                   .disabled(roleAssignmentDTO.isDisabled())
-                                   .identifier(roleAssignmentDTO.getIdentifier())
-                                   .managed(roleAssignmentDTO.isManaged())
-                                   .principal(roleAssignmentDTO.getPrincipal())
-                                   .roleIdentifier(roleAssignmentDTO.getRoleIdentifier())
-                                   .resourceGroupIdentifier(getDefaultResourceGroupIdentifier(harnessScopeParams))
-                                   .build());
-      } else {
-        roleAssignmentDTOs.add(roleAssignmentDTO);
-      }
-    });
-    roleAssignmentCreateRequestDTO =
-        RoleAssignmentCreateRequestDTO.builder().roleAssignments(roleAssignmentDTOs).build();
     return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, managed));
   }
 

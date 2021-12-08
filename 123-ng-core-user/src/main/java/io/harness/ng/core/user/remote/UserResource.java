@@ -15,7 +15,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGE_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
-import static io.harness.ng.core.invites.mapper.RoleBindingMapper.validateRoleBindings;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Boolean.FALSE;
@@ -435,7 +434,6 @@ public class UserResource {
       String projectIdentifier, @NotNull @Valid AddUsersDTO addUsersDTO) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USER, null), MANAGE_USER_PERMISSION);
-    validateRoleBindings(addUsersDTO.getRoleBindings(), orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(
         ngUserService.addUsers(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), addUsersDTO));
   }
