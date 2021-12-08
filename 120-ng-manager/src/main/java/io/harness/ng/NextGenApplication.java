@@ -154,6 +154,7 @@ import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.stats.statscollector.InstanceStatsIteratorHandler;
 import io.harness.springdata.HMongoTemplate;
+import io.harness.telemetry.NGTelemetryRecordsJob;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.token.remote.TokenClient;
@@ -396,7 +397,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     }
     registerMigrations(injector);
 
+    initializeNGMonitoring(appConfig, injector);
+
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void initializeNGMonitoring(NextGenConfiguration appConfig, Injector injector) {
+    injector.getInstance(NGTelemetryRecordsJob.class).scheduleTasks();
   }
 
   private void registerOasResource(NextGenConfiguration appConfig, Environment environment, Injector injector) {
