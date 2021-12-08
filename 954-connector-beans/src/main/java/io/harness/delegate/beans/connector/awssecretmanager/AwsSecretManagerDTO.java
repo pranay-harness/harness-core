@@ -37,7 +37,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(name = "AwsSecretManager", description = "This contains Aws SecretManager configuration")
+@Schema(name = "AwsSecretManager", description = "Returns AWS Secret Manager configuration details")
 public class AwsSecretManagerDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @Valid @NotNull AwsSecretManagerCredentialDTO credential;
   @NotNull private String region;

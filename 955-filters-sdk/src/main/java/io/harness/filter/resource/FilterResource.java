@@ -82,7 +82,7 @@ public class FilterResource {
             responseCode = "default", description = "Returns Filter having filterIdentifier as specified in request")
       })
   public ResponseDTO<FilterDTO>
-  get(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotEmpty @QueryParam(
+  get(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotEmpty @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
@@ -148,7 +148,7 @@ public class FilterResource {
   update(@RequestBody(required = true,
              description = "This is the updated Filter. This should have all the fields not just the updated ones")
          @NotNull @Valid FilterDTO filterDTO,
-      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotEmpty @QueryParam(
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotEmpty @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(filterService.update(accountIdentifier, filterDTO));
   }
@@ -163,7 +163,7 @@ public class FilterResource {
         ApiResponse(responseCode = "default", description = "Boolean status whether request was successful or not")
       })
   public ResponseDTO<Boolean>
-  delete(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+  delete(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @QueryParam(
              NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
