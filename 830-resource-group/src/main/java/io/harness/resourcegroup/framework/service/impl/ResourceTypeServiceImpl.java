@@ -12,6 +12,7 @@ import io.harness.resourcegroup.remote.dto.ResourceTypeDTO.ResourceType;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -27,10 +28,12 @@ public class ResourceTypeServiceImpl implements ResourceTypeService {
     this.resources = resources;
   }
 
-  private static ResourceType toResourceType(Resource resource) {
+  private static ResourceType toResourceType(Resource resource, ScopeLevel scopeLevel) {
     return ResourceType.builder()
         .name(resource.getType())
-        .validatorTypes(new ArrayList<>(resource.getSelectorKind()))
+        .validatorTypes(resource.getSelectorKind().get(scopeLevel) == null
+                ? new ArrayList<>()
+                : new ArrayList<>(resource.getSelectorKind().get(scopeLevel)))
         .build();
   }
 
@@ -43,7 +46,7 @@ public class ResourceTypeServiceImpl implements ResourceTypeService {
     return ResourceTypeMapper.toDTO(resources.values()
                                         .stream()
                                         .filter(resource -> resource.getValidScopeLevels().contains(scopeLevel))
-                                        .map(ResourceTypeServiceImpl::toResourceType)
+                                        .map(resource -> toResourceType(resource, scopeLevel))
                                         .collect(Collectors.toList()));
   }
 }
