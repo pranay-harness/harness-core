@@ -10,6 +10,7 @@ package io.harness.resourcegroup.resourceclient.environment;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.NESTED_DYNAMIC;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static org.apache.commons.lang3.StringUtils.stripToNull;
@@ -27,11 +28,13 @@ import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceInfo;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -100,7 +103,8 @@ public class EnvironmentResourceImpl implements Resource {
   }
 
   @Override
-  public EnumSet<ValidatorType> getSelectorKind() {
-    return EnumSet.of(STATIC, DYNAMIC);
+  public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
+    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(STATIC, DYNAMIC, NESTED_DYNAMIC), ScopeLevel.ORGANIZATION,
+        EnumSet.of(STATIC, DYNAMIC, NESTED_DYNAMIC), ScopeLevel.PROJECT, EnumSet.of(STATIC, DYNAMIC));
   }
 }

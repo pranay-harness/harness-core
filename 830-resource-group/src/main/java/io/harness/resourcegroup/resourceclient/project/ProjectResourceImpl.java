@@ -35,6 +35,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -69,8 +70,8 @@ public class ProjectResourceImpl implements Resource {
   }
 
   @Override
-  public EnumSet<ValidatorType> getSelectorKind() {
-    return EnumSet.of(STATIC);
+  public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
+    return Collections.emptyMap();
   }
 
   @Override

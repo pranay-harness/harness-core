@@ -7,42 +7,52 @@ permissions:
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+      - account
+      - organization
       - project
   - identifier: core_project_view
     name: View Project
     status: ACTIVE
     includeInAllRoles: true
     allowedScopeLevels:
+      - account
+      - organization
       - project
   - identifier: core_project_edit
     name: Edit a Project
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+      - account
+      - organization
       - project
   - identifier: core_project_create
     name: Create a Project
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+      - account
       - organization
   - identifier: core_organization_delete
     name: Delete Organization
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+      - account
       - organization
   - identifier: core_organization_view
     name: View Organization
     status: ACTIVE
     includeInAllRoles: true
     allowedScopeLevels:
+      - account
       - organization
   - identifier: core_organization_edit
     name: Edit an Organization
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+      - account
       - organization
   - identifier: core_organization_create
     name: Create an Organization
@@ -185,18 +195,24 @@ permissions:
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+      - account
+      - organization
       - project
   - identifier: core_pipeline_delete
     name: Delete Pipeline
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+      - account
+      - organization
       - project
   - identifier: core_pipeline_execute
     name: Run Pipeline
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+      - account
+      - organization
       - project
   - identifier: core_service_view
     name: View Service

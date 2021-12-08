@@ -10,7 +10,6 @@ package io.harness.resourcegroup.resourceclient.organization;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.remote.client.NGRestUtils.getResponse;
-import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
@@ -34,6 +33,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -68,8 +68,8 @@ public class OrganizationResourceImpl implements Resource {
   }
 
   @Override
-  public EnumSet<ValidatorType> getSelectorKind() {
-    return EnumSet.of(STATIC);
+  public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
+    return Collections.emptyMap();
   }
 
   @Override

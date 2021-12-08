@@ -10,6 +10,7 @@ package io.harness.resourcegroup.resourceclient.usergroup;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.NESTED_DYNAMIC;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static java.util.stream.Collectors.toList;
@@ -29,6 +30,7 @@ import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceInfo;
 import io.harness.usergroups.UserGroupClient;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -36,6 +38,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -73,8 +76,9 @@ public class UserGroupResourceImpl implements Resource {
   }
 
   @Override
-  public EnumSet<ValidatorType> getSelectorKind() {
-    return EnumSet.of(STATIC, DYNAMIC);
+  public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
+    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(STATIC, DYNAMIC, NESTED_DYNAMIC), ScopeLevel.ORGANIZATION,
+        EnumSet.of(STATIC, DYNAMIC, NESTED_DYNAMIC), ScopeLevel.PROJECT, EnumSet.of(STATIC, DYNAMIC));
   }
 
   @Override
