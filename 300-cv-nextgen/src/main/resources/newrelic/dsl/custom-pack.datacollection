@@ -1,0 +1,31 @@
+Var index = 0
+Var tempList = []
+Var one = 1
+Var lengthOfItems = Env:queries.length()
+Var requests = []
+Var returnList = []
+Var emptySpace = ""
+Var queryConcat = concat(" SINCE ", Env:startTimeMillis, " UNTIL ", Env:endTimeMillis, " TIMESERIES ")
+while Var:index !=  Var:lengthOfItems {
+    Var query = Env:queries[Var:index]
+    Var metricValuePath = Env:metricJsonPaths[Var:index]
+    Var timestampPath = Env:timestampJsonPaths[Var:index]
+    Var metricName = Env:metricNames[Var:index]
+
+    Var fullQuery = concat(Env:baseUrl, "query?nrql=", Var:query, Var:queryConcat)
+
+    print Var:fullQuery
+    Request metricRequest = new Request(url=Var:fullQuery, header=Env:commonHeaders)
+    Var resp = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
+
+    Var metricVal = extract(Var:resp,Var:metricValuePath)
+    Var timestamp = extract(Var:resp,Var:timestampPath)
+    Var nullVal = null
+    if Var:metricVal != Var:nullVal  {
+        if
+        Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp)
+        Var:returnList.append(Var:tsRecord)
+    }
+    index = Var:index + Var:one
+}
+return Var:returnList
