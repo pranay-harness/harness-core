@@ -18,6 +18,8 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
+import io.harness.ff.FeatureFlagService;
+import io.harness.ff.FeatureFlagServiceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -126,6 +128,7 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
         bind(WebhookEventService.class).toInstance(mock(WebhookEventService.class));
         bind(AccountClient.class).toInstance(mock(AccountClient.class));
         bind(NGEncryptorService.class).toInstance(mock(NGEncryptorServiceImpl.class));
+        bind(FeatureFlagService.class).toInstance(mock(FeatureFlagServiceImpl.class));
         bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
             .toInstance(mock(NoOpProducer.class));
