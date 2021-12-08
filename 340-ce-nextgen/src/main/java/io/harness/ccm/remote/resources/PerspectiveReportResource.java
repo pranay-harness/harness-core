@@ -51,8 +51,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @OwnedBy(CE)
-@Tag(name = "Cloud Cost Perspective Reports",
-    description = "This resource contains the APIs Reports created on Perspectives")
+@Tag(name = "Cloud Cost Perspective Reports", description = "Manage cost reports created on Perspectives.")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content = { @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FailureDTO.class)) })
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
@@ -73,17 +72,17 @@ public class PerspectiveReportResource {
   @LogAccountIdentifier
   @ApiOperation(value = "Get perspective reports", nickname = "getReportSetting")
   @Operation(operationId = "getReportSetting",
-      description = "Get Reports by Report identifier or by Perspective identifier",
-      summary = "Get Reports by Report identifier or by Perspective identifier",
+      description = "Fetch cost Report details for the given Report ID or a Perspective ID.",
+      summary = "Fetch details of a cost Report",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Returns a list of Report Schedules",
             content = { @Content(mediaType = MediaType.APPLICATION_JSON) })
       })
   public ResponseDTO<List<CEReportSchedule>>
-  getReportSetting(
-      @Parameter(description = "The identifier of the Perspective") @QueryParam("perspectiveId") String perspectiveId,
-      @Parameter(description = "The identifier of the Report") @QueryParam("reportId") String reportId,
+  getReportSetting(@Parameter(description = "Unique identifier for the Perspective") @QueryParam(
+                       "perspectiveId") String perspectiveId,
+      @Parameter(description = "Unique identifier for the Report") @QueryParam("reportId") String reportId,
       @Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @PathParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId) {
     if (perspectiveId != null) {
@@ -107,8 +106,8 @@ public class PerspectiveReportResource {
   @LogAccountIdentifier
   @ApiOperation(value = "Delete perspective reports", nickname = "deleteReportSetting")
   @Operation(operationId = "deleteReportSetting",
-      description = "Delete setting by Report identifier or by Perspective identifier",
-      summary = "Delete setting by Report identifier or by Perspective identifier",
+      description = "Delete cost Perspective Report for the given Report ID or a Perspective ID.",
+      summary = "Delete cost Perspective report",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -116,8 +115,10 @@ public class PerspectiveReportResource {
             content = { @Content(mediaType = MediaType.APPLICATION_JSON) })
       })
   public ResponseDTO<String>
-  deleteReportSetting(@Parameter(description = "The Report Identifier") @QueryParam("reportId") String reportId,
-      @Parameter(description = "The Perspective Identifier") @QueryParam("perspectiveId") String perspectiveId,
+  deleteReportSetting(
+      @Parameter(description = "Unique identifier for the Report") @QueryParam("reportId") String reportId,
+      @Parameter(description = "Unique identifier for the Perspective") @QueryParam(
+          "perspectiveId") String perspectiveId,
       @Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @PathParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId) {
     final String deleteSuccessfulMsg = "Successfully deleted the record";
@@ -143,9 +144,8 @@ public class PerspectiveReportResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create perspective reports", nickname = "createReportSetting")
   @Operation(operationId = "createReportSetting",
-      description =
-          "Create setting by Report identifier or by Perspective identifier, by sending CEReportSchedule as request body",
-      summary = "Create Report Setting",
+      description = "Create a report schedule for the given Report ID or a Perspective ID.",
+      summary = "Create a schedule for a Report",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Returns a list of Report Schedules",
@@ -172,9 +172,8 @@ public class PerspectiveReportResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Update perspective reports", nickname = "updateReportSetting")
-  @Operation(operationId = "updateReportSetting",
-      description = "Update perspective reports by sending CEReportSchedule as request body",
-      summary = "Update perspective reports",
+  @Operation(operationId = "updateReportSetting", description = "Update cost Perspective Reports.",
+      summary = "Update a cost Perspective Report",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Returns a list of Report Schedules",
