@@ -7,17 +7,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.NewRelicDataCollectionInfo;
+import io.harness.cvng.beans.NewRelicDataCollectionInfo.NewRelicMetricInfoDTO;
+import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.MetricResponseMapping;
+import io.harness.cvng.core.entities.AnalysisInfo;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
+import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicMetricInfo;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class NewRelicDataCollectionInfoMapperTest extends CvNextGenTestBase {
   @Inject private NewRelicDataCollectionInfoMapper mapper;
+  BuilderFactory builderFactory;
+
+  @Before
+  public void setup() {
+    builderFactory = BuilderFactory.getDefault();
+  }
+
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
@@ -34,5 +50,51 @@ public class NewRelicDataCollectionInfoMapperTest extends CvNextGenTestBase {
     assertThat(dataCollectionInfo.getApplicationName()).isEqualTo("cv-app");
     assertThat(dataCollectionInfo.getApplicationId()).isEqualTo(cvConfig.getApplicationId());
     assertThat(dataCollectionInfo.getDataCollectionDsl()).isEqualTo("metric-pack-dsl");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testToDataConnectionInfo_withCustomMetrics() {
+    NewRelicCVConfig cvConfig = createCVConfigWithCustomMetric();
+    NewRelicDataCollectionInfo dataCollectionInfo = mapper.toDataCollectionInfo(cvConfig);
+    assertThat(dataCollectionInfo.getMetricPack()).isEqualTo(cvConfig.getMetricPack().toDTO());
+    assertThat(dataCollectionInfo.getApplicationName()).isNull();
+    assertThat(dataCollectionInfo.getApplicationId()).isEqualTo(0);
+    assertThat(dataCollectionInfo.getDataCollectionDsl()).isEqualTo("metric-pack-dsl");
+
+    assertThat(dataCollectionInfo.getGroupName()).isEqualTo("groupName");
+    assertThat(dataCollectionInfo.getMetricInfoList().size()).isEqualTo(1);
+    NewRelicMetricInfoDTO metricInfoDTO = dataCollectionInfo.getMetricInfoList().get(0);
+    NewRelicMetricInfo metricInfo = cvConfig.getMetricInfos().get(0);
+    assertThat(metricInfoDTO.getMetricName()).isEqualTo(metricInfo.getMetricName());
+    assertThat(metricInfoDTO.getNrql()).isEqualTo(metricInfo.getNrql());
+    assertThat(metricInfoDTO.getResponseMapping()).isEqualTo(metricInfo.getResponseMapping().toDto());
+  }
+
+  private NewRelicCVConfig createCVConfigWithCustomMetric() {
+    NewRelicCVConfig cvConfig = (NewRelicCVConfig) builderFactory.newRelicCVConfigBuilder()
+                                    .groupName("groupName")
+                                    .connectorIdentifier("connector")
+                                    .productName("apm")
+                                    .identifier("monService")
+                                    .monitoringSourceName("monService")
+                                    .build();
+    cvConfig.setMetricPack(
+        MetricPack.builder().dataCollectionDsl("metric-pack-dsl").category(CVMonitoringCategory.PERFORMANCE).build());
+    cvConfig.setMetricInfos(Arrays.asList(
+        NewRelicCVConfig.NewRelicMetricInfo.builder()
+            .metricName("metric1")
+            .nrql("Select * from transactions")
+            .metricType(TimeSeriesMetricType.RESP_TIME)
+            .responseMapping(MetricResponseMapping.builder()
+                                 .metricValueJsonPath("$.metricValue")
+                                 .timestampJsonPath("$.timestamp")
+                                 .build())
+            .deploymentVerification(AnalysisInfo.DeploymentVerification.builder().enabled(Boolean.TRUE).build())
+            .liveMonitoring(AnalysisInfo.LiveMonitoring.builder().enabled(Boolean.TRUE).build())
+            .sli(AnalysisInfo.SLI.builder().enabled(Boolean.TRUE).build())
+            .build()));
+    return cvConfig;
   }
 }
