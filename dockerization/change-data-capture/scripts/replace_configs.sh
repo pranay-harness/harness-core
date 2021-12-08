@@ -14,7 +14,7 @@ write_mongo_hosts_and_ports() {
 }
 
 write_mongo_params() {
-  IFS=',' read -ra PARAMS <<< "$2"
+  IFS='&' read -ra PARAMS <<< "$2"
   for PARAM_PAIR in "${PARAMS[@]}"; do
     NAME=$(cut -d= -f 1 <<< "$PARAM_PAIR")
     VALUE=$(cut -d= -f 2 <<< "$PARAM_PAIR")
