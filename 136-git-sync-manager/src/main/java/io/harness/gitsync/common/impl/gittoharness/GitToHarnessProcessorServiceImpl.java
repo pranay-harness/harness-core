@@ -15,6 +15,7 @@ import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.beans.Scope;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.ff.FeatureFlagService;
 import io.harness.gitsync.ChangeSet;
@@ -291,7 +292,8 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
         // This exception happens in the case when we are not able to connect to the microservice
         log.error("Exception in file processing for the microservice {}", entry.getKey(), ex);
         if (ngErrorExperienceEnabled) {
-          gitSyncErrorService.recordConnectivityError(gitToHarnessProcessingInfo.getAccountId(), null, null,
+          gitSyncErrorService.recordConnectivityError(gitToHarnessProcessingInfo.getAccountId(),
+              getScopes(gitToHarnessProcessingInfo.getRepoUrl(), gitToHarnessProcessingInfo.getAccountId()),
               gitToHarnessProcessingInfo.getRepoUrl(), gitToHarnessProcessingInfo.getBranchName(),
               GitConnectivityExceptionHelper.ERROR_MSG_MSVC_DOWN);
         }
@@ -469,11 +471,12 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
 
   private List<GitSyncErrorDTO> getErrorsForInvalidChangeSets(GitToHarnessProcessingInfo gitToHarnessProcessingInfo,
       List<ChangeSetWithYamlStatusDTO> invalidChangeSetWithYamlStatusDTO) {
+    List<Scope> scopes = getScopes(gitToHarnessProcessingInfo.getRepoUrl(), gitToHarnessProcessingInfo.getAccountId());
     List<GitSyncErrorDTO> gitToHarnessErrors = new ArrayList<>();
     invalidChangeSetWithYamlStatusDTO.forEach(changeSetWithYamlStatusDTO -> {
       String errorMessage = changeSetWithYamlStatusDTO.getYamlInputErrorType().getValue();
-      gitToHarnessErrors.add(
-          buildGitSyncErrorDTO(gitToHarnessProcessingInfo, errorMessage, changeSetWithYamlStatusDTO.getChangeSet()));
+      gitToHarnessErrors.add(buildGitSyncErrorDTO(
+          gitToHarnessProcessingInfo, errorMessage, changeSetWithYamlStatusDTO.getChangeSet(), scopes));
     });
     return gitToHarnessErrors;
   }
@@ -491,18 +494,23 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
     Map<FileProcessingResponseDTO, ChangeSet> mapOfChangeSetAndFileResponse =
         getFileProcessingResponseToChangeSetMap(fileResponsesHavingError, changeSets);
     emptyIfNull(fileResponsesHavingError).forEach(fileProcessingResponseDTO -> {
+      ChangeSet changeSet = mapOfChangeSetAndFileResponse.get(fileProcessingResponseDTO);
+      Scope scope = Scope.of(gitToHarnessProcessingInfo.getAccountId(),
+          changeSet.getYamlGitConfigInfo().getYamlGitConfigOrgIdentifier().getValue(),
+          changeSet.getYamlGitConfigInfo().getYamlGitConfigProjectIdentifier().getValue());
       gitToHarnessErrors.add(buildGitSyncErrorDTO(gitToHarnessProcessingInfo,
-          fileProcessingResponseDTO.getErrorMessage(), mapOfChangeSetAndFileResponse.get(fileProcessingResponseDTO)));
+          fileProcessingResponseDTO.getErrorMessage(), changeSet, Collections.singletonList(scope)));
     });
     return gitToHarnessErrors;
   }
 
-  private GitSyncErrorDTO buildGitSyncErrorDTO(
-      GitToHarnessProcessingInfo gitToHarnessProcessingInfo, String errorMessage, ChangeSet changeSet) {
+  private GitSyncErrorDTO buildGitSyncErrorDTO(GitToHarnessProcessingInfo gitToHarnessProcessingInfo,
+      String errorMessage, ChangeSet changeSet, List<Scope> scopes) {
     return GitSyncErrorDTO.builder()
         .accountIdentifier(gitToHarnessProcessingInfo.getAccountId())
         .repoUrl(gitToHarnessProcessingInfo.getRepoUrl())
         .branchName(gitToHarnessProcessingInfo.getBranchName())
+        .scopes(scopes)
         .errorType(GitSyncErrorType.GIT_TO_HARNESS)
         .status(GitSyncErrorStatus.ACTIVE)
         .completeFilePath(changeSet.getFilePath())
@@ -566,5 +574,15 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
         GitToHarnessProcessingResponseDTO.builder().fileResponses(fileProcessingResponses).accountId(accountId).build();
     return Collections.singletonList(
         GitToHarnessProcessingResponse.builder().processingResponse(gitToHarnessProcessingResponseDTO).build());
+  }
+
+  private List<Scope> getScopes(String repoUrl, String accountId) {
+    List<YamlGitConfigDTO> yamlGitConfigDTOS = yamlGitConfigService.getByRepo(repoUrl);
+    return yamlGitConfigDTOS.stream()
+        .filter(yamlGitConfigDTO -> yamlGitConfigDTO.getAccountIdentifier().equals(accountId))
+        .map(yamlGitConfigDTO
+            -> Scope.of(
+                accountId, yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier()))
+        .collect(Collectors.toList());
   }
 }

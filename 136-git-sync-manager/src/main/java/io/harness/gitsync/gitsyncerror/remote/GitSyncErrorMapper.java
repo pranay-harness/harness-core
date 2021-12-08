@@ -9,13 +9,12 @@ import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorAggregateByCommit;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
-import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDetailsDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitToHarnessErrorDetailsDTO;
-import io.harness.gitsync.gitsyncerror.dtos.HarnessToGitErrorDetailsDTO;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
@@ -23,33 +22,39 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(PL)
 public class GitSyncErrorMapper {
   public GitSyncErrorDTO toGitSyncErrorDTO(GitSyncError gitSyncError) {
+    Optional<GitSyncErrorDetailsDTO> additionalErrorDetails =
+        toGitSyncErrorDetailsDTO(gitSyncError.getAdditionalErrorDetails());
     return GitSyncErrorDTO.builder()
         .accountIdentifier(gitSyncError.getAccountIdentifier())
         .repoUrl(nullIfEmpty(gitSyncError.getRepoUrl()))
         .branchName(nullIfEmpty(gitSyncError.getBranchName()))
+        .scopes(gitSyncError.getScopes())
         .completeFilePath(nullIfEmpty(gitSyncError.getCompleteFilePath()))
         .errorType(gitSyncError.getErrorType())
         .changeType(gitSyncError.getChangeType())
         .entityType(gitSyncError.getEntityType())
         .status(gitSyncError.getStatus())
         .failureReason(gitSyncError.getFailureReason())
-        .additionalErrorDetails(toGitSyncErrorDetailsDTO(gitSyncError.getAdditionalErrorDetails()))
+        .additionalErrorDetails(additionalErrorDetails.isPresent() ? additionalErrorDetails.get() : null)
         .createdAt(gitSyncError.getCreatedAt())
         .build();
   }
 
   public GitSyncError toGitSyncError(GitSyncErrorDTO gitSyncErrorDTO, String accountIdentifier) {
+    Optional<GitSyncErrorDetails> additionalErrorDetails =
+        toGitSyncErrorDetails(gitSyncErrorDTO.getAdditionalErrorDetails());
     return GitSyncError.builder()
         .accountIdentifier(accountIdentifier)
         .repoUrl(nullIfEmpty(gitSyncErrorDTO.getRepoUrl()))
         .branchName(nullIfEmpty(gitSyncErrorDTO.getBranchName()))
+        .scopes(gitSyncErrorDTO.getScopes())
         .completeFilePath(nullIfEmpty(gitSyncErrorDTO.getCompleteFilePath()))
         .errorType(gitSyncErrorDTO.getErrorType())
         .changeType(gitSyncErrorDTO.getChangeType())
         .entityType(gitSyncErrorDTO.getEntityType())
         .status(gitSyncErrorDTO.getStatus())
         .failureReason(gitSyncErrorDTO.getFailureReason())
-        .additionalErrorDetails(toGitSyncErrorDetails(gitSyncErrorDTO.getAdditionalErrorDetails()))
+        .additionalErrorDetails(additionalErrorDetails.isPresent() ? additionalErrorDetails.get() : null)
         .build();
   }
 
@@ -69,39 +74,29 @@ public class GitSyncErrorMapper {
         .build();
   }
 
-  private GitSyncErrorDetails toGitSyncErrorDetails(GitSyncErrorDetailsDTO gitSyncErrorDetailsDTO) {
-    if (gitSyncErrorDetailsDTO instanceof GitToHarnessErrorDetailsDTO) {
+  private Optional<GitSyncErrorDetails> toGitSyncErrorDetails(GitSyncErrorDetailsDTO gitSyncErrorDetailsDTO) {
+    if (gitSyncErrorDetailsDTO != null) {
       GitToHarnessErrorDetailsDTO gitToHarnessErrorDetailsDTO = (GitToHarnessErrorDetailsDTO) gitSyncErrorDetailsDTO;
-      return GitToHarnessErrorDetails.builder()
-          .commitMessage(gitToHarnessErrorDetailsDTO.getCommitMessage())
-          .gitCommitId(gitToHarnessErrorDetailsDTO.getGitCommitId())
-          .yamlContent(gitToHarnessErrorDetailsDTO.getYamlContent())
-          .resolvedByCommitId(gitToHarnessErrorDetailsDTO.getResolvedByCommitId())
-          .build();
-    } else {
-      HarnessToGitErrorDetailsDTO harnessToGitErrorDetailsDTO = (HarnessToGitErrorDetailsDTO) gitSyncErrorDetailsDTO;
-      return HarnessToGitErrorDetails.builder()
-          .orgIdentifier(harnessToGitErrorDetailsDTO.getOrgIdentifier())
-          .projectIdentifier(harnessToGitErrorDetailsDTO.getProjectIdentifier())
-          .build();
+      return Optional.of(GitToHarnessErrorDetails.builder()
+                             .commitMessage(gitToHarnessErrorDetailsDTO.getCommitMessage())
+                             .gitCommitId(gitToHarnessErrorDetailsDTO.getGitCommitId())
+                             .yamlContent(gitToHarnessErrorDetailsDTO.getYamlContent())
+                             .resolvedByCommitId(gitToHarnessErrorDetailsDTO.getResolvedByCommitId())
+                             .build());
     }
+    return Optional.empty();
   }
 
-  private GitSyncErrorDetailsDTO toGitSyncErrorDetailsDTO(GitSyncErrorDetails gitSyncErrorDetails) {
-    if (gitSyncErrorDetails instanceof GitToHarnessErrorDetails) {
+  private Optional<GitSyncErrorDetailsDTO> toGitSyncErrorDetailsDTO(GitSyncErrorDetails gitSyncErrorDetails) {
+    if (gitSyncErrorDetails != null) {
       GitToHarnessErrorDetails gitToHarnessErrorDetails = (GitToHarnessErrorDetails) gitSyncErrorDetails;
-      return GitToHarnessErrorDetailsDTO.builder()
-          .commitMessage(gitToHarnessErrorDetails.getCommitMessage())
-          .gitCommitId(gitToHarnessErrorDetails.getGitCommitId())
-          .yamlContent(gitToHarnessErrorDetails.getYamlContent())
-          .resolvedByCommitId(gitToHarnessErrorDetails.getResolvedByCommitId())
-          .build();
-    } else {
-      HarnessToGitErrorDetails harnessToGitErrorDetails = (HarnessToGitErrorDetails) gitSyncErrorDetails;
-      return HarnessToGitErrorDetailsDTO.builder()
-          .orgIdentifier(harnessToGitErrorDetails.getOrgIdentifier())
-          .projectIdentifier(harnessToGitErrorDetails.getProjectIdentifier())
-          .build();
+      return Optional.of(GitToHarnessErrorDetailsDTO.builder()
+                             .commitMessage(gitToHarnessErrorDetails.getCommitMessage())
+                             .gitCommitId(gitToHarnessErrorDetails.getGitCommitId())
+                             .yamlContent(gitToHarnessErrorDetails.getYamlContent())
+                             .resolvedByCommitId(gitToHarnessErrorDetails.getResolvedByCommitId())
+                             .build());
     }
+    return Optional.empty();
   }
 }
