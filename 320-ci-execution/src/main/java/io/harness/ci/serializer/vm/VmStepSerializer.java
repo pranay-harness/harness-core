@@ -6,18 +6,16 @@ import io.harness.delegate.beans.ci.vm.steps.VmStepInfo;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.timeout.Timeout;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import lombok.experimental.UtilityClass;
 
-@Singleton
+@UtilityClass
 public class VmStepSerializer {
-  @Inject private VmRunStepSerializer vmRunStepSerializer;
   public VmStepInfo serialize(
       CIStepInfo stepInfo, String identifier, ParameterField<Timeout> parameterFieldTimeout) {
       String stepName = stepInfo.getNonYamlInfo().getStepInfoType().getDisplayName();
     switch (stepInfo.getNonYamlInfo().getStepInfoType()) {
       case RUN:
-        return vmRunStepSerializer.serialize((RunStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName);
+        return VmRunStepSerializer.serialize((RunStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName);
       case CLEANUP:
       case TEST:
       case BUILD:

@@ -89,7 +89,6 @@ public class RunStepTest extends CIExecutionTestBase {
   public static final String ERROR = "Error executing run step";
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock private OutcomeService outcomeService;
-  @Mock private VmStepSerializer vmStepSerializer;
 
   @Mock private CIDelegateTaskExecutor ciDelegateTaskExecutor;
   @Mock private RunStepProtobufSerializer runStepProtobufSerializer;
@@ -299,7 +298,7 @@ public class RunStepTest extends CIExecutionTestBase {
              ambiance, RefObjectUtils.getSweepingOutputRefObject(STAGE_INFRA_DETAILS)))
         .thenReturn(OptionalSweepingOutput.builder().found(true).output(VmStageInfraDetails.builder().build()).build());
 
-    when(vmStepSerializer.serialize(any(), any(), any())).thenReturn(VmRunStep.builder().build());
+    //    when(vmStepSerializer.serialize(any(), any(), any())).thenReturn(VmRunStep.builder().build());
     when(ciDelegateTaskExecutor.queueTask(any(), any())).thenReturn(callbackId);
 
     AsyncExecutableResponse asyncExecutableResponse =
