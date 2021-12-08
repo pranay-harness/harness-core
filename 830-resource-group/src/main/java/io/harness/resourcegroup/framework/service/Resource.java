@@ -10,6 +10,7 @@ import io.harness.resourcegroup.beans.ValidatorType;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -25,5 +26,5 @@ public interface Resource {
 
   List<Boolean> validate(List<String> resourceIds, Scope scope);
 
-  EnumSet<ValidatorType> getSelectorKind();
+  Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind();
 }
