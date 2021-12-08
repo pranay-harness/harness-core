@@ -33,6 +33,6 @@ public class TemplateLinkConfig {
   String uuid;
 
   @NotNull @EntityIdentifier @Pattern(regexp = NGRegexValidatorConstants.IDENTIFIER_PATTERN) String templateRef;
-  @Pattern(regexp = NGRegexValidatorConstants.IDENTIFIER_PATTERN) String versionLabel;
+  @Pattern(regexp = NGRegexValidatorConstants.VERSION_LABEL_PATTERN) String versionLabel;
   JsonNode templateInputs;
 }

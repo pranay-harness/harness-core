@@ -66,7 +66,7 @@ public class TemplateEntity
   @NotEmpty String accountId;
   @Wither @Trimmed String orgIdentifier;
   @Wither @Trimmed String projectIdentifier;
-  @NotEmpty @EntityIdentifier String identifier;
+  @Wither @NotEmpty @EntityIdentifier String identifier;
 
   @Wither @EntityName String name;
   @Wither @Size(max = 1024) String description;
