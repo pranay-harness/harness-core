@@ -19,6 +19,7 @@ import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
+import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -27,6 +28,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -54,8 +56,10 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
     if (enablePrimaryCheck && queueController != null) {
       consumeResponse = queueController.isPrimary();
     }
+    long loopStartTime = 0;
     while (consumeResponse) {
       try {
+        final Stopwatch stopwatch = Stopwatch.createStarted();
         Query<DelegateAsyncTaskResponse> taskResponseQuery =
             persistence.createQuery(DelegateAsyncTaskResponse.class, excludeAuthority)
                 .field(DelegateAsyncTaskResponseKeys.processAfter)
@@ -65,14 +69,18 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
             persistence.createUpdateOperations(DelegateAsyncTaskResponse.class)
                 .set(DelegateAsyncTaskResponseKeys.processAfter, currentTimeMillis());
 
+        long queryStartTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         DelegateAsyncTaskResponse lockedAsyncTaskResponse =
             persistence.findAndModify(taskResponseQuery, updateOperations, HPersistence.returnNewOptions);
+        long queryEndTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
 
         if (lockedAsyncTaskResponse == null) {
           break;
         }
 
-        log.info("Process won the async task response {}.", lockedAsyncTaskResponse.getUuid());
+        log.info("Process won the async task response {}, mongo queryTime {}, loop processing time {} .",
+            lockedAsyncTaskResponse.getUuid(), queryEndTime - queryStartTime, queryEndTime - loopStartTime);
+        loopStartTime = queryEndTime;
         ResponseData responseData = disableDeserialization
             ? BinaryResponseData.builder().data(lockedAsyncTaskResponse.getResponseData()).build()
             : (DelegateResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData());
