@@ -73,6 +73,12 @@ public class PmsExecutionSummaryRepositoryCustomImpl implements PmsExecutionSumm
     }
   }
 
+  @Override
+  public PipelineExecutionSummaryEntity findFirst(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.findOne(query, PipelineExecutionSummaryEntity.class);
+  }
+
   private void queryFieldsForPipelineExecutionSummaryEntity(Query query) {
     query.fields().include(PlanExecutionSummaryKeys.uuid);
     query.fields().include(PlanExecutionSummaryKeys.runSequence);
