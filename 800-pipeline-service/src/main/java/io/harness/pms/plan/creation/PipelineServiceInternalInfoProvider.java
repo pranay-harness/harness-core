@@ -34,7 +34,9 @@ import io.harness.pms.sdk.core.variables.VariableCreator;
 import io.harness.pms.utils.InjectorUtils;
 import io.harness.pms.variables.HTTPStepVariableCreator;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.approval.ApprovalStepVariableCreator;
 import io.harness.steps.cf.FlagConfigurationStep;
+import io.harness.steps.jira.JiraStepVariableCreator;
 import io.harness.steps.shellscript.ShellScriptStepVariableCreator;
 
 import com.google.inject.Inject;
@@ -87,6 +89,8 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     variableCreators.add(new HTTPStepVariableCreator());
     variableCreators.add(new StepGroupVariableCreator());
     variableCreators.add(new ShellScriptStepVariableCreator());
+    variableCreators.add(new JiraStepVariableCreator());
+    variableCreators.add(new ApprovalStepVariableCreator());
     variableCreators.add(new ExecutionVariableCreator());
     variableCreators.add(new ApprovalStageVariableCreator());
     injectorUtils.injectMembers(variableCreators);
