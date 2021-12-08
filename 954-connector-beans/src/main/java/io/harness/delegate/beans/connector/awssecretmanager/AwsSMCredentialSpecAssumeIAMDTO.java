@@ -17,5 +17,5 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(AwsSecretManagerConstants.ASSUME_IAM_ROLE)
 @ApiModel("AwsSMCredentialSpecAssumeIAM")
-@Schema(name = "AwsSMCredentialSpecAssumeIAM", description = "This contains the credential spec of AWS SM for IAM role")
+@Schema(name = "AwsSMCredentialSpecAssumeIAM")
 public class AwsSMCredentialSpecAssumeIAMDTO implements AwsSecretManagerCredentialSpecDTO {}

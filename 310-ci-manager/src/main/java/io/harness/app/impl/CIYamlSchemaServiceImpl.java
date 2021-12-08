@@ -17,6 +17,7 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
@@ -69,6 +70,8 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
     JsonNode integrationStepDefinitions = integrationStageSteps.get(DEFINITIONS_NODE);
 
     JsonNodeUtils.merge(definitions, integrationStepDefinitions);
+    yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier, scope, (ObjectNode) definitions,
+        YamlSchemaTransientHelper.ciStepV2EntityTypes);
 
     JsonNode jsonNode = definitions.get(StepElementConfig.class.getSimpleName());
     modifyStepElementSchema((ObjectNode) jsonNode);

@@ -8,6 +8,6 @@ import java.io.IOException;
 import java.util.Optional;
 
 @OwnedBy(PL)
-public interface SecretStorage {
+public interface SecretStorage extends AutoCloseable {
   Optional<String> getSecretBy(String secretReference) throws IOException;
 }

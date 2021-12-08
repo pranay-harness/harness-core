@@ -25,7 +25,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("AwsKmsConnectorCredential")
 @JsonDeserialize(using = AwsKmsCredentialDTODeserializer.class)
-@Schema(name = "AwsKmsConnectorCredential", description = "This contains the AWS KMS SM credential type and the config")
+@Schema(name = "AwsKmsConnectorCredential",
+    description = "Returns config details for the AWS KMS Secret Manager Connector.")
 public class AwsKmsConnectorCredentialDTO {
   @NotNull @JsonProperty("type") AwsKmsCredentialType credentialType;
   @JsonProperty("spec")

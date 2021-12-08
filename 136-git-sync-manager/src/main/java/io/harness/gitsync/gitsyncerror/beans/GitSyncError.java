@@ -7,11 +7,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.Scope;
 import io.harness.data.validator.Trimmed;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
-import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails.HarnessToGitErrorDetailsKeys;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
@@ -58,6 +58,7 @@ public class GitSyncError
   // The repo details about the git sync error repo
   private String repoUrl;
   private String branchName;
+  private List<Scope> scopes;
 
   // The details about the file in git
   private ChangeType changeType;
@@ -78,14 +79,15 @@ public class GitSyncError
   @LastModifiedDate private long lastUpdatedAt;
 
   @Builder
-  public GitSyncError(String uuid, String accountIdentifier, String repoUrl, String branchName, ChangeType changeType,
-      String completeFilePath, EntityType entityType, String failureReason, GitSyncErrorStatus status,
-      GitSyncErrorType errorType, GitSyncErrorDetails additionalErrorDetails, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt) {
+  public GitSyncError(String uuid, String accountIdentifier, String repoUrl, String branchName, List<Scope> scopes,
+      ChangeType changeType, String completeFilePath, EntityType entityType, String failureReason,
+      GitSyncErrorStatus status, GitSyncErrorType errorType, GitSyncErrorDetails additionalErrorDetails,
+      EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt) {
     this.uuid = uuid;
     this.accountIdentifier = accountIdentifier;
     this.repoUrl = repoUrl;
     this.branchName = branchName;
+    this.scopes = scopes;
     this.changeType = changeType;
     this.completeFilePath = completeFilePath;
     this.entityType = entityType;
@@ -106,21 +108,15 @@ public class GitSyncError
         GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.commitMessage;
     public static final String resolvedByCommitId =
         GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.resolvedByCommitId;
-    public static final String orgIdentifier =
-        GitSyncErrorKeys.additionalErrorDetails + "." + HarnessToGitErrorDetailsKeys.orgIdentifier;
-    public static final String projectIdentifier =
-        GitSyncErrorKeys.additionalErrorDetails + "." + HarnessToGitErrorDetailsKeys.projectIdentifier;
   }
 
   public static List<MongoIndex> mongoIndexes() {
-    return ImmutableList
-        .<MongoIndex>builder()
-        // for gitToHarness errors
+    return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()
-                 .name("accountId_errorType_repo_branch_filepath_status_sort_Index")
-                 .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.errorType,
-                     GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName, GitSyncErrorKeys.completeFilePath,
-                     GitSyncErrorKeys.status))
+                 .name("accountId_scopes_errorType_repo_branch_filepath_status_sort_Index")
+                 .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.scopes,
+                     GitSyncErrorKeys.errorType, GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName,
+                     GitSyncErrorKeys.completeFilePath, GitSyncErrorKeys.status))
                  .descSortField(GitSyncErrorKeys.createdAt)
                  .build())
         .add(CompoundMongoIndex.builder()
@@ -128,14 +124,6 @@ public class GitSyncError
                  .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.gitCommitId,
                      GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName, GitSyncErrorKeys.completeFilePath))
                  .unique(true)
-                 .build())
-        // for full sync and connectivity issue errors
-        .add(SortCompoundMongoIndex.builder()
-                 .name("accountId_orgId_projectId_errorType_repo_branch_sort_Index")
-                 .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.orgIdentifier,
-                     GitSyncErrorKeys.projectIdentifier, GitSyncErrorKeys.errorType, GitSyncErrorKeys.repoUrl,
-                     GitSyncErrorKeys.branchName))
-                 .descSortField(GitSyncErrorKeys.createdAt)
                  .build())
         .build();
   }

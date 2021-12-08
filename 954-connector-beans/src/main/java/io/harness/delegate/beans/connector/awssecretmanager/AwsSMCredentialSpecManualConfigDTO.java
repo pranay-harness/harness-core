@@ -22,7 +22,7 @@ import lombok.Data;
 @JsonTypeName(AwsSecretManagerConstants.MANUAL_CONFIG)
 @ApiModel("AwsSMCredentialSpecManualConfig")
 @Schema(name = "AwsSMCredentialSpecManualConfig",
-    description = "This contains the secret reference accessKey and secretKey of AWS SM")
+    description = "Returns secret reference accessKey and secretKey of AWS Secret Manager")
 public class AwsSMCredentialSpecManualConfigDTO implements AwsSecretManagerCredentialSpecDTO {
   @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData accessKey;
   @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData secretKey;

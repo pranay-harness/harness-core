@@ -90,7 +90,7 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
       configSecretResolver.resolveSecret(configuration);
     })
         .isInstanceOf(ConfigSecretException.class)
-        .hasMessageContaining(ConfigSecret.class.getSimpleName() + "' can't be used on final fields");
+        .hasMessageContaining(ConfigSecret.class.getSimpleName() + "' can't be used on final field");
   }
 
   @Test

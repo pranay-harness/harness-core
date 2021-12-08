@@ -61,6 +61,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -154,6 +155,7 @@ public class UserResource {
   }
 
   @GET
+  @Hidden
   @Path("usermembership")
   @ApiOperation(value = "Check if user part of scope", nickname = "checkUserMembership", hidden = true)
   @InternalApi
@@ -174,7 +176,7 @@ public class UserResource {
   @GET
   @Path("currentgen")
   @ApiOperation(value = "Get users from current gen for an account", nickname = "getCurrentGenUsers")
-  @Operation(operationId = "getCurrentGenUsers", summary = "list of current gen users with the given account Id",
+  @Operation(operationId = "getCurrentGenUsers", summary = "List of current gen users with the given account Id",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -196,7 +198,7 @@ public class UserResource {
   @Path("projects")
   @ApiOperation(value = "get user project information", nickname = "getUserProjectInfo")
   @Operation(operationId = "getUserProjectInfo",
-      summary = "list of project(s) of current user in the passed account Id in form of page response",
+      summary = "List of project(s) of current user in the passed account Id in form of page response",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
@@ -233,7 +235,7 @@ public class UserResource {
   @Path("projects-count")
   @ApiOperation(value = "Get count of projects accessible to a user", nickname = "getAccessibleProjectsCount")
   @Operation(operationId = "getAccessibleProjectsCount",
-      summary = "count of projects that are accessible to a user filtered by CreatedAt time",
+      summary = "Count of projects that are accessible to a user filtered by CreatedAt time",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
@@ -282,7 +284,7 @@ public class UserResource {
   @POST
   @Path("batch")
   @ApiOperation(value = "Get a list of users", nickname = "getUsers")
-  @Operation(operationId = "getUsers", summary = "list of user's Metadata for a given scope",
+  @Operation(operationId = "getUsers", summary = "List of user's Metadata for a given scope",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -351,7 +353,7 @@ public class UserResource {
   @Path("aggregate")
   @ApiOperation(value = "Get a page of active users for access control", nickname = "getAggregatedUsers")
   @Operation(operationId = "getAggregatedUsers",
-      summary = "list of all the user's metadata along with rolesAssignments who have access to given scope",
+      summary = "List of all the user's metadata along with rolesAssignments who have access to given scope",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
@@ -487,6 +489,7 @@ public class UserResource {
   }
 
   @DELETE
+  @Hidden
   @Path("internal/{userId}")
   @Produces("application/json")
   @Consumes()

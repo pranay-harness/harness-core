@@ -50,7 +50,6 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
-import io.harness.plancreator.steps.StepSchemaUtils;
 import io.harness.plancreator.steps.http.HttpStepNode;
 import io.harness.plancreator.steps.http.PmsAbstractStepNode;
 import io.harness.pms.Dashboard.PMSLandingDashboardService;
@@ -117,6 +116,7 @@ import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.jira.JiraStepHelperService;
 import io.harness.steps.shellscript.ShellScriptHelperService;
 import io.harness.steps.shellscript.ShellScriptHelperServiceImpl;
+import io.harness.steps.shellscript.ShellScriptStepNode;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.template.TemplateResourceClientModule;
@@ -135,7 +135,6 @@ import io.harness.version.VersionInfoManager;
 import io.harness.webhook.WebhookEventClientModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
-import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
@@ -174,10 +173,13 @@ public class PipelineServiceModule extends AbstractModule {
   private final PipelineServiceConfiguration configuration;
 
   private static PipelineServiceModule instance;
+  // TODO: Take this from application.
   public static Set<Class<?>> commonStepsMovedToNewSchema = new HashSet() {
-    { add(HttpStepNode.class); }
+    {
+      add(HttpStepNode.class);
+      add(ShellScriptStepNode.class);
+    }
   };
-  ;
 
   private PipelineServiceModule(PipelineServiceConfiguration configuration) {
     this.configuration = configuration;
@@ -491,7 +493,6 @@ public class PipelineServiceModule extends AbstractModule {
     Set<Class<? extends StepSpecType>> subTypesOfStepSpecType =
         HarnessReflections.get().getSubTypesOf(StepSpecType.class);
     Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
-    set = YamlSchemaTransientHelper.removeNewSchemaStepsSubtypes(set, StepSchemaUtils.getStepsMovedToNewSchema());
     return ImmutableMap.of(StepSpecType.class, set);
   }
 
