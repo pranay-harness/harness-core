@@ -10,7 +10,6 @@ resourceGroups:
     allowedScopeLevels:
       - account
       - organization
-      - project
   - identifier: _all_account_level_resources
     name: All Account Level Resources
     fullScopeSelected: true

@@ -9,7 +9,6 @@ package io.harness.resourcegroup.resourceclient.account;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.remote.client.RestClientUtils.getResponse;
-import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
@@ -26,7 +25,6 @@ import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceInfo;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Collections;
