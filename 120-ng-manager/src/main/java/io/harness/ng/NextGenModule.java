@@ -157,7 +157,7 @@ import io.harness.ng.overview.service.CDLandingDashboardService;
 import io.harness.ng.overview.service.CDLandingDashboardServiceImpl;
 import io.harness.ng.overview.service.CDOverviewDashboardService;
 import io.harness.ng.overview.service.CDOverviewDashboardServiceImpl;
-import io.harness.ng.scim.NGScimUserService;
+import io.harness.ng.scim.NGScimGroupServiceImpl;
 import io.harness.ng.scim.NGScimUserServiceImpl;
 import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
 import io.harness.ng.serviceaccounts.service.impl.ServiceAccountServiceImpl;
@@ -225,6 +225,8 @@ import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
+import software.wings.scim.ScimGroupService;
+import software.wings.scim.ScimUserService;
 import software.wings.security.ThreadLocalUserProvider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -459,7 +461,8 @@ public class NextGenModule extends AbstractModule {
                         .logStreamingServiceBaseUrl(appConfig.getLogStreamingServiceConfig().getBaseUrl())
                         .build());
     bind(WebhookEventService.class).to(WebhookServiceImpl.class);
-    bind(NGScimUserService.class).to(NGScimUserServiceImpl.class);
+    bind(ScimUserService.class).to(NGScimUserServiceImpl.class);
+    bind(ScimGroupService.class).to(NGScimGroupServiceImpl.class);
     install(new OpaClientModule(
         appConfig.getOpaServerConfig().getBaseUrl(), appConfig.getNextGenConfig().getJwtAuthSecret()));
 

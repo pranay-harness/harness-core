@@ -2,11 +2,13 @@ package io.harness.ng.scim.resource;
 
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
-import io.harness.ng.scim.NGScimUserService;
 import io.harness.security.annotations.ScimAPI;
 
 import software.wings.beans.scim.ScimUser;
+import software.wings.resources.ScimResource;
 import software.wings.scim.PatchRequest;
+import software.wings.scim.ScimListResponse;
+import software.wings.scim.ScimUserService;
 
 import com.google.inject.Inject;
 import io.dropwizard.jersey.PATCH;
@@ -53,14 +55,19 @@ import lombok.extern.slf4j.Slf4j;
       @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
       , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
     })
-public class NGScimUserResource {
-  @Inject private NGScimUserService scimUserService;
+public class NGScimUserResource extends ScimResource {
+  @Inject private ScimUserService scimUserService;
 
   @POST
   @Path("Users")
   @ApiOperation(value = "Create a new user", nickname = "createScimUser")
   public Response createUser(ScimUser userQuery, @PathParam("accountIdentifier") String accountIdentifier) {
-    return null;
+    try {
+      return scimUserService.createUser(userQuery, accountIdentifier);
+    } catch (Exception ex) {
+      log.error("Failed to create the user", ex);
+      return getExceptionResponse(ex, Response.Status.NOT_FOUND.getStatusCode(), Response.Status.CONFLICT);
+    }
   }
 
   @PUT
@@ -68,7 +75,12 @@ public class NGScimUserResource {
   @ApiOperation(value = "Update an existing user by uuid", nickname = "updateScimUser")
   public Response updateUser(@PathParam("userIdentifier") String userIdentifier,
       @PathParam("accountIdentifier") String accountIdentifier, ScimUser userQuery) {
-    return null;
+    try {
+      return scimUserService.updateUser(userIdentifier, accountIdentifier, userQuery);
+    } catch (Exception ex) {
+      log.info("Failed to update the user with id: {} for account: {}", userIdentifier, accountIdentifier, ex);
+      return getExceptionResponse(ex, Response.Status.NOT_FOUND.getStatusCode(), Response.Status.NOT_FOUND);
+    }
   }
 
   @GET
@@ -76,7 +88,14 @@ public class NGScimUserResource {
   @ApiOperation(value = "Get an existing user by uuid", nickname = "getScimUser")
   public Response getUser(
       @PathParam("userIdentifier") String userIdentifier, @PathParam("accountIdentifier") String accountIdentifier) {
-    return null;
+    try {
+      return Response.status(Response.Status.OK)
+          .entity(scimUserService.getUser(userIdentifier, accountIdentifier))
+          .build();
+    } catch (Exception ex) {
+      log.info("Failed to fetch the user with id: {} for account: {}", userIdentifier, accountIdentifier);
+      return getExceptionResponse(ex, Response.Status.NOT_FOUND.getStatusCode(), Response.Status.NOT_FOUND);
+    }
   }
 
   @GET
@@ -88,7 +107,15 @@ public class NGScimUserResource {
   public Response
   searchUser(@PathParam("accountIdentifier") String accountIdentifier, @QueryParam("filter") String filter,
       @QueryParam("count") Integer count, @QueryParam("startIndex") Integer startIndex) {
-    return null;
+    try {
+      ScimListResponse<ScimUser> searchUserResponse =
+          scimUserService.searchUser(accountIdentifier, filter, count, startIndex);
+      return Response.status(Response.Status.OK).entity(searchUserResponse).build();
+    } catch (Exception ex) {
+      log.error("SCIM: Search user call failed. AccountId: {}, filter: {}, count: {}, startIndex{}", accountIdentifier,
+          filter, count, startIndex, ex);
+      return getExceptionResponse(ex, Response.Status.NOT_FOUND.getStatusCode(), Response.Status.NOT_FOUND);
+    }
   }
 
   @DELETE
@@ -96,7 +123,8 @@ public class NGScimUserResource {
   @ApiOperation(value = "Delete an user by uuid", nickname = "deleteScimUser")
   public Response deleteUser(
       @PathParam("userIdentifier") String userIdentifier, @PathParam("accountIdentifier") String accountIdentifier) {
-    return null;
+    scimUserService.deleteUser(userIdentifier, accountIdentifier);
+    return Response.status(Response.Status.NO_CONTENT).build();
   }
 
   @PATCH
@@ -104,6 +132,6 @@ public class NGScimUserResource {
   @ApiOperation(value = "Update some fields of a user by uuid", nickname = "patchScimUser")
   public ScimUser updateUser(@PathParam("accountIdentifier") String accountIdentifier,
       @PathParam("userIdentifier") String userIdentifier, PatchRequest patchRequest) {
-    return null;
+    return scimUserService.updateUser(accountIdentifier, userIdentifier, patchRequest);
   }
 }
