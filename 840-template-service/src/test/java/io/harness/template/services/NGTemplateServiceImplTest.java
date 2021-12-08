@@ -22,6 +22,7 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.repositories.NGTemplateRepository;
 import io.harness.rule.Owner;
 import io.harness.springdata.TransactionHelper;
+import io.harness.template.TemplateFilterPropertiesDTO;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
@@ -29,11 +30,13 @@ import io.harness.template.mappers.NGTemplateDtoMapper;
 import io.harness.utils.YamlPipelineUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -204,6 +207,70 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
     boolean delete = templateService.delete(
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, "");
     assertThat(delete).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testDeleteTemplateVersionScenarios() {
+    TemplateEntity createdEntity = templateService.create(entity, false, "");
+    assertThat(createdEntity.isStableTemplate()).isTrue();
+
+    TemplateEntity entityVersion2 = templateService.create(entity.withVersionLabel("version2"), true, "");
+    assertThat(entityVersion2.isStableTemplate()).isTrue();
+
+    TemplateEntity entityVersion3 = templateService.create(entity.withVersionLabel("version3"), false, "");
+    assertThat(entityVersion3.isStableTemplate()).isFalse();
+    assertThat(entityVersion3.isLastUpdatedTemplate()).isTrue();
+
+    TemplateEntity template2EntityVersion2 =
+        templateService.create(entity.withVersionLabel("version2").withIdentifier("template2"), false, "");
+    assertThat(template2EntityVersion2.isStableTemplate()).isTrue();
+
+    TemplateEntity template2EntityVersion3 =
+        templateService.create(entity.withVersionLabel("version3").withIdentifier("template2"), true, "");
+    assertThat(template2EntityVersion3.isStableTemplate()).isTrue();
+    assertThat(template2EntityVersion3.isLastUpdatedTemplate()).isTrue();
+
+    // Deleting a last updated version for a particular templateIdentifier.
+    boolean delete =
+        templateService.delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, "version3", null, "");
+    assertThat(delete).isTrue();
+
+    Criteria criteria =
+        templateServiceHelper.formCriteria(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, null, false, "", false);
+    criteria.and(TemplateEntityKeys.isLastUpdatedTemplate).is(true);
+    Pageable pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, TemplateEntityKeys.lastUpdatedAt));
+    Page<TemplateEntity> templateEntities =
+        templateService.list(criteria, pageRequest, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, false);
+    assertThat(templateEntities.getContent()).isNotNull();
+    assertThat(templateEntities.getContent().size()).isEqualTo(2);
+
+    // Deleting a non last update template version
+    delete = templateService.delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "template2", "version2", null, "");
+    assertThat(delete).isTrue();
+    templateEntities = templateService.list(criteria, pageRequest, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, false);
+    assertThat(templateEntities.getContent()).isNotNull();
+    assertThat(templateEntities.getContent().size()).isEqualTo(2);
+
+    // Deleting complete templateIdentifier
+    delete = templateService.deleteTemplates(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, Sets.newHashSet("version1", "version2"), "");
+    assertThat(delete).isTrue();
+    templateEntities = templateService.list(criteria, pageRequest, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, false);
+    assertThat(templateEntities.getContent()).isNotNull();
+    assertThat(templateEntities.getContent().size()).isEqualTo(1);
+
+    criteria = templateServiceHelper.formCriteria(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null,
+        TemplateFilterPropertiesDTO.builder()
+            .childTypes(Collections.singletonList(TEMPLATE_CHILD_TYPE))
+            .templateEntityTypes(Collections.singletonList(TemplateEntityType.STEP_TEMPLATE))
+            .build(),
+        false, "", false);
+    criteria.and(TemplateEntityKeys.isStableTemplate).is(true);
+    templateEntities = templateService.list(criteria, pageRequest, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, false);
+    assertThat(templateEntities.getContent()).isNotNull();
+    assertThat(templateEntities.getContent().size()).isEqualTo(1);
   }
 
   @Test
