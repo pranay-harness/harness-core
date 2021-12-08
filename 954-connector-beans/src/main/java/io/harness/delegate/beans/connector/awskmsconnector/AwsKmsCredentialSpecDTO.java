@@ -16,5 +16,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
       @JsonSubTypes.Type(value = AwsKmsCredentialSpecAssumeSTSDTO.class, name = AwsKmsConstants.ASSUME_STS_ROLE)
 })
 @ApiModel("AwsKmsCredentialSpec")
-@Schema(name = "AwsKmsCredentialSpec", description = "This contains the credential spec of AWS KMS SM")
+@Schema(name = "AwsKmsCredentialSpec",
+    description = "This is interface that returns credentials specific to all roles for the AWS KMS Secret Manager.")
 public interface AwsKmsCredentialSpecDTO extends DecryptableEntity {}

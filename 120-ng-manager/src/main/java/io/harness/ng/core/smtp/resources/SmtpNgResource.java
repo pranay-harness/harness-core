@@ -98,7 +98,8 @@ public class SmtpNgResource {
   @ExceptionMetered
   public ResponseDTO<ValidationResultDTO>
   validateName(@Parameter(description = "The name of Config") @QueryParam("name") String name,
-      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") String accountId) throws IOException {
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @QueryParam("accountId") String accountId)
+      throws IOException {
     ValidationResultDTO response = smtpNgService.validateSmtpSettings(name, accountId);
     return ResponseDTO.newResponse(response);
   }
