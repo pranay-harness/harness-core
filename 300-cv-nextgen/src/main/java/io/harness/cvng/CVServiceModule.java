@@ -88,6 +88,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVNGLogService;
 import io.harness.cvng.core.services.api.CVNGYamlSchemaService;
 import io.harness.cvng.core.services.api.ChangeEventService;
+import io.harness.cvng.core.services.api.CustomHealthService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionSLIInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskManagementService;
@@ -126,6 +127,7 @@ import io.harness.cvng.core.services.impl.CVNGLogServiceImpl;
 import io.harness.cvng.core.services.impl.CVNGYamlSchemaServiceImpl;
 import io.harness.cvng.core.services.impl.ChangeEventServiceImpl;
 import io.harness.cvng.core.services.impl.ChangeSourceUpdateHandler;
+import io.harness.cvng.core.services.impl.CustomHealthServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
 import io.harness.cvng.core.services.impl.DatadogMetricDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.DatadogServiceImpl;
@@ -392,6 +394,8 @@ public class CVServiceModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), DataSourceType.class, DataCollectionSLIInfoMapper.class);
     dataSourceTypeDataCollectionSLIInfoMapperMapBinder.addBinding(DataSourceType.PROMETHEUS)
         .to(PrometheusDataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionSLIInfoMapperMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
+        .to(AppDynamicsDataCollectionInfoMapper.class);
     dataSourceTypeDataCollectionSLIInfoMapperMapBinder.addBinding(DataSourceType.DATADOG_METRICS)
         .to(DatadogMetricDataCollectionInfoMapper.class);
     dataSourceTypeDataCollectionSLIInfoMapperMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
@@ -483,9 +487,9 @@ public class CVServiceModule extends AbstractModule {
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(CVNGStepTaskService.class).to(CVNGStepTaskServiceImpl.class);
     bind(PrometheusService.class).to(PrometheusServiceImpl.class);
+    bind(CustomHealthService.class).to(CustomHealthServiceImpl.class);
     bind(CVNGYamlSchemaService.class).to(CVNGYamlSchemaServiceImpl.class);
     bind(SumoLogicService.class).to(SumoLogicServiceImpl.class);
-
     bind(HealthSourceService.class).to(HealthSourceServiceImpl.class);
     bind(MonitoredServiceService.class).to(MonitoredServiceServiceImpl.class);
     bind(ServiceDependencyService.class).to(ServiceDependencyServiceImpl.class);
@@ -545,6 +549,7 @@ public class CVServiceModule extends AbstractModule {
     bind(ServiceLevelObjectiveService.class).to(ServiceLevelObjectiveServiceImpl.class);
     bind(UserJourneyService.class).to(UserJourneyServiceImpl.class);
     bind(ServiceLevelIndicatorService.class).to(ServiceLevelIndicatorServiceImpl.class);
+    bind(SLIDataProcessorService.class).to(SLIDataProcessorServiceImpl.class);
     bind(ServiceLevelIndicatorEntityAndDTOTransformer.class);
     MapBinder<SLIMetricType, ServiceLevelIndicatorTransformer> serviceLevelIndicatorTransformerMapBinder =
         MapBinder.newMapBinder(binder(), SLIMetricType.class, ServiceLevelIndicatorTransformer.class);

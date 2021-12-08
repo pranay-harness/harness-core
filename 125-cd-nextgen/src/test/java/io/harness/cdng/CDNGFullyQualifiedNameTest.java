@@ -45,13 +45,11 @@ public class CDNGFullyQualifiedNameTest extends CDNGTestBase {
   private final String ACCOUNT = "ACCOUNT";
   private final String ORG = "ORG";
   private final String PROJECT = "PROJECT";
-  private Set<String> expectedReferences = Sets.newHashSet(
-      "pipeline.stages.stage_1.spec.infrastructure.infrastructureDefinition.spec.connectorRef",
-      "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.manifests.manifest1.spec.store.spec.connectorRef",
-      "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.manifests.values.spec.store.spec.connectorRef",
-      "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.connectorRef",
-      "pipeline.stages.stage_1.spec.serviceConfig.service.identifier",
-      "pipeline.stages.stage_1.spec.infrastructure.environment.identifier");
+  private Set<String> expectedReferences =
+      Sets.newHashSet("pipeline.stages.stage_1.spec.infrastructure.infrastructureDefinition.spec.connectorRef",
+          "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.connectorRef",
+          "pipeline.stages.stage_1.spec.serviceConfig.service.identifier",
+          "pipeline.stages.stage_1.spec.infrastructure.environment.identifier");
 
   private Map<String, String> identifierToFieldName = Maps.newHashMap();
   private List<String> arrayFields = new ArrayList<>();
@@ -86,7 +84,8 @@ public class CDNGFullyQualifiedNameTest extends CDNGTestBase {
     Set<String> yamlUtilsFqn = getFqnUsingYamlNode(yamlField);
 
     // log.info("Validating fqn generation from yamlUtils and Visitor framework");
-    assertThat(entityReferences).isEqualTo(yamlUtilsFqn);
+    // manifest connectorRef has been excluded from RBAC
+    assertThat(yamlUtilsFqn.containsAll(entityReferences)).isTrue();
 
     validateFqnIsGeneratedUsingFQNUtils(pipelineYaml);
     assertThat(entityReferences).isEqualTo(expectedReferences);

@@ -80,6 +80,11 @@ public class Workflow
                  .field(WorkflowKeys.accountId)
                  .ascSortField(WorkflowKeys.name)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("appId_name")
+                 .field(WorkflowKeys.appId)
+                 .ascSortField(WorkflowKeys.name)
+                 .build())
         .build();
   }
   public static final String NAME_KEY = "name";
@@ -128,7 +133,7 @@ public class Workflow
   @FdIndex private List<String> linkedArtifactStreamIds = new ArrayList<>();
 
   @Getter @Setter private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
-  @FdIndex private String accountId;
+  private String accountId;
   private boolean sample;
 
   @Override

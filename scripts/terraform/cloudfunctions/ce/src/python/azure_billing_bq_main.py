@@ -71,15 +71,13 @@ def main(event, context):
     jsonData["tableName"] = f"azureBilling_{jsonData['tableSuffix']}"
     jsonData["tableId"] = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
 
-    create_dataset(client, jsonData["datasetName"])
+    create_dataset(client, jsonData["datasetName"], jsonData.get("accountId"))
     dataset = client.dataset(jsonData["datasetName"])
 
     preAggragatedTableRef = dataset.table("preAggregated")
     preAggregatedTableTableName = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], PREAGGREGATED)
     unifiedTableRef = dataset.table("unifiedTable")
     unifiedTableTableName = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], UNIFIED)
-    cost_aggregated_table_ref = client.dataset(CEINTERNALDATASET).table(COSTAGGREGATED)
-    cost_aggregated_table_name = "%s.%s.%s" % (PROJECTID, CEINTERNALDATASET, COSTAGGREGATED)
 
     if not if_tbl_exists(client, unifiedTableRef):
         print_("%s table does not exists, creating table..." % unifiedTableRef)
@@ -95,12 +93,6 @@ def main(event, context):
     else:
         alter_preagg_table(jsonData)
         print_("%s table exists" % preAggregatedTableTableName)
-
-    if not if_tbl_exists(client, cost_aggregated_table_ref):
-        print_("%s table does not exists, creating table..." % cost_aggregated_table_ref)
-        createTable(client, cost_aggregated_table_ref)
-    else:
-        print_("%s table exists" % cost_aggregated_table_name)
 
     # start streaming the data from the gcs
     print_("%s table exists. Starting to write data from gcs into it..." % jsonData["tableName"])

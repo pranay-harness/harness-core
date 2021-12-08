@@ -8,6 +8,7 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Localhost.getLocalHostName;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 import io.harness.version.VersionInfoManager;
 
@@ -149,10 +150,13 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
     submitLogs(MIN_BATCH_SIZE);
   }
 
+  // TODO: This whole class needs a complete rework. Right now it causes a huge delay on delegate startup with
+  // dropwizard
   private void flush() {
     while (true) {
       synchronized (this) {
-        if (logQueue.isEmpty()) {
+        // If logging is not initialized, just ignore the queue
+        if (logQueue.isEmpty() || logging == null) {
           return;
         }
         submitLogs(0);
@@ -315,17 +319,22 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   private Map<String, String> getLogLabels() {
     String delegateId = getDelegateId();
     if (isEmpty(logLabels) || !StringUtils.equals(delegateId, logLabels.get("delegateId"))) {
-      ImmutableMap.Builder<String, String> labelsBuilder = ImmutableMap.<String, String>builder()
-                                                               .put("source", localhostName)
-                                                               .put("processId", processId)
-                                                               .put("version", versionInfoManager.getFullVersion())
-                                                               .put("app", getAppName())
-                                                               .put("accountId", getAccountId())
-                                                               .put("managerHost", getManagerHost());
+      // Stackdriver has a problem with label containing 'https://' ( ':' seems to be a special character so we should
+      // remove it - '/' confirmed to work )
+      ImmutableMap.Builder<String, String> labelsBuilder =
+          ImmutableMap.<String, String>builder()
+              .put("source", localhostName)
+              .put("processId", processId)
+              .put("version", versionInfoManager.getFullVersion())
+              .put("app", getAppName())
+              .put("accountId", getAccountId())
+              .put("managerHost", substringAfter(getManagerHost(), "://"));
+
       if (isNotBlank(delegateId)) {
         labelsBuilder.put("delegateId", delegateId);
       }
       logLabels = labelsBuilder.build();
+      log.info("Logging labels {}", logLabels);
     }
     return logLabels;
   }

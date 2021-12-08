@@ -1,7 +1,7 @@
 package io.harness.platform.resourcegroup;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.platform.PlatformConfiguration.getResourceGroupServiceResourceClasses;
+import static io.harness.platform.PlatformConfiguration.RESOURCE_GROUP_RESOURCES;
 
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
@@ -104,7 +104,7 @@ public class ResourceGroupServiceSetup {
   }
 
   private void registerResources(Environment environment, Injector injector) {
-    for (Class<?> resource : getResourceGroupServiceResourceClasses()) {
+    for (Class<?> resource : RESOURCE_GROUP_RESOURCES) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }

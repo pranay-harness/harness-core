@@ -13,5 +13,5 @@ import org.springframework.data.repository.CrudRepository;
 @OwnedBy(DX)
 public interface GitFullSyncEntityRepository
     extends CrudRepository<GitFullSyncEntityInfo, String>, GitFullSyncEntityRepositoryCustom {
-    List<GitFullSyncEntityInfo> findByAccountIdentifierAndFullSyncJobId(String accountIdentifier, String fullSyncJobId);
+  List<GitFullSyncEntityInfo> findByAccountIdentifierAndFullSyncJobId(String accountIdentifier, String fullSyncJobId);
 }

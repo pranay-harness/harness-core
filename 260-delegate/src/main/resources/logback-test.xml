@@ -42,6 +42,8 @@
 
     <appender name="REST2" class="io.harness.delegate.logging.DelegateStackdriverLogAppender">
         <threshold>TRACE</threshold>
+        <managerHost>${MANAGER_HOST_AND_PORT}</managerHost>
+        <accountId>${ACCOUNT_ID}</accountId>
     </appender>
 
     <logger name="software.wings" level="INFO"/>

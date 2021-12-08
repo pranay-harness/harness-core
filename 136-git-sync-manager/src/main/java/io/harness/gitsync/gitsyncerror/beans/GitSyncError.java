@@ -30,6 +30,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -41,7 +42,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@Builder
+@NoArgsConstructor
 @EqualsAndHashCode()
 @FieldNameConstants(innerTypeName = "GitSyncErrorKeys")
 @Entity(value = "gitSyncErrorNG")
@@ -75,6 +76,28 @@ public class GitSyncError
   @CreatedDate private long createdAt;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;
   @LastModifiedDate private long lastUpdatedAt;
+
+  @Builder
+  public GitSyncError(String uuid, String accountIdentifier, String repoUrl, String branchName, ChangeType changeType,
+      String completeFilePath, EntityType entityType, String failureReason, GitSyncErrorStatus status,
+      GitSyncErrorType errorType, GitSyncErrorDetails additionalErrorDetails, EmbeddedUser createdBy, long createdAt,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt) {
+    this.uuid = uuid;
+    this.accountIdentifier = accountIdentifier;
+    this.repoUrl = repoUrl;
+    this.branchName = branchName;
+    this.changeType = changeType;
+    this.completeFilePath = completeFilePath;
+    this.entityType = entityType;
+    this.failureReason = failureReason;
+    this.status = status;
+    this.errorType = errorType;
+    this.additionalErrorDetails = additionalErrorDetails;
+    this.createdBy = createdBy;
+    this.createdAt = createdAt;
+    this.lastUpdatedBy = lastUpdatedBy;
+    this.lastUpdatedAt = lastUpdatedAt;
+  }
 
   public static final class GitSyncErrorKeys {
     public static final String gitCommitId =

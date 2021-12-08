@@ -84,20 +84,25 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           VaultRestClientFactory
               .getVaultRetrofit(sshVaultConfig.getVaultUrl(), sshVaultConfig.isCertValidationRequired())
               .create(VaultSysAuthRestClient.class);
-
+      log.info("[VaultSSH]: HostConnectionAttributes are : {} Vault SSH Config is : {}", hostConnectionAttributes,
+          sshVaultConfig);
       SignedSSHVaultRequest signedSSHVaultRequest = SignedSSHVaultRequest.builder()
                                                         .publicKey(hostConnectionAttributes.getPublicKey())
                                                         .validPrincipals(hostConnectionAttributes.getUserName())
                                                         .build();
-
+      log.info("[VaultSSH]: Signing request: {}", signedSSHVaultRequest);
       Response<SignedSSHVaultResponse> response =
           restClient
               .fetchSignedPublicKey(sshVaultConfig.getSecretEngineName(), hostConnectionAttributes.getRole(),
                   vaultToken, signedSSHVaultRequest)
               .execute();
+      log.info("[VaultSSH]: Signing response: {}", response);
       if (response.isSuccessful() && response.body().getSignedSSHVaultResult() != null) {
+        log.info(
+            "[VaultSSH]: Signed public key is : {}", response.body().getSignedSSHVaultResult().getSignedPublicKey());
         hostConnectionAttributes.setSignedPublicKey(response.body().getSignedSSHVaultResult().getSignedPublicKey());
       } else {
+        log.info("[VaultSSH]: Error signing public key for request:{}", signedSSHVaultRequest);
         logAndThrowVaultError(sshVaultConfig, response, "sign public key with SSH secret engine");
       }
     } catch (IOException ioe) {

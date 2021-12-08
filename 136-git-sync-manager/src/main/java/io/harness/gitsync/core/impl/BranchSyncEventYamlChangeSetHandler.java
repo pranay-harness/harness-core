@@ -6,7 +6,9 @@ import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.ff.FeatureFlagService;
 import io.harness.gitsync.common.beans.BranchSyncMetadata;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
@@ -43,6 +45,7 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
   private GitToHarnessProgressService gitToHarnessProgressService;
   private GitToHarnessProgressHelper gitToHarnessProgressHelper;
   private GitSyncErrorService gitSyncErrorService;
+  private FeatureFlagService featureFlagService;
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
@@ -115,7 +118,9 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
 
   private void recordErrors(
       String accountId, BranchSyncMetadata branchSyncMetadata, String repo, String branch, String errorMessage) {
-    gitSyncErrorService.recordConnectivityError(accountId, branchSyncMetadata.getOrgIdentifier(),
-        branchSyncMetadata.getProjectIdentifier(), repo, branch, errorMessage);
+    if (featureFlagService.isEnabled(FeatureName.NG_GIT_ERROR_EXPERIENCE, accountId)) {
+      gitSyncErrorService.recordConnectivityError(accountId, branchSyncMetadata.getOrgIdentifier(),
+          branchSyncMetadata.getProjectIdentifier(), repo, branch, errorMessage);
+    }
   }
 }

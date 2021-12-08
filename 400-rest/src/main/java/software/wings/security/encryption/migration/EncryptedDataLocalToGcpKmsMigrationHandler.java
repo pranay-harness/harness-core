@@ -61,9 +61,9 @@ public class EncryptedDataLocalToGcpKmsMigrationHandler implements Handler<Encry
 
   @Inject
   public EncryptedDataLocalToGcpKmsMigrationHandler(WingsPersistence wingsPersistence,
-                                                    FeatureFlagService featureFlagService, PersistenceIteratorFactory persistenceIteratorFactory,
-                                                    GcpSecretsManagerService gcpSecretsManagerService, LocalSecretManagerService localSecretManagerService,
-                                                    MorphiaPersistenceProvider<EncryptedData> persistenceProvider, SecretService secretService) {
+      FeatureFlagService featureFlagService, PersistenceIteratorFactory persistenceIteratorFactory,
+      GcpSecretsManagerService gcpSecretsManagerService, LocalSecretManagerService localSecretManagerService,
+      MorphiaPersistenceProvider<EncryptedData> persistenceProvider, SecretService secretService) {
     this.wingsPersistence = wingsPersistence;
     this.featureFlagService = featureFlagService;
     this.persistenceIteratorFactory = persistenceIteratorFactory;
@@ -81,19 +81,19 @@ public class EncryptedDataLocalToGcpKmsMigrationHandler implements Handler<Encry
     this.gcpKmsConfig = gcpSecretsManagerService.getGlobalKmsConfig();
     if (gcpKmsConfig == null) {
       log.error(
-              "Global GCP KMS config found to be null hence not registering EncryptedDataLocalToGcpKmsMigrationHandler iterators");
+          "Global GCP KMS config found to be null hence not registering EncryptedDataLocalToGcpKmsMigrationHandler iterators");
       return;
     }
 
     Set<String> accountIds = featureFlagService.getAccountIds(ACTIVE_MIGRATION_FROM_LOCAL_TO_GCP_KMS);
     if (isEmpty(accountIds)) {
       log.info(
-              "Feature flag {} is not enabled hence not registering EncryptedDataLocalToGcpKmsMigrationHandler iterators",
-              ACTIVE_MIGRATION_FROM_LOCAL_TO_GCP_KMS);
+          "Feature flag {} is not enabled hence not registering EncryptedDataLocalToGcpKmsMigrationHandler iterators",
+          ACTIVE_MIGRATION_FROM_LOCAL_TO_GCP_KMS);
     } else {
       log.info(
-              "Feature flag {} is enabled for accounts {} hence registering EncryptedDataLocalToGcpKmsMigrationHandler iterators",
-              ACTIVE_MIGRATION_FROM_LOCAL_TO_GCP_KMS, accountIds.toString());
+          "Feature flag {} is enabled for accounts {} hence registering EncryptedDataLocalToGcpKmsMigrationHandler iterators",
+          ACTIVE_MIGRATION_FROM_LOCAL_TO_GCP_KMS, accountIds.toString());
       MorphiaFilterExpander<EncryptedData> filterExpander = getFilterQueryWithAccountIdsFilter(accountIds);
       registerIteratorWithFactory(filterExpander);
     }
@@ -101,22 +101,22 @@ public class EncryptedDataLocalToGcpKmsMigrationHandler implements Handler<Encry
 
   private void registerIteratorWithFactory(@NotNull MorphiaFilterExpander<EncryptedData> filterExpander) {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-            PersistenceIteratorFactory.PumpExecutorOptions.builder()
-                    .name("EncryptedDataLocalToGcpKmsMigrationHandler")
-                    .poolSize(5)
-                    .interval(ofSeconds(30))
-                    .build(),
-            EncryptedData.class,
-            MongoPersistenceIterator.<EncryptedData, MorphiaFilterExpander<EncryptedData>>builder()
-                    .clazz(EncryptedData.class)
-                    .fieldName(EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration)
-                    .targetInterval(ofHours(20))
-                    .acceptableNoAlertDelay(ofHours(40))
-                    .handler(this)
-                    .filterExpander(filterExpander)
-                    .schedulingType(REGULAR)
-                    .persistenceProvider(persistenceProvider)
-                    .redistribute(true));
+        PersistenceIteratorFactory.PumpExecutorOptions.builder()
+            .name("EncryptedDataLocalToGcpKmsMigrationHandler")
+            .poolSize(5)
+            .interval(ofSeconds(30))
+            .build(),
+        EncryptedData.class,
+        MongoPersistenceIterator.<EncryptedData, MorphiaFilterExpander<EncryptedData>>builder()
+            .clazz(EncryptedData.class)
+            .fieldName(EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration)
+            .targetInterval(ofHours(20))
+            .acceptableNoAlertDelay(ofHours(40))
+            .handler(this)
+            .filterExpander(filterExpander)
+            .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
+            .redistribute(true));
   }
 
   private MorphiaFilterExpander<EncryptedData> getFilterQueryWithAccountIdsFilter(Set<String> accountIds) {
@@ -161,25 +161,25 @@ public class EncryptedDataLocalToGcpKmsMigrationHandler implements Handler<Encry
 
   private boolean updateEncryptionInfo(@NotNull EncryptedData encryptedData) {
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-            .field(EncryptedDataKeys.ID_KEY)
-            .equal(encryptedData.getUuid())
-            .field(EncryptedDataKeys.lastUpdatedAt)
-            .equal(encryptedData.getLastUpdatedAt());
+                                     .field(EncryptedDataKeys.ID_KEY)
+                                     .equal(encryptedData.getUuid())
+                                     .field(EncryptedDataKeys.lastUpdatedAt)
+                                     .equal(encryptedData.getLastUpdatedAt());
 
     UpdateOperations<EncryptedData> updateOperations =
-            wingsPersistence.createUpdateOperations(EncryptedData.class)
-                    .set(EncryptedDataKeys.encryptionType, GCP_KMS)
-                    .set(EncryptedDataKeys.kmsId, gcpKmsConfig.getUuid())
-                    .set(EncryptedDataKeys.backupEncryptionType, LOCAL)
-                    .set(EncryptedDataKeys.backupKmsId, encryptedData.getAccountId())
-                    .set(EncryptedDataKeys.backupEncryptionKey, encryptedData.getEncryptionKey());
+        wingsPersistence.createUpdateOperations(EncryptedData.class)
+            .set(EncryptedDataKeys.encryptionType, GCP_KMS)
+            .set(EncryptedDataKeys.kmsId, gcpKmsConfig.getUuid())
+            .set(EncryptedDataKeys.backupEncryptionType, LOCAL)
+            .set(EncryptedDataKeys.backupKmsId, encryptedData.getAccountId())
+            .set(EncryptedDataKeys.backupEncryptionKey, encryptedData.getEncryptionKey());
 
     EncryptedData savedEncryptedData =
-            wingsPersistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
+        wingsPersistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
 
     if (savedEncryptedData == null) {
       log.error("Failed to save encrypted record {} during Local Secret Manager to GCP KMS migration",
-              encryptedData.getUuid());
+          encryptedData.getUuid());
       return false;
     }
     return true;
@@ -188,18 +188,18 @@ public class EncryptedDataLocalToGcpKmsMigrationHandler implements Handler<Encry
   protected boolean migrateToGcpKMS(@NotNull EncryptedData encryptedData) {
     try {
       LocalEncryptionConfig localEncryptionConfig =
-              localSecretManagerService.getEncryptionConfig(encryptedData.getAccountId());
+          localSecretManagerService.getEncryptionConfig(encryptedData.getAccountId());
       MigrateSecretTask migrateSecretTask = MigrateSecretTask.builder()
-              .accountId(encryptedData.getAccountId())
-              .secretId(encryptedData.getUuid())
-              .fromConfig(localEncryptionConfig)
-              .toConfig(gcpKmsConfig)
-              .build();
+                                                .accountId(encryptedData.getAccountId())
+                                                .secretId(encryptedData.getUuid())
+                                                .fromConfig(localEncryptionConfig)
+                                                .toConfig(gcpKmsConfig)
+                                                .build();
       secretService.migrateSecret(migrateSecretTask);
       return true;
     } catch (Exception ex) {
       log.error("Exception occurred for encrypted record {} while Local Secret Manager to GCP KMS migration",
-              encryptedData.getUuid(), ex);
+          encryptedData.getUuid(), ex);
       return false;
     }
   }
