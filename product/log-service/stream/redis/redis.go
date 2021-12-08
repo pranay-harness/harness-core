@@ -65,9 +65,11 @@ func newTlSConfig(certPathForTLS string) (*tls.Config, error) {
 func New(endpoint, password string, useTLS bool, certPathForTLS string) *Redis {
 	opt := &redis.Options{
 		Addr:     endpoint,
-		Password: password,
 		DB:       0,
 		PoolSize: connectionPool,
+	}
+	if password != "" {
+		opt.Password = password
 	}
 	if useTLS {
 		newTlSConfig, err := newTlSConfig(certPathForTLS)
