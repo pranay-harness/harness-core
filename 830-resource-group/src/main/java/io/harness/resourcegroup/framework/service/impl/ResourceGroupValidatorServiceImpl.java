@@ -87,7 +87,8 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
 
     return resourceMap.containsKey(resourceType)
         && resourceMap.get(resourceType).getValidScopeLevels().contains(scopeLevel)
-        && resourceMap.get(resourceType).getSelectorKind().contains(DYNAMIC);
+        && resourceMap.get(resourceType).getSelectorKind().containsKey(scopeLevel)
+        && resourceMap.get(resourceType).getSelectorKind().get(scopeLevel).contains(DYNAMIC);
   }
 
   private boolean sanitizeStaticResourceSelector(Scope scope, StaticResourceSelector resourceSelector) {
@@ -97,7 +98,8 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
 
     Resource resource = resourceMap.get(resourceType);
     if (resource == null || !resource.getValidScopeLevels().contains(scopeLevel)
-        || !resource.getSelectorKind().contains(STATIC)) {
+        || !resource.getSelectorKind().containsKey(scopeLevel)
+        || !resource.getSelectorKind().get(scopeLevel).contains(STATIC)) {
       resourceSelector.getIdentifiers().clear();
       return true;
     }
