@@ -51,7 +51,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @OwnedBy(CE)
-@Tag(name = "Cloud Cost Budgets", description = "This contains APIs related to Cloud Cost Budgets")
+@Tag(name = "Cloud Cost Budgets",
+    description = "Manage Budgets and receive alerts when your costs exceed (or are forecasted to exceed) your budget.")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content = { @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FailureDTO.class)) })
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
@@ -67,17 +68,19 @@ public class BudgetResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create budget", nickname = "createBudget")
   @Operation(operationId = "createBudget",
-      description = "Creates a Budget from the Budget object passed as a request body", summary = "Create a Budget",
+      description =
+          "Create a Budget to set and receive alerts when your costs exceed (or are forecasted to exceed) your budget amount.",
+      summary = "Create a Budget",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns the identifier string of the new Budget created",
+        ApiResponse(responseCode = "default", description = "Returns the ID string of the new Budget created",
             content = { @Content(mediaType = MediaType.APPLICATION_JSON) })
       })
   public ResponseDTO<String>
   save(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
            NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
-      @RequestBody(required = true, description = "The Budget definition") Budget budget) {
+      @RequestBody(required = true, description = "Budget definition") Budget budget) {
     budget.setAccountId(accountId);
     return ResponseDTO.newResponse(budgetService.create(budget));
   }
@@ -88,8 +91,8 @@ public class BudgetResource {
   @LogAccountIdentifier
   @ExceptionMetered
   @ApiOperation(value = "Clone budget", nickname = "cloneBudget")
-  @Operation(operationId = "cloneBudget", description = "Clone an existing Budget using an existing Budget identifier",
-      summary = "Clone an existing Budget",
+  @Operation(operationId = "cloneBudget", description = "Clone a Cloud Cost Budget using the given Budget ID.",
+      summary = "Clone a budget",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
@@ -99,9 +102,8 @@ public class BudgetResource {
   public ResponseDTO<String>
   clone(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
             NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
-      @PathParam("id") @Parameter(required = true, description = "The identifier of the Budget") String budgetId,
-      @QueryParam("cloneName") @Parameter(required = true,
-          description = "The name of the new Budget created after cloning operation") String budgetName) {
+      @PathParam("id") @Parameter(required = true, description = "Unique identifier for the budget") String budgetId,
+      @QueryParam("cloneName") @Parameter(required = true, description = "Name of the new budget") String budgetName) {
     return ResponseDTO.newResponse(budgetService.clone(budgetId, budgetName, accountId));
   }
 
@@ -111,8 +113,8 @@ public class BudgetResource {
   @LogAccountIdentifier
   @ExceptionMetered
   @ApiOperation(value = "Get budget", nickname = "getBudget")
-  @Operation(operationId = "getBudget", description = "Get a Cloud Cost Budget by an identifier",
-      summary = "Get a Budget",
+  @Operation(operationId = "getBudget", description = "Fetch details of a Cloud Cost Budget for the given Budget ID.",
+      summary = "Fetch Budget details",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -122,8 +124,7 @@ public class BudgetResource {
   public ResponseDTO<Budget>
   get(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
-      @Parameter(required = true, description = "The identifier of an existing Budget") @PathParam(
-          "id") String budgetId) {
+      @Parameter(required = true, description = "Unique identifier for the budget") @PathParam("id") String budgetId) {
     return ResponseDTO.newResponse(budgetService.get(budgetId, accountId));
   }
 
@@ -131,8 +132,8 @@ public class BudgetResource {
   @Timed
   @LogAccountIdentifier
   @ExceptionMetered
-  @ApiOperation(value = "List budgets for account", nickname = "listBudgetsForAccount")
-  @Operation(operationId = "listBudgets", description = "List all the Cloud Cost Budgets",
+  @ApiOperation(value = "List Budgets for account", nickname = "listBudgetsForAccount")
+  @Operation(operationId = "listBudgets", description = "List all the Cloud Cost Budgets.",
       summary = "List all the Budgets",
       responses =
       {
@@ -151,9 +152,9 @@ public class BudgetResource {
   @Timed
   @LogAccountIdentifier
   @ExceptionMetered
-  @ApiOperation(value = "List budgets for perspective", nickname = "listBudgetsForPerspective")
+  @ApiOperation(value = "List Budgets for Perspective", nickname = "listBudgetsForPerspective")
   @Operation(operationId = "listBudgetsForPerspective",
-      description = "List all the Cloud Cost Budgets associated with a Cloud Cost Perspective identifier",
+      description = "List all the Cloud Cost Budgets associated for the given Perspective ID.",
       summary = "List all the Budgets associated with a Perspective",
       responses =
       {
@@ -163,7 +164,7 @@ public class BudgetResource {
   public ResponseDTO<List<Budget>>
   list(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
            NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
-      @Parameter(required = true, description = "The identifier of an existing Perspective") @QueryParam(
+      @Parameter(required = true, description = "Unique identifier for the Perspective") @QueryParam(
           "perspectiveId") String perspectiveId) {
     return ResponseDTO.newResponse(budgetService.list(accountId, perspectiveId));
   }
@@ -175,8 +176,8 @@ public class BudgetResource {
   @ExceptionMetered
   @ApiOperation(value = "Update budget", nickname = "updateBudget")
   @Operation(operationId = "updateBudget",
-      description = "Update an existing Budget using the identifier passed as a path param",
-      summary = "Update an existing Budget",
+      description = "Update an existing Cloud Cost Budget for the given Budget ID.",
+      summary = "Update an existing budget",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
@@ -186,9 +187,8 @@ public class BudgetResource {
   public ResponseDTO<String>
   update(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
              NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
-      @Valid @NotNull @Parameter(required = true, description = "The identifier of an existing Budget") @PathParam(
-          "id") String budgetId,
-      @RequestBody(required = true, description = "The Budget object as a request body") @NotNull Budget budget) {
+      @Valid @NotNull @Parameter(required = true, description = "Unique identifier for the budget") @PathParam("id")
+      String budgetId, @RequestBody(required = true, description = "The Budget object") @NotNull Budget budget) {
     budgetService.update(budgetId, budget);
     return ResponseDTO.newResponse("Successfully updated the budget");
   }
@@ -199,8 +199,8 @@ public class BudgetResource {
   @LogAccountIdentifier
   @ExceptionMetered
   @ApiOperation(value = "Delete budget", nickname = "deleteBudget")
-  @Operation(operationId = "deleteBudget", description = "Delete an existing Cloud Cost Budget by identifier",
-      summary = "Delete an existing Budget",
+  @Operation(operationId = "deleteBudget", description = "Delete a Cloud Cost Budget for the given Budget ID.",
+      summary = "Delete a budget",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
@@ -210,7 +210,7 @@ public class BudgetResource {
   public ResponseDTO<String>
   delete(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
              NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
-      @NotNull @Valid @Parameter(required = true, description = "The identifier of the Budget") @PathParam(
+      @NotNull @Valid @Parameter(required = true, description = "Unique identifier for the budget") @PathParam(
           "id") String budgetId) {
     budgetService.delete(budgetId, accountId);
     return ResponseDTO.newResponse("Successfully deleted the budget");
@@ -221,7 +221,7 @@ public class BudgetResource {
   @Timed
   @LogAccountIdentifier
   @ExceptionMetered
-  @ApiOperation(value = "Deprecated use /perspective/lastMonthCost instead, Get last month cost for perspective.",
+  @ApiOperation(value = "Deprecated use /perspective/lastMonthCost instead, Get last month cost for Perspective.",
       nickname = "getLastMonthCost")
   @Operation(hidden = true)
   @Deprecated
@@ -229,7 +229,7 @@ public class BudgetResource {
   getLastMonthCost(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
                        NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @QueryParam("perspectiveId") @Parameter(
-          required = true, description = "The identifier of the perspective") String perspectiveId) {
+          required = true, description = "The identifier of the Perspective") String perspectiveId) {
     return ResponseDTO.newResponse(ceViewService.getLastMonthCostForPerspective(accountId, perspectiveId));
   }
 
@@ -237,7 +237,7 @@ public class BudgetResource {
   @Path("forecastCost")
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "Deprecated use /perspective/forecastCost instead, Get forecast cost for perspective.",
+  @ApiOperation(value = "Deprecated use /perspective/forecastCost instead, Get forecast cost for Perspective.",
       nickname = "getForecastCost")
   @Operation(hidden = true)
   @Deprecated
@@ -255,8 +255,8 @@ public class BudgetResource {
   @ExceptionMetered
   @ApiOperation(value = "Get cost details for budget", nickname = "getCostDetails")
   @Operation(operationId = "getCostDetails",
-      description = "Get the cost details associated with a Cloud Cost Budget identifier",
-      summary = "Get the cost details associated with a Budget",
+      description = "Fetch the cost details of a Cloud Cost Budget for the given Budget ID.",
+      summary = "Fetch the cost details of a Budget",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -266,7 +266,7 @@ public class BudgetResource {
   public ResponseDTO<BudgetData>
   getCostDetails(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
                      NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
-      @Parameter(required = true, description = "The identifier of the Budget") @PathParam("id") String budgetId) {
+      @Parameter(required = true, description = "Unique identifier for the Budget") @PathParam("id") String budgetId) {
     return ResponseDTO.newResponse(budgetService.getBudgetTimeSeriesStats(budgetService.get(budgetId, accountId)));
   }
 }
