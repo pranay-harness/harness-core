@@ -129,7 +129,7 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
                 Collectors.toList())));
     List<SLIAnalyseResponse> sliAnalyseResponses =
         sliDataProcessorService.process(sliAnalyseRequest, serviceLevelIndicatorDTO.getSpec().getSpec(), startTime,
-            endTime, serviceLevelIndicatorDTO.getSliMissingDataType(), 0L, 0L);
+            endTime, serviceLevelIndicatorDTO.getSliMissingDataType());
     sliAnalyseResponses.sort(Comparator.comparing(SLIAnalyseResponse::getTimeStamp));
 
     return TimeGraphResponse.builder()

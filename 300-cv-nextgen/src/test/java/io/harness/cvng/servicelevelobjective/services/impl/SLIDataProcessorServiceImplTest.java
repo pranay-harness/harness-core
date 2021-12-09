@@ -57,8 +57,8 @@ public class SLIDataProcessorServiceImplTest extends CvNextGenTestBase {
     Map<String, List<SLIAnalyseRequest>> sliAnalyseRequests = new HashMap<String, List<SLIAnalyseRequest>>() {
       { put(metricIdentifier, Arrays.asList(sliAnalyseRequest1, sliAnalyseRequest2)); }
     };
-    List<SLIAnalyseResponse> responses = sliDataProcessorService.process(
-        sliAnalyseRequests, sliMetricSpec, startTime, endTime, SLIMissingDataType.GOOD, 0L, 0L);
+    List<SLIAnalyseResponse> responses =
+        sliDataProcessorService.process(sliAnalyseRequests, sliMetricSpec, startTime, endTime, SLIMissingDataType.GOOD);
 
     assertThat(responses).hasSize(4);
     assertThat(responses.get(0).getTimeStamp()).isEqualTo(startTime);
@@ -98,8 +98,8 @@ public class SLIDataProcessorServiceImplTest extends CvNextGenTestBase {
     Map<String, List<SLIAnalyseRequest>> sliAnalyseRequests = new HashMap<String, List<SLIAnalyseRequest>>() {
       { put(metricIdentifier, Arrays.asList(sliAnalyseRequest1, sliAnalyseRequest2)); }
     };
-    List<SLIAnalyseResponse> responses = sliDataProcessorService.process(
-        sliAnalyseRequests, sliMetricSpec, startTime, endTime, SLIMissingDataType.BAD, 0L, 0L);
+    List<SLIAnalyseResponse> responses =
+        sliDataProcessorService.process(sliAnalyseRequests, sliMetricSpec, startTime, endTime, SLIMissingDataType.BAD);
 
     assertThat(responses).hasSize(4);
 
@@ -131,7 +131,7 @@ public class SLIDataProcessorServiceImplTest extends CvNextGenTestBase {
       { put(metricIdentifier, Arrays.asList(sliAnalyseRequest1, sliAnalyseRequest2)); }
     };
     List<SLIAnalyseResponse> responses = sliDataProcessorService.process(
-        sliAnalyseRequests, sliMetricSpec, startTime, endTime, SLIMissingDataType.IGNORE, 0L, 0L);
+        sliAnalyseRequests, sliMetricSpec, startTime, endTime, SLIMissingDataType.IGNORE);
 
     assertThat(responses).hasSize(4);
 
@@ -169,7 +169,7 @@ public class SLIDataProcessorServiceImplTest extends CvNextGenTestBase {
     };
 
     List<SLIAnalyseResponse> responses = sliDataProcessorService.process(
-        sliAnalyseRequests, sliMetricSpec, startTime, endTime, SLIMissingDataType.IGNORE, 0L, 0L);
+        sliAnalyseRequests, sliMetricSpec, startTime, endTime, SLIMissingDataType.IGNORE);
 
     assertThat(responses).hasSize(4);
 
