@@ -11,6 +11,8 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = true)
@@ -22,7 +24,10 @@ public class DatadogLogDataCollectionInfo extends LogDataCollectionInfo<DatadogC
   public Map<String, Object> getDslEnvVariables(DatadogConnectorDTO connectorConfigDTO) {
     Map<String, Object> dslEnvVariables = new HashMap<>();
     dslEnvVariables.put("query", logDefinition.getQuery());
-    String indexesParam = String.join(",", logDefinition.getIndexes());
+    String indexesParam = null;
+    if (isNotEmpty(logDefinition.getIndexes())) {
+      indexesParam = String.join(",", logDefinition.getIndexes());
+    }
     dslEnvVariables.put("indexes", indexesParam);
     dslEnvVariables.put("limit", LOG_MAX_LIMIT);
     dslEnvVariables.put("serviceInstanceIdentifier", logDefinition.getServiceInstanceIdentifier());
