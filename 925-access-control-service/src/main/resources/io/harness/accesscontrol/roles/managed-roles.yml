@@ -121,6 +121,9 @@ roles:
         - core_organization_edit
         - core_organization_delete
         - core_project_create
+        - core_project_delete
+        - core_project_view
+        - core_project_edit
         - core_secret_view
         - core_secret_edit
         - core_secret_delete
@@ -169,6 +172,10 @@ roles:
         - core_governancePolicy_view
         - core_governancePolicy_edit
         - core_governancePolicy_delete
+        - core_pipeline_edit
+        - core_pipeline_delete
+        - core_pipeline_execute
+        - core_pipeline_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -192,6 +199,8 @@ roles:
         - core_template_view
         - core_governancePolicy_view
         - core_governancePolicySets_view
+        - core_project_view
+        - core_pipeline_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -201,6 +210,9 @@ roles:
       permissions:
         - core_user_invite
         - core_organization_create
+        - core_organization_delete
+        - core_organization_view
+        - core_organization_edit
         - core_secret_view
         - core_secret_edit
         - core_secret_delete
@@ -257,6 +269,14 @@ roles:
         - core_governancePolicy_view
         - core_governancePolicy_edit
         - core_governancePolicy_delete
+        - core_project_delete
+        - core_project_view
+        - core_project_edit
+        - core_project_create
+        - core_pipeline_edit
+        - core_pipeline_delete
+        - core_pipeline_execute
+        - core_pipeline_view
       allowedScopeLevels:
         - account
       managed: true
@@ -282,6 +302,9 @@ roles:
         - core_template_view
         - core_governancePolicy_view
         - core_governancePolicySets_view
+        - core_project_view
+        - core_organization_view
+        - core_pipeline_view
       allowedScopeLevels:
         - account
       managed: true
