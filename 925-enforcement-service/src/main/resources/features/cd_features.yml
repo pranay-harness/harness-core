@@ -19,6 +19,9 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: true
   - name: SERVICES
     description: The restriction on number of services
     restrictions:
@@ -39,6 +42,9 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: true
   - name: K8S_BG_SWAP_SERVICES
     description: The restriction on kubernetes BG swap service step
     restrictions:
@@ -49,6 +55,9 @@ features:
         restrictionType: AVAILABILITY
         enabled: true
       ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      COMMUNITY:
         restrictionType: AVAILABILITY
         enabled: true
   - name: K8S_BLUE_GREEN_DEPLOY
@@ -63,6 +72,9 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: true
   - name: K8S_APPLY
     description: The restriction on kubernetes apply step
     restrictions:
@@ -73,6 +85,9 @@ features:
         restrictionType: AVAILABILITY
         enabled: true
       ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      COMMUNITY:
         restrictionType: AVAILABILITY
         enabled: true
   - name: K8S_DELETE
@@ -87,6 +102,9 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: true
   - name: K8S_CANARY_DELETE
     description: The restriction on kubernetes canary delete step
     restrictions:
@@ -97,6 +115,9 @@ features:
         restrictionType: AVAILABILITY
         enabled: true
       ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      COMMUNITY:
         restrictionType: AVAILABILITY
         enabled: true
   - name: K8S_ROLLING_DEPLOY
@@ -111,6 +132,9 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: true
   - name: K8S_CANARY_DEPLOY
     description: The restriction on kubernetes canary deployment step
     restrictions:
@@ -121,6 +145,9 @@ features:
         restrictionType: AVAILABILITY
         enabled: true
       ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      COMMUNITY:
         restrictionType: AVAILABILITY
         enabled: true
   - name: K8S_SCALE
@@ -135,6 +162,9 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: true
   - name: K8S_ROLLING_ROLLBACK
     description: The restriction on kubernetes rolling rollback step
     restrictions:
@@ -145,6 +175,9 @@ features:
         restrictionType: AVAILABILITY
         enabled: true
       ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      COMMUNITY:
         restrictionType: AVAILABILITY
         enabled: true
   - name: TERRAFORM_APPLY
@@ -159,6 +192,9 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: true
   - name: TERRAFORM_PLAN
     description: The restriction on terraform plan step
     restrictions:
@@ -169,6 +205,9 @@ features:
         restrictionType: AVAILABILITY
         enabled: true
       ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      COMMUNITY:
         restrictionType: AVAILABILITY
         enabled: true
   - name: TERRAFORM_DESTROY
@@ -183,6 +222,9 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: true
   - name: TERRAFORM_ROLLBACK
     description: The restriction on terraform rollback step
     restrictions:
@@ -193,6 +235,9 @@ features:
         restrictionType: AVAILABILITY
         enabled: true
       ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      COMMUNITY:
         restrictionType: AVAILABILITY
         enabled: true
   - name: DEPLOYMENTS_PER_MONTH
@@ -211,6 +256,9 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: true
   - name: INITIAL_DEPLOYMENTS
     description: The restriction on number of initial number of deployments
     restrictions:
@@ -222,5 +270,8 @@ features:
         restrictionType: AVAILABILITY
         enabled: true
       ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      COMMUNITY:
         restrictionType: AVAILABILITY
         enabled: true

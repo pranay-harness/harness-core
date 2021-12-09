@@ -63,12 +63,16 @@ public class CommonStepInfo {
           .setName("Jira Create")
           .setType(StepSpecTypeConstants.JIRA_CREATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").addFolderPaths("Jira").build())
+          .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_JIRA.name())
+
           .build();
   StepInfo jiraUpdateStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Update")
           .setType(StepSpecTypeConstants.JIRA_UPDATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").addFolderPaths("Jira").build())
+          .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_JIRA.name())
+
           .build();
   StepInfo barrierStepInfo =
       StepInfo.newBuilder()
