@@ -78,6 +78,7 @@ public class ResourceGroupFactory {
     } else if (resourceSelector instanceof NestedDynamicResourceSelector) {
       NestedDynamicResourceSelector nestedDynamicResourceSelector = (NestedDynamicResourceSelector) resourceSelector;
       return Collections.singleton(PATH_DELIMITER.concat(ResourceGroup.NESTED_SCOPES_IDENTIFIER)
+                                       .concat(PATH_DELIMITER)
                                        .concat(nestedDynamicResourceSelector.getResourceType())
                                        .concat(PATH_DELIMITER)
                                        .concat(ResourceGroup.ALL_RESOURCES_IDENTIFIER));

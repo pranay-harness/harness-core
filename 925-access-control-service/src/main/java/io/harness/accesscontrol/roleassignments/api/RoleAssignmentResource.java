@@ -166,8 +166,6 @@ public class RoleAssignmentResource {
   AccessControlClient accessControlClient;
 
   RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
-  String ALL_RESOURCES = "_all_resources";
-  String ALL_RESOURCES_DEPRECATED_ERROR_MESSAGE = "_all_resources is deprecated, please use _all_%s_resources.";
 
   @Inject
   public RoleAssignmentResource(RoleAssignmentService roleAssignmentService,
