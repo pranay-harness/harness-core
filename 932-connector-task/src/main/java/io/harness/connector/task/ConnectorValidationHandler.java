@@ -1,6 +1,7 @@
 package io.harness.connector.task;
 
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.ConnectorValidationResponseData;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 
 /**
@@ -9,4 +10,9 @@ import io.harness.delegate.beans.connector.ConnectorValidationParams;
 
 public interface ConnectorValidationHandler {
   ConnectorValidationResult validate(ConnectorValidationParams connectorValidationParams, String accountIdentifier);
+
+  default ConnectorValidationResponseData validateThis(
+      ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
+    return null;
+  }
 }

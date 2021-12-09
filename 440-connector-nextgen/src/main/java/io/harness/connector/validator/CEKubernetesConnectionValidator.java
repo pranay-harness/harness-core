@@ -10,6 +10,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.scmValidators.AbstractKubernetesConnectorValidator;
+import io.harness.delegate.beans.ConnectorValidationResponseData;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -46,7 +47,7 @@ public class CEKubernetesConnectionValidator extends AbstractKubernetesConnector
   @Override
   public ConnectorValidationResult validate(ConnectorConfigDTO kubernetesClusterConfig, String accountIdentifier,
       String orgIdentifier, String projectIdentifier, String identifier) {
-    DelegateResponseData responseData;
+    ConnectorValidationResponseData responseData;
 
     try {
       responseData = super.validateConnector(

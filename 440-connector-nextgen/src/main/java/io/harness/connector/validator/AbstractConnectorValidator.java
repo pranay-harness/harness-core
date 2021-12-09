@@ -12,6 +12,7 @@ import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.task.ConnectorValidationHandler;
+import io.harness.delegate.beans.ConnectorValidationResponseData;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -23,6 +24,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.ConnectorValidationException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
+import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -41,7 +43,7 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
   @Inject private Map<String, ConnectorValidationParamsProvider> connectorValidationParamsProviderMap;
   @Inject Map<String, ConnectorValidationHandler> connectorTypeToConnectorValidationHandlerMap;
 
-  public <T extends ConnectorConfigDTO> DelegateResponseData validateConnector(
+  public <T extends ConnectorConfigDTO> ConnectorValidationResponseData validateConnector(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     TaskParameters taskParameters =
         getTaskParameters(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier);
@@ -65,7 +67,7 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
     return responseData;
   }
 
-  public ConnectorValidationResult validateConnectorViaManager(
+  public ConnectorValidationResponseData validateConnectorViaManager(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     AtomicReference<ConnectorValidationHandler> connectorValidationHandler = new AtomicReference<>();
 
@@ -85,7 +87,10 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
                              -> new InvalidRequestException(String.format(
                                  CONNECTOR_STRING, identifier, accountIdentifier, orgIdentifier, projectIdentifier)));
 
-    return connectorValidationHandler.get().validate(connectorValidationParams, accountIdentifier);
+    final ConnectorValidationResponseData validate =
+        connectorValidationHandler.get().validateThis(connectorValidationParams, accountIdentifier);
+
+    return validate;
   }
 
   public List<EncryptedDataDetail> getEncryptionDetail(

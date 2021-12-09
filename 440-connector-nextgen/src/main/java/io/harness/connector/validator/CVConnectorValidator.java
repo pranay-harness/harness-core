@@ -6,7 +6,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.ConnectorValidationResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskParams;
@@ -66,7 +66,7 @@ public class CVConnectorValidator extends AbstractConnectorValidator {
   @Override
   public ConnectorValidationResult validate(ConnectorConfigDTO connectorDTO, String accountIdentifier,
       String orgIdentifier, String projectIdentifier, String identifier) {
-    final DelegateResponseData delegateResponseData =
+    final ConnectorValidationResponseData delegateResponseData =
         super.validateConnector(connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     CVConnectorTaskResponse cvConnectorTaskResponse = (CVConnectorTaskResponse) delegateResponseData;
     return ConnectorValidationResult.builder()

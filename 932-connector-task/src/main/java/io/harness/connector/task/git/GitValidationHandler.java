@@ -6,10 +6,12 @@ import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.task.ConnectorValidationHandler;
+import io.harness.delegate.beans.ConnectorValidationResponseData;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.git.ManagerGitCommandExecutionResponse;
 import io.harness.shell.SshSessionConfig;
 
 import com.google.inject.Inject;
@@ -40,5 +42,12 @@ public class GitValidationHandler implements ConnectorValidationHandler {
 
     return gitCommandTaskHandler.validateGitCredentials(
         gitConfig, scmValidationParams.getScmConnector(), accountIdentifier, sshSessionConfig);
+  }
+
+  @Override
+  public ConnectorValidationResponseData validateThis(
+      ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
+    final ConnectorValidationResult validate = validate(connectorValidationParams, accountIdentifier);
+    return ManagerGitCommandExecutionResponse.builder().connectorValidationResult(validate).build();
   }
 }
