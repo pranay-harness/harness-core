@@ -81,7 +81,6 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
     String identity = ambiance.getMetadata().getTriggerInfo().getTriggeredBy().getExtraInfoMap().get("email");
     telemetryReporter.sendTrackEvent(PIPELINE_EXECUTION, identity, accountId, propertiesMap,
         Collections.singletonMap(AMPLITUDE, true), Category.GLOBAL);
-
     sendNotificationEvents(notificationRulesList, ambiance, accountId);
   }
 
