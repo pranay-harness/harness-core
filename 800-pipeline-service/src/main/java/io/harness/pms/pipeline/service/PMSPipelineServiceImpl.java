@@ -297,6 +297,16 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
+  public PipelineEntity findFirstPipeline(Criteria criteria) {
+    return pmsPipelineRepository.findFirstPipeline(criteria);
+  }
+
+  @Override
+  public Long countAllPipelines(Criteria criteria) {
+    return pmsPipelineRepository.countAllPipelines(criteria);
+  }
+
+  @Override
   public StepCategory getSteps(String module, String category, String accountId) {
     Map<String, StepPalleteInfo> serviceInstanceNameToSupportedSteps =
         pmsSdkInstanceService.getModuleNameToStepPalleteInfo();
