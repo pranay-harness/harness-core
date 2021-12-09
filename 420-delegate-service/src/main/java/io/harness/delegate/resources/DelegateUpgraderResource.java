@@ -2,8 +2,6 @@ package io.harness.delegate.resources;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AccountLogContext;
@@ -11,8 +9,6 @@ import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.service.intfc.DelegateUpgraderService;
-
-import software.wings.security.annotations.AuthRule;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -29,7 +25,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Api("upgrader/delegate")
 @Path("upgrader/delegate")
 @Produces("application/json")
-@AuthRule(permissionType = LOGGED_IN)
+@DelegateAuth
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateUpgraderResource {
