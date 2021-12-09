@@ -229,13 +229,18 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public Optional<PipelineEntity> incrementRunSequence(
+  public int incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean deleted) {
     Criteria criteria = PMSPipelineServiceHelper.getPipelineEqualityCriteria(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, null);
     Update update = new Update();
     update.inc(PipelineEntityKeys.runSequence);
-    return Optional.ofNullable(updatePipelineMetadata(accountId, orgIdentifier, projectIdentifier, criteria, update));
+    Optional<PipelineEntity> pipelineEntityOptional =
+        Optional.ofNullable(updatePipelineMetadata(accountId, orgIdentifier, projectIdentifier, criteria, update));
+    if (pipelineEntityOptional.isPresent()) {
+      return pipelineEntityOptional.get().getRunSequence();
+    }
+    throw new InvalidRequestException("Could not fetch pipeline with the given id: " + pipelineIdentifier);
   }
 
   @Override
