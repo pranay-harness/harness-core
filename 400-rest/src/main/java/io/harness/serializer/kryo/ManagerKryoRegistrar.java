@@ -471,6 +471,7 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
+import software.wings.helpers.ext.helm.response.HelmCollectChartResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -1384,6 +1385,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ConfigFile.ConfigOverrideType.class, 71108);
     kryo.register(EntityVersion.class, 71109);
     kryo.register(EntityVersion.ChangeType.class, 71110);
+    kryo.register(HelmCollectChartResponse.class, 71111);
     kryo.register(AwsEcsListClusterServicesRequest.class, 7206);
     kryo.register(AwsEcsListClusterServicesResponse.class, 7207);
     kryo.register(Deployment.class, 7208);
