@@ -9,6 +9,7 @@ import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassInt
 import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPaths;
 import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPublicApi;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.HARNESS_RESOURCE_CLASSES;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
@@ -37,6 +38,7 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
+import io.harness.configuration.DeployVariant;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
@@ -397,7 +399,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     }
     registerMigrations(injector);
 
-    initializeNGMonitoring(appConfig, injector);
+    if (DeployVariant.isCommunity(System.getenv().get(DEPLOY_VERSION))) {
+      initializeNGMonitoring(appConfig, injector);
+    }
 
     MaintenanceController.forceMaintenance(false);
   }
