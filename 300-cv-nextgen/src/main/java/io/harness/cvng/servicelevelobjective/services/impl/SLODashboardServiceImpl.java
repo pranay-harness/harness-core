@@ -86,7 +86,8 @@ public class SLODashboardServiceImpl implements SLODashboardService {
     Instant currentTimeMinute = DateTimeUtils.roundDownTo1MinBoundary(clock.instant());
     SLODashboardWidget.SLOGraphData sloGraphData = sliRecordService.getGraphData(serviceLevelIndicator.getUuid(),
         timePeriod.getStartDate().atStartOfDay().toInstant(ZoneOffset.UTC), currentTimeMinute,
-        serviceLevelObjective.getTotalErrorBudgetMinutes(currentLocalDate));
+        serviceLevelObjective.getTotalErrorBudgetMinutes(currentLocalDate),
+        serviceLevelIndicator.getSliMissingDataType());
     int remainingDays = timePeriod.getRemainingDays(currentLocalDate).getDays();
     double dailyBurnRate =
         sloGraphData.errorBudgetSpentPercentage() / (timePeriod.getTotalDays().getDays() - remainingDays);
