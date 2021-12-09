@@ -7,7 +7,7 @@ import io.harness.service.intfc.DelegateUpgraderService;
 import com.google.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.math3.util.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
 @ValidateOnExecution
@@ -18,6 +18,6 @@ public class DelegateUpgraderServiceImpl implements DelegateUpgraderService {
 
   @Override
   public Pair<Boolean, String> getDelegateImageTag(String accountId, String currentDelegateImageTag) {
-    return new Pair<>(false, DELEGATEIMAGETAG);
+    return Pair.of(false, DELEGATEIMAGETAG);
   }
 }
