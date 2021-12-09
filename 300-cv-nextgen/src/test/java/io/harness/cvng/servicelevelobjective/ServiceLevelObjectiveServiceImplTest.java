@@ -20,6 +20,7 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricEventType;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTargetSpec;
@@ -82,7 +83,7 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
                                                            .spec(ServiceLevelIndicatorSpec.builder()
                                                                      .type(SLIMetricType.RATIO)
                                                                      .spec(RatioSLIMetricSpec.builder()
-                                                                               .eventType("eventName")
+                                                                               .eventType(RatioSLIMetricEventType.GOOD)
                                                                                .metric1("metric1")
                                                                                .metric2("metric2")
                                                                                .build())
@@ -226,7 +227,7 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
                                           .spec(RatioSLIMetricSpec.builder()
                                                     .thresholdValue(20.0)
                                                     .thresholdType(ThresholdType.GREATER_THAN)
-                                                    .eventType("Bad")
+                                                    .eventType(RatioSLIMetricEventType.BAD)
                                                     .metric1("metric4")
                                                     .metric2("metric5")
                                                     .build())

@@ -75,7 +75,7 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
     List<CVConfig> cvConfigs = healthSourceService
                                    .getCVConfigs(projectParams.getAccountIdentifier(), projectParams.getOrgIdentifier(),
                                        projectParams.getProjectIdentifier(), monitoredServiceIdentifier,
-                                       serviceLevelIndicatorDTO.getHealthSourceIdentifier())
+                                       serviceLevelIndicatorDTO.getHealthSourceRef())
                                    .stream()
                                    .filter(cvConfig -> cvConfig instanceof MetricCVConfig)
                                    .map(cvConfig -> (MetricCVConfig) cvConfig)
@@ -87,7 +87,7 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
     ServiceLevelIndicator serviceLevelIndicator =
         serviceLevelIndicatorTransformerMap.get(serviceLevelIndicatorDTO.getSpec().getType())
             .getEntity(projectParams, serviceLevelIndicatorDTO, monitoredServiceIdentifier,
-                serviceLevelIndicatorDTO.getHealthSourceIdentifier());
+                serviceLevelIndicatorDTO.getHealthSourceRef());
     Preconditions.checkArgument(CollectionUtils.isNotEmpty(cvConfigs), "Health source not present");
     CVConfig baseCVConfig = cvConfigs.get(0);
     DataCollectionInfo dataCollectionInfo = dataSourceTypeDataCollectionInfoMapperMap.get(baseCVConfig.getType())
