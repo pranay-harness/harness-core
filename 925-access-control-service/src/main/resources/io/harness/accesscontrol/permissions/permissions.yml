@@ -189,6 +189,8 @@ permissions:
     status: ACTIVE
     includeInAllRoles: true
     allowedScopeLevels:
+      - account
+      - organization
       - project
   - identifier: core_pipeline_edit
     name: Create or Edit Pipeline
