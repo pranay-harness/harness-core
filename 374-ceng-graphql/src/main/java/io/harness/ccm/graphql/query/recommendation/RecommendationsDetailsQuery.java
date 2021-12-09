@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@GraphQLApi
+@GraphQLApi(isPublic = true)
 @OwnedBy(CE)
 public class RecommendationsDetailsQuery {
   @Inject private GraphQLUtils graphQLUtils;

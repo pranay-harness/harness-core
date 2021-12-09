@@ -1,3 +1,13 @@
 package io.harness.ccm.views.graphql;
 
-public enum QLCEViewFilterOperator { NOT_IN, IN, EQUALS, NOT_NULL, NULL, LIKE }
+import io.leangen.graphql.annotations.types.GraphQLType;
+
+@GraphQLType(name = "ViewFilterOperator")
+public enum QLCEViewFilterOperator {
+  NOT_IN,
+  IN,
+  EQUALS,
+  NOT_NULL,
+  NULL,
+  LIKE
+}

@@ -55,7 +55,7 @@ import org.jooq.impl.DSL;
 
 @Slf4j
 @Singleton
-@GraphQLApi
+@GraphQLApi(isPublic = true)
 @OwnedBy(CE)
 public class RecommendationsOverviewQueryV2 {
   @Inject private GraphQLUtils graphQLUtils;
@@ -92,15 +92,13 @@ public class RecommendationsOverviewQueryV2 {
     return recommendationService.getStats(accountId, condition);
   }
 
-  // TODO(UTSAV): Add unit test
-  @GraphQLQuery(name = "count", description = "generic count query in RecommendationOverviewStats context")
+  @GraphQLQuery(name = "count", description = "generic count query in RecommendationOverviewStats type context")
   public int count(
       @GraphQLContext RecommendationOverviewStatsDTO xyz, @GraphQLEnvironment final ResolutionEnvironment env) {
     return genericCountQuery(env);
   }
 
-  // TODO(UTSAV): Add unit test
-  @GraphQLQuery(name = "count", description = "generic count query in RecommendationsDTO context")
+  @GraphQLQuery(name = "count", description = "generic count query in Recommendations type context")
   public int count(@GraphQLContext RecommendationsDTO xyz, @GraphQLEnvironment final ResolutionEnvironment env) {
     return genericCountQuery(env);
   }

@@ -40,6 +40,7 @@ import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.dataloader.DataLoaderRegistry;
 import org.hibernate.validator.constraints.NotBlank;
+import org.jetbrains.annotations.NotNull;
 import org.reflections.Reflections;
 import org.springframework.stereotype.Service;
 
@@ -56,6 +57,7 @@ public class GraphQLController {
   private static final SchemaPrinter schemaPrinter = new SchemaPrinter();
   private static final DataLoaderRegistry registry = new DataLoaderRegistry();
   private static String schemaAsString;
+  private static String publicSchemaAsString;
   private static final String BASE_PACKAGE = "io.harness.ccm.graphql";
 
   @Inject
@@ -66,23 +68,40 @@ public class GraphQLController {
             // using Gson as alternate because WORKSPACE version of Jackson is old and incompatible.
             .withValueMapperFactory(new GsonValueMapperFactory());
 
+    final GraphQLSchemaGenerator publicSchemaGenerator =
+        new GraphQLSchemaGenerator()
+            .withBasePackages(BASE_PACKAGE)
+            // using Gson as alternate because WORKSPACE version of Jackson is old and incompatible.
+            .withValueMapperFactory(new GsonValueMapperFactory());
+
     final Reflections reflections = new Reflections(BASE_PACKAGE + ".query");
     final Set<Class<?>> queryClasses = reflections.getTypesAnnotatedWith(GraphQLApi.class);
+
     for (Class<?> clazz : queryClasses) {
+      if (clazz.getAnnotation(GraphQLApi.class).isPublic()) {
+        publicSchemaGenerator.withOperationsFromSingleton(injector.getInstance(clazz));
+      }
+
       schemaGenerator.withOperationsFromSingleton(injector.getInstance(clazz));
     }
 
+    publicSchemaAsString = getSchemaAsString(publicSchemaGenerator.generate());
+
     final GraphQLSchema schema = schemaGenerator.generate();
-    graphQL = GraphQL.newGraphQL(schema).build();
-
-    schemaAsString = schemaPrinter.print(schema)
-                         .replaceAll("@_mappedOperation\\(operation : \"__internal__\"\\)", "")
-                         .replaceAll("@_mappedType\\(type : \"__internal__\"\\)", "")
-                         .replaceAll("@_mappedInputField\\(inputField : \"__internal__\"\\)", "");
-
+    schemaAsString = getSchemaAsString(schema);
     log.info("ce-nextgen graphql schemas:\n{}", schemaAsString);
 
+    graphQL = GraphQL.newGraphQL(schema).build();
+
     registerDataLoaders();
+  }
+
+  @NotNull
+  private String getSchemaAsString(GraphQLSchema generate) {
+    return schemaPrinter.print(generate)
+        .replaceAll("@_mappedOperation\\(operation : \"__internal__\"\\)", "")
+        .replaceAll("@_mappedType\\(type : \"__internal__\"\\)", "")
+        .replaceAll("@_mappedInputField\\(inputField : \"__internal__\"\\)", "");
   }
 
   private void registerDataLoaders() {
@@ -107,6 +126,13 @@ public class GraphQLController {
 
     GraphQLQuery graphQLQuery = objectMapper.readValue(query, GraphQLQuery.class);
     return executeInternal(accountIdentifier, orgIdentifier, projectIdentifier, graphQLQuery, raw);
+  }
+
+  @GET
+  @Path("/public-schema")
+  @PublicApi
+  public Response getPublicSchema() {
+    return Response.ok(publicSchemaAsString).type(MediaType.TEXT_PLAIN).build();
   }
 
   @POST
