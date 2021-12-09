@@ -9,10 +9,10 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ARPIT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.LUCAS;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.PUNEET;
@@ -71,7 +71,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
-import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateCache;
 
 import software.wings.WingsBaseTest;
@@ -119,7 +118,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mongodb.morphia.query.Query;
 
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(HarnessTeam.DEL)
@@ -238,14 +236,20 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                      .build())
             .build();
 
-    DelegateTaskBuilder delegateTaskBuilder =
-        DelegateTask.builder()
-            .accountId("ACCOUNT_ID")
-            .setupAbstraction("appId", "APP_ID")
-            .setupAbstraction("envId", "ENV_ID")
-            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
+                                                  .accountId("ACCOUNT_ID")
+                                                  .setupAbstraction("appId", "APP_ID")
+                                                  .setupAbstraction("envId", "ENV_ID")
+                                                  .data(TaskData.builder()
+                                                            .async(true)
+                                                            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                                            .taskType(TaskType.HTTP.name())
+                                                            .build());
 
-    DelegateBuilder delegateBuilder = Delegate.builder().accountId("ACCOUNT_ID").uuid("DELEGATE_ID");
+    DelegateBuilder delegateBuilder = Delegate.builder()
+                                          .accountId("ACCOUNT_ID")
+                                          .uuid("DELEGATE_ID")
+                                          .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()));
 
     for (DelegateScopeTestData test : tests) {
       Delegate delegate =
@@ -268,14 +272,20 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
   public void testAssignByDelegateIncludeScopesWithWildcard() {
-    DelegateTaskBuilder delegateTaskBuilder =
-        DelegateTask.builder()
-            .accountId("ACCOUNT_ID")
-            .setupAbstraction("appId", SCOPE_WILDCARD)
-            .setupAbstraction("envId", "ENV_ID")
-            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
+                                                  .accountId("ACCOUNT_ID")
+                                                  .setupAbstraction("appId", SCOPE_WILDCARD)
+                                                  .setupAbstraction("envId", "ENV_ID")
+                                                  .data(TaskData.builder()
+                                                            .async(true)
+                                                            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                                            .taskType(TaskType.HTTP.name())
+                                                            .build());
 
-    DelegateBuilder delegateBuilder = Delegate.builder().accountId("ACCOUNT_ID").uuid("DELEGATE_ID");
+    DelegateBuilder delegateBuilder = Delegate.builder()
+                                          .accountId("ACCOUNT_ID")
+                                          .uuid("DELEGATE_ID")
+                                          .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()));
 
     Delegate delegate = delegateBuilder
                             .includeScopes(ImmutableList.of(
@@ -304,14 +314,20 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
   public void testAssignByDelegateExcludeScopesWithWildcard() {
-    DelegateTaskBuilder delegateTaskBuilder =
-        DelegateTask.builder()
-            .accountId("ACCOUNT_ID")
-            .setupAbstraction("appId", SCOPE_WILDCARD)
-            .setupAbstraction("envId", "ENV_ID")
-            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
+                                                  .accountId("ACCOUNT_ID")
+                                                  .setupAbstraction("appId", SCOPE_WILDCARD)
+                                                  .setupAbstraction("envId", "ENV_ID")
+                                                  .data(TaskData.builder()
+                                                            .async(true)
+                                                            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                                            .taskType(TaskType.HTTP.name())
+                                                            .build());
 
-    DelegateBuilder delegateBuilder = Delegate.builder().accountId("ACCOUNT_ID").uuid("DELEGATE_ID");
+    DelegateBuilder delegateBuilder = Delegate.builder()
+                                          .accountId("ACCOUNT_ID")
+                                          .uuid("DELEGATE_ID")
+                                          .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()));
 
     Delegate delegate = delegateBuilder
                             .excludeScopes(ImmutableList.of(
@@ -394,6 +410,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -414,7 +431,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                      .numOfProfileScopeNotMatchedInvocations(0)
                      .build())
             .add(DelegateProfileScopeTestData.builder()
-                     .delegate(Delegate.builder().accountId(accountId).uuid(generateUuid()).build())
+                     .delegate(Delegate.builder()
+                                   .accountId(accountId)
+                                   .uuid(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
+                                   .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
                                .accountId(accountId)
@@ -433,6 +454,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -453,6 +475,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -475,6 +498,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -498,6 +522,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -522,6 +547,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -545,6 +571,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -573,6 +600,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .ng(true)
                                    .build())
                      .task(DelegateTask.builder()
@@ -616,8 +644,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     }
 
     // Case to cover non-existing delegate profile
-    Delegate delegateWithNonExistingProfile =
-        Delegate.builder().accountId(accountId).uuid(generateUuid()).delegateProfileId(generateUuid()).build();
+    Delegate delegateWithNonExistingProfile = Delegate.builder()
+                                                  .accountId(accountId)
+                                                  .uuid(generateUuid())
+                                                  .delegateProfileId(generateUuid())
+                                                  .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
+                                                  .build();
     when(delegateCache.get(accountId, delegateWithNonExistingProfile.getUuid(), false))
         .thenReturn(delegateWithNonExistingProfile);
     assertThat(assignDelegateService.canAssign(null, delegateWithNonExistingProfile.getUuid(),
@@ -803,6 +835,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                           .hostName("a.b.c.")
                                           .delegateName("testDelegateName")
                                           .delegateProfileId(delegateProfile.getUuid())
+                                          .supportedTaskTypes(Arrays.asList(TaskType.SCRIPT.name()))
                                           .includeScopes(emptyList())
                                           .excludeScopes(emptyList());
 
@@ -898,6 +931,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                           .accountId("ACCOUNT_ID")
                                           .uuid("DELEGATE_ID")
                                           .includeScopes(emptyList())
+                                          .supportedTaskTypes(Arrays.asList(TaskType.SCRIPT.name()))
                                           .excludeScopes(emptyList());
 
     for (NameTestData test : tests) {
@@ -1019,6 +1053,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid("DELEGATE_ID")
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
+                            .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                             .build();
 
     when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
@@ -1124,6 +1159,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid("DELEGATE_ID")
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
+                            .supportedTaskTypes(Arrays.asList(TaskType.SPOTINST_COMMAND_TASK.name()))
                             .build();
     when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
     when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
@@ -1170,13 +1206,18 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .accountId("ACCOUNT_ID")
                                     .setupAbstraction("appId", "APP_ID")
                                     .setupAbstraction("envId", "ENV_ID")
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .taskType(TaskType.HTTP.name())
+                                              .build())
                                     .build();
     Delegate delegate = Delegate.builder()
                             .accountId("ACCOUNT_ID")
                             .uuid("DELEGATE_ID")
                             .includeScopes(singletonList(null))
                             .excludeScopes(emptyList())
+                            .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
@@ -1191,7 +1232,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .accountId("ACCOUNT_ID")
                                     .setupAbstraction("appId", "APP_ID")
                                     .setupAbstraction("envId", "ENV_ID")
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .taskType(TaskType.HTTP.name())
+                                              .build())
                                     .build();
 
     Delegate delegate = Delegate.builder()
@@ -1199,6 +1244,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid("DELEGATE_ID")
                             .includeScopes(emptyList())
                             .excludeScopes(singletonList(null))
+                            .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
@@ -1213,7 +1259,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .accountId("ACCOUNT_ID")
                                     .setupAbstraction("appId", "APP_ID")
                                     .setupAbstraction("envId", "ENV_ID")
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .taskType(TaskType.HTTP.name())
+                                              .build())
                                     .build();
 
     List<DelegateScope> includeScopes = new ArrayList<>();
@@ -1225,6 +1275,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid("DELEGATE_ID")
                             .includeScopes(includeScopes)
                             .excludeScopes(emptyList())
+                            .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
@@ -1261,7 +1312,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .setupAbstraction("appId", "APP_ID")
                                     .setupAbstraction("envId", "ENV_ID")
                                     .setupAbstraction("infrastructureMappingId", infrastructureMapping.getUuid())
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .taskType(TaskType.SCRIPT.name())
+                                              .build())
                                     .build();
 
     DelegateTask delegateTask2 = DelegateTask.builder()
@@ -1269,13 +1324,18 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                      .setupAbstraction("appId", "APP_ID")
                                      .setupAbstraction("envId", "ENV_ID")
                                      .setupAbstraction("infrastructureMappingId", WRONG_INFRA_MAPPING_ID)
-                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                     .data(TaskData.builder()
+                                               .async(true)
+                                               .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                               .taskType(TaskType.SCRIPT.name())
+                                               .build())
                                      .build();
     Delegate delegate = Delegate.builder()
                             .accountId("ACCOUNT_ID")
                             .uuid("DELEGATE_ID")
                             .includeScopes(scopes)
                             .excludeScopes(emptyList())
+                            .supportedTaskTypes(Arrays.asList(TaskType.SCRIPT.name()))
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(infrastructureMappingService.get("APP_ID", "infraMapping_Id")).thenReturn(infrastructureMapping);
@@ -1889,7 +1949,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     connectionResult.setValidated(true);
     connectionResult.setLastUpdatedAt(clock.millis());
 
-    Delegate delegate2 = Delegate.builder().uuid(generateUuid()).status(ENABLED).lastHeartBeat(clock.millis()).build();
+    Delegate delegate2 = Delegate.builder()
+                             .uuid(generateUuid())
+                             .status(ENABLED)
+                             .lastHeartBeat(clock.millis())
+                             .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
+                             .build();
 
     DelegateConnectionResult connectionResult2 = connectionResultBuilder.build();
     connectionResult2.setDelegateId(delegate2.getUuid());
@@ -1904,7 +1969,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     when(accountDelegatesCache.get(accountId)).thenReturn(Collections.emptyList()).thenReturn(Arrays.asList(delegate2));
     when(delegateCache.get(task.getAccountId(), delegate2.getUuid(), false))
-        .thenReturn(Delegate.builder().uuid(delegateId).build());
+        .thenReturn(
+            Delegate.builder().uuid(delegateId).supportedTaskTypes(Arrays.asList(TaskType.HTTP.name())).build());
     assertThat(assignDelegateService.shouldValidate(task, delegateId)).isFalse();
 
     // test case: connection result present, validated, not expired, delegate connected
@@ -1924,45 +1990,21 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void testCanAssignWithMustExecuteOnDelegate() {
-    String accountId = generateUuid();
-    String delegateId1 = generateUuid();
-    BatchDelegateSelectionLog batch = Mockito.mock(BatchDelegateSelectionLog.class);
-
-    // Test matching mustExecuteOnDelegateId
-    Delegate delegate = Mockito.mock(Delegate.class);
-    when(delegateCache.get(accountId, delegateId1, false)).thenReturn(delegate);
-
-    assertThat(assignDelegateService.canAssign(batch, delegateId1,
-                   DelegateTask.builder().accountId(accountId).mustExecuteOnDelegateId(delegateId1).build()))
-        .isTrue();
-    verify(delegateSelectionLogsService).logMustExecuteOnDelegateMatched(batch, accountId, delegateId1);
-    verify(delegateSelectionLogsService, never()).logCanAssign(batch, accountId, delegateId1);
-
-    // Test not matching mustExecuteOnDelegateId
-    String delegateId2 = generateUuid();
-    when(delegateCache.get(accountId, delegateId2, false)).thenReturn(delegate);
-
-    assertThat(assignDelegateService.canAssign(batch, delegateId2,
-                   DelegateTask.builder().accountId(accountId).mustExecuteOnDelegateId(delegateId1).build()))
-        .isFalse();
-    verify(delegateSelectionLogsService).logMustExecuteOnDelegateNotMatched(batch, accountId, delegateId2);
-    verify(delegateSelectionLogsService, never()).logCanAssign(batch, accountId, delegateId1);
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
   public void testCanAssignCgNg() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
-                                    .data(TaskData.builder().build())
+                                    .data(TaskData.builder().taskType(TaskType.HTTP.name()).build())
                                     .executionCapabilities(emptyList())
                                     .build();
-    Delegate delegate =
-        Delegate.builder().accountId(accountId).uuid(delegateId).status(ENABLED).lastHeartBeat(clock.millis()).build();
+    Delegate delegate = Delegate.builder()
+                            .accountId(accountId)
+                            .uuid(delegateId)
+                            .status(ENABLED)
+                            .lastHeartBeat(clock.millis())
+                            .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
+                            .build();
 
     BatchDelegateSelectionLog batch = Mockito.mock(BatchDelegateSelectionLog.class);
     when(delegateCache.get(accountId, delegateId, false)).thenReturn(delegate);
@@ -2006,13 +2048,18 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testCanAssignOwner() {
-    TaskData taskData = TaskData.builder().build();
+    TaskData taskData = TaskData.builder().taskType(TaskType.SCRIPT.name()).build();
     String accountId = generateUuid();
     String delegateId = generateUuid();
     DelegateTask delegateTask =
         DelegateTask.builder().accountId(accountId).data(taskData).executionCapabilities(emptyList()).build();
-    Delegate delegate =
-        Delegate.builder().accountId(accountId).uuid(delegateId).status(ENABLED).lastHeartBeat(clock.millis()).build();
+    Delegate delegate = Delegate.builder()
+                            .accountId(accountId)
+                            .uuid(delegateId)
+                            .status(ENABLED)
+                            .lastHeartBeat(clock.millis())
+                            .supportedTaskTypes(Arrays.asList(TaskType.SCRIPT.name()))
+                            .build();
 
     BatchDelegateSelectionLog batch = Mockito.mock(BatchDelegateSelectionLog.class);
     // Test matching mustExecuteOnDelegateId
@@ -2078,60 +2125,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = LUCAS)
-  @Category(UnitTests.class)
-  public void onPossibleRetryTest() throws ExecutionException {
-    Set<String> selectors = Stream.of("a", "b").collect(Collectors.toSet());
-    HttpConnectionExecutionCapability connectionExecutionCapability =
-        HttpConnectionExecutionCapability.builder().url("localhost").build();
-    SelectorCapability selectorCapability = SelectorCapability.builder().selectors(selectors).build();
-    List<ExecutionCapability> executionCapabilityList = asList(selectorCapability, connectionExecutionCapability);
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId("TASK_ID_1").build();
-
-    TaskData taskData = TaskData.builder().taskType(TaskType.HTTP.name()).build();
-    Set<String> alreadyTriedDelegates = new HashSet<>();
-    alreadyTriedDelegates.add("DELEGATE_ID_2");
-
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId("ACCOUNT_ID")
-                                    .data(taskData)
-                                    .executionCapabilities(executionCapabilityList)
-                                    .mustExecuteOnDelegateId("DELEGATE_ID")
-                                    .alreadyTriedDelegates(alreadyTriedDelegates)
-                                    .build();
-
-    Delegate delegate = Delegate.builder()
-                            .accountId("ACCOUNT_ID")
-                            .uuid("DELEGATE_ID")
-                            .status(ENABLED)
-                            .lastHeartBeat(clock.millis())
-                            .build();
-
-    Optional<DelegateConnectionResult> trueResult =
-        Optional.of(DelegateConnectionResult.builder().validated(true).lastUpdatedAt(10).build());
-
-    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
-    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
-    when(delegateSelectionLogsService.createBatch(delegateTask)).thenReturn(batch);
-    when(delegateConnectionResultCache.get(ImmutablePair.of("DELEGATE_ID", any()))).thenReturn(trueResult);
-
-    Query<DelegateTask> taskQuery =
-        persistence.createQuery(DelegateTask.class).filter("accountId", "ACCOUNT_ID").filter("uuid", "TASK_ID_1");
-
-    RetryDelegate retryDelegate = RetryDelegate.builder()
-                                      .delegateId("DELEGATE_ID_2")
-                                      .taskQuery(taskQuery)
-                                      .delegateTask(delegateTask)
-                                      .retryPossible(true)
-                                      .build();
-
-    retryDelegate = assignDelegateService.onPossibleRetry(retryDelegate);
-
-    assertThat(retryDelegate).isNotNull();
-    assertThat(retryDelegate.isRetryPossible()).isEqualTo(true);
-  }
-
-  @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testGetAccountDelegates() throws ExecutionException {
@@ -2170,5 +2163,63 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(accountDelegatesCache.get(accountId)).thenThrow(InvalidCacheLoadException.class);
 
     assertThat(assignDelegateService.getAccountDelegates(accountId)).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testDelegateSupportsGivenTaskType() {
+    String delegateId1 = "delegateId1";
+    String delegateId2 = "delegateId2";
+
+    Delegate delegate1 = Delegate.builder()
+                             .uuid(delegateId1)
+                             .delegateName("delegateName")
+                             .accountId("accountId")
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .supportedTaskTypes(Arrays.asList(TaskType.SCRIPT.name(), TaskType.HTTP.name()))
+                             .build();
+
+    Delegate delegate2 = Delegate.builder()
+                             .uuid(delegateId2)
+                             .delegateName("delegateName")
+                             .accountId("accountId")
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+
+    persistence.save(delegate1);
+    persistence.save(delegate2);
+    when(delegateCache.get("accountId", delegateId1, false)).thenReturn(delegate1);
+    when(delegateCache.get("accountId", delegateId2, false)).thenReturn(delegate2);
+    DelegateTask asyncTask = DelegateTask.builder()
+                                 .uuid(generateUuid())
+                                 .accountId("accountId")
+                                 .data(TaskData.builder().async(true).taskType(TaskType.SCRIPT.name()).build())
+                                 .build();
+    DelegateTask syncTask = DelegateTask.builder()
+                                .uuid(generateUuid())
+                                .accountId("accountId")
+                                .data(TaskData.builder().async(false).taskType(TaskType.HTTP.name()).build())
+                                .build();
+    DelegateTask wrongAsyncTask =
+        DelegateTask.builder()
+            .uuid(generateUuid())
+            .accountId("accountId")
+            .data(TaskData.builder().async(true).taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build())
+            .build();
+
+    DelegateTask wrongSyncTask =
+        DelegateTask.builder()
+            .uuid(generateUuid())
+            .accountId("accountId")
+            .data(TaskData.builder().async(false).taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build())
+            .build();
+
+    assertThat(assignDelegateService.canAssign(null, delegateId1, asyncTask)).isTrue();
+    assertThat(assignDelegateService.canAssign(null, delegateId1, syncTask)).isTrue();
+    assertThat(assignDelegateService.canAssign(null, delegateId2, asyncTask)).isFalse();
+    assertThat(assignDelegateService.canAssign(null, delegateId2, syncTask)).isFalse();
+    assertThat(assignDelegateService.canAssign(null, delegateId1, wrongAsyncTask)).isFalse();
+    assertThat(assignDelegateService.canAssign(null, delegateId1, wrongSyncTask)).isFalse();
   }
 }

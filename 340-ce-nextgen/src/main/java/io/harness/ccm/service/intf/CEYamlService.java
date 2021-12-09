@@ -9,13 +9,18 @@ import lombok.NonNull;
 public interface CEYamlService {
   String DOT_YAML = ".yaml";
   String CLOUD_COST_K8S_CLUSTER_SETUP = "cloudCostK8sClusterSetup";
-  String DOWNLOAD_YAML_FILENAME = "cloud_cost_k8s_cluster_setup";
+  String CLOUD_COST_K8S_CLUSTER_SETUP_V2 = "cloudCostK8sClusterSetupV2";
 
   // use unifiedCloudCostK8sClusterYaml
   @Deprecated
   File downloadCostOptimisationYaml(String accountId, String connectorIdentifier, String harnessHost, String serverName)
       throws IOException;
 
+  @Deprecated
   String unifiedCloudCostK8sClusterYaml(@NonNull String accountId, String harnessHost, String serverName,
       @NonNull K8sClusterSetupRequest k8sClusterSetupRequest) throws IOException;
+
+  String unifiedCloudCostK8sClusterYaml(@NonNull String accountId, String harnessHost, String serverName,
+      @NonNull K8sClusterSetupRequest k8sClusterSetupRequest, boolean includeVisibility, boolean includeOptimization)
+      throws IOException;
 }

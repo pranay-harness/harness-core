@@ -16,7 +16,6 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
-import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -51,7 +50,6 @@ import lombok.experimental.SuperBuilder;
 import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "VerificationJobKeys")
@@ -248,14 +246,6 @@ public abstract class VerificationJob
     return envIdentifier.getValue();
   }
 
-  public RuntimeParameter getEnvIdentifierRuntimeParam() {
-    return envIdentifier;
-  }
-
-  public RuntimeParameter getServiceIdentifierRuntimeParam() {
-    return serviceIdentifier;
-  }
-
   public abstract void resolveJobParams(Map<String, String> runtimeParameters);
   public VerificationJob resolveAdditionsFields(VerificationJobInstanceService verificationJobInstanceService) {
     // no-op by default. Designed to override.
@@ -331,22 +321,6 @@ public abstract class VerificationJob
         return RUNTIME_STRING;
       }
       return value;
-    }
-  }
-
-  public abstract static class VerificationJobUpdatableEntity<T extends VerificationJob, D extends VerificationJobDTO>
-      implements UpdatableEntity<T, D> {
-    public void setCommonOperations(UpdateOperations<T> updateOperations, D dto) {
-      updateOperations.set(VerificationJobKeys.jobName, dto.getJobName())
-          .set(VerificationJobKeys.envIdentifier,
-              getRunTimeParameter(dto.getEnvIdentifier(), dto.isRuntimeParam(dto.getEnvIdentifier())))
-          .set(VerificationJobKeys.serviceIdentifier,
-              getRunTimeParameter(dto.getServiceIdentifier(), dto.isRuntimeParam(dto.getEnvIdentifier())))
-          .set(VerificationJobKeys.duration,
-              getRunTimeParameter(dto.getDuration(), dto.isRuntimeParam(dto.getEnvIdentifier())))
-          .set(VerificationJobKeys.monitoringSources, dto.getMonitoringSources())
-          .set(VerificationJobKeys.isDefaultJob, dto.isDefaultJob())
-          .set(VerificationJobKeys.activitySourceIdentifier, dto.getActivitySourceIdentifier());
     }
   }
 

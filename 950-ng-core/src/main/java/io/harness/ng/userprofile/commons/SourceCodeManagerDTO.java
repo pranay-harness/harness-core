@@ -21,9 +21,9 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Schema(name = "SourceCodeManager", description = "This contains details of Source Code Manager")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
-@Schema(name = "SourceCodeManager", description = "This is the view of the SourceCodeManager entity defined in Harness")
 public abstract class SourceCodeManagerDTO {
   String id;
   String userIdentifier;

@@ -1,7 +1,6 @@
 package io.harness.delegate.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.K8sCommandUnitConstants.Apply;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
@@ -201,10 +200,10 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
 
     k8sTaskHelperBase.deleteSkippedManifestFiles(manifestFilesDirectory, executionLogCallback);
 
-    List<String> manifestHelperFiles =
-        isEmpty(request.getValuesYamlList()) ? request.getOpenshiftParamList() : request.getValuesYamlList();
+    List<String> manifestOverrideFiles = getManifestOverrideFlies(request);
+
     List<FileData> manifestFiles = k8sTaskHelperBase.renderTemplate(k8sDelegateTaskParams,
-        request.getManifestDelegateConfig(), manifestFilesDirectory, manifestHelperFiles, releaseName,
+        request.getManifestDelegateConfig(), manifestFilesDirectory, manifestOverrideFiles, releaseName,
         kubernetesConfig.getNamespace(), executionLogCallback, request.getTimeoutIntervalInMin());
 
     resources = k8sTaskHelperBase.readManifests(manifestFiles, executionLogCallback, isErrorFrameworkSupported());

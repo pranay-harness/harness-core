@@ -1,5 +1,7 @@
 package io.harness.event.handler.segment;
 
+import io.harness.secret.ConfigSecret;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
@@ -18,5 +20,5 @@ import lombok.NoArgsConstructor;
 public class SegmentConfig {
   @JsonProperty(defaultValue = "false") private boolean enabled;
   private String url;
-  private String apiKey;
+  @ConfigSecret private String apiKey;
 }

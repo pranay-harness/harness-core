@@ -437,7 +437,12 @@ public class PipelineServiceImpl implements PipelineService {
 
       yamlPushService.pushYamlChangeSet(accountId, pipeline, null, Type.DELETE, syncFromGit, false);
 
-      return prunePipeline(appId, pipelineId);
+      if (!prunePipeline(appId, pipelineId)) {
+        throw new InvalidRequestException(
+            String.format("Pipeline %s does not exist or might already be deleted.", pipeline.getName()));
+      }
+
+      return true;
     });
   }
 

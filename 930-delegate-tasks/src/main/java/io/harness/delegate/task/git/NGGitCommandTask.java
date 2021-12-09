@@ -6,6 +6,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.service.git.NGGitService;
 import io.harness.connector.task.git.GitCommandTaskHandler;
+import io.harness.connector.task.git.GitDecryptionHelper;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;

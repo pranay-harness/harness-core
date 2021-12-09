@@ -101,7 +101,7 @@ public class ManifestCollectionUtilsTest extends WingsBaseTest {
     assertThat(helmChartConfigParams.getChartName()).isEqualTo(CHART_NAME);
     assertThat(helmChartConfigParams.getEncryptedDataDetails().get(0).getFieldName()).isEqualTo(ENCRYPT);
     assertThat(helmChartConfigParams.getHelmVersion()).isEqualTo(HelmVersion.V3);
-    assertThat(helmChartConfigParams.getRepoName()).isEqualTo(convertBase64UuidToCanonicalForm(SETTING_ID));
+    assertThat(helmChartConfigParams.getRepoName()).isEqualTo(convertBase64UuidToCanonicalForm(MANIFEST_ID));
     assertThat(helmChartConfigParams.getHelmRepoConfig()).isInstanceOf(HttpHelmRepoConfig.class);
   }
 

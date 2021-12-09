@@ -12,6 +12,7 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +33,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("BitbucketConnector")
 @OwnedBy(HarnessTeam.DX)
+@Schema(name = "BitbucketConnector", description = "This contains details of Bitbucket connectors")
 public class BitbucketConnectorDTO extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable {
   @NotNull @JsonProperty("type") private GitConnectionType connectionType;
   @NotNull @NotBlank private String url;

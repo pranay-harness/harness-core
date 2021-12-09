@@ -22,7 +22,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
-@Schema(name = "AccountLicense", description = "This is the view of an Account License defined in Harness")
+@Schema(name = "AccountLicense", description = "This contains details of the Account License defined in Harness")
 public class AccountLicenseDTO {
   String accountId;
   Map<ModuleType, ModuleLicenseDTO> moduleLicenses;

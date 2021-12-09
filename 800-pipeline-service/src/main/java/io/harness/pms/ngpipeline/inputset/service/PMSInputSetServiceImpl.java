@@ -10,6 +10,7 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
+import io.harness.gitsync.scm.EntityObjectIdUtils;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTOMapper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
@@ -94,7 +95,8 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
                                         .withDescription(inputSetEntity.getDescription())
                                         .withTags(inputSetEntity.getTags())
                                         .withInputSetReferences(inputSetEntity.getInputSetReferences())
-                                        .withIsInvalid(false);
+                                        .withIsInvalid(false)
+                                        .withIsEntityInvalid(false);
 
     return makeInputSetUpdateCall(entityToUpdate, changeType);
   }
@@ -123,6 +125,24 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
     update.set(InputSetEntityKeys.isInvalid, isInvalid);
     InputSetEntity inputSetEntity = inputSetRepository.switchValidationFlag(criteria, update);
     return inputSetEntity != null;
+  }
+
+  @Override
+  public boolean markGitSyncedInputSetInvalid(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, String identifier, String invalidYaml) {
+    Optional<InputSetEntity> optionalInputSetEntity =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false);
+    if (!optionalInputSetEntity.isPresent()) {
+      log.warn(String.format(
+          "Marking input set [%s] as invalid failed as it does not exist or has been deleted", identifier));
+      return false;
+    }
+    InputSetEntity existingInputSet = optionalInputSetEntity.get();
+    InputSetEntity updatedInputSet = existingInputSet.withYaml(invalidYaml)
+                                         .withObjectIdOfYaml(EntityObjectIdUtils.getObjectIdOfYaml(invalidYaml))
+                                         .withIsEntityInvalid(true);
+    makeInputSetUpdateCall(updatedInputSet, ChangeType.NONE);
+    return true;
   }
 
   private InputSetEntity makeInputSetUpdateCall(InputSetEntity entity, ChangeType changeType) {

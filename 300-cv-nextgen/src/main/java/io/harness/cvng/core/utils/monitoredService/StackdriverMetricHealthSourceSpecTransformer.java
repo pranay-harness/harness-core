@@ -39,6 +39,7 @@ public class StackdriverMetricHealthSourceSpecTransformer
                 .metricTags(metricInfo.getTags())
                 .dashboardName(cvConfig.getDashboardName())
                 .metricName(metricInfo.getMetricName())
+                .identifier(metricInfo.getIdentifier())
                 .serviceInstanceField(metricInfo.getServiceInstanceField())
                 .jsonMetricDefinition(JsonUtils.asObject(metricInfo.getJsonMetricDefinition(), Object.class))
                 .isManualQuery(metricInfo.isManualQuery())

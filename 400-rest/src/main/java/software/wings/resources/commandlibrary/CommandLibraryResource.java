@@ -2,7 +2,7 @@ package software.wings.resources.commandlibrary;
 
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 

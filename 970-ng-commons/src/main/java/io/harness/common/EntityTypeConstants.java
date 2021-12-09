@@ -30,4 +30,6 @@ public interface EntityTypeConstants {
   String TEMPLATE = "Template";
   String GIT_REPOSITORIES = "GitRepositories";
   String FEATURE_FLAGS = "FeatureFlags";
+  String HTTP = "Http";
+  String SHELL_SCRIPT = "ShellScript";
 }

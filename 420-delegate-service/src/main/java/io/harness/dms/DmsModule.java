@@ -24,5 +24,6 @@ public class DmsModule extends AbstractModule {
     } else {
       bind(DmsProxy.class).to(DmsProxyManagerModeImpl.class);
     }
+    // todo(abhinav): install event fmwk module and observers depending on modes.
   }
 }

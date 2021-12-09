@@ -18,6 +18,7 @@ import io.harness.gitsync.common.dtos.GitBranchListDTO;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.ScmClientFacilitatorService;
+import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.repositories.gitBranches.GitBranchesRepository;
@@ -46,18 +47,18 @@ public class GitBranchServiceImpl implements GitBranchService {
   private final GitBranchesRepository gitBranchesRepository;
   private final YamlGitConfigService yamlGitConfigService;
   private final ExecutorService executorService;
-  private final ScmClientFacilitatorService scmDelegateService;
   private final GitBranchSyncService gitBranchSyncService;
+  private final ScmOrchestratorService scmOrchestratorService;
 
   @Inject
   public GitBranchServiceImpl(GitBranchesRepository gitBranchesRepository, YamlGitConfigService yamlGitConfigService,
       ExecutorService executorService, @Named(SCM_ON_DELEGATE) ScmClientFacilitatorService scmDelegateService,
-      GitBranchSyncService gitBranchSyncService) {
+      GitBranchSyncService gitBranchSyncService, ScmOrchestratorService scmOrchestratorService) {
     this.gitBranchesRepository = gitBranchesRepository;
     this.yamlGitConfigService = yamlGitConfigService;
     this.executorService = executorService;
-    this.scmDelegateService = scmDelegateService;
     this.gitBranchSyncService = gitBranchSyncService;
+    this.scmOrchestratorService = scmOrchestratorService;
   }
 
   @Override
@@ -117,9 +118,12 @@ public class GitBranchServiceImpl implements GitBranchService {
   public void createBranches(String accountId, String orgIdentifier, String projectIdentifier, String gitConnectorRef,
       String repoUrl, String yamlGitConfigIdentifier) {
     final int MAX_BRANCH_SIZE = 5000;
-    final List<String> branches =
-        scmDelegateService.listBranchesForRepoByConnector(accountId, orgIdentifier, projectIdentifier, gitConnectorRef,
-            repoUrl, io.harness.ng.beans.PageRequest.builder().pageSize(MAX_BRANCH_SIZE).pageIndex(0).build(), null);
+    List<String> branches = scmOrchestratorService.processScmRequestUsingConnectorSettings(scmClientFacilitatorService
+        -> scmClientFacilitatorService.listBranchesForRepoByConnector(accountId, orgIdentifier, projectIdentifier,
+            gitConnectorRef, repoUrl,
+            io.harness.ng.beans.PageRequest.builder().pageSize(MAX_BRANCH_SIZE).pageIndex(0).build(), null),
+        projectIdentifier, orgIdentifier, accountId, gitConnectorRef);
+
     for (String branchName : branches) {
       GitBranch gitBranch = GitBranch.builder()
                                 .accountIdentifier(accountId)

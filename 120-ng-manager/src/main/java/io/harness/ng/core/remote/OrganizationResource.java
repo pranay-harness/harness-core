@@ -48,6 +48,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -179,17 +180,17 @@ public class OrganizationResource {
     return ResponseDTO.newResponse(getNGPageResponse(orgsPage.map(OrganizationMapper::toResponseWrapper)));
   }
 
-  @GET
+  @POST
+  @Hidden
   @Path("all-organizations")
   @ApiOperation(value = "Get All Organizations list", nickname = "getAllOrganizationList", hidden = true)
   @InternalApi
   public ResponseDTO<PageResponse<OrganizationResponse>> listAllOrganizations(
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Parameter(description = "list of ProjectIdentifiers to filter results by") @QueryParam(
-          NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
-      @Parameter(description = "Search term") @QueryParam(
-          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+      @Parameter(description = "Search term") @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @RequestBody(
+          required = true, description = "list of ProjectIdentifiers to filter results by") List<String> identifiers) {
     OrganizationFilterDTO organizationFilterDTO =
         OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
     Page<Organization> orgsPage = organizationService.listPermittedOrgs(accountIdentifier,

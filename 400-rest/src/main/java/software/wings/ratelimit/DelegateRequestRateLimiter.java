@@ -32,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(DEL)
 @Deprecated
 public class DelegateRequestRateLimiter {
-  private static final int GLOBAL_DELEGATE_REQUEST_LIMIT_PER_MINUTE = 10000;
-  private static final int ACCOUNT_PER_DELEGATE_REQUEST_LIMIT_PER_MINUTE = 200;
+  private static final int GLOBAL_DELEGATE_REQUEST_LIMIT_PER_MINUTE = 20000;
+  private static final int ACCOUNT_PER_DELEGATE_REQUEST_LIMIT_PER_MINUTE = 1200;
 
   LimitConfigurationService limitConfigurationService;
 

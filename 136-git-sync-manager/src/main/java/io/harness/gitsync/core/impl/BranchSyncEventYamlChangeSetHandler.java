@@ -6,7 +6,10 @@ import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
+import io.harness.beans.Scope;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.ff.FeatureFlagService;
 import io.harness.gitsync.common.beans.BranchSyncMetadata;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
@@ -16,6 +19,7 @@ import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
+import io.harness.gitsync.common.helper.GitConnectivityExceptionHelper;
 import io.harness.gitsync.common.helper.GitToHarnessProgressHelper;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
@@ -23,9 +27,11 @@ import io.harness.gitsync.common.service.GitToHarnessProgressService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 import io.harness.gitsync.core.service.YamlChangeSetHandler;
+import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +46,8 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
   private GitBranchService gitBranchService;
   private GitToHarnessProgressService gitToHarnessProgressService;
   private GitToHarnessProgressHelper gitToHarnessProgressHelper;
+  private GitSyncErrorService gitSyncErrorService;
+  private FeatureFlagService featureFlagService;
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
@@ -97,6 +105,8 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
       }
     } catch (Exception ex) {
       log.error("Error encountered while syncing the branch [{}]", branch, ex);
+      String errorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
+      recordErrors(accountIdentifier, branchSyncMetadata, repoURL, branch, errorMessage);
       gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);
       // TODO adding it here for safer side as of now. Ideally should be part of step service to mark it
       gitToHarnessProgressService.updateStepStatus(
@@ -105,6 +115,16 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
       gitToHarnessProgressService.updateProgressStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProgressStatus.ERROR);
       return YamlChangeSetStatus.FAILED_WITH_RETRY;
+    }
+  }
+
+  private void recordErrors(
+      String accountId, BranchSyncMetadata branchSyncMetadata, String repo, String branch, String errorMessage) {
+    if (featureFlagService.isEnabled(FeatureName.NG_GIT_ERROR_EXPERIENCE, accountId)) {
+      Scope scope =
+          Scope.of(accountId, branchSyncMetadata.getOrgIdentifier(), branchSyncMetadata.getProjectIdentifier());
+      gitSyncErrorService.recordConnectivityError(
+          accountId, Collections.singletonList(scope), repo, branch, errorMessage);
     }
   }
 }

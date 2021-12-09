@@ -71,9 +71,7 @@ public class OrganizationEntityCRUDEventListener implements MessageListener {
     try {
       final DelegateEntityOwner owner =
           DelegateEntityOwnerHelper.buildOwner(organizationEntityChangeDTO.getIdentifier(), StringUtils.EMPTY);
-      log.info("New organization created {}. Creating delegate primary config.", owner.getIdentifier());
-      // We need to create only if it doesn't already exist as message can be repeated
-      delegateProfileService.fetchNgPrimaryProfile(organizationEntityChangeDTO.getAccountIdentifier(), owner);
+      log.info("New organization created {}.", owner.getIdentifier());
       return true;
     } catch (final Exception e) {
       log.error("Failed to create primary delegate profile for organization {}/{}",

@@ -7,8 +7,8 @@ import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.BaseVaultConfig.BaseVaultConfigKeys;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.settings.SettingVariableTypes.VAULT;
 
 import static java.time.Duration.ofMillis;
@@ -86,12 +86,12 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
       }
 
       if (encryptedToken != null) {
-        char[] decryptToken = decryptUsingBaseAlgo(encryptedToken);
+        char[] decryptToken = decryptUsingAlgoOfSecret(encryptedToken);
         baseVaultConfig.setAuthToken(String.valueOf(decryptToken));
       }
 
       if (encryptedSecretId != null) {
-        char[] decryptedSecretId = decryptUsingBaseAlgo(encryptedSecretId);
+        char[] decryptedSecretId = decryptUsingAlgoOfSecret(encryptedSecretId);
 
         baseVaultConfig.setSecretId(String.valueOf(decryptedSecretId));
       }
@@ -316,11 +316,11 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
       }
 
       if (tokenData != null) {
-        char[] decryptedToken = decryptUsingBaseAlgo(tokenData);
+        char[] decryptedToken = decryptUsingAlgoOfSecret(tokenData);
         vaultConfig.setAuthToken(String.valueOf(decryptedToken));
       }
       if (secretIdData != null) {
-        char[] decryptedSecretId = decryptUsingBaseAlgo(secretIdData);
+        char[] decryptedSecretId = decryptUsingAlgoOfSecret(secretIdData);
         vaultConfig.setSecretId(String.valueOf(decryptedSecretId));
       }
     }

@@ -7,6 +7,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_ACTIVIT
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_FULL_SYNC_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.INSTANCE_STATS;
 import static io.harness.eventsframework.EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION;
 import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
@@ -15,7 +16,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.USERMEMBERSHIP
 import static io.harness.eventsframework.EventsFrameworkConstants.USERMEMBERSHIP_MAX_PROCESSING_TIME;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.common.events.GitSyncConfigStreamConsumer;
+import io.harness.gitsync.common.impl.FullSyncMessageConsumer;
 import io.harness.ng.authenticationsettings.SamlAuthorizationStreamConsumer;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -35,7 +36,7 @@ public class NGEventConsumerService implements Managed {
   @Inject private SetupUsageStreamConsumer setupUsageStreamConsumer;
   @Inject private EntityActivityStreamConsumer entityActivityStreamConsumer;
   @Inject private SamlAuthorizationStreamConsumer samlAuthorizationStreamConsumer;
-  @Inject private GitSyncConfigStreamConsumer gitSyncConfigStreamConsumer;
+  @Inject private FullSyncMessageConsumer fullSyncMessageConsumer;
   private ExecutorService ngAccountSetupConsumerService;
 
   @Inject private InstanceStatsStreamConsumer instanceStatsStreamConsumer;
@@ -46,6 +47,7 @@ public class NGEventConsumerService implements Managed {
   private ExecutorService samlAuthorizationConsumerService;
   private ExecutorService instanceStatsConsumerService;
   private ExecutorService gitSyncConfigStreamConsumerService;
+  private ExecutorService fullSyncStreamConsumerService;
 
   @Override
   public void start() {
@@ -65,6 +67,8 @@ public class NGEventConsumerService implements Managed {
         Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(INSTANCE_STATS).build());
     gitSyncConfigStreamConsumerService =
         Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(GIT_CONFIG_STREAM).build());
+    fullSyncStreamConsumerService =
+        Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(GIT_FULL_SYNC_STREAM).build());
 
     entityCRUDConsumerService.execute(entityCRUDStreamConsumer);
     ngAccountSetupConsumerService.execute(ngAccountSetupConsumer);
@@ -73,7 +77,7 @@ public class NGEventConsumerService implements Managed {
     userMembershipConsumerService.execute(userMembershipStreamConsumer);
     samlAuthorizationConsumerService.execute(samlAuthorizationStreamConsumer);
     instanceStatsConsumerService.execute(instanceStatsStreamConsumer);
-    gitSyncConfigStreamConsumerService.execute(gitSyncConfigStreamConsumer);
+    fullSyncStreamConsumerService.execute(fullSyncMessageConsumer);
   }
 
   @Override

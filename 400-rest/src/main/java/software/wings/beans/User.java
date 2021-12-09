@@ -23,6 +23,7 @@ import software.wings.beans.utm.UtmInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
+import software.wings.security.authentication.totp.RateLimitProtection;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -123,6 +124,8 @@ public class User extends Base implements Principal {
   private boolean imported;
 
   private UserLockoutInfo userLockoutInfo = new UserLockoutInfo();
+
+  @Getter private RateLimitProtection rateLimitProtection;
 
   @JsonIgnore private long passwordChangedAt;
 
@@ -762,6 +765,7 @@ public class User extends Base implements Principal {
     private boolean userLocked;
     private boolean imported;
     private UtmInfo utmInfo;
+    private RateLimitProtection rateLimitProtection;
     private UserRequestContext userRequestContext;
     private String externalUserId;
 
@@ -808,6 +812,11 @@ public class User extends Base implements Principal {
 
     public Builder userRequestContext(UserRequestContext userRequestContext) {
       this.userRequestContext = userRequestContext;
+      return this;
+    }
+
+    public Builder rateLimitProtection(RateLimitProtection rateLimitProtection) {
+      this.rateLimitProtection = rateLimitProtection;
       return this;
     }
 
@@ -983,6 +992,7 @@ public class User extends Base implements Principal {
           .twoFactorJwtToken(twoFactorJwtToken)
           .passwordExpired(passwordExpired)
           .oauthProvider(oauthProvider)
+          .rateLimitProtection(rateLimitProtection)
           .utmInfo(utmInfo)
           .imported(imported);
     }
@@ -1025,6 +1035,8 @@ public class User extends Base implements Principal {
       user.setGivenName(givenName);
       user.setFamilyName(familyName);
       user.setUserRequestContext(userRequestContext);
+
+      user.rateLimitProtection = rateLimitProtection;
 
       return user;
     }

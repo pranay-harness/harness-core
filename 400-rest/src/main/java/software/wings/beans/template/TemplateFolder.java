@@ -2,7 +2,7 @@ package software.wings.beans.template;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Arrays.asList;

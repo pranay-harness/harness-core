@@ -23,6 +23,9 @@ public interface PMSInputSetService {
 
   boolean switchValidationFlag(InputSetEntity entity, boolean isInvalid);
 
+  boolean markGitSyncedInputSetInvalid(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, String identifier, String invalidYaml);
+
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
       String identifier, Long version);
 

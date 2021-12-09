@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -18,6 +19,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GcpConnectorCredential")
 @JsonDeserialize(using = GcpCredentialDTODeserializer.class)
+@Schema(name = "GcpConnectorCredential", description = "This contains GCP connector credentials")
 public class GcpConnectorCredentialDTO {
   @NotNull @JsonProperty("type") GcpCredentialType gcpCredentialType;
   @JsonProperty("spec")

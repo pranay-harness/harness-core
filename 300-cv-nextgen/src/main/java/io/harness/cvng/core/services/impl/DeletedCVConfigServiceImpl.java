@@ -21,6 +21,7 @@ import io.harness.cvng.core.entities.demo.CVNGDemoDataIndex;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.servicelevelobjective.entities.SLIRecord;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.persistence.HPersistence;
@@ -48,7 +49,7 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
       AnalysisStateMachine.class, LearningEngineTask.class, LogRecord.class, HostRecord.class, LogAnalysisRecord.class,
       LogAnalysisResult.class, LogAnalysisCluster.class, DeploymentTimeSeriesAnalysis.class,
       DeploymentLogAnalysis.class, TimeSeriesRiskSummary.class, TimeSeriesAnomalousPatterns.class,
-      DataCollectionTask.class, TimeSeriesCumulativeSums.class, CVNGDemoDataIndex.class);
+      DataCollectionTask.class, TimeSeriesCumulativeSums.class, CVNGDemoDataIndex.class, SLIRecord.class);
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
@@ -75,7 +76,8 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
         -> ENTITIES_TO_DELETE_BY_VERIFICATION_ID.forEach(entity
             -> hPersistence.delete(hPersistence.createQuery(entity).filter(
                 VerificationTask.VERIFICATION_TASK_ID_KEY, verificationTaskId))));
-    verificationTaskService.removeCVConfigMappings(deletedCVConfig.getCvConfig().getUuid());
+    verificationTaskService.removeCVConfigMappings(
+        deletedCVConfig.getCvConfig().getAccountId(), deletedCVConfig.getCvConfig().getUuid());
     monitoringSourcePerpetualTaskService.deleteTask(deletedCVConfig.getCvConfig().getAccountId(),
         deletedCVConfig.getCvConfig().getOrgIdentifier(), deletedCVConfig.getCvConfig().getProjectIdentifier(),
         deletedCVConfig.getCvConfig().getIdentifier());

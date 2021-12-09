@@ -52,7 +52,7 @@ import io.harness.overviewdashboard.remote.ParallelRestCallExecutor;
 import io.harness.pipeline.dashboards.PMSLandingDashboardResourceClient;
 import io.harness.pms.dashboards.LandingDashboardRequestPMS;
 import io.harness.pms.dashboards.PipelinesCount;
-import io.harness.userng.remote.UserNGClient;
+import io.harness.project.remote.ProjectClient;
 
 import com.google.inject.Inject;
 import dashboards.CDLandingDashboardResourceClient;
@@ -77,7 +77,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   CDLandingDashboardResourceClient cdLandingDashboardResourceClient;
   PMSLandingDashboardResourceClient pmsLandingDashboardResourceClient;
   ParallelRestCallExecutor parallelRestCallExecutor;
-  UserNGClient userNGClient;
+  ProjectClient projectClient;
 
   @Override
   public ExecutionResponse<TopProjectsPanel> getTopProjectsPanel(
@@ -514,7 +514,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
                                 .build());
     restCallRequestList.add(
         RestCallRequest.<ActiveProjectsCountDTO>builder()
-            .request(userNGClient.getAccessibleProjectsCount(accountIdentifier, userId, startInterval, endInterval))
+            .request(projectClient.getAccessibleProjectsCount(accountIdentifier, startInterval, endInterval))
             .requestType(OverviewDashboardRequestType.GET_PROJECTS_COUNT)
             .build());
     return restCallRequestList;

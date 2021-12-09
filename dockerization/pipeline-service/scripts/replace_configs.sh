@@ -65,6 +65,10 @@ if [[ "" != "$MONGO_TRANSACTIONS_ALLOWED" ]]; then
   yq write -i $CONFIG_FILE mongo.transactionsEnabled $MONGO_TRANSACTIONS_ALLOWED
 fi
 
+if [[ "" != "$DISTRIBUTED_LOCK_IMPLEMENTATION" ]]; then
+  yq write -i $CONFIG_FILE distributedLockImplementation "$DISTRIBUTED_LOCK_IMPLEMENTATION"
+fi
+
 if [[ "" != "$GRPC_SERVER_PORT" ]]; then
   yq write -i $CONFIG_FILE grpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
@@ -393,5 +397,7 @@ replace_key_value pipelineEventConsumersConfig.partialPlanResponse.threads "$PAR
 replace_key_value pipelineEventConsumersConfig.createPlan.threads "$CREATE_PLAN_EVENT_CONSUMER_THREAD_COUNT"
 replace_key_value pipelineEventConsumersConfig.planNotify.threads "$PLAN_NOTIFY_EVENT_CONSUMER_THREAD_COUNT"
 replace_key_value pipelineEventConsumersConfig.pmsNotify.threads "$PMS_NOTIFY_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.webhookEvent.threads "$PMS_WEBHOOK_EVENT_CONSUMER_THREAD_COUNT"
 
 replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"
+replace_key_value segmentConfiguration.url "$SEGMENT_URL"

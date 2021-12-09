@@ -2,10 +2,15 @@ package io.harness.plancreator.steps.internal;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.barrier.BarrierStepInfo;
+import io.harness.plancreator.steps.common.StepElementParameters.StepElementParametersBuilder;
+import io.harness.plancreator.steps.common.StepParametersUtils;
 import io.harness.plancreator.steps.common.WithStepElementParameters;
 import io.harness.plancreator.steps.http.HttpStepInfo;
+import io.harness.plancreator.steps.http.PmsAbstractStepNode;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.steps.approval.step.harness.HarnessApprovalStepInfo;
 import io.harness.steps.approval.step.jira.JiraApprovalStepInfo;
 import io.harness.steps.jira.create.JiraCreateStepInfo;
@@ -19,4 +24,12 @@ import io.swagger.annotations.ApiModel;
 @ApiModel(subTypes = {BarrierStepInfo.class, HttpStepInfo.class, FlagConfigurationStepInfo.class,
               HarnessApprovalStepInfo.class, JiraApprovalStepInfo.class, JiraCreateStepInfo.class,
               JiraUpdateStepInfo.class, ShellScriptStepInfo.class})
-public interface PMSStepInfo extends StepSpecType, WithStepElementParameters {}
+public interface PMSStepInfo extends StepSpecType, WithStepElementParameters {
+  default StepParameters getStepParameters(
+      PmsAbstractStepNode stepElementConfig, OnFailRollbackParameters failRollbackParameters) {
+    StepElementParametersBuilder stepParametersBuilder =
+        StepParametersUtils.getStepParameters(stepElementConfig, failRollbackParameters);
+    stepParametersBuilder.spec(getSpecParameters());
+    return stepParametersBuilder.build();
+  }
+}

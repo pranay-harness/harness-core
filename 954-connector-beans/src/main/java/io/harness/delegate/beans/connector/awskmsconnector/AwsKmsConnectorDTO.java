@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.Preconditions;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +40,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Schema(name = "AwsKmsConnector", description = "This contains AWS KMS SM connectors config details")
 public class AwsKmsConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @Valid AwsKmsConnectorCredentialDTO credential;
 

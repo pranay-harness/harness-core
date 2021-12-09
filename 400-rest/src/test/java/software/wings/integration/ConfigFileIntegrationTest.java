@@ -5,9 +5,9 @@ import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.integration.IntegrationTestUtils.randomInt;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;

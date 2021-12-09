@@ -3,7 +3,8 @@ let numApprovalsRequired = 1;
 
 if (review.pullRequest.title.startsWith('[CDP') ||
     review.pullRequest.title.startsWith('[CVNG') ||
-    review.pullRequest.title.startsWith('[CV')) {
+    review.pullRequest.title.startsWith('[CV') ||
+    review.pullRequest.title.startsWith('[PIE')) {
   numApprovalsRequired = 2;
 }
 

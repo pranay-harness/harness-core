@@ -23,7 +23,7 @@ import static software.wings.beans.AccountType.ESSENTIALS;
 import static software.wings.beans.AccountType.PAID;
 import static software.wings.beans.AccountType.TRIAL;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.EmailVerificationToken.Builder.anEmailVerificationToken;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.User.Builder.anUser;
@@ -1027,7 +1027,6 @@ public class UserServiceTest extends WingsBaseTest {
     userService.inviteUsers(userInvite);
     verify(wingsPersistence).save(any(UserInvite.class));
     verify(wingsPersistence).saveAndGet(eq(User.class), any(User.class));
-    verify(cache).remove(USER_ID);
     verify(auditServiceHelper, times(userInvite.getEmails().size()))
         .reportForAuditingUsingAccountId(eq(ACCOUNT_ID), eq(null), any(UserInvite.class), eq(Type.CREATE));
 

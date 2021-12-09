@@ -2,6 +2,10 @@ package io.harness.pms.pipeline.service;
 
 import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.SPEC_NODE;
 
 import static java.lang.String.format;
 
@@ -17,6 +21,7 @@ import io.harness.jackson.JsonNodeUtils;
 import io.harness.manage.ManagedExecutorService;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.merger.helpers.FQNMapGenerator;
 import io.harness.pms.pipeline.service.yamlschema.PmsYamlSchemaHelper;
 import io.harness.pms.pipeline.service.yamlschema.SchemaFetcher;
@@ -29,6 +34,7 @@ import io.harness.project.remote.ProjectClient;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.utils.JsonPipelineUtils;
 import io.harness.yaml.utils.YamlSchemaUtils;
@@ -40,6 +46,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,6 +65,7 @@ import org.apache.commons.collections.CollectionUtils;
 public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   private final Executor executor = new ManagedExecutorService(Executors.newFixedThreadPool(4));
 
+  private static final String STEP_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StepElementConfig.class);
   public static final String STAGE_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StageElementConfig.class);
   public static final Class<StageElementConfig> STAGE_ELEMENT_CONFIG_CLASS = StageElementConfig.class;
 
@@ -136,15 +144,20 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
       String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope) {
     JsonNode pipelineSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINES, orgIdentifier, projectIdentifier, scope);
-
     JsonNode pipelineSteps =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINE_STEPS, orgIdentifier, projectIdentifier, scope);
+
     ObjectNode pipelineDefinitions = (ObjectNode) pipelineSchema.get(DEFINITIONS_NODE);
     ObjectNode pipelineStepsDefinitions = (ObjectNode) pipelineSteps.get(DEFINITIONS_NODE);
 
     ObjectNode mergedDefinitions = (ObjectNode) JsonNodeUtils.merge(pipelineDefinitions, pipelineStepsDefinitions);
 
+    // Merging the schema for all steps that are moved to new schema.
+    ObjectNode finalMergedDefinitions = yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier,
+        scope, mergedDefinitions, YamlSchemaTransientHelper.pipelineStepV2EntityTypes);
+    YamlSchemaTransientHelper.removeV2StepEnumsFromStepElementConfig(finalMergedDefinitions.get(STEP_ELEMENT_CONFIG));
     ObjectNode stageElementConfig = (ObjectNode) pipelineDefinitions.get(STAGE_ELEMENT_CONFIG);
+    YamlSchemaTransientHelper.deleteSpecNodeInStageElementConfig(stageElementConfig);
 
     PmsYamlSchemaHelper.flattenParallelElementConfig(pipelineDefinitions);
 
@@ -152,7 +165,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
     CompletableFutures<PartialSchemaDTO> completableFutures = new CompletableFutures<>(executor);
     for (ModuleType enabledModule : enabledModules) {
-      completableFutures.supplyAsync(() -> schemaFetcher.fetchSchema(enabledModule));
+      completableFutures.supplyAsync(() -> schemaFetcher.fetchSchema(accountIdentifier, enabledModule));
     }
 
     try {
@@ -165,7 +178,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
       partialSchemaDtoMap.values().forEach(partialSchemaDTO
           -> pmsYamlSchemaHelper.processPartialStageSchema(
-              mergedDefinitions, pipelineStepsDefinitions, stageElementConfig, partialSchemaDTO));
+              finalMergedDefinitions, pipelineStepsDefinitions, stageElementConfig, partialSchemaDTO));
     } catch (Exception e) {
       log.error(format("[PMS] Exception while merging yaml schema: %s", e.getMessage()), e);
     }
@@ -176,7 +189,30 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     pmsYamlSchemaHelper.processPartialStageSchema(mergedDefinitions, pipelineStepsDefinitions, stageElementConfig,
         featureFlagYamlService.getFeatureFlagYamlSchema(projectIdentifier, orgIdentifier, scope));
 
+    // Remove duplicate if then statements from stage element config. Keep references only to new ones we added above.
+    removeDuplicateIfThenFromStageElementConfig(stageElementConfig);
+
     return ((ObjectNode) pipelineSchema).set(DEFINITIONS_NODE, pipelineDefinitions);
+  }
+
+  private void removeDuplicateIfThenFromStageElementConfig(ObjectNode stageElementConfig) {
+    ArrayNode stageElementConfigAllOfNode =
+        getAllOfNodeWithTypeAndSpec((ArrayNode) stageElementConfig.get(ONE_OF_NODE));
+    if (stageElementConfigAllOfNode == null) {
+      return;
+    }
+
+    Iterator<JsonNode> elements = stageElementConfigAllOfNode.elements();
+    while (elements.hasNext()) {
+      JsonNode element = elements.next();
+      JsonNode refNode = element.findValue(REF_NODE);
+      if (refNode != null && refNode.isValueNode()) {
+        if (refNode.asText().equals("#/definitions/ApprovalStageConfig")
+            || refNode.asText().equals("#/definitions/FeatureFlagStageConfig")) {
+          elements.remove();
+        }
+      }
+    }
   }
 
   private void mergeCVIntoCDIfPresent(Map<ModuleType, PartialSchemaDTO> partialSchemaDTOMap) {
@@ -206,15 +242,27 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   }
 
   private void populateAllOfForCD(JsonNode cdDefinitions, JsonNode cdDefinitionsCopy) {
-    ArrayNode cdDefinitionsAllOfNode =
-        (ArrayNode) cdDefinitions.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ALL_OF_NODE);
-    ArrayNode cdDefinitionsCopyAllOfNode =
-        (ArrayNode) cdDefinitionsCopy.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ALL_OF_NODE);
+    ArrayNode cdDefinitionsAllOfNode = getAllOfNodeWithTypeAndSpec(
+        (ArrayNode) cdDefinitions.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ONE_OF_NODE));
+    ArrayNode cdDefinitionsCopyAllOfNode = getAllOfNodeWithTypeAndSpec(
+        (ArrayNode) cdDefinitionsCopy.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ONE_OF_NODE));
 
+    if (cdDefinitionsCopyAllOfNode == null || cdDefinitionsAllOfNode == null) {
+      return;
+    }
     for (int i = 0; i < cdDefinitionsCopyAllOfNode.size(); i++) {
       cdDefinitionsAllOfNode.add(cdDefinitionsCopyAllOfNode.get(i));
     }
     JsonNodeUtils.removeDuplicatesFromArrayNode(cdDefinitionsAllOfNode);
+  }
+
+  private ArrayNode getAllOfNodeWithTypeAndSpec(ArrayNode node) {
+    for (int i = 0; i < node.size(); i++) {
+      if (node.get(i).get(PROPERTIES_NODE).get(SPEC_NODE) != null) {
+        return (ArrayNode) node.get(i).get(ALL_OF_NODE);
+      }
+    }
+    return null;
   }
 
   @SuppressWarnings("unchecked")

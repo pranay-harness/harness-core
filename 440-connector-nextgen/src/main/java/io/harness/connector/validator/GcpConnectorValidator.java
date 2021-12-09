@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static software.wings.beans.TaskType.GCP_TASK;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
@@ -56,5 +57,11 @@ public class GcpConnectorValidator extends AbstractConnectorValidator {
     final GcpValidationTaskResponse gcpValidationTaskResponse = (GcpValidationTaskResponse) super.validateConnector(
         connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return gcpValidationTaskResponse.getConnectorValidationResult();
+  }
+
+  @Override
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    return null;
   }
 }

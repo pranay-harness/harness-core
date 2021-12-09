@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM_MAX_TOPIC_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_FULL_SYNC_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PR_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM;
@@ -72,6 +73,9 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
       bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_FULL_SYNC_STREAM))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
       bind(Consumer.class)
@@ -95,6 +99,10 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
       bind(Consumer.class)
           .annotatedWith(Names.named(GIT_CONFIG_STREAM))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(GIT_FULL_SYNC_STREAM))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
       bind(Producer.class)
@@ -158,6 +166,11 @@ public class EventsFrameworkModule extends AbstractModule {
               EventsFrameworkConstants.GIT_CONFIG_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId(),
               redisConfig.getEnvNamespace()));
       bind(Producer.class)
+          .annotatedWith(Names.named(GIT_FULL_SYNC_STREAM))
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.GIT_FULL_SYNC_STREAM, redissonClient,
+              EventsFrameworkConstants.FULL_SYNC_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId(),
+              redisConfig.getEnvNamespace()));
+      bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.USERMEMBERSHIP, redissonClient,
               EventsFrameworkConstants.USER_MEMBERSHIP_TOPIC_SIZE, NG_MANAGER.getServiceId(),
@@ -193,6 +206,11 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(RedisConsumer.of(GIT_CONFIG_STREAM, NG_MANAGER.getServiceId(), redissonClient,
               EventsFrameworkConstants.GIT_CONFIG_STREAM_PROCESSING_TIME,
               EventsFrameworkConstants.GIT_CONFIG_STREAM_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(GIT_FULL_SYNC_STREAM))
+          .toInstance(RedisConsumer.of(GIT_FULL_SYNC_STREAM, NG_MANAGER.getServiceId(), redissonClient,
+              EventsFrameworkConstants.FULL_SYNC_STREAM_PROCESSING_TIME,
+              EventsFrameworkConstants.FULL_SYNC_STREAM_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(INSTANCE_STATS))
           .toInstance(RedisProducer.of(INSTANCE_STATS, redissonClient, EventsFrameworkConstants.DEFAULT_TOPIC_SIZE,

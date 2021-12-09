@@ -67,6 +67,7 @@ import io.harness.migrations.all.DelegateProfileIdentifierMigration;
 import io.harness.migrations.all.DelegateTokenMigration;
 import io.harness.migrations.all.DelegatesWithoutGroupMigration;
 import io.harness.migrations.all.DelegatesWithoutProfileMigration;
+import io.harness.migrations.all.DeleteDelegateAlertsExceptDelegateDown;
 import io.harness.migrations.all.DeleteInvalidArtifactStreams;
 import io.harness.migrations.all.DeleteInvalidServiceGuardConfigs;
 import io.harness.migrations.all.DeleteOrphanNotificationGroups;
@@ -100,6 +101,7 @@ import io.harness.migrations.all.MigratePipelineStagesToUseDisableAssertion;
 import io.harness.migrations.all.MigrateServiceNowCriteriaInPipelines;
 import io.harness.migrations.all.MigrateServiceNowCriteriaInWorkflows;
 import io.harness.migrations.all.MigrateTimeSeriesRawDataToGoogle;
+import io.harness.migrations.all.MigrationSMCredentialsFromLocalToGlobalKMS;
 import io.harness.migrations.all.MoveDelegateNameToDelegateSelectorsMigration;
 import io.harness.migrations.all.NoOpMigration;
 import io.harness.migrations.all.RemoveDeletedAppIdsFromUserGroups;
@@ -346,6 +348,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(204, DeleteOrphanPerpetualTaskMigration.class))
         .add(Pair.of(205, ManageApplicationTemplatePermissionMigration.class))
         .add(Pair.of(206, CDPaidLicenseToNGMigration.class))
+        .add(Pair.of(207, DeleteDelegateAlertsExceptDelegateDown.class))
+        .add(Pair.of(208, MigrationSMCredentialsFromLocalToGlobalKMS.class))
         .build();
   }
 }

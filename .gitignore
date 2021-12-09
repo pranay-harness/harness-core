@@ -19,6 +19,7 @@ jacoco-it.exec
 *.iws
 *.orig
 *.xml.bak
+*.jar
 */upgrade.sh
 .checkstyle
 .classpath

@@ -3,7 +3,7 @@ package io.harness.ccm.config;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.HANTANG;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;

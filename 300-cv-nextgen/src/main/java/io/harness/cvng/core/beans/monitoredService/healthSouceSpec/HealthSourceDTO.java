@@ -10,10 +10,8 @@ import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransfo
 import io.harness.cvng.models.VerificationType;
 
 import com.google.common.base.Preconditions;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 import java.util.List;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -39,12 +37,12 @@ public class HealthSourceDTO {
         .build();
   }
 
-  public static HealthSource toHealthSource(List<CVConfig> cvConfigs, Injector injector) {
+  public static HealthSource toHealthSource(List<CVConfig> cvConfigs,
+      Map<DataSourceType, CVConfigToHealthSourceTransformer> dataSourceTypeToHealthSourceTransformerMap) {
     Preconditions.checkState(isNotEmpty(cvConfigs), "Cannot convert to HealthSource if cvConfig list is empty");
 
     CVConfigToHealthSourceTransformer<CVConfig, HealthSourceSpec> cvConfigToHealthSourceTransformer =
-        injector.getInstance(
-            Key.get(CVConfigToHealthSourceTransformer.class, Names.named(cvConfigs.get(0).getType().name())));
+        dataSourceTypeToHealthSourceTransformerMap.get(cvConfigs.get(0).getType());
 
     return HealthSource.builder()
         .name(cvConfigs.get(0).getMonitoringSourceName())

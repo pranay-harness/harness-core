@@ -1,0 +1,9 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "testintelligence",
+    srcs = ["runner.go"],
+    importpath = "github.com/wings-software/portal/product/ci/addon/testintelligence",
+    visibility = ["//visibility:public"],
+    deps = ["//product/ci/ti-service/types"],
+)

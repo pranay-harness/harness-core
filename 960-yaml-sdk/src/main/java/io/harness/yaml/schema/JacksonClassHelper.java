@@ -257,24 +257,41 @@ public class JacksonClassHelper {
     final OneOfSet oneOfSetAnnotation = clazz.getAnnotation(OneOfSet.class);
     if (oneOfSetAnnotation != null) {
       final Field[] declaredFields = clazz.getDeclaredFields();
-      Set<Set<String>> mappedOneOfSetFields = new HashSet<>();
-      for (String oneOfSetFields : oneOfSetAnnotation.fields()) {
-        Set<String> oneOfSet =
-            Stream.of(oneOfSetFields.trim().split("\\s*,\\s*"))
-                .map(oneOfSetField -> {
-                  Optional<Field> declaredField =
-                      Arrays.stream(declaredFields).filter(f -> oneOfSetField.equals(f.getName())).findFirst();
-                  return declaredField.map(YamlSchemaUtils::getFieldName).orElse(null);
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        if (isNotEmpty(oneOfSet)) {
-          mappedOneOfSetFields.add(oneOfSet);
-        }
-      }
-      return OneOfSetMapping.builder().oneOfSets(mappedOneOfSetFields).build();
+      Set<Set<String>> mappedOneOfSetFields = getMappedOneOfSetFields(oneOfSetAnnotation, declaredFields);
+      Set<String> requiredFieldNames = getRequiredFieldNames(oneOfSetAnnotation, declaredFields);
+      return OneOfSetMapping.builder().oneOfSets(mappedOneOfSetFields).requiredFieldNames(requiredFieldNames).build();
     }
     return null;
+  }
+
+  private Set<String> getRequiredFieldNames(OneOfSet oneOfSetAnnotation, Field[] declaredFields) {
+    return Arrays.stream(oneOfSetAnnotation.requiredFieldNames())
+        .map(requiredFieldName -> {
+          Optional<Field> declaredField =
+              Arrays.stream(declaredFields).filter(f -> requiredFieldName.equals(f.getName())).findFirst();
+          return declaredField.map(YamlSchemaUtils::getFieldName).orElse(null);
+        })
+        .filter(Objects::nonNull)
+        .collect(Collectors.toSet());
+  }
+
+  private Set<Set<String>> getMappedOneOfSetFields(OneOfSet oneOfSetAnnotation, Field[] declaredFields) {
+    Set<Set<String>> mappedOneOfSetFields = new HashSet<>();
+    for (String oneOfSetFields : oneOfSetAnnotation.fields()) {
+      Set<String> oneOfSet =
+          Stream.of(oneOfSetFields.trim().split("\\s*,\\s*"))
+              .map(oneOfSetField -> {
+                Optional<Field> declaredField =
+                    Arrays.stream(declaredFields).filter(f -> oneOfSetField.equals(f.getName())).findFirst();
+                return declaredField.map(YamlSchemaUtils::getFieldName).orElse(null);
+              })
+              .filter(Objects::nonNull)
+              .collect(Collectors.toSet());
+      if (isNotEmpty(oneOfSet)) {
+        mappedOneOfSetFields.add(oneOfSet);
+      }
+    }
+    return mappedOneOfSetFields;
   }
 
   private Class<?> getAlternativeClassType(Field declaredField) {

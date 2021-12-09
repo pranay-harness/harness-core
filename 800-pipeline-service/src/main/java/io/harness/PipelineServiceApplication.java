@@ -1,7 +1,7 @@
 package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
-import static io.harness.PipelineServiceConfiguration.getResourceClasses;
+import static io.harness.PipelineServiceConfiguration.HARNESS_RESOURCE_CLASSES;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
@@ -16,16 +16,6 @@ import io.harness.cache.CacheModule;
 import io.harness.consumers.GraphUpdateRedisConsumer;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
-import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
-import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
-import io.harness.enforcement.client.custom.CustomRestrictionInterface;
-import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
-import io.harness.enforcement.client.usage.RestrictionUsageInterface;
-import io.harness.enforcement.constants.FeatureRestrictionName;
-import io.harness.enforcement.executions.BuildRestrictionUsageImpl;
-import io.harness.enforcement.executions.CIMonthlyBuildImpl;
-import io.harness.enforcement.executions.CITotalBuildImpl;
-import io.harness.enforcement.executions.DeploymentRestrictionUsageImpl;
 import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
@@ -64,8 +54,9 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
+import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.ng.core.template.exception.NGTemplateResolveExceptionMapper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
@@ -78,6 +69,7 @@ import io.harness.pms.approval.ApprovalInstanceHandler;
 import io.harness.pms.async.plan.PlanNotifyEventConsumer;
 import io.harness.pms.async.plan.PlanNotifyEventPublisher;
 import io.harness.pms.event.PMSEventConsumerService;
+import io.harness.pms.event.webhookevent.WebhookEventStreamConsumer;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
@@ -159,7 +151,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -241,6 +232,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   public void initialize(Bootstrap<PipelineServiceConfiguration> bootstrap) {
     initializeLogging();
     bootstrap.addCommand(new InspectCommand<>(this));
+    bootstrap.addCommand(new ScanClasspathMetadataCommand());
 
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
@@ -311,7 +303,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(appConfig);
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
     modules.add(PipelineServiceUtilityModule.getInstance());
-
     Injector injector = Guice.createInjector(modules);
     registerStores(appConfig, injector);
     registerEventListeners(injector);
@@ -326,7 +317,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerObservers(injector);
     registerRequestContextFilter(environment);
     registerOasResource(appConfig, environment, injector);
-    initializeEnforcementFramework(injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     PipelineServiceIteratorsConfig iteratorsConfig = appConfig.getIteratorsConfig();
@@ -341,12 +331,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     injector.getInstance(InterruptMonitor.class).registerIterators(iteratorsConfig.getInterruptMonitorConfig());
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
-    log.info("Initializing gRPC servers...");
-    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
-    serviceManager.awaitHealthy();
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-
-    registerPmsSdk(appConfig, injector);
     registerYamlSdk(injector);
     if (appConfig.isShouldDeployWithGitSync()) {
       registerGitSyncSdk(appConfig, injector, environment);
@@ -355,8 +339,19 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
     registerPmsSdkEvents(appConfig.getPipelineServiceConsumersConfig(), injector);
+
+    initializeGrpcServer(injector);
+    registerPmsSdk(appConfig, injector);
     registerMigrations(injector);
+
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void initializeGrpcServer(Injector injector) {
+    log.info("Initializing gRPC servers...");
+    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+    serviceManager.awaitHealthy();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
   }
 
   private void registerOasResource(PipelineServiceConfiguration appConfig, Environment environment, Injector injector) {
@@ -438,8 +433,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     // NodeUpdateObservers
     nodeExecutionService.getNodeUpdateObserverSubject().register(
         injector.getInstance(Key.get(ExecutionSummaryUpdateEventHandler.class)));
-    nodeExecutionService.getNodeUpdateObserverSubject().register(
-        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
     nodeExecutionService.getNodeUpdateObserverSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
 
@@ -579,6 +572,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     log.info("Initializing pms sdk redis abstract consumers...");
     PipelineEventConsumerController pipelineEventConsumerController =
         injector.getInstance(PipelineEventConsumerController.class);
+    pipelineEventConsumerController.register(injector.getInstance(WebhookEventStreamConsumer.class),
+        pipelineServiceConsumersConfig.getWebhookEvent().getThreads());
     pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class),
         pipelineServiceConsumersConfig.getInterrupt().getThreads());
     pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class),
@@ -686,7 +681,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void registerResources(Environment environment, Injector injector) {
-    for (Class<?> resource : getResourceClasses()) {
+    for (Class<?> resource : HARNESS_RESOURCE_CLASSES) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
@@ -695,11 +690,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {
+    environment.jersey().register(JerseyViolationExceptionMapperV2.class);
+    environment.jersey().register(GenericExceptionMapperV2.class);
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
-    environment.jersey().register(NGTemplateResolveExceptionMapper.class);
 
     environment.jersey().register(MultiPartFeature.class);
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
@@ -738,26 +734,5 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
           { add(PipelineCoreMigrationProvider.class); } // Add all migration provider classes here
         })
         .build();
-  }
-
-  private void initializeEnforcementFramework(Injector injector) {
-    RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
-        RestrictionUsageRegisterConfiguration.builder()
-            .restrictionNameClassMap(
-                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
-                    .put(FeatureRestrictionName.MAX_TOTAL_BUILDS, CITotalBuildImpl.class)
-                    .put(FeatureRestrictionName.MAX_BUILDS_PER_MONTH, CIMonthlyBuildImpl.class)
-                    .build())
-            .build();
-    CustomRestrictionRegisterConfiguration customConfig =
-        CustomRestrictionRegisterConfiguration.builder()
-            .customRestrictionMap(
-                ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
-                    .put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class)
-                    .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
-                    .build())
-            .build();
-    injector.getInstance(EnforcementSdkRegisterService.class)
-        .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }
 }

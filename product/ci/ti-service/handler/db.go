@@ -37,6 +37,7 @@ func HandleWrite(db db.Db) http.HandlerFunc {
 		report := r.FormValue(reportParam)
 		repo := r.FormValue(repoParam)
 		sha := r.FormValue(shaParam)
+		commitLink := r.FormValue(commitLinkParam)
 
 		var in []*types.TestCase
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
@@ -53,10 +54,17 @@ func HandleWrite(db db.Db) http.HandlerFunc {
 			return
 		}
 
+		if err := db.WriteTestExecutionSummary(r.Context(), accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, commitLink); err != nil {
+			// Log error if we could not write summary
+			// Even if this fails, still return a success (this table is mainly used for analytics purposes)
+			log.Errorw("api: cannot write test execution metadata to db", "account_id", accountId, "org_id", orgId,
+				"project_id", projectId, "build_id", buildId, zap.Error(err))
+		}
+
 		w.WriteHeader(http.StatusNoContent)
 		log.Infow("wrote test cases", "account_id", accountId, "org_id", orgId,
 			"project_id", projectId, "build_id", buildId, "stage_id", stageId, "step_id", stepId,
-			"num_cases", len(in), "time_taken", time.Since(st))
+			"commit_link", commitLink, "num_cases", len(in), "time_taken", time.Since(st))
 	}
 }
 

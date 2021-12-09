@@ -6,6 +6,9 @@ clients:
   - name: ngmanager
     clientConfig: ngManagerClientConfig
     secretConfig: nextGenConfig.ngManagerServiceSecret
+  - name: lightwing
+    clientConfig: lightwingClientConfig
+    secretConfig: nextGenConfig.ngManagerServiceSecret
 features:
   - name: PERSPECTIVES
     description: Availability & limiting number of custom perspectives
@@ -27,6 +30,19 @@ features:
         restrictionType: STATIC_LIMIT
         limit: 2
         clientName: ngmanager
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+  - name: CCM_AUTOSTOPPING_RULES
+    description: Availability & limiting number of CCM AutoStopping Rules
+    restrictions:
+      FREE:
+        restrictionType: STATIC_LIMIT
+        limit: 10
+        clientName: lightwing
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true

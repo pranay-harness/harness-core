@@ -28,6 +28,7 @@ message InitializeSdkRequest {
   ConsumerConfig planCreationEventConsumerConfig = 14;
   map<string, string> staticAliases = 15;
   repeated string sdkFunctors = 16;
+  repeated string expandableFields = 17;
 }
 
 message InitializeSdkResponse {}

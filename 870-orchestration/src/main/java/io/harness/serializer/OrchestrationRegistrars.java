@@ -145,6 +145,7 @@ public class OrchestrationRegistrars {
           .add(OrchestrationKryoRegistrar.class)
           .add(DelegateServiceBeansKryoRegistrar.class)
           .add(CommonEntitiesKryoRegistrar.class)
+          .addAll(DelegateTaskRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -156,6 +157,7 @@ public class OrchestrationRegistrars {
           .addAll(OrchestrationDelayRegistrars.morphiaRegistrars)
           .addAll(NGCoreClientRegistrars.morphiaRegistrars)
           .add(OrchestrationMorphiaRegistrar.class)
+          .addAll(DelegateTaskRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

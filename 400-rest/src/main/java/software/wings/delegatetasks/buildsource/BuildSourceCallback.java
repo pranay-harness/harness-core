@@ -7,7 +7,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.STABLE;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.STOPPED;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTABLE;

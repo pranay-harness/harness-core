@@ -23,6 +23,7 @@ public class K8sRollingDeployRequest implements K8sDeployRequest {
   Integer timeoutIntervalInMin;
   @Expression(ALLOW_SECRETS) List<String> valuesYamlList;
   @Expression(ALLOW_SECRETS) List<String> openshiftParamList;
+  @Expression(ALLOW_SECRETS) List<String> kustomizePatchesList;
   K8sInfraDelegateConfig k8sInfraDelegateConfig;
   ManifestDelegateConfig manifestDelegateConfig;
   boolean inCanaryWorkflow;

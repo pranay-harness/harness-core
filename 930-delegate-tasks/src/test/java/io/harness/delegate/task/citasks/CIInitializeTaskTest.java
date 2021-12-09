@@ -31,7 +31,7 @@ import org.mockito.MockitoAnnotations;
 public class CIInitializeTaskTest extends CategoryTest {
   @Mock private ILogStreamingTaskClient logStreamingTaskClient;
   @Mock @Named(CITaskConstants.INIT_K8) private CIInitializeTaskHandler ciK8InitializeTaskHandler;
-  @Mock @Named(CITaskConstants.INIT_AWS_VM) private CIInitializeTaskHandler ciAwsVmInitializeTaskHandler;
+  @Mock @Named(CITaskConstants.INIT_VM) private CIInitializeTaskHandler ciVmInitializeTaskHandler;
 
   @InjectMocks
   private CIInitializeTask task =

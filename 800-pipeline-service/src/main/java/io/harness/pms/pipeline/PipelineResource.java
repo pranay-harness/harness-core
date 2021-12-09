@@ -13,9 +13,6 @@ import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
-import io.harness.accesscontrol.clients.AccessControlClient;
-import io.harness.accesscontrol.clients.Resource;
-import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionNode;
 import io.harness.data.structure.EmptyPredicate;
@@ -28,41 +25,29 @@ import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityDeleteInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
-import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.notification.bean.NotificationRules;
 import io.harness.opaclient.model.OpaConstants;
+import io.harness.plancreator.steps.http.HttpStepNode;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.contracts.governance.GovernanceMetadata;
-import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
-import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.governance.PipelineSaveResponse;
-import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetYamlWithTemplateDTO;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
-import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
-import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
-import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
-import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
-import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
-import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
-import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.rbac.PipelineRbacPermissions;
 import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.utils.PageUtils;
 import io.harness.yaml.schema.YamlSchemaResource;
 
 import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -77,6 +62,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -94,7 +80,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -108,9 +93,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
-      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error"),
-          @ApiResponse(code = 403, response = TemplateInputsErrorResponseDTO.class,
-              message = "TemplateRefs Resolved failed in pipeline yaml.")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @Tag(name = "pipelines", description = "This contains APIs related to pipelines")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
@@ -129,15 +112,12 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 public class PipelineResource implements YamlSchemaResource {
   private final PMSPipelineService pmsPipelineService;
-  private final PMSExecutionService pmsExecutionService;
   private final PMSYamlSchemaService pmsYamlSchemaService;
   private final NodeExecutionService nodeExecutionService;
-  private final AccessControlClient accessControlClient;
   private final NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
-  private final PmsGitSyncHelper pmsGitSyncHelper;
   private final PMSPipelineTemplateHelper pipelineTemplateHelper;
-  private final PipelineExecutionSummaryDtoMapper pipelineExecutionSummaryDtoMapper;
   private final GovernanceService governanceService;
+  private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   private PipelineEntity createPipelineInternal(String accountId, String orgId, String projectId, String yaml)
       throws IOException {
@@ -152,9 +132,8 @@ public class PipelineResource implements YamlSchemaResource {
     pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, resolveTemplateRefsInPipeline);
     // validate unique fqn in resolveTemplateRefsInPipeline
     pmsYamlSchemaService.validateUniqueFqn(resolveTemplateRefsInPipeline);
-    if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
-      pipelineEntity.setTemplateReference(true);
-    }
+    pipelineEntity.setTemplateReference(
+        EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries()));
     return pmsPipelineService.create(pipelineEntity);
   }
 
@@ -297,9 +276,8 @@ public class PipelineResource implements YamlSchemaResource {
     if (!pipelineEntity.getIdentifier().equals(pipelineId)) {
       throw new InvalidRequestException("Pipeline identifier in URL does not match pipeline identifier in yaml");
     }
-    if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
-      pipelineEntity.setTemplateReference(true);
-    }
+    pipelineEntity.setTemplateReference(
+        EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries()));
 
     PipelineEntity withVersion = pipelineEntity.withVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     return pmsPipelineService.updatePipelineYaml(withVersion, ChangeType.MODIFY);
@@ -418,8 +396,9 @@ public class PipelineResource implements YamlSchemaResource {
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @Parameter(description = NGCommonEntityConstants.PAGE_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PAGE) @DefaultValue("0") int page,
-      @Parameter(description = NGCommonEntityConstants.SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE)
-      @DefaultValue("25") int size, @QueryParam("sort") List<String> sort,
+      @Parameter(description = NGCommonEntityConstants.SIZE_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.SIZE) @DefaultValue("25") int size,
+      @QueryParam("sort") @Parameter(description = NGCommonEntityConstants.SORT_PARAM_MESSAGE) List<String> sort,
       @Parameter(description = PipelineResourceConstants.PIPELINE_SEARCH_TERM_PARAM_MESSAGE)
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @QueryParam("module") String module,
       @QueryParam("filterIdentifier") String filterIdentifier, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
@@ -431,12 +410,8 @@ public class PipelineResource implements YamlSchemaResource {
     Criteria criteria = pmsPipelineService.formCriteria(accountId, orgId, projectId, filterIdentifier,
         (PipelineFilterPropertiesDto) filterProperties, false, module, searchTerm);
 
-    Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
-      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.lastUpdatedAt));
-    } else {
-      pageRequest = PageUtils.getPageRequest(page, size, sort);
-    }
+    Pageable pageRequest =
+        PageUtils.getPageRequest(page, size, sort, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.lastUpdatedAt));
 
     Page<PMSPipelineSummaryResponseDTO> pipelines =
         pmsPipelineService.list(criteria, pageRequest, accountId, orgId, projectId, getDistinctFromBranches)
@@ -462,7 +437,8 @@ public class PipelineResource implements YamlSchemaResource {
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @Parameter(
+          description = PipelineResourceConstants.PIPELINE_ID_PARAM_MESSAGE) String pipelineId,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info(
         String.format("Get pipeline summary for pipeline with with identifier %s in project %s, org %s, account %s",
@@ -475,6 +451,30 @@ public class PipelineResource implements YamlSchemaResource {
                                  "Pipeline with the given ID: %s does not exist or has been deleted", pipelineId))));
 
     return ResponseDTO.newResponse(pipelineSummary);
+  }
+
+  @GET
+  @Path("/expandedJSON/{pipelineIdentifier}")
+  @ApiOperation(value = "Gets Pipeline JSON with extra info for some fields", nickname = "getExpandedPipelineJSON")
+  @Operation(operationId = "getExpandedPipelineJSON", summary = "Gets Pipeline JSON with extra info for some fields",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Gets Pipeline JSON with extra info for some fields as required for Pipeline Governance")
+      })
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  public ResponseDTO<ExpandedPipelineJsonDTO>
+  getExpandedPipelineJson(@NotNull @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE)
+                          @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @Parameter(
+          description = PipelineResourceConstants.PIPELINE_ID_PARAM_MESSAGE) String pipelineId,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+    String expandedPipelineJSON = pmsPipelineService.fetchExpandedPipelineJSON(accountId, orgId, projectId, pipelineId);
+    return ResponseDTO.newResponse(ExpandedPipelineJsonDTO.builder().expandedJson(expandedPipelineJSON).build());
   }
 
   @GET
@@ -515,174 +515,6 @@ public class PipelineResource implements YamlSchemaResource {
     return ResponseDTO.newResponse(pmsPipelineService.getStepsV2(accountId, stepPalleteFilterWrapper));
   }
 
-  @POST
-  @Path("/execution/summary")
-  @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
-  @Operation(operationId = "getListOfExecutions",
-      summary = "Gets list of Executions of Pipelines for specific filters.",
-      responses =
-      {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns all the Executions of pipelines for given filters")
-      })
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  public ResponseDTO<Page<PipelineExecutionSummaryDTO>>
-  getListOfExecutions(@Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true)
-                      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
-          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
-          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @Parameter(description = PipelineResourceConstants.PIPELINE_SEARCH_TERM_PARAM_MESSAGE) @QueryParam(
-          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @Parameter(description = PipelineResourceConstants.PIPELINE_ID_LIST_PARAM_MESSAGE) @QueryParam(
-          NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @Parameter(description = NGCommonEntityConstants.PAGE_PARAM_MESSAGE) @QueryParam(
-          NGCommonEntityConstants.PAGE) @DefaultValue("0") int page,
-      @Parameter(description = NGCommonEntityConstants.SIZE_PARAM_MESSAGE) @QueryParam(
-          NGCommonEntityConstants.SIZE) @DefaultValue("10") int size,
-      @Parameter(description = NGCommonEntityConstants.SORT_PARAM_MESSAGE) @QueryParam("sort") List<String> sort,
-      @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
-      @QueryParam("module") String moduleName, FilterPropertiesDTO filterProperties,
-      @QueryParam("status") List<ExecutionStatus> statusesList, @QueryParam("myDeployments") boolean myDeployments,
-      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
-    log.info("Get List of executions");
-    ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
-    if (EmptyPredicate.isEmpty(gitEntityBasicInfo.getBranch())
-        || EmptyPredicate.isEmpty(gitEntityBasicInfo.getYamlGitConfigId())) {
-      gitSyncBranchContext = null;
-    }
-    Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
-        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, statusesList,
-        myDeployments, false, gitSyncBranchContext, true);
-    Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
-      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
-    } else {
-      pageRequest = PageUtils.getPageRequest(page, size, sort);
-    }
-
-    // NOTE: We are getting entity git details from git context and not pipeline entity as we'll have to make DB calls
-    // to fetch them and each might have a different branch context so we cannot even batch them. The only data missing
-    // because of this approach is objectId which UI doesn't use.
-    Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
-            .map(e
-                -> pipelineExecutionSummaryDtoMapper.toDto(e,
-                    e.getEntityGitDetails() != null
-                        ? e.getEntityGitDetails()
-                        : pmsGitSyncHelper.getEntityGitDetailsFromBytes(e.getGitSyncBranchContext())));
-
-    return ResponseDTO.newResponse(planExecutionSummaryDTOS);
-  }
-
-  @GET
-  @Path("/execution/{planExecutionId}")
-  @ApiOperation(value = "Gets Execution Detail", nickname = "getExecutionDetail")
-  @Operation(operationId = "getExecutionDetail",
-      summary = "Get the Pipeline Execution details for given PlanExecution Id",
-      responses =
-      {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "default", description = "Return the Pipeline Execution details for given PlanExecution Id")
-      })
-  public ResponseDTO<PipelineExecutionDetailDTO>
-  getExecutionDetail(@NotNull @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true)
-                     @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
-          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @NotNull @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @QueryParam(
-          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @Parameter(description = PipelineResourceConstants.STAGE_NODE_ID_PARAM_MESSAGE) @QueryParam(
-          "stageNodeId") String stageNodeId,
-      @Parameter(description = "Plan Execution Id for which we want to get the Execution details",
-          required = true) @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
-    PipelineExecutionSummaryEntity executionSummaryEntity =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
-
-    Optional<PipelineEntity> optionalPipelineEntity;
-    if (executionSummaryEntity.getEntityGitDetails() == null) {
-      try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
-               executionSummaryEntity.getGitSyncBranchContext(), false)) {
-        optionalPipelineEntity = pmsPipelineService.getWithoutIsDeleted(
-            accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier());
-      }
-    } else {
-      try (PmsGitSyncBranchContextGuard ignore = new PmsGitSyncBranchContextGuard(
-               executionSummaryEntity.getEntityGitDetails().toGitSyncBranchContext(), false)) {
-        optionalPipelineEntity = pmsPipelineService.getWithoutIsDeleted(
-            accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier());
-      }
-    }
-    if (!optionalPipelineEntity.isPresent()) {
-      throw new InvalidRequestException(
-          "Pipeline with identifier " + executionSummaryEntity.getPipelineIdentifier() + " not found");
-    }
-
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
-        Resource.of("PIPELINE", executionSummaryEntity.getPipelineIdentifier()), PipelineRbacPermissions.PIPELINE_VIEW);
-
-    PipelineExecutionDetailDTO pipelineExecutionDetailDTO =
-        PipelineExecutionDetailDTO.builder()
-            .pipelineExecutionSummary(pipelineExecutionSummaryDtoMapper.toDto(
-                executionSummaryEntity, EntityGitDetailsMapper.mapEntityGitDetails(optionalPipelineEntity.get())))
-            .executionGraph(ExecutionGraphMapper.toExecutionGraph(
-                pmsExecutionService.getOrchestrationGraph(stageNodeId, planExecutionId)))
-            .build();
-
-    return ResponseDTO.newResponse(pipelineExecutionDetailDTO);
-  }
-
-  @GET
-  @Produces({"application/yaml"})
-  @Path("/execution/{planExecutionId}/inputset")
-  @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYaml")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  @Operation(operationId = "getInputsetYaml", summary = "Get the Input Set YAML used for given Plan Execution",
-      responses =
-      {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Return the Input Set YAML used for given Plan Execution")
-      })
-  public String
-  getInputsetYaml(@NotNull @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true)
-                  @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
-          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @NotNull @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @QueryParam(
-          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @QueryParam("resolveExpressions") @DefaultValue("false") boolean resolveExpressions,
-      @Parameter(description = "Plan Execution Id for which we want to get the Input Set YAML",
-          required = true) @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
-    return pmsExecutionService
-        .getInputSetYamlWithTemplate(accountId, orgId, projectId, planExecutionId, false, resolveExpressions)
-        .getInputSetYaml();
-  }
-
-  @GET
-  @Path("/execution/{planExecutionId}/inputsetV2")
-  @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYamlV2")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  @Operation(operationId = "getInputsetYamlV2", summary = "Get the Input Set YAML used for given Plan Execution",
-      responses =
-      {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Return the Input Set YAML used for given Plan Execution")
-      })
-  public ResponseDTO<InputSetYamlWithTemplateDTO>
-  getInputsetYamlV2(@NotNull @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true)
-                    @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
-          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @NotNull @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @QueryParam(
-          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @QueryParam("resolveExpressions") @DefaultValue("false") boolean resolveExpressions,
-      @Parameter(description = "Plan Execution Id for which we want to get the Input Set YAML",
-          required = true) @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
-    return ResponseDTO.newResponse(pmsExecutionService.getInputSetYamlWithTemplate(
-        accountId, orgId, projectId, planExecutionId, false, resolveExpressions));
-  }
-
   @GET
   @Path("/notification")
   @ApiOperation(value = "Get Notification Schema", nickname = "getNotificationSchema")
@@ -714,5 +546,32 @@ public class PipelineResource implements YamlSchemaResource {
     }
     return ResponseDTO.newResponse(
         nodeExecutionToExecutioNodeMapper.mapNodeExecutionToExecutionNode(nodeExecutionService.get(nodeExecutionId)));
+  }
+
+  // TODO: Will delete this dummy api
+  @GET
+  @Path("/dummy-api")
+  public ResponseDTO<HttpStepNode> getStepNode() {
+    return ResponseDTO.newResponse(new HttpStepNode());
+  }
+
+  @GET
+  @Path("/refreshFFCache")
+  @ApiOperation(value = "Refresh the feature flag cache", nickname = "refreshFFCache")
+  @Operation(operationId = "refreshFFCache", summary = "Refresh the feature flag cache",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Refresh the feature flag cache")
+      })
+  public ResponseDTO<Boolean>
+  refreshFFCache(@NotNull @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE,
+      required = true) @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId) {
+    try {
+      return ResponseDTO.newResponse(pmsFeatureFlagHelper.refreshCacheForGivenAccountId(accountId));
+    } catch (ExecutionException e) {
+      log.error("Execution exception occurred while updating cache: " + e.getMessage());
+    }
+    return ResponseDTO.newResponse(false);
   }
 }

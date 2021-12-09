@@ -1,6 +1,5 @@
 package io.harness.pms.plan.creation;
 
-import io.harness.OrchestrationStepTypes;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.pipeline.CfExecutionPMSPlanCreator;
@@ -17,12 +16,16 @@ import io.harness.plancreator.pipeline.NGPipelinePlanCreator;
 import io.harness.plancreator.stages.StagesPlanCreator;
 import io.harness.plancreator.stages.parallel.ParallelPlanCreator;
 import io.harness.plancreator.steps.StepGroupPMSPlanCreator;
+import io.harness.plancreator.steps.http.HttpStepPlanCreator;
 import io.harness.plancreator.steps.internal.PMSStepPlanCreator;
 import io.harness.plancreator.steps.internal.PmsStepFilterJsonCreator;
+import io.harness.plancreator.steps.internal.PmsStepFilterJsonCreatorV2;
 import io.harness.plancreator.steps.resourceconstraint.ResourceConstraintStepPlanCreator;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
+import io.harness.pms.sdk.core.pipeline.variables.ApprovalStageVariableCreator;
+import io.harness.pms.sdk.core.pipeline.variables.ExecutionVariableCreator;
 import io.harness.pms.sdk.core.pipeline.variables.PipelineVariableCreator;
 import io.harness.pms.sdk.core.pipeline.variables.StepGroupVariableCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
@@ -30,7 +33,11 @@ import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvide
 import io.harness.pms.sdk.core.variables.VariableCreator;
 import io.harness.pms.utils.InjectorUtils;
 import io.harness.pms.variables.HTTPStepVariableCreator;
+import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.approval.ApprovalStepVariableCreator;
 import io.harness.steps.cf.FlagConfigurationStep;
+import io.harness.steps.jira.JiraStepVariableCreator;
+import io.harness.steps.shellscript.ShellScriptStepPlanCreator;
 import io.harness.steps.shellscript.ShellScriptStepVariableCreator;
 
 import com.google.inject.Inject;
@@ -50,6 +57,8 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     planCreators.add(new StagesPlanCreator());
     planCreators.add(new ParallelPlanCreator());
     planCreators.add(new PMSStepPlanCreator());
+    planCreators.add(new HttpStepPlanCreator());
+    planCreators.add(new ShellScriptStepPlanCreator());
     planCreators.add(new ApprovalStagePlanCreator());
     planCreators.add(new ExecutionPmsPlanCreator());
     planCreators.add(new StepGroupPMSPlanCreator());
@@ -67,6 +76,7 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     filterJsonCreators.add(new ParallelFilterJsonCreator());
     filterJsonCreators.add(new ApprovalStageFilterJsonCreator());
     filterJsonCreators.add(new PmsStepFilterJsonCreator());
+    filterJsonCreators.add(new PmsStepFilterJsonCreatorV2());
     filterJsonCreators.add(new ExecutionPMSFilterJsonCreator());
     filterJsonCreators.add(new StepGroupPmsFilterJsonCreator());
     filterJsonCreators.add(new FeatureFlagStageFilterJsonCreator());
@@ -81,6 +91,10 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     variableCreators.add(new HTTPStepVariableCreator());
     variableCreators.add(new StepGroupVariableCreator());
     variableCreators.add(new ShellScriptStepVariableCreator());
+    variableCreators.add(new JiraStepVariableCreator());
+    variableCreators.add(new ApprovalStepVariableCreator());
+    variableCreators.add(new ExecutionVariableCreator());
+    variableCreators.add(new ApprovalStageVariableCreator());
     injectorUtils.injectMembers(variableCreators);
     return variableCreators;
   }
@@ -89,7 +103,7 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
   public List<StepInfo> getStepInfo() {
     StepInfo k8sRolling = StepInfo.newBuilder()
                               .setName(FlagConfigurationStep.STEP_NAME)
-                              .setType(OrchestrationStepTypes.FLAG_CONFIGURATION)
+                              .setType(StepSpecTypeConstants.FLAG_CONFIGURATION)
                               .setStepMetaData(StepMetaData.newBuilder()
                                                    .addCategory(FlagConfigurationStep.STEP_CATEGORY)
                                                    .addFolderPaths("Feature Flags")

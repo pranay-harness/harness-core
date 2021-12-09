@@ -29,7 +29,7 @@ import org.mockito.MockitoAnnotations;
 
 public class CIExecuteTaskTest extends CategoryTest {
   @Mock @Named(CITaskConstants.EXECUTE_STEP_K8) private CIExecuteStepTaskHandler ciK8ExecuteStepTaskHandler;
-  @Mock @Named(CITaskConstants.EXECUTE_STEP_AWS_VM) private CIExecuteStepTaskHandler ciAwsVmExecuteStepTaskHandler;
+  @Mock @Named(CITaskConstants.EXECUTE_STEP_VM) private CIExecuteStepTaskHandler ciVmExecuteStepTaskHandler;
 
   @InjectMocks
   private final CIExecuteStepTask task =

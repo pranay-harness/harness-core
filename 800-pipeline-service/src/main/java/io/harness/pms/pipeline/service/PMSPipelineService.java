@@ -38,6 +38,9 @@ public interface PMSPipelineService {
   Optional<PipelineEntity> incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean b);
 
+  boolean markEntityInvalid(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml);
+
   boolean delete(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version);
 
@@ -54,4 +57,7 @@ public interface PMSPipelineService {
       PipelineFilterPropertiesDto filterProperties, boolean deleted, String module, String searchTerm);
 
   boolean deleteAllPipelinesInAProject(String accountId, String orgId, String projectId);
+
+  String fetchExpandedPipelineJSON(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
 }

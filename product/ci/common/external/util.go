@@ -36,6 +36,7 @@ const (
 	dTargetBranch    = "DRONE_TARGET_BRANCH"
 	dRemoteUrl       = "DRONE_REMOTE_URL"
 	dCommitSha       = "DRONE_COMMIT_SHA"
+	dCommitLink      = "DRONE_COMMIT_LINK"
 	wrkspcPath       = "HARNESS_WORKSPACE"
 	logUploadFf      = "HARNESS_CI_INDIRECT_LOG_UPLOAD_FF"
 	gitBin           = "git"
@@ -294,6 +295,14 @@ func GetWrkspcPath() (string, error) {
 		return "", fmt.Errorf("workspace path variable not set %s", wrkspcPath)
 	}
 	return path, nil
+}
+
+func GetCommitLink() (string, error) {
+	link, ok := os.LookupEnv(dCommitLink)
+	if !ok {
+		return "", fmt.Errorf("commit link variable not set %s", dCommitLink)
+	}
+	return link, nil
 }
 
 func IsManualExecution() bool {

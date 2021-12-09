@@ -1,6 +1,7 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -10,6 +11,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.beans.gitsync.GitFileDetails.GitFileDetailsBuilder;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
+import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
@@ -22,17 +24,24 @@ import io.harness.delegate.task.scm.GitFileTaskResponseData;
 import io.harness.delegate.task.scm.GitFileTaskType;
 import io.harness.delegate.task.scm.GitPRTaskType;
 import io.harness.delegate.task.scm.GitRefType;
+import io.harness.delegate.task.scm.GitWebhookTaskType;
 import io.harness.delegate.task.scm.ScmGitFileTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
+import io.harness.delegate.task.scm.ScmGitWebhookTaskParams;
+import io.harness.delegate.task.scm.ScmGitWebhookTaskResponseData;
 import io.harness.delegate.task.scm.ScmPRTaskParams;
 import io.harness.delegate.task.scm.ScmPRTaskResponseData;
 import io.harness.delegate.task.scm.ScmPushTaskParams;
 import io.harness.delegate.task.scm.ScmPushTaskResponseData;
+import io.harness.exception.DelegateNotAvailableException;
+import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.ExplanationException;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.exceptionhandler.DocumentLinksConstants;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.dtos.CreatePRDTO;
@@ -46,10 +55,12 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.webhook.UpsertWebhookRequestDTO;
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
@@ -105,7 +116,14 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
         getScmGitRefTaskParams(scmConnector, encryptionDetails, GitRefType.BRANCH);
     DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(
         accountIdentifier, orgIdentifier, projectIdentifier, scmGitRefTaskParams, TaskType.SCM_GIT_REF_TASK);
-    final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
     ScmGitRefTaskResponseData scmGitRefTaskResponseData = (ScmGitRefTaskResponseData) delegateResponseData;
     try {
       return ListBranchesResponse.parseFrom(scmGitRefTaskResponseData.getListBranchesResponse()).getBranchesList();
@@ -132,7 +150,14 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     DelegateTaskRequest delegateTaskRequest =
         getDelegateTaskRequest(accountIdentifier, yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
-    final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
     try {
       return validateAndGetGitFileContent(FileContent.parseFrom(gitFileTaskResponseData.getFileContent()));
@@ -174,8 +199,15 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
                                                   .taskParameters(scmPRTaskParams)
                                                   .executionTimeout(Duration.ofMinutes(2))
                                                   .build();
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-    ScmPRTaskResponseData scmCreatePRResponse = (ScmPRTaskResponseData) responseData;
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
+    ScmPRTaskResponseData scmCreatePRResponse = (ScmPRTaskResponseData) delegateResponseData;
     final CreatePRResponse createPRResponse = scmCreatePRResponse.getCreatePRResponse();
     try {
       ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
@@ -219,8 +251,15 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
                                                     .build();
     DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(identifierRef.getAccountIdentifier(),
         orgIdentifier, projectIdentifier, scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-    GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) responseData;
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
+    GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
     try {
       return FileBatchResponseMapper.createGitFileChangeList(
           FileBatchContentResponse.parseFrom(gitFileTaskResponseData.getFileBatchContentResponse()),
@@ -244,7 +283,14 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     DelegateTaskRequest delegateTaskRequest =
         getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
-    final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
     try {
       return FileBatchResponseMapper.createGitFileChangeList(
@@ -269,7 +315,14 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     DelegateTaskRequest delegateTaskRequest =
         getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
-    final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
     try {
       return FileBatchResponseMapper.createGitFileChangeList(
@@ -299,7 +352,14 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     DelegateTaskRequest delegateTaskRequest =
         getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), scmGitRefTaskParams, TaskType.SCM_GIT_REF_TASK);
-    final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
     ScmGitRefTaskResponseData scmGitRefTaskResponseData = (ScmGitRefTaskResponseData) delegateResponseData;
     try {
       return PRFileListMapper.toGitDiffResultFileListDTO(
@@ -326,7 +386,14 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     DelegateTaskRequest delegateTaskRequest =
         getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), scmGitRefTaskParams, TaskType.SCM_GIT_REF_TASK);
-    final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
     ScmGitRefTaskResponseData scmGitRefTaskResponseData = (ScmGitRefTaskResponseData) delegateResponseData;
     try {
       return new ArrayList<>(
@@ -353,7 +420,14 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     DelegateTaskRequest delegateTaskRequest =
         getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), scmGitRefTaskParams, TaskType.SCM_GIT_REF_TASK);
-    final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
     ScmGitRefTaskResponseData scmGitRefTaskResponseData = (ScmGitRefTaskResponseData) delegateResponseData;
     try {
       return GetLatestCommitResponse.parseFrom(scmGitRefTaskResponseData.getGetLatestCommitResponse()).getCommit();
@@ -380,8 +454,15 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     final DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(infoForPush.getAccountId(),
         infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), scmPushTaskParams, TaskType.SCM_PUSH_TASK);
 
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-    ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
+    ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) delegateResponseData;
     try {
       return CreateFileResponse.parseFrom(scmPushTaskResponseData.getCreateFileResponse());
     } catch (InvalidProtocolBufferException e) {
@@ -408,8 +489,15 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     final DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(infoForPush.getAccountId(),
         infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), scmPushTaskParams, TaskType.SCM_PUSH_TASK);
 
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-    ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
+    ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) delegateResponseData;
     try {
       return UpdateFileResponse.parseFrom(scmPushTaskResponseData.getUpdateFileResponse());
     } catch (InvalidProtocolBufferException e) {
@@ -436,8 +524,15 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     final DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(infoForPush.getAccountId(),
         infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), scmPushTaskParams, TaskType.SCM_PUSH_TASK);
 
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-    ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
+    ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) delegateResponseData;
     try {
       return DeleteFileResponse.parseFrom(scmPushTaskResponseData.getDeleteFileResponse());
     } catch (InvalidProtocolBufferException e) {
@@ -462,12 +557,61 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     DelegateTaskRequest delegateTaskRequest =
         getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), scmGitRefTaskParams, TaskType.SCM_GIT_REF_TASK);
-    final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
     ScmGitRefTaskResponseData scmGitRefTaskResponseData = (ScmGitRefTaskResponseData) delegateResponseData;
     try {
       return FindCommitResponse.parseFrom(scmGitRefTaskResponseData.getFindCommitResponse()).getCommit();
     } catch (InvalidProtocolBufferException e) {
       throw new UnexpectedException("Unexpected error occurred while doing scm operation");
+    }
+  }
+
+  @Override
+  public CreateWebhookResponse upsertWebhook(
+      UpsertWebhookRequestDTO upsertWebhookRequestDTO, String target, GitWebhookTaskType gitWebhookTaskType) {
+    final ScmConnector scmConnector =
+        getScmConnector(upsertWebhookRequestDTO.getAccountIdentifier(), upsertWebhookRequestDTO.getOrgIdentifier(),
+            upsertWebhookRequestDTO.getProjectIdentifier(), upsertWebhookRequestDTO.getConnectorIdentifierRef());
+    if (!isEmpty(upsertWebhookRequestDTO.getRepoURL())) {
+      scmConnector.setUrl(upsertWebhookRequestDTO.getRepoURL());
+    }
+    final List<EncryptedDataDetail> encryptionDetails =
+        getEncryptedDataDetails(upsertWebhookRequestDTO.getAccountIdentifier(),
+            upsertWebhookRequestDTO.getOrgIdentifier(), upsertWebhookRequestDTO.getProjectIdentifier(), scmConnector);
+    final ScmGitWebhookTaskParams gitWebhookTaskParams =
+        ScmGitWebhookTaskParams.builder()
+            .gitWebhookTaskType(gitWebhookTaskType)
+            .scmConnector(scmConnector)
+            .encryptedDataDetails(encryptionDetails)
+            .gitWebhookDetails(GitWebhookDetails.builder()
+                                   .hookEventType(upsertWebhookRequestDTO.getHookEventType())
+                                   .target(target)
+                                   .build())
+            .build();
+    DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(upsertWebhookRequestDTO.getAccountIdentifier(),
+        upsertWebhookRequestDTO.getOrgIdentifier(), upsertWebhookRequestDTO.getProjectIdentifier(),
+        gitWebhookTaskParams, TaskType.SCM_GIT_WEBHOOK_TASK);
+    final DelegateResponseData delegateResponseData;
+    try {
+      delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
+    ScmGitWebhookTaskResponseData scmGitWebhookTaskResponseData = (ScmGitWebhookTaskResponseData) delegateResponseData;
+    try {
+      return CreateWebhookResponse.parseFrom(scmGitWebhookTaskResponseData.getCreateWebhookResponse());
+
+    } catch (InvalidProtocolBufferException e) {
+      throw new UnexpectedException("Unexpected error occurred while doing scm operation", e);
     }
   }
 

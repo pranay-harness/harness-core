@@ -1,5 +1,6 @@
 package io.harness.mongo;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.mongo.IndexManager.Mode.MANUAL;
 
 import static lombok.AccessLevel.NONE;
@@ -7,6 +8,7 @@ import static lombok.AccessLevel.NONE;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.tracing.TraceMode;
+import io.harness.secret.ConfigSecret;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,6 +17,8 @@ import com.mongodb.ReadPreference;
 import com.mongodb.Tag;
 import com.mongodb.TagSet;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.Builder;
@@ -22,6 +26,9 @@ import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.Value;
+import lombok.experimental.FieldDefaults;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -33,8 +40,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder(toBuilder = true)
 @ToString(onlyExplicitlyIncluded = true)
 @OwnedBy(HarnessTeam.PL)
+@FieldDefaults(makeFinal = false)
 public class MongoConfig {
   public static final String DOT_REPLACEMENT = "__dot__";
+  public static final String DEFAULT_URI = "mongodb://localhost:27017/wings";
+  public static final String MONGODB_SCHEMA = "mongodb";
 
   @Value
   public static class ReadPref {
@@ -42,10 +52,27 @@ public class MongoConfig {
     ImmutableMap<String, String> tagSet;
   }
 
-  @JsonProperty(defaultValue = "mongodb://localhost:27017/wings")
-  @Default
-  @NotEmpty
-  private String uri = "mongodb://localhost:27017/wings";
+  @Value
+  public static class HostAndPort {
+    public static HostAndPort of(String host, int port) {
+      return new HostAndPort(host, port);
+    }
+
+    public static HostAndPort of(String host) {
+      return new HostAndPort(host, -1);
+    }
+
+    @JsonProperty String host;
+    @JsonProperty(defaultValue = "-1") int port;
+  }
+
+  @JsonProperty(defaultValue = DEFAULT_URI) @Default @NotEmpty private String uri = DEFAULT_URI;
+  @JsonProperty @Getter(NONE) private String schema;
+  @JsonProperty @Getter(NONE) private List<HostAndPort> hosts;
+  @JsonProperty @Getter(NONE) private String database;
+  @JsonProperty @Getter(NONE) @ConfigSecret private String username;
+  @JsonProperty @Getter(NONE) @ConfigSecret private String password;
+  @JsonProperty @Getter(NONE) private Map<String, String> params;
 
   @ToString.Include @Getter(NONE) private ReadPref readPref;
 
@@ -85,5 +112,58 @@ public class MongoConfig {
                                                    .map(entry -> new Tag(entry.getKey(), entry.getValue()))
                                                    .collect(Collectors.toList()))));
     }
+  }
+
+  public String getUri() {
+    if (uriPartsAreNotUsed()) {
+      return uri;
+    }
+
+    final URIBuilder uriBuilder =
+        new URIBuilder().setScheme(schema()).setHost(hosts()).setPath(forceSlashAfterHostWhenThereAreParams());
+
+    if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
+      uriBuilder.setUserInfo(username, password);
+    } else if (StringUtils.isNotBlank(username)) {
+      uriBuilder.setUserInfo(username);
+    }
+
+    if (params != null) {
+      params.forEach(uriBuilder::setParameter);
+    }
+
+    return uriBuilder.toString();
+  }
+
+  private String schema() {
+    if (StringUtils.isNotBlank(schema)) {
+      return schema;
+    } else {
+      return MONGODB_SCHEMA;
+    }
+  }
+
+  private String hosts() {
+    return hosts.stream()
+        .map(host -> {
+          if (host.port > 0) {
+            return host.host + ":" + host.port;
+          } else {
+            return host.host;
+          }
+        })
+        .collect(Collectors.joining(","));
+  }
+
+  private String forceSlashAfterHostWhenThereAreParams() {
+    if (isEmpty(params)) {
+      return database;
+    } else {
+      return StringUtils.defaultIfBlank(database, "/");
+    }
+  }
+
+  private boolean uriPartsAreNotUsed() {
+    return isEmpty(hosts);
   }
 }

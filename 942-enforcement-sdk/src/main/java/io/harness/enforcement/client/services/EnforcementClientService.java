@@ -12,6 +12,12 @@ import java.util.Set;
 
 public interface EnforcementClientService {
   /**
+   * Check if enforcement is enabled in current module
+   * @return true if enabled, else false
+   */
+  boolean isEnforcementEnabled();
+
+  /**
    * Check if available for next feature consume
    * @param featureRestrictionName
    * @param accountIdentifier
@@ -46,6 +52,23 @@ public interface EnforcementClientService {
    */
   void checkAvailabilityWithIncrement(
       FeatureRestrictionName featureRestrictionName, String accountIdentifier, long increment);
+
+  /**
+   * Used only in case checking for feature restriction status in other microservices.
+   * @param featureRestrictionName
+   * @param accountIdentifier
+   * @return
+   */
+  boolean isRemoteFeatureAvailable(FeatureRestrictionName featureRestrictionName, String accountIdentifier);
+
+  /**
+   * Used only in case checking for list of feature restriction status in other microservices.
+   * @param featureRestrictionNames
+   * @param accountIdentifier
+   * @return
+   */
+  Map<FeatureRestrictionName, Boolean> getAvailabilityForRemoteFeatures(
+      List<FeatureRestrictionName> featureRestrictionNames, String accountIdentifier);
 
   /**
    * Get a list of availability

@@ -12,6 +12,7 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
 
+import software.wings.beans.SettingAttribute;
 import software.wings.sm.BarrierStatusData;
 
 import java.util.Set;
@@ -24,6 +25,7 @@ public class CgOrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     set.add(StateInspection.class);
     set.add(SweepingOutputInstance.class);
     set.add(ResourceConstraint.class);
+    set.add(SettingAttribute.class);
   }
 
   @Override

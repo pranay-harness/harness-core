@@ -19,6 +19,7 @@ import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -32,6 +33,10 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.observer.NoOpRemoteObserverInformerImpl;
+import io.harness.observer.RemoteObserver;
+import io.harness.observer.RemoteObserverInformer;
+import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.DelegateTokenAuthenticator;
@@ -63,6 +68,7 @@ import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.scheduler.LdapSyncJobConfig;
+import software.wings.security.authentication.totp.SimpleTotpModule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -77,6 +83,7 @@ import graphql.GraphQL;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -284,7 +291,24 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
-    modules.add(new WingsModule(configuration));
+    modules.add(new AbstractRemoteObserverModule() {
+      @Override
+      public boolean noOpProducer() {
+        return true;
+      }
+
+      @Override
+      public Set<RemoteObserver> observers() {
+        return Collections.emptySet();
+      }
+
+      @Override
+      public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+        return NoOpRemoteObserverInformerImpl.class;
+      }
+    });
+    modules.add(new WingsModule(configuration, StartupMode.MANAGER));
+    modules.add(new SimpleTotpModule());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());
     modules.add(new ManagerQueueModule());

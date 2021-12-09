@@ -101,7 +101,9 @@ public class TagLinkTimescaleChangeHandler implements ChangeHandler {
     columnValueMapping.put("created_at", tagLink.getCreatedAt());
 
     // created_by
-    columnValueMapping.put("created_by", tagLink.getCreatedBy().getName());
+    if (tagLink.getCreatedBy() != null) {
+      columnValueMapping.put("created_by", tagLink.getCreatedBy().getName());
+    }
 
     // last_updated_at
     columnValueMapping.put("last_updated_at", tagLink.getLastUpdatedAt());

@@ -2,8 +2,11 @@ package io.harness.gitsync.core.impl;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
+import io.harness.beans.Scope;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.UnexpectedException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest.GitToHarnessFileProcessingRequestBuilder;
@@ -20,6 +23,7 @@ import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepRequest;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
+import io.harness.gitsync.common.helper.GitConnectivityExceptionHelper;
 import io.harness.gitsync.common.helper.GitToHarnessProgressHelper;
 import io.harness.gitsync.common.helper.YamlGitConfigHelper;
 import io.harness.gitsync.common.service.GitBranchSyncService;
@@ -38,6 +42,7 @@ import io.harness.utils.FilePathUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +64,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
   private final GitToHarnessProgressHelper gitToHarnessProgressHelper;
   private final GitBranchSyncService gitBranchSyncService;
   private final GitSyncErrorService gitSyncErrorService;
+  private final FeatureFlagService featureFlagService;
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
@@ -167,7 +173,9 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
           gitFileChangeDTO -> gitFileChangeDTOListAsString.append(gitFileChangeDTO.toString()).append(" :::: "));
       log.info(gitFileChangeDTOListAsString.toString());
     } catch (Exception ex) {
-      log.error("Error occurred while perform step : {}", GitToHarnessProcessingStepType.GET_FILES);
+      log.error("Error occurred while perform step : {}" + GitToHarnessProcessingStepType.GET_FILES, ex);
+      String errorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
+      recordErrors(yamlGitConfigDTOList, yamlChangeSetDTO, errorMessage);
       // Mark step status error
       gitToHarnessProgressService.updateStepStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
@@ -187,6 +195,19 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         .processingCommitId(filesFromDiffResponse.getProcessingCommitId())
         .commitMessage(filesFromDiffResponse.getCommitMessage())
         .build();
+  }
+
+  private void recordErrors(
+      List<YamlGitConfigDTO> yamlGitConfigDTOList, YamlChangeSetDTO yamlChangeSetDTO, String errorMessage) {
+    if (featureFlagService.isEnabled(FeatureName.NG_GIT_ERROR_EXPERIENCE, yamlChangeSetDTO.getAccountId())) {
+      yamlGitConfigDTOList.forEach(yamlGitConfigDTO -> {
+        Scope scope = Scope.of(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier());
+        gitSyncErrorService.recordConnectivityError(yamlGitConfigDTO.getAccountIdentifier(),
+            Collections.singletonList(scope), yamlChangeSetDTO.getRepoUrl(), yamlChangeSetDTO.getBranch(),
+            errorMessage);
+      });
+    }
   }
 
   private GitToHarnessProcessMsvcStepResponse performBranchSync(GitToHarnessGetFilesStepRequest request) {

@@ -21,6 +21,9 @@ import io.harness.core.ci.services.CIActiveCommitterUsageImpl;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.enforcement.BuildRestrictionUsageImpl;
+import io.harness.enforcement.BuildsPerMonthRestrictionUsageImpl;
+import io.harness.enforcement.TotalBuildsRestrictionUsageImpl;
 import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
 import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
 import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
@@ -72,7 +75,6 @@ import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
-import io.harness.threading.ThreadPoolConfig;
 import io.harness.token.remote.TokenClient;
 import io.harness.utils.NGObjectMapperHelper;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -386,9 +388,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
         .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
-        .executionPoolConfig(ThreadPoolConfig.builder().corePoolSize(20).maxPoolSize(100).idleTime(120L).build())
-        .orchestrationEventPoolConfig(
-            ThreadPoolConfig.builder().corePoolSize(10).maxPoolSize(50).idleTime(120L).build())
+        .executionPoolConfig(config.getPmsSdkExecutionPoolConfig())
+        .orchestrationEventPoolConfig(config.getPmsSdkOrchestrationEventPoolConfig())
         .build();
   }
 
@@ -494,6 +495,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
                 ImmutableMap
                     .<FeatureRestrictionName,
                         Class<? extends io.harness.enforcement.client.custom.CustomRestrictionInterface>>builder()
+                    .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
                     .build())
             .build();
     RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
@@ -501,6 +503,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
             .restrictionNameClassMap(
                 ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
                     .put(FeatureRestrictionName.ACTIVE_COMMITTERS, CIActiveCommitterUsageImpl.class)
+                    .put(FeatureRestrictionName.MAX_TOTAL_BUILDS, TotalBuildsRestrictionUsageImpl.class)
+                    .put(FeatureRestrictionName.MAX_BUILDS_PER_MONTH, BuildsPerMonthRestrictionUsageImpl.class)
                     .build())
             .build();
     injector.getInstance(EnforcementSdkRegisterService.class)

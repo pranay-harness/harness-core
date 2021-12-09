@@ -19,4 +19,5 @@ public class SegmentConfiguration implements TelemetryConfiguration {
   @JsonProperty(defaultValue = "false") private boolean enabled;
   private String url;
   private String apiKey;
+  private boolean certValidationRequired;
 }

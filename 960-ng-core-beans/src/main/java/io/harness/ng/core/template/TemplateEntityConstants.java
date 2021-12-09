@@ -17,5 +17,6 @@ public interface TemplateEntityConstants {
   String TEMPLATE_LAST_UPDATED_FALSE = "TemplateLastUpdatedFalse";
   String TEMPLATE_LAST_UPDATED_TRUE = "TemplateLastUpdatedTrue";
   String TEMPLATE_CHANGE_SCOPE = "TemplateChangeScope";
+  String TEMPLATE_CREATE = "TemplateCreate";
   String OTHERS = "Others";
 }

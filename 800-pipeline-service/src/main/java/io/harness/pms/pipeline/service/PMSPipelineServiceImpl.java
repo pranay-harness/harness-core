@@ -1,10 +1,12 @@
 package io.harness.pms.pipeline.service;
 
+import static io.harness.ModuleType.PMS;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import static io.harness.pms.pipeline.service.PMSPipelineServiceStepHelper.LIBRARY;
+import static io.harness.telemetry.Destination.AMPLITUDE;
 
 import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -22,7 +24,11 @@ import io.harness.exception.ScmException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.scm.EntityObjectIdUtils;
+import io.harness.pms.contracts.governance.ExpansionResponseBatch;
 import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.governance.ExpansionRequest;
+import io.harness.pms.governance.JsonExpander;
 import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -38,13 +44,18 @@ import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
+import io.harness.telemetry.TelemetryReporter;
 
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.dao.DuplicateKeyException;
@@ -66,6 +77,16 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
   @Inject private GitSyncSdkService gitSyncSdkService;
   @Inject private CommonStepInfo commonStepInfo;
+  @Inject private TelemetryReporter telemetryReporter;
+  @Inject private JsonExpander jsonExpander;
+  public static String PIPELINE_SAVE = "pipeline_save";
+  public static String PIPELINE_SAVE_ACTION_TYPE = "action";
+  public static String CREATING_PIPELINE = "creating new pipeline";
+  public static String UPDATING_PIPELINE = "updating existing pipeline";
+  public static String PIPELINE_NAME = "pipelineName";
+  public static String ACCOUNT_ID = "accountId";
+  public static String ORG_ID = "orgId";
+  public static String PROJECT_ID = "projectId";
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
@@ -78,8 +99,10 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
           pipelineEntity.getIdentifier());
 
       PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
-
-      return pmsPipelineRepository.save(entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo));
+      PipelineEntity createdEntity =
+          pmsPipelineRepository.save(entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo));
+      sendPipelineSaveTelemetryEvent(createdEntity, CREATING_PIPELINE);
+      return createdEntity;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
@@ -150,7 +173,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     PipelineEntity tempEntity = entityToUpdate.withYaml(pipelineEntity.getYaml())
                                     .withName(pipelineEntity.getName())
                                     .withDescription(pipelineEntity.getDescription())
-                                    .withTags(pipelineEntity.getTags());
+                                    .withTags(pipelineEntity.getTags())
+                                    .withIsEntityInvalid(false);
 
     return makePipelineUpdateCall(tempEntity, entityToUpdate, changeType);
   }
@@ -168,6 +192,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
             pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
       }
 
+      sendPipelineSaveTelemetryEvent(updatedResult, UPDATING_PIPELINE);
       return updatedResult;
     } catch (EventsFrameworkDownException ex) {
       log.error("Events framework is down for Pipeline Service.", ex);
@@ -211,6 +236,25 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     Update update = new Update();
     update.inc(PipelineEntityKeys.runSequence);
     return Optional.ofNullable(updatePipelineMetadata(accountId, orgIdentifier, projectIdentifier, criteria, update));
+  }
+
+  @Override
+  public boolean markEntityInvalid(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml) {
+    Optional<PipelineEntity> optionalPipelineEntity =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier, false);
+    if (!optionalPipelineEntity.isPresent()) {
+      log.warn(String.format(
+          "Marking pipeline [%s] as invalid failed as it does not exist or has been deleted", identifier));
+      return false;
+    }
+    PipelineEntity existingPipeline = optionalPipelineEntity.get();
+    PipelineEntity pipelineEntityUpdated = existingPipeline.withYaml(invalidYaml)
+                                               .withObjectIdOfYaml(EntityObjectIdUtils.getObjectIdOfYaml(invalidYaml))
+                                               .withIsEntityInvalid(true);
+    pmsPipelineRepository.updatePipelineYaml(
+        pipelineEntityUpdated, existingPipeline, PipelineYamlDtoMapper.toDto(pipelineEntityUpdated), ChangeType.NONE);
+    return true;
   }
 
   @Override
@@ -380,5 +424,25 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     criteria.andOperator(moduleCriteria, searchCriteria);
 
     return criteria;
+  }
+
+  private void sendPipelineSaveTelemetryEvent(PipelineEntity entity, String actionType) {
+    HashMap<String, Object> properties = new HashMap<>();
+    properties.put(PIPELINE_NAME, entity.getName());
+    properties.put(ORG_ID, entity.getOrgIdentifier());
+    properties.put(PROJECT_ID, entity.getProjectIdentifier());
+    properties.put(PIPELINE_SAVE_ACTION_TYPE, actionType);
+    telemetryReporter.sendTrackEvent(
+        PIPELINE_SAVE, properties, Collections.singletonMap(AMPLITUDE, true), io.harness.telemetry.Category.GLOBAL);
+  }
+
+  @Override
+  public String fetchExpandedPipelineJSON(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
+    // todo(@NamanVerma): add all parts of the flow as and when implemented. Add test when full method is ready
+    Set<ExpansionRequest> expansionRequests = Collections.singleton(
+        ExpansionRequest.builder().fqn("pipeline.name").fieldValue(new TextNode("pipeline name")).module(PMS).build());
+    Set<ExpansionResponseBatch> expansionResponseBatches = jsonExpander.fetchExpansionResponses(expansionRequests);
+    return null;
   }
 }

@@ -13,7 +13,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
@@ -431,6 +431,9 @@ public class AppServiceImpl implements AppService {
       // Now we are ready to delete the object.
       if (wingsPersistence.delete(Application.class, appId)) {
         sendNotification(application, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
+      } else {
+        throw new InvalidRequestException(
+            String.format("Application %s does not exist or might already be deleted.", application.getName()));
       }
 
       // Note that if we failed to delete the object we left without the yaml. Likely the users

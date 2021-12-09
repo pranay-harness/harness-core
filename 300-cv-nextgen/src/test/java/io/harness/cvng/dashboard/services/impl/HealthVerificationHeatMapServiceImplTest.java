@@ -26,6 +26,7 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.VerificationTask.DeploymentInfo;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap.AggregationLevel;
@@ -95,8 +96,10 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase 
     when(activityService.get(activityId)).thenReturn(getActivity());
     when(verificationTaskService.get(verificationTaskId))
         .thenReturn(VerificationTask.builder()
-                        .cvConfigId(cvConfigId)
-                        .verificationJobInstanceId(verificationJobInstanceId)
+                        .taskInfo(DeploymentInfo.builder()
+                                      .cvConfigId(cvConfigId)
+                                      .verificationJobInstanceId(verificationJobInstanceId)
+                                      .build())
                         .build());
     when(activityService.getByVerificationJobInstanceId(verificationJobInstanceId)).thenReturn(getActivity());
   }
@@ -209,8 +212,10 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase 
     when(activityService.getByVerificationJobInstanceId(verificationJobInstanceId + "-2")).thenReturn(getActivity());
     when(verificationTaskService.get(verificationTaskId + "-2"))
         .thenReturn(VerificationTask.builder()
-                        .cvConfigId(cvConfigId + "-2")
-                        .verificationJobInstanceId(verificationJobInstanceId + "-2")
+                        .taskInfo(DeploymentInfo.builder()
+                                      .verificationJobInstanceId(verificationJobInstanceId + "-2")
+                                      .cvConfigId(cvConfigId + "-2")
+                                      .build())
                         .build());
     heatMapService.updateRisk(verificationTaskId + "-2", 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
 
@@ -248,8 +253,10 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase 
     when(activityService.getByVerificationJobInstanceId(verificationJobInstanceId + "-2")).thenReturn(getActivity());
     when(verificationTaskService.get(verificationTaskId + "-2"))
         .thenReturn(VerificationTask.builder()
-                        .cvConfigId(cvConfigId + "-2")
-                        .verificationJobInstanceId(verificationJobInstanceId + "-2")
+                        .taskInfo(DeploymentInfo.builder()
+                                      .verificationJobInstanceId(verificationJobInstanceId + "-2")
+                                      .cvConfigId(cvConfigId + "-2")
+                                      .build())
                         .build());
     heatMapService.updateRisk(verificationTaskId + "-2", 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
 
@@ -350,13 +357,13 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase 
   public void testGetVerificationJobInstanceAggregatedRisk_maxOfVerificationTasks() throws IllegalAccessException {
     Instant endTime = Instant.now();
     FieldUtils.writeField(heatMapService, "verificationTaskService", realVerificationTaskService, true);
-    String verificationTaskId1 =
-        realVerificationTaskService.create(accountId, generateUuid(), verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId1 = realVerificationTaskService.createDeploymentVerificationTask(
+        accountId, generateUuid(), verificationJobInstanceId, APP_DYNAMICS);
     heatMapService.updateRisk(verificationTaskId1, .5, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
     heatMapService.updateRisk(
         verificationTaskId1, 0.7, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);
-    String verificationTaskId2 =
-        realVerificationTaskService.create(accountId, generateUuid(), verificationJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId2 = realVerificationTaskService.createDeploymentVerificationTask(
+        accountId, generateUuid(), verificationJobInstanceId, APP_DYNAMICS);
     heatMapService.updateRisk(verificationTaskId2, 0.9, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
     heatMapService.updateRisk(
         verificationTaskId2, 0.8, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);

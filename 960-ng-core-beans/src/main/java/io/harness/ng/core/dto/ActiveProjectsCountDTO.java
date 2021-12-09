@@ -16,5 +16,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Schema(name = "ActiveProjectsCount", description = "This gives the count of the active Projects")
 public class ActiveProjectsCountDTO {
-  Integer count;
+  long count;
 }

@@ -6,6 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactsStep;
 import io.harness.cdng.artifact.steps.SidecarsStep;
+import io.harness.cdng.helm.HelmDeployStep;
+import io.harness.cdng.helm.HelmRollbackStep;
 import io.harness.cdng.infra.steps.EnvironmentStep;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
@@ -88,6 +90,8 @@ public class NgStepRegistrar {
     engineSteps.put(CDNGExecutionStep.STEP_TYPE, CDNGExecutionStep.class);
     engineSteps.put(CDStepsStep.STEP_TYPE, CDStepsStep.class);
     engineSteps.put(EnvironmentStep.STEP_TYPE, EnvironmentStep.class);
+    engineSteps.put(HelmDeployStep.STEP_TYPE, HelmDeployStep.class);
+    engineSteps.put(HelmRollbackStep.STEP_TYPE, HelmRollbackStep.class);
 
     engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
     return engineSteps;

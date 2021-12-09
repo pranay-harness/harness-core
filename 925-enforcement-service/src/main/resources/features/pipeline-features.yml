@@ -12,11 +12,14 @@ features:
     restrictions:
       FREE:
         restrictionType: AVAILABILITY
-        enabled: false
+        enabled: true
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true
       ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      COMMUNITY:
         restrictionType: AVAILABILITY
         enabled: true
   - name: INTEGRATED_APPROVALS_WITH_JIRA
@@ -31,3 +34,6 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false

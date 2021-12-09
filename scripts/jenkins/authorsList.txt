@@ -120,6 +120,7 @@ Prashant Pal prashant.pal@harness.io
 Prashant Sharma prashant.sharma@harness.io
 prashantsharma04 prashant.sharma@harness.io
 Prasun Banerjee prasun.banerjee@harness.io
+Prateek Barapatre prateek.barapatre@harness.io
 Praveen Kambam Sugavanam praveen.sugavanam@harness.io
 Praveen Sugavanam praveen.sugavanam@harness.io
 Puneet Saraswat puneet.saraswat@harness.io
@@ -136,6 +137,7 @@ Riyas P riyas.yash@harness.io
 Rohit Karelia rohit.karelia@harness.io
 Rohit Kumar rohit.kumar@harness.io
 Rushabh Shah rushabh.shah@harness.io
+Sagnik De sagnik.de@harness.io
 Sahil Hindwani sahil.hindwani@harness.io
 Sahithi Kolichala sahithi@harness.io
 Sainath Batthala sainath.batthala@harness.io
@@ -201,3 +203,14 @@ markoharness marko.lukic@harness.io
 bharat bandhu goel bharat.goel@harness.io
 Bharat Goel bharat.goel@harness.io
 Alexandru Ciofu alexandru.ciofu@harness.io
+Slobodan Pavic slobodan.pavic@harness.io
+Marc Batchelor marc.batchelor@harness.io
+Angelo Rodriguez angelo.rodriguez@harness.io
+Ben Morrise ben.morrise@harness.io
+Chris Caspanello chris.caspanello@harness.io
+Chen Shterental chen.shterental@harness.io
+Corey Severino corey.severino@harness.io
+Brandon Groves brandon.groves@harness.io
+Michael D'Amour michael.damour@harness.io
+Hodaya Gamliel hodaya.gamliel@harness.io
+Amnon Danieli amnon.danieli@harness.io

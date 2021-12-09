@@ -11,7 +11,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.TaskType.CUSTOM_LOG_COLLECTION_TASK;
 import static software.wings.beans.TaskType.STACKDRIVER_COLLECT_LOG_DATA;
 import static software.wings.beans.TaskType.SUMO_COLLECT_LOG_DATA;

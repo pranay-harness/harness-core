@@ -28,9 +28,9 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateApplyRequestDTO;
-import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
 import io.harness.ng.core.template.TemplateListType;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
+import io.harness.ng.core.template.TemplateReferenceSummary;
 import io.harness.ng.core.template.TemplateSummaryResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.template.TemplateFilterPropertiesDTO;
@@ -61,6 +61,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -93,9 +95,7 @@ import retrofit2.http.Body;
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
-      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error"),
-          @ApiResponse(code = 403, response = TemplateInputsErrorResponseDTO.class,
-              message = "TemplateRefs Resolved failed in given yaml.")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @Tag(name = "Templates", description = "This contains a list of APIs specific to the Templates")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = NGCommonEntityConstants.BAD_REQUEST_CODE,
@@ -241,8 +241,8 @@ public class NGTemplateResource {
         "Updating Stable Template with identifier %s with versionLabel %s in project %s, org %s, account %s",
         templateIdentifier, versionLabel, projectId, orgId, accountId));
 
-    TemplateEntity templateEntity =
-        templateService.updateStableTemplateVersion(accountId, orgId, projectId, templateIdentifier, versionLabel);
+    TemplateEntity templateEntity = templateService.updateStableTemplateVersion(
+        accountId, orgId, projectId, templateIdentifier, versionLabel, comments);
     return ResponseDTO.newResponse(templateEntity.getVersion().toString(), templateEntity.getVersionLabel());
   }
 
@@ -503,8 +503,19 @@ public class NGTemplateResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @NotNull TemplateApplyRequestDTO templateApplyRequestDTO) {
-    return ResponseDTO.newResponse(templateMergeHelper.mergeTemplateSpecToPipelineYaml(
-        accountId, orgId, projectId, templateApplyRequestDTO.getOriginalEntityYaml()));
+    TemplateMergeResponseDTO templateMergeResponseDTO = templateMergeHelper.mergeTemplateSpecToPipelineYaml(
+        accountId, orgId, projectId, templateApplyRequestDTO.getOriginalEntityYaml());
+    if (templateApplyRequestDTO.isCheckForAccess() && templateMergeResponseDTO != null
+        && EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
+      Set<String> templateIdentifiers = templateMergeResponseDTO.getTemplateReferenceSummaries()
+                                            .stream()
+                                            .map(TemplateReferenceSummary::getTemplateIdentifier)
+                                            .collect(Collectors.toSet());
+      templateIdentifiers.forEach(templateIdentifier
+          -> accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+              Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_ACCESS_PERMISSION));
+    }
+    return ResponseDTO.newResponse(templateMergeResponseDTO);
   }
 
   @GET

@@ -48,9 +48,9 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
@@ -5065,9 +5065,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (isNotEmpty(infraMappingList)) {
-      // Note: CDC-15698 for reasons why we are using a sorted list rather than a set.
-      List<String> sortedInfraMappings = infraMappingList.stream().distinct().sorted().collect(Collectors.toList());
-      workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, sortedInfraMappings);
+      workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, new HashSet<>(infraMappingList));
     }
 
     addressInefficientQueries(workflowExecutionQuery);

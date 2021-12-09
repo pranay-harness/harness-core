@@ -2,6 +2,7 @@ package io.harness.delegate.task.git;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.INFO;
 
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
@@ -12,6 +13,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.service.git.NGGitService;
+import io.harness.connector.task.git.GitDecryptionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -109,9 +111,13 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
         filesFromMultipleRepo.put(gitFetchFilesConfig.getIdentifier(), gitFetchFilesResult);
       }
 
+      if (gitFetchRequest.isCloseLogStream()) {
+        executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
+      }
       return GitFetchResponse.builder()
           .taskStatus(TaskStatus.SUCCESS)
           .filesFromMultipleRepo(filesFromMultipleRepo)
+
           .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
           .build();
     } catch (Exception exception) {

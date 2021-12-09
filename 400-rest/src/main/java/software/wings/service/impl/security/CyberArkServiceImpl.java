@@ -8,7 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.settings.SettingVariableTypes.CYBERARK;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -219,7 +219,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
       if (maskSecret) {
         cyberArkConfig.maskSecrets();
       } else {
-        cyberArkConfig.setClientCertificate(String.valueOf(decryptUsingBaseAlgo(encryptedClientCert)));
+        cyberArkConfig.setClientCertificate(String.valueOf(decryptUsingAlgoOfSecret(encryptedClientCert)));
       }
     }
   }

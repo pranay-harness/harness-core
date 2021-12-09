@@ -154,7 +154,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
             wingsPersistence.get(EncryptedData.class, secretsManagerConfig.getSecretKey());
         checkNotNull(
             encryptedSecretKey, "Secret key can't be null for AWS Secrets Manager " + secretsManagerConfig.getUuid());
-        secretsManagerConfig.setSecretKey(String.valueOf(decryptUsingBaseAlgo(encryptedSecretKey)));
+        secretsManagerConfig.setSecretKey(String.valueOf(decryptUsingAlgoOfSecret(encryptedSecretKey)));
       }
     }
   }

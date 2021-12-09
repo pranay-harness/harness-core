@@ -6,6 +6,7 @@ import io.harness.validation.OneOfField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -17,6 +18,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(KubernetesConfigConstants.OPENID_CONNECT)
 @OneOfField(fields = {"oidcUsername", "oidcUsernameRef"})
+@Schema(name = "KubernetesOpenIdConnect", description = "This contains kubernetes open id connect details")
 public class KubernetesOpenIdConnectDTO extends KubernetesAuthCredentialDTO {
   @NotBlank String oidcIssuerUrl;
   String oidcUsername;

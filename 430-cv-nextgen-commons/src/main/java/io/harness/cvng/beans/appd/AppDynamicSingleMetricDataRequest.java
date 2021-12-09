@@ -15,14 +15,14 @@ import lombok.experimental.SuperBuilder;
 
 @Data
 @SuperBuilder
-@JsonTypeName("APPDYNAMICS_GET_METRIC_DATA")
+@JsonTypeName("APPDYNAMICS_GET_SINGLE_METRIC_DATA")
 @OwnedBy(CV)
 public class AppDynamicSingleMetricDataRequest extends AppDynamicsDataCollectionRequest {
   public static final String DSL = AppDynamicsDataCollectionRequest.readDSL(
       "appd-single-metric-data.datacollection", AppDynamicsDataCollectionRequest.class);
 
   public AppDynamicSingleMetricDataRequest() {
-    setType(DataCollectionRequestType.APPDYNAMICS_GET_METRIC_DATA);
+    setType(DataCollectionRequestType.APPDYNAMICS_GET_SINGLE_METRIC_DATA);
   }
 
   @NonNull private String applicationName;

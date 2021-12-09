@@ -115,6 +115,8 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
 
   Long lastExpiredEventHeartbeatTime;
 
+  private String delegateTokenName;
+
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (DelegateKeys.capabilitiesCheckNextIteration.equals(fieldName)) {

@@ -3,7 +3,6 @@ package io.harness.engine.expressions;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -47,7 +46,7 @@ public class SampleExpressionEvaluatorTest extends CategoryTest {
     ExpressionEvaluatorProvider expressionEvaluatorProvider = new SampleExpressionEvaluatorProvider(false);
     EngineExpressionEvaluator expressionEvaluator = expressionEvaluatorProvider.get(null, ambiance, null, false);
 
-    assertThatThrownBy(() -> expressionEvaluator.evaluateExpression("<+stringUtils.toUpper(\"Abc\")>")).isNotNull();
+    assertThat(expressionEvaluator.evaluateExpression("<+stringUtils.toUpper(\"Abc\")>")).isNull();
   }
 
   private void validateEvaluateExpression(

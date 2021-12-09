@@ -12,6 +12,8 @@ public class SchemaConstants {
   public static final String ANY_OF_NODE = "anyOf";
   public static final String PROPERTIES_NODE = "properties";
   public static final String DEFINITIONS_NODE = "definitions";
+  public static final String EXECUTION_WRAPPER_CONFIG_NODE = "ExecutionWrapperConfig";
+  public static final String STEP_NODE = "step";
   public static final String SCHEMA_NODE = "$schema";
   public static final String REF_NODE = "$ref";
   public static final String CONST_NODE = "const";
@@ -32,4 +34,5 @@ public class SchemaConstants {
   public static final String PATTERN_NODE = "pattern";
   public static final String MIN_LENGTH_NODE = "minLength";
   public static final String RUNTIME_INPUT_PATTERN = "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$";
+  public static final String SPEC_NODE = "spec";
 }

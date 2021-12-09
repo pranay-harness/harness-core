@@ -18,6 +18,8 @@ import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.VerificationTask.DeploymentInfo;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap.AggregationLevel;
@@ -56,11 +58,13 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
     // Update the risk score for that specific verificationTaskId and for the activity level as well.
     Preconditions.checkNotNull(verificationTaskId, "verificationTaskId should not be null");
     VerificationTask verificationTask = verificationTaskService.get(verificationTaskId);
-    Preconditions.checkNotNull(
-        verificationTask.getVerificationJobInstanceId(), "VerificationJobInstance should be present");
+    Preconditions.checkNotNull(verificationTask.getTaskInfo().getTaskType().equals(TaskType.DEPLOYMENT),
+        "VerificationTask should be of Deployment type");
     CVConfig cvConfig = verificationJobInstanceService.getEmbeddedCVConfig(
-        verificationTask.getCvConfigId(), verificationTask.getVerificationJobInstanceId());
-    Activity activity = activityService.getByVerificationJobInstanceId(verificationTask.getVerificationJobInstanceId());
+        ((DeploymentInfo) verificationTask.getTaskInfo()).getCvConfigId(),
+        ((DeploymentInfo) verificationTask.getTaskInfo()).getVerificationJobInstanceId());
+    Activity activity = activityService.getByVerificationJobInstanceId(
+        ((DeploymentInfo) verificationTask.getTaskInfo()).getVerificationJobInstanceId());
 
     updateRiskScoreInDB(verificationTaskId, AggregationLevel.VERIFICATION_TASK, healthVerificationPeriod, cvConfig,
         activity, overallRisk, endTime);

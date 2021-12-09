@@ -6,7 +6,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: 768M
+          memory: 2048M
     image: harness/delegate:latest
     environment:
       - ACCOUNT_ID=ACCOUNT_ID
@@ -15,9 +15,9 @@ services:
       - WATCHER_STORAGE_URL=http://localhost:8888
       - WATCHER_CHECK_LOCATION=watcherci.txt
       - REMOTE_WATCHER_URL_CDN=http://localhost:9500/builds
-      - DELEGATE_STORAGE_URL=http://localhost:9500
+      - DELEGATE_STORAGE_URL=http://localhost:8888
       - DELEGATE_CHECK_LOCATION=delegateci.txt
-      - DEPLOY_MODE=DOCKER
+      - DEPLOY_MODE=KUBERNETES
       - DELEGATE_NAME=harness-delegate
       - NEXT_GEN=true
       - DELEGATE_DESCRIPTION=desc
@@ -27,6 +27,7 @@ services:
       - DELEGATE_ORG_IDENTIFIER=9S5HMP0xROugl3_QgO62rQO
       - DELEGATE_PROJECT_IDENTIFIER=9S5HMP0xROugl3_QgO62rQP
       - PROXY_MANAGER=true
-      - USE_CDN=true
+      - USE_CDN=false
       - CDN_URL=http://localhost:9500
       - VERSION_CHECK_DISABLED=false
+      - INIT_SCRIPT=echo "Docker delegate init script executed."

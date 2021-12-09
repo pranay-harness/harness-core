@@ -1,6 +1,7 @@
 import json
 import bq_schema
 import time
+import datetime
 
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
@@ -24,7 +25,8 @@ COSTAGGREGATED = "costAggregated"
 CEINTERNALDATASET = "CE_INTERNAL"
 GCPINSTANCEINVENTORY = "gcpInstanceInventory"
 GCPDISKINVENTORY = "gcpDiskInventory"
-
+CONNECTORDATASYNCSTATUSTABLE = "connectorDataSyncStatus"
+GCPCONNECTORINFOTABLE = "gcpConnectorInfo"
 
 def print_(message, severity="INFO"):
     # Set account id in the beginning of your CF call
@@ -33,11 +35,12 @@ def print_(message, severity="INFO"):
     except:
         print(message)
 
-def create_dataset(client, datasetName):
+def create_dataset(client, datasetName, accountid=""):
     dataset_id = "{}.{}".format(client.project, datasetName)
     dataset = bigquery.Dataset(dataset_id)
     dataset.location = "US"
-    dataset.description = "Dataset for [ AccountId: %s ]" % (ACCOUNTID_LOG)
+    # Do not change this format for description
+    dataset.description = "Dataset for [ AccountId: %s ]" % (accountid)
 
     # Send the dataset to the API for creation, with an explicit timeout.
     # Raises google.api_core.exceptions.Conflict if the Dataset already
@@ -46,7 +49,14 @@ def create_dataset(client, datasetName):
         dataset = client.create_dataset(dataset, timeout=30)  # Make an API request.
         print_("Created dataset {}.{}".format(client.project, dataset.dataset_id))
     except Exception as e:
-        print_("Dataset {} already exists {}".format(dataset_id, e), "WARN")
+        print_("Dataset {} description {}, already exists {}".format(dataset_id, dataset.description, e), "WARN")
+        if not dataset.description:
+            # Do not change this format for description
+            dataset.description = "Dataset for [ AccountId: %s ]" % (accountid)
+            try:
+                client.update_dataset(dataset, ["description"])
+            except:
+                pass
 
 
 def if_tbl_exists(client, table_ref):
@@ -210,3 +220,18 @@ def run_batch_query(client, query, job_config, timeout=120):
     except Exception as e:
         print_(query, "ERROR")
         print_(e)
+
+def update_connector_data_sync_status(jsonData, PROJECTID, client):
+    query = """INSERT INTO `%s.%s.%s` (accountId, connectorId, lastSuccessfullExecutionAt, jobType, cloudProviderId) 
+                VALUES ('%s', '%s', '%s', '%s', '%s')
+            """ % ( PROJECTID, CEINTERNALDATASET, CONNECTORDATASYNCSTATUSTABLE,
+                    jsonData["accountId"], jsonData["connectorId"], datetime.datetime.utcnow(), 'cloudfunction', jsonData['cloudProvider']
+    )
+
+    try:
+        print_(query)
+        query_job = client.query(query)
+        query_job.result()  # wait for job to complete
+    except Exception as e:
+        print_("  Failed to update connector data sync status", "WARN")
+        raise e

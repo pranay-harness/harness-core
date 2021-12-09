@@ -24,25 +24,16 @@ import io.harness.cvng.beans.appd.AppDynamicsMetricDataValidationRequest;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.beans.appd.AppdynamicsMetricDataResponse;
 import io.harness.cvng.beans.appd.AppdynamicsMetricDataResponse.DataPoint;
-import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.client.RequestExecutor;
-import io.harness.cvng.client.VerificationManagerClient;
-import io.harness.cvng.core.beans.AppdynamicsImportStatus;
-import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
-import io.harness.cvng.core.entities.AppDynamicsCVConfig;
-import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.AppDynamicsService;
-import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.datacollection.entity.TimeSeriesRecord;
 import io.harness.ng.beans.PageResponse;
 import io.harness.serializer.JsonUtils;
 import io.harness.utils.PageUtils;
 
-import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
@@ -63,10 +54,6 @@ import org.apache.commons.collections4.CollectionUtils;
 @Slf4j
 @OwnedBy(CV)
 public class AppDynamicsServiceImpl implements AppDynamicsService {
-  @Inject private VerificationManagerClient verificationManagerClient;
-  @Inject private RequestExecutor requestExecutor;
-  @Inject private MetricPackService metricPackService;
-  @Inject private NextGenService nextGenService;
   @Inject private OnboardingService onboardingService;
   @Inject private Clock clock;
 
@@ -239,7 +226,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
                                         .startTime(startTime)
                                         .endTime(endTime)
                                         .metricPath(getCompletePath(baseFolder, tier, metricPath))
-                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_METRIC_DATA)
+                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_SINGLE_METRIC_DATA)
                                         .build();
 
     OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
@@ -278,34 +265,39 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   }
 
   @Override
+  public String getServiceInstanceMetricPath(ProjectParams projectParams, String connectorIdentifier, String appName,
+      String baseFolder, String tier, String metricPath, String tracingId) {
+    String[] metricPathFolders = metricPath.split("\\|");
+    StringBuilder metricPathSoFar = new StringBuilder(512);
+    int index = 0;
+
+    for (; index < metricPathFolders.length - 1; index++) {
+      if (containsIndividualNode(
+              projectParams, connectorIdentifier, appName, baseFolder, tier, metricPathSoFar.toString(), tracingId)) {
+        break;
+      }
+      metricPathSoFar.append('|').append(metricPathFolders[index]);
+    }
+    metricPathSoFar.append("|Individual Nodes|*");
+    for (; index < metricPathFolders.length; index++) {
+      { metricPathSoFar.append('|').append(metricPathFolders[index]); }
+    }
+    return metricPathSoFar.substring(1, metricPathSoFar.length());
+  }
+
+  @Override
   public void checkConnectivity(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String tracingId) {
     getApplications(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, 0, 1, null);
   }
 
-  @Override
-  public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
-      List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
-    Preconditions.checkState(
-        isNotEmpty(cvConfigsGroupedByMonitoringSource), "The cv configs belonging to a monitoring source is empty");
-    Set<String> applicationSet = cvConfigsGroupedByMonitoringSource.stream()
-                                     .map(config -> ((AppDynamicsCVConfig) config).getApplicationName())
-                                     .collect(Collectors.toSet());
-    Set<String> envIdentifiersList =
-        cvConfigsGroupedByMonitoringSource.stream().map(CVConfig::getEnvIdentifier).collect(Collectors.toSet());
-    CVConfig firstCVConfigForReference = cvConfigsGroupedByMonitoringSource.get(0);
-
-    List<AppDynamicsApplication> appDynamicsApplications = getApplications(firstCVConfigForReference.getAccountId(),
-        firstCVConfigForReference.getConnectorIdentifier(), firstCVConfigForReference.getOrgIdentifier(),
-        firstCVConfigForReference.getProjectIdentifier(), 0, Integer.MAX_VALUE, null)
-                                                               .getContent();
-
-    return AppdynamicsImportStatus.builder()
-        .numberOfApplications(isNotEmpty(applicationSet) ? applicationSet.size() : 0)
-        .numberOfEnvironments(isNotEmpty(envIdentifiersList) ? envIdentifiersList.size() : 0)
-        .totalNumberOfApplications(isNotEmpty(appDynamicsApplications) ? appDynamicsApplications.size() : 0)
-        .totalNumberOfEnvironments(totalNumberOfEnvironments)
-        .build();
+  private boolean containsIndividualNode(ProjectParams projectParams, String connectorIdentifier, String appName,
+      String baseFolder, String tier, String metricPath, String tracingId) {
+    List<AppDynamicsFileDefinition> appDynamicsFileDefinitions =
+        getMetricStructure(projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, tracingId);
+    return appDynamicsFileDefinitions.stream()
+        .map(AppDynamicsFileDefinition::getName)
+        .anyMatch(name -> name.equals("Individual Nodes"));
   }
 
   private List<AppDynamicsFileDefinition> getMetricStructure(

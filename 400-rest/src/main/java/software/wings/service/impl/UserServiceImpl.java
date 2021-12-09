@@ -26,8 +26,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.app.ManagerCacheRegistrar.PRIMARY_CACHE_PREFIX;
 import static software.wings.app.ManagerCacheRegistrar.USER_CACHE;
 import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anApplicationRole;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.security.JWT_CATEGORY.INVITE_SECRET;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
@@ -537,7 +537,7 @@ public class UserServiceImpl implements UserService {
                                .licenseUnits(50)
                                .build());
 
-    Account createdAccount = accountService.save(account, false);
+    Account createdAccount = accountService.save(account, false, false);
 
     // create user
     User user = User.Builder.anUser()
@@ -2447,8 +2447,11 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User createUser(User user, String accountId) {
+    boolean isExistingUser = user.getUuid() != null;
     user = wingsPersistence.saveAndGet(User.class, user);
-    evictUserFromCache(user.getUuid());
+    if (isExistingUser) {
+      evictUserFromCache(user.getUuid());
+    }
     eventPublishHelper.publishSetupRbacEvent(accountId, user.getUuid(), EntityType.USER);
     publishUserEvent(null, user);
     return user;

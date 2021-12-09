@@ -8,7 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.template.Template.TYPE_KEY;
 import static software.wings.beans.template.TemplateFolder.GALLERY_ID_KEY;
 import static software.wings.beans.template.TemplateFolder.NAME_KEY;
@@ -35,6 +35,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
+import io.harness.validation.SuppressValidation;
 import io.harness.validation.Update;
 
 import software.wings.beans.Base;
@@ -244,6 +245,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   }
 
   @Override
+  @SuppressValidation
   public void loadDefaultTemplateFolders() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     notNullCheck("Harness Template gallery was deleted", templateGallery, SRE);

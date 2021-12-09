@@ -18,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.NgAutoLogContext;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
@@ -142,15 +143,17 @@ public class ConnectorServiceImpl implements ConnectorService {
              new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
       connectorInfo.getConnectorConfig().validate();
+      final boolean executeOnDelegate = defaultConnectorService.checkConnectorExecutableOnDelegate(connectorInfo);
       boolean isHarnessManagedSecretManager =
           harnessManagedConnectorHelper.isHarnessManagedSecretManager(connectorInfo);
       boolean isDefaultBranchConnector = gitSyncSdkService.isDefaultBranch(accountIdentifier,
           connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getProjectIdentifier());
-      if (!isHarnessManagedSecretManager && isDefaultBranchConnector) {
+      if (!isHarnessManagedSecretManager && isDefaultBranchConnector && executeOnDelegate) {
         connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier,
             connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
       }
-      if (connectorHeartbeatTaskId != null || isHarnessManagedSecretManager || !isDefaultBranchConnector) {
+      if (connectorHeartbeatTaskId != null || isHarnessManagedSecretManager || !isDefaultBranchConnector
+          || !executeOnDelegate) {
         ConnectorResponseDTO connectorResponse;
         if (GitContextHelper.isUpdateToNewBranch()) {
           connectorResponse = getConnectorService(connectorInfo.getConnectorType())
@@ -260,6 +263,9 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   private void validateTheUpdateRequestIsValid(ConnectorInfoDTO connectorInfo, String accountIdentifier) {
+    if (GitContextHelper.isFullSyncFlow()) {
+      return;
+    }
     final Optional<ConnectorResponseDTO> connectorDTO = findExistingConnector(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
     if (!connectorDTO.isPresent()) {
@@ -644,10 +650,13 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public boolean markEntityInvalid(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml) {
-    return defaultConnectorService.markEntityInvalid(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalidYaml);
+  public boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String invalidYaml) {
+    return defaultConnectorService.markEntityInvalid(accountIdentifier, entityReference, invalidYaml);
+  }
+
+  @Override
+  public boolean checkConnectorExecutableOnDelegate(ConnectorInfoDTO connectorInfo) {
+    return defaultConnectorService.checkConnectorExecutableOnDelegate(connectorInfo);
   }
 
   private ConnectorValidationResult createValidationResultWithGenericError(Exception ex) {

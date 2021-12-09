@@ -123,7 +123,9 @@ public class WorkflowTimescaleChangeHandler implements ChangeHandler {
     columnValueMapping.put("last_updated_at", workflow.getLastUpdatedAt());
 
     // created_by
-    columnValueMapping.put("created_by", workflow.getCreatedBy().getName());
+    if (workflow.getCreatedBy() != null) {
+      columnValueMapping.put("created_by", workflow.getCreatedBy().getName());
+    }
 
     // last_updated_by
     if (workflow.getLastUpdatedBy() != null) {

@@ -24,6 +24,7 @@ message WriteTestsRequest {
   repeated string tests = 2;
   string repo = 3;
   string sha = 4;
+  string commit_link = 5;
 }
 
 message WriteTestsResponse {}

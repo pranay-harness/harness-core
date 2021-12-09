@@ -111,6 +111,7 @@ public class ElkDataCollector implements LogDataCollector<ElkDataCollectionInfoV
     JSONObject responseObject = new JSONObject(JsonUtils.asJson(searchResponse));
     JSONObject hits = responseObject.getJSONObject("hits");
     if (hits == null) {
+      log.info("hits object is null");
       return logElements;
     }
 
@@ -120,18 +121,21 @@ public class ElkDataCollector implements LogDataCollector<ElkDataCollectionInfoV
     for (int i = 0; i < logHits.length(); i++) {
       JSONObject source = logHits.optJSONObject(i).getJSONObject("_source");
       if (source == null) {
+        log.info("_source object is null under hits");
         continue;
       }
 
       final String host = parseAndGetValue(source, dataCollectionInfo.getHostnameField());
-
+      log.info("host found:" + host);
       // if this elkResponse doesn't belong to this host, ignore it.
       // We ignore case because we don't know if elasticsearch might just lowercase everything in the index.
       if (hostname.isPresent() && !hostname.get().trim().equalsIgnoreCase(host.trim())) {
+        log.info("skipping record as the hostname does not match " + hostname + "with host as" + host.trim());
         continue;
       }
 
       final String logMessage = parseAndGetValue(source, dataCollectionInfo.getMessageField());
+      log.info("log message: " + logMessage);
 
       final String timeStamp = parseAndGetValue(source, dataCollectionInfo.getTimestampField());
       long timeStampValue;
@@ -157,7 +161,7 @@ public class ElkDataCollector implements LogDataCollector<ElkDataCollectionInfoV
       elkLogElement.setLogCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(timeStampValue));
       logElements.add(elkLogElement);
     }
-
+    log.info("size of log elements: " + logElements.size());
     return logElements;
   }
 

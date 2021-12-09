@@ -11,7 +11,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.security.encryption.AccessType.APP_ROLE;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.settings.SettingVariableTypes.VAULT;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;

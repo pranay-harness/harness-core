@@ -17,6 +17,8 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -27,6 +29,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.Singular;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -62,6 +65,12 @@ public class ServiceLevelObjective
   private long lastUpdatedAt;
   private long createdAt;
 
+  public int getTotalErrorBudgetMinutes(LocalDate currentDate) {
+    int currentWindowMinutes = getCurrentTimeRange(currentDate).totalMinutes();
+    Double errorBudgetPercentage = sloTarget.getSloTargetPercentage();
+    return (int) ((100 - errorBudgetPercentage) * currentWindowMinutes);
+  }
+
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -73,5 +82,29 @@ public class ServiceLevelObjective
                  .field(ServiceLevelObjectiveKeys.identifier)
                  .build())
         .build();
+  }
+
+  public TimePeriod getCurrentTimeRange(LocalDate currentDate) {
+    return TimePeriod.builder()
+        .startDate(currentDate)
+        .endDate(currentDate.minus(Period.ofDays(7)))
+        .build(); // TODO: write this logic.
+  }
+
+  @Value
+  @Builder
+  public static class TimePeriod {
+    LocalDate startDate;
+    LocalDate endDate;
+
+    public Period getRemainingDays(LocalDate currentDate) {
+      return Period.between(currentDate, endDate);
+    }
+    public Period getTotalDays() {
+      return Period.between(startDate, endDate);
+    }
+    public int totalMinutes() {
+      return Period.between(startDate, endDate).getDays() * 24 * 60;
+    }
   }
 }

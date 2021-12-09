@@ -6,6 +6,7 @@ import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.variables.ChildrenVariableCreator;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationContext;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -32,8 +33,10 @@ public class StepGroupVariableCreator extends ChildrenVariableCreator {
     for (YamlField stepYamlField : stepYamlFields) {
       Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
       stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
-      responseMap.put(
-          stepYamlField.getNode().getUuid(), VariableCreationResponse.builder().dependencies(stepYamlFieldMap).build());
+      responseMap.put(stepYamlField.getNode().getUuid(),
+          VariableCreationResponse.builder()
+              .dependencies(DependenciesUtils.toDependenciesProto(stepYamlFieldMap))
+              .build());
     }
 
     YamlField rollbackStepsField = config.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
@@ -41,7 +44,9 @@ public class StepGroupVariableCreator extends ChildrenVariableCreator {
       Map<String, YamlField> rollbackDependencyMap = new HashMap<>();
       rollbackDependencyMap.put(rollbackStepsField.getNode().getUuid(), rollbackStepsField);
       responseMap.put(rollbackStepsField.getNode().getUuid(),
-          VariableCreationResponse.builder().dependencies(rollbackDependencyMap).build());
+          VariableCreationResponse.builder()
+              .dependencies(DependenciesUtils.toDependenciesProto(rollbackDependencyMap))
+              .build());
     }
     return responseMap;
   }

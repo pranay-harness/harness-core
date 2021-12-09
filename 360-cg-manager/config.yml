@@ -32,6 +32,8 @@ commonPoolConfig:
   idleTime: ${COMMON_POOL_IDLE_TIME:-500}
   timeUnit: ${COMMON_POOL_IDLE_TIME_TIME_UNIT:-MILLISECONDS}
 
+disableResourceValidation: ${DISABLE_RESOURCE_VALIDATION:-false}
+
 auditConfig:
   storeRequestPayload: false
   storeResponsePayload: false
@@ -103,7 +105,7 @@ marketoConfig:
 segmentConfig:
   enabled: false #segmentConfigEnable
   url: "segment_url_place_holder"
-  apiKey: "segment_api_key"
+  apiKey: ""
 
 segmentConfiguration:
   enabled: false
@@ -121,7 +123,7 @@ salesforceConfig:
 
 datadogConfig:
   enabled: false #datadogConfigEnable
-  apiKey: "datadog_api_key"
+  apiKey: ""
 
 distributedLockImplementation: MONGO
 
@@ -347,6 +349,14 @@ portal:
   optionalDelegateTaskRejectAtLimit: 10000
   importantDelegateTaskRejectAtLimit: 50000
   criticalDelegateTaskRejectAtLimit: 100000
+
+totp:
+  secOpsEmail: secops.fake.email@mailnator.com
+  incorrectAttemptsUntilSecOpsNotified: 1000
+  limit:
+    count: 10
+    duration: 5
+    durationUnit: MINUTES
 
 cacheConfig:
   cacheBackend: HAZELCAST
@@ -674,6 +684,10 @@ iteratorsConfig:
     threadPoolSize: ${PERPETUAL_TASK_ASSIGNMENT_ITERATOR_THREAD_COUNT:-5}
 
 disableDelegateMgmtInManager: false
+
+secretsConfiguration:
+  secretResolutionEnabled: false
+  gcpSecretManagerProject: harness-playground
 
 ldapSyncJobConfig:
   poolSize: 3

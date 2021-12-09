@@ -40,7 +40,7 @@ import static software.wings.api.DeploymentType.AZURE_WEBAPP;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS;
 import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS_REVERSE;
 import static software.wings.beans.EntityType.ARTIFACT;
@@ -87,8 +87,6 @@ import static software.wings.sm.StepType.AZURE_WEBAPP_SLOT_SWAP;
 import static software.wings.sm.StepType.K8S_TRAFFIC_SPLIT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK;
-import static software.wings.sm.StepType.TERRAGRUNT_DESTROY;
-import static software.wings.sm.StepType.TERRAGRUNT_PROVISION;
 import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
 
 import static java.lang.String.format;
@@ -220,6 +218,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
+import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.impl.workflow.creation.WorkflowCreator;
@@ -1443,12 +1442,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public boolean deleteWorkflow(String appId, String workflowId) {
-    String accountId = appService.getAccountIdByAppId(appId);
-    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
-        new Action(accountId, ActionType.CREATE_WORKFLOW));
-
-    return LimitEnforcementUtils.withCounterDecrement(
-        checker, () -> { return deleteWorkflow(appId, workflowId, false, false); });
+    return deleteWorkflow(appId, workflowId, false, false);
   }
 
   private boolean deleteWorkflow(String appId, String workflowId, boolean forceDelete, boolean syncFromGit) {
@@ -1457,14 +1451,25 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return true;
     }
 
-    if (!forceDelete) {
-      ensureWorkflowSafeToDelete(workflow);
-    }
+    String accountId =
+        workflow.getAccountId() == null ? appService.getAccountIdByAppId(appId) : workflow.getAccountId();
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_WORKFLOW));
 
-    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
-    yamlPushService.pushYamlChangeSet(accountId, workflow, null, Type.DELETE, syncFromGit, false);
+    return LimitEnforcementUtils.withCounterDecrement(checker, () -> {
+      if (!forceDelete) {
+        ensureWorkflowSafeToDelete(workflow);
+      }
 
-    return pruneWorkflow(appId, workflowId);
+      yamlPushService.pushYamlChangeSet(accountId, workflow, null, Type.DELETE, syncFromGit, false);
+
+      if (!pruneWorkflow(appId, workflowId)) {
+        throw new InvalidRequestException(
+            String.format("Workflow %s does not exist or might already be deleted.", workflow.getName()));
+      }
+
+      return true;
+    });
   }
 
   @Override
@@ -2673,8 +2678,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())
         .filter(WorkflowExecutionKeys.appId, workflow.getAppId())
         .filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())
-        .field(WorkflowExecutionKeys.serviceIds)
-        .contains(serviceId)
+        .filter(WorkflowExecutionKeys.serviceIds, serviceId)
         .filter(WorkflowExecutionKeys.status, SUCCESS)
         .order(Sort.descending(WorkflowExecutionKeys.createdAt))
         .get();
@@ -2743,7 +2747,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (artifactStream != null) {
           Artifact artifact = artifactService.fetchLastCollectedApprovedArtifactSorted(artifactStream);
           if (artifact != null) {
-            artifactStreamSummaryBuilder.defaultArtifact(ArtifactSummary.prepareSummaryFromArtifact(artifact));
+            artifactStreamSummaryBuilder.defaultArtifact(
+                ArtifactStreamServiceImpl.prepareSummaryFromArtifact(artifact));
           }
         }
         artifactVariable.setArtifactStreamSummaries(singletonList(artifactStreamSummaryBuilder.build()));
@@ -2754,7 +2759,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           ? getArtifactVariableDefaultArtifact(artifactVariable, workflowExecution)
           : null;
       ArtifactSummary artifactSummary =
-          (artifact != null) ? ArtifactSummary.prepareSummaryFromArtifact(artifact) : null;
+          (artifact != null) ? ArtifactStreamServiceImpl.prepareSummaryFromArtifact(artifact) : null;
       artifactVariable.setArtifactStreamSummaries(artifactVariable.getAllowedList()
                                                       .stream()
                                                       .map(artifactStreamId -> {
@@ -4284,9 +4289,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                         .build();
         if (!step.getType().equals(
                 StateType.CVNG.name())) { // TODO: Hiding it for now. We can remove it after few months.
-          if (shouldHideStep(step, accountId)) {
-            continue;
-          }
           steps.put(step.getType(), stepMeta);
         }
       }
@@ -4303,11 +4305,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     addServiceCommandsToWorkflowCategories(steps, fetchServiceCommandNames(workflowPhase, appId), categories);
 
     return WorkflowCategorySteps.builder().steps(steps).categories(categories).build();
-  }
-
-  private boolean shouldHideStep(StepType stepType, String accountId) {
-    List<StepType> terragruntSteps = asList(TERRAGRUNT_DESTROY, StepType.TERRAGRUNT_ROLLBACK, TERRAGRUNT_PROVISION);
-    return terragruntSteps.contains(stepType) && !featureFlagService.isEnabled(FeatureName.TERRAGRUNT, accountId);
   }
 
   private List<StepType> filterSelectNodesStep(List<StepType> stepTypesList, StepType filteredSelectNode) {

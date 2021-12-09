@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 @OwnedBy(CV)
-public interface AppDynamicsService extends MonitoringSourceImportStatusCreator, DataSourceConnectivityChecker {
+public interface AppDynamicsService extends DataSourceConnectivityChecker {
   Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, String appName, String tierName, String requestGuid,
       List<MetricPackDTO> metricPacks);
@@ -34,5 +34,8 @@ public interface AppDynamicsService extends MonitoringSourceImportStatusCreator,
       String appName, String baseFolder, String tier, String metricPath, String tracingId);
 
   AppdynamicsMetricDataResponse getMetricData(ProjectParams projectParams, String connectorIdentifier, String appName,
+      String baseFolder, String tier, String metricPath, String tracingId);
+
+  String getServiceInstanceMetricPath(ProjectParams projectParams, String connectorIdentifier, String appName,
       String baseFolder, String tier, String metricPath, String tracingId);
 }

@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -62,6 +63,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 
@@ -100,17 +102,19 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
       if (timeSeriesRecord.getHost() != null) {
         query = query.filter(TimeSeriesRecordKeys.host, timeSeriesRecord.getHost());
       }
-      hPersistence.getDatastore(TimeSeriesRecord.class)
-          .update(query,
-              hPersistence.createUpdateOperations(TimeSeriesRecord.class)
-                  .setOnInsert(TimeSeriesRecordKeys.uuid, generateUuid())
-                  .setOnInsert(TimeSeriesRecordKeys.createdAt, Instant.now().toEpochMilli())
-                  .setOnInsert(TimeSeriesRecordKeys.metricType, metricType)
-                  .setOnInsert(TimeSeriesRecordKeys.validUntil, TimeSeriesRecord.builder().build().getValidUntil())
-                  .set(TimeSeriesRecordKeys.accountId, timeSeriesRecord.getAccountId())
-                  .addToSet(TimeSeriesRecordKeys.timeSeriesGroupValues,
-                      Lists.newArrayList(timeSeriesRecord.getTimeSeriesGroupValues())),
-              options);
+
+      UpdateOperations<TimeSeriesRecord> updateOperations =
+          hPersistence.createUpdateOperations(TimeSeriesRecord.class)
+              .setOnInsert(TimeSeriesRecordKeys.uuid, generateUuid())
+              .setOnInsert(TimeSeriesRecordKeys.createdAt, Instant.now().toEpochMilli())
+              .setOnInsert(TimeSeriesRecordKeys.validUntil, TimeSeriesRecord.builder().build().getValidUntil())
+              .set(TimeSeriesRecordKeys.accountId, timeSeriesRecord.getAccountId())
+              .addToSet(TimeSeriesRecordKeys.timeSeriesGroupValues,
+                  Lists.newArrayList(timeSeriesRecord.getTimeSeriesGroupValues()));
+      if (Objects.nonNull(metricType)) {
+        updateOperations.setOnInsert(TimeSeriesRecordKeys.metricType, metricType);
+      }
+      hPersistence.getDatastore(TimeSeriesRecord.class).update(query, updateOperations, options);
     });
 
     saveHosts(dataRecords);

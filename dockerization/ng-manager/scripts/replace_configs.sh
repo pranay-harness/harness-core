@@ -119,6 +119,10 @@ if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.ciManagerSecret "$NEXT_GEN_MANAGER_SECRET"
 fi
 
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.ceNextGenServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi
+
 if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
@@ -192,6 +196,10 @@ fi
 
 if [[ "" != "$CE_NG_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE ceNextGenClientConfig.baseUrl "$CE_NG_CLIENT_BASEURL"
+fi
+
+if [[ "" != "$LW_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE lightwingClientConfig.baseUrl "$LW_CLIENT_BASEURL"
 fi
 
 if [[ "" != "$AUDIT_CLIENT_BASEURL" ]]; then
@@ -351,7 +359,9 @@ replace_key_value signupNotificationConfiguration.projectId "$SIGNUP_NOTIFICATIO
 replace_key_value signupNotificationConfiguration.bucketName "$SIGNUP_NOTIFICATION_GCS_BUCKET_NAME"
 
 replace_key_value segmentConfiguration.enabled "$SEGMENT_ENABLED"
+replace_key_value segmentConfiguration.url "$SEGMENT_URL"
 replace_key_value segmentConfiguration.apiKey "$SEGMENT_APIKEY"
+replace_key_value segmentConfiguration.certValidationRequired "$SEGMENT_VERIFY_CERT"
 
 replace_key_value accountConfig.deploymentClusterName "$DEPLOYMENT_CLUSTER_NAME"
 
@@ -360,6 +370,9 @@ replace_key_value gitGrpcClientConfigs.pms.authority "$PMS_GITSYNC_AUTHORITY"
 
 replace_key_value gitGrpcClientConfigs.templateservice.target "$TEMPLATE_GITSYNC_TARGET"
 replace_key_value gitGrpcClientConfigs.templateservice.authority "$TEMPLATE_GITSYNC_AUTHORITY"
+
+replace_key_value gitGrpcClientConfigs.cf.target "$CF_GITSYNC_TARGET"
+replace_key_value gitGrpcClientConfigs.cf.authority "$CF_GITSYNC_AUTHORITY"
 
 replace_key_value cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
 replace_key_value cfClientConfig.configUrl "$CF_CLIENT_CONFIG_URL"
@@ -376,4 +389,3 @@ replace_key_value ciManagerClientConfig.baseUrl "$CI_MANAGER_SERVICE_CLIENT_BASE
 replace_key_value scopeAccessCheckEnabled "${SCOPE_ACCESS_CHECK:-true}"
 
 replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"
-replace_key_value licenseConfig.deployVariant "$LICENSE_DEPLOY_VARIANT"

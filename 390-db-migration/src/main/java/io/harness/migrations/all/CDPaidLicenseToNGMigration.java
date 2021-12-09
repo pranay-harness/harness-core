@@ -4,7 +4,7 @@ import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import io.harness.ModuleType;
 import io.harness.licensing.Edition;

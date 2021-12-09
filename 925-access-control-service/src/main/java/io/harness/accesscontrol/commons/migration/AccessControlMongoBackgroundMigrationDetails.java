@@ -2,7 +2,9 @@ package io.harness.accesscontrol.commons.migration;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.accesscontrol.resources.resourcegroups.migration.MultipleManagedResourceGroupMigration;
 import io.harness.accesscontrol.roleassignments.migration.PrivilegedRoleAssignmentMigration;
+import io.harness.accesscontrol.roleassignments.migration.RoleAssignmentResourceGroupMigration;
 import io.harness.accesscontrol.roleassignments.migration.RoleAssignmentScopeAdditionMigration;
 import io.harness.accesscontrol.scopes.harness.migration.ScopeMigration;
 import io.harness.annotations.dev.OwnedBy;
@@ -33,6 +35,8 @@ public class AccessControlMongoBackgroundMigrationDetails implements MigrationDe
         .add(Pair.of(2, ScopeMigration.class))
         .add(Pair.of(3, RoleAssignmentScopeAdditionMigration.class))
         .add(Pair.of(5, PrivilegedRoleAssignmentMigration.class))
+        .add(Pair.of(6, MultipleManagedResourceGroupMigration.class))
+        .add(Pair.of(7, RoleAssignmentResourceGroupMigration.class))
         .build();
   }
 }

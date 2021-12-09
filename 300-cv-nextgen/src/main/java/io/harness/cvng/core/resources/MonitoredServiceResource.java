@@ -13,6 +13,7 @@ import io.harness.cvng.core.beans.monitoredService.CountServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
+import io.harness.cvng.core.beans.monitoredService.MetricDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
@@ -39,6 +40,7 @@ import io.swagger.annotations.ApiParam;
 import java.time.Instant;
 import java.util.List;
 import javax.validation.Valid;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -57,8 +59,6 @@ import retrofit2.http.Body;
 @NextGenManagerAuth
 @OwnedBy(HarnessTeam.CV)
 public class MonitoredServiceResource {
-  private static final String YAML_TEMPLATE_KEY = "yaml";
-
   @Inject MonitoredServiceService monitoredServiceService;
 
   @POST
@@ -442,5 +442,28 @@ public class MonitoredServiceResource {
                                       .projectIdentifier(projectIdentifier)
                                       .build();
     return monitoredServiceService.getCountOfServices(projectParams, environmentIdentifier, filter);
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/{monitoredServiceIdentifier}/health-source/{healthSourceIdentifier}/slo-metrics")
+  @ApiOperation(value = "get slo metrics in a healthSource ", nickname = "getSloMetrcs")
+  public RestResponse<List<MetricDTO>> getSloMetrics(@BeanParam ProjectParams projectParams,
+      @PathParam("monitoredServiceIdentifier") String monitoredServiceIdentifier,
+      @PathParam("healthSourceIdentifier") String healthSourceIdentifier) {
+    return new RestResponse<>(
+        monitoredServiceService.getSloMetrics(projectParams, monitoredServiceIdentifier, healthSourceIdentifier));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/service-details")
+  @ApiOperation(value = "get details of a monitored service present in the Service Dependency Graph",
+      nickname = "getMonitoredServiceDetails")
+  public MonitoredServiceListItemDTO
+  getMonitoredServiceDetails(@BeanParam ServiceEnvironmentParams serviceEnvironmentParams) {
+    return monitoredServiceService.getMonitoredServiceDetails(serviceEnvironmentParams);
   }
 }

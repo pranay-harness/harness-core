@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -40,12 +40,14 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.HashSet;
 import java.util.UUID;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by rsingh on 11/6/17.
  */
 @OwnedBy(PL)
+@Setter
 @Slf4j
 @TargetModule(HarnessModule._890_SM_CORE)
 public abstract class AbstractSecretServiceImpl {
@@ -74,7 +76,7 @@ public abstract class AbstractSecretServiceImpl {
         .build();
   }
 
-  EncryptedData encryptUsingBaseAlgo(String accountId, char[] value) {
+  public EncryptedData encryptUsingBaseAlgo(String accountId, char[] value) {
     String kmsId = accountId;
     if (mainConfiguration.isUseGlobalKMSAsBaseAlgo()) {
       SecretManagerConfig globalSecretManager = secretManagerConfigService.getGlobalSecretManager(accountId);
@@ -108,13 +110,13 @@ public abstract class AbstractSecretServiceImpl {
     return metadata;
   }
 
-  char[] decryptUsingBaseAlgo(EncryptedData encryptedData) {
+  public char[] decryptUsingAlgoOfSecret(EncryptedData encryptedData) {
     return secretService.fetchSecretValue(encryptedData);
   }
 
   char[] decryptKey(char[] key) {
     final EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, new String(key));
-    return decryptUsingBaseAlgo(encryptedData);
+    return decryptUsingAlgoOfSecret(encryptedData);
   }
 
   protected void checkIfSecretsManagerConfigCanBeCreatedOrUpdated(String accountId) {

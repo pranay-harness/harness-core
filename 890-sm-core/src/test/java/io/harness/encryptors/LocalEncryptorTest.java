@@ -9,13 +9,17 @@ import io.harness.SMCoreTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.encryptors.clients.LocalEncryptor;
+import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedMech;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
+
+import software.wings.beans.LocalEncryptionConfig;
 
 import com.google.inject.Inject;
 import org.junit.Test;
@@ -27,6 +31,7 @@ import org.mockito.Mock;
 public class LocalEncryptorTest extends SMCoreTestBase {
   @Mock private FeatureFlagHelperService featureFlagHelperService;
   @InjectMocks @Inject private LocalEncryptor localEncryptor;
+  @InjectMocks @Inject private LocalEncryptorHelper localEncryptorHelper;
 
   private static final String ACCOUNTID = "accountId";
 
@@ -35,9 +40,11 @@ public class LocalEncryptorTest extends SMCoreTestBase {
   @Category(UnitTests.class)
   public void testEncryptDecrypt() {
     String valueToEncrypt = "value";
-    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(ACCOUNTID, valueToEncrypt, null);
+    SecretManagerConfig secretManagerConfig = getLocalEncryptionConfig();
+    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(ACCOUNTID, valueToEncrypt, secretManagerConfig);
 
-    String decryptedValue = new String(localEncryptor.fetchSecretValue(ACCOUNTID, encryptedRecord, null));
+    String decryptedValue =
+        new String(localEncryptor.fetchSecretValue(ACCOUNTID, encryptedRecord, secretManagerConfig));
     assertThat(decryptedValue).isEqualTo(valueToEncrypt);
   }
 
@@ -47,8 +54,9 @@ public class LocalEncryptorTest extends SMCoreTestBase {
   public void testEncryptDecryptInMultiCryptoMode() {
     when(featureFlagHelperService.isEnabled(ACCOUNTID, FeatureName.LOCAL_MULTI_CRYPTO_MODE)).thenReturn(true);
 
+    SecretManagerConfig secretManagerConfig = getLocalEncryptionConfig();
     String valueToEncrypt = "value";
-    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(ACCOUNTID, valueToEncrypt, null);
+    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(ACCOUNTID, valueToEncrypt, secretManagerConfig);
 
     assertThat(encryptedRecord.getEncryptedMech()).isEqualTo(EncryptedMech.MULTI_CRYPTO);
     assertThat(encryptedRecord.getEncryptedValue()).isNotNull();
@@ -58,7 +66,8 @@ public class LocalEncryptorTest extends SMCoreTestBase {
     assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.AWS_ENCRYPTED_SECRET))
         .isNotNull();
 
-    String decryptedValue = new String(localEncryptor.fetchSecretValue(ACCOUNTID, encryptedRecord, null));
+    String decryptedValue =
+        new String(localEncryptor.fetchSecretValue(ACCOUNTID, encryptedRecord, secretManagerConfig));
     assertThat(decryptedValue).isEqualTo(valueToEncrypt);
   }
 
@@ -68,8 +77,9 @@ public class LocalEncryptorTest extends SMCoreTestBase {
   public void testEncryptDecryptAwsSdkMode() {
     when(featureFlagHelperService.isEnabled(ACCOUNTID, FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)).thenReturn(true);
 
+    SecretManagerConfig secretManagerConfig = getLocalEncryptionConfig();
     String valueToEncrypt = "value";
-    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(ACCOUNTID, valueToEncrypt, null);
+    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(ACCOUNTID, valueToEncrypt, secretManagerConfig);
 
     assertThat(encryptedRecord.getEncryptedMech()).isEqualTo(EncryptedMech.AWS_ENCRYPTION_SDK_CRYPTO);
     assertThat(encryptedRecord.getEncryptionKey()).isNotNull();
@@ -77,7 +87,8 @@ public class LocalEncryptorTest extends SMCoreTestBase {
     assertThat(encryptedRecord.getEncryptedValue()).isNull();
     assertThat(encryptedRecord.getEncryptedValueBytes()).isNotNull();
 
-    String decryptedValue = new String(localEncryptor.fetchSecretValue(ACCOUNTID, encryptedRecord, null));
+    String decryptedValue =
+        new String(localEncryptor.fetchSecretValue(ACCOUNTID, encryptedRecord, secretManagerConfig));
     assertThat(decryptedValue).isEqualTo(valueToEncrypt);
   }
 
@@ -87,11 +98,19 @@ public class LocalEncryptorTest extends SMCoreTestBase {
   public void testEncryptMultiCryptoModeThenDecryptWithoutIt() {
     when(featureFlagHelperService.isEnabled(ACCOUNTID, FeatureName.LOCAL_MULTI_CRYPTO_MODE)).thenReturn(true);
 
+    SecretManagerConfig secretManagerConfig = getLocalEncryptionConfig();
     String valueToEncrypt = "value";
-    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(ACCOUNTID, valueToEncrypt, null);
+    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(ACCOUNTID, valueToEncrypt, secretManagerConfig);
 
     when(featureFlagHelperService.isEnabled(ACCOUNTID, FeatureName.LOCAL_MULTI_CRYPTO_MODE)).thenReturn(false);
-    String decryptedValue = new String(localEncryptor.fetchSecretValue(ACCOUNTID, encryptedRecord, null));
+    String decryptedValue =
+        new String(localEncryptor.fetchSecretValue(ACCOUNTID, encryptedRecord, secretManagerConfig));
     assertThat(decryptedValue).isEqualTo(valueToEncrypt);
+  }
+
+  private SecretManagerConfig getLocalEncryptionConfig() {
+    SecretManagerConfig secretManagerConfig = LocalEncryptionConfig.builder().accountId(ACCOUNTID).build();
+    localEncryptorHelper.populateConfigForEncryption(secretManagerConfig);
+    return secretManagerConfig;
   }
 }

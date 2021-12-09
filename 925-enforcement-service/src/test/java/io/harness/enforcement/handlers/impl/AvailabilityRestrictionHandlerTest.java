@@ -66,7 +66,7 @@ public class AvailabilityRestrictionHandlerTest extends CategoryTest {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testGetMetadataDTO() {
-    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction);
+    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction, null, null);
 
     AvailabilityRestrictionMetadataDTO dto = (AvailabilityRestrictionMetadataDTO) metadataDTO;
     assertThat(dto.getRestrictionType()).isEqualTo(RestrictionType.AVAILABILITY);
