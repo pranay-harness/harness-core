@@ -15,8 +15,10 @@ import io.harness.beans.LocalEncryptionMigrationInfo;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.encryptors.clients.LocalEncryptor;
+import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.repositories.LocalEncryptionMigrationInfoRepository;
 import io.harness.rule.Owner;
 import io.harness.secrets.SecretsDaoImpl;
@@ -25,6 +27,8 @@ import io.harness.security.encryption.EncryptedMech;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
+
+import software.wings.beans.LocalEncryptionConfig;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -42,6 +46,7 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
   @InjectMocks @Inject LocalMultiCryptoModeEncryptionMigrationHandler localMultiCryptoModeEncryptionMigrationHandler;
   @Inject LocalEncryptionMigrationInfoRepository localEncryptionMigrationInfoRepository;
   @Inject SecretsDaoImpl secretsDao;
+  @InjectMocks @Inject LocalEncryptorHelper localEncryptorHelper;
 
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
 
@@ -141,15 +146,16 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
   private void createEncryptedRecords(int numOfRecords) {
     for (int i = 0; i < numOfRecords; i++) {
       String value = RandomStringUtils.randomAlphabetic(10);
-      secretsDao.saveSecret(mapEncryptedRecordToEncryptedData(localEncryptor.encryptSecret(ACCOUNT_ID, value, null)));
+      secretsDao.saveSecret(mapEncryptedRecordToEncryptedData(
+          localEncryptor.encryptSecret(ACCOUNT_ID, value, getLocalEncryptionConfig())));
     }
   }
 
   private void createEncryptedRecordsWithCreatedAtBeforeGivenTimestamp(int numOfRecords, long thresholdCreatedAt) {
     for (int i = 0; i < numOfRecords; i++) {
       String value = RandomStringUtils.randomAlphabetic(10);
-      EncryptedData encryptedData =
-          mapEncryptedRecordToEncryptedData(localEncryptor.encryptSecret(ACCOUNT_ID, value, null));
+      EncryptedData encryptedData = mapEncryptedRecordToEncryptedData(
+          localEncryptor.encryptSecret(ACCOUNT_ID, value, getLocalEncryptionConfig()));
       encryptedData.setCreatedAt(thresholdCreatedAt - i - 1);
       secretsDao.saveSecret(encryptedData);
     }
@@ -205,5 +211,11 @@ public class LocalMultiCryptoModeEncryptionMigrationTest extends SMCoreTestBase 
     return (int) encryptedDataList.stream()
         .filter(encryptedData -> encryptedData.getEncryptedMech() != EncryptedMech.MULTI_CRYPTO)
         .count();
+  }
+
+  private SecretManagerConfig getLocalEncryptionConfig() {
+    SecretManagerConfig secretManagerConfig = LocalEncryptionConfig.builder().accountId(ACCOUNT_ID).build();
+    localEncryptorHelper.populateConfigForEncryption(secretManagerConfig);
+    return secretManagerConfig;
   }
 }

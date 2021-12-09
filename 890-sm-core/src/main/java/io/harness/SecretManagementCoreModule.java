@@ -4,6 +4,7 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.beans.MigrateSecretTask;
 import io.harness.config.PublisherConfiguration;
+import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
@@ -41,6 +42,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class SecretManagementCoreModule extends AbstractModule {
   private static SecretManagementCoreModule instance;

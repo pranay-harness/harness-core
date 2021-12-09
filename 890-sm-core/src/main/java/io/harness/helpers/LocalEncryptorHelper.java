@@ -35,6 +35,11 @@ public class LocalEncryptorHelper {
     populateFeatureFlagStatus(secretManagerConfig);
     String accountId = secretManagerConfig.getAccountId();
     String secretKeyUuid = null;
+
+    if (encryptedRecord.getEncryptedMech() == null) {
+      return;
+    }
+
     if (featureFlagHelperService.isEnabled(accountId, FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)) {
       secretKeyUuid = encryptedRecord.getEncryptionKey();
     } else if (featureFlagHelperService.isEnabled(accountId, FeatureName.LOCAL_MULTI_CRYPTO_MODE)) {

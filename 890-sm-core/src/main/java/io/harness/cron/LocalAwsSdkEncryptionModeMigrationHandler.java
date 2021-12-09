@@ -47,8 +47,7 @@ public class LocalAwsSdkEncryptionModeMigrationHandler extends LocalEncryptionMi
       log.info(getFeatureName().name() + ": Processing encrypted record : {}", encryptedData);
       UpdateOperations<EncryptedData> updateOperations = secretsDao.getUpdateOperations();
       if (encryptedData.getEncryptedMech() == null) {
-        EncryptedRecord migratedRecord = localEncryptor.encryptSecret(
-            accountId, new String(localEncryptor.fetchSecretValue(accountId, encryptedData, null)), null);
+        EncryptedRecord migratedRecord = encryptRecord(accountId, decryptRecord(accountId, encryptedData));
 
         updateOperations.set(EncryptedDataKeys.encryptedMech, migratedRecord.getEncryptedMech())
             .set(EncryptedDataKeys.encryptionKey, migratedRecord.getEncryptionKey())

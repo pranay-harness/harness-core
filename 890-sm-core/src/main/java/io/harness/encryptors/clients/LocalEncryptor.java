@@ -55,14 +55,15 @@ public class LocalEncryptor implements KmsEncryptor {
           .encryptionKey(accountId)
           .encryptedValue(localJavaEncryptedSecret)
           .encryptedMech(EncryptedMech.MULTI_CRYPTO)
-          .additionalMetadata(AdditionalMetadata.builder()
-                                  .values(new HashMap<String, Object>() {
-                                    {
-                                      put(AdditionalMetadata.SECRET_KEY_UUID_KEY, secretKey.getUuid());
-                                      put(AdditionalMetadata.AWS_ENCRYPTED_SECRET, awsEncryptedSecret);
-                                    }
-                                  })
-                                  .build())
+          .additionalMetadata(
+              AdditionalMetadata.builder()
+                  .values(new HashMap<String, Object>() {
+                    {
+                      put(AdditionalMetadata.SECRET_KEY_UUID_KEY, encryptionConfig.getSecretKeySpec().getUuid());
+                      put(AdditionalMetadata.AWS_ENCRYPTED_SECRET, awsEncryptedSecret);
+                    }
+                  })
+                  .build())
           .build();
     }
     return EncryptedRecordData.builder().encryptionKey(accountId).encryptedValue(localJavaEncryptedSecret).build();
