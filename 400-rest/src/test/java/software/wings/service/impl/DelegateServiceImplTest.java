@@ -47,6 +47,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
@@ -59,6 +60,8 @@ import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
+import io.harness.delegate.beans.DelegateTokenDetails;
+import io.harness.delegate.beans.DelegateTokenStatus;
 import io.harness.delegate.beans.DelegateType;
 import io.harness.delegate.beans.K8sConfigDetails;
 import io.harness.delegate.beans.K8sPermissionType;
@@ -70,6 +73,7 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
+import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
 import io.harness.observer.Subject;
@@ -88,10 +92,13 @@ import io.harness.service.impl.DelegateTaskServiceImpl;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
+import io.harness.service.intfc.DelegateNgTokenService;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
+import software.wings.app.UrlConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.DelegateConnection;
@@ -99,9 +106,13 @@ import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.VaultConfig;
+import software.wings.cdn.CdnConfig;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.helpers.ext.url.SubdomainUrlHelper;
+import software.wings.jre.JreConfig;
+import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateProfileService;
@@ -110,15 +121,18 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -168,6 +182,11 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private Account account;
   @Mock private DelegateProfileService delegateProfileService;
   @Mock private DelegateCache delegateCache;
+  @Mock private UrlConfiguration urlConfiguration;
+  @Mock private SubdomainUrlHelper subdomainUrlHelper;
+  @Mock private InfraDownloadService infraDownloadService;
+  @Mock private DelegateNgTokenService delegateNgTokenService;
+  @Inject @Spy private MainConfiguration mainConfiguration;
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
   @InjectMocks @Inject private DelegateTaskServiceClassicImpl delegateTaskServiceClassic;
   @InjectMocks @Inject private DelegateSyncServiceImpl delegateSyncService;
@@ -1325,6 +1344,60 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateService.validateDelegateProfileId(ACCOUNT_ID, null);
   }
 
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldGenerateKubernetesYamlNgHappyPath() throws IOException {
+    setUpDelegatesWithoutProfile();
+    String tokenName = "testToken";
+    when(accountService.getDelegateConfiguration(any()))
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(Collections.singletonList("0.0")).build());
+    when(urlConfiguration.getDelegateMetadataUrl()).thenReturn("/");
+    when(subdomainUrlHelper.getDelegateMetadataUrl(any(), any(), any())).thenReturn("/");
+    when(infraDownloadService.getCdnWatcherBaseUrl()).thenReturn("/");
+    when(subdomainUrlHelper.getWatcherMetadataUrl(any(), any(), any())).thenReturn("/");
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+    DelegateTokenDetails tokenDetails =
+        DelegateTokenDetails.builder().name(tokenName).status(DelegateTokenStatus.ACTIVE).build();
+    when(delegateNgTokenService.getDelegateToken(any(), any(), eq(tokenName))).thenReturn(tokenDetails);
+    when(delegateNgTokenService.getDelegateTokenValue(any(), any(), eq(tokenName))).thenReturn("q2ewfga13948r9gb");
+    when(mainConfiguration.getKubectlVersion()).thenReturn("0.0.0");
+    when(mainConfiguration.getLogStreamingServiceConfig())
+        .thenReturn(LogStreamingServiceConfig.builder().build().builder().baseUrl("/").build());
+    when(mainConfiguration.getScmVersion()).thenReturn("0.0.0");
+    when(mainConfiguration.getCurrentJre()).thenReturn("0.0.0");
+    ImmutableMap jreConfigMap = ImmutableMap.builder()
+                                    .put(mainConfiguration.getCurrentJre(),
+                                        JreConfig.builder()
+                                            .version("0.0.0")
+                                            .jreDirectory("/")
+                                            .jreTarPath("/")
+                                            .alpnJarPath("/")
+                                            .jreMacDirectory("/")
+                                            .build())
+                                    .build();
+    when(mainConfiguration.getJreConfigs()).thenReturn(jreConfigMap);
+    CdnConfig cdnConfig = new CdnConfig();
+    cdnConfig.setUrl("/");
+    when(mainConfiguration.getCdnConfig()).thenReturn(cdnConfig);
+    DelegateSetupDetails delegateSetupDetails =
+        DelegateSetupDetails.builder()
+            .name(TEST_DELEGATE_GROUP_NAME)
+            .size(DelegateSize.LAPTOP)
+            .delegateType(DelegateType.KUBERNETES)
+            .identifier("id1")
+            .orgIdentifier("orgId1")
+            .projectIdentifier("projId1")
+            .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_VIEWER).build())
+            .tokenName(tokenName)
+            .build();
+    String managerHost = "";
+    String verificationServiceUrl = "";
+    File result = delegateService.generateKubernetesYamlNg(
+        ACCOUNT_ID, delegateSetupDetails, managerHost, verificationServiceUrl, MediaType.APPLICATION_JSON_TYPE);
+    assertThat(result).isNotNull();
+  }
+
   private List<String> setUpDelegatesForInitializationTest() {
     List<String> delegateIds = new ArrayList<>();
 
@@ -1372,6 +1445,55 @@ public class DelegateServiceImplTest extends WingsBaseTest {
         DelegateProfile.builder().accountId(ACCOUNT_ID).uuid(delegateProfileId2).startupScript("testScript").build();
 
     when(delegateProfileService.get(ACCOUNT_ID, delegateProfileId2)).thenReturn(delegateProfile2);
+
+    String delegateId_1 = persistence.save(delegate1);
+    String delegateId_2 = persistence.save(delegate2);
+    String delegateId_3 = persistence.save(delegate3);
+    String delegateId_4 = persistence.save(delegate4);
+
+    when(delegateCache.get(ACCOUNT_ID, delegateId_1, true)).thenReturn(delegate1);
+    when(delegateCache.get(ACCOUNT_ID, delegateId_2, true)).thenReturn(delegate2);
+    when(delegateCache.get(ACCOUNT_ID, delegateId_3, true)).thenReturn(delegate3);
+    when(delegateCache.get(ACCOUNT_ID, delegateId_4, true)).thenReturn(delegate4);
+
+    delegateIds.add(delegateId_1);
+    delegateIds.add(delegateId_2);
+    delegateIds.add(delegateId_3);
+    delegateIds.add(delegateId_4);
+
+    return delegateIds;
+  }
+
+  private List<String> setUpDelegatesWithoutProfile() {
+    List<String> delegateIds = new ArrayList<>();
+
+    Delegate delegate1 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .version(VERSION)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .profileError(true)
+                             .build();
+
+    Delegate delegate2 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .version(VERSION)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .profileError(false)
+                             .build();
+
+    Delegate delegate3 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .version(VERSION)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .profileError(false)
+                             .build();
+
+    Delegate delegate4 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .version(VERSION)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .profileError(false)
+                             .build();
 
     String delegateId_1 = persistence.save(delegate1);
     String delegateId_2 = persistence.save(delegate2);

@@ -149,6 +149,11 @@ public class ArtifactCollectionUtils {
   @Inject private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
   @Inject private MainConfiguration mainConfiguration;
 
+  public static final List<String> SUPPORTED_ARTIFACT_CLEANUP_LIST =
+      Lists.newArrayList(DOCKER, AMI, ARTIFACTORY, GCR, ECR, ACR, NEXUS, AZURE_MACHINE_IMAGE, CUSTOM)
+          .stream()
+          .map(Enum::name)
+          .collect(Collectors.toList());
   public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
 
   static final List<String> metadataOnlyStreams = Collections.unmodifiableList(
@@ -732,12 +737,12 @@ public class ArtifactCollectionUtils {
     return requestType;
   }
 
-  public DelegateTask prepareValidateTask(String artifactStreamId) {
+  public DelegateTask prepareValidateTask(String artifactStreamId, String accountId) {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream == null) {
+      artifactStreamService.deletePerpetualTaskByArtifactStream(accountId, artifactStreamId);
       throw new InvalidRequestException("Artifact stream does not exist");
     }
-    String accountId = artifactStream.getAccountId();
     BuildSourceParametersBuilder parametersBuilder = BuildSourceParameters.builder()
                                                          .appId(artifactStream.getAppId())
                                                          .artifactStreamType(artifactStream.getArtifactStreamType());
@@ -756,6 +761,7 @@ public class ArtifactCollectionUtils {
     } else {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       if (settingAttribute == null) {
+        artifactStreamService.deletePerpetualTaskByArtifactStream(accountId, artifactStreamId);
         throw new InvalidRequestException("Connector / Cloud Provider associated to Artifact Stream was deleted");
       }
       settingValue = settingAttribute.getValue();
@@ -1036,9 +1042,6 @@ public class ArtifactCollectionUtils {
   }
 
   public static boolean supportsCleanup(String artifactStreamType) {
-    return Lists.newArrayList(DOCKER, AMI, ARTIFACTORY, GCR, ECR, ACR, NEXUS, AZURE_MACHINE_IMAGE)
-        .stream()
-        .map(Enum::name)
-        .anyMatch(x -> x.equals(artifactStreamType));
+    return SUPPORTED_ARTIFACT_CLEANUP_LIST.stream().anyMatch(x -> x.equals(artifactStreamType));
   }
 }

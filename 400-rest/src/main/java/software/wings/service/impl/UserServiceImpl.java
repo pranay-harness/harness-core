@@ -537,7 +537,7 @@ public class UserServiceImpl implements UserService {
                                .licenseUnits(50)
                                .build());
 
-    Account createdAccount = accountService.save(account, false);
+    Account createdAccount = accountService.save(account, false, false);
 
     // create user
     User user = User.Builder.anUser()
@@ -2447,8 +2447,11 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User createUser(User user, String accountId) {
+    boolean isExistingUser = user.getUuid() != null;
     user = wingsPersistence.saveAndGet(User.class, user);
-    evictUserFromCache(user.getUuid());
+    if (isExistingUser) {
+      evictUserFromCache(user.getUuid());
+    }
     eventPublishHelper.publishSetupRbacEvent(accountId, user.getUuid(), EntityType.USER);
     publishUserEvent(null, user);
     return user;

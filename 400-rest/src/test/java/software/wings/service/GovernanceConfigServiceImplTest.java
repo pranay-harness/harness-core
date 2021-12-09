@@ -48,6 +48,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.security.UserGroup;
 import software.wings.resources.stats.model.TimeRange;
+import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.UserGroupService;
@@ -78,6 +79,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Mock EnvironmentService environmentService;
   @Mock AppService appService;
   @Mock UserGroupService userGroupService;
+  @Mock DeploymentFreezeUtils deploymentFreezeUtils;
   @Inject @InjectMocks private GovernanceConfigService governanceConfigService;
 
   @Before
@@ -781,5 +783,173 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
         .hasSize(2)
         .containsExactly(currentTimeMillis + DAY_IN_MILLIS, currentTimeMillis + 2 * DAY_IN_MILLIS);
     assertThat(governanceConfig.getNextIterations()).hasSize(1).containsExactly(currentTimeMillis + DAY_IN_MILLIS);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldSendNotificationForNewActiveWindow() {
+    long currentTimeMillis = System.currentTimeMillis();
+    TimeRange range = new TimeRange(currentTimeMillis - DAY_IN_MILLIS, currentTimeMillis + DAY_IN_MILLIS,
+        "Asia/Calcutta", false, null, null, null, false);
+
+    ApplicationFilter appSelection1 = AllAppFilter.builder()
+                                          .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
+                                          .envSelection(new AllEnvFilter(EnvironmentFilterType.ALL))
+                                          .build();
+
+    ApplicationFilter appSelection3 =
+        CustomAppFilter.builder()
+            .blackoutWindowFilterType(BlackoutWindowFilterType.CUSTOM)
+            .apps(asList(APP_ID))
+            .envSelection(new CustomEnvFilter(EnvironmentFilterType.CUSTOM, asList(ENV_ID, ENV_ID + 2)))
+            .build();
+
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
+        new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
+            range, "shouldRecalculateNextIterations", null, true, asList(appSelection1, appSelection3),
+            Collections.singletonList("testUserGroup"), "uuid");
+
+    GovernanceConfig governanceConfig = GovernanceConfig.builder()
+                                            .accountId(ACCOUNT_ID)
+                                            .timeRangeBasedFreezeConfigs(asList(timeRangeBasedFreezeConfig))
+                                            .build();
+
+    when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList(APP_ID, APP_ID + 2, APP_ID + 3));
+    governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+    verify(deploymentFreezeUtils).handleActivationEvent(timeRangeBasedFreezeConfig, ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotSendNotificationForNewInActiveWindow() {
+    long currentTimeMillis = System.currentTimeMillis();
+    TimeRange range = new TimeRange(currentTimeMillis + DAY_IN_MILLIS, currentTimeMillis + 2 * DAY_IN_MILLIS,
+        "Asia/Calcutta", false, null, null, null, false);
+
+    ApplicationFilter appSelection1 = AllAppFilter.builder()
+                                          .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
+                                          .envSelection(new AllEnvFilter(EnvironmentFilterType.ALL))
+                                          .build();
+
+    ApplicationFilter appSelection3 =
+        CustomAppFilter.builder()
+            .blackoutWindowFilterType(BlackoutWindowFilterType.CUSTOM)
+            .apps(asList(APP_ID))
+            .envSelection(new CustomEnvFilter(EnvironmentFilterType.CUSTOM, asList(ENV_ID, ENV_ID + 2)))
+            .build();
+
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
+        new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
+            range, "shouldRecalculateNextIterations", null, true, asList(appSelection1, appSelection3),
+            Collections.singletonList("testUserGroup"), "uuid");
+
+    GovernanceConfig governanceConfig = GovernanceConfig.builder()
+                                            .accountId(ACCOUNT_ID)
+                                            .timeRangeBasedFreezeConfigs(asList(timeRangeBasedFreezeConfig))
+                                            .build();
+
+    when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList(APP_ID, APP_ID + 2, APP_ID + 3));
+    governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+    verify(deploymentFreezeUtils, never()).handleActivationEvent(timeRangeBasedFreezeConfig, ACCOUNT_ID);
+    verify(deploymentFreezeUtils, never()).handleDeActivationEvent(timeRangeBasedFreezeConfig, ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldSendNotificationWhenWindowMadeActive() {
+    long currentTimeMillis = System.currentTimeMillis();
+    TimeRange range = new TimeRange(currentTimeMillis - DAY_IN_MILLIS, currentTimeMillis + DAY_IN_MILLIS,
+        "Asia/Calcutta", false, null, null, null, false);
+
+    ApplicationFilter appSelection1 = AllAppFilter.builder()
+                                          .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
+                                          .envSelection(new AllEnvFilter(EnvironmentFilterType.ALL))
+                                          .build();
+
+    ApplicationFilter appSelection3 =
+        CustomAppFilter.builder()
+            .blackoutWindowFilterType(BlackoutWindowFilterType.CUSTOM)
+            .apps(asList(APP_ID))
+            .envSelection(new CustomEnvFilter(EnvironmentFilterType.CUSTOM, asList(ENV_ID, ENV_ID + 2)))
+            .build();
+
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
+        new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
+            range, "shouldRecalculateNextIterations", null, false, asList(appSelection1, appSelection3),
+            Collections.singletonList("testUserGroup"), "uuid");
+
+    GovernanceConfig governanceConfig = GovernanceConfig.builder()
+                                            .accountId(ACCOUNT_ID)
+                                            .timeRangeBasedFreezeConfigs(asList(timeRangeBasedFreezeConfig))
+                                            .build();
+
+    when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList(APP_ID, APP_ID + 2, APP_ID + 3));
+    governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+    verify(deploymentFreezeUtils, never()).handleActivationEvent(timeRangeBasedFreezeConfig, ACCOUNT_ID);
+
+    timeRangeBasedFreezeConfig.setApplicable(true);
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig2 =
+        new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
+            range, "shouldRecalculateNextIteration2s", null, true, asList(appSelection1, appSelection3),
+            Collections.singletonList("testUserGroup"), "uuid2");
+    governanceConfig = GovernanceConfig.builder()
+                           .accountId(ACCOUNT_ID)
+                           .timeRangeBasedFreezeConfigs(asList(timeRangeBasedFreezeConfig, timeRangeBasedFreezeConfig2))
+                           .build();
+    governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+    verify(deploymentFreezeUtils).handleActivationEvent(timeRangeBasedFreezeConfig, ACCOUNT_ID);
+    verify(deploymentFreezeUtils).handleActivationEvent(timeRangeBasedFreezeConfig2, ACCOUNT_ID);
+    verify(deploymentFreezeUtils, never()).handleDeActivationEvent(timeRangeBasedFreezeConfig, ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldSendNotificationWhenWindowMadeInactive() {
+    long currentTimeMillis = System.currentTimeMillis();
+    TimeRange range = new TimeRange(currentTimeMillis - DAY_IN_MILLIS, currentTimeMillis + DAY_IN_MILLIS,
+        "Asia/Calcutta", false, null, null, null, false);
+
+    ApplicationFilter appSelection1 = AllAppFilter.builder()
+                                          .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
+                                          .envSelection(new AllEnvFilter(EnvironmentFilterType.ALL))
+                                          .build();
+
+    ApplicationFilter appSelection3 =
+        CustomAppFilter.builder()
+            .blackoutWindowFilterType(BlackoutWindowFilterType.CUSTOM)
+            .apps(asList(APP_ID))
+            .envSelection(new CustomEnvFilter(EnvironmentFilterType.CUSTOM, asList(ENV_ID, ENV_ID + 2)))
+            .build();
+
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
+        new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
+            range, "shouldRecalculateNextIterations", null, true, asList(appSelection1, appSelection3),
+            Collections.singletonList("testUserGroup"), "uuid");
+
+    GovernanceConfig governanceConfig = GovernanceConfig.builder()
+                                            .accountId(ACCOUNT_ID)
+                                            .timeRangeBasedFreezeConfigs(asList(timeRangeBasedFreezeConfig))
+                                            .build();
+
+    when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList(APP_ID, APP_ID + 2, APP_ID + 3));
+    governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+
+    timeRangeBasedFreezeConfig.setApplicable(false);
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig2 =
+        new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
+            range, "shouldRecalculateNextIteration2s", null, false, asList(appSelection1, appSelection3),
+            Collections.singletonList("testUserGroup"), "uuid2");
+    governanceConfig = GovernanceConfig.builder()
+                           .accountId(ACCOUNT_ID)
+                           .timeRangeBasedFreezeConfigs(asList(timeRangeBasedFreezeConfig, timeRangeBasedFreezeConfig2))
+                           .build();
+    governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+    verify(deploymentFreezeUtils).handleActivationEvent(timeRangeBasedFreezeConfig, ACCOUNT_ID);
+    verify(deploymentFreezeUtils, never()).handleActivationEvent(timeRangeBasedFreezeConfig2, ACCOUNT_ID);
+    verify(deploymentFreezeUtils).handleDeActivationEvent(timeRangeBasedFreezeConfig, ACCOUNT_ID);
   }
 }

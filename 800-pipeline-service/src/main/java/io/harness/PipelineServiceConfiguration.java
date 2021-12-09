@@ -20,6 +20,7 @@ import io.harness.ngtriggers.TriggerConfiguration;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.opaclient.OpaServiceConfiguration;
 import io.harness.redis.RedisConfig;
+import io.harness.reflection.HarnessReflections;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ThreadPoolConfig;
@@ -47,11 +48,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.reflections.Reflections;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(PIPELINE)
 @Data
@@ -151,9 +153,13 @@ public class PipelineServiceConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections =
-        new Reflections(RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE, FILTER_PACKAGE, ENFORCEMENT_PACKAGE);
-    return reflections.getTypesAnnotatedWith(Path.class);
+    return HarnessReflections.get()
+        .getTypesAnnotatedWith(Path.class)
+        .stream()
+        .filter(klazz
+            -> StringUtils.startsWithAny(klazz.getPackage().getName(), RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE,
+                FILTER_PACKAGE, ENFORCEMENT_PACKAGE))
+        .collect(Collectors.toSet());
   }
 
   private ConnectorFactory getDefaultApplicationConnectorFactory() {

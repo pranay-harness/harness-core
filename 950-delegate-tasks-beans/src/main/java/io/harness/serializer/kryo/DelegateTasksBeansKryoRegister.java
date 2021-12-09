@@ -91,6 +91,7 @@ import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
+import io.harness.delegate.beans.connector.ConnectorValidationParameterResponse;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.NoOpConnectorValidationParams;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
@@ -120,6 +121,7 @@ import io.harness.delegate.beans.connector.helm.HttpHelmConnectivityTaskParams;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectivityTaskResponse;
 import io.harness.delegate.beans.connector.helm.HttpHelmValidationParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
+import io.harness.delegate.beans.connector.jira.JiraValidationParams;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
 import io.harness.delegate.beans.connector.k8Connector.CEK8sValidationParams;
 import io.harness.delegate.beans.connector.k8Connector.CEKubernetesConnectionTaskParams;
@@ -743,6 +745,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsCodeCommitValidationParams.class, 19547);
     kryo.register(HelmChartManifestDelegateConfig.class, 19548);
     kryo.register(HttpHelmValidationParams.class, 19549);
+    kryo.register(ConnectorValidationParameterResponse.class, 19551);
 
     kryo.register(HttpHelmConnectivityTaskParams.class, 19640);
     kryo.register(HttpHelmConnectivityTaskResponse.class, 19641);
@@ -975,5 +978,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CIAWSVmExecuteStepTaskParams.class, 543444);
     kryo.register(CIAwsVmCleanupTaskParams.class, 543445);
     kryo.register(AwsVmTaskExecutionResponse.class, 543446);
+    kryo.register(JiraValidationParams.class, 543447);
   }
 }

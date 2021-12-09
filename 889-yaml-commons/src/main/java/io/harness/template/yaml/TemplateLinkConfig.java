@@ -2,9 +2,7 @@ package io.harness.template.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.validator.NGRegexValidatorConstants;
@@ -28,7 +26,6 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("templateLinkConfig")
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._884_PMS_COMMONS)
 public class TemplateLinkConfig {
   @JsonProperty(YamlNode.UUID_FIELD_NAME)
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
@@ -36,6 +33,6 @@ public class TemplateLinkConfig {
   String uuid;
 
   @NotNull @EntityIdentifier @Pattern(regexp = NGRegexValidatorConstants.IDENTIFIER_PATTERN) String templateRef;
-  @Pattern(regexp = NGRegexValidatorConstants.IDENTIFIER_PATTERN) String versionLabel;
+  @Pattern(regexp = NGRegexValidatorConstants.VERSION_LABEL_PATTERN) String versionLabel;
   JsonNode templateInputs;
 }

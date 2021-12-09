@@ -28,6 +28,7 @@ go_test(
     deps = [
         "//commons/go/lib/logs",
         "//product/ci/addon/parser/cg",
+        "//product/ci/ti-service/logger",
         "//product/ci/ti-service/types",
         "@com_github_stretchr_testify//assert",
         "@org_mongodb_go_mongo_driver//bson",

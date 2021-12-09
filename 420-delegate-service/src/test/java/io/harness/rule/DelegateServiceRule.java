@@ -17,6 +17,10 @@ import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.observer.NoOpRemoteObserverInformerImpl;
+import io.harness.observer.RemoteObserver;
+import io.harness.observer.RemoteObserverInformer;
+import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.outbox.api.OutboxDao;
 import io.harness.outbox.api.OutboxService;
 import io.harness.outbox.api.impl.OutboxDaoImpl;
@@ -50,6 +54,7 @@ import com.google.inject.name.Named;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -158,7 +163,22 @@ public class DelegateServiceRule implements MethodRule, InjectorRuleMixin, Mongo
         bind(OutboxEventRepository.class).toInstance(mock(OutboxEventRepository.class));
       }
     });
+    modules.add(new AbstractRemoteObserverModule() {
+      @Override
+      public boolean noOpProducer() {
+        return true;
+      }
 
+      @Override
+      public Set<RemoteObserver> observers() {
+        return Collections.emptySet();
+      }
+
+      @Override
+      public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+        return NoOpRemoteObserverInformerImpl.class;
+      }
+    });
     return modules;
   }
 

@@ -598,11 +598,21 @@ public class PlanExecutionResource {
   @ApiOperation(value = "get list of stages for stage execution", nickname = "getStagesExecutionList")
   @Path("/stagesExecutionList")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  public ResponseDTO<List<StageExecutionResponse>> getStagesExecutionList(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
+  @Operation(operationId = "getStagesExecutionList", summary = "Get list of Stages to select for Stage executions",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns list of Stage identifiers with their names and stage dependencies")
+      })
+  public ResponseDTO<List<StageExecutionResponse>>
+  getStagesExecutionList(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Parameter(
+                             description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @Parameter(
+          description = PipelineResourceConstants.ORG_PARAM_MESSAGE) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier @Parameter(
+          description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @NotEmpty @Parameter(
+          description = PipelineResourceConstants.PIPELINE_ID_PARAM_MESSAGE) String pipelineIdentifier,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     Optional<PipelineEntity> optionalPipelineEntity =
         pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);

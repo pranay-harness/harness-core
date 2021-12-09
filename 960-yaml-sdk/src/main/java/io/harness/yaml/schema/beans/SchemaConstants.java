@@ -12,6 +12,8 @@ public class SchemaConstants {
   public static final String ANY_OF_NODE = "anyOf";
   public static final String PROPERTIES_NODE = "properties";
   public static final String DEFINITIONS_NODE = "definitions";
+  public static final String EXECUTION_WRAPPER_CONFIG_NODE = "ExecutionWrapperConfig";
+  public static final String STEP_NODE = "step";
   public static final String SCHEMA_NODE = "$schema";
   public static final String REF_NODE = "$ref";
   public static final String CONST_NODE = "const";

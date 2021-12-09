@@ -462,7 +462,7 @@ public class ProjectServiceImpl implements ProjectService {
                                             .and(ProjectKeys.identifier)
                                             .is(project.getProjectIdentifier()))
                                  .toArray(Criteria[] ::new);
-    criteria.orOperator(subCriteria);
+    Criteria accessibleProjectCriteria = criteria.orOperator(subCriteria);
     Criteria deletedFalseCriteria = Criteria.where(ProjectKeys.createdAt)
                                         .gt(startInterval)
                                         .lt(endInterval)
@@ -473,7 +473,8 @@ public class ProjectServiceImpl implements ProjectService {
             .andOperator(new Criteria().andOperator(Criteria.where(ProjectKeys.deleted).is(true)),
                 Criteria.where(ProjectKeys.lastModifiedAt).gt(startInterval).lt(endInterval));
     return ActiveProjectsCountDTO.builder()
-        .count(projectRepository.count(deletedFalseCriteria) - projectRepository.count(deletedTrueCriteria))
+        .count(projectRepository.count(new Criteria().andOperator(accessibleProjectCriteria, deletedFalseCriteria))
+            - projectRepository.count(new Criteria().andOperator(accessibleProjectCriteria, deletedTrueCriteria)))
         .build();
   }
 

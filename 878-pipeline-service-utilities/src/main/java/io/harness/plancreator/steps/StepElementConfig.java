@@ -41,7 +41,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("stepElementConfig")
-@OneOfSet(fields = {"type, stepSpecType, timeout, failureStrategies, when, delegateSelectors", "template"})
+@OneOfSet(fields = {"type, stepSpecType, timeout, failureStrategies, when, delegateSelectors", "template"},
+    requiredFieldNames = {"type", "template"})
 @OwnedBy(CDC)
 // TODO this should go to yaml commons
 @TargetModule(HarnessModule._884_PMS_COMMONS)
@@ -65,7 +66,7 @@ public class StepElementConfig {
 
   StepWhenCondition when;
 
-  @NotNull String type;
+  String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   io.harness.yaml.core.StepSpecType stepSpecType;

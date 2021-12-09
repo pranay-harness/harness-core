@@ -15,6 +15,11 @@ import io.harness.cdng.artifact.bean.yaml.PrimaryArtifact;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
+import io.harness.cdng.helm.HelmDeployStepInfo;
+import io.harness.cdng.helm.HelmDeployStepParams;
+import io.harness.cdng.helm.NativeHelmStepPassThroughData;
+import io.harness.cdng.helm.rollback.HelmRollbackStepInfo;
+import io.harness.cdng.helm.rollback.HelmRollbackStepParams;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.infra.steps.InfraStepParameters;
@@ -164,6 +169,12 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(TerraformPlanStepInfo.class, 12543);
     kryo.register(HelmValuesFetchResponsePassThroughData.class, 12544);
     kryo.register(StepExceptionPassThroughData.class, 12545);
+
+    kryo.register(HelmDeployStepInfo.class, 13001);
+    kryo.register(HelmDeployStepParams.class, 13002);
+    kryo.register(NativeHelmStepPassThroughData.class, 13003);
+    kryo.register(HelmRollbackStepInfo.class, 13004);
+    kryo.register(HelmRollbackStepParams.class, 13005);
 
     kryo.register(StoreConfigWrapper.class, 8045);
 

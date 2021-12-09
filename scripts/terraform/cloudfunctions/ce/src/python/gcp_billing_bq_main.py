@@ -4,7 +4,8 @@ import json
 import os
 import util
 import re
-from util import create_dataset, print_, if_tbl_exists, createTable, run_batch_query, COSTAGGREGATED, UNIFIED, CEINTERNALDATASET
+from util import create_dataset, print_, if_tbl_exists, createTable, run_batch_query, COSTAGGREGATED, UNIFIED, \
+    CEINTERNALDATASET, update_connector_data_sync_status
 from google.cloud import bigquery
 from google.cloud import secretmanager
 from google.oauth2 import service_account
@@ -64,6 +65,7 @@ def main(event, context):
     print(event)
     data = base64.b64decode(event['data']).decode('utf-8')
     jsonData = json.loads(data)
+    jsonData["cloudProvider"] = "GCP"
     print(jsonData)
     if jsonData.get("dataSourceId"):
         # Event is from BQ DT service. Ingest in unified and preaggregated
@@ -78,6 +80,7 @@ def main(event, context):
             jsonData["interval"] = '3'
         ingest_into_preaggregated(jsonData)
         ingest_into_unified(jsonData)
+        update_connector_data_sync_status(jsonData, PROJECTID, client)
         ingest_data_to_costagg(jsonData)
         return
     # Set the accountId for GCP logging
@@ -262,6 +265,7 @@ def syncDataset(jsonData):
     get_unique_billingaccount_id(jsonData)
     ingest_into_preaggregated(jsonData)
     ingest_into_unified(jsonData)
+    update_connector_data_sync_status(jsonData, PROJECTID, client)
     ingest_data_to_costagg(jsonData)
 
 

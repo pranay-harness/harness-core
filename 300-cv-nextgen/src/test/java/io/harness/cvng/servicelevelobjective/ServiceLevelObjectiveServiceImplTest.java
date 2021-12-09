@@ -22,7 +22,7 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTargetSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
-import io.harness.cvng.servicelevelobjective.services.ServiceLevelObjectiveService;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 

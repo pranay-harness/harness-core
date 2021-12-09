@@ -48,7 +48,12 @@ public class StaticLimitRestrictionHandler implements RestrictionHandler {
   }
 
   @Override
-  public RestrictionMetadataDTO getMetadataDTO(Restriction restriction) {
+  public RestrictionMetadataDTO getMetadataDTO(
+      Restriction restriction, String accountIdentifier, ModuleType moduleType) {
+    return generateMetadataDTO(restriction);
+  }
+
+  private StaticLimitRestrictionMetadataDTO generateMetadataDTO(Restriction restriction) {
     StaticLimitRestriction staticLimitRestriction = (StaticLimitRestriction) restriction;
     return StaticLimitRestrictionMetadataDTO.builder()
         .restrictionType(staticLimitRestriction.getRestrictionType())
@@ -59,7 +64,7 @@ public class StaticLimitRestrictionHandler implements RestrictionHandler {
 
   private long getCurrentCount(FeatureRestrictionName featureRestrictionName,
       StaticLimitRestriction staticLimitRestriction, String accountIdentifier) {
-    RestrictionMetadataDTO metadataDTO = getMetadataDTO(staticLimitRestriction);
+    RestrictionMetadataDTO metadataDTO = generateMetadataDTO(staticLimitRestriction);
     return RestrictionUtils.getCurrentUsage(
         staticLimitRestriction, featureRestrictionName, accountIdentifier, metadataDTO);
   }

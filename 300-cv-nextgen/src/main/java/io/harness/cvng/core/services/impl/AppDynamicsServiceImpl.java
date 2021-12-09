@@ -265,9 +265,39 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   }
 
   @Override
+  public String getServiceInstanceMetricPath(ProjectParams projectParams, String connectorIdentifier, String appName,
+      String baseFolder, String tier, String metricPath, String tracingId) {
+    String[] metricPathFolders = metricPath.split("\\|");
+    StringBuilder metricPathSoFar = new StringBuilder(512);
+    int index = 0;
+
+    for (; index < metricPathFolders.length - 1; index++) {
+      if (containsIndividualNode(
+              projectParams, connectorIdentifier, appName, baseFolder, tier, metricPathSoFar.toString(), tracingId)) {
+        break;
+      }
+      metricPathSoFar.append('|').append(metricPathFolders[index]);
+    }
+    metricPathSoFar.append("|Individual Nodes|*");
+    for (; index < metricPathFolders.length; index++) {
+      { metricPathSoFar.append('|').append(metricPathFolders[index]); }
+    }
+    return metricPathSoFar.substring(1, metricPathSoFar.length());
+  }
+
+  @Override
   public void checkConnectivity(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String tracingId) {
     getApplications(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, 0, 1, null);
+  }
+
+  private boolean containsIndividualNode(ProjectParams projectParams, String connectorIdentifier, String appName,
+      String baseFolder, String tier, String metricPath, String tracingId) {
+    List<AppDynamicsFileDefinition> appDynamicsFileDefinitions =
+        getMetricStructure(projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, tracingId);
+    return appDynamicsFileDefinitions.stream()
+        .map(AppDynamicsFileDefinition::getName)
+        .anyMatch(name -> name.equals("Individual Nodes"));
   }
 
   private List<AppDynamicsFileDefinition> getMetricStructure(

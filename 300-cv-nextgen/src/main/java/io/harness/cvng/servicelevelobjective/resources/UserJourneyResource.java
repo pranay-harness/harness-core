@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.servicelevelobjective.beans.UserJourneyDTO;
 import io.harness.cvng.servicelevelobjective.beans.UserJourneyResponse;
-import io.harness.cvng.servicelevelobjective.services.UserJourneyService;
+import io.harness.cvng.servicelevelobjective.services.api.UserJourneyService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rest.RestResponse;

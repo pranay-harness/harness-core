@@ -3,6 +3,7 @@ package io.harness.pms.pipeline.service.yamlschema;
 import static java.lang.String.format;
 
 import io.harness.ModuleType;
+import io.harness.SchemaCacheKey;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.SafeHttpCall;
@@ -36,13 +37,13 @@ public class SchemaFetcher {
 
   private static final int CACHE_EVICTION_TIME_HOUR = 1;
 
-  private final LoadingCache<ModuleType, PartialSchemaDTO> schemaCache =
+  private final LoadingCache<SchemaCacheKey, PartialSchemaDTO> schemaCache =
       CacheBuilder.newBuilder()
           .expireAfterAccess(CACHE_EVICTION_TIME_HOUR, TimeUnit.HOURS)
-          .build(new CacheLoader<ModuleType, PartialSchemaDTO>() {
+          .build(new CacheLoader<SchemaCacheKey, PartialSchemaDTO>() {
             @Override
-            public PartialSchemaDTO load(@NotNull final ModuleType moduleType) {
-              return fetchSchemaWithRetry(moduleType);
+            public PartialSchemaDTO load(@NotNull final SchemaCacheKey moduleType) {
+              return fetchSchemaWithRetry(moduleType.getModuleType(), moduleType.getAccountIdentifier());
             }
           });
 
@@ -58,10 +59,12 @@ public class SchemaFetcher {
    * In order to avoid that, we do deep copy of cached object
    */
   @Nullable
-  public PartialSchemaDTO fetchSchema(ModuleType moduleType) {
+  public PartialSchemaDTO fetchSchema(String accountId, ModuleType moduleType) {
     long startTs = System.currentTimeMillis();
     try {
-      PartialSchemaDTO partialSchemaDTO = schemaCache.get(moduleType);
+      // use account id here
+      PartialSchemaDTO partialSchemaDTO =
+          schemaCache.get(SchemaCacheKey.builder().accountIdentifier(accountId).moduleType(moduleType).build());
 
       log.info("[PMS] Successfully fetched schema for {}", moduleType.name());
       logWarnIfExceedsThreshold(moduleType, startTs);
@@ -91,10 +94,10 @@ public class SchemaFetcher {
     log.info("[PMS] Yaml schema cache was successfully invalidated");
   }
 
-  private PartialSchemaDTO fetchSchemaWithRetry(ModuleType moduleType) {
+  private PartialSchemaDTO fetchSchemaWithRetry(ModuleType moduleType, String accountIdentifier) {
     try {
       Call<ResponseDTO<PartialSchemaDTO>> call =
-          obtainYamlSchemaClient(moduleType.name().toLowerCase()).get(null, null, null);
+          obtainYamlSchemaClient(moduleType.name().toLowerCase()).get(accountIdentifier, null, null, null);
 
       RetryPolicy<Object> retryPolicy = getRetryPolicy(moduleType);
       return Failsafe.with(retryPolicy).get(() -> SafeHttpCall.execute(call.clone())).getData();

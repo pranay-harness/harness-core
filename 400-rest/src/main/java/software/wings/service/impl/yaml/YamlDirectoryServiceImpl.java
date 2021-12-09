@@ -1998,11 +1998,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return workflowsFolder;
     }
 
-    PageRequest<Workflow> pageRequest = aPageRequest()
-                                            .addFilter("appId", Operator.EQ, app.getAppId())
-                                            .addOrder(Workflow.NAME_KEY, SortOrder.OrderType.ASC)
-                                            .build();
-    List<Workflow> workflows = workflowService.listWorkflows(pageRequest).getResponse();
+    PageRequest<Workflow> pageRequest =
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, app.getAppId())
+            .addOrder(Workflow.NAME_KEY, SortOrder.OrderType.ASC)
+            .addFieldsIncluded(Pipeline.UUID_KEY, Pipeline.NAME_KEY, Pipeline.APP_ID_KEY2)
+            .build();
+    List<Workflow> workflows = workflowService.listWorkflowsWithoutOrchestration(pageRequest).getResponse();
 
     if (workflows != null) {
       // iterate over workflows
@@ -2031,10 +2033,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return pipelinesFolder;
     }
 
-    PageRequest<Pipeline> pageRequest = aPageRequest()
-                                            .addFilter("appId", Operator.EQ, app.getAppId())
-                                            .addOrder(Pipeline.NAME_KEY, SortOrder.OrderType.ASC)
-                                            .build();
+    PageRequest<Pipeline> pageRequest =
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, app.getAppId())
+            .addOrder(Pipeline.NAME_KEY, SortOrder.OrderType.ASC)
+            .addFieldsIncluded(Pipeline.UUID_KEY, Pipeline.NAME_KEY, Pipeline.APP_ID_KEY2)
+            .build();
     List<Pipeline> pipelines = pipelineService.listPipelines(pageRequest).getResponse();
 
     if (pipelines != null) {

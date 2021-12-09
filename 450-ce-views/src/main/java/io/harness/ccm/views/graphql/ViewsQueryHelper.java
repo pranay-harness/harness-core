@@ -254,14 +254,21 @@ public class ViewsQueryHelper {
   }
 
   public ViewQueryParams buildQueryParams(String accountId, boolean isTimeTruncGroupByRequired,
-      boolean isUsedByTimeSeriesStats, boolean isClusterQuery, boolean isTotalCountQuery) {
+      boolean isUsedByTimeSeriesStats, boolean isClusterQuery, boolean isTotalCountQuery, int timeOffsetInDays) {
     return ViewQueryParams.builder()
         .accountId(accountId)
         .isClusterQuery(isClusterQuery)
         .isUsedByTimeSeriesStats(isUsedByTimeSeriesStats)
         .isTimeTruncGroupByRequired(isTimeTruncGroupByRequired)
         .isTotalCountQuery(isTotalCountQuery)
+        .timeOffsetInDays(timeOffsetInDays)
         .build();
+  }
+
+  public ViewQueryParams buildQueryParams(String accountId, boolean isTimeTruncGroupByRequired,
+      boolean isUsedByTimeSeriesStats, boolean isClusterQuery, boolean isTotalCountQuery) {
+    return buildQueryParams(
+        accountId, isTimeTruncGroupByRequired, isUsedByTimeSeriesStats, isClusterQuery, isTotalCountQuery, 0);
   }
 
   public ViewQueryParams buildQueryParams(String accountId, boolean isClusterQuery) {
@@ -276,6 +283,7 @@ public class ViewsQueryHelper {
         .isUsedByTimeSeriesStats(false)
         .isTimeTruncGroupByRequired(false)
         .isTotalCountQuery(false)
+        .timeOffsetInDays(0)
         .build();
   }
 

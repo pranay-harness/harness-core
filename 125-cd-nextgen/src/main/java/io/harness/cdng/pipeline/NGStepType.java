@@ -32,6 +32,14 @@ public enum NGStepType {
   K8S_ROLLING_ROLLBACK("K8s Rolling Rollback", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes",
       StepSpecTypeConstants.K8S_ROLLING_ROLLBACK),
 
+  // helm steps
+  @JsonProperty(StepSpecTypeConstants.HELM_DEPLOY)
+  HELM_DEPLOY("Helm Deploy", Arrays.asList(ServiceDefinitionType.NATIVE_HELM), "Native Helm",
+      StepSpecTypeConstants.HELM_DEPLOY),
+  @JsonProperty(StepSpecTypeConstants.HELM_ROLLBACK)
+  HELM_ROLLBACK("Helm Rollback", Arrays.asList(ServiceDefinitionType.NATIVE_HELM), "Native Helm",
+      StepSpecTypeConstants.HELM_ROLLBACK),
+
   @JsonProperty(StepSpecTypeConstants.K8S_BG_SWAP_SERVICES)
   SWAP_SELECTORS("Swap Selectors", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes",
       StepSpecTypeConstants.K8S_BG_SWAP_SERVICES),

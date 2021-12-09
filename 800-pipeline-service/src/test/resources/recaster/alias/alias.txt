@@ -51,6 +51,7 @@ io.harness.steps.environment.EnvironmentOutcome
 io.harness.steps.section.chain.SectionChainPassThroughData
 io.harness.steps.approval.step.harness.HarnessApprovalSpecParameters
 io.harness.plancreator.steps.http.HttpStepInfo
+io.harness.plancreator.steps.http.HttpStepNode
 io.harness.ngpipeline.artifact.bean.EcrArtifactOutcome
 io.harness.steps.jira.JiraIssueOutcome
 io.harness.advisers.rollback.OnFailRollbackOutput

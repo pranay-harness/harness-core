@@ -1,5 +1,6 @@
 package io.harness.cvng.beans;
 
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.cvng.appd.AppDynamicsUtils;
 
@@ -7,9 +8,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldDefaults;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 @Data
 @Builder
@@ -18,19 +23,45 @@ public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo<
   private String applicationName;
   private String tierName;
   private MetricPackDTO metricPack;
+  private List<AppMetricInfoDTO> customMetrics;
+  private String groupName;
+
   @Override
   public Map<String, Object> getDslEnvVariables(AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
     Map<String, Object> dslEnvVariables = AppDynamicsUtils.getCommonEnvVariables(appDynamicsConnectorDTO);
     dslEnvVariables.put("applicationName", getApplicationName());
     dslEnvVariables.put("tierName", getTierName());
-    final List<String> metricPaths = getMetricPack()
-                                         .getMetrics()
+    final List<String> metricPaths = CollectionUtils.emptyIfNull(getMetricPack().getMetrics())
                                          .stream()
                                          .filter(metricDefinition -> metricDefinition.isIncluded())
                                          .map(metricDefinition -> metricDefinition.getPath())
                                          .collect(Collectors.toList());
     dslEnvVariables.put("metricsToCollect", metricPaths);
     dslEnvVariables.put("collectHostData", Boolean.toString(this.isCollectHostData()));
+
+    if (CollectionUtils.isNotEmpty(customMetrics)
+        && metricPack.getIdentifier().equals(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER)) {
+      dslEnvVariables.put(
+          "metricNames", customMetrics.stream().map(AppMetricInfoDTO::getMetricName).collect(Collectors.toList()));
+      dslEnvVariables.put("groupName", groupName);
+
+      if (this.isCollectHostData()) {
+        List<String> customMetricPaths =
+            customMetrics.stream()
+                .map(mi -> createFullMetricPath(mi.getBaseFolder(), mi.getServiceInstanceMetricPath()))
+                .collect(Collectors.toList());
+        List<Integer> getServiceInstanceIndexs =
+            customMetricPaths.stream().map(this::getServiceInstanceIndex).collect(Collectors.toList());
+        dslEnvVariables.put("metricPaths", customMetricPaths);
+        dslEnvVariables.put("serviceInstanceIndexes", getServiceInstanceIndexs);
+      } else {
+        List<String> customMetricPaths = customMetrics.stream()
+                                             .map(mi -> createFullMetricPath(mi.getBaseFolder(), mi.getMetricPath()))
+                                             .collect(Collectors.toList());
+        dslEnvVariables.put("metricPaths", customMetricPaths);
+      }
+    }
+
     return dslEnvVariables;
   }
 
@@ -47,5 +78,23 @@ public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo<
   @Override
   public Map<String, String> collectionParams(AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
     return Collections.emptyMap();
+  }
+
+  private String createFullMetricPath(String baseFolder, String metricPath) {
+    return baseFolder + '|' + tierName + "|" + metricPath;
+  }
+
+  private Integer getServiceInstanceIndex(String fullMetricPath) {
+    return ArrayUtils.indexOf(fullMetricPath.split("\\|"), "Individual Nodes") + 1;
+  }
+
+  @Data
+  @Builder
+  @FieldDefaults(level = AccessLevel.PRIVATE)
+  public static class AppMetricInfoDTO {
+    String metricName;
+    String baseFolder;
+    String metricPath;
+    String serviceInstanceMetricPath;
   }
 }

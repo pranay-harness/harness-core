@@ -8,12 +8,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.FilterCreationResponse;
 import io.harness.pms.contracts.plan.SetupMetadata;
-import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.filter.creation.FilterCreationResponseWrapper.FilterCreationResponseWrapperBuilder;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
@@ -68,8 +68,12 @@ public class FilterCreatorMergeService {
     String yaml = pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity).getMergedPipelineYaml();
     String processedYaml = YamlUtils.injectUuid(yaml);
     YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
-    Map<String, YamlFieldBlob> dependencies = new HashMap<>();
-    dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
+
+    Dependencies dependencies =
+        Dependencies.newBuilder()
+            .setYaml(processedYaml)
+            .putDependencies(pipelineField.getNode().getUuid(), pipelineField.getNode().getYamlPath())
+            .build();
 
     Map<String, String> filters = new HashMap<>();
     SetupMetadata.Builder setupMetadataBuilder = SetupMetadata.newBuilder()
@@ -93,47 +97,46 @@ public class FilterCreatorMergeService {
 
   @VisibleForTesting
   public void validateFilterCreationBlobResponse(FilterCreationBlobResponse response) throws IOException {
-    if (isNotEmpty(response.getDependenciesMap())) {
-      throw new InvalidRequestException(
-          PmsExceptionUtils.getUnresolvedDependencyErrorMessage(response.getDependenciesMap().values()));
+    if (isNotEmpty(response.getDeps().getDependenciesMap())) {
+      throw new InvalidRequestException(PmsExceptionUtils.getUnresolvedDependencyPathsErrorMessage(response.getDeps()));
     }
   }
 
   @VisibleForTesting
   public FilterCreationBlobResponse obtainFiltersRecursively(Map<String, PlanCreatorServiceInfo> services,
-      Map<String, YamlFieldBlob> dependencies, Map<String, String> filters, SetupMetadata setupMetadata)
-      throws IOException {
-    FilterCreationBlobResponse.Builder responseBuilder =
-        FilterCreationBlobResponse.newBuilder().putAllDependencies(dependencies);
+      Dependencies initialDependencies, Map<String, String> filters, SetupMetadata setupMetadata) throws IOException {
+    FilterCreationBlobResponse.Builder finalResponseBuilder =
+        FilterCreationBlobResponse.newBuilder().setDeps(initialDependencies);
 
-    if (isEmpty(services) || isEmpty(dependencies)) {
-      return responseBuilder.build();
+    if (isEmpty(services) || isEmpty(initialDependencies.getDependenciesMap())) {
+      return finalResponseBuilder.build();
     }
 
-    for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(responseBuilder.getDependenciesMap()); i++) {
+    for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(finalResponseBuilder.getDeps().getDependenciesMap());
+         i++) {
       FilterCreationBlobResponse currIterResponse =
-          obtainFiltersPerIteration(services, responseBuilder.getDependenciesMap(), filters, setupMetadata);
+          obtainFiltersPerIteration(services, finalResponseBuilder, filters, setupMetadata);
 
-      FilterCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, currIterResponse);
-      if (isNotEmpty(responseBuilder.getDependenciesMap())) {
+      FilterCreationBlobResponseUtils.mergeResolvedDependencies(finalResponseBuilder, currIterResponse);
+      if (isNotEmpty(finalResponseBuilder.getDeps().getDependenciesMap())) {
         throw new InvalidRequestException(
-            PmsExceptionUtils.getUnresolvedDependencyErrorMessage(responseBuilder.getDependenciesMap().values()));
+            PmsExceptionUtils.getUnresolvedDependencyPathsErrorMessage(finalResponseBuilder.getDeps()));
       }
-      FilterCreationBlobResponseUtils.mergeDependencies(responseBuilder, currIterResponse);
-      FilterCreationBlobResponseUtils.updateStageCount(responseBuilder, currIterResponse);
-      FilterCreationBlobResponseUtils.mergeReferredEntities(responseBuilder, currIterResponse);
-      FilterCreationBlobResponseUtils.mergeStageNames(responseBuilder, currIterResponse);
+      FilterCreationBlobResponseUtils.mergeDependencies(finalResponseBuilder, currIterResponse);
+      FilterCreationBlobResponseUtils.updateStageCount(finalResponseBuilder, currIterResponse);
+      FilterCreationBlobResponseUtils.mergeReferredEntities(finalResponseBuilder, currIterResponse);
+      FilterCreationBlobResponseUtils.mergeStageNames(finalResponseBuilder, currIterResponse);
     }
 
-    return responseBuilder.build();
+    return finalResponseBuilder.build();
   }
 
   @VisibleForTesting
   public FilterCreationBlobResponse obtainFiltersPerIteration(Map<String, PlanCreatorServiceInfo> services,
-      Map<String, YamlFieldBlob> dependencies, Map<String, String> filters, SetupMetadata setupMetadata) {
+      FilterCreationBlobResponse.Builder responseBuilder, Map<String, String> filters, SetupMetadata setupMetadata) {
     CompletableFutures<FilterCreationResponseWrapper> completableFutures = new CompletableFutures<>(executor);
     for (Map.Entry<String, PlanCreatorServiceInfo> serviceEntry : services.entrySet()) {
-      if (!pmsSdkHelper.containsSupportedDependency(serviceEntry.getValue(), dependencies)) {
+      if (!pmsSdkHelper.containsSupportedDependencyByYamlPath(serviceEntry.getValue(), responseBuilder.getDeps())) {
         continue;
       }
 
@@ -143,7 +146,7 @@ public class FilterCreatorMergeService {
         try {
           FilterCreationResponse filterCreationResponse =
               serviceEntry.getValue().getPlanCreationClient().createFilter(FilterCreationBlobRequest.newBuilder()
-                                                                               .putAllDependencies(dependencies)
+                                                                               .setDeps(responseBuilder.getDeps())
                                                                                .setSetupMetadata(setupMetadata)
                                                                                .build());
           if (filterCreationResponse.getResponseCase() == FilterCreationResponse.ResponseCase.ERRORRESPONSE) {

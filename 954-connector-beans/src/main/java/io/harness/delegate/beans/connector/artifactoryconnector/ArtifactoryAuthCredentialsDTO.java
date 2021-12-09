@@ -15,5 +15,5 @@ import io.swagger.v3.oas.annotations.media.Schema;
 })
 @ApiModel("ArtifactoryAuthCredentials")
 @Schema(name = "ArtifactoryAuthCredentials",
-    description = "This contains details of credentials for Artifactory Authentication")
+    description = "This entity contains the details of credentials for Artifactory Authentication")
 public interface ArtifactoryAuthCredentialsDTO extends DecryptableEntity {}

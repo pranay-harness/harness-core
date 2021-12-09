@@ -2,7 +2,7 @@ package io.harness.connector;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.ConnectorValidationParameterResponse;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.serializer.kryo.KryoResponse;
@@ -32,7 +32,7 @@ public interface ConnectorResourceClient {
 
   @GET(CONNECTORS_API + "/{identifier}/validation-params")
   @KryoResponse
-  Call<ResponseDTO<ConnectorValidationParams>> getConnectorValidationParams(
+  Call<ResponseDTO<ConnectorValidationParameterResponse>> getConnectorValidationParams(
       @Path(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
@@ -46,4 +46,11 @@ public interface ConnectorResourceClient {
       @Query(NGResourceFilterConstants.PAGE_KEY) int page, @Query(NGResourceFilterConstants.SIZE_KEY) int size,
       @Body ConnectorFilterPropertiesDTO connectorListFilter,
       @Query("getDistinctFromBranches") Boolean getDistinctFromBranches);
+
+  @POST(CONNECTORS_API + "/testConnectionInternal/{identifier}")
+  Call<ResponseDTO<ConnectorValidationResult>> testConnectionInternal(
+      @Path(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
+      @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
 }

@@ -8,6 +8,7 @@ import io.harness.resourcegroup.validator.ValidResourceGroupFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -17,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @OwnedBy(PL)
+@Schema(name = "ResourceGroupFilter", description = "Contains information of filters for Resource Group")
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor

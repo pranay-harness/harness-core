@@ -169,6 +169,10 @@ if [[ "" != "$WEEKLY_REPORT_JOB_CRON" ]]; then
   yq write -i $CONFIG_FILE scheduler-jobs-config.weeklyReportsJobCron "$WEEKLY_REPORT_JOB_CRON"
 fi
 
+if [[ "" != "$CONNECTOR_HEALTH_UPDATE_CRON" ]]; then
+  yq write -i $CONFIG_FILE scheduler-jobs-config.connectorHealthUpdateJobCron "$CONNECTOR_HEALTH_UPDATE_CRON"
+fi
+
 if [[ "" != "$HARNESS_CE_AZURE_CLIENTID" ]]; then
   yq write -i $CONFIG_FILE azureStorageSyncConfig.azureAppClientId "$HARNESS_CE_AZURE_CLIENTID"
 fi
@@ -219,6 +223,10 @@ fi
 
 if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi
+
+if [[ "" != "$CONNECTOR_HEALTH_UPDATE_JOB_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE connectorHealthUpdateJobConfig.enabled "$CONNECTOR_HEALTH_UPDATE_JOB_ENABLED"
 fi
 
 replace_key_value cfClientConfig.apiKey "$CF_CLIENT_API_KEY"

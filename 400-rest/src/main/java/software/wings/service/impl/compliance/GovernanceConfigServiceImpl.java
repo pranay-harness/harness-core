@@ -46,6 +46,7 @@ import software.wings.features.api.RestrictedApi;
 import software.wings.resources.stats.model.TimeRange;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -67,7 +68,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -101,6 +104,8 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Inject private YamlPushService yamlPushService;
   @Inject private UserGroupService userGroupService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private DeploymentFreezeUtils deploymentFreezeUtils;
+  @Inject private ExecutorService executorService;
 
   @Override
   public GovernanceConfig get(String accountId) {
@@ -161,6 +166,8 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
       if (newDeploymentFreezeEnabled) {
         validateDeploymentFreezeInput(governanceConfig.getTimeRangeBasedFreezeConfigs(), accountId, oldSetting);
         resetReadOnlyProperties(governanceConfig.getTimeRangeBasedFreezeConfigs(), accountId, oldSetting);
+        checkForWindowActivationAndSendNotification(
+            governanceConfig.getTimeRangeBasedFreezeConfigs(), oldSetting.getTimeRangeBasedFreezeConfigs(), accountId);
       }
 
       Query<GovernanceConfig> query =
@@ -217,6 +224,29 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
       toggleExpiredWindows(updatedSetting, accountId);
       populateWindowsStatus(updatedSetting, accountId);
       return updatedSetting;
+    }
+  }
+
+  private void checkForWindowActivationAndSendNotification(
+      List<TimeRangeBasedFreezeConfig> newWindows, List<TimeRangeBasedFreezeConfig> oldWindows, String accountId) {
+    if (isEmpty(newWindows)) {
+      return;
+    }
+    for (TimeRangeBasedFreezeConfig freezeWindow : newWindows) {
+      Optional<TimeRangeBasedFreezeConfig> oldMatchingWindow =
+          oldWindows.stream().filter(window -> window.getUuid().equals(freezeWindow.getUuid())).findFirst();
+
+      if (!oldMatchingWindow.isPresent()) {
+        if (freezeWindow.checkIfActive()) {
+          executorService.submit(() -> deploymentFreezeUtils.handleActivationEvent(freezeWindow, accountId));
+        }
+      } else {
+        if (freezeWindow.checkIfActive() && !oldMatchingWindow.get().checkIfActive()) {
+          executorService.submit(() -> deploymentFreezeUtils.handleActivationEvent(freezeWindow, accountId));
+        } else if (!freezeWindow.checkIfActive() && oldMatchingWindow.get().checkIfActive()) {
+          executorService.submit(() -> deploymentFreezeUtils.handleDeActivationEvent(freezeWindow, accountId));
+        }
+      }
     }
   }
 

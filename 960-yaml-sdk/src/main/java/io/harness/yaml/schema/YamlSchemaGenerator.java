@@ -32,6 +32,7 @@ import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.FieldTypesMetadata;
 import io.harness.yaml.schema.beans.OneOfMapping;
+import io.harness.yaml.schema.beans.OneOfSetMapping;
 import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.StringFieldTypeMetadata;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
@@ -278,19 +279,32 @@ public class YamlSchemaGenerator {
 
   private void addOneOfSetNodes(
       ObjectNode value, SwaggerDefinitionsMetaInfo swaggerDefinitionsMetaInfo, ObjectMapper mapper) {
-    Set<Set<String>> oneOfSets = swaggerDefinitionsMetaInfo.getOneOfSetMapping().getOneOfSets();
+    OneOfSetMapping oneOfSetMapping = swaggerDefinitionsMetaInfo.getOneOfSetMapping();
     ObjectNode nodeWithProperties = getNodeWithPropertiesFromDefinitionNode(value);
+    addRequiredNodes(nodeWithProperties, oneOfSetMapping.getRequiredFieldNames(), mapper);
 
     Map<String, List<ObjectNode>> externalPropertyFieldNamesToAllOfNodeMap = new HashMap<>();
     if (!isEmpty(swaggerDefinitionsMetaInfo.getSubtypeClassMap())) {
       addConditionalNodes(swaggerDefinitionsMetaInfo, mapper, value, externalPropertyFieldNamesToAllOfNodeMap);
     }
 
-    List<ObjectNode> oneOfSetList =
-        getOneOfSetList(mapper, oneOfSets, nodeWithProperties, externalPropertyFieldNamesToAllOfNodeMap);
+    List<ObjectNode> oneOfSetList = getOneOfSetList(
+        mapper, oneOfSetMapping.getOneOfSets(), nodeWithProperties, externalPropertyFieldNamesToAllOfNodeMap);
     removePropertiesAndRequiredFieldsFromOriginalNode(nodeWithProperties);
 
     value.putArray(SchemaConstants.ONE_OF_NODE).addAll(oneOfSetList);
+  }
+
+  private void addRequiredNodes(ObjectNode nodeWithProperties, Set<String> requiredFieldNames, ObjectMapper mapper) {
+    ArrayNode requiredFieldNamesArrayNode = mapper.createArrayNode();
+    requiredFieldNames.forEach(requiredFieldNamesArrayNode::add);
+    if (isNotEmpty(requiredFieldNames)) {
+      if (nodeWithProperties.has(REQUIRED_NODE)) {
+        ((ArrayNode) nodeWithProperties.get(REQUIRED_NODE)).addAll(requiredFieldNamesArrayNode);
+      } else {
+        nodeWithProperties.putArray(REQUIRED_NODE).addAll(requiredFieldNamesArrayNode);
+      }
+    }
   }
 
   private List<ObjectNode> getOneOfSetList(ObjectMapper mapper, Set<Set<String>> oneOfSets,
@@ -347,7 +361,8 @@ public class YamlSchemaGenerator {
     // assuming index 1 to have properties node.
     // later if we find a corner case we will have to iterate over all the nodes to find properties node and see if it
     // works.
-    if (value.get(ALL_OF_NODE) != null) {
+    if (value.get(ALL_OF_NODE) != null && value.get(ALL_OF_NODE).get(1) != null
+        && value.get(ALL_OF_NODE).get(1).has(PROPERTIES_NODE)) {
       return (ObjectNode) value.get(ALL_OF_NODE).get(1);
     } else {
       return value;

@@ -77,9 +77,10 @@ public class ServiceVariableCreator {
     if (typeField != null) {
       switch (typeField.getNode().getCurrJsonNode().textValue()) {
         case ServiceSpecType.KUBERNETES:
+        case ServiceSpecType.NATIVE_HELM:
           YamlField specNode = serviceDefNode.getNode().getField(YamlTypes.SERVICE_SPEC);
           if (specNode != null) {
-            addVariablesForKubernetesServiceSpec(specNode, yamlPropertiesMap);
+            addVariablesForKubernetesHelmServiceSpec(specNode, yamlPropertiesMap);
           }
           break;
         default:
@@ -88,7 +89,7 @@ public class ServiceVariableCreator {
     }
   }
 
-  private void addVariablesForKubernetesServiceSpec(
+  private void addVariablesForKubernetesHelmServiceSpec(
       YamlField serviceSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
     YamlField artifactsNode = serviceSpecNode.getNode().getField(YamlTypes.ARTIFACT_LIST_CONFIG);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(artifactsNode)) {

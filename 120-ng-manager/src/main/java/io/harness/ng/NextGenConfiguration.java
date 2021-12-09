@@ -23,14 +23,15 @@ import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
-import io.harness.ng.core.NextGenConfig;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.opaclient.OpaServiceConfiguration;
 import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.redis.RedisConfig;
+import io.harness.reflection.HarnessReflections;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.CEAzureSetupConfig;
 import io.harness.remote.CEGcpSetupConfig;
+import io.harness.remote.NextGenConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.remote.ResourceGroupClientConfig;
 import io.harness.signup.SignupNotificationConfiguration;
@@ -47,11 +48,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.reflections.Reflections;
+import org.apache.commons.lang3.StringUtils;
 
 @Getter
 @OwnedBy(HarnessTeam.PL)
@@ -95,6 +97,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String FEEDBACK_PACKAGE = "io.harness.ng.feedback.resources";
   public static final String INSTANCE_SYNC_PACKAGE = "io.harness.ng.instancesync.resources";
   public static final String INSTANCE_NG_PACKAGE = "io.harness.ng.instance";
+  public static final String SMTP_NG_RESOURCE = "io.harness.ng.core.smtp.resources";
   public static final Collection<Class<?>> HARNESS_RESOURCE_CLASSES = getResourceClasses();
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
@@ -114,6 +117,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("pipelineServiceClientConfig") private ServiceHttpClientConfig pipelineServiceClientConfig;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty("ceNextGenClientConfig") private ServiceHttpClientConfig ceNextGenClientConfig;
+  @JsonProperty("lightwingClientConfig") private ServiceHttpClientConfig lightwingClientConfig;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
@@ -174,15 +178,20 @@ public class NextGenConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(CORE_PACKAGE, CONNECTOR_PACKAGE, GITOPS_PROVIDER_RESOURCE_PACKAGE,
-        GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE, OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE,
-        SIGNUP_PACKAGE, MOCKSERVER_PACKAGE, ACCOUNT_PACKAGE, LICENSE_PACKAGE, POLLING_PACKAGE, ENFORCEMENT_PACKAGE,
-        ENFORCEMENT_CLIENT_PACKAGE, ARTIFACTS_PACKAGE, AUTHENTICATION_SETTINGS_PACKAGE, CD_OVERVIEW_PACKAGE,
-        ACTIVITY_HISTORY_PACKAGE, SERVICE_PACKAGE, SERVICE_ACCOUNTS_PACKAGE, BUCKETS_PACKAGE, CLUSTER_GCP_PACKAGE,
-        WEBHOOK_PACKAGE, ENVIRONMENT_PACKAGE, USERPROFILE_PACKAGE, JIRA_PACKAGE, EXECUTION_PACKAGE, ENTITYSETUP_PACKAGE,
-        SCHEMA_PACKAGE, DELEGATE_PACKAGE, ACCESS_CONTROL_PACKAGE, FEEDBACK_PACKAGE, INSTANCE_SYNC_PACKAGE,
-        INVITE_PACKAGE, USER_PACKAGE, INSTANCE_NG_PACKAGE);
-    return reflections.getTypesAnnotatedWith(Path.class);
+    return HarnessReflections.get()
+        .getTypesAnnotatedWith(Path.class)
+        .stream()
+        .filter(klazz
+            -> StringUtils.startsWithAny(klazz.getPackage().getName(), CORE_PACKAGE, CONNECTOR_PACKAGE,
+                GITOPS_PROVIDER_RESOURCE_PACKAGE, GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE,
+                OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE, SIGNUP_PACKAGE, MOCKSERVER_PACKAGE,
+                ACCOUNT_PACKAGE, LICENSE_PACKAGE, POLLING_PACKAGE, ENFORCEMENT_PACKAGE, ENFORCEMENT_CLIENT_PACKAGE,
+                ARTIFACTS_PACKAGE, AUTHENTICATION_SETTINGS_PACKAGE, CD_OVERVIEW_PACKAGE, ACTIVITY_HISTORY_PACKAGE,
+                SERVICE_PACKAGE, SERVICE_ACCOUNTS_PACKAGE, BUCKETS_PACKAGE, CLUSTER_GCP_PACKAGE, WEBHOOK_PACKAGE,
+                ENVIRONMENT_PACKAGE, USERPROFILE_PACKAGE, JIRA_PACKAGE, EXECUTION_PACKAGE, ENTITYSETUP_PACKAGE,
+                SCHEMA_PACKAGE, DELEGATE_PACKAGE, ACCESS_CONTROL_PACKAGE, FEEDBACK_PACKAGE, INSTANCE_SYNC_PACKAGE,
+                INVITE_PACKAGE, USER_PACKAGE, INSTANCE_NG_PACKAGE, SMTP_NG_RESOURCE))
+        .collect(Collectors.toSet());
   }
 
   private static Set<String> getUniquePackages(Collection<Class<?>> classes) {

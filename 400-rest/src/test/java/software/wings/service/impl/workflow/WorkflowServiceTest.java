@@ -535,7 +535,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(userGroupService.getDefaultUserGroup(Mockito.anyString()))
         .thenReturn(UserGroup.builder().uuid("some-user-group-id").build());
     when(featureFlagService.isEnabled(eq(FeatureName.DEFAULT_ARTIFACT), any())).thenReturn(true);
-    when(featureFlagService.isEnabled(eq(FeatureName.TERRAGRUNT), any())).thenReturn(true);
     Role role = aRole()
                     .withRoleType(RoleType.ACCOUNT_ADMIN)
                     .withUuid(ROLE_ID)

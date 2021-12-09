@@ -152,7 +152,7 @@ spec:
           value: ""
         - name: KUBECTL_PATH
           value: ""
-        - name: ENABlE_CE
+        - name: ENABLE_CE
           value: "${enableCE}"
         - name: GRPC_SERVICE_ENABLED
           value: "${grpcServiceEnabled}"

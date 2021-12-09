@@ -7,11 +7,11 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.WingsBaseTest;
+import software.wings.sm.status.StateStatusUpdateInfo;
 
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
@@ -27,7 +27,7 @@ import org.reflections.Reflections;
 public class KryoUtilTest extends WingsBaseTest {
   @Inject KryoSerializer kryoSerializer;
 
-  Class<?> classToRunTest = GithubConnectorDTO.class;
+  Class<?> classToRunTest = StateStatusUpdateInfo.class;
 
   @Test
   @Owner(developers = ABHINAV)
@@ -50,6 +50,7 @@ public class KryoUtilTest extends WingsBaseTest {
     if (classesInvolved.contains(clazz)) {
       return;
     }
+    classesInvolved.add(clazz);
     // if class has subtypes traverse them.
     Set<Class<?>> subTypesOf = reflections.getSubTypesOf((Class<Object>) clazz);
     if (!subTypesOf.isEmpty()) {
@@ -69,10 +70,8 @@ public class KryoUtilTest extends WingsBaseTest {
       }
       if (checkIfClassShouldBeTraversed(type)) {
         getAllInvolvedClasses(classesInvolved, type, reflections);
-        classesInvolved.add(type);
       }
     }
-    classesInvolved.add(clazz);
   }
 
   private boolean isAbstractOrInterface(Class<?> clazz) {

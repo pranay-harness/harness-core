@@ -186,12 +186,15 @@ public class SignupServiceImpl implements SignupService {
         throw new InvalidRequestException("Email is already signed up", ErrorCode.USER_ALREADY_REGISTERED, USER);
       }
       throw e;
+    } catch (Exception e) {
+      log.error("Unable to finish community provision flow", e);
+      throw e;
     }
-
-    waitForRbacSetup(userInfo.getDefaultAccountId(), userInfo.getUuid(), userInfo.getEmail());
 
     licenseService.startCommunityLicense(userInfo.getDefaultAccountId(), ModuleType.CD);
     sendCommunitySucceedTelemetry(userInfo.getEmail(), userInfo.getDefaultAccountId(), userInfo, COMMUNITY_PROVISION);
+
+    waitForRbacSetup(userInfo.getDefaultAccountId(), userInfo.getUuid(), userInfo.getEmail());
     return userInfo;
   }
 

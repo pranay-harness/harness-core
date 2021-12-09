@@ -149,10 +149,14 @@ import io.harness.delegate.task.git.GitValidationHandler;
 import io.harness.delegate.task.git.NGGitCommandTask;
 import io.harness.delegate.task.gitapi.DecryptGitAPIAccessTask;
 import io.harness.delegate.task.gitapi.GitApiTask;
+import io.harness.delegate.task.helm.HelmCommandTaskNG;
+import io.harness.delegate.task.helm.HelmDeployServiceImplNG;
+import io.harness.delegate.task.helm.HelmDeployServiceNG;
 import io.harness.delegate.task.helm.HelmValuesFetchTaskNG;
 import io.harness.delegate.task.helm.HttpHelmConnectivityDelegateTask;
 import io.harness.delegate.task.helm.HttpHelmValidationHandler;
 import io.harness.delegate.task.jira.JiraTaskNG;
+import io.harness.delegate.task.jira.JiraValidationHandler;
 import io.harness.delegate.task.jira.connection.JiraTestConnectionTaskNG;
 import io.harness.delegate.task.k8s.K8sFetchServiceAccountTask;
 import io.harness.delegate.task.k8s.K8sTaskNG;
@@ -373,6 +377,7 @@ import software.wings.delegatetasks.container.ContainerDummyTask;
 import software.wings.delegatetasks.cv.LogDataCollectionTask;
 import software.wings.delegatetasks.cv.MetricsDataCollectionTask;
 import software.wings.delegatetasks.cvng.K8InfoDataService;
+import software.wings.delegatetasks.helm.HelmCollectChartTask;
 import software.wings.delegatetasks.helm.HelmCommandTask;
 import software.wings.delegatetasks.helm.HelmValuesFetchTask;
 import software.wings.delegatetasks.jira.JiraTask;
@@ -754,7 +759,7 @@ public class DelegateModule extends AbstractModule {
   @Singleton
   @Named("asyncExecutor")
   public ExecutorService asyncExecutor() {
-    ExecutorService asyncExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
+    ExecutorService asyncExecutor = ThreadPool.create(10, 400, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("async-%d").setPriority(Thread.MIN_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { asyncExecutor.shutdownNow(); }));
     return asyncExecutor;
@@ -962,6 +967,8 @@ public class DelegateModule extends AbstractModule {
     bind(DelegateFileManagerBase.class).to(DelegateFileManagerImpl.class);
     bind(TerraformClient.class).to(TerraformClientImpl.class);
 
+    bind(HelmDeployServiceNG.class).to(HelmDeployServiceImplNG.class);
+
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
     serviceCommandExecutorServiceMapBinder.addBinding(DeploymentType.ECS.name())
@@ -1088,6 +1095,8 @@ public class DelegateModule extends AbstractModule {
     tfTaskTypeToHandlerMap.addBinding(TFTaskType.APPLY).to(TerraformApplyTaskHandler.class);
     tfTaskTypeToHandlerMap.addBinding(TFTaskType.PLAN).to(TerraformPlanTaskHandler.class);
     tfTaskTypeToHandlerMap.addBinding(TFTaskType.DESTROY).to(TerraformDestroyTaskHandler.class);
+
+    // HelmNG Task Handlers
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(HttpService.class).to(HttpServiceImpl.class);
@@ -1427,6 +1436,8 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.HELM_REPO_CONFIG_VALIDATION).toInstance(HelmRepoConfigValidationTask.class);
     mapBinder.addBinding(TaskType.HELM_VALUES_FETCH).toInstance(HelmValuesFetchTask.class);
     mapBinder.addBinding(TaskType.HELM_VALUES_FETCH_NG).toInstance(HelmValuesFetchTaskNG.class);
+    mapBinder.addBinding(TaskType.HELM_COMMAND_TASK_NG).toInstance(HelmCommandTaskNG.class);
+    mapBinder.addBinding(TaskType.HELM_COLLECT_CHART).toInstance(HelmCollectChartTask.class);
     mapBinder.addBinding(TaskType.SLACK).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.INITIALIZATION_PHASE).toInstance(CIInitializeTask.class);
     mapBinder.addBinding(TaskType.CI_EXECUTE_STEP).toInstance(CIExecuteStepTask.class);
@@ -1593,6 +1604,8 @@ public class DelegateModule extends AbstractModule {
         .to(CVConnectorValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.CUSTOM_HEALTH.getDisplayName())
         .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.JIRA.getDisplayName())
+        .to(JiraValidationHandler.class);
   }
 
   private void bindExceptionHandlers() {

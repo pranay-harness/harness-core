@@ -186,6 +186,7 @@ import org.quartz.TriggerKey;
 @Slf4j
 @TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerServiceImpl implements TriggerService {
+  private static final long MIN_INTERVAL = 300;
   public static final String TRIGGER_SLOWNESS_ERROR_MESSAGE = "Trigger rejected due to slowness in the product";
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
@@ -2104,6 +2105,12 @@ public class TriggerServiceImpl implements TriggerService {
         throw new InvalidRequestException(
             "Given cron expression doesn't evaluate to a valid time. Please check the expression provided");
       }
+      nextIterations = trigger.getNextIterations();
+      if (nextIterations.size() > 1 && ((nextIterations.get(1) - nextIterations.get(0)) / 1000 < MIN_INTERVAL)) {
+        throw new InvalidRequestException(
+            "Deployments can be triggered only at 5 minute intervals. Cron Expression should evaluate to time intervals of at least "
+            + MIN_INTERVAL + " seconds.");
+      }
     }
   }
 
@@ -2233,12 +2240,17 @@ public class TriggerServiceImpl implements TriggerService {
         : collectNewArtifactForBuildNumber(appId, artifactStream, buildNumber);
   }
 
-  private HelmChart getAlreadyCollectedHelmChartForVersionNumber(
+  private HelmChart getAlreadyCollectedHelmChartOrCollectNewForVersionNumber(
       String appId, String appManifestId, String versionNumber) {
     ApplicationManifest appManifest = applicationManifestService.getById(appId, appManifestId);
     notNullCheck("Application Manifest doesn't exist", appManifest, USER);
     HelmChart helmChart =
         helmChartService.getManifestByVersionNumber(appManifest.getAccountId(), appManifestId, versionNumber);
+
+    if (helmChart == null) {
+      helmChart = helmChartService.fetchByChartVersion(
+          appManifest.getAccountId(), appId, appManifest.getServiceId(), appManifest.getName(), versionNumber);
+    }
     notNullCheck("Helm chart with given version number doesn't exist", helmChart, USER);
     return helmChart;
   }
@@ -2324,7 +2336,7 @@ public class TriggerServiceImpl implements TriggerService {
           if (isBlank(versionNo)) {
             throw new InvalidRequestException("Version Number is Mandatory", USER);
           }
-          helmCharts.add(getAlreadyCollectedHelmChartForVersionNumber(
+          helmCharts.add(getAlreadyCollectedHelmChartOrCollectNewForVersionNumber(
               trigger.getAppId(), manifestSelection.getAppManifestId(), versionNo));
         });
   }

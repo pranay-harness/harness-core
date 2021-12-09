@@ -35,11 +35,14 @@ import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.utils.NGUtils;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.secrets.SecretService;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateProfileObserver;
+import io.harness.validation.SuppressValidation;
 
 import software.wings.beans.Account;
 import software.wings.beans.Event;
@@ -88,7 +91,9 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Inject private DelegateCache delegateCache;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
-  @Getter private final Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
+  @Getter(onMethod = @__(@SuppressValidation))
+  private final Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
+  @Inject RemoteObserverInformer remoteObserverInformer;
 
   @Override
   public PageResponse<DelegateProfile> list(PageRequest<DelegateProfile> pageRequest) {
@@ -166,8 +171,12 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     DelegateProfile updatedDelegateProfile = get(delegateProfile.getAccountId(), delegateProfile.getUuid());
     log.info("Updated delegate profile: {}", updatedDelegateProfile.getUuid());
 
+    // Both subject and remote Observer are needed since in few places DMS might not be present
     delegateProfileSubject.fireInform(
         DelegateProfileObxxxxxxxx:onProfileUpdated, originalProfile, updatedDelegateProfile);
+    remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(DelegateProfileObserver.class, "onProfileUpdated",
+                                         DelegateProfile.class, DelegateProfile.class),
+        DelegateProfileServiceImpl.class, originalProfile, updatedDelegateProfile);
 
     auditServiceHelper.reportForAuditingUsingAccountId(
         delegateProfile.getAccountId(), delegateProfile, updatedDelegateProfile, Event.Type.UPDATE);
@@ -201,6 +210,9 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
     delegateProfileSubject.fireInform(
         DelegateProfileObxxxxxxxx:onProfileUpdated, originalProfile, updatedDelegateProfile);
+    remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(DelegateProfileObserver.class, "onProfileUpdated",
+                                         DelegateProfile.class, DelegateProfile.class),
+        DelegateProfileServiceImpl.class, originalProfile, updatedDelegateProfile);
 
     auditServiceHelper.reportForAuditingUsingAccountId(
         delegateProfile.getAccountId(), delegateProfile, updatedDelegateProfile, Event.Type.UPDATE);
@@ -449,11 +461,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     if (!account.isForImport()) {
       DelegateProfile cgDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), null, false);
       add(cgDelegateProfile);
-
-      DelegateProfile ngDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), null, true);
-      add(ngDelegateProfile);
-
-      log.info("Primary Delegate Profiles added.");
+      log.info("Primary CG Delegate Profile added.");
 
       return;
     }

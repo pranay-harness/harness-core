@@ -16,6 +16,7 @@ import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.ConnectorValidationParameterResponse;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -113,16 +114,21 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
   }
 
   @Override
-  public ConnectorValidationParams getConnectorValidationParams(
+  public ConnectorValidationParameterResponse getConnectorValidationParams(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     final Optional<ConnectorResponseDTO> connectorResponseDTO =
         connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     return connectorResponseDTO
         .map(connectorResponse -> {
           final ConnectorType connectorType = connectorResponse.getConnector().getConnectorType();
-          return connectorValidationParamsProviderMap.get(connectorType.getDisplayName())
-              .getConnectorValidationParams(connectorResponse.getConnector(),
-                  connectorResponse.getConnector().getName(), accountIdentifier, orgIdentifier, projectIdentifier);
+          ConnectorValidationParams connectorValidationParams =
+              connectorValidationParamsProviderMap.get(connectorType.getDisplayName())
+                  .getConnectorValidationParams(connectorResponse.getConnector(),
+                      connectorResponse.getConnector().getName(), accountIdentifier, orgIdentifier, projectIdentifier);
+          return ConnectorValidationParameterResponse.builder()
+              .connectorValidationParams(connectorValidationParams)
+              .isInvalid(!connectorResponse.getEntityValidityDetails().isValid())
+              .build();
         })
         .orElseThrow(()
                          -> new InvalidRequestException(String.format(CONNECTOR_STRING, connectorIdentifier,

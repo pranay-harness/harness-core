@@ -15,6 +15,7 @@ import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityBuil
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeEventDTO.ChangeEventDTOBuilder;
 import io.harness.cvng.beans.change.ChangeSourceType;
@@ -138,6 +139,14 @@ public class BuilderFactory {
         .callbackId(generateUuid());
   }
 
+  public ProjectParams getProjectParams() {
+    return ProjectParams.builder()
+        .accountIdentifier(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .build();
+  }
+
   public ServiceResponseDTOBuilder serviceResponseDTOBuilder() {
     return ServiceResponseDTO.builder()
         .accountId(context.getAccountId())
@@ -234,6 +243,7 @@ public class BuilderFactory {
         .tierName("tier")
         .connectorRef(CONNECTOR_IDENTIFIER)
         .feature("Application Monitoring")
+        .metricDefinitions(Collections.emptyList())
         .metricPacks(new HashSet<MetricPackDTO>() {
           { add(MetricPackDTO.builder().identifier(cvMonitoringCategory).build()); }
         })
@@ -320,6 +330,19 @@ public class BuilderFactory {
         .envIdentifier(context.getEnvIdentifier())
         .connectorIdentifier("connectorRef")
         .category(CVMonitoringCategory.PERFORMANCE);
+  }
+  public PrometheusCVConfig prometheusCVConfigWithMetricInfo() {
+    MetricPack metricPack = MetricPack.builder().dataCollectionDsl("metric-pack-dsl").build();
+    PrometheusCVConfig cvConfig = prometheusCVConfigBuilder().groupName("mygroupName").build();
+    cvConfig.setMetricPack(metricPack);
+    PrometheusCVConfig.MetricInfo metricInfo = PrometheusCVConfig.MetricInfo.builder()
+                                                   .metricName("myMetric")
+                                                   .metricType(TimeSeriesMetricType.RESP_TIME)
+                                                   .prometheusMetricName("cpu_usage_total")
+                                                   .build();
+
+    cvConfig.setMetricInfoList(Arrays.asList(metricInfo));
+    return cvConfig;
   }
 
   public StackdriverCVConfigBuilder stackdriverMetricCVConfigBuilder() {

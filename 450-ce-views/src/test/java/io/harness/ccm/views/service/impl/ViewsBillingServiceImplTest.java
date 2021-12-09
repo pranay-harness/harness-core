@@ -125,12 +125,19 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
         .when(viewsQueryBuilder)
         .getFilterValuesQuery(any(), any(), any(), anyString(), anyInt(), anyInt());
     doCallRealMethod().when(viewsQueryBuilder).getQuery(any(), any(), any(), any(), any(), any(), anyString());
+    doCallRealMethod()
+        .when(viewsQueryBuilder)
+        .getQuery(any(), any(), any(), any(), any(), any(), anyString(), anyInt());
     doCallRealMethod().when(viewsQueryBuilder).getTotalCountQuery(any(), any(), any(), any(), anyString());
     doReturn(resultSet).when(bigQuery).query(any());
     doCallRealMethod().when(viewsQueryHelper).buildQueryParams(anyString(), anyBoolean());
+    doCallRealMethod().when(viewsQueryHelper).buildQueryParams(anyString(), anyBoolean(), anyBoolean());
     doCallRealMethod()
         .when(viewsQueryHelper)
         .buildQueryParams(anyString(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean());
+    doCallRealMethod()
+        .when(viewsQueryHelper)
+        .buildQueryParams(anyString(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt());
     doCallRealMethod().when(viewsQueryBuilder).getViewFieldInput(any());
 
     clusterId = QLCEViewFieldInput.builder()
@@ -767,7 +774,7 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
   }
 
   private ViewQueryParams getMockViewQueryParams(boolean isClusterQuery) {
-    return ViewQueryParams.builder().accountId(ACCOUNT_ID).isClusterQuery(isClusterQuery).build();
+    return ViewQueryParams.builder().accountId(ACCOUNT_ID).isClusterQuery(isClusterQuery).timeOffsetInDays(0).build();
   }
 
   private ViewQueryParams getMockViewQueryParamsForTotalCount(boolean isClusterQuery) {
@@ -775,6 +782,7 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
         .accountId(ACCOUNT_ID)
         .isClusterQuery(isClusterQuery)
         .isTotalCountQuery(true)
+        .timeOffsetInDays(0)
         .build();
   }
 
@@ -783,6 +791,7 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
         .accountId(ACCOUNT_ID)
         .isClusterQuery(isClusterQuery)
         .isTimeTruncGroupByRequired(isTimeTruncGroupByRequired)
+        .timeOffsetInDays(0)
         .build();
   }
 }

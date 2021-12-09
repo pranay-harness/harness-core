@@ -5,8 +5,8 @@ import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.platform.PlatformConfiguration.RESOURCE_GROUP_RESOURCES;
 import static io.harness.platform.PlatformConfiguration.getPlatformServiceCombinedResourceClasses;
-import static io.harness.platform.PlatformConfiguration.getResourceGroupServiceResourceClasses;
 import static io.harness.platform.audit.AuditServiceSetup.AUDIT_SERVICE;
 import static io.harness.platform.notification.NotificationServiceSetup.NOTIFICATION_SERVICE;
 import static io.harness.platform.resourcegroup.ResourceGroupServiceSetup.RESOURCE_GROUP_SERVICE;
@@ -333,9 +333,6 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
   }
 
   public static Collection<Class<?>> getOAS3ResourceClassesOnly() {
-    return getResourceGroupServiceResourceClasses()
-        .stream()
-        .filter(x -> x.isAnnotationPresent(Tag.class))
-        .collect(Collectors.toList());
+    return RESOURCE_GROUP_RESOURCES.stream().filter(x -> x.isAnnotationPresent(Tag.class)).collect(Collectors.toList());
   }
 }

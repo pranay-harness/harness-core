@@ -4,6 +4,7 @@ import static software.wings.beans.TaskType.CVNG_CONNECTOR_VALIDATE_TASK;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -73,5 +74,11 @@ public class CVConnectorValidator extends AbstractConnectorValidator {
         .errorSummary(cvConnectorTaskResponse.getErrorMessage())
         .delegateId(getDelegateId(cvConnectorTaskResponse))
         .build();
+  }
+
+  @Override
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    return null;
   }
 }

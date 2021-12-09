@@ -4,6 +4,7 @@ import static io.harness.delegate.beans.artifactory.ArtifactoryTaskParams.TaskTy
 
 import static software.wings.beans.TaskType.NG_ARTIFACTORY_TASK;
 
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskParams;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskResponse;
@@ -41,5 +42,11 @@ public class ArtifactoryConnectionValidator extends AbstractConnectorValidator {
     ArtifactoryTaskResponse responseData = (ArtifactoryTaskResponse) super.validateConnector(
         connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return responseData.getConnectorValidationResult();
+  }
+
+  @Override
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    return null;
   }
 }

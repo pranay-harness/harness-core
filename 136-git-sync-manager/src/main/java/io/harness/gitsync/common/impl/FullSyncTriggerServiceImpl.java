@@ -6,11 +6,14 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.gitsync.FullSyncEventRequest;
 import io.harness.gitsync.common.dtos.TriggerFullSyncRequestDTO;
 import io.harness.gitsync.common.dtos.TriggerFullSyncResponseDTO;
 import io.harness.gitsync.common.service.FullSyncTriggerService;
-import io.harness.gitsync.core.fullsync.FullSyncAccumulatorService;
+import io.harness.gitsync.core.fullsync.GitFullSyncConfigService;
+import io.harness.gitsync.fullsync.dtos.GitFullSyncConfigDTO;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -22,20 +25,36 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class FullSyncTriggerServiceImpl implements FullSyncTriggerService {
-  FullSyncAccumulatorService fullSyncAccumulatorService;
-  Producer eventProducer;
+  private final Producer eventProducer;
+  private final GitFullSyncConfigService gitFullSyncConfigService;
 
   @Inject
-  public FullSyncTriggerServiceImpl(FullSyncAccumulatorService fullSyncAccumulatorService,
-      @Named(EventsFrameworkConstants.GIT_FULL_SYNC_STREAM) Producer fullSyncEventProducer) {
-    this.fullSyncAccumulatorService = fullSyncAccumulatorService;
+  public FullSyncTriggerServiceImpl(@Named(EventsFrameworkConstants.GIT_FULL_SYNC_STREAM)
+                                    Producer fullSyncEventProducer, GitFullSyncConfigService gitFullSyncConfigService) {
     this.eventProducer = fullSyncEventProducer;
+    this.gitFullSyncConfigService = gitFullSyncConfigService;
   }
 
   @Override
-  public TriggerFullSyncResponseDTO triggerFullSync(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, TriggerFullSyncRequestDTO fullSyncRequest) {
-    final String messageId = sendEventForFullSync(accountIdentifier, orgIdentifier, projectIdentifier, fullSyncRequest);
+  public TriggerFullSyncResponseDTO triggerFullSync(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    GitFullSyncConfigDTO gitFullSyncConfigDTO =
+        gitFullSyncConfigService.get(accountIdentifier, orgIdentifier, projectIdentifier)
+            .orElseThrow(()
+                             -> new InvalidRequestException(
+                                 "There is no configuration saved for performing full sync, please save and try again",
+                                 WingsException.USER));
+
+    TriggerFullSyncRequestDTO triggerFullSyncRequestDTO =
+        TriggerFullSyncRequestDTO.builder()
+            .branch(gitFullSyncConfigDTO.getBranch())
+            .commitMessage(gitFullSyncConfigDTO.getMessage())
+            .createPR(gitFullSyncConfigDTO.isCreatePullRequest())
+            .targetBranchForPR(gitFullSyncConfigDTO.getBaseBranch())
+            .yamlGitConfigIdentifier(gitFullSyncConfigDTO.getRepoIdentifier())
+            .build();
+    final String messageId =
+        sendEventForFullSync(accountIdentifier, orgIdentifier, projectIdentifier, triggerFullSyncRequestDTO);
     if (messageId == null) {
       return TriggerFullSyncResponseDTO.builder().isFullSyncTriggered(false).build();
     }

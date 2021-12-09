@@ -65,7 +65,6 @@ import io.harness.ng.DbAliases;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.ng.core.template.exception.NGTemplateResolveExceptionMapper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
@@ -313,7 +312,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(appConfig);
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
     modules.add(PipelineServiceUtilityModule.getInstance());
-
     Injector injector = Guice.createInjector(modules);
     registerStores(appConfig, injector);
     registerEventListeners(injector);
@@ -445,8 +443,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     // NodeUpdateObservers
     nodeExecutionService.getNodeUpdateObserverSubject().register(
         injector.getInstance(Key.get(ExecutionSummaryUpdateEventHandler.class)));
-    nodeExecutionService.getNodeUpdateObserverSubject().register(
-        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
     nodeExecutionService.getNodeUpdateObserverSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
 
@@ -709,7 +705,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
-    environment.jersey().register(NGTemplateResolveExceptionMapper.class);
 
     environment.jersey().register(MultiPartFeature.class);
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
