@@ -46,6 +46,6 @@ public class CIBeansMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sweepingoutputs.PodCleanupDetails", PodCleanupDetails.class);
     w.put("sweepingoutputs.StageInfraDetails", StageInfraDetails.class);
     w.put("sweepingoutputs.K8StageInfraDetails", K8StageInfraDetails.class);
-    w.put("sweepingoutputs.VmStageInfraDetails", VmStageInfraDetails.class);
+    w.put("sweepingoutputs.AwsVmStageInfraDetails", VmStageInfraDetails.class);
   }
 }

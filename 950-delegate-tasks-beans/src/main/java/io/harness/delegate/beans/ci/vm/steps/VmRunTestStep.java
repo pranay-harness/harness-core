@@ -5,10 +5,8 @@ import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Value;
 
-@Data
 @Value
 @Builder
 public class VmRunTestStep implements VmStepInfo {
