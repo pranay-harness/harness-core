@@ -51,6 +51,7 @@ import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
+import io.harness.cdng.k8s.K8sCanaryStepNode;
 import io.harness.connector.ConnectorModule;
 import io.harness.connector.events.ConnectorEventHandler;
 import io.harness.connector.helper.DecryptionHelper;
@@ -262,7 +263,9 @@ import ru.vyarus.guice.validator.ValidationModule;
 public class NextGenModule extends AbstractModule {
   public static final String SECRET_MANAGER_CONNECTOR_SERVICE = "secretManagerConnectorService";
   public static final String CONNECTOR_DECORATOR_SERVICE = "connectorDecoratorService";
-  public static Set<Class<?>> cdStepsMovedToNewSchema = new HashSet<>();
+  public static Set<Class<?>> cdStepsMovedToNewSchema = new HashSet() {
+    { add(K8sCanaryStepNode.class); }
+  };
   private final NextGenConfiguration appConfig;
   public NextGenModule(NextGenConfiguration appConfig) {
     this.appConfig = appConfig;
