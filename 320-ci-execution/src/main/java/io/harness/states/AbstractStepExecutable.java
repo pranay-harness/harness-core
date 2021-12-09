@@ -106,6 +106,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private CIDelegateTaskExecutor ciDelegateTaskExecutor;
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
+  @Inject private VmStepSerializer vmStepSerializer;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -210,7 +211,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
                                            .stageRuntimeId(stageDetails.getStageRuntimeID())
                                            .stepRuntimeId(runtimeId)
                                            .stepId(stepIdentifier)
-                                           .stepInfo(VmStepSerializer.serialize(ciStepInfo, stepIdentifier,
+                                           .stepInfo(vmStepSerializer.serialize(ciStepInfo, stepIdentifier,
                                                ParameterField.createValueField(Timeout.fromString(stringTimeout))))
                                            .logKey(logKey)
                                            .workingDir(STEP_WORK_DIR)

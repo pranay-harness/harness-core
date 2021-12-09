@@ -28,7 +28,7 @@ public class VmRunTestStep implements VmStepInfo {
   private Map<String, String> envVariables;
   private List<String> outputVariables;
   private VmUnitTestReport unitTestReport;
-  private int timeoutSecs;
+  private long timeoutSecs;
 
   @Override
   public VmStepInfo.Type getType() {

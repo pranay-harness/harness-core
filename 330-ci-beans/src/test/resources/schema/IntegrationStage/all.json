@@ -3163,6 +3163,14 @@
                 }
               ]
             },
+            "shell": {
+              "type": "string",
+              "enum": [
+                "Sh",
+                "Bash",
+                "Powershell"
+              ]
+            },
             "testAnnotations": {
               "type": "string"
             }
