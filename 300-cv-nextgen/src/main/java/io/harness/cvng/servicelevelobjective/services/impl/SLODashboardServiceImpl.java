@@ -22,12 +22,10 @@ import io.harness.ng.core.common.beans.NGTag;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,44 +55,7 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         sloPageResponse.getContent()
             .stream()
             .map(sloResponse -> {
-              Preconditions.checkState(
-                  sloResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators().size() == 1,
-                  "Only one service level indicator is supported");
-              ServiceLevelIndicatorDTO serviceLevelIndicatorDTO =
-                  sloResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators().get(0);
-              ServiceLevelIndicator serviceLevelIndicator = serviceLevelIndicatorService.getServiceLevelIndicator(
-                  projectParams, serviceLevelIndicatorDTO.getIdentifier());
-
-              ServiceLevelObjectiveDTO slo = sloResponse.getServiceLevelObjectiveDTO();
-              ServiceLevelObjective serviceLevelObjective =
-                  serviceLevelObjectiveService.getEntity(projectParams, slo.getIdentifier());
-              MonitoredServiceDTO monitoredService = identifierToMonitoredServiceMap.get(slo.getMonitoredServiceRef());
-              LocalDate currentLocalDate = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC).toLocalDate();
-              ServiceLevelObjective.TimePeriod timePeriod = serviceLevelObjective.getCurrentTimeRange(currentLocalDate);
-              List<SLODashboardWidget.Point> points = new ArrayList<>();
-              Instant currentTimeMinute = DateTimeUtils.roundDownTo1MinBoundary(clock.instant());
-              for (int i = 100; i >= 0; i--) {
-                points.add(SLODashboardWidget.Point.builder()
-                               .timestamp(currentTimeMinute.minus(Duration.ofMinutes(i * 15)).toEpochMilli())
-                               .value(i)
-                               .build());
-              }
-              List<SLODashboardWidget.Point> sloPerformanceTrend =
-                  sliRecordService.sliPerformanceTrend(serviceLevelIndicator.getUuid(),
-                      timePeriod.getStartDate().atStartOfDay().toInstant(ZoneOffset.UTC), currentTimeMinute);
-              return SLODashboardWidget.builder()
-                  .title(slo.getName())
-                  .monitoredServiceIdentifier(slo.getMonitoredServiceRef())
-                  .monitoredServiceName(monitoredService.getName())
-                  .healthSourceIdentifier(slo.getHealthSourceRef())
-                  .healthSourceName(getHealthSourceName(monitoredService, slo.getHealthSourceRef()))
-                  .tags(getNGTags(slo.getTags()))
-                  .type(slo.getServiceLevelIndicators().get(0).getType())
-                  .burnRate(SLODashboardWidget.BurnRate.builder().currentRatePercentage(10).build())
-                  .sloPerformanceTrend(sloPerformanceTrend)
-                  .errorBudgetBurndown(points)
-                  .timeRemainingDays(timePeriod.getRemainingDays(currentLocalDate).getDays())
-                  .build();
+              return getSloDashboardWidget(projectParams, identifierToMonitoredServiceMap, sloResponse);
             })
             .collect(Collectors.toList());
     return PageResponse.<SLODashboardWidget>builder()
@@ -104,6 +65,44 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .totalItems(sloPageResponse.getTotalItems())
         .pageItemCount(sloPageResponse.getPageItemCount())
         .content(sloDashboardWidgets)
+        .build();
+  }
+
+  private SLODashboardWidget getSloDashboardWidget(ProjectParams projectParams,
+      Map<String, MonitoredServiceDTO> identifierToMonitoredServiceMap, ServiceLevelObjectiveResponse sloResponse) {
+    Preconditions.checkState(sloResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators().size() == 1,
+        "Only one service level indicator is supported");
+    ServiceLevelIndicatorDTO serviceLevelIndicatorDTO =
+        sloResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators().get(0);
+    ServiceLevelIndicator serviceLevelIndicator =
+        serviceLevelIndicatorService.getServiceLevelIndicator(projectParams, serviceLevelIndicatorDTO.getIdentifier());
+
+    ServiceLevelObjectiveDTO slo = sloResponse.getServiceLevelObjectiveDTO();
+    ServiceLevelObjective serviceLevelObjective =
+        serviceLevelObjectiveService.getEntity(projectParams, slo.getIdentifier());
+    MonitoredServiceDTO monitoredService = identifierToMonitoredServiceMap.get(slo.getMonitoredServiceRef());
+    LocalDate currentLocalDate = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC).toLocalDate();
+    ServiceLevelObjective.TimePeriod timePeriod = serviceLevelObjective.getCurrentTimeRange(currentLocalDate);
+    Instant currentTimeMinute = DateTimeUtils.roundDownTo1MinBoundary(clock.instant());
+    SLODashboardWidget.SLOGraphData sloGraphData = sliRecordService.getGraphData(serviceLevelIndicator.getUuid(),
+        timePeriod.getStartDate().atStartOfDay().toInstant(ZoneOffset.UTC), currentTimeMinute,
+        serviceLevelObjective.getTotalErrorBudgetMinutes(currentLocalDate));
+    int remainingDays = timePeriod.getRemainingDays(currentLocalDate).getDays();
+    double dailyBurnRate =
+        sloGraphData.errorBudgetSpentPercentage() / (timePeriod.getTotalDays().getDays() - remainingDays);
+    return SLODashboardWidget.builder()
+        .title(slo.getName())
+        .monitoredServiceIdentifier(slo.getMonitoredServiceRef())
+        .monitoredServiceName(monitoredService.getName())
+        .healthSourceIdentifier(slo.getHealthSourceRef())
+        .healthSourceName(getHealthSourceName(monitoredService, slo.getHealthSourceRef()))
+        .tags(getNGTags(slo.getTags()))
+        .type(slo.getServiceLevelIndicators().get(0).getType())
+        .burnRate(SLODashboardWidget.BurnRate.builder().currentRatePercentage(dailyBurnRate).build())
+        .errorBudgetRemainingPercentage(sloGraphData.getErrorBudgetRemainingPercentage())
+        .sloPerformanceTrend(sloGraphData.getSloPerformanceTrend())
+        .errorBudgetBurndown(sloGraphData.getErrorBudgetBurndown())
+        .timeRemainingDays(remainingDays)
         .build();
   }
 
