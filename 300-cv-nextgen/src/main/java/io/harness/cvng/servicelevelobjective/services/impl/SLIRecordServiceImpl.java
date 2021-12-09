@@ -1,5 +1,6 @@
 package io.harness.cvng.servicelevelobjective.services.impl;
 
+import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget.Point;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget.SLOGraphData;
 import io.harness.cvng.servicelevelobjective.entities.SLIRecord;
@@ -56,7 +57,8 @@ public class SLIRecordServiceImpl implements SLIRecordService {
     hPersistence.save(sliRecordList);
   }
   @Override
-  public SLOGraphData getGraphData(String sliId, Instant startTime, Instant endTime, int totalErrorBudgetMinutes) {
+  public SLOGraphData getGraphData(String sliId, Instant startTime, Instant endTime, int totalErrorBudgetMinutes,
+      SLIMissingDataType sliMissingDataType) {
     List<SLIRecord> sliRecords = sliRecords(sliId, startTime, endTime);
     List<Point> sliTread = new ArrayList<>();
     List<Point> errorBudgetBurndown = new ArrayList<>();
@@ -67,10 +69,8 @@ public class SLIRecordServiceImpl implements SLIRecordService {
         long goodCountFromStart = sliRecords.get(i).getRunningGoodCount() - sliRecords.get(0).getRunningGoodCount();
         long badCountFromStart = sliRecords.get(i).getRunningBadCount() - sliRecords.get(0).getRunningBadCount();
         long minutesFromStart = sliRecords.get(i).getEpochMinute() - beginningMinute + 1;
-        long missingDataCountFromStart = minutesFromStart - (goodCountFromStart + badCountFromStart);
-        // TODO: change missing data interpretation based on user input
         double percentageSLIValue =
-            ((goodCountFromStart + missingDataCountFromStart) * 100) / (double) minutesFromStart;
+            sliMissingDataType.calculateSLIValue(goodCountFromStart, badCountFromStart, minutesFromStart);
         sliTread.add(Point.builder()
                          .timestamp(sliRecords.get(i).getTimestamp().toEpochMilli())
                          .value(percentageSLIValue)

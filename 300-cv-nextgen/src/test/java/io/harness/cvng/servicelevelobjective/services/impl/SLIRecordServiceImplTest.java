@@ -12,6 +12,7 @@ import static org.assertj.core.data.Offset.offset;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.utils.DateTimeUtils;
+import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget.Point;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget.SLOGraphData;
 import io.harness.cvng.servicelevelobjective.entities.SLIRecord;
@@ -43,7 +44,8 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetGraphData_noData() {
     assertThat(
-        sliRecordService.getGraphData(generateUuid(), clock.instant(), clock.instant(), 10).getSloPerformanceTrend())
+        sliRecordService.getGraphData(generateUuid(), clock.instant(), clock.instant(), 10, SLIMissingDataType.GOOD)
+            .getSloPerformanceTrend())
         .isEmpty();
   }
 
@@ -57,7 +59,8 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
     List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
     createData(verificationTaskId, sliId, startTime, sliStates);
 
-    assertThat(sliRecordService.getGraphData(sliId, startTime, startTime.plus(Duration.ofMinutes(11)), 10)
+    assertThat(sliRecordService
+                   .getGraphData(sliId, startTime, startTime.plus(Duration.ofMinutes(11)), 10, SLIMissingDataType.GOOD)
                    .getSloPerformanceTrend())
         .hasSize(5);
   }
@@ -72,7 +75,8 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
     List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD);
     createData(verificationTaskId, sliId, startTime, sliStates);
 
-    assertThat(sliRecordService.getGraphData(sliId, startTime, startTime.plus(Duration.ofMinutes(10)), 10)
+    assertThat(sliRecordService
+                   .getGraphData(sliId, startTime, startTime.plus(Duration.ofMinutes(10)), 10, SLIMissingDataType.GOOD)
                    .getSloPerformanceTrend())
         .hasSize(5);
   }
@@ -86,8 +90,8 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
     Instant startTime = DateTimeUtils.roundDownTo1MinBoundary(clock.instant().minus(Duration.ofMinutes(4)));
     List<SLIState> sliStates = Arrays.asList(GOOD, NO_DATA, BAD, GOOD);
     createData(verificationTaskId, sliId, startTime, sliStates);
-    SLOGraphData sloGraphData =
-        sliRecordService.getGraphData(sliId, startTime, startTime.plus(Duration.ofMinutes(5)), 100);
+    SLOGraphData sloGraphData = sliRecordService.getGraphData(
+        sliId, startTime, startTime.plus(Duration.ofMinutes(5)), 100, SLIMissingDataType.GOOD);
     List<Double> expectedSLITrend = Lists.newArrayList(100.0, 100.0, 66.66, 75.0);
     List<Double> expectedBurndown = Lists.newArrayList(100.0, 100.0, 99.0, 99.0);
     assertThat(sloGraphData.getSloPerformanceTrend()).hasSize(4);
