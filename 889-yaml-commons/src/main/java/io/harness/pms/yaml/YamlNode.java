@@ -37,7 +37,7 @@ public class YamlNode implements Visitable {
   public static final String NAME_FIELD_NAME = "name";
   public static final String KEY_FIELD_NAME = "key";
 
-  private static final String PATH_SEP = "/";
+  public static final String PATH_SEP = "/";
 
   String fieldName;
   YamlNode parentNode;
