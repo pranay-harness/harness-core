@@ -157,6 +157,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import javax.cache.Cache;
@@ -312,6 +313,13 @@ public class PipelineServiceModule extends AbstractModule {
         .toInstance(new ManagedScheduledExecutorService("ProgressUpdateServiceExecutor-Thread"));
     bind(TriggerWebhookExecutionService.class).to(TriggerWebhookExecutionServiceImpl.class);
     bind(TriggerWebhookExecutionServiceV2.class).to(TriggerWebhookExecutionServiceImplV2.class);
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("telemetryPublisherExecutor"))
+        .toInstance(new ScheduledThreadPoolExecutor(1,
+            new ThreadFactoryBuilder()
+                .setNameFormat("pipeline-telemetry-publisher-Thread-%d")
+                .setPriority(Thread.NORM_PRIORITY)
+                .build()));
 
     MapBinder<String, FilterPropertiesMapper> filterPropertiesMapper =
         MapBinder.newMapBinder(binder(), String.class, FilterPropertiesMapper.class);

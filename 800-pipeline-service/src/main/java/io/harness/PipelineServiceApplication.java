@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.PipelineServiceConfiguration.HARNESS_RESOURCE_CLASSES;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATION;
@@ -13,6 +14,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheModule;
+import io.harness.configuration.DeployVariant;
 import io.harness.consumers.GraphUpdateRedisConsumer;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
@@ -48,6 +50,7 @@ import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.PipelineTelemetryRecordsJob;
 import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
@@ -347,7 +350,15 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerPmsSdk(appConfig, injector);
     registerMigrations(injector);
 
+    if (DeployVariant.isCommunity(System.getenv().get(DEPLOY_VERSION))) {
+      initializePipelineMonitoring(appConfig, injector);
+    }
+
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void initializePipelineMonitoring(PipelineServiceConfiguration appConfig, Injector injector) {
+    injector.getInstance(PipelineTelemetryRecordsJob.class).scheduleTasks();
   }
 
   private void initializeGrpcServer(Injector injector) {
