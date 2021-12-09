@@ -2447,8 +2447,11 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User createUser(User user, String accountId) {
+    boolean isExistingUser = user.getUuid() != null;
     user = wingsPersistence.saveAndGet(User.class, user);
-    evictUserFromCache(user.getUuid());
+    if (isExistingUser) {
+      evictUserFromCache(user.getUuid());
+    }
     eventPublishHelper.publishSetupRbacEvent(accountId, user.getUuid(), EntityType.USER);
     publishUserEvent(null, user);
     return user;
