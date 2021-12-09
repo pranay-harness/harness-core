@@ -1,4 +1,4 @@
-Portal Project Dev environment setup instructions
+Portal Project Dev environment setup instructions.
 ==================================================
 ## On MacOS
 
