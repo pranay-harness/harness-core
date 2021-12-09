@@ -2,6 +2,7 @@ package io.harness.ci.serializer.vm;
 
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
+import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.delegate.beans.ci.vm.steps.VmStepInfo;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.timeout.Timeout;
@@ -16,6 +17,8 @@ public class VmStepSerializer {
     switch (stepInfo.getNonYamlInfo().getStepInfoType()) {
       case RUN:
         return VmRunStepSerializer.serialize((RunStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName);
+      case RUN_TESTS:
+        return VmRunTestStepSerializer.serialize((RunTestsStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName);
       case CLEANUP:
       case TEST:
       case BUILD:

@@ -61,7 +61,7 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
     if (!isEmpty(settings)) {
       for (Map.Entry<String, JsonNode> entry : settings.entrySet()) {
         String key = PLUGIN_ENV_PREFIX + entry.getKey().toUpperCase();
-        envVarMap.put(key, convertJsonNodeToString(entry.getKey(), entry.getValue()));
+        envVarMap.put(key, SerializerUtils.convertJsonNodeToString(entry.getKey(), entry.getValue()));
       }
     }
 
@@ -97,37 +97,5 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
         .setPlugin(pluginStep)
         .setLogKey(logKey)
         .build();
-  }
-
-  private String convertJsonNodeToString(String key, JsonNode jsonNode) {
-    try {
-      if (jsonNode.isValueNode()) {
-        return jsonNode.asText("");
-      } else if (jsonNode.isArray() && isPrimitiveArray(jsonNode)) {
-        ArrayNode arrayNode = (ArrayNode) jsonNode;
-        List<String> strValues = new ArrayList<>();
-        for (JsonNode node : arrayNode) {
-          strValues.add(node.asText(""));
-        }
-
-        return String.join(",", strValues);
-      } else {
-        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-        return ow.writeValueAsString(jsonNode);
-      }
-    } catch (Exception ex) {
-      throw new CIStageExecutionException(String.format("Invalid setting attribute %s value", key));
-    }
-  }
-
-  // Return whether array contains only value node or not.
-  private boolean isPrimitiveArray(JsonNode jsonNode) {
-    ArrayNode arrayNode = (ArrayNode) jsonNode;
-    for (JsonNode e : arrayNode) {
-      if (!e.isValueNode()) {
-        return false;
-      }
-    }
-    return true;
   }
 }
