@@ -850,6 +850,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     existingConnector.setObjectIdOfYaml(EntityObjectIdUtils.getObjectIdOfYaml(invalidYaml));
     connectorRepository.save(existingConnector, ChangeType.NONE);
     if (existingConnector.getHeartbeatPerpetualTaskId() != null) {
+      log.info("Reset invalid connector heartbeat");
       connectorHeartbeatService.resetPerpetualTask(accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
     }
     return true;

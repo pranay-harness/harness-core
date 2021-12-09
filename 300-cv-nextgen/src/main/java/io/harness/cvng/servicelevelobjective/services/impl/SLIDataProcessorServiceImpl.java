@@ -18,14 +18,13 @@ import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class SLIDataProcessorServiceImpl implements SLIDataProcessorService {
-  @Inject Map<SLIMetricType, SLIAnalyserService> sliAnalyserServiceMapBinder;
+  @Inject private Map<SLIMetricType, SLIAnalyserService> sliAnalyserServiceMapBinder;
 
   @Override
   public List<SLIAnalyseResponse> process(Map<String, List<SLIAnalyseRequest>> sliAnalyseRequestMap,
-      SLIMetricSpec sliSpec, Instant startTime, Instant endTime, SLIMissingDataType sliMissingDataType,
-      Long runningGoodCount, Long runningBadCount) {
+      SLIMetricSpec sliSpec, Instant startTime, Instant endTime, SLIMissingDataType sliMissingDataType) {
     List<SLIAnalyseResponse> sliAnalyseResponseList = new ArrayList<>();
-    Pair<Long, Long> runningCount = Pair.of(runningGoodCount, runningBadCount);
+    Pair<Long, Long> runningCount = Pair.of(0L, 0L);
     Map<Instant, Map<String, Double>> sliProcessRequestMap = new HashMap<>();
     for (Map.Entry<String, List<SLIAnalyseRequest>> entry : sliAnalyseRequestMap.entrySet()) {
       for (SLIAnalyseRequest sliAnalyseRequest : entry.getValue()) {

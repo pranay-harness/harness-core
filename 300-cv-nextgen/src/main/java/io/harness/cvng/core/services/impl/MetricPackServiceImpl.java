@@ -8,7 +8,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
@@ -88,6 +87,9 @@ public class MetricPackServiceImpl implements MetricPackService {
   private static final URL NEW_RELIC_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/newrelic/dsl/performance-pack.datacollection");
   public static final String NEW_RELIC_DSL;
+  private static final URL NEWRELIC_CUSTOM_PACK_DSL_PATH =
+      MetricPackServiceImpl.class.getResource("/newrelic/dsl/custom-pack.datacollection");
+  public static final String NEWRELIC_CUSTOM_PACK_DSL;
   static {
     String appDPeformancePackDsl = null;
     String appDqualityPackDsl = null;
@@ -95,6 +97,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     String appDCustomPackDsl = null;
     String stackDriverDsl = null;
     String newrelicDsl = null;
+    String newrelicCustomDsl = null;
     String prometheusDsl = null;
     String datadogDsl = null;
     try {
@@ -104,6 +107,7 @@ public class MetricPackServiceImpl implements MetricPackService {
       appDCustomPackDsl = Resources.toString(APPDYNAMICS_CUSTOM_PACK_DSL_PATH, Charsets.UTF_8);
       stackDriverDsl = Resources.toString(STACKDRIVER_DSL_PATH, Charsets.UTF_8);
       newrelicDsl = Resources.toString(NEW_RELIC_DSL_PATH, Charsets.UTF_8);
+      newrelicCustomDsl = Resources.toString(NEWRELIC_CUSTOM_PACK_DSL_PATH, Charsets.UTF_8);
       prometheusDsl = Resources.toString(PROMETHEUS_DSL_PATH, Charsets.UTF_8);
       datadogDsl = Resources.toString(DATADOG_DSL_PATH, Charsets.UTF_8);
     } catch (Exception e) {
@@ -117,6 +121,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     APPDYNAMICS_CUSTOM_PACK_DSL = appDCustomPackDsl;
     STACKDRIVER_DSL = stackDriverDsl;
     NEW_RELIC_DSL = newrelicDsl;
+    NEWRELIC_CUSTOM_PACK_DSL = newrelicCustomDsl;
     PROMETHEUS_DSL = prometheusDsl;
     DATADOG_DSL = datadogDsl;
   }
@@ -128,6 +133,10 @@ public class MetricPackServiceImpl implements MetricPackService {
       DataSourceType dataSourceType, String accountId, String orgIdentifier, String projectIdentifier) {
     return getMetricPacks(accountId, orgIdentifier, projectIdentifier, dataSourceType)
         .stream()
+        // hack to remove Custom metric pack from APPD in UI
+        .filter(metricPack
+            -> !(metricPack.getDataSourceType().equals(DataSourceType.APP_DYNAMICS)
+                && metricPack.getIdentifier().equals(CUSTOM_PACK_IDENTIFIER)))
         .map(MetricPack::toDTO)
         .collect(Collectors.toList());
   }
@@ -160,16 +169,15 @@ public class MetricPackServiceImpl implements MetricPackService {
 
   @Override
   public MetricPack getMetricPack(String accountId, String orgIdentifier, String projectIdentifier,
-      DataSourceType dataSourceType, CVMonitoringCategory cvMonitoringCategory) {
+      DataSourceType dataSourceType, String identifier) {
     MetricPack metricPackFromDb = hPersistence.createQuery(MetricPack.class, excludeAuthority)
                                       .filter(MetricPackKeys.accountId, accountId)
                                       .filter(MetricPackKeys.projectIdentifier, projectIdentifier)
                                       .filter(MetricPackKeys.orgIdentifier, orgIdentifier)
                                       .filter(MetricPackKeys.dataSourceType, dataSourceType)
-                                      .filter(MetricPackKeys.category, cvMonitoringCategory)
+                                      .filter(MetricPackKeys.identifier, identifier)
                                       .get();
-    Preconditions.checkNotNull(
-        metricPackFromDb, String.format("No Metric Packs found for Category %s", cvMonitoringCategory));
+    Preconditions.checkNotNull(metricPackFromDb, String.format("No Metric Packs found for identifier %s", identifier));
     return metricPackFromDb;
   }
 
@@ -391,7 +399,7 @@ public class MetricPackServiceImpl implements MetricPackService {
         metricPack.setDataCollectionDsl(DATADOG_DSL);
         break;
       case NEW_RELIC:
-        metricPack.setDataCollectionDsl(NEW_RELIC_DSL);
+        metricPack.setDataCollectionDsl(getNewRelicMetricPackDsl(metricPack));
         break;
       default:
         throw new IllegalArgumentException("Invalid type " + dataSourceType);
@@ -408,6 +416,17 @@ public class MetricPackServiceImpl implements MetricPackService {
         return APPDYNAMICS_INFRASTRUCTURE_PACK_DSL;
       case CUSTOM_PACK_IDENTIFIER:
         return APPDYNAMICS_CUSTOM_PACK_DSL;
+      default:
+        throw new IllegalArgumentException("Invalid identifier " + metricPack.getIdentifier());
+    }
+  }
+
+  private String getNewRelicMetricPackDsl(MetricPack metricPack) {
+    switch (metricPack.getIdentifier()) {
+      case PERFORMANCE_PACK_IDENTIFIER:
+        return NEW_RELIC_DSL;
+      case CUSTOM_PACK_IDENTIFIER:
+        return NEWRELIC_CUSTOM_PACK_DSL;
       default:
         throw new IllegalArgumentException("Invalid identifier " + metricPack.getIdentifier());
     }

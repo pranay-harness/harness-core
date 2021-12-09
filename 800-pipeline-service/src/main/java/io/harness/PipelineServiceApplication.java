@@ -16,15 +16,6 @@ import io.harness.cache.CacheModule;
 import io.harness.consumers.GraphUpdateRedisConsumer;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
-import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
-import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
-import io.harness.enforcement.client.custom.CustomRestrictionInterface;
-import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
-import io.harness.enforcement.client.usage.RestrictionUsageInterface;
-import io.harness.enforcement.constants.FeatureRestrictionName;
-import io.harness.enforcement.executions.BuildRestrictionUsageImpl;
-import io.harness.enforcement.executions.CIMonthlyBuildImpl;
-import io.harness.enforcement.executions.CITotalBuildImpl;
 import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
@@ -108,6 +99,8 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
+import io.harness.pms.sdk.core.governance.NoOpExpansionHandler;
 import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
@@ -119,6 +112,7 @@ import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.pms.triggers.scheduled.ScheduledTriggerHandler;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
@@ -160,7 +154,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -327,7 +320,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerObservers(injector);
     registerRequestContextFilter(environment);
     registerOasResource(appConfig, environment, injector);
-    initializeEnforcementFramework(injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     PipelineServiceIteratorsConfig iteratorsConfig = appConfig.getIteratorsConfig();
@@ -541,6 +533,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineFacilitators(PipelineServiceFacilitatorRegistrar.getEngineFacilitators())
         .engineAdvisers(PipelineServiceUtilAdviserRegistrar.getEngineAdvisers())
         .staticAliases(getStaticAliases())
+        .jsonExpansionHandlers(getJsonExpansionHandlers())
         .engineEventHandlersMap(of())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
@@ -562,6 +555,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         "<+pipeline.currentStatus> == \"SUCCEEDED\" || <+pipeline.currentStatus> == \"IGNORE_FAILED\"");
     aliases.put(OrchestrationConstants.ALWAYS, "true");
     return aliases;
+  }
+
+  private Map<String, Class<? extends JsonExpansionHandler>> getJsonExpansionHandlers() {
+    Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers = new HashMap<>();
+    jsonExpansionHandlers.put(YAMLFieldNameConstants.CONNECTOR_REF, NoOpExpansionHandler.class);
+    return jsonExpansionHandlers;
   }
 
   private void registerEventListeners(Injector injector) {
@@ -745,25 +744,5 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
           { add(PipelineCoreMigrationProvider.class); } // Add all migration provider classes here
         })
         .build();
-  }
-
-  private void initializeEnforcementFramework(Injector injector) {
-    RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
-        RestrictionUsageRegisterConfiguration.builder()
-            .restrictionNameClassMap(
-                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
-                    .put(FeatureRestrictionName.MAX_TOTAL_BUILDS, CITotalBuildImpl.class)
-                    .put(FeatureRestrictionName.MAX_BUILDS_PER_MONTH, CIMonthlyBuildImpl.class)
-                    .build())
-            .build();
-    CustomRestrictionRegisterConfiguration customConfig =
-        CustomRestrictionRegisterConfiguration.builder()
-            .customRestrictionMap(
-                ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
-                    .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
-                    .build())
-            .build();
-    injector.getInstance(EnforcementSdkRegisterService.class)
-        .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }
 }

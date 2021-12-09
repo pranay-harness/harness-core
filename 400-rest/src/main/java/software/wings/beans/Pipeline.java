@@ -16,7 +16,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.validator.EntityName;
-import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
@@ -81,6 +80,11 @@ public class Pipeline
                  .field(PipelineKeys.accountId)
                  .ascSortField(PipelineKeys.name)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("appId_name")
+                 .field(PipelineKeys.appId)
+                 .ascSortField(PipelineKeys.name)
+                 .build())
         .build();
   }
 
@@ -108,7 +112,7 @@ public class Pipeline
   private transient List<String> infraMappingIds = new ArrayList<>();
   private transient List<String> infraDefinitionIds = new ArrayList<>();
   @SchemaIgnore private Set<String> keywords;
-  @FdIndex private String accountId;
+  private String accountId;
   private boolean sample;
   private transient List<HarnessTagLink> tagLinks;
 

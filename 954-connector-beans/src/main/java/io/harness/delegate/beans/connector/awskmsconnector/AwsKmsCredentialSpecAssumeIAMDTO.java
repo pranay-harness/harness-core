@@ -21,7 +21,7 @@ import lombok.Data;
 @JsonTypeName(AwsKmsConstants.ASSUME_IAM_ROLE)
 @ApiModel("AwsKmsCredentialSpecAssumeIAM")
 @Schema(name = "AwsKmsCredentialSpecAssumeIAM",
-    description = "This contains the credential spec of AWS KMS SM for IAM role")
+    description = "Returns the Delegate Selectors used by this AWS KMS Secret Manager Connector.")
 public class AwsKmsCredentialSpecAssumeIAMDTO implements AwsKmsCredentialSpecDTO {
-  @NotNull @Size(min = 1, message = "Delegate Selectors can not be empty") private Set<String> delegateSelectors;
+  @NotNull @Size(min = 1, message = "Delegate Selectors cannot be empty") private Set<String> delegateSelectors;
 }

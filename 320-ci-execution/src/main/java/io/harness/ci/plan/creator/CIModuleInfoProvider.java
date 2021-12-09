@@ -55,7 +55,6 @@ import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -349,7 +348,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       connection.connect();
       int code = connection.getResponseCode();
       return !Response.Status.Family.familyOf(code).equals(Response.Status.Family.SUCCESSFUL);
-    } catch (IOException e) {
+    } catch (Exception e) {
       log.warn("Failed to get repo info, assuming private. url", e);
       return true;
     }

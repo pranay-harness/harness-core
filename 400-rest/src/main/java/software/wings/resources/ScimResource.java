@@ -5,7 +5,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 public class ScimResource {
-  Response getExceptionResponse(Exception ex, int statusCode, Status status) {
+  protected Response getExceptionResponse(Exception ex, int statusCode, Status status) {
     ScimError scimError = ScimError.builder()
                               .status(statusCode)
                               .detail(ex.getMessage())

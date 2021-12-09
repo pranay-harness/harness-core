@@ -37,6 +37,7 @@ import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
 import io.harness.security.annotations.PublicApiWithWhitelist;
+import io.harness.security.annotations.ScimAPI;
 
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
@@ -45,7 +46,6 @@ import software.wings.security.annotations.AdminPortalAuth;
 import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
-import software.wings.security.annotations.ScimAPI;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;

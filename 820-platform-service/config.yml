@@ -78,6 +78,11 @@ accessControlClient:
 notificationServiceConfig:
   mongo:
     uri: mongodb://localhost:27017/notification
+    username:
+    password:
+    database: notification
+    hosts:
+    params:
     connectTimeout: 30000
     serverSelectionTimeout: 90000
     maxConnectionIdleTime: 600000
@@ -104,6 +109,11 @@ notificationServiceConfig:
 auditServiceConfig:
   mongo:
     uri: mongodb://localhost:27017/ng-audits
+    username:
+    password:
+    database: ng-audits
+    hosts:
+    params:
     connectTimeout: 30000
     serverSelectionTimeout: 90000
     maxConnectionIdleTime: 600000
@@ -172,6 +182,11 @@ resourceGroupServiceConfig:
     accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   mongo:
     uri: mongodb://localhost:27017/resourcegroup
+    username:
+    password:
+    database: resourcegroup
+    hosts:
+    params:
     connectTimeout: 30000
     serverSelectionTimeout: 90000
     maxConnectionIdleTime: 600000

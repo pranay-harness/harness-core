@@ -103,9 +103,9 @@ public class PmsYamlSchemaHelper {
   public void processPartialStageSchema(ObjectNode pipelineDefinitions, ObjectNode pipelineSteps,
       ObjectNode stageElementConfig, PartialSchemaDTO partialSchemaDTO) {
     YamlSchemaTransientHelper.removeV2StepEnumsFromStepElementConfig(partialSchemaDTO.getSchema()
-                                                                          .get(DEFINITIONS_NODE)
-                                                                          .get(partialSchemaDTO.getNamespace())
-                                                                          .get(STEP_ELEMENT_CONFIG));
+                                                                         .get(DEFINITIONS_NODE)
+                                                                         .get(partialSchemaDTO.getNamespace())
+                                                                         .get(STEP_ELEMENT_CONFIG));
     SubtypeClassMap subtypeClassMap =
         SubtypeClassMap.builder()
             .subTypeDefinitionKey(partialSchemaDTO.getNamespace() + "/" + partialSchemaDTO.getNodeName())

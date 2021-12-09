@@ -24,7 +24,11 @@ import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
+import io.harness.pms.contracts.governance.ExpansionResponseBatch;
 import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.governance.ExpansionRequest;
+import io.harness.pms.governance.ExpansionRequestsExtractor;
+import io.harness.pms.governance.JsonExpander;
 import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -50,6 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.dao.DuplicateKeyException;
@@ -72,6 +77,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private GitSyncSdkService gitSyncSdkService;
   @Inject private CommonStepInfo commonStepInfo;
   @Inject private TelemetryReporter telemetryReporter;
+  @Inject private JsonExpander jsonExpander;
+  @Inject private ExpansionRequestsExtractor expansionRequestsExtractor;
   public static String PIPELINE_SAVE = "pipeline_save";
   public static String PIPELINE_SAVE_ACTION_TYPE = "action";
   public static String CREATING_PIPELINE = "creating new pipeline";
@@ -427,5 +434,22 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     properties.put(PIPELINE_SAVE_ACTION_TYPE, actionType);
     telemetryReporter.sendTrackEvent(
         PIPELINE_SAVE, properties, Collections.singletonMap(AMPLITUDE, true), io.harness.telemetry.Category.GLOBAL);
+  }
+
+  @Override
+  public String fetchExpandedPipelineJSON(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
+    // todo(@NamanVerma): add all parts of the flow as and when implemented. Add test when full method is ready
+    Optional<PipelineEntity> pipelineEntityOptional =
+        get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (!pipelineEntityOptional.isPresent()) {
+      throw new InvalidRequestException(format("Pipeline [%s] under Project[%s], Organization [%s] doesn't exist.",
+          pipelineIdentifier, projectIdentifier, orgIdentifier));
+    }
+
+    Set<ExpansionRequest> expansionRequests =
+        expansionRequestsExtractor.fetchExpansionRequests(pipelineEntityOptional.get().getYaml());
+    Set<ExpansionResponseBatch> expansionResponseBatches = jsonExpander.fetchExpansionResponses(expansionRequests);
+    return null;
   }
 }

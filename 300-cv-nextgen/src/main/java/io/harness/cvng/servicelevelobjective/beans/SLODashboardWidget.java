@@ -31,4 +31,14 @@ public class SLODashboardWidget {
     long timestamp;
     double value;
   }
+  @Value
+  @Builder
+  public static class SLOGraphData {
+    double errorBudgetRemainingPercentage;
+    List<Point> errorBudgetBurndown;
+    List<Point> sloPerformanceTrend;
+    public double errorBudgetSpentPercentage() {
+      return 100 - errorBudgetRemainingPercentage;
+    }
+  }
 }

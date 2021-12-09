@@ -1,6 +1,14 @@
 package ci.pipeline.execution;
 
-import com.google.inject.Inject;
+import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
+import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.SHUBHAM;
+
+import static junit.framework.TestCase.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
+
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
 import io.harness.beans.sweepingoutputs.StageDetails;
@@ -15,6 +23,10 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.rule.Owner;
 import io.harness.stateutils.buildstate.ConnectorUtils;
+
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.ArrayList;
 import org.apache.groovy.util.Maps;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -23,17 +35,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.io.IOException;
-import java.util.ArrayList;
-
-import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
-import static io.harness.rule.OwnerRule.HARSH;
-import static io.harness.rule.OwnerRule.SHUBHAM;
-import static junit.framework.TestCase.assertEquals;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
 
 public class StageCleanupUtilityTest extends CIExecutionTestBase {
   @Mock private ConnectorUtils connectorUtils;

@@ -188,10 +188,11 @@ public class ExecutionHelper {
     }
 
     if (pipelineEntity.getTemplateReference() != null && pipelineEntity.getTemplateReference()) {
-      pipelineYaml = pipelineTemplateHelper
-                         .resolveTemplateRefsInPipeline(pipelineEntity.getAccountId(),
-                             pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineYaml)
-                         .getMergedPipelineYaml();
+      pipelineYaml =
+          pipelineTemplateHelper
+              .resolveTemplateRefsInPipeline(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
+                  pipelineEntity.getProjectIdentifier(), pipelineYaml, true)
+              .getMergedPipelineYaml();
     }
     pipelineYaml = InputSetSanitizer.trimValues(pipelineYaml);
     pmsYamlSchemaService.validateYamlSchema(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),

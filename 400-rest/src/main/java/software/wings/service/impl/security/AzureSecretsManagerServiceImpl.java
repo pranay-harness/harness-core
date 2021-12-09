@@ -167,7 +167,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
           currentConfig, "Azure settings with id: " + secretManagerConfig.getUuid() + " not found in database.");
       EncryptedData secretData = wingsPersistence.get(EncryptedData.class, currentConfig.getSecretKey());
       Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + secretManagerConfig);
-      secretManagerConfig.setSecretKey(new String(decryptUsingBaseAlgo(secretData)));
+      secretManagerConfig.setSecretKey(new String(decryptUsingAlgoOfSecret(secretData)));
     }
   }
 

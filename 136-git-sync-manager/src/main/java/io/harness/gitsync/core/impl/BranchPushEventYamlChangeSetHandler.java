@@ -2,8 +2,11 @@ package io.harness.gitsync.core.impl;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
+import io.harness.beans.Scope;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.UnexpectedException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest.GitToHarnessFileProcessingRequestBuilder;
@@ -39,6 +42,7 @@ import io.harness.utils.FilePathUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +64,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
   private final GitToHarnessProgressHelper gitToHarnessProgressHelper;
   private final GitBranchSyncService gitBranchSyncService;
   private final GitSyncErrorService gitSyncErrorService;
+  private final FeatureFlagService featureFlagService;
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
@@ -194,10 +199,15 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
 
   private void recordErrors(
       List<YamlGitConfigDTO> yamlGitConfigDTOList, YamlChangeSetDTO yamlChangeSetDTO, String errorMessage) {
-    yamlGitConfigDTOList.forEach(yamlGitConfigDTO
-        -> gitSyncErrorService.recordConnectivityError(yamlGitConfigDTO.getAccountIdentifier(),
-            yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(),
-            yamlChangeSetDTO.getRepoUrl(), yamlChangeSetDTO.getBranch(), errorMessage));
+    if (featureFlagService.isEnabled(FeatureName.NG_GIT_ERROR_EXPERIENCE, yamlChangeSetDTO.getAccountId())) {
+      yamlGitConfigDTOList.forEach(yamlGitConfigDTO -> {
+        Scope scope = Scope.of(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier());
+        gitSyncErrorService.recordConnectivityError(yamlGitConfigDTO.getAccountIdentifier(),
+            Collections.singletonList(scope), yamlChangeSetDTO.getRepoUrl(), yamlChangeSetDTO.getBranch(),
+            errorMessage);
+      });
+    }
   }
 
   private GitToHarnessProcessMsvcStepResponse performBranchSync(GitToHarnessGetFilesStepRequest request) {

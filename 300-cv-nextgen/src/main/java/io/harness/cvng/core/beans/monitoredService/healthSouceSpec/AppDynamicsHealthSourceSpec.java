@@ -84,6 +84,8 @@ public class AppDynamicsHealthSourceSpec extends MetricHealthSourceSpec {
       String environmentRef, String serviceRef, String identifier, String name, MetricPackService metricPackService) {
     List<AppDynamicsCVConfig> cvConfigs = new ArrayList<>();
     metricPacks.forEach(metricPack -> {
+      MetricPack metricPackFromDb =
+          metricPack.toMetricPack(accountId, orgIdentifier, projectIdentifier, getType(), metricPackService);
       AppDynamicsCVConfig appDynamicsCVConfig = AppDynamicsCVConfig.builder()
                                                     .accountId(accountId)
                                                     .orgIdentifier(orgIdentifier)
@@ -96,9 +98,8 @@ public class AppDynamicsHealthSourceSpec extends MetricHealthSourceSpec {
                                                     .tierName(tierName)
                                                     .envIdentifier(environmentRef)
                                                     .serviceIdentifier(serviceRef)
-                                                    .metricPack(metricPack.toMetricPack(accountId, orgIdentifier,
-                                                        projectIdentifier, getType(), metricPackService))
-                                                    .category(metricPack.getIdentifier())
+                                                    .metricPack(metricPackFromDb)
+                                                    .category(metricPackFromDb.getCategory())
                                                     .build();
       cvConfigs.add(appDynamicsCVConfig);
     });

@@ -18,6 +18,7 @@ import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHe
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
@@ -101,8 +102,8 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
     assertThat(cvConfig.getCategory()).isEqualTo(CVMonitoringCategory.ERRORS);
     assertThat(cvConfig.isEnabled()).isTrue();
     assertThat(cvConfig.getMetricPack())
-        .isEqualTo(metricPackService.getMetricPack(
-            accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, CVMonitoringCategory.ERRORS));
+        .isEqualTo(metricPackService.getMetricPack(accountId, orgIdentifier, projectIdentifier,
+            DataSourceType.APP_DYNAMICS, CVNextGenConstants.ERRORS_PACK_IDENTIFIER));
   }
 
   @Test
@@ -219,8 +220,8 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
     AppDynamicsHealthSourceSpec appDynamicsHealthSourceSpec = (AppDynamicsHealthSourceSpec) healthSource.getSpec();
     appDynamicsHealthSourceSpec.setMetricPacks(
         Arrays
-            .asList(MetricPackDTO.builder().identifier(CVMonitoringCategory.ERRORS).build(),
-                MetricPackDTO.builder().identifier(CVMonitoringCategory.PERFORMANCE).build())
+            .asList(MetricPackDTO.builder().identifier(CVNextGenConstants.ERRORS_PACK_IDENTIFIER).build(),
+                MetricPackDTO.builder().identifier(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER).build())
             .stream()
             .collect(Collectors.toSet()));
     appDynamicsHealthSourceSpec.setFeature("new-feature");
@@ -265,9 +266,10 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
             .tierName(appTierName)
             .connectorRef(connectorIdentifier)
             .feature(feature)
-            .metricPacks(Arrays.asList(MetricPackDTO.builder().identifier(cvMonitoringCategory).build())
-                             .stream()
-                             .collect(Collectors.toSet()))
+            .metricPacks(
+                Arrays.asList(MetricPackDTO.builder().identifier(cvMonitoringCategory.getDisplayName()).build())
+                    .stream()
+                    .collect(Collectors.toSet()))
             .metricDefinitions(Collections.EMPTY_LIST)
             .build();
     return HealthSource.builder()

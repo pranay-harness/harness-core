@@ -1027,7 +1027,6 @@ public class UserServiceTest extends WingsBaseTest {
     userService.inviteUsers(userInvite);
     verify(wingsPersistence).save(any(UserInvite.class));
     verify(wingsPersistence).saveAndGet(eq(User.class), any(User.class));
-    verify(cache).remove(USER_ID);
     verify(auditServiceHelper, times(userInvite.getEmails().size()))
         .reportForAuditingUsingAccountId(eq(ACCOUNT_ID), eq(null), any(UserInvite.class), eq(Type.CREATE));
 

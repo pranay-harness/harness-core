@@ -158,10 +158,6 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
 
   boolean shouldLogAudits(String accountId, String orgIdentifier, String projectIdentifier) {
     // if git sync is disabled or if git sync is enabled (only for default branch)
-    if (!gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier)) {
-      return true;
-    }
-    return gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier)
-        && gitSyncSdkService.isDefaultBranch(accountId, orgIdentifier, projectIdentifier);
+    return !gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier);
   }
 }

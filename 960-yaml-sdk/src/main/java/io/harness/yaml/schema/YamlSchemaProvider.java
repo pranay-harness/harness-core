@@ -23,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Iterator;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -122,5 +123,14 @@ public class YamlSchemaProvider {
       log.error("Encountered error while setting  for key: {}", nodeKey, e);
     }
     return yamlSchema;
+  }
+
+  public ObjectNode mergeAllV2StepsDefinitions(String projectIdentifier, String orgIdentifier, Scope scope,
+      ObjectNode definitions, List<EntityType> v2StepEntityTypes) {
+    for (EntityType entityType : v2StepEntityTypes) {
+      JsonNode step = getYamlSchema(entityType, orgIdentifier, projectIdentifier, scope);
+      JsonNodeUtils.merge(definitions, step.get(DEFINITIONS_NODE));
+    }
+    return definitions;
   }
 }

@@ -62,6 +62,7 @@ io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo
 io.harness.plancreator.flowcontrol.FlowControlConfig
 io.harness.steps.approval.step.jira.beans.KeyValuesCriteriaSpec
 io.harness.beans.outcomes.LiteEnginePodDetailsOutcome
+io.harness.beans.outcomes.VmDetailsOutcome
 io.harness.ngpipeline.artifact.bean.ArtifactsOutcome
 io.harness.states.codebase.CodeBaseTaskStepParameters
 io.harness.steps.resourcerestraint.beans.HoldingScope
@@ -87,6 +88,7 @@ io.harness.steps.section.chain.SectionChainPassThroughData
 io.harness.steps.approval.step.harness.HarnessApprovalSpecParameters
 io.harness.plancreator.steps.http.HttpStepInfo
 io.harness.plancreator.steps.http.HttpStepNode
+io.harness.steps.shellscript.ShellScriptStepNode
 io.harness.ci.stdvars.BuildStandardVariables
 io.harness.steps.jira.JiraIssueOutcome
 io.harness.ngpipeline.artifact.bean.EcrArtifactOutcome

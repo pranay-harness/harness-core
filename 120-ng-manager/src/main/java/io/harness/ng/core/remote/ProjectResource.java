@@ -51,6 +51,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -254,6 +255,7 @@ public class ProjectResource {
   }
 
   @GET
+  @Hidden
   @Path("all-projects")
   @ApiOperation(value = "Get ProjectDTO list", nickname = "getProjectDTOList", hidden = true)
   @Operation(operationId = "getProjectDTOList", summary = "Get ProjectDTO list",
@@ -280,6 +282,7 @@ public class ProjectResource {
   }
 
   @GET
+  @Hidden
   @Path("projects-count")
   @ApiOperation(
       value = "Get total count of projects accessible to a user", nickname = "getPermittedProjectsCount", hidden = true)
