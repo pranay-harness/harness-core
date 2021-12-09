@@ -32,7 +32,9 @@ import io.harness.beans.sweepingoutputs.VmStageInfraDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.serializer.RunStepProtobufSerializer;
+import io.harness.ci.serializer.vm.VmStepSerializer;
 import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
+import io.harness.delegate.beans.ci.vm.steps.VmRunStep;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
@@ -90,6 +92,7 @@ public class RunStepTest extends CIExecutionTestBase {
   @Mock private CIDelegateTaskExecutor ciDelegateTaskExecutor;
   @Mock private RunStepProtobufSerializer runStepProtobufSerializer;
   @Mock private CIExecutionServiceConfig ciExecutionServiceConfig;
+  @Mock private VmStepSerializer vmStepSerializer;
   @Mock CILogServiceUtils logServiceUtils;
   @InjectMocks RunStep runStep;
 
@@ -295,7 +298,7 @@ public class RunStepTest extends CIExecutionTestBase {
              ambiance, RefObjectUtils.getSweepingOutputRefObject(STAGE_INFRA_DETAILS)))
         .thenReturn(OptionalSweepingOutput.builder().found(true).output(VmStageInfraDetails.builder().build()).build());
 
-    //    when(vmStepSerializer.serialize(any(), any(), any())).thenReturn(VmRunStep.builder().build());
+    when(vmStepSerializer.serialize(any(), any(), any())).thenReturn(VmRunStep.builder().build());
     when(ciDelegateTaskExecutor.queueTask(any(), any())).thenReturn(callbackId);
 
     AsyncExecutableResponse asyncExecutableResponse =
