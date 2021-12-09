@@ -13,6 +13,8 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CIVmCleanupTaskParams implements CICleanupTaskParams {
   @NotNull private String stageRuntimeId;
+  @NotNull private String poolId;
+
   @Builder.Default private static final CICleanupTaskParams.Type type = CICleanupTaskParams.Type.VM;
 
   @Override
