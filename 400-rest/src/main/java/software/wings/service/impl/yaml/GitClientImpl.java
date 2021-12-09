@@ -62,6 +62,9 @@ import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
+import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.GenericLogSanitizer;
+import software.wings.delegatetasks.LogSanitizer;
 import software.wings.service.intfc.yaml.GitClient;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -82,9 +85,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -143,6 +148,8 @@ import org.eclipse.jgit.util.HttpSupport;
 @BreakDependencyOn("software.wings.beans.GitConfig")
 public class GitClientImpl implements GitClient {
   @Inject GitClientHelper gitClientHelper;
+  @Inject private DelegateLogService delegateLogService;
+
   /**
    * factory for creating HTTP connections. By default, JGit uses JDKHttpConnectionFactory which doesn't work well with
    * proxy. See:
@@ -939,14 +946,18 @@ public class GitClientImpl implements GitClient {
   @Override
   public String validate(GitConfig gitConfig) {
     String repoUrl = gitConfig.getRepoUrl();
+    Optional<LogSanitizer> logSanitizer = Optional.empty();
     try {
       // Init Git repo
+      logSanitizer = getLogSanitizerOptional(gitConfig);
+      logSanitizer.ifPresent(delegateLogService::registerLogSanitizer);
       LsRemoteCommand lsRemoteCommand = Git.lsRemoteRepository();
       lsRemoteCommand = (LsRemoteCommand) getAuthConfiguredCommand(lsRemoteCommand, gitConfig);
       Collection<Ref> refs = lsRemoteCommand.setRemote(repoUrl).setHeads(true).setTags(true).call();
       log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Remote branches found, validation success.");
     } catch (Exception e) {
-      log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Git validation failed [{}]", e);
+      log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Git validation failed [{}] [{}]", e,
+          gitConfig.getRepoUrl());
 
       if (e instanceof InvalidRemoteException || e.getCause() instanceof NoRemoteRepositoryException) {
         return "Invalid git repo " + repoUrl;
@@ -964,8 +975,18 @@ public class GitClientImpl implements GitClient {
       }
       // Any generic error
       return getMessage(e);
+    } finally {
+      logSanitizer.ifPresent(delegateLogService::unregisterLogSanitizer);
     }
     return null; // no error
+  }
+
+  private Optional<LogSanitizer> getLogSanitizerOptional(GitConfig gitConfig) {
+    if (gitConfig == null || gitConfig.getPassword() == null) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        new GenericLogSanitizer(new HashSet<>(Collections.singletonList(String.valueOf(gitConfig.getPassword())))));
   }
 
   /**

@@ -40,7 +40,11 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +59,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
   @Inject private GitClient gitClient;
   @Inject private EncryptionService encryptionService;
   @Inject private GitService gitService;
+  @Inject private DelegateLogService delegateLogService;
 
   public GitCommandTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -72,9 +77,13 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
     GitConfig gitConfig = (GitConfig) parameters[1];
     gitConfig.setGitRepoType(GitRepositoryType.YAML); // TODO:: find better place. possibly manager can set this
 
+    Optional<LogSanitizer> logSanitizer = Optional.empty();
+
     try {
       List<EncryptedDataDetail> encryptionDetails = (List<EncryptedDataDetail>) parameters[2];
 
+      logSanitizer = getLogSanitizerOptional(gitConfig);
+      logSanitizer.ifPresent(delegateLogService::registerLogSanitizer);
       // Decrypt git config
       decryptGitConfig(gitConfig, encryptionDetails);
 
@@ -163,7 +172,17 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
                                                        .errorMessage(ex.getMessage())
                                                        .errorCode(getErrorCode(ex));
       return builder.build();
+    } finally {
+      logSanitizer.ifPresent(delegateLogService::unregisterLogSanitizer);
     }
+  }
+
+  private Optional<LogSanitizer> getLogSanitizerOptional(GitConfig gitConfig) {
+    if (gitConfig == null || gitConfig.getPassword() == null) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        new GenericLogSanitizer(new HashSet<>(Collections.singletonList(String.valueOf(gitConfig.getPassword())))));
   }
 
   private ErrorCode getErrorCode(Exception ex) {
