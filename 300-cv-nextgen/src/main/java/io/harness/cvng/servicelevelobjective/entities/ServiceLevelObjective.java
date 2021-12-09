@@ -65,6 +65,12 @@ public class ServiceLevelObjective
   private long lastUpdatedAt;
   private long createdAt;
 
+  public int getTotalErrorBudgetMinutes(LocalDate currentDate) {
+    int currentWindowMinutes = getCurrentTimeRange(currentDate).totalMinutes();
+    Double errorBudgetPercentage = sloTarget.getSloTargetPercentage();
+    return (int) ((100 - errorBudgetPercentage) * currentWindowMinutes);
+  }
+
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -84,6 +90,7 @@ public class ServiceLevelObjective
         .endDate(currentDate.minus(Period.ofDays(7)))
         .build(); // TODO: write this logic.
   }
+
   @Value
   @Builder
   public static class TimePeriod {
@@ -92,6 +99,12 @@ public class ServiceLevelObjective
 
     public Period getRemainingDays(LocalDate currentDate) {
       return Period.between(currentDate, endDate);
+    }
+    public Period getTotalDays() {
+      return Period.between(startDate, endDate);
+    }
+    public int totalMinutes() {
+      return Period.between(startDate, endDate).getDays() * 24 * 60;
     }
   }
 }
