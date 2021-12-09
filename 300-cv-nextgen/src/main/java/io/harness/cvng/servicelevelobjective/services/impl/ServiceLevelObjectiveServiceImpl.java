@@ -187,6 +187,8 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
                                       .build();
     ServiceLevelObjectiveDTO serviceLevelObjectiveDTO =
         ServiceLevelObjectiveDTO.builder()
+            .orgIdentifier(serviceLevelObjective.getOrgIdentifier())
+            .projectIdentifier(serviceLevelObjective.getProjectIdentifier())
             .identifier(serviceLevelObjective.getIdentifier())
             .name(serviceLevelObjective.getName())
             .description(serviceLevelObjective.getDesc())
