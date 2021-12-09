@@ -8,6 +8,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 public class NGTelemetryPublisher {
   public void recordTelemetry() {
-    // Any method here will be called every hours.
+    // Any method here will be called every 24 hours.
   }
 }
