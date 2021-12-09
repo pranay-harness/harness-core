@@ -123,7 +123,6 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
         ConnectorFilterPropertiesDTO.builder()
             .types(Arrays.asList(ConnectorType.CE_AWS))
             .ccmConnectorFilter(CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
-            .connectivityStatuses(Arrays.asList(ConnectivityStatus.SUCCESS))
             .build();
     connectorFilterPropertiesDTO.setFilterType(FilterType.CONNECTOR);
     int page = 0;
