@@ -6,6 +6,7 @@ import io.harness.cvng.core.beans.MetricPackValidationResponse;
 import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public interface NewRelicService {
@@ -14,7 +15,8 @@ public interface NewRelicService {
       String projectIdentifier, String filter, String tracingId);
   MetricPackValidationResponse validateData(String accountId, String connectorIdentifier, String orgIdentifier,
       String projectIdentifier, String appName, String appId, List<MetricPackDTO> metricPacks, String tracingId);
-  String fetchSampleData(ProjectParams projectParams, String connectorIdentifier, String query, String tracingId);
+  LinkedHashMap fetchSampleData(
+      ProjectParams projectParams, String connectorIdentifier, String query, String tracingId);
   List<TimeSeriesSampleDTO> parseSampleData(ProjectParams projectParams, String jsonResponse, String groupName,
       String metricValueJsonPath, String timestampJsonPath, String timestampFormat);
 }

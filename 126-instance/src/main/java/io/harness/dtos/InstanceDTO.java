@@ -8,7 +8,9 @@ import io.harness.entities.InstanceType;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 
 import lombok.Builder;
+import lombok.Setter;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 
 @OwnedBy(HarnessTeam.DX)
 @Value
@@ -30,7 +32,7 @@ public class InstanceDTO {
   ArtifactDetails primaryArtifact;
   String lastDeployedById;
   String lastDeployedByName;
-  long lastDeployedAt;
+  @NonFinal @Setter long lastDeployedAt;
   String lastPipelineExecutionId;
   String lastPipelineExecutionName;
   InstanceInfoDTO instanceInfoDTO;

@@ -30,4 +30,5 @@ enum EntityTypeProtoEnum {
   GIT_REPOSITORIES = 22;
   FEATURE_FLAGS = 23;
   HTTP_STEP = 24;
+  SHELL_SCRIPT_STEP = 25;
 }

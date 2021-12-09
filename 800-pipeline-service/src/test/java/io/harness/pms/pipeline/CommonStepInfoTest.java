@@ -65,7 +65,6 @@ public class CommonStepInfoTest extends CategoryTest {
           .setType(StepSpecTypeConstants.JIRA_CREATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").addFolderPaths("Jira").build())
           .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_JIRA.name())
-
           .build();
   StepInfo jiraUpdateStepInfo =
       StepInfo.newBuilder()
@@ -73,7 +72,6 @@ public class CommonStepInfoTest extends CategoryTest {
           .setType(StepSpecTypeConstants.JIRA_UPDATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").addFolderPaths("Jira").build())
           .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_JIRA.name())
-
           .build();
   StepInfo barrierStepInfo =
       StepInfo.newBuilder()

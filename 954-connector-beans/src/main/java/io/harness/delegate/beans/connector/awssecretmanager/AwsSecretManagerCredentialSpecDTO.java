@@ -18,5 +18,5 @@ import io.swagger.v3.oas.annotations.media.Schema;
 })
 @ApiModel("AwsSecretManagerCredentialSpec")
 @Schema(name = "AwsSecretManagerCredentialSpec",
-    description = "This contains AWS SM credential spec according to the role using which SM is created")
+    description = "This is interface that returns credentials specific to all roles for the AWS Secret Manager.")
 public interface AwsSecretManagerCredentialSpecDTO extends DecryptableEntity {}

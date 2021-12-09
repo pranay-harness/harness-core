@@ -1,8 +1,14 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.cvng.beans.NewRelicDataCollectionInfo;
+import io.harness.cvng.beans.NewRelicDataCollectionInfo.NewRelicMetricInfoDTO;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class NewRelicDataCollectionInfoMapper
     implements DataCollectionInfoMapper<NewRelicDataCollectionInfo, NewRelicCVConfig> {
@@ -14,6 +20,19 @@ public class NewRelicDataCollectionInfoMapper
                                                                 .metricPack(cvConfig.getMetricPack().toDTO())
                                                                 .build();
     newRelicDataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
+    if (isNotEmpty(cvConfig.getMetricInfos())) {
+      newRelicDataCollectionInfo.setGroupName(cvConfig.getGroupName());
+      List<NewRelicMetricInfoDTO> metricInfoDTOS = new ArrayList<>();
+      cvConfig.getMetricInfos().forEach(newRelicMetricInfo -> {
+        NewRelicMetricInfoDTO dto = NewRelicMetricInfoDTO.builder()
+                                        .metricName(newRelicMetricInfo.getMetricName())
+                                        .nrql(newRelicMetricInfo.getNrql())
+                                        .responseMapping(newRelicMetricInfo.getResponseMapping().toDto())
+                                        .build();
+        metricInfoDTOS.add(dto);
+      });
+      newRelicDataCollectionInfo.setMetricInfoList(metricInfoDTOS);
+    }
     return newRelicDataCollectionInfo;
   }
 }

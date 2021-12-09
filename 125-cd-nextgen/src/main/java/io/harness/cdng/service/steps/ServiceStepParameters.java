@@ -8,7 +8,6 @@ import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.pms.yaml.SkipAutoEvaluation;
 
 import java.util.Map;
 import lombok.Builder;
@@ -29,7 +28,7 @@ public class ServiceStepParameters implements StepParameters {
   Map<String, String> tags;
 
   ParameterField<String> serviceRefInternal;
-  @SkipAutoEvaluation ParameterField<ServiceConfig> serviceConfigInternal;
+  ParameterField<ServiceConfig> serviceConfigInternal;
 
   public static ServiceStepParameters fromServiceConfig(ServiceConfig serviceConfig) {
     if (serviceConfig == null) {

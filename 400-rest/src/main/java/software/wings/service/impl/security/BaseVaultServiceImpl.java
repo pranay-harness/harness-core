@@ -86,12 +86,12 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
       }
 
       if (encryptedToken != null) {
-        char[] decryptToken = decryptUsingBaseAlgo(encryptedToken);
+        char[] decryptToken = decryptUsingAlgoOfSecret(encryptedToken);
         baseVaultConfig.setAuthToken(String.valueOf(decryptToken));
       }
 
       if (encryptedSecretId != null) {
-        char[] decryptedSecretId = decryptUsingBaseAlgo(encryptedSecretId);
+        char[] decryptedSecretId = decryptUsingAlgoOfSecret(encryptedSecretId);
 
         baseVaultConfig.setSecretId(String.valueOf(decryptedSecretId));
       }
@@ -316,11 +316,11 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
       }
 
       if (tokenData != null) {
-        char[] decryptedToken = decryptUsingBaseAlgo(tokenData);
+        char[] decryptedToken = decryptUsingAlgoOfSecret(tokenData);
         vaultConfig.setAuthToken(String.valueOf(decryptedToken));
       }
       if (secretIdData != null) {
-        char[] decryptedSecretId = decryptUsingBaseAlgo(secretIdData);
+        char[] decryptedSecretId = decryptUsingAlgoOfSecret(secretIdData);
         vaultConfig.setSecretId(String.valueOf(decryptedSecretId));
       }
     }

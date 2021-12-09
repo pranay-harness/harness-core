@@ -39,8 +39,10 @@ type Config struct {
 	}
 
 	Redis struct {
-		Endpoint string `envconfig:"LOG_SERVICE_REDIS_ENDPOINT"`
-		Password string `envconfig:"LOG_SERVICE_REDIS_PASSWORD"`
+		Endpoint   string `envconfig:"LOG_SERVICE_REDIS_ENDPOINT"`
+		Password   string `envconfig:"LOG_SERVICE_REDIS_PASSWORD"`
+		SSLEnabled bool   `envconfig:"LOG_SERVICE_REDIS_SSL_ENABLED"`
+		CertPath   string `envconfig:"LOG_SERVICE_REDIS_SSL_CA_CERT_PATH"`
 	}
 }
 

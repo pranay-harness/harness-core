@@ -9,6 +9,7 @@ import io.harness.grpc.server.GrpcServerModule;
 import io.harness.task.service.TaskServiceGrpc;
 import io.harness.task.service.impl.TaskServiceImpl;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
@@ -20,7 +21,6 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -60,8 +60,7 @@ public class DelegateGrpcServiceModule extends AbstractModule {
   }
 
   private List<Connector> getConnectors() {
-    List<Connector> connectors = new ArrayList<>();
-    connectors.add(Connector.builder().port(servicePort).build());
-    return connectors;
+    final Connector connector = Connector.builder().port(servicePort).build();
+    return ImmutableList.of(connector);
   }
 }

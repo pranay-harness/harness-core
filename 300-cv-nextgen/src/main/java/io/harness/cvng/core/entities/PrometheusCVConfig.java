@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,8 +37,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class PrometheusCVConfig extends MetricCVConfig {
-  private String groupName;
-  private List<MetricInfo> metricInfoList;
+  @NotNull private String groupName;
+  @NotNull private List<MetricInfo> metricInfoList;
 
   @Data
   @SuperBuilder

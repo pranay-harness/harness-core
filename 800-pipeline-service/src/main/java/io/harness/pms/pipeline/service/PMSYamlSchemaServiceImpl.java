@@ -21,6 +21,7 @@ import io.harness.jackson.JsonNodeUtils;
 import io.harness.manage.ManagedExecutorService;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.merger.helpers.FQNMapGenerator;
 import io.harness.pms.pipeline.service.yamlschema.PmsYamlSchemaHelper;
 import io.harness.pms.pipeline.service.yamlschema.SchemaFetcher;
@@ -64,6 +65,7 @@ import org.apache.commons.collections.CollectionUtils;
 public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   private final Executor executor = new ManagedExecutorService(Executors.newFixedThreadPool(4));
 
+  private static final String STEP_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StepElementConfig.class);
   public static final String STAGE_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StageElementConfig.class);
   public static final Class<StageElementConfig> STAGE_ELEMENT_CONFIG_CLASS = StageElementConfig.class;
 
@@ -144,15 +146,16 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINES, orgIdentifier, projectIdentifier, scope);
     JsonNode pipelineSteps =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINE_STEPS, orgIdentifier, projectIdentifier, scope);
-    JsonNode httpStep = yamlSchemaProvider.getYamlSchema(EntityType.HTTP_STEP, orgIdentifier, projectIdentifier, scope);
 
     ObjectNode pipelineDefinitions = (ObjectNode) pipelineSchema.get(DEFINITIONS_NODE);
     ObjectNode pipelineStepsDefinitions = (ObjectNode) pipelineSteps.get(DEFINITIONS_NODE);
-    ObjectNode pipelineStepsV2Definitions = (ObjectNode) httpStep.get(DEFINITIONS_NODE);
 
-    ObjectNode tempMergedDefinitions = (ObjectNode) JsonNodeUtils.merge(pipelineDefinitions, pipelineStepsDefinitions);
-    ObjectNode mergedDefinitions = (ObjectNode) JsonNodeUtils.merge(tempMergedDefinitions, pipelineStepsV2Definitions);
+    ObjectNode mergedDefinitions = (ObjectNode) JsonNodeUtils.merge(pipelineDefinitions, pipelineStepsDefinitions);
 
+    // Merging the schema for all steps that are moved to new schema.
+    ObjectNode finalMergedDefinitions = yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier,
+        scope, mergedDefinitions, YamlSchemaTransientHelper.pipelineStepV2EntityTypes);
+    YamlSchemaTransientHelper.removeV2StepEnumsFromStepElementConfig(finalMergedDefinitions.get(STEP_ELEMENT_CONFIG));
     ObjectNode stageElementConfig = (ObjectNode) pipelineDefinitions.get(STAGE_ELEMENT_CONFIG);
     YamlSchemaTransientHelper.deleteSpecNodeInStageElementConfig(stageElementConfig);
 
@@ -175,7 +178,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
       partialSchemaDtoMap.values().forEach(partialSchemaDTO
           -> pmsYamlSchemaHelper.processPartialStageSchema(
-              mergedDefinitions, pipelineStepsDefinitions, stageElementConfig, partialSchemaDTO));
+              finalMergedDefinitions, pipelineStepsDefinitions, stageElementConfig, partialSchemaDTO));
     } catch (Exception e) {
       log.error(format("[PMS] Exception while merging yaml schema: %s", e.getMessage()), e);
     }

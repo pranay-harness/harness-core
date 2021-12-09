@@ -94,22 +94,10 @@ spec:
           value: ACCOUNT_KEY
         - name: MANAGER_HOST_AND_PORT
           value: https://localhost:9090
-        - name: WATCHER_STORAGE_URL
-          value: http://localhost:8888
-        - name: WATCHER_CHECK_LOCATION
-          value: watcherci.txt
-        - name: REMOTE_WATCHER_URL_CDN
-          value: http://localhost:9500/builds
-        - name: DELEGATE_STORAGE_URL
-          value: http://localhost:8888
-        - name: DELEGATE_CHECK_LOCATION
-          value: delegateci.txt
         - name: DEPLOY_MODE
           value: KUBERNETES
         - name: DELEGATE_NAME
           value: harness-delegate
-        - name: DELEGATE_PROFILE
-          value: ""
         - name: DELEGATE_TYPE
           value: "KUBERNETES"
         - name: PROXY_HOST
@@ -134,6 +122,30 @@ spec:
               key: PROXY_PASSWORD
         - name: POLL_FOR_TASKS
           value: "false"
+        - name: ENABLE_CE
+          value: "false"
+        - name: GRPC_SERVICE_ENABLED
+          value: "true"
+        - name: GRPC_SERVICE_CONNECTOR_PORT
+          value: "8080"
+        - name: VERSION_CHECK_DISABLED
+          value: "false"
+        - name: DELEGATE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: DELEGATE_PROFILE
+          value: ""
+        - name: WATCHER_STORAGE_URL
+          value: http://localhost:8888
+        - name: WATCHER_CHECK_LOCATION
+          value: watcherci.txt
+        - name: REMOTE_WATCHER_URL_CDN
+          value: http://localhost:9500/builds
+        - name: DELEGATE_STORAGE_URL
+          value: http://localhost:8888
+        - name: DELEGATE_CHECK_LOCATION
+          value: delegateci.txt
         - name: HELM_DESIRED_VERSION
           value: ""
         - name: USE_CDN
@@ -150,18 +162,6 @@ spec:
           value: ""
         - name: KUBECTL_PATH
           value: ""
-        - name: ENABLE_CE
-          value: "false"
-        - name: GRPC_SERVICE_ENABLED
-          value: "true"
-        - name: GRPC_SERVICE_CONNECTOR_PORT
-          value: "8080"
-        - name: VERSION_CHECK_DISABLED
-          value: "false"
-        - name: DELEGATE_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
       restartPolicy: Always
 
 ---

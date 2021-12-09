@@ -19,8 +19,9 @@ public class ConfigSecretUtils {
       }
       log.info("Secret resolution started...");
       log.info("Fetching secrets from project '{}'", secretsConfiguration.getGcpSecretManagerProject());
-      new ConfigSecretResolver(GcpSecretManager.create(secretsConfiguration.getGcpSecretManagerProject()))
-          .resolveSecret(configuration);
+      try (SecretStorage secretStorage = GcpSecretManager.create(secretsConfiguration.getGcpSecretManagerProject())) {
+        new ConfigSecretResolver(secretStorage).resolveSecret(configuration);
+      }
       log.info("Secret resolution finished");
     } catch (Exception e) {
       log.error("Failed to resolve secrets", e);

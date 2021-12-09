@@ -24,9 +24,11 @@ public class ConfigSecretResolver {
   public void resolveSecret(Object config) throws IOException {
     for (Field field : FieldUtils.getFieldsListWithAnnotation(config.getClass(), ConfigSecret.class)) {
       try {
+        log.info("Resolving secret in field '{}'...", field);
+
         if (Modifier.isFinal(field.getModifiers())) {
-          throw new ConfigSecretException(
-              String.format("Annotation '%s' can't be used on final fields", ConfigSecret.class.getSimpleName()));
+          throw new ConfigSecretException(String.format(
+              "Annotation '%s' can't be used on final field '%s'", ConfigSecret.class.getSimpleName(), field));
         }
 
         Object fieldValue = FieldUtils.readField(field, config, true);
