@@ -154,6 +154,7 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(VmStageInfraDetails.class, 100098);
     kryo.register(StageInfraDetails.class, 100099);
     kryo.register(K8StageInfraDetails.class, 100100);
-    kryo.register(VmDetailsOutcome.class, 110101);
+
+    kryo.register(VmDetailsOutcome.class, 110101);  // quantum change in order because 100101 is already assigned.
   }
 }
