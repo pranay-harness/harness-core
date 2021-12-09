@@ -88,6 +88,7 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO.ServiceLevelObjectiveDTOBuilder;
 import io.harness.cvng.servicelevelobjective.beans.UserJourneyDTO;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricEventType;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec.RatioSLIMetricSpecBuilder;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdSLIMetricSpec;
@@ -635,6 +636,8 @@ public class BuilderFactory {
 
   public ServiceLevelObjectiveDTOBuilder getServiceLevelObjectiveDTOBuilder() {
     return ServiceLevelObjectiveDTO.builder()
+        .projectIdentifier(context.getProjectIdentifier())
+        .orgIdentifier(context.getOrgIdentifier())
         .identifier("sloIdentifier")
         .name("sloName")
         .tags(new HashMap<String, String>() {
@@ -668,7 +671,7 @@ public class BuilderFactory {
                   .spec(RatioSLIMetricSpec.builder()
                             .thresholdType(ThresholdType.GREATER_THAN)
                             .thresholdValue(20.0)
-                            .eventType("Good")
+                            .eventType(RatioSLIMetricEventType.GOOD)
                             .metric1("metric1")
                             .metric2("metric2")
                             .build())
@@ -679,7 +682,7 @@ public class BuilderFactory {
   public ServiceLevelIndicatorDTOBuilder getThresholdServiceLevelIndicatorDTOBuilder() {
     return ServiceLevelIndicatorDTO.builder()
         .type(ServiceLevelIndicatorType.LATENCY)
-        .healthSourceIdentifier("healthSourceIdentifier")
+        .healthSourceRef("healthSourceIdentifier")
         .sliMissingDataType(SLIMissingDataType.GOOD)
         .spec(ServiceLevelIndicatorSpec.builder()
                   .type(SLIMetricType.THRESHOLD)
@@ -702,7 +705,7 @@ public class BuilderFactory {
     return RatioSLIMetricSpec.builder()
         .thresholdType(ThresholdType.GREATER_THAN)
         .thresholdValue(20.0)
-        .eventType("Good")
+        .eventType(RatioSLIMetricEventType.GOOD)
         .metric1("metric1")
         .metric2("metric2");
   }
