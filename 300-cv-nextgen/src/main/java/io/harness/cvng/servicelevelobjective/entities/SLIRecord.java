@@ -55,4 +55,11 @@ public class SLIRecord implements PersistentEntity, UuidAware, UpdatedAtAware, C
   private long createdAt;
   private int sliVersion;
   public enum SLIState { NO_DATA, GOOD, BAD }
+
+  @Data
+  @Builder
+  public static class SLIRecordParam {
+    private SLIState sliState;
+    private Instant timeStamp;
+  }
 }
