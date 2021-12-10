@@ -2132,6 +2132,30 @@
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
+            <id>portal-maven-2</id>
+            <name>portal-maven-2</name>
+            <url>https://harness.jfrog.io/harness/thirdparty-annonymous</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>portal-maven-3</id>
+            <name>portal-maven-3</name>
+            <url>https://harness.jfrog.io/artifactory/harness-internal</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>portal-maven-0</id>
+            <name>portal-maven-0</name>
+            <url>http://jfrogdev.dev.harness.io:80/artifactory/portal-maven/</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
             <id>portal-maven</id>
             <name>portal-maven</name>
             <url>https://harness.jfrog.io/artifactory/portal-maven</url>

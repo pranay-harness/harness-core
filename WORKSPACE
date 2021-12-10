@@ -5081,6 +5081,9 @@ maven_install(
         "org.mongodb:mongodb-driver": "@maven//:org_mongodb_mongo_java_driver",
     },
     repositories = [
+        "https://harness.jfrog.io/artifactory/harness-internal",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "http://jfrogdev.dev.harness.io:80/artifactory/portal-maven",
         "https://harness.jfrog.io/artifactory/portal-maven",
     ],
     version_conflict_policy = "pinned",
@@ -5097,6 +5100,9 @@ maven_install(
         "org.antlr:antlr4-runtime:4.8",
     ],
     repositories = [
+        "https://harness.jfrog.io/artifactory/harness-internal",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "http://jfrogdev.dev.harness.io:80/artifactory/portal-maven",
         "https://harness.jfrog.io/artifactory/portal-maven",
     ],
     version_conflict_policy = "pinned",
@@ -5109,6 +5115,9 @@ maven_install(
         "com.squareup.okhttp3:okhttp:4.9.0",
     ],
     repositories = [
+        "https://harness.jfrog.io/artifactory/harness-internal",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "http://jfrogdev.dev.harness.io:80/artifactory/portal-maven",
         "https://harness.jfrog.io/artifactory/portal-maven",
     ],
     version_conflict_policy = "pinned",
@@ -5129,6 +5138,9 @@ maven_install(
         "com.github.sevntu-checkstyle:sevntu-checks:1.35.0",
     ],
     repositories = [
+        "https://harness.jfrog.io/artifactory/harness-internal",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "http://jfrogdev.dev.harness.io:80/artifactory/portal-maven",
         "https://harness.jfrog.io/artifactory/portal-maven",
     ],
 )
