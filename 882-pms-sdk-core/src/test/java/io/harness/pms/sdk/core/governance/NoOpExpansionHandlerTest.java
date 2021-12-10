@@ -21,7 +21,7 @@ public class NoOpExpansionHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExpand() {
     NoOpExpansionHandler noOpExpansionHandler = new NoOpExpansionHandler();
-    ExpansionResponse expansionResponse = noOpExpansionHandler.expand(new TextNode("what"));
+    ExpansionResponse expansionResponse = noOpExpansionHandler.expand(new TextNode("what"), null);
     assertThat(expansionResponse.isSuccess()).isTrue();
     assertThat(expansionResponse.getErrorMessage()).isNotNull();
     assertThat(expansionResponse.getKey()).isNotNull();

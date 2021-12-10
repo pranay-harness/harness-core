@@ -11,6 +11,7 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.governance.ExpansionRequestBatch;
+import io.harness.pms.contracts.governance.ExpansionRequestMetadata;
 import io.harness.pms.contracts.governance.ExpansionResponseBatch;
 import io.harness.pms.contracts.governance.ExpansionResponseProto;
 import io.harness.pms.contracts.governance.JsonExpansionServiceGrpc;
@@ -86,7 +87,8 @@ public class JsonExpanderTest extends CategoryTest {
     on(jsonExpander).set("jsonExpansionServiceBlockingStubMap", Collections.singletonMap(ModuleType.PMS, blockingStub));
     on(jsonExpander).set("executor", Executors.newFixedThreadPool(5));
 
-    Set<ExpansionResponseBatch> empty = jsonExpander.fetchExpansionResponses(Collections.emptySet());
+    Set<ExpansionResponseBatch> empty =
+        jsonExpander.fetchExpansionResponses(Collections.emptySet(), ExpansionRequestMetadata.getDefaultInstance());
     assertThat(empty).isEmpty();
     ExpansionRequest expansionRequest = ExpansionRequest.builder()
                                             .module(ModuleType.PMS)
@@ -94,7 +96,8 @@ public class JsonExpanderTest extends CategoryTest {
                                             .fieldValue(new TextNode("k8sConn"))
                                             .build();
     Set<ExpansionRequest> oneRequest = Collections.singleton(expansionRequest);
-    Set<ExpansionResponseBatch> oneBatch = jsonExpander.fetchExpansionResponses(oneRequest);
+    Set<ExpansionResponseBatch> oneBatch =
+        jsonExpander.fetchExpansionResponses(oneRequest, ExpansionRequestMetadata.getDefaultInstance());
     assertThat(oneBatch).hasSize(1);
     ExpansionResponseBatch responseBatch = new ArrayList<>(oneBatch).get(0);
     List<ExpansionResponseProto> batchList = responseBatch.getExpansionResponseProtoList();
@@ -125,7 +128,8 @@ public class JsonExpanderTest extends CategoryTest {
                                    .fieldValue(new TextNode("k8sConn"))
                                    .build();
     Set<ExpansionRequest> requests = new HashSet<>(Arrays.asList(jiraConn1, jiraConn2, k8sConn));
-    Map<ModuleType, ExpansionRequestBatch> expansionRequestBatches = jsonExpander.batchExpansionRequests(requests);
+    Map<ModuleType, ExpansionRequestBatch> expansionRequestBatches =
+        jsonExpander.batchExpansionRequests(requests, ExpansionRequestMetadata.getDefaultInstance());
     assertThat(expansionRequestBatches).hasSize(2);
     ExpansionRequestBatch pmsBatch = expansionRequestBatches.get(ModuleType.PMS);
     assertThat(pmsBatch.getExpansionRequestProtoList()).hasSize(2);
@@ -156,8 +160,8 @@ public class JsonExpanderTest extends CategoryTest {
     assertThat(idBytes).isNotNull();
     assertThat(tagBytes).isNotNull();
     assertThat(listBytes).isNotNull();
-    assertThat(idBytes.toStringUtf8()).isEqualTo("s1");
-    assertThat(tagBytes.toStringUtf8()).isEqualTo("{\"a\":\"b\",\"c\":\"d\"}");
-    assertThat(listBytes.toStringUtf8()).isEqualTo("[\"l1\",\"l2\"]");
+    assertThat(YamlUtils.readTree(idBytes.toStringUtf8()).getNode().getCurrJsonNode()).isEqualTo(idNode);
+    assertThat(YamlUtils.readTree(tagBytes.toStringUtf8()).getNode().getCurrJsonNode()).isEqualTo(tagsNode);
+    assertThat(YamlUtils.readTree(listBytes.toStringUtf8()).getNode().getCurrJsonNode()).isEqualTo(listNode);
   }
 }
