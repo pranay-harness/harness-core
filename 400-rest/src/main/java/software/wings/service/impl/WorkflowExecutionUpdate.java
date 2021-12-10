@@ -378,6 +378,9 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   }
 
   private PipelineEventData getPipelineEventData(PipelineSummary summary) {
+    if (summary == null) {
+      return null;
+    }
     return PipelineEventData.builder().id(summary.getPipelineId()).name(summary.getPipelineName()).build();
   }
 
