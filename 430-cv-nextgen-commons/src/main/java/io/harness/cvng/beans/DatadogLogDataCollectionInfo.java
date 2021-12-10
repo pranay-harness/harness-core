@@ -1,5 +1,7 @@
 package io.harness.cvng.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.cvng.beans.datadog.DatadogLogDefinition;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.cvng.datadog.DatadogUtils;
@@ -10,8 +12,6 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 @Value
 @Builder

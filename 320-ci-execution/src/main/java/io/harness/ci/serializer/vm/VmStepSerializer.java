@@ -16,9 +16,8 @@ import com.google.inject.Singleton;
 public class VmStepSerializer {
   @Inject VmPluginCompatibleStepSerializer vmPluginCompatibleStepSerializer;
 
-  public VmStepInfo serialize(
-      CIStepInfo stepInfo, String identifier, ParameterField<Timeout> parameterFieldTimeout) {
-      String stepName = stepInfo.getNonYamlInfo().getStepInfoType().getDisplayName();
+  public VmStepInfo serialize(CIStepInfo stepInfo, String identifier, ParameterField<Timeout> parameterFieldTimeout) {
+    String stepName = stepInfo.getNonYamlInfo().getStepInfoType().getDisplayName();
     switch (stepInfo.getNonYamlInfo().getStepInfoType()) {
       case RUN:
         return VmRunStepSerializer.serialize((RunStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName);
