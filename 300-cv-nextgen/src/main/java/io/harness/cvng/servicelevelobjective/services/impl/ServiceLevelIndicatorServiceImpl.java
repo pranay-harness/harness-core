@@ -1,5 +1,7 @@
 package io.harness.cvng.servicelevelobjective.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
@@ -48,11 +50,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
@@ -88,7 +90,7 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
         serviceLevelIndicatorTransformerMap.get(serviceLevelIndicatorDTO.getSpec().getType())
             .getEntity(projectParams, serviceLevelIndicatorDTO, monitoredServiceIdentifier,
                 serviceLevelIndicatorDTO.getHealthSourceRef());
-    Preconditions.checkArgument(CollectionUtils.isNotEmpty(cvConfigs), "Health source not present");
+    Preconditions.checkArgument(isNotEmpty(cvConfigs), "Health source not present");
     CVConfig baseCVConfig = cvConfigs.get(0);
     DataCollectionInfo dataCollectionInfo = dataSourceTypeDataCollectionInfoMapperMap.get(baseCVConfig.getType())
                                                 .toDataCollectionInfo(cvConfigs, serviceLevelIndicator);
@@ -127,10 +129,10 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
                        .timeStamp(Instant.ofEpochMilli(timeSeriesRecord.getTimestamp()))
                        .build(),
                 Collectors.toList())));
-    List<SLIAnalyseResponse> sliAnalyseResponses =
-        sliDataProcessorService.process(sliAnalyseRequest, serviceLevelIndicatorDTO.getSpec().getSpec(), startTime,
-            endTime, serviceLevelIndicatorDTO.getSliMissingDataType());
+    List<SLIAnalyseResponse> sliAnalyseResponses = sliDataProcessorService.process(
+        sliAnalyseRequest, serviceLevelIndicatorDTO.getSpec().getSpec(), startTime, endTime);
     sliAnalyseResponses.sort(Comparator.comparing(SLIAnalyseResponse::getTimeStamp));
+    final SLIAnalyseResponse initialSLIResponse = sliAnalyseResponses.get(0);
 
     return TimeGraphResponse.builder()
         .startTime(startTime.toEpochMilli())
@@ -140,12 +142,11 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
                 .map(sliAnalyseResponse
                     -> DataPoints.builder()
                            .timeStamp(sliAnalyseResponse.getTimeStamp().toEpochMilli())
-                           .value(
-                               (sliAnalyseResponse.getRunningGoodCount() + sliAnalyseResponse.getRunningBadCount()) <= 0
-                                   ? 0
-                                   : (sliAnalyseResponse.getRunningGoodCount() * 100.0)
-                                       / (sliAnalyseResponse.getRunningGoodCount()
-                                           + sliAnalyseResponse.getRunningBadCount()))
+                           .value(serviceLevelIndicatorDTO.getSliMissingDataType().calculateSLIValue(
+                               sliAnalyseResponse.getRunningGoodCount(), sliAnalyseResponse.getRunningBadCount(),
+                               TimeUnit.MILLISECONDS.toMinutes(sliAnalyseResponse.getTimeStamp().toEpochMilli()
+                                   - initialSLIResponse.getTimeStamp().toEpochMilli())
+                                   + 1))
                            .build())
                 .collect(Collectors.toList()))
         .build();
@@ -225,7 +226,7 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
 
   @Override
   public void deleteByIdentifier(ProjectParams projectParams, List<String> serviceLevelIndicatorIdentifier) {
-    if (CollectionUtils.isNotEmpty(serviceLevelIndicatorIdentifier)) {
+    if (isNotEmpty(serviceLevelIndicatorIdentifier)) {
       hPersistence.delete(hPersistence.createQuery(ServiceLevelIndicator.class)
                               .filter(ServiceLevelIndicatorKeys.accountId, projectParams.getAccountIdentifier())
                               .filter(ServiceLevelIndicatorKeys.orgIdentifier, projectParams.getOrgIdentifier())
