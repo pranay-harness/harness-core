@@ -821,14 +821,14 @@ public class WatcherServiceImpl implements WatcherService {
 
   @VisibleForTesting
   public void switchStorage() {
-    log.info("Switching Storage");
-    boolean downloadSuccessful = downloadRunScriptsBeforeRestartingDelegateAndWatcher();
-    if (downloadSuccessful) {
-      restartDelegate();
-      restartWatcher();
-    } else {
-      log.warn("Download of run scripts was not successful. Skipping restart for switching storage.");
-    }
+    log.info("Skipping Switching Storage");
+    //    boolean downloadSuccessful = downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+    //    if (downloadSuccessful) {
+    //      restartDelegate();
+    //      restartWatcher();
+    //    } else {
+    //      log.warn("Download of run scripts was not successful. Skipping restart for switching storage.");
+    //    }
   }
 
   @VisibleForTesting
