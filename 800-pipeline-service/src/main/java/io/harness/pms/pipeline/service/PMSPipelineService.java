@@ -35,7 +35,7 @@ public interface PMSPipelineService {
   void saveExecutionInfo(
       String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo);
 
-  Optional<PipelineEntity> incrementRunSequence(
+  int incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean b);
 
   boolean markEntityInvalid(

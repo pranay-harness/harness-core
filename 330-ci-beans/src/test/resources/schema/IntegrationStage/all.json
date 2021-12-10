@@ -3075,7 +3075,8 @@
               "enum": [
                 "Maven",
                 "Bazel",
-                "Gradle"
+                "Gradle",
+                "Dotnet"
               ]
             },
             "connectorRef": {
@@ -3108,7 +3109,8 @@
             "language": {
               "type": "string",
               "enum": [
-                "Java"
+                "Java",
+                "Csharp"
               ]
             },
             "outputVariables": {
@@ -3161,6 +3163,14 @@
                 {
                   "type": "string"
                 }
+              ]
+            },
+            "shell": {
+              "type": "string",
+              "enum": [
+                "Sh",
+                "Bash",
+                "Powershell"
               ]
             },
             "testAnnotations": {

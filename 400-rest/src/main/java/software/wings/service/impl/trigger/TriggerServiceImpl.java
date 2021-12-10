@@ -2240,12 +2240,17 @@ public class TriggerServiceImpl implements TriggerService {
         : collectNewArtifactForBuildNumber(appId, artifactStream, buildNumber);
   }
 
-  private HelmChart getAlreadyCollectedHelmChartForVersionNumber(
+  private HelmChart getAlreadyCollectedHelmChartOrCollectNewForVersionNumber(
       String appId, String appManifestId, String versionNumber) {
     ApplicationManifest appManifest = applicationManifestService.getById(appId, appManifestId);
     notNullCheck("Application Manifest doesn't exist", appManifest, USER);
     HelmChart helmChart =
         helmChartService.getManifestByVersionNumber(appManifest.getAccountId(), appManifestId, versionNumber);
+
+    if (helmChart == null) {
+      helmChart = helmChartService.fetchByChartVersion(
+          appManifest.getAccountId(), appId, appManifest.getServiceId(), appManifest.getName(), versionNumber);
+    }
     notNullCheck("Helm chart with given version number doesn't exist", helmChart, USER);
     return helmChart;
   }
@@ -2331,7 +2336,7 @@ public class TriggerServiceImpl implements TriggerService {
           if (isBlank(versionNo)) {
             throw new InvalidRequestException("Version Number is Mandatory", USER);
           }
-          helmCharts.add(getAlreadyCollectedHelmChartForVersionNumber(
+          helmCharts.add(getAlreadyCollectedHelmChartOrCollectNewForVersionNumber(
               trigger.getAppId(), manifestSelection.getAppManifestId(), versionNo));
         });
   }

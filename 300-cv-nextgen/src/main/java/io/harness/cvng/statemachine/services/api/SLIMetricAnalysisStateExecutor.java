@@ -52,9 +52,8 @@ public class SLIMetricAnalysisStateExecutor extends AnalysisStateExecutor<SLIMet
         sliMetricAnalysisTransformer.getSLIAnalyseRequest(timeSeriesRecordDTOS);
     ServiceLevelIndicatorDTO serviceLevelIndicatorDTO =
         serviceLevelIndicatorEntityAndDTOTransformer.getDto(serviceLevelIndicator);
-    List<SLIAnalyseResponse> sliAnalyseResponseList =
-        sliDataProcessorService.process(sliAnalyseRequest, serviceLevelIndicatorDTO.getSpec().getSpec(), startTime,
-            endTime, serviceLevelIndicatorDTO.getSliMissingDataType());
+    List<SLIAnalyseResponse> sliAnalyseResponseList = sliDataProcessorService.process(
+        sliAnalyseRequest, serviceLevelIndicatorDTO.getSpec().getSpec(), startTime, endTime);
     List<SLIRecordParam> sliRecordList = sliMetricAnalysisTransformer.getSLIAnalyseResponse(sliAnalyseResponseList);
 
     sliRecordService.create(sliRecordList, serviceLevelIndicator.getUuid(), verificationTaskId);
