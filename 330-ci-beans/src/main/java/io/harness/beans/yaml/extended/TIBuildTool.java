@@ -13,6 +13,7 @@ public enum TIBuildTool {
   @JsonProperty("Bazel") BAZEL("Bazel"),
   @JsonProperty("Gradle") GRADLE("Gradle"),
   @JsonProperty("Dotnet") DOTNET("Dotnet");
+  @JsonProperty("Buck") DOTNET("Buck");
 
   private final String yamlName;
 
