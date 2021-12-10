@@ -96,6 +96,7 @@ import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.rbac.validator.PipelineRbacServiceImpl;
 import io.harness.pms.resourceconstraints.service.PMSResourceConstraintService;
 import io.harness.pms.resourceconstraints.service.PMSResourceConstraintServiceImpl;
+import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionServiceV2;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
@@ -532,6 +533,13 @@ public class PipelineServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("shouldUseInstanceCache")
+  public boolean shouldUseInstanceCache() {
+    return configuration.isShouldUseInstanceCache();
+  }
+
+  @Provides
+  @Singleton
   @Named("PipelineExecutorService")
   public ExecutorService pipelineExecutorService() {
     return ThreadPool.create(
@@ -545,5 +553,15 @@ public class PipelineServiceModule extends AbstractModule {
       HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
     return harnessCacheManager.getCache("pmsEventsCache", String.class, Integer.class,
         AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
+  }
+
+  @Provides
+  @Singleton
+  @Named("pmsSdkInstanceCache")
+  public Cache<String, PmsSdkInstance> sdkInstanceCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
+    return harnessCacheManager.getCache("pmsSdkInstanceCache", String.class, PmsSdkInstance.class,
+        AccessedExpiryPolicy.factoryOf(new Duration(TimeUnit.DAYS, 30)),
+        versionInfoManager.getVersionInfo().getBuildNo());
   }
 }

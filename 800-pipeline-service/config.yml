@@ -343,4 +343,6 @@ segmentConfiguration:
 enforcementClientConfiguration:
   enforcementCheckEnabled: false
 
+shouldUseInstanceCache: true
+
 

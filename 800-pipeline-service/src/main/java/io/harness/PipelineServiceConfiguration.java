@@ -105,6 +105,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
   @JsonProperty("pipelineEventConsumersConfig") PipelineServiceConsumersConfig pipelineServiceConsumersConfig;
   @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
+  @JsonProperty("shouldUseInstanceCache") boolean shouldUseInstanceCache;
 
   private String managerServiceSecret;
   private String managerTarget;
