@@ -18,13 +18,10 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.services.api.SLODashboardService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.common.beans.NGTag;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -76,19 +73,13 @@ public class SLODashboardServiceImplTest extends CvNextGenTestBase {
     assertThat(pageResponse.getTotalItems()).isEqualTo(1);
     List<SLODashboardWidget> sloDashboardWidgets = pageResponse.getContent();
     assertThat(sloDashboardWidgets).hasSize(1);
+    assertThat(sloDashboardWidgets.get(0).getSloIdentifier()).isEqualTo(serviceLevelObjective.getIdentifier());
     assertThat(sloDashboardWidgets.get(0).getHealthSourceIdentifier()).isEqualTo(healthSource.getIdentifier());
     assertThat(sloDashboardWidgets.get(0).getHealthSourceName()).isEqualTo(healthSource.getName());
     assertThat(sloDashboardWidgets.get(0).getMonitoredServiceIdentifier()).isEqualTo(monitoredServiceIdentifier);
     assertThat(sloDashboardWidgets.get(0).getMonitoredServiceName()).isEqualTo(monitoredServiceDTO.getName());
-    assertThat(sloDashboardWidgets.get(0).getTags()).isEqualTo(getNGTags(serviceLevelObjective.getTags()));
+    assertThat(sloDashboardWidgets.get(0).getTags()).isEqualTo(serviceLevelObjective.getTags());
     assertThat(sloDashboardWidgets.get(0).getType())
         .isEqualTo(serviceLevelObjective.getServiceLevelIndicators().get(0).getType());
-  }
-
-  private List<NGTag> getNGTags(Map<String, String> tags) {
-    return tags.entrySet()
-        .stream()
-        .map(entry -> NGTag.builder().key(entry.getKey()).value(entry.getValue()).build())
-        .collect(Collectors.toList());
   }
 }

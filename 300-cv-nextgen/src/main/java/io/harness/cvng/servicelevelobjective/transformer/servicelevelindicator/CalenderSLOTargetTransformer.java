@@ -17,7 +17,7 @@ public class CalenderSLOTargetTransformer implements SLOTargetTransformer<Calend
         return WeeklyCalenderTarget.builder().dayOfWeek(((WeeklyCalendarSpec) spec.getSpec()).getDayOfWeek()).build();
       case MONTHLY:
         return MonthlyCalenderTarget.builder()
-            .dayOfMonth(((MonthlyCalenderSpec) spec.getSpec()).getDayOfMonth())
+            .windowEndDayOfMonth(((MonthlyCalenderSpec) spec.getSpec()).getDayOfMonth())
             .build();
       case QUARTERLY:
         return ServiceLevelObjective.QuarterlyCalenderTarget.builder().build();
@@ -37,7 +37,9 @@ public class CalenderSLOTargetTransformer implements SLOTargetTransformer<Calend
       case MONTHLY:
         return CalenderSLOTargetSpec.builder()
             .type(SLOCalenderType.MONTHLY)
-            .spec(MonthlyCalenderSpec.builder().dayOfMonth(((MonthlyCalenderTarget) entity).getDayOfMonth()).build())
+            .spec(MonthlyCalenderSpec.builder()
+                      .dayOfMonth(((MonthlyCalenderTarget) entity).getWindowEndDayOfMonth())
+                      .build())
             .build();
       case QUARTERLY:
         return CalenderSLOTargetSpec.builder()

@@ -17,7 +17,6 @@ import io.harness.cvng.servicelevelobjective.services.api.SLODashboardService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.common.beans.NGTag;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -92,12 +91,13 @@ public class SLODashboardServiceImpl implements SLODashboardService {
     double dailyBurnRate =
         sloGraphData.errorBudgetSpentPercentage() / (timePeriod.getTotalDays().getDays() - remainingDays);
     return SLODashboardWidget.builder()
+        .sloIdentifier(slo.getIdentifier())
         .title(slo.getName())
         .monitoredServiceIdentifier(slo.getMonitoredServiceRef())
         .monitoredServiceName(monitoredService.getName())
         .healthSourceIdentifier(slo.getHealthSourceRef())
         .healthSourceName(getHealthSourceName(monitoredService, slo.getHealthSourceRef()))
-        .tags(getNGTags(slo.getTags()))
+        .tags(slo.getTags())
         .type(slo.getServiceLevelIndicators().get(0).getType())
         .burnRate(SLODashboardWidget.BurnRate.builder().currentRatePercentage(dailyBurnRate).build())
         .errorBudgetRemainingPercentage(sloGraphData.getErrorBudgetRemainingPercentage())
@@ -129,11 +129,5 @@ public class SLODashboardServiceImpl implements SLODashboardService {
                          -> new IllegalStateException(
                              "Health source identifier" + healthSourceRef + " not found in monitored service"))
         .getName();
-  }
-  private List<NGTag> getNGTags(Map<String, String> tags) {
-    return tags.entrySet()
-        .stream()
-        .map(entry -> NGTag.builder().key(entry.getKey()).value(entry.getValue()).build())
-        .collect(Collectors.toList());
   }
 }
