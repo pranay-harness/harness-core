@@ -221,9 +221,9 @@ public class PipelineServiceModule extends AbstractModule {
             .expressionEvaluatorProvider(new PMSExpressionEvaluatorProvider())
             .withPMS(false)
             .isPipelineService(true)
-            .corePoolSize(20)
-            .maxPoolSize(100)
-            .idleTimeInSecs(500L)
+            .corePoolSize(configuration.getOrchestrationPoolConfig().getCorePoolSize())
+            .maxPoolSize(configuration.getOrchestrationPoolConfig().getMaxPoolSize())
+            .idleTimeInSecs(configuration.getOrchestrationPoolConfig().getIdleTime())
             .eventsFrameworkConfiguration(configuration.getEventsFrameworkConfiguration())
             .accountClientId(PIPELINE_SERVICE.getServiceId())
             .accountServiceHttpClientConfig(configuration.getManagerClientConfig())
@@ -535,7 +535,7 @@ public class PipelineServiceModule extends AbstractModule {
   @Named("PipelineExecutorService")
   public ExecutorService pipelineExecutorService() {
     return ThreadPool.create(
-        5, 10, 10, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
+        configuration.getPipelineExecutionPoolConfig().getCorePoolSize(), configuration.getPipelineExecutionPoolConfig().getMaxPoolSize(), configuration.getPipelineExecutionPoolConfig().getIdleTime(), configuration.getPipelineExecutionPoolConfig().getTimeUnit(), new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
   }
 
   @Provides
