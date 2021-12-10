@@ -22,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Api("upgrader/delegate")
-@Path("upgrader/delegate")
+@Api("/upgrader/delegate")
+@Path("/upgrader/delegate")
 @Produces("application/json")
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
