@@ -1,7 +1,7 @@
 package io.harness.connector.events;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.audit.ResourceTypeConstants.CONNECTOR;
+import static io.harness.audit.ResourceTypeEnum.CONNECTOR;
 import static io.harness.connector.ConnectorEvent.CONNECTOR_CREATED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -48,7 +48,7 @@ public class ConnectorCreateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(connectorDTO.getIdentifier()).type(CONNECTOR).build();
+    return Resource.builder().identifier(connectorDTO.getIdentifier()).type(Resource.Type.CONNECTOR).build();
   }
 
   @JsonIgnore

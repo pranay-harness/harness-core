@@ -117,9 +117,9 @@ public class AuditFilterPropertiesValidator {
   }
 
   private void verifyResource(ResourceDTO resource) {
-    if (isEmpty(resource.getType())) {
+    /*if (isEmpty(resource.getType())) {
       throw new InvalidRequestException("Invalid resource filter with missing resource type.");
-    }
+    }*/
     Map<String, String> labels = resource.getLabels();
     if (isNotEmpty(labels)) {
       labels.forEach((key, value) -> {

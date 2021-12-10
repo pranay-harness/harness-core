@@ -2,7 +2,7 @@ package io.harness.delegate.events;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.audit.ResourceTypeConstants;
+import io.harness.audit.ResourceTypeEnum;
 import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.ng.core.Resource;
 
@@ -22,7 +22,7 @@ public class DelegateGroupDeleteEvent extends AbstractDelegateConfigurationEvent
 
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(delegateGroupId).type(ResourceTypeConstants.DELEGATE).build();
+    return Resource.builder().identifier(delegateGroupId).type(Resource.Type.DELEGATE).build();
   }
 
   @Override

@@ -22,7 +22,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonInclude(NON_NULL)
 @FieldNameConstants(innerTypeName = "ResourceKeys")
 public class ResourceDTO {
-  @NotNull @NotBlank String type;
+  @NotNull Resource.Type type;
   @NotNull @NotBlank String identifier;
   @Size(max = 5) Map<String, String> labels;
 

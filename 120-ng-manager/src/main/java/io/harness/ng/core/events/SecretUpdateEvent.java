@@ -1,7 +1,6 @@
 package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.audit.ResourceTypeConstants.SECRET;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -48,7 +47,7 @@ public class SecretUpdateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(newSecret.getIdentifier()).type(SECRET).build();
+    return Resource.builder().identifier(newSecret.getIdentifier()).type(Resource.Type.SECRET).build();
   }
 
   @JsonIgnore

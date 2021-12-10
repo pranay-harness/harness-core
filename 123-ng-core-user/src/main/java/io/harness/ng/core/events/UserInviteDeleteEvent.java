@@ -1,7 +1,7 @@
 package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.audit.ResourceTypeConstants.USER;
+import static io.harness.audit.ResourceTypeEnum.USER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -51,7 +51,7 @@ public class UserInviteDeleteEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(invite.getEmail()).type(USER).build();
+    return Resource.builder().identifier(invite.getEmail()).type(Resource.Type.USER).build();
   }
 
   @JsonIgnore

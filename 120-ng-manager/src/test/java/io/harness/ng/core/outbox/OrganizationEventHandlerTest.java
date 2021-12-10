@@ -28,13 +28,13 @@ import io.harness.CategoryTest;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
-import io.harness.audit.ResourceTypeConstants;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.category.element.UnitTests;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
+import io.harness.ng.core.Resource;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationRequest;
 import io.harness.ng.core.events.OrganizationCreateEvent;
@@ -257,7 +257,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
       String accountIdentifier, String identifier, AuditEntry auditEntry, OutboxEvent outboxEvent) {
     assertNotNull(auditEntry);
     assertEquals(outboxEvent.getId(), auditEntry.getInsertId());
-    assertEquals(ResourceTypeConstants.ORGANIZATION, auditEntry.getResource().getType());
+    assertEquals(Resource.Type.ORGANIZATION, auditEntry.getResource().getType());
     assertEquals(identifier, auditEntry.getResource().getIdentifier());
     assertEquals(accountIdentifier, auditEntry.getResourceScope().getAccountIdentifier());
     assertEquals(identifier, auditEntry.getResourceScope().getOrgIdentifier());

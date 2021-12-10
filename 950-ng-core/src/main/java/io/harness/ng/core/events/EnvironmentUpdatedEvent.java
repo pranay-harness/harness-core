@@ -1,7 +1,7 @@
 package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.audit.ResourceTypeConstants.ENVIRONMENT;
+import static io.harness.audit.ResourceTypeEnum.ENVIRONMENT;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.Event;
@@ -36,7 +36,7 @@ public class EnvironmentUpdatedEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(newEnvironment.getIdentifier()).type(ENVIRONMENT).build();
+    return Resource.builder().identifier(newEnvironment.getIdentifier()).type(Resource.Type.ENVIRONMENT).build();
   }
 
   @JsonIgnore

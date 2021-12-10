@@ -1,7 +1,7 @@
 package io.harness.accesscontrol.roleassignments.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.audit.ResourceTypeConstants.ROLE_ASSIGNMENT;
+import static io.harness.audit.ResourceTypeEnum.ROLE_ASSIGNMENT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
@@ -47,7 +47,7 @@ public class RoleAssignmentCreateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(roleAssignment.getIdentifier()).type(ROLE_ASSIGNMENT).build();
+    return Resource.builder().identifier(roleAssignment.getIdentifier()).type(Resource.Type.ROLE_ASSIGNMENT).build();
   }
 
   @JsonIgnore

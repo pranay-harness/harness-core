@@ -1,7 +1,6 @@
 package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.audit.ResourceTypeConstants.ORGANIZATION;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.Event;
@@ -35,7 +34,7 @@ public class OrganizationRestoreEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(organization.getIdentifier()).type(ORGANIZATION).build();
+    return Resource.builder().identifier(organization.getIdentifier()).type(Resource.Type.ORGANIZATION).build();
   }
 
   @JsonIgnore

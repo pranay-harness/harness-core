@@ -22,7 +22,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonInclude(NON_NULL)
 @FieldNameConstants(innerTypeName = "ResourceKeys")
 public class Resource {
-  @NotNull @NotEmpty String type;
+  @NotNull @NotEmpty io.harness.ng.core.Resource.Type type;
   @NotNull @NotEmpty String identifier;
   @Size(max = 10) List<KeyValuePair> labels;
 }

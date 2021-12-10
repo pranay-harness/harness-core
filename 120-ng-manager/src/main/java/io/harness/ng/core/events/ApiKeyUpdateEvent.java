@@ -1,7 +1,6 @@
 package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.audit.ResourceTypeConstants.API_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
@@ -38,7 +37,7 @@ public class ApiKeyUpdateEvent implements Event {
   @Override
   @JsonIgnore
   public Resource getResource() {
-    return Resource.builder().identifier(oldApiKey.getIdentifier()).type(API_KEY).build();
+    return Resource.builder().identifier(oldApiKey.getIdentifier()).type(Resource.Type.API_KEY).build();
   }
 
   @Override

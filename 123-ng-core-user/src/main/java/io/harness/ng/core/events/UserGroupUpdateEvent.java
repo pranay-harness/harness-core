@@ -1,7 +1,7 @@
 package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.audit.ResourceTypeConstants.USER_GROUP;
+import static io.harness.audit.ResourceTypeEnum.USER_GROUP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -45,7 +45,7 @@ public class UserGroupUpdateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(newUserGroup.getIdentifier()).type(USER_GROUP).build();
+    return Resource.builder().identifier(newUserGroup.getIdentifier()).type(Resource.Type.USER_GROUP).build();
   }
 
   @JsonIgnore

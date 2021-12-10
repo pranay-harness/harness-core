@@ -1,7 +1,6 @@
 package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.audit.ResourceTypeConstants.TOKEN;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
@@ -38,7 +37,7 @@ public class TokenUpdateEvent implements Event {
   @Override
   @JsonIgnore
   public Resource getResource() {
-    return Resource.builder().identifier(oldToken.getIdentifier()).type(TOKEN).build();
+    return Resource.builder().identifier(oldToken.getIdentifier()).type(Resource.Type.TOKEN).build();
   }
 
   @Override

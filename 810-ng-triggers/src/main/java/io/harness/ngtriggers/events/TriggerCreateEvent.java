@@ -3,7 +3,7 @@ package io.harness.ngtriggers.events;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.audit.ResourceTypeConstants;
+import io.harness.audit.ResourceTypeEnum;
 import io.harness.event.Event;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
@@ -39,7 +39,7 @@ public class TriggerCreateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(triggerEntity.getIdentifier()).type(ResourceTypeConstants.TRIGGER).build();
+    return Resource.builder().identifier(triggerEntity.getIdentifier()).type(Resource.Type.TRIGGER).build();
   }
 
   @JsonIgnore

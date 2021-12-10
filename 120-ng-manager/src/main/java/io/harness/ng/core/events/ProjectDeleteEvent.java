@@ -1,7 +1,6 @@
 package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.audit.ResourceTypeConstants.PROJECT;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.Event;
@@ -35,7 +34,7 @@ public class ProjectDeleteEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(project.getIdentifier()).type(PROJECT).build();
+    return Resource.builder().identifier(project.getIdentifier()).type(Resource.Type.PROJECT).build();
   }
 
   @JsonIgnore

@@ -1,7 +1,6 @@
 package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.audit.ResourceTypeConstants.SERVICE_ACCOUNT;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
@@ -38,7 +37,7 @@ public class ServiceAccountUpdateEvent implements Event {
   @Override
   @JsonIgnore
   public Resource getResource() {
-    return Resource.builder().identifier(oldServiceAccount.getIdentifier()).type(SERVICE_ACCOUNT).build();
+    return Resource.builder().identifier(oldServiceAccount.getIdentifier()).type(Resource.Type.SERVICE_ACCOUNT).build();
   }
 
   @Override

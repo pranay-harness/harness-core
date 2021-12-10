@@ -2,7 +2,6 @@ package io.harness.ng.core.events;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.audit.ResourceTypeConstants;
 import io.harness.delegate.beans.DelegateProfileDetailsNg;
 import io.harness.delegate.events.AbstractDelegateConfigurationEvent;
 import io.harness.ng.core.Resource;
@@ -23,10 +22,7 @@ public class DelegateConfigurationUpdateEvent extends AbstractDelegateConfigurat
 
   @Override
   public Resource getResource() {
-    return Resource.builder()
-        .identifier(newProfile.getIdentifier())
-        .type(ResourceTypeConstants.DELEGATE_CONFIGURATION)
-        .build();
+    return Resource.builder().identifier(newProfile.getIdentifier()).type(Resource.Type.DELEGATE_CONFIGURATION).build();
   }
 
   @Override

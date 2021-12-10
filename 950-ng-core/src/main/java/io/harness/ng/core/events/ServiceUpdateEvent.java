@@ -1,7 +1,7 @@
 package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.audit.ResourceTypeConstants.SERVICE;
+import static io.harness.audit.ResourceTypeEnum.SERVICE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.Event;
@@ -35,7 +35,7 @@ public class ServiceUpdateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(newService.getIdentifier()).type(SERVICE).build();
+    return Resource.builder().identifier(newService.getIdentifier()).type(Resource.Type.SERVICE).build();
   }
 
   @JsonIgnore

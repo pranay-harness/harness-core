@@ -3,7 +3,7 @@ package io.harness.pms.events;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.audit.ResourceTypeConstants;
+import io.harness.audit.ResourceTypeEnum;
 import io.harness.event.Event;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
@@ -39,7 +39,7 @@ public class InputSetUpdateEvent implements Event {
   public Resource getResource() {
     return Resource.builder()
         .identifier(newInputSet.getIdentifier())
-        .type(ResourceTypeConstants.INPUT_SET)
+        .type(Resource.Type.INPUT_SET)
         .labels(ImmutableMap.<String, String>builder().put("pipelineIdentifier", pipelineIdentifier).build())
         .build();
   }

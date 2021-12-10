@@ -27,13 +27,13 @@ import io.harness.CategoryTest;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
-import io.harness.audit.ResourceTypeConstants;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
+import io.harness.ng.core.Resource;
 import io.harness.ng.core.events.AddCollaboratorEvent;
 import io.harness.ng.core.events.RemoveCollaboratorEvent;
 import io.harness.ng.core.events.UserInviteCreateEvent;
@@ -368,7 +368,7 @@ public class UserEventHandlerTest extends CategoryTest {
       String accountIdentifier, String orgIdentifier, String email, AuditEntry auditEntry, OutboxEvent outboxEvent) {
     assertNotNull(auditEntry);
     assertEquals(outboxEvent.getId(), auditEntry.getInsertId());
-    assertEquals(ResourceTypeConstants.USER, auditEntry.getResource().getType());
+    assertEquals(Resource.Type.USER, auditEntry.getResource().getType());
     assertEquals(email, auditEntry.getResource().getIdentifier());
     assertEquals(accountIdentifier, auditEntry.getResourceScope().getAccountIdentifier());
     assertEquals(orgIdentifier, auditEntry.getResourceScope().getOrgIdentifier());

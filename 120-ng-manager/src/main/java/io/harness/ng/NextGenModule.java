@@ -1,17 +1,6 @@
 package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
-import static io.harness.audit.ResourceTypeConstants.API_KEY;
-import static io.harness.audit.ResourceTypeConstants.CONNECTOR;
-import static io.harness.audit.ResourceTypeConstants.DELEGATE_CONFIGURATION;
-import static io.harness.audit.ResourceTypeConstants.ENVIRONMENT;
-import static io.harness.audit.ResourceTypeConstants.ORGANIZATION;
-import static io.harness.audit.ResourceTypeConstants.PROJECT;
-import static io.harness.audit.ResourceTypeConstants.SECRET;
-import static io.harness.audit.ResourceTypeConstants.SERVICE;
-import static io.harness.audit.ResourceTypeConstants.SERVICE_ACCOUNT;
-import static io.harness.audit.ResourceTypeConstants.TOKEN;
-import static io.harness.audit.ResourceTypeConstants.USER;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.INSTANCE_STATS;
 import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
@@ -22,6 +11,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SECRET
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_SCOPE_RECONCILIATION;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
+import static io.harness.ng.core.Resource.Type.*;
 
 import static java.lang.Boolean.TRUE;
 
@@ -41,7 +31,6 @@ import io.harness.account.AccountConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
-import io.harness.audit.ResourceTypeConstants;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -96,12 +85,7 @@ import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.accesscontrol.user.AggregateUserServiceImpl;
 import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
-import io.harness.ng.core.CoreModule;
-import io.harness.ng.core.DefaultOrganizationModule;
-import io.harness.ng.core.DelegateServiceModule;
-import io.harness.ng.core.InviteModule;
-import io.harness.ng.core.NGAggregateModule;
-import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.*;
 import io.harness.ng.core.api.ApiKeyService;
 import io.harness.ng.core.api.NGModulesService;
 import io.harness.ng.core.api.NGSecretServiceV2;
@@ -698,11 +682,11 @@ public class NextGenModule extends AbstractModule {
   }
 
   private void registerOutboxEventHandlers() {
-    MapBinder<String, OutboxEventHandler> outboxEventHandlerMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, OutboxEventHandler.class);
+    MapBinder<Resource.Type, OutboxEventHandler> outboxEventHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), Resource.Type.class, OutboxEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(ORGANIZATION).to(OrganizationEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(PROJECT).to(ProjectEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(ResourceTypeConstants.USER_GROUP).to(UserGroupEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(USER_GROUP).to(UserGroupEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(SECRET).to(SecretEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(USER).to(UserEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(DELEGATE_CONFIGURATION).to(DelegateProfileEventHandler.class);

@@ -3,7 +3,7 @@ package io.harness.template.events;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.audit.ResourceTypeConstants;
+import io.harness.audit.ResourceTypeEnum;
 import io.harness.encryption.Scope;
 import io.harness.event.Event;
 import io.harness.ng.core.AccountScope;
@@ -59,7 +59,7 @@ public class TemplateUpdateEvent implements Event {
   public Resource getResource() {
     return Resource.builder()
         .identifier(newTemplateEntity.getIdentifier())
-        .type(ResourceTypeConstants.TEMPLATE)
+        .type(Resource.Type.TEMPLATE)
         .labels(ImmutableMap.<String, String>builder().put("versionLabel", newTemplateEntity.getVersionLabel()).build())
         .build();
   }

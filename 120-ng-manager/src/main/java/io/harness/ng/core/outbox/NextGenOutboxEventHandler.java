@@ -3,6 +3,7 @@ package io.harness.ng.core.outbox;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.Resource;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
 
@@ -13,10 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Slf4j
 public class NextGenOutboxEventHandler implements OutboxEventHandler {
-  private final Map<String, OutboxEventHandler> outboxEventHandlerMap;
+  private final Map<Resource.Type, OutboxEventHandler> outboxEventHandlerMap;
 
   @Inject
-  public NextGenOutboxEventHandler(Map<String, OutboxEventHandler> outboxEventHandlerMap) {
+  public NextGenOutboxEventHandler(Map<Resource.Type, OutboxEventHandler> outboxEventHandlerMap) {
     this.outboxEventHandlerMap = outboxEventHandlerMap;
   }
 

@@ -25,10 +25,10 @@ import io.harness.accesscontrol.roleassignments.events.RoleAssignmentUpdateEvent
 import io.harness.accesscontrol.scopes.ScopeDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
-import io.harness.audit.ResourceTypeConstants;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.core.Resource;
 import io.harness.outbox.OutboxEvent;
 import io.harness.rule.Owner;
 
@@ -161,7 +161,7 @@ public class RoleAssignmentEventHandlerTest extends CategoryTest {
       AuditEntry auditEntry, OutboxEvent outboxEvent) {
     assertNotNull(auditEntry);
     assertEquals(outboxEvent.getId(), auditEntry.getInsertId());
-    assertEquals(ResourceTypeConstants.ROLE_ASSIGNMENT, auditEntry.getResource().getType());
+    assertEquals(Resource.Type.ROLE_ASSIGNMENT, auditEntry.getResource().getType());
     assertEquals(identifier, auditEntry.getResource().getIdentifier());
     assertEquals(accountIdentifier, auditEntry.getResourceScope().getAccountIdentifier());
     assertEquals(orgIdentifier, auditEntry.getResourceScope().getOrgIdentifier());

@@ -2,7 +2,7 @@ package io.harness.delegate.events;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.audit.ResourceTypeConstants;
+import io.harness.audit.ResourceTypeEnum;
 import io.harness.beans.Scope;
 import io.harness.delegate.dto.DelegateNgTokenDTO;
 import io.harness.ng.core.Resource;
@@ -26,7 +26,7 @@ public class DelegateNgTokenCreateEvent extends AbstractDelegateConfigurationEve
 
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(token.getIdentifier()).type(ResourceTypeConstants.DELEGATE_TOKEN).build();
+    return Resource.builder().identifier(token.getIdentifier()).type(Resource.Type.DELEGATE_TOKEN).build();
   }
 
   @Override

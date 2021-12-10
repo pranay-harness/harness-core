@@ -3,7 +3,7 @@ package io.harness.pms.events;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.audit.ResourceTypeConstants;
+import io.harness.audit.ResourceTypeEnum;
 import io.harness.event.Event;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
@@ -42,7 +42,7 @@ public class PipelineUpdateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(newPipeline.getIdentifier()).type(ResourceTypeConstants.PIPELINE).build();
+    return Resource.builder().identifier(newPipeline.getIdentifier()).type(Resource.Type.PIPELINE).build();
   }
 
   @JsonIgnore
