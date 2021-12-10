@@ -25,7 +25,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Api("upgrader/delegate")
 @Path("upgrader/delegate")
 @Produces("application/json")
-@DelegateAuth
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateUpgraderResource {
