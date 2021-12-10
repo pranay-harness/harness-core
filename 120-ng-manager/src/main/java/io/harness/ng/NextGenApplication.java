@@ -68,6 +68,7 @@ import io.harness.gitsync.migration.GitSyncMigrationProvider;
 import io.harness.gitsync.server.GitSyncGrpcModule;
 import io.harness.gitsync.server.GitSyncServiceConfiguration;
 import io.harness.govern.ProviderModule;
+import io.harness.governance.DefaultConnectorRefExpansionHandler;
 import io.harness.health.HealthService;
 import io.harness.licensing.migrations.LicenseManagerMigrationProvider;
 import io.harness.logstreaming.LogStreamingModule;
@@ -588,7 +589,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private Map<String, Class<? extends JsonExpansionHandler>> getJsonExpansionHandlers() {
     Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers = new HashMap<>();
-    jsonExpansionHandlers.put(YAMLFieldNameConstants.CONNECTOR_REF, NoOpExpansionHandler.class);
+    jsonExpansionHandlers.put(YAMLFieldNameConstants.CONNECTOR_REF, DefaultConnectorRefExpansionHandler.class);
     jsonExpansionHandlers.put(YamlTypes.SERVICE_REF, NoOpExpansionHandler.class);
     jsonExpansionHandlers.put(YamlTypes.ENVIRONMENT_REF, NoOpExpansionHandler.class);
     return jsonExpansionHandlers;

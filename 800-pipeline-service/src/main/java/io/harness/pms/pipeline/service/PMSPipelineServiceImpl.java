@@ -24,8 +24,10 @@ import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
+import io.harness.pms.contracts.governance.ExpansionRequestMetadata;
 import io.harness.pms.contracts.governance.ExpansionResponseBatch;
 import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.governance.ExpansionRequest;
 import io.harness.pms.governance.ExpansionRequestsExtractor;
 import io.harness.pms.governance.JsonExpander;
@@ -48,6 +50,7 @@ import io.harness.telemetry.TelemetryReporter;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -79,6 +82,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private TelemetryReporter telemetryReporter;
   @Inject private JsonExpander jsonExpander;
   @Inject private ExpansionRequestsExtractor expansionRequestsExtractor;
+  @Inject private PmsGitSyncHelper gitSyncHelper;
   public static String PIPELINE_SAVE = "pipeline_save";
   public static String PIPELINE_SAVE_ACTION_TYPE = "action";
   public static String CREATING_PIPELINE = "creating new pipeline";
@@ -462,9 +466,22 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
           pipelineIdentifier, projectIdentifier, orgIdentifier));
     }
 
+    ExpansionRequestMetadata expansionRequestMetadata = getRequestMetadata(accountId, orgIdentifier, projectIdentifier);
+
     Set<ExpansionRequest> expansionRequests =
         expansionRequestsExtractor.fetchExpansionRequests(pipelineEntityOptional.get().getYaml());
-    Set<ExpansionResponseBatch> expansionResponseBatches = jsonExpander.fetchExpansionResponses(expansionRequests);
+    Set<ExpansionResponseBatch> expansionResponseBatches =
+        jsonExpander.fetchExpansionResponses(expansionRequests, expansionRequestMetadata);
     return null;
+  }
+
+  ExpansionRequestMetadata getRequestMetadata(String accountId, String orgIdentifier, String projectIdentifier) {
+    ByteString gitSyncBranchContextBytes = gitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
+    return ExpansionRequestMetadata.newBuilder()
+        .setAccountId(accountId)
+        .setOrgId(orgIdentifier)
+        .setProjectId(projectIdentifier)
+        .setGitSyncBranchContext(gitSyncBranchContextBytes)
+        .build();
   }
 }

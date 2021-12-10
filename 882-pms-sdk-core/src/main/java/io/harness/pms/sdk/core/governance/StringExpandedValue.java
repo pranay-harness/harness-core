@@ -11,6 +11,7 @@ import lombok.Value;
 @Value
 @Builder
 public class StringExpandedValue implements ExpandedValue {
+  String key;
   String value;
 
   @Override
