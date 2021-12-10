@@ -650,7 +650,7 @@ public class BuilderFactory {
         .target(SLOTarget.builder()
                     .type(SLOTargetType.ROLLING)
                     .sloTargetPercentage(80.0)
-                    .spec(RollingSLOTargetSpec.builder().periodLength("30D").build())
+                    .spec(RollingSLOTargetSpec.builder().periodLength("30d").build())
                     .build())
         .serviceLevelIndicators(Collections.singletonList(getServiceLevelIndicatorDTOBuilder()))
         .healthSourceRef("healthSourceIdentifier")

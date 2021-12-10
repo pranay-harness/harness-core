@@ -4,7 +4,9 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
+import io.harness.cvng.servicelevelobjective.beans.DayOfWeek;
+import io.harness.cvng.servicelevelobjective.beans.SLOCalenderType;
+import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -32,6 +34,7 @@ import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -64,10 +67,11 @@ public class ServiceLevelObjective
   SLOTarget sloTarget;
   private long lastUpdatedAt;
   private long createdAt;
+  private Double sloTargetPercentage;
 
   public int getTotalErrorBudgetMinutes(LocalDate currentDate) {
     int currentWindowMinutes = getCurrentTimeRange(currentDate).totalMinutes();
-    Double errorBudgetPercentage = sloTarget.getSloTargetPercentage();
+    Double errorBudgetPercentage = getSloTargetPercentage();
     return (int) ((100 - errorBudgetPercentage) * currentWindowMinutes);
   }
 
@@ -106,5 +110,44 @@ public class ServiceLevelObjective
     public int totalMinutes() {
       return Period.between(startDate, endDate).getDays() * 24 * 60;
     }
+  }
+
+  @Data
+  @SuperBuilder
+  public abstract static class SLOTarget {
+    public abstract SLOTargetType getType();
+  }
+  @Data
+  @SuperBuilder
+  public abstract static class CalenderSLOTarget extends SLOTarget {
+    private final SLOTargetType type = SLOTargetType.CALENDER;
+    public abstract SLOCalenderType getCalenderType();
+  }
+
+  @Value
+  @SuperBuilder
+  public static class WeeklyCalenderTarget extends CalenderSLOTarget {
+    private DayOfWeek dayOfWeek;
+    private final SLOCalenderType calenderType = SLOCalenderType.WEEKLY;
+  }
+
+  @SuperBuilder
+  @Data
+  public static class MonthlyCalenderTarget extends CalenderSLOTarget {
+    int dayOfMonth;
+    private final SLOCalenderType calenderType = SLOCalenderType.MONTHLY;
+  }
+
+  @SuperBuilder
+  @Data
+  public static class QuarterlyCalenderTarget extends CalenderSLOTarget {
+    private final SLOCalenderType calenderType = SLOCalenderType.QUARTERLY;
+  }
+
+  @SuperBuilder
+  @Data
+  public static class RollingSLOTarget extends SLOTarget {
+    int periodLengthDays;
+    private final SLOTargetType type = SLOTargetType.ROLLING;
   }
 }
