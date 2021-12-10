@@ -36,6 +36,7 @@ Var timeSeriesPointsList = extract(Var:metricResponse, $.series)
             }
         }
 }
+
 }
 
 return Var:returnList
