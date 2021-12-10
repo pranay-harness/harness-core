@@ -6,14 +6,15 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnexpectedException;
 import io.harness.pms.contracts.governance.ExpansionRequestBatch;
+import io.harness.pms.contracts.governance.ExpansionRequestMetadata;
 import io.harness.pms.contracts.governance.ExpansionRequestProto;
 import io.harness.pms.contracts.governance.ExpansionResponseBatch;
 import io.harness.pms.contracts.governance.JsonExpansionServiceGrpc.JsonExpansionServiceBlockingStub;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.utils.PmsGrpcClientUtils;
+import io.harness.pms.yaml.YamlUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.HashMap;
@@ -31,8 +32,10 @@ public class JsonExpander {
   @Inject Map<ModuleType, JsonExpansionServiceBlockingStub> jsonExpansionServiceBlockingStubMap;
   Executor executor = Executors.newFixedThreadPool(5);
 
-  public Set<ExpansionResponseBatch> fetchExpansionResponses(Set<ExpansionRequest> expansionRequests) {
-    Map<ModuleType, ExpansionRequestBatch> expansionRequestBatches = batchExpansionRequests(expansionRequests);
+  public Set<ExpansionResponseBatch> fetchExpansionResponses(
+      Set<ExpansionRequest> expansionRequests, ExpansionRequestMetadata expansionRequestMetadata) {
+    Map<ModuleType, ExpansionRequestBatch> expansionRequestBatches =
+        batchExpansionRequests(expansionRequests, expansionRequestMetadata);
     CompletableFutures<ExpansionResponseBatch> completableFutures = new CompletableFutures<>(executor);
 
     for (ModuleType module : expansionRequestBatches.keySet()) {
@@ -49,7 +52,8 @@ public class JsonExpander {
     }
   }
 
-  Map<ModuleType, ExpansionRequestBatch> batchExpansionRequests(Set<ExpansionRequest> expansionRequests) {
+  Map<ModuleType, ExpansionRequestBatch> batchExpansionRequests(
+      Set<ExpansionRequest> expansionRequests, ExpansionRequestMetadata expansionRequestMetadata) {
     Set<ModuleType> requiredModules =
         expansionRequests.stream().map(ExpansionRequest::getModule).collect(Collectors.toSet());
     Map<ModuleType, ExpansionRequestBatch> expansionRequestBatches = new HashMap<>();
@@ -65,20 +69,17 @@ public class JsonExpander {
                                                                  .setValue(convertToByteString(request.getFieldValue()))
                                                                  .build())
                                                       .collect(Collectors.toList());
-      ExpansionRequestBatch batch =
-          ExpansionRequestBatch.newBuilder().addAllExpansionRequestProto(protoRequests).build();
+      ExpansionRequestBatch batch = ExpansionRequestBatch.newBuilder()
+                                        .addAllExpansionRequestProto(protoRequests)
+                                        .setRequestMetadata(expansionRequestMetadata)
+                                        .build();
       expansionRequestBatches.put(module, batch);
     }
     return expansionRequestBatches;
   }
 
   ByteString convertToByteString(JsonNode fieldValue) {
-    String s;
-    if (fieldValue instanceof TextNode) {
-      s = fieldValue.textValue();
-    } else {
-      s = fieldValue.toString();
-    }
+    String s = YamlUtils.write(fieldValue);
     return ByteString.copyFromUtf8(s);
   }
 }

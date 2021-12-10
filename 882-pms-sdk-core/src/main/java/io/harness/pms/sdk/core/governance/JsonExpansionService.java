@@ -42,7 +42,7 @@ public class JsonExpansionService extends JsonExpansionServiceImplBase {
         String key = YamlNode.getLastKeyInPath(fqn);
         JsonExpansionHandler jsonExpansionHandler = expansionHandlerRegistry.obtain(key);
         JsonNode value = getValueJsonNode(request);
-        ExpansionResponse expansionResponse = jsonExpansionHandler.expand(value);
+        ExpansionResponse expansionResponse = jsonExpansionHandler.expand(value, requestsBatch.getRequestMetadata());
         ExpansionResponseProto expansionResponseProto = convertToResponseProto(expansionResponse, fqn);
         expansionResponseBatchBuilder.addExpansionResponseProto(expansionResponseProto);
 
@@ -71,13 +71,20 @@ public class JsonExpansionService extends JsonExpansionServiceImplBase {
   }
 
   ExpansionResponseProto convertToResponseProto(ExpansionResponse expansionResponse, String fqn) {
-    return ExpansionResponseProto.newBuilder()
-        .setSuccess(expansionResponse.isSuccess())
-        .setErrorMessage(expansionResponse.getErrorMessage())
-        .setFqn(fqn)
-        .setKey(expansionResponse.getKey())
-        .setValue(expansionResponse.getValue().toJson())
-        .setPlacement(expansionResponse.getPlacement())
-        .build();
+    if (expansionResponse.isSuccess()) {
+      return ExpansionResponseProto.newBuilder()
+          .setSuccess(expansionResponse.isSuccess())
+          .setFqn(fqn)
+          .setKey(expansionResponse.getKey())
+          .setValue(expansionResponse.getValue().toJson())
+          .setPlacement(expansionResponse.getPlacement())
+          .build();
+    } else {
+      return ExpansionResponseProto.newBuilder()
+          .setSuccess(expansionResponse.isSuccess())
+          .setErrorMessage(expansionResponse.getErrorMessage())
+          .setFqn(fqn)
+          .build();
+    }
   }
 }

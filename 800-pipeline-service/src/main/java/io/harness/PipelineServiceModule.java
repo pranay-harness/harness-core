@@ -2,7 +2,6 @@ package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
-import static io.harness.AuthorizationServiceHeader.TEMPLATE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
@@ -238,11 +237,11 @@ public class PipelineServiceModule extends AbstractModule {
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
         configuration.getManagerTarget(), configuration.getManagerAuthority(), true));
     install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
-        configuration.getNgManagerServiceSecret(), MANAGER.getServiceId(), ClientMode.PRIVILEGED));
+        configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId(), ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new TemplateResourceClientModule(configuration.getTemplateServiceClientConfig(),
-        configuration.getTemplateServiceSecret(), TEMPLATE_SERVICE.toString()));
+        configuration.getTemplateServiceSecret(), PIPELINE_SERVICE.toString()));
     install(NGTriggersModule.getInstance(configuration.getTriggerConfig(),
         configuration.getPipelineServiceClientConfig(), configuration.getPipelineServiceSecret()));
     install(PersistentLockModule.getInstance());
