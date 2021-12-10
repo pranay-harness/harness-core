@@ -29,8 +29,7 @@ public class CDPipelineInstrumentationHelper {
     }
 
     public long getTotalNumberOfActiveServices(List<InstanceDTO> serviceInstances) {
-        Row3<String, String, String>[] activeServicesRows = getActiveServices(serviceInstances);
-        return activeServicesRows.length;
+        return getActiveServices(serviceInstances).length;
     }
 
     public List<InstanceDTO> getServiceInstancesInInterval(String accountIdentifier, long startInterval, long endInterval) {
@@ -45,9 +44,7 @@ public class CDPipelineInstrumentationHelper {
     }
 
     public Row3<String, String, String>[] getActiveServices(List<InstanceDTO> serviceInstances) {
-        Row3<String, String, String>[] serviceRowsFromInstances = getOrgProjectServiceRows(serviceInstances);
-
-        return serviceRowsFromInstances;
+        return getOrgProjectServiceRows(serviceInstances);
     }
 
     Row3<String, String, String>[] getOrgProjectServiceRows(List<InstanceDTO> instanceDTOList) {
