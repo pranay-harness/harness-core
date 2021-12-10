@@ -100,6 +100,7 @@ import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
+import io.harness.pms.sdk.PmsSdkInstanceCacheMonitor;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
@@ -323,6 +324,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerObservers(injector);
     registerRequestContextFilter(environment);
     registerOasResource(appConfig, environment, injector);
+    intializeSdkInstanceCacheSync(injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     PipelineServiceIteratorsConfig iteratorsConfig = appConfig.getIteratorsConfig();
@@ -349,12 +351,15 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     initializeGrpcServer(injector);
     registerPmsSdk(appConfig, injector);
     registerMigrations(injector);
-
     if (DeployVariant.isCommunity(System.getenv().get(DEPLOY_VERSION))) {
       initializePipelineMonitoring(appConfig, injector);
     }
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void intializeSdkInstanceCacheSync(Injector injector) {
+    injector.getInstance(PmsSdkInstanceCacheMonitor.class).scheduleCacheSync();
   }
 
   private void initializePipelineMonitoring(PipelineServiceConfiguration appConfig, Injector injector) {
