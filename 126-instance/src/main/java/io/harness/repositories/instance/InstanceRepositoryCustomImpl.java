@@ -239,4 +239,10 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
 
     return baseCriteria.andOperator(filterCreatedAt.orOperator(filterNotDeleted, filterDeletedAt));
   }
+
+  @Override
+  public Instance findFirstInstance(Criteria criteria) {
+    Query query = new Query().addCriteria(criteria);
+    return mongoTemplate.findOne(query, Instance.class);
+  }
 }

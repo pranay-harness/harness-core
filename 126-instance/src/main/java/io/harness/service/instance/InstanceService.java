@@ -10,6 +10,7 @@ import io.harness.models.InstancesByBuildId;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(HarnessTeam.DX)
 public interface InstanceService {
@@ -55,4 +56,6 @@ public interface InstanceService {
 
   AggregationResults<CountByServiceIdAndEnvType> getActiveServiceInstanceCountBreakdown(String accountIdentifier,
       String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs);
+
+    InstanceDTO findFirstInstance(Criteria criteria);
 }

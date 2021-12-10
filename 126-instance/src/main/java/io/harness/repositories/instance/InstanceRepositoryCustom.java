@@ -46,4 +46,6 @@ public interface InstanceRepositoryCustom {
 
   AggregationResults<CountByServiceIdAndEnvType> getActiveServiceInstanceCountBreakdown(String accountIdentifier,
       String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs);
+
+  Instance findFirstInstance(Criteria criteria);
 }

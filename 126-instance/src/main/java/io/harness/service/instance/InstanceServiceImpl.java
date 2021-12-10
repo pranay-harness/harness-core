@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
@@ -189,6 +190,11 @@ public class InstanceServiceImpl implements InstanceService {
       String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs) {
     return instanceRepository.getActiveServiceInstanceCountBreakdown(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
+  }
+
+  @Override
+  public InstanceDTO findFirstInstance(Criteria criteria) {
+    return InstanceMapper.toDTO(instanceRepository.findFirstInstance(criteria));
   }
 
   // ----------------------------------- PRIVATE METHODS -------------------------------------
