@@ -15,7 +15,6 @@ import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.mongodb.morphia.query.Sort;
@@ -25,13 +24,9 @@ public class SLIRecordServiceImpl implements SLIRecordService {
   @Inject private HPersistence hPersistence;
 
   @Override
-  public void create(SLIRecord sliRecord) {
-    hPersistence.save(sliRecord);
-  }
-  @Override
   public void create(List<SLIRecordParam> sliRecordParamList, String sliId, String verificationTaskId) {
     List<SLIRecord> sliRecordList = new ArrayList<>();
-    SLIRecord lastSLIRecord = getLastNonMissingSliRecord(sliRecordParamList.get(0).getTimeStamp());
+    SLIRecord lastSLIRecord = getLastSLIRecord(sliId, sliRecordParamList.get(0).getTimeStamp());
     long runningGoodCount = 0L;
     long runningBadCount = 0L;
     if (Objects.nonNull(lastSLIRecord)) {
@@ -113,12 +108,12 @@ public class SLIRecordServiceImpl implements SLIRecordService {
         .asList();
   }
 
-  private SLIRecord getLastNonMissingSliRecord(Instant startTimeStamp) {
+  private SLIRecord getLastSLIRecord(String sliId, Instant startTimeStamp) {
     return hPersistence.createQuery(SLIRecord.class)
+        .filter(SLIRecordKeys.sliId, sliId)
         .field(SLIRecordKeys.timestamp)
         .lessThan(startTimeStamp)
-        .field(SLIRecordKeys.sliState)
-        .in(Arrays.asList(SLIState.GOOD, SLIState.BAD))
+        .order(Sort.descending(SLIRecordKeys.timestamp))
         .get();
   }
 }

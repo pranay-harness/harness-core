@@ -1,6 +1,7 @@
 package io.harness.cvng.servicelevelobjective.beans;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
 
 public enum SLIMissingDataType {
   @JsonProperty("Good") GOOD,
@@ -8,6 +9,7 @@ public enum SLIMissingDataType {
   @JsonProperty("Ignore") IGNORE;
 
   public double calculateSLIValue(long goodCount, long badCount, long totalMinutes) {
+    Preconditions.checkState(totalMinutes != 0);
     long missingDataCount = totalMinutes - (goodCount + badCount);
     switch (this) {
       case GOOD:
@@ -15,6 +17,9 @@ public enum SLIMissingDataType {
       case BAD:
         return (goodCount * 100.0) / totalMinutes;
       case IGNORE:
+        if (goodCount + badCount == 0) {
+          return 100;
+        }
         return (goodCount * 100.0) / (goodCount + badCount);
       default:
         throw new IllegalStateException("Unhanded SLIMissingDataType " + this);
