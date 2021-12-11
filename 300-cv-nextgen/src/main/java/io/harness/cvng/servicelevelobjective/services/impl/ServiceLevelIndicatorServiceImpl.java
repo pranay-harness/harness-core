@@ -50,7 +50,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -144,8 +143,8 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
                            .timeStamp(sliAnalyseResponse.getTimeStamp().toEpochMilli())
                            .value(serviceLevelIndicatorDTO.getSliMissingDataType().calculateSLIValue(
                                sliAnalyseResponse.getRunningGoodCount(), sliAnalyseResponse.getRunningBadCount(),
-                               TimeUnit.MILLISECONDS.toMinutes(sliAnalyseResponse.getTimeStamp().toEpochMilli()
-                                   - initialSLIResponse.getTimeStamp().toEpochMilli())
+                               Duration.between(initialSLIResponse.getTimeStamp(), sliAnalyseResponse.getTimeStamp())
+                                       .toMinutes()
                                    + 1))
                            .build())
                 .collect(Collectors.toList()))
