@@ -5,6 +5,7 @@ import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
@@ -14,6 +15,8 @@ import io.harness.persistence.UuidAware;
 
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
@@ -68,7 +71,7 @@ public class SLIRecord implements PersistentEntity, UuidAware, UpdatedAtAware, C
   private long createdAt;
   private int sliVersion;
   public enum SLIState { NO_DATA, GOOD, BAD }
-
+  @Builder.Default @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusDays(180).toInstant());
   @Data
   @Builder
   public static class SLIRecordParam {
