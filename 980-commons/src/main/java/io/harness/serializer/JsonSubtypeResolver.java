@@ -2,6 +2,8 @@ package io.harness.serializer;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.reflection.HarnessReflections;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.reflections.Reflections;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class JsonSubtypeResolver extends SubtypeResolver {
   protected SubtypeResolver subtypeResolver;
 
@@ -67,10 +70,10 @@ public class JsonSubtypeResolver extends SubtypeResolver {
     subtypeResolver.registerSubtypes(classes);
   }
 
-  //  @Override
-  //  public void registerSubtypes(Collection<Class<?>> collection) {
-  //    subtypeResolver.registerSubtypes(collection);
-  //  }
+  @Override
+  public void registerSubtypes(Collection<Class<?>> collection) {
+    subtypeResolver.registerSubtypes(collection);
+  }
 
   @Override
   public Collection<NamedType> collectAndResolveSubtypes(

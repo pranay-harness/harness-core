@@ -71,18 +71,21 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretList;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSetList;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSetSpec;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentList;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.extensions.DoneableDaemonSet;
-import io.fabric8.kubernetes.api.model.extensions.DoneableDeployment;
-import io.fabric8.kubernetes.api.model.extensions.DoneableStatefulSet;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetList;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionList;
+import io.fabric8.kubernetes.api.model.apiextensions.DoneableCustomResourceDefinition;
+import io.fabric8.kubernetes.api.model.apps.DaemonSet;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetList;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetSpec;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentList;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.apps.DoneableDaemonSet;
+import io.fabric8.kubernetes.api.model.apps.DoneableDeployment;
+import io.fabric8.kubernetes.api.model.apps.DoneableStatefulSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetList;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetSpec;
 import io.fabric8.kubernetes.client.AppsAPIGroupClient;
 import io.fabric8.kubernetes.client.ExtensionsAPIGroupClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -94,7 +97,7 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
-import io.fabric8.kubernetes.client.dsl.ScalableResource;
+import io.fabric8.kubernetes.client.dsl.ServiceResource;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigList;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
@@ -171,13 +174,14 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   private NonNamespaceOperation<ReplicationController, ReplicationControllerList, DoneableReplicationController,
       RollableScalableResource<ReplicationController, DoneableReplicationController>> namespacedReplicationControllers;
 
-  @Mock private MixedOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>> services;
+  @Mock
+  private MixedOperation<Service, ServiceList, DoneableService, ServiceResource<Service, DoneableService>> services;
   @Mock private MixedOperation<Secret, SecretList, DoneableSecret, Resource<Secret, DoneableSecret>> secrets;
   @Mock
   private MixedOperation<ConfigMap, ConfigMapList, DoneableConfigMap, Resource<ConfigMap, DoneableConfigMap>>
       configMaps;
   @Mock
-  private NonNamespaceOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>>
+  private NonNamespaceOperation<Service, ServiceList, DoneableService, ServiceResource<Service, DoneableService>>
       namespacedServices;
 
   @Mock
@@ -188,7 +192,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
 
   @Mock
   private RollableScalableResource<ReplicationController, DoneableReplicationController> scalableReplicationController;
-  @Mock private Resource<Service, DoneableService> serviceResource;
+  @Mock private ServiceResource<Service, DoneableService> serviceResource;
   @Mock private Resource<Secret, DoneableSecret> secretResource;
   @Mock private Resource<ConfigMap, DoneableConfigMap> configMapResource;
   @Mock private MixedOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> pods;
@@ -203,11 +207,11 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
 
   // Deployments
   private MixedOperation<Deployment, DeploymentList, DoneableDeployment,
-      ScalableResource<Deployment, DoneableDeployment>> deploymentOperations;
+      RollableScalableResource<Deployment, DoneableDeployment>> deploymentOperations;
   @Mock
   private NonNamespaceOperation<Deployment, DeploymentList, DoneableDeployment,
-      ScalableResource<Deployment, DoneableDeployment>> namespacedDeployments;
-  @Mock private ScalableResource<Deployment, DoneableDeployment> scalableDeployment;
+      RollableScalableResource<Deployment, DoneableDeployment>> namespacedDeployments;
+  @Mock private RollableScalableResource<Deployment, DoneableDeployment> scalableDeployment;
   @Mock
   private FilterWatchListDeletable<Deployment, DeploymentList, Boolean, Watch, Watcher<Deployment>>
       deploymentFilteredList;
@@ -248,6 +252,14 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Mock
   private NonNamespaceOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
       Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler>> namespacedHpa;
+
+  @Mock
+  private NonNamespaceOperation<CustomResourceDefinition, CustomResourceDefinitionList,
+      DoneableCustomResourceDefinition, Resource<CustomResourceDefinition, DoneableCustomResourceDefinition>>
+      customResourceDefinitionOperation;
+  @Mock private Resource<CustomResourceDefinition, DoneableCustomResourceDefinition> customResourceDefinition;
+  @Mock private CustomResourceDefinition virtualService;
+
   @Mock private Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler> horizontalPodAutoscalerResource;
 
   @Mock private ExtensionsAPIGroupClient extensionsAPIGroupClient;

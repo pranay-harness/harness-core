@@ -14,7 +14,7 @@ public enum RepoProviders {
   @JsonProperty("bitbucket") BITBUCKET,
   @JsonProperty("unknown") UNKNOWN;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static RepoProviders fromString(@JsonProperty("repoProviderName") String repoProvider) {
     for (RepoProviders repoProviderEnum : RepoProviders.values()) {
       if (repoProviderEnum.name().equalsIgnoreCase(repoProvider)) {

@@ -9,7 +9,7 @@ import io.harness.state.inspection.ExpressionVariableUsage;
 
 import software.wings.beans.GraphNode;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +25,7 @@ import lombok.experimental.NonFinal;
 @Builder
 public class GraphNodeMetadata implements GraphNodeVisitable, ExecutionDetailsMetadata {
   // id is used for post-processing and getting execution data.
-  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore String id;
+  @Getter @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) String id;
 
   String name;
   String type;
@@ -39,19 +39,19 @@ public class GraphNodeMetadata implements GraphNodeVisitable, ExecutionDetailsMe
   Map<String, Object> executionDetails;
 
   // activityId is used to fill up subCommands later when we want to query execution logs.
-  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore String activityId;
+  @Getter @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) String activityId;
   @NonFinal @Setter List<ActivityCommandUnitMetadata> subCommands;
 
   // executionContext contain variables used at runtime and their values.
-  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore boolean hasInspection;
+  @Getter @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) boolean hasInspection;
   @NonFinal @Setter List<ExpressionVariableUsage.Item> executionContext;
 
   // interruptHistory contains the interrupt history.
-  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore int interruptHistoryCount;
+  @Getter @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) int interruptHistoryCount;
   @NonFinal @Setter List<ExecutionInterruptMetadata> interruptHistory;
 
   // executionHistory contains the execution history like retries.
-  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore int executionHistoryCount;
+  @Getter @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) int executionHistoryCount;
   @NonFinal @Setter List<ExecutionHistoryMetadata> executionHistory;
 
   GraphGroupMetadata subGraph;

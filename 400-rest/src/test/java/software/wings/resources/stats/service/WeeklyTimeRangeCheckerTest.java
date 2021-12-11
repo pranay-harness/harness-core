@@ -25,8 +25,8 @@ public class WeeklyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfEndTimeForRepeatableRangeIsBeforeCurrentTime() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, 1624879347000L, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, 1624879347000L, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 16248789680000L)).isFalse();
   }
 
@@ -34,8 +34,8 @@ public class WeeklyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayOfWeekIsNotInGivenRepeatableRange() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 16248789680000L)).isFalse();
   }
 
@@ -43,8 +43,8 @@ public class WeeklyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayOfWeekIsInGivenRepeatableRangeButAfterHoursForSingleDayRange() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1624792947001L)).isFalse();
   }
 
@@ -52,8 +52,8 @@ public class WeeklyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayOfWeekIsInGivenRepeatableRangeButBeforeHoursForSingleDayRange() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1624785746999L)).isFalse();
   }
 
@@ -61,8 +61,8 @@ public class WeeklyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfCurrentDayOfWeekIsInGivenRepeatableRangeAndTimeForSingleDayRange() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1624792887000L)).isTrue();
   }
 
@@ -70,8 +70,8 @@ public class WeeklyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayOfWeekIsInGivenRepeatableRangeButBeforeHoursForMultipleDaysRange() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1625063083000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1625063083000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1625390546999L)).isFalse();
   }
 
@@ -79,8 +79,8 @@ public class WeeklyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayOfWeekIsInGivenRepeatableRangeButAfterHoursForMultipleDaysRange() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1625063083000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1625063083000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1625063687801L)).isFalse();
   }
 
@@ -88,8 +88,8 @@ public class WeeklyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfCurrentDayOfWeekIsFirstDayOfGivenRepeatableRangeAndTimeIsAfterStartTime() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1624868749000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1624868749000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1624785747001L)).isTrue();
   }
 
@@ -97,8 +97,8 @@ public class WeeklyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfCurrentDayOfWeekIsLastDayOfGivenRepeatableRangeAndTimeIsBeforeTime() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1624868749000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1624868749000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, WEEKLY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1624868748999L)).isTrue();
   }
 }

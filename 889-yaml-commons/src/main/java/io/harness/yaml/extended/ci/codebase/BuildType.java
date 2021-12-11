@@ -18,7 +18,7 @@ public enum BuildType {
 
   private final String yamlProperty;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static BuildType getCodeBaseType(@JsonProperty("type") String yamlPropertyName) {
     for (BuildType buildType : BuildType.values()) {
       if (buildType.yamlProperty.equalsIgnoreCase(yamlPropertyName)) {

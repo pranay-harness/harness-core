@@ -488,6 +488,14 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         // update scenario, restore uuid and timezone
         entry.setUuid(oldWindow.getUuid());
 
+        // if no timezone(update from YAML) then fetch from db
+        if (isEmpty(entry.getTimeRange().getTimeZone())) {
+          new TimeRange(null, entry.getTimeRange().getFrom(), entry.getTimeRange().getTo(),
+              oldWindow.getTimeRange().getTimeZone(), entry.getTimeRange().isDurationBased(),
+              entry.getTimeRange().getDuration(), entry.getTimeRange().getEndTime(),
+              entry.getTimeRange().getFreezeOccurrence(), false);
+        }
+
         if (isEmpty(entry.getDescription())) {
           entry.setDescription(null);
         }

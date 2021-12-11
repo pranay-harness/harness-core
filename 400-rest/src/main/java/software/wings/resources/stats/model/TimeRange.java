@@ -40,14 +40,6 @@ public class TimeRange {
   // this field is used for proper rendering in UI
   private boolean expires;
 
-  public TimeRange(@JsonProperty("from") long from, @JsonProperty("to") long to,
-      @JsonProperty("timeZone") String timeZone, @JsonProperty("durationBased") boolean durationBased,
-      @JsonProperty("duration") Long duration, @JsonProperty("endTime") Long endTime,
-      @JsonProperty("freezeOccurrence") TimeRangeOccurrence freezeOccurrence,
-      @JsonProperty("expires") boolean expires) {
-    this(null, from, to, timeZone, durationBased, duration, endTime, freezeOccurrence, expires);
-  }
-
   @JsonCreator
   public TimeRange(@JsonProperty("label") @Nullable String label, @JsonProperty("from") long from,
       @JsonProperty("to") long to, @JsonProperty("timeZone") String timeZone,

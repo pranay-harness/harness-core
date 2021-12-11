@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.TreeNode;
@@ -85,7 +85,8 @@ public class JsonUtils {
 
     mapper = new ObjectMapper();
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    mapper.setSerializationInclusion(Include.NON_NULL);
+    mapper.setDefaultPropertyInclusion(
+        JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.ALWAYS));
     mapper.setSubtypeResolver(new JsonSubtypeResolver(mapper.getSubtypeResolver()));
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new GuavaModule());
@@ -94,7 +95,8 @@ public class JsonUtils {
     mapperForCloning = new ObjectMapper();
     mapperForCloning.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapperForCloning.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-    mapperForCloning.setSerializationInclusion(Include.NON_NULL);
+    mapperForCloning.setDefaultPropertyInclusion(
+        JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.ALWAYS));
     mapperForCloning.enableDefaultTyping();
     mapperForCloning.setSubtypeResolver(new JsonSubtypeResolver(mapperForCloning.getSubtypeResolver()));
     mapperForCloning.registerModule(new Jdk8Module());
@@ -103,7 +105,8 @@ public class JsonUtils {
 
     mapperForInternalUse = new ObjectMapper();
     mapperForInternalUse.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    mapperForInternalUse.setSerializationInclusion(Include.NON_NULL);
+    mapperForInternalUse.setDefaultPropertyInclusion(
+        JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.ALWAYS));
     mapperForInternalUse.enableDefaultTyping();
     mapperForInternalUse.setSubtypeResolver(new JsonSubtypeResolver(mapperForCloning.getSubtypeResolver()));
     mapperForInternalUse.registerModule(new Jdk8Module());

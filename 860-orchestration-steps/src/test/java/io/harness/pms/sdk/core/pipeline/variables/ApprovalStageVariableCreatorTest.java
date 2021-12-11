@@ -35,7 +35,7 @@ public class ApprovalStageVariableCreatorTest extends CategoryTest {
     final URL testFile = classLoader.getResource("approval_stage.json");
     String json = Resources.toString(testFile, Charsets.UTF_8);
     JsonNode jsonNode = JsonUtils.asObject(json, JsonNode.class);
-    YamlNode approvalYamlNode = new YamlNode("stage", jsonNode);
+    YamlNode approvalYamlNode = new YamlNode("stage", jsonNode, null);
     YamlField yamlField = new YamlField(approvalYamlNode);
     LinkedHashMap<String, VariableCreationResponse> variablesMap =
         approvalStageVariableCreator.createVariablesForChildrenNodes(null, yamlField);

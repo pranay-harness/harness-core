@@ -204,7 +204,7 @@ public class DeploymentFreezeWindowController {
     }
 
     // SETUP CREATED
-    return new TimeRange(from, to, timeZone, durationBased, duration, endTime, freezeOccurrence, expires);
+    return new TimeRange(null, from, to, timeZone, durationBased, duration, endTime, freezeOccurrence, expires);
   }
 
   private List<ApplicationFilter> populateAppSelectionsEntity(List<QLFreezeWindowInput> qlFreezeWindowInputList) {

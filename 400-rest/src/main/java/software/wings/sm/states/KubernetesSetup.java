@@ -15,6 +15,8 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -60,6 +62,7 @@ import org.mongodb.morphia.annotations.Transient;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class KubernetesSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in
   // wingsui/src/containers/WorkflowEditor/custom/ServiceSetup/KubernetesSetup/KubernetesSetup.js

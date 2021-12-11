@@ -23,7 +23,7 @@ public class CpuQuantity {
   private String numericValue;
   private DecimalQuantityUnit unit;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static CpuQuantity fromString(String quantity) {
     try {
       if (isEmpty(quantity)) {

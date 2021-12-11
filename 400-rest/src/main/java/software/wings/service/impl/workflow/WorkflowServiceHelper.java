@@ -362,7 +362,9 @@ public class WorkflowServiceHelper {
       + "  - type: Resource\n"
       + "    resource:\n"
       + "      name: cpu\n"
-      + "      targetAverageUtilization: ${UTILIZATION}\n";
+      + "      target:\n"
+      + "        type: Utilization\n"
+      + "        averageUtilization: ${UTILIZATION}\n";
 
   @Inject private EnvironmentService environmentService;
   @Inject private ServiceResourceService serviceResourceService;

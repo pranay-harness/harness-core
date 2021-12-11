@@ -17,8 +17,8 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -71,11 +71,7 @@ public final class MetricPack implements PersistentEntity, UuidAware, CreatedAtA
   @Trimmed @NotEmpty private String identifier;
   @NotNull private CVMonitoringCategory category;
   @NotEmpty private Set<MetricDefinition> metrics;
-  private String dataCollectionDsl;
-  @JsonIgnore
-  public String getDataCollectionDsl() {
-    return dataCollectionDsl;
-  }
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) private String dataCollectionDsl;
 
   public void addToMetrics(MetricDefinition metricDefinition) {
     if (this.metrics == null) {
@@ -111,21 +107,12 @@ public final class MetricPack implements PersistentEntity, UuidAware, CreatedAtA
   public static class MetricDefinition {
     @Trimmed @NotEmpty private String name;
     @NotNull private TimeSeriesMetricType type;
-    private String path;
-    private String validationPath;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) private String path;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) private String validationPath;
     private String responseJsonPath;
     private String validationResponseJsonPath;
     private boolean included;
     @Builder.Default private List<TimeSeriesThreshold> thresholds = new ArrayList<>();
-    @JsonIgnore
-    public String getPath() {
-      return path;
-    }
-
-    @JsonIgnore
-    public String getValidationPath() {
-      return validationPath;
-    }
 
     public io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO toDTO() {
       return io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO.builder()

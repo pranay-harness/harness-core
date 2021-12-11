@@ -9,7 +9,7 @@ public enum PRCloneStrategy {
   @JsonProperty(CloneStrategyTypeConstants.SOURCE_BRANCH) SOURCE_BRANCH(CloneStrategyTypeConstants.SOURCE_BRANCH);
   private final String yamlName;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static PRCloneStrategy getPRCloneStrategy(@JsonProperty("prCloneStrategy") String yamlName) {
     for (PRCloneStrategy prCloneStrategy : PRCloneStrategy.values()) {
       if (prCloneStrategy.yamlName.equalsIgnoreCase(yamlName)) {

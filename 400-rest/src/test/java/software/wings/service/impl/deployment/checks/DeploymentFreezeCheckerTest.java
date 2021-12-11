@@ -223,7 +223,7 @@ public class DeploymentFreezeCheckerTest extends WingsBaseTest {
 
   private GovernanceConfig generateGovernanceConfig() {
     TimeRange timeRange = new TimeRange(
-        System.currentTimeMillis(), System.currentTimeMillis() + 100_000, "", false, null, null, null, false);
+        null, System.currentTimeMillis(), System.currentTimeMillis() + 100_000, "", false, null, null, null, false);
     TimeRangeBasedFreezeConfig freezeConfig =
         TimeRangeBasedFreezeConfig.builder()
             .applicable(true)
@@ -250,28 +250,28 @@ public class DeploymentFreezeCheckerTest extends WingsBaseTest {
 
   private GovernanceConfig generateGovernanceConfigTimeRangeTest() {
     // expired window with end time less than current time
-    TimeRange timeRangeExpired = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 100_000,
+    TimeRange timeRangeExpired = new TimeRange(null, System.currentTimeMillis(), System.currentTimeMillis() + 100_000,
         "Asia/Calcutta", false, null, System.currentTimeMillis() - 100_000, TimeRangeOccurrence.DAILY, false);
 
     // active window with future expiry
-    TimeRange timeRangeActive = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 100_000,
+    TimeRange timeRangeActive = new TimeRange(null, System.currentTimeMillis(), System.currentTimeMillis() + 100_000,
         "Asia/Calcutta", false, null, System.currentTimeMillis() + 100_000_000, TimeRangeOccurrence.DAILY, false);
 
     // inactive window with future expiry
     TimeRange timeRangeInactive =
-        new TimeRange(System.currentTimeMillis() + 100_000, System.currentTimeMillis() + 200_000, "Asia/Calcutta",
+        new TimeRange(null, System.currentTimeMillis() + 100_000, System.currentTimeMillis() + 200_000, "Asia/Calcutta",
             false, null, System.currentTimeMillis() + 100_000_000, TimeRangeOccurrence.DAILY, false);
 
     // non recurring expired window
-    TimeRange timeRangeExpiredNonRecurring = new TimeRange(System.currentTimeMillis() - 200_000,
+    TimeRange timeRangeExpiredNonRecurring = new TimeRange(null, System.currentTimeMillis() - 200_000,
         System.currentTimeMillis() - 100_000, "Asia/Calcutta", false, null, null, null, false);
 
     // non recurring inactive window schedules in future
-    TimeRange timeRangeNonRecurringInActive = new TimeRange(System.currentTimeMillis() + 200_000,
+    TimeRange timeRangeNonRecurringInActive = new TimeRange(null, System.currentTimeMillis() + 200_000,
         System.currentTimeMillis() + 300_000, "Asia/Calcutta", false, null, null, null, false);
 
     // non recurring active window
-    TimeRange timeRangeNonRecurringActive = new TimeRange(System.currentTimeMillis(),
+    TimeRange timeRangeNonRecurringActive = new TimeRange(null, System.currentTimeMillis(),
         System.currentTimeMillis() + 300_000, "Asia/Calcutta", false, null, null, null, false);
 
     TimeRangeBasedFreezeConfig freezeConfig =

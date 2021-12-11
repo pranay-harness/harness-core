@@ -25,8 +25,8 @@ public class MonthlyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfEndTimeForRepeatableRangeIsBeforeCurrentTime() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, 1624879347000L, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, 1624879347000L, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 16248789680000L)).isFalse();
   }
 
@@ -34,8 +34,8 @@ public class MonthlyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayDoesNotMatchGivenRangeWhenRangeCoversTwoMonth() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1625151338000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1625151338000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1627311338000L)).isFalse();
   }
 
@@ -43,8 +43,8 @@ public class MonthlyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayDoesNotMatchGivenRangeWhenRangeCoversSameMonth() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1625044947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1625044947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1625151338000L)).isFalse();
   }
 
@@ -52,8 +52,8 @@ public class MonthlyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfCurrentDayMatchesGivenRangeAndTimeWhenRangeIsForSingleDay() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1624800147000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1624800147000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1630063538000L)).isTrue();
   }
 
@@ -61,8 +61,8 @@ public class MonthlyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayMatchesGivenRangeWhenRangeIsForSingleDayButBeforeStartTime() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1624800147000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1624800147000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1624785746999L)).isFalse();
   }
 
@@ -70,8 +70,8 @@ public class MonthlyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayMatchesGivenRangeWhenRangeIsForSingleDayButAfterEndTime() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1624800147000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1624800147000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1624800147001L)).isFalse();
   }
 
@@ -79,8 +79,8 @@ public class MonthlyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayMatchesStartDayButIsBeforeStartTimeOfGivenRangeWhenRangeIsForMultipleDays() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1625217747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1625217747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1627377746999L)).isFalse();
   }
 
@@ -89,8 +89,8 @@ public class MonthlyTimeRangeCheckerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void
   shouldReturnTrueIfCurrentDayMatchesStartDayAndTimeIsAfterStartTimeOfGivenRangeWhenRangeIsForMultipleDays() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1625217747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1625217747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1624785747001L)).isTrue();
   }
 
@@ -98,8 +98,8 @@ public class MonthlyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayMatchesEndDayButIsAfterEndTimeOfGivenRangeWhenRangeIsForMultipleDays() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1625217747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1625217747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1625217747001L)).isFalse();
   }
 
@@ -107,8 +107,8 @@ public class MonthlyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfCurrentDayMatchesEndDayAndIsBeforeEndTimeOfGivenRangeWhenRangeIsForMultipleDays() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1625217747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1625217747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1625217746999L)).isTrue();
   }
 
@@ -116,8 +116,8 @@ public class MonthlyTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfCurrentDayIsBetweenGivenRangeForMultipleDays() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1625217747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1625217747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1638177747000L)).isTrue();
   }
 }

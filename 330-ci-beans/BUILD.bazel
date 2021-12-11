@@ -261,7 +261,6 @@ shared_dependencies = [
     "@maven//:javax_xml_bind_jaxb_api",
     "@maven//:joda_time_joda_time",
     "@maven//:me_snowdrop_istio_client",
-    "@maven//:me_snowdrop_istio_client_1_0_1",
     "@maven//:me_snowdrop_istio_common",
     "@maven//:me_snowdrop_istio_model",
     "@maven//:net_arnx_nashorn_promise",
