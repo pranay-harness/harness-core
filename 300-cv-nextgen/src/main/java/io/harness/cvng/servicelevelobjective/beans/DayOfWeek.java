@@ -5,13 +5,13 @@ import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 
 public enum DayOfWeek {
-  @JsonProperty("Mon") MONDAY(0),
-  @JsonProperty("Tue") TUESDAY(1),
-  @JsonProperty("Wed") WEDNESDAY(2),
-  @JsonProperty("Thu") THURSDAY(3),
-  @JsonProperty("Fri") FRIDAY(4),
-  @JsonProperty("Sat") SATURDAY(5),
-  @JsonProperty("Sun") SUNDAY(6);
+  @JsonProperty("Mon") MONDAY(1),
+  @JsonProperty("Tue") TUESDAY(2),
+  @JsonProperty("Wed") WEDNESDAY(3),
+  @JsonProperty("Thu") THURSDAY(4),
+  @JsonProperty("Fri") FRIDAY(5),
+  @JsonProperty("Sat") SATURDAY(6),
+  @JsonProperty("Sun") SUNDAY(7);
   int dayOfWeek;
   DayOfWeek(int dayOfWeek) {
     this.dayOfWeek = dayOfWeek;
