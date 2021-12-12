@@ -131,6 +131,34 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
     assertThat(sloGraphData.getErrorBudgetRemaining()).isEqualTo(99);
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetGraphData_noDataConsideredBad() {
+    String verificationTaskId = generateUuid();
+    String sliId = generateUuid();
+    Instant startTime = DateTimeUtils.roundDownTo1MinBoundary(clock.instant().minus(Duration.ofMinutes(4)));
+    List<SLIState> sliStates = Arrays.asList(GOOD, NO_DATA, BAD, GOOD);
+    createData(verificationTaskId, sliId, startTime, sliStates);
+    SLOGraphData sloGraphData = sliRecordService.getGraphData(
+        sliId, startTime, startTime.plus(Duration.ofMinutes(5)), 100, SLIMissingDataType.BAD);
+    List<Double> expectedSLITrend = Lists.newArrayList(100.0, 50.0, 33.33, 50.0);
+    List<Double> expectedBurndown = Lists.newArrayList(100.0, 99.0, 98.0, 98.0);
+    assertThat(sloGraphData.getSloPerformanceTrend()).hasSize(4);
+    List<Point> sloPerformanceTrend = sloGraphData.getSloPerformanceTrend();
+    List<Point> errorBudgetBurndown = sloGraphData.getErrorBudgetBurndown();
+    for (int i = 0; i < expectedSLITrend.size(); i++) {
+      assertThat(sloPerformanceTrend.get(i).getTimestamp())
+          .isEqualTo(startTime.plus(Duration.ofMinutes(i)).toEpochMilli());
+      assertThat(sloPerformanceTrend.get(i).getValue()).isCloseTo(expectedSLITrend.get(i), offset(0.01));
+      assertThat(errorBudgetBurndown.get(i).getTimestamp())
+          .isEqualTo(startTime.plus(Duration.ofMinutes(i)).toEpochMilli());
+      assertThat(errorBudgetBurndown.get(i).getValue()).isCloseTo(expectedBurndown.get(i), offset(0.01));
+    }
+    assertThat(sloGraphData.getErrorBudgetRemainingPercentage()).isCloseTo(98, offset(0.01));
+    assertThat(sloGraphData.getErrorBudgetRemaining()).isEqualTo(98);
+  }
+
   private void createData(String verificationTaskId, String sliId, Instant startTime, List<SLIState> sliStates) {
     List<SLIRecordParam> sliRecordParams = new ArrayList<>();
     for (int i = 0; i < sliStates.size(); i++) {

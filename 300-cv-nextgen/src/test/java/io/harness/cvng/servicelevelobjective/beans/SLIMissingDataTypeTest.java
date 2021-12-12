@@ -29,9 +29,9 @@ public class SLIMissingDataTypeTest extends CategoryTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCalculateSLIValue_testActualCalculationForDifferentEnums() {
-    assertThat(GOOD.calculateSLIValue(1, 2, 5)).isCloseTo(300.0 / 5.0, offset(.001));
-    assertThat(BAD.calculateSLIValue(1, 2, 5)).isCloseTo(100.0 / 5.0, offset(.001));
-    assertThat(IGNORE.calculateSLIValue(1, 2, 5)).isCloseTo(100.0 / 3.0, offset(.001));
-    assertThat(IGNORE.calculateSLIValue(0, 0, 5)).isCloseTo(100.0, offset(.001));
+    assertThat(GOOD.calculateSLIValue(1, 2, 5).sliPercentage()).isCloseTo(300.0 / 5.0, offset(.001));
+    assertThat(BAD.calculateSLIValue(1, 2, 5).sliPercentage()).isCloseTo(100.0 / 5.0, offset(.001));
+    assertThat(IGNORE.calculateSLIValue(1, 2, 5).sliPercentage()).isCloseTo(100.0 / 3.0, offset(.001));
+    assertThat(IGNORE.calculateSLIValue(0, 0, 5).sliPercentage()).isCloseTo(100.0, offset(.001));
   }
 }
