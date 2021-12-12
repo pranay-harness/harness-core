@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.DISABLE_WINRM_COMMAND_ENCODING;
 import static io.harness.beans.FeatureName.LOCAL_DELEGATE_CONFIG_OVERRIDE;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
@@ -35,6 +36,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.FailureType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
@@ -100,6 +102,7 @@ import com.google.inject.Inject;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -220,6 +223,15 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
           break;
         case FAILURE:
           executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);
+          if (featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, context.getAccountId())
+              && commandExecutionResult.getCommandExecutionData() instanceof ShellExecutionData) {
+            ShellExecutionData shellExecutionData =
+                (ShellExecutionData) commandExecutionResult.getCommandExecutionData();
+            if (shellExecutionData != null && shellExecutionData.isExpired()) {
+              executionResponseBuilder.executionStatus(ExecutionStatus.EXPIRED);
+              executionResponseBuilder.failureTypes(EnumSet.of(FailureType.EXPIRED, FailureType.TIMEOUT_ERROR));
+            }
+          }
           break;
         case RUNNING:
           executionResponseBuilder.executionStatus(ExecutionStatus.RUNNING);

@@ -15,6 +15,6 @@ public interface BaseScriptExecutor {
 
   ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect);
 
-  ExecuteCommandResponse executeCommandString(
-      String command, List<String> envVariablesToCollect, List<String> secretEnvVariablesToCollect);
+  ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect,
+      List<String> secretEnvVariablesToCollect, Long timeoutInMillis);
 }

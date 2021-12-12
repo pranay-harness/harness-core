@@ -227,7 +227,7 @@ public class DelegateQueueTask implements Runnable {
                       .expired(true)
                       .response(ErrorNotifyResponseData.builder()
                                     .errorMessage(errorMessage)
-                                    .failureTypes(EnumSet.of(FailureType.TIMEOUT_ERROR))
+                                    .failureTypes(EnumSet.of(FailureType.EXPIRED, FailureType.TIMEOUT_ERROR))
                                     .build())
                       .build());
             } else {

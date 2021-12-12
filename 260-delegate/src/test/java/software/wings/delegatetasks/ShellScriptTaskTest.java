@@ -129,7 +129,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
     Map<String, String> map = new HashMap<>();
     map.put("A", "aaa");
     map.put("B", "bbb");
-    when(scriptProcessExecutor.executeCommandString(anyString(), anyList(), anyList()))
+    when(scriptProcessExecutor.executeCommandString(anyString(), anyList(), anyList(), any()))
         .thenReturn(ExecuteCommandResponse.builder()
                         .status(CommandExecutionStatus.SUCCESS)
                         .commandExecutionData(ShellExecutionData.builder().sweepingOutputEnvVariables(map).build())
@@ -184,7 +184,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
                                        .saveExecutionLogs(true)
                                        .build();
     when(shellExecutorFactory.getExecutor(any(), eq(true))).thenReturn(scriptProcessExecutor);
-    when(scriptProcessExecutor.executeCommandString(anyString(), anyList(), anyList()))
+    when(scriptProcessExecutor.executeCommandString(anyString(), anyList(), anyList(), any()))
         .thenReturn(ExecuteCommandResponse.builder().status(CommandExecutionStatus.FAILURE).build());
     CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
     assertThat(commandExecutionResult).isNotNull();
@@ -209,7 +209,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
 
     ArgumentCaptor<String> scriptStringCaptor = ArgumentCaptor.forClass(String.class);
     when(shellExecutorFactory.getExecutor(any(ShellExecutorConfig.class), eq(true))).thenReturn(scriptProcessExecutor);
-    when(scriptProcessExecutor.executeCommandString(scriptStringCaptor.capture(), anyList(), anyList()))
+    when(scriptProcessExecutor.executeCommandString(scriptStringCaptor.capture(), anyList(), anyList(), any()))
         .thenReturn(ExecuteCommandResponse.builder()
                         .status(CommandExecutionStatus.SUCCESS)
                         .commandExecutionData(ShellExecutionData.builder().build())
@@ -260,7 +260,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
 
     ArgumentCaptor<SshSessionConfig> sshSessionConfigArgumentCaptor = ArgumentCaptor.forClass(SshSessionConfig.class);
     when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class), eq(true))).thenReturn(scriptSshExecutor);
-    when(scriptSshExecutor.executeCommandString(anyString(), anyList(), anyList()))
+    when(scriptSshExecutor.executeCommandString(anyString(), anyList(), anyList(), any()))
         .thenReturn(ExecuteCommandResponse.builder().status(CommandExecutionStatus.SUCCESS).build());
     CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
     assertThat(commandExecutionResult).isNotNull();
@@ -315,7 +315,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
         ArgumentCaptor.forClass(WinRmSessionConfig.class);
     when(winrmExecutorFactory.getExecutor(any(WinRmSessionConfig.class), anyBoolean(), eq(true)))
         .thenReturn(defaultWinRmExecutor);
-    when(defaultWinRmExecutor.executeCommandString(anyString(), anyList(), anyList()))
+    when(defaultWinRmExecutor.executeCommandString(anyString(), anyList(), anyList(), any()))
         .thenReturn(ExecuteCommandResponse.builder().status(CommandExecutionStatus.SUCCESS).build());
     CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
     assertThat(commandExecutionResult).isNotNull();

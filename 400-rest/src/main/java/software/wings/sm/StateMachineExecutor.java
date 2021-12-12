@@ -1551,19 +1551,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       StringBuilder errorMsgBuilder = new StringBuilder();
       log.info("[AbortInstance] Found {} Delegate Task Id for StateExecutionInstance {}", delegateTaskIds.size(),
           stateExecutionInstance.getUuid());
-      for (String delegateTaskId : delegateTaskIds) {
-        notNullCheck("context.getApp()", context.getApp());
-        try {
-          // String errorMsg = delegateTaskServiceClassic.expireTask(context.getApp().getAccountId(), delegateTaskId);
-          //          if (isNotBlank(errorMsg)) {
-          //            errorMsgBuilder.append(errorMsg);
-          //          }
-        } catch (Exception e) {
-          log.error(
-              "[AbortInstance] Error in ABORTING WorkflowExecution {}. Error in expiring delegate task : {}. Reason : {}",
-              stateExecutionInstance.getExecutionUuid(), delegateTaskId, e.getMessage());
-        }
-      }
+      notNullCheck("context.getApp()", context.getApp());
       log.info(
           "[AbortInstance] All DelegateTaskHandled for StateExecutionInstance {}", stateExecutionInstance.getUuid());
 

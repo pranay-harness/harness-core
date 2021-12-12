@@ -194,12 +194,12 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
 
   @Override
   public ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect) {
-    return executeCommandString(command, envVariablesToCollect, Collections.emptyList());
+    return executeCommandString(command, envVariablesToCollect, Collections.emptyList(), null);
   }
 
   @Override
-  public ExecuteCommandResponse executeCommandString(
-      String command, List<String> envVariablesToCollect, List<String> secretEnvVariablesToCollect) {
+  public ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect,
+      List<String> secretEnvVariablesToCollect, Long timeoutInMillis) {
     try {
       return getExecuteCommandResponse(command, envVariablesToCollect, secretEnvVariablesToCollect, false);
     } catch (SshRetryableException ex) {

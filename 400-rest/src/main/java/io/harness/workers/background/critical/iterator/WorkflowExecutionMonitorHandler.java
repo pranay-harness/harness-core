@@ -1,7 +1,9 @@
 package io.harness.workers.background.critical.iterator;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.beans.ExecutionInterruptType.*;
+import static io.harness.beans.ExecutionInterruptType.MARK_EXPIRED;
+import static io.harness.beans.ExecutionInterruptType.MARK_EXPIRED_WITH_FAILURE_STRATEGY;
+import static io.harness.beans.ExecutionInterruptType.ROLLBACK_PROVISIONER_AFTER_PHASES;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
@@ -36,8 +38,13 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
-import software.wings.sm.*;
+import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionInterrupt;
+import software.wings.sm.ExecutionInterruptManager;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
+import software.wings.sm.StateMachineExecutor;
+import software.wings.sm.StateType;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -106,8 +113,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
         hasActiveStates = stateExecutionInstances.hasNext();
         while (stateExecutionInstances.hasNext()) {
           StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
-          //          if (stateExecutionInstance.getExpiryTs() > System.currentTimeMillis()) {
-          if (true) {
+          if (stateExecutionInstance.getExpiryTs() > System.currentTimeMillis()) {
             continue;
           }
 

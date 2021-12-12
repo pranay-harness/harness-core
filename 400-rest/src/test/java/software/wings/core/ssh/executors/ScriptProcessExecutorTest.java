@@ -77,8 +77,8 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
 
     String command = "export A=\"aaa\"\n"
         + "export B=\"bbb\"";
-    ExecuteCommandResponse executeCommandResponse =
-        scriptProcessExecutor.executeCommandString(command, asList("A", "B", "${C}", "${A}"), Collections.emptyList());
+    ExecuteCommandResponse executeCommandResponse = scriptProcessExecutor.executeCommandString(
+        command, asList("A", "B", "${C}", "${A}"), Collections.emptyList(), null);
     assertThat(executeCommandResponse).isNotNull();
     assertThat(executeCommandResponse.getStatus()).isEqualTo(SUCCESS);
     assertThat(executeCommandResponse.getCommandExecutionData()).isNotNull();
@@ -109,7 +109,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
 
     String command = "exit 1";
     ExecuteCommandResponse executeCommandResponse =
-        scriptProcessExecutor.executeCommandString(command, asList("A", "B"), Collections.emptyList());
+        scriptProcessExecutor.executeCommandString(command, asList("A", "B"), Collections.emptyList(), null);
     assertThat(executeCommandResponse).isNotNull();
     assertThat(executeCommandResponse.getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(executeCommandResponse.getCommandExecutionData()).isNotNull();

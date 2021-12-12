@@ -86,7 +86,7 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
 
     saveExecutionLog(parameters, "Starting Script Execution ...", RUNNING);
     ExecuteCommandResponse executeCommandResponse =
-        executor.executeCommandString(parameters.getScript(), items, Collections.emptyList());
+        executor.executeCommandString(parameters.getScript(), items, Collections.emptyList(), null);
     saveExecutionLog(parameters, "End of Script Execution ...", RUNNING);
     saveExecutionLog(parameters, "\n---------------------------------------------------\n", RUNNING);
 

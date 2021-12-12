@@ -161,12 +161,12 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
   @Override
   public ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect) {
-    return executeCommandString(command, envVariablesToCollect, Collections.emptyList());
+    return executeCommandString(command, envVariablesToCollect, Collections.emptyList(), null);
   }
 
   @Override
-  public ExecuteCommandResponse executeCommandString(
-      String command, List<String> envVariablesToCollect, List<String> secretEnvVariablesToCollect) {
+  public ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect,
+      List<String> secretEnvVariablesToCollect, Long timeoutInMillis) {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
     ExecuteCommandResponseBuilder executeCommandResponseBuilder = ExecuteCommandResponse.builder();
     CommandExecutionStatus commandExecutionStatus;
