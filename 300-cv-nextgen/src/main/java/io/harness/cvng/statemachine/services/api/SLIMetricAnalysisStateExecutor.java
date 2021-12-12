@@ -55,8 +55,8 @@ public class SLIMetricAnalysisStateExecutor extends AnalysisStateExecutor<SLIMet
     List<SLIAnalyseResponse> sliAnalyseResponseList = sliDataProcessorService.process(
         sliAnalyseRequest, serviceLevelIndicatorDTO.getSpec().getSpec(), startTime, endTime);
     List<SLIRecordParam> sliRecordList = sliMetricAnalysisTransformer.getSLIAnalyseResponse(sliAnalyseResponseList);
-
-    sliRecordService.create(sliRecordList, serviceLevelIndicator.getUuid(), verificationTaskId);
+    sliRecordService.create(
+        sliRecordList, serviceLevelIndicator.getUuid(), verificationTaskId, serviceLevelIndicator.getVersion());
     analysisState.setStatus(AnalysisStatus.SUCCESS);
     return analysisState;
   }

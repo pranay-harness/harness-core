@@ -24,6 +24,10 @@ import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -41,7 +45,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
   @Inject private HPersistence hPersistence;
 
   @Inject private MonitoredServiceService monitoredServiceService;
-
+  @Inject Clock clock;
   @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Inject private Map<SLOTargetType, SLOTargetTransformer> sloTargetTypeSLOTargetTransformerMap;
 
@@ -170,10 +174,12 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
         ServiceLevelObjectiveKeys.monitoredServiceIdentifier, serviceLevelObjectiveDTO.getMonitoredServiceRef());
     updateOperations.set(
         ServiceLevelObjectiveKeys.healthSourceIdentifier, serviceLevelObjectiveDTO.getHealthSourceRef());
+    LocalDate currentLocalDate = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC).toLocalDate();
     updateOperations.set(ServiceLevelObjectiveKeys.serviceLevelIndicators,
         serviceLevelIndicatorService.update(projectParams, serviceLevelObjectiveDTO.getServiceLevelIndicators(),
             serviceLevelObjectiveDTO.getIdentifier(), serviceLevelObjective.getServiceLevelIndicators(),
-            serviceLevelObjective.getMonitoredServiceIdentifier(), serviceLevelObjective.getHealthSourceIdentifier()));
+            serviceLevelObjective.getMonitoredServiceIdentifier(), serviceLevelObjective.getHealthSourceIdentifier(),
+            serviceLevelObjective.getCurrentTimeRange(currentLocalDate)));
     updateOperations.set(ServiceLevelObjectiveKeys.sloTarget,
         sloTargetTypeSLOTargetTransformerMap.get(serviceLevelObjectiveDTO.getTarget().getType())
             .getSLOTarget(serviceLevelObjectiveDTO.getTarget().getSpec()));

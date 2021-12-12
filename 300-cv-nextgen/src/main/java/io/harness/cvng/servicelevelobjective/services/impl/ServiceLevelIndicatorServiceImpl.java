@@ -28,10 +28,12 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorKeys;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorUpdatableEntity;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.TimePeriod;
 import io.harness.cvng.servicelevelobjective.services.api.SLIDataProcessorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorEntityAndDTOTransformer;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorTransformer;
+import io.harness.cvng.statemachine.services.api.OrchestrationService;
 import io.harness.datacollection.entity.TimeSeriesRecord;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.JsonUtils;
@@ -44,8 +46,10 @@ import java.lang.reflect.Type;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +73,7 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
   @Inject private Map<DataSourceType, DataCollectionSLIInfoMapper> dataSourceTypeDataCollectionInfoMapperMap;
   @Inject private SLIDataProcessorService sliDataProcessorService;
   @Inject Clock clock;
+  @Inject private OrchestrationService orchestrationService;
 
   @Override
   public TimeGraphResponse getOnboardingGraph(ProjectParams projectParams, String monitoredServiceIdentifier,
@@ -199,7 +204,7 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
   @Override
   public List<String> update(ProjectParams projectParams, List<ServiceLevelIndicatorDTO> serviceLevelIndicatorDTOList,
       String serviceLevelObjectiveIdentifier, List<String> serviceLevelIndicatorsList, String monitoredServiceIndicator,
-      String healthSourceIndicator) {
+      String healthSourceIndicator, TimePeriod timePeriod) {
     List<String> serviceLevelIndicatorIdentifiers = new ArrayList<>();
     for (ServiceLevelIndicatorDTO serviceLevelIndicatorDTO : serviceLevelIndicatorDTOList) {
       if (Objects.isNull(serviceLevelIndicatorDTO.getName())
@@ -208,12 +213,16 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
       }
       ServiceLevelIndicator serviceLevelIndicator =
           getServiceLevelIndicator(projectParams, serviceLevelIndicatorDTO.getIdentifier());
+      ServiceLevelIndicator newServiceLevelIndicator =
+          convertDTOToEntity(projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
       if (Objects.isNull(serviceLevelIndicator)) {
-        saveServiceLevelIndicatorEntity(
-            projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
+        saveServiceLevelIndicatorEntity(newServiceLevelIndicator);
+      } else if (!serviceLevelIndicator.isUpdatable(convertDTOToEntity(
+                     projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator))) {
+        deleteAndCreate(projectParams, newServiceLevelIndicator);
       } else {
         updateServiceLevelIndicatorEntity(
-            projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
+            projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator, timePeriod);
       }
       serviceLevelIndicatorIdentifiers.add(serviceLevelIndicatorDTO.getIdentifier());
     }
@@ -223,6 +232,11 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
             .collect(Collectors.toList());
     deleteByIdentifier(projectParams, toBeDeletedIdentifiers);
     return serviceLevelIndicatorIdentifiers;
+  }
+
+  private void deleteAndCreate(ProjectParams projectParams, ServiceLevelIndicator serviceLevelIndicator) {
+    deleteByIdentifier(projectParams, Collections.singletonList(serviceLevelIndicator.getIdentifier()));
+    saveServiceLevelIndicatorEntity(serviceLevelIndicator);
   }
 
   @Override
@@ -243,8 +257,8 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
   }
 
   private void updateServiceLevelIndicatorEntity(ProjectParams projectParams,
-      ServiceLevelIndicatorDTO serviceLevelIndicatorDTO, String monitoredServiceIndicator,
-      String healthSourceIndicator) {
+      ServiceLevelIndicatorDTO serviceLevelIndicatorDTO, String monitoredServiceIndicator, String healthSourceIndicator,
+      TimePeriod timePeriod) {
     UpdatableEntity<ServiceLevelIndicator, ServiceLevelIndicator> updatableEntity =
         serviceLevelIndicatorMapBinder.get(serviceLevelIndicatorDTO.getSpec().getType());
     ServiceLevelIndicator serviceLevelIndicator =
@@ -254,6 +268,12 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
     ServiceLevelIndicator updatableServiceLevelIndicator =
         convertDTOToEntity(projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
     updatableEntity.setUpdateOperations(updateOperations, updatableServiceLevelIndicator);
+    if (serviceLevelIndicator.shouldReAnalysis(updatableServiceLevelIndicator)) {
+      orchestrationService.queueAnalysis(verificationTaskService.getSLIVerificationTaskId(
+                                             serviceLevelIndicator.getAccountId(), serviceLevelIndicator.getUuid()),
+          timePeriod.getStartDate().atStartOfDay().toInstant(ZoneOffset.UTC),
+          timePeriod.getEndDate().atStartOfDay().toInstant(ZoneOffset.UTC));
+    }
     hPersistence.update(serviceLevelIndicator, updateOperations);
   }
 
@@ -262,6 +282,10 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
       String healthSourceIndicator) {
     ServiceLevelIndicator serviceLevelIndicator =
         convertDTOToEntity(projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
+    saveServiceLevelIndicatorEntity(serviceLevelIndicator);
+  }
+
+  private void saveServiceLevelIndicatorEntity(ServiceLevelIndicator serviceLevelIndicator) {
     hPersistence.save(serviceLevelIndicator);
     verificationTaskService.createSLIVerificationTask(
         serviceLevelIndicator.getAccountId(), serviceLevelIndicator.getUuid());
