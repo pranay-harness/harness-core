@@ -58,6 +58,7 @@ public class SLIRecordServiceImpl implements SLIRecordService {
     List<Point> sliTread = new ArrayList<>();
     List<Point> errorBudgetBurndown = new ArrayList<>();
     double errorBudgetRemainingPercentage = 100;
+    int errorBudgetRemaining = totalErrorBudgetMinutes;
     if (!sliRecords.isEmpty()) {
       long beginningMinute = sliRecords.get(0).getEpochMinute();
       for (int i = 0; i < sliRecords.size(); i++) {
@@ -77,9 +78,13 @@ public class SLIRecordServiceImpl implements SLIRecordService {
                 .build());
       }
       errorBudgetRemainingPercentage = errorBudgetBurndown.get(errorBudgetBurndown.size() - 1).getValue();
+      errorBudgetRemaining = totalErrorBudgetMinutes
+          - ((int) (sliRecords.get(sliRecords.size() - 1).getRunningBadCount()
+              - sliRecords.get(0).getRunningBadCount()));
     }
     return SLOGraphData.builder()
         .errorBudgetBurndown(errorBudgetBurndown)
+        .errorBudgetRemaining(errorBudgetRemaining)
         .sloPerformanceTrend(sliTread)
         .errorBudgetRemainingPercentage(errorBudgetRemainingPercentage)
         .build();
