@@ -157,11 +157,12 @@ public class NewRelicServiceImpl implements NewRelicService {
       for (int i = 0; i < lengthOfValues; i++) {
         Long timestamp = parseTimestamp(timestampArr.get(i), timestampFormat);
 
-        parsedResponseList.add(TimeSeriesSampleDTO.builder()
-                                   .metricValue(Double.valueOf(metricValueArr.get(i).toString()))
-                                   .timestamp(timestamp)
-                                   .txnName(groupName)
-                                   .build());
+        parsedResponseList.add(
+            TimeSeriesSampleDTO.builder()
+                .metricValue(metricValueArr.get(i) == null ? null : Double.valueOf(metricValueArr.get(i).toString()))
+                .timestamp(timestamp)
+                .txnName(groupName)
+                .build());
       }
 
       return parsedResponseList;
@@ -199,6 +200,9 @@ public class NewRelicServiceImpl implements NewRelicService {
       timestamp = getTimestampInMillis(timestamp);
     } else if (timestampObj instanceof Double) {
       timestamp = ((Double) timestampObj).longValue();
+      timestamp = getTimestampInMillis(timestamp);
+    } else if (timestampObj instanceof Integer) {
+      timestamp = ((Integer) timestampObj).longValue();
       timestamp = getTimestampInMillis(timestamp);
     } else {
       try {
