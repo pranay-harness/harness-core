@@ -10,18 +10,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.security.Timestamp;
-import java.util.Date;
-
+import java.sql.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
 public class BigQueryServiceImpl implements BigQueryService {
   public static final String GCP_CREDENTIALS_PATH = "GOOGLE_CREDENTIALS_PATH";
-  public static String BQ_UPDATE_DATA_SYNC_STATUS_QUERY = "INSERT INTO `{}.{}.{}`" +
-          "(accountId, connectorId, lastSuccessfullExecutionAt, jobType, cloudProviderId)" +
-          "VALUES ('{}', '{}', '{}', '{}', '{}')";
+  public static String BQ_UPDATE_DATA_SYNC_STATUS_QUERY = "INSERT INTO `{}.CE_INTERNAL.connectorDataSyncStatus`"
+      + "(accountId, connectorId, lastSuccessfullExecutionAt, jobType, cloudProviderId)"
+      + "VALUES ('{}', '{}', '{}', 'batch', '{}')";
 
   @Override
   public BigQuery get() {
@@ -48,10 +46,13 @@ public class BigQueryServiceImpl implements BigQueryService {
     return credentials;
   }
 
-  public boolean updateDataSyncStatusTable() {
-    Date date = new Date();
-    Timestamp timestamp2 = new Timestamp(date.getTime());
-    String.format(BQ_UPDATE_DATA_SYNC_STATUS_QUERY, )
+  public boolean updateDataSyncStatusTable(
+      String gcpProjectId, String accountId, String connectorId, String cloudProviderId) {
+    Long date = System.currentTimeMillis();
+    Timestamp timestamp = new Timestamp(date);
+    String query = String.format(
+        BQ_UPDATE_DATA_SYNC_STATUS_QUERY, gcpProjectId, accountId, connectorId, timestamp.toString(), cloudProviderId);
+    log.info("Query: {}", query);
     return true;
   }
 }
