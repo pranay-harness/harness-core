@@ -19,6 +19,7 @@ import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.BlobStorageException;
+import com.azure.storage.blob.models.ListBlobsOptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -50,17 +51,31 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
     String projectIdentifier = connectorResponseDTO.getConnector().getProjectIdentifier();
     String orgIdentifier = connectorResponseDTO.getConnector().getOrgIdentifier();
     String connectorIdentifier = connectorResponseDTO.getConnector().getIdentifier();
+    long oneDayOld = Instant.now().toEpochMilli() - 24 * 60 * 60 * 1000;
+
+    BillingExportSpecDTO billingExportSpec = ceAzureConnectorDTO.getBillingExportSpec();
+    if (billingExportSpec == null) {
+      log.error("No billing export spec found for this connector {}", connectorIdentifier);
+      return ConnectorValidationResult.builder()
+          .status(ConnectivityStatus.FAILURE)
+          .errorSummary("Invalid connector configuration")
+          .testedAt(Instant.now().toEpochMilli())
+          .build();
+    }
+
+    String storageAccountName = billingExportSpec.getStorageAccountName();
+    String containerName = billingExportSpec.getContainerName();
+    String directoryName = billingExportSpec.getDirectoryName();
+    String reportName = billingExportSpec.getReportName();
+    String tenantId = ceAzureConnectorDTO.getTenantId();
 
     try {
       if (featuresEnabled.contains(CEFeatures.BILLING)) {
-        final BillingExportSpecDTO billingExportSpec = ceAzureConnectorDTO.getBillingExportSpec();
-        final String storageAccountName = billingExportSpec.getStorageAccountName();
-        final String containerName = billingExportSpec.getContainerName();
-        final String directoryName = billingExportSpec.getDirectoryName();
-        final String tenantId = ceAzureConnectorDTO.getTenantId();
         String endpoint = String.format(AZURE_STORAGE_URL_FORMAT, storageAccountName, AZURE_STORAGE_SUFFIX);
         BlobContainerClient blobContainerClient = getBlobContainerClient(endpoint, containerName, tenantId);
-        validateIfContainerIsPresent(blobContainerClient, directoryName);
+        if (connectorResponseDTO.getLastModifiedAt() < oneDayOld) {
+          validateIfFileIsPresent(blobContainerClient, directoryName + "/" + reportName);
+        }
       }
     } catch (BlobStorageException ex) {
       if (ex.getErrorCode().toString().equals("ContainerNotFound")) {
@@ -114,27 +129,26 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
             .errorSummary("The specified storage account does not exist")
             .testedAt(Instant.now().toEpochMilli())
             .build();
+      } else if (ex.getMessage() != null && ex.getMessage().startsWith("No billing export file")) {
+        return ConnectorValidationResult.builder()
+            .status(ConnectivityStatus.FAILURE)
+            .errorSummary(ex.getMessage())
+            .testedAt(Instant.now().toEpochMilli())
+            .build();
+      } else {
+        log.error(GENERIC_LOGGING_ERROR, accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, ex);
+        return ConnectorValidationResult.builder()
+            .status(ConnectivityStatus.FAILURE)
+            .errorSummary("Exception while validating billing export details")
+            .testedAt(Instant.now().toEpochMilli())
+            .build();
       }
-      log.error(GENERIC_LOGGING_ERROR, accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, ex);
-      return ConnectorValidationResult.builder()
-          .status(ConnectivityStatus.FAILURE)
-          .errorSummary("Exception while validating billing export details")
-          .testedAt(Instant.now().toEpochMilli())
-          .build();
     }
     // Check for data at destination only when 24 hrs have elapsed since connector last modified at
-    long now = Instant.now().toEpochMilli() - 1 * 24 * 60 * 60 * 1000;
-    if (connectorResponseDTO.getLastModifiedAt() < now) {
-      if (!ceConnectorsHelper.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.CE_AZURE,
+    if (connectorResponseDTO.getLastModifiedAt() < oneDayOld) {
+      if (featuresEnabled.contains(CEFeatures.BILLING)
+          && !ceConnectorsHelper.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.CE_AZURE,
               ceConnectorsHelper.JOB_TYPE_CLOUDFUNCTION)) {
-        // Data not available in unified table. Possibly an issue with CFs
-        // Check if Batch sync job has finished for this
-        /*
-        if (!ceConnectorsUtil.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.CE_AZURE,
-        ceConnectorsUtil.JOB_TYPE_BATCH)) { return ConnectorValidationResult.builder() .errorSummary("Error with syncing
-        data") .status(ConnectivityStatus.FAILURE) .build();
-        }
-        */
         // Issue with CFs
         return ConnectorValidationResult.builder()
             .errorSummary("Error with processing data. Please contact Harness support")
@@ -142,20 +156,38 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
             .build();
       }
     }
-    log.info("Validation successfull for connector {}", connectorIdentifier);
+    log.info("Validation successful for connector {}", connectorIdentifier);
     return ConnectorValidationResult.builder()
         .status(ConnectivityStatus.SUCCESS)
         .testedAt(Instant.now().toEpochMilli())
         .build();
   }
 
-  public void validateIfContainerIsPresent(BlobContainerClient blobContainerClient, String directoryName)
-      throws Exception {
-    // List the blob(s) in the container.
-    for (BlobItem blobItem : blobContainerClient.listBlobsByHierarchy(directoryName)) {
-      return;
+  public void validateIfFileIsPresent(BlobContainerClient blobContainerClient, String prefix) throws Exception {
+    ListBlobsOptions options = new ListBlobsOptions().setPrefix(prefix);
+    String latestFileName = "";
+    Instant latestFileLastModifiedTime = Instant.EPOCH;
+    // Caveat: This can be slow for some accounts.
+    for (BlobItem blobItem : blobContainerClient.listBlobs(options, null)) {
+      Instant lastModifiedTime = Instant.from(blobItem.getProperties().getLastModified());
+      String blobName = blobItem.getName();
+      if (blobName.endsWith(".csv")) {
+        int value = lastModifiedTime.compareTo(latestFileLastModifiedTime);
+        if (value > 0) {
+          latestFileLastModifiedTime = lastModifiedTime;
+          latestFileName = blobName;
+        }
+      }
     }
-    throw new Exception("The specified directory does not exist");
+    log.info("Latest .csv.gz file in {} latestFileName: {} latestFileLastModifiedTime: {}", prefix, latestFileName,
+        latestFileLastModifiedTime);
+    long oneDayOld = Instant.now().getEpochSecond() - 24 * 60 * 60;
+    if (!latestFileName.isEmpty() && latestFileLastModifiedTime.getEpochSecond() < oneDayOld) {
+      throw new Exception(String.format("No billing export file is found in last 24 hrs in %s. "
+              + "Please verify your billing export config in your Azure account and CCM connector. "
+              + "Follow CCM documentation for more information",
+          prefix));
+    }
   }
 
   @VisibleForTesting

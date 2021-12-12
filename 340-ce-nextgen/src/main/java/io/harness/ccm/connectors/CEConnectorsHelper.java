@@ -66,6 +66,7 @@ public class CEConnectorsHelper {
     for (FieldValueList row : result.iterateAll()) {
       long count = row.get("count").getLongValue();
       if (count > 0) {
+        log.info("count: {}", count);
         return true;
       }
     }

@@ -12,6 +12,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.utils.RestCallToNGManagerClientUtils;
 
@@ -41,8 +42,8 @@ public class CEAzureConnectorValidator extends AbstractConnectorValidator {
     try {
       return RestCallToNGManagerClientUtils.execute(
           ceNextGenResourceClient.testConnection(accountIdentifier, connectorResponseDTO));
-    } catch (InvalidRequestException ex) {
-      log.error("Error in calling ce ng microservice");
+    } catch (InvalidRequestException | UnexpectedException ex) {
+      log.info("Error could be in CENG microservice or in connecting to it");
       List<ErrorDetail> errorDetails = Collections.singletonList(ngErrorHelper.getGenericErrorDetail());
       return ConnectorValidationResult.builder()
           .errors(errorDetails)
