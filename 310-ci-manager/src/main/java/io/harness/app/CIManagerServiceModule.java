@@ -35,7 +35,7 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.opaclient.OpaClientModule;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
-import io.harness.plancreator.steps.StepSchemaUtils;
+// import io.harness.plancreator.steps.StepSchemaUtils;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ClientMode;
 import io.harness.secrets.SecretNGManagerClientModule;
@@ -131,7 +131,7 @@ public class CIManagerServiceModule extends AbstractModule {
 
     Set<Class<? extends StepSpecType>> subTypesOfStepSpecType = reflections.getSubTypesOf(StepSpecType.class);
     Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
-    set = YamlSchemaTransientHelper.removeNewSchemaStepsSubtypes(set, StepSchemaUtils.getStepsMovedToNewSchema());
+    //    set = YamlSchemaTransientHelper.removeNewSchemaStepsSubtypes(set, StepSchemaUtils.getStepsMovedToNewSchema());
     return ImmutableMap.of(StepSpecType.class, set);
   }
 
