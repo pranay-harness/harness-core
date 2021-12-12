@@ -20,7 +20,6 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_START_GRPC;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STOP_ACQUIRING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STOP_GRPC;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_SWITCH_STORAGE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_STARTED;
@@ -593,9 +592,9 @@ public class WatcherServiceImpl implements WatcherService {
               selfDestruct();
             } else if (delegateData.containsKey(DELEGATE_MIGRATE)) {
               migrate((String) delegateData.get(DELEGATE_MIGRATE));
-            } else if (delegateData.containsKey(DELEGATE_SWITCH_STORAGE)
-                && (Boolean) delegateData.get(DELEGATE_SWITCH_STORAGE)) {
-              switchStorage();
+              //            } else if (delegateData.containsKey(DELEGATE_SWITCH_STORAGE)
+              //                && (Boolean) delegateData.get(DELEGATE_SWITCH_STORAGE)) {
+              //              switchStorage();
             } else {
               if (delegateData.containsKey(DELEGATE_JRE_VERSION) && delegateData.containsKey(MIGRATE_TO_JRE_VERSION)) {
                 String delegateJreVersion = (String) delegateData.get(DELEGATE_JRE_VERSION);
@@ -822,13 +821,13 @@ public class WatcherServiceImpl implements WatcherService {
   @VisibleForTesting
   public void switchStorage() {
     log.info("Skipping Switching Storage");
-    //    boolean downloadSuccessful = downloadRunScriptsBeforeRestartingDelegateAndWatcher();
-    //    if (downloadSuccessful) {
-    //      restartDelegate();
-    //      restartWatcher();
-    //    } else {
-    //      log.warn("Download of run scripts was not successful. Skipping restart for switching storage.");
-    //    }
+    boolean downloadSuccessful = downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+    if (downloadSuccessful) {
+      restartDelegate();
+      restartWatcher();
+    } else {
+      log.warn("Download of run scripts was not successful. Skipping restart for switching storage.");
+    }
   }
 
   @VisibleForTesting
