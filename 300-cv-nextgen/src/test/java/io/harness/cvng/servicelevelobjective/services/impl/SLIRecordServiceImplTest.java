@@ -128,6 +128,7 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
       assertThat(errorBudgetBurndown.get(i).getValue()).isCloseTo(expectedBurndown.get(i), offset(0.01));
     }
     assertThat(sloGraphData.getErrorBudgetRemainingPercentage()).isCloseTo(99, offset(0.01));
+    assertThat(sloGraphData.getErrorBudgetRemaining()).isEqualTo(99);
   }
 
   private void createData(String verificationTaskId, String sliId, Instant startTime, List<SLIState> sliStates) {
