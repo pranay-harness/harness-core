@@ -1,5 +1,7 @@
 package io.harness.cvng.servicelevelobjective.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.SLIValue;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget.Point;
@@ -12,45 +14,82 @@ import io.harness.cvng.servicelevelobjective.services.api.SLIRecordService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 
 public class SLIRecordServiceImpl implements SLIRecordService {
   @VisibleForTesting static int MAX_NUMBER_OF_POINTS = 2000;
   @Inject private HPersistence hPersistence;
 
   @Override
-  public void create(List<SLIRecordParam> sliRecordParamList, String sliId, String verificationTaskId) {
-    List<SLIRecord> sliRecordList = new ArrayList<>();
-    SLIRecord lastSLIRecord = getLastSLIRecord(sliId, sliRecordParamList.get(0).getTimeStamp());
+  public void create(List<SLIRecordParam> sliRecordParamList, String sliId, String verificationTaskId, int sliVersion) {
+    if (isEmpty(sliRecordParamList)) {
+      return;
+    }
+    SLIRecordParam firstSLIRecordParam = sliRecordParamList.get(0);
+    SLIRecordParam lastSLIRecordParam = sliRecordParamList.get(sliRecordParamList.size() - 1);
     long runningGoodCount = 0L;
     long runningBadCount = 0L;
+    List<SLIRecord> sliRecordList = new ArrayList<>();
+    SLIRecord lastSLIRecord = getLastSLIRecord(sliId, firstSLIRecordParam.getTimeStamp());
+    SLIRecord latestSLIRecord = getLatestSLIRecord(sliId);
     if (Objects.nonNull(lastSLIRecord)) {
       runningGoodCount = lastSLIRecord.getRunningGoodCount();
       runningBadCount = lastSLIRecord.getRunningBadCount();
     }
-    for (SLIRecordParam sliRecordParam : sliRecordParamList) {
-      if (SLIState.GOOD.equals(sliRecordParam.getSliState())) {
-        runningGoodCount++;
-      } else if (SLIState.BAD.equals(sliRecordParam.getSliState())) {
-        runningBadCount++;
+    if (Objects.nonNull(latestSLIRecord)
+        && latestSLIRecord.getTimestamp().isAfter(firstSLIRecordParam.getTimeStamp())) {
+      // Update flow: fetch SLI Records to be updated
+      List<SLIRecord> toBeUpdatedSLIRecords =
+          getSLIRecords(sliId, firstSLIRecordParam.getTimeStamp(), lastSLIRecordParam.getTimeStamp());
+      Map<Instant, SLIRecordParam> sliRecordParamMap =
+          sliRecordParamList.stream().collect(Collectors.toMap(SLIRecordParam::getTimeStamp, Function.identity()));
+
+      for (SLIRecord sliRecord : toBeUpdatedSLIRecords) {
+        SLIRecordParam sliRecordParam = sliRecordParamMap.get(sliRecord.getTimestamp());
+        Preconditions.checkNotNull(sliRecordParam, "missing sliRecordParam for updatable entity");
+        if (SLIState.GOOD.equals(sliRecordParam.getSliState())) {
+          runningGoodCount++;
+        } else if (SLIState.BAD.equals(sliRecordParam.getSliState())) {
+          runningBadCount++;
+        }
+        UpdateOperations<SLIRecord> updateOperations = hPersistence.createUpdateOperations(SLIRecord.class);
+        updateOperations.set(SLIRecordKeys.runningGoodCount, runningGoodCount);
+        updateOperations.set(SLIRecordKeys.runningBadCount, runningBadCount);
+        updateOperations.set(SLIRecordKeys.sliState, sliRecordParam.getSliState());
+        updateOperations.set(SLIRecordKeys.sliVersion, sliVersion);
+        hPersistence.update(sliRecord, updateOperations);
       }
-      SLIRecord sliRecord = SLIRecord.builder()
-                                .runningBadCount(runningBadCount)
-                                .runningGoodCount(runningGoodCount)
-                                .sliId(sliId)
-                                .verificationTaskId(verificationTaskId)
-                                .timestamp(sliRecordParam.getTimeStamp())
-                                .sliState(sliRecordParam.getSliState())
-                                .build();
-      sliRecordList.add(sliRecord);
+    } else {
+      for (SLIRecordParam sliRecordParam : sliRecordParamList) {
+        if (SLIState.GOOD.equals(sliRecordParam.getSliState())) {
+          runningGoodCount++;
+        } else if (SLIState.BAD.equals(sliRecordParam.getSliState())) {
+          runningBadCount++;
+        }
+        SLIRecord sliRecord = SLIRecord.builder()
+                                  .runningBadCount(runningBadCount)
+                                  .runningGoodCount(runningGoodCount)
+                                  .sliId(sliId)
+                                  .sliVersion(sliVersion)
+                                  .verificationTaskId(verificationTaskId)
+                                  .timestamp(sliRecordParam.getTimeStamp())
+                                  .sliState(sliRecordParam.getSliState())
+                                  .build();
+        sliRecordList.add(sliRecord);
+      }
+      hPersistence.save(sliRecordList);
     }
-    hPersistence.save(sliRecordList);
   }
   @Override
   public SLOGraphData getGraphData(String sliId, Instant startTime, Instant endTime, int totalErrorBudgetMinutes,
@@ -114,11 +153,29 @@ public class SLIRecordServiceImpl implements SLIRecordService {
         .asList();
   }
 
+  private List<SLIRecord> getSLIRecords(String sliId, Instant startTimeStamp, Instant endTimeStamp) {
+    return hPersistence.createQuery(SLIRecord.class)
+        .filter(SLIRecordKeys.sliId, sliId)
+        .field(SLIRecordKeys.timestamp)
+        .greaterThanOrEq(startTimeStamp)
+        .field(SLIRecordKeys.timestamp)
+        .lessThanOrEq(endTimeStamp)
+        .order(Sort.ascending(SLIRecordKeys.timestamp))
+        .asList();
+  }
+
   private SLIRecord getLastSLIRecord(String sliId, Instant startTimeStamp) {
     return hPersistence.createQuery(SLIRecord.class)
         .filter(SLIRecordKeys.sliId, sliId)
         .field(SLIRecordKeys.timestamp)
         .lessThan(startTimeStamp)
+        .order(Sort.descending(SLIRecordKeys.timestamp))
+        .get();
+  }
+
+  private SLIRecord getLatestSLIRecord(String sliId) {
+    return hPersistence.createQuery(SLIRecord.class)
+        .filter(SLIRecordKeys.sliId, sliId)
         .order(Sort.descending(SLIRecordKeys.timestamp))
         .get();
   }

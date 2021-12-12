@@ -5,6 +5,7 @@ import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricE
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
@@ -51,6 +52,31 @@ public class RatioServiceLevelIndicator extends ServiceLevelIndicator {
           .set(RatioServiceLevelIndicatorKeys.metric2, ratioServiceLevelIndicator.getMetric2())
           .set(RatioServiceLevelIndicatorKeys.thresholdValue, ratioServiceLevelIndicator.getThresholdValue())
           .set(RatioServiceLevelIndicatorKeys.thresholdType, ratioServiceLevelIndicator.getThresholdType());
+    }
+  }
+
+  public boolean isUpdatable(ServiceLevelIndicator serviceLevelIndicator) {
+    try {
+      Preconditions.checkArgument(isCoreUpdatable(serviceLevelIndicator));
+      RatioServiceLevelIndicator ratioServiceLevelIndicator = (RatioServiceLevelIndicator) serviceLevelIndicator;
+      Preconditions.checkArgument(this.getEventType().equals(ratioServiceLevelIndicator.getEventType()));
+      Preconditions.checkArgument(this.getMetric1().equalsIgnoreCase(ratioServiceLevelIndicator.getMetric1()));
+      Preconditions.checkArgument(this.getMetric2().equalsIgnoreCase(ratioServiceLevelIndicator.getMetric2()));
+      return true;
+    } catch (IllegalArgumentException ex) {
+      return false;
+    }
+  }
+
+  @Override
+  public boolean shouldReAnalysis(ServiceLevelIndicator serviceLevelIndicator) {
+    try {
+      RatioServiceLevelIndicator ratioServiceLevelIndicator = (RatioServiceLevelIndicator) serviceLevelIndicator;
+      Preconditions.checkArgument(this.getThresholdValue().equals(ratioServiceLevelIndicator.getThresholdValue()));
+      Preconditions.checkArgument(this.getThresholdType().equals(ratioServiceLevelIndicator.getThresholdType()));
+      return false;
+    } catch (IllegalArgumentException ex) {
+      return true;
     }
   }
 }
