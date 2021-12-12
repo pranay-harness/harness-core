@@ -1,6 +1,7 @@
 package io.harness.cvng.servicelevelobjective.services.impl;
 
 import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
+import io.harness.cvng.servicelevelobjective.beans.SLIValue;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget.Point;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget.SLOGraphData;
 import io.harness.cvng.servicelevelobjective.entities.SLIRecord;
@@ -60,27 +61,27 @@ public class SLIRecordServiceImpl implements SLIRecordService {
     double errorBudgetRemainingPercentage = 100;
     int errorBudgetRemaining = totalErrorBudgetMinutes;
     if (!sliRecords.isEmpty()) {
+      SLIValue sliValue = null;
       long beginningMinute = sliRecords.get(0).getEpochMinute();
-      for (int i = 0; i < sliRecords.size(); i++) {
-        long goodCountFromStart = sliRecords.get(i).getRunningGoodCount() - sliRecords.get(0).getRunningGoodCount();
-        long badCountFromStart = sliRecords.get(i).getRunningBadCount() - sliRecords.get(0).getRunningBadCount();
-        long minutesFromStart = sliRecords.get(i).getEpochMinute() - beginningMinute + 1;
-        double percentageSLIValue =
-            sliMissingDataType.calculateSLIValue(goodCountFromStart, badCountFromStart, minutesFromStart);
-        sliTread.add(Point.builder()
-                         .timestamp(sliRecords.get(i).getTimestamp().toEpochMilli())
-                         .value(percentageSLIValue)
-                         .build());
+      SLIRecord firstRecord = sliRecords.get(0);
+      long prevRecordGoodCount =
+          firstRecord.getRunningGoodCount() - (firstRecord.getSliState() == SLIState.GOOD ? 1 : 0);
+      long prevRecordBadCount = firstRecord.getRunningBadCount() - (firstRecord.getSliState() == SLIState.BAD ? 1 : 0);
+      for (SLIRecord sliRecord : sliRecords) {
+        long goodCountFromStart = sliRecord.getRunningGoodCount() - prevRecordGoodCount;
+        long badCountFromStart = sliRecord.getRunningBadCount() - prevRecordBadCount;
+        long minutesFromStart = sliRecord.getEpochMinute() - beginningMinute + 1;
+        sliValue = sliMissingDataType.calculateSLIValue(goodCountFromStart, badCountFromStart, minutesFromStart);
+        sliTread.add(
+            Point.builder().timestamp(sliRecord.getTimestamp().toEpochMilli()).value(sliValue.sliPercentage()).build());
         errorBudgetBurndown.add(
             Point.builder()
-                .timestamp(sliRecords.get(i).getTimestamp().toEpochMilli())
-                .value(((totalErrorBudgetMinutes - badCountFromStart) * 100.0) / totalErrorBudgetMinutes)
+                .timestamp(sliRecord.getTimestamp().toEpochMilli())
+                .value(((totalErrorBudgetMinutes - sliValue.getBadCount()) * 100.0) / totalErrorBudgetMinutes)
                 .build());
       }
       errorBudgetRemainingPercentage = errorBudgetBurndown.get(errorBudgetBurndown.size() - 1).getValue();
-      errorBudgetRemaining = totalErrorBudgetMinutes
-          - ((int) (sliRecords.get(sliRecords.size() - 1).getRunningBadCount()
-              - sliRecords.get(0).getRunningBadCount()));
+      errorBudgetRemaining = totalErrorBudgetMinutes - sliValue.getBadCount();
     }
     return SLOGraphData.builder()
         .errorBudgetBurndown(errorBudgetBurndown)

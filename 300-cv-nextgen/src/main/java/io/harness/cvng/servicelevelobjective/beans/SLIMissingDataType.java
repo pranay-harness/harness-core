@@ -8,19 +8,28 @@ public enum SLIMissingDataType {
   @JsonProperty("Bad") BAD,
   @JsonProperty("Ignore") IGNORE;
 
-  public double calculateSLIValue(long goodCount, long badCount, long totalMinutes) {
+  public SLIValue calculateSLIValue(long goodCount, long badCount, long totalMinutes) {
     Preconditions.checkState(totalMinutes != 0);
     long missingDataCount = totalMinutes - (goodCount + badCount);
     switch (this) {
       case GOOD:
-        return ((goodCount + missingDataCount) * 100.0) / totalMinutes;
+        return SLIValue.builder()
+            .goodCount((int) (goodCount + missingDataCount))
+            .badCount((int) badCount)
+            .total((int) totalMinutes)
+            .build();
       case BAD:
-        return (goodCount * 100.0) / totalMinutes;
+        return SLIValue.builder()
+            .goodCount((int) goodCount)
+            .badCount((int) (badCount + missingDataCount))
+            .total((int) totalMinutes)
+            .build();
       case IGNORE:
-        if (goodCount + badCount == 0) {
-          return 100;
-        }
-        return (goodCount * 100.0) / (goodCount + badCount);
+        return SLIValue.builder()
+            .goodCount((int) goodCount)
+            .badCount((int) badCount)
+            .total((int) (goodCount + badCount))
+            .build();
       default:
         throw new IllegalStateException("Unhanded SLIMissingDataType " + this);
     }
