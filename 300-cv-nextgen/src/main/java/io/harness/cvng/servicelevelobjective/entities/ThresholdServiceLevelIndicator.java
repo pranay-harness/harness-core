@@ -1,9 +1,10 @@
 package io.harness.cvng.servicelevelobjective.entities;
 
-import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
@@ -22,7 +23,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class ThresholdServiceLevelIndicator extends ServiceLevelIndicator {
   String metric1;
   Double thresholdValue;
-  TimeSeriesThresholdType thresholdType;
+  ThresholdType thresholdType;
 
   @Override
   public SLIMetricType getSLIMetricType() {
@@ -47,6 +48,31 @@ public class ThresholdServiceLevelIndicator extends ServiceLevelIndicator {
           ThresholdServiceLevelIndicatorKeys.thresholdValue, thresholdServiceLevelIndicator.getThresholdValue());
       updateOperations.set(
           ThresholdServiceLevelIndicatorKeys.thresholdType, thresholdServiceLevelIndicator.getThresholdType());
+    }
+  }
+
+  public boolean isUpdatable(ServiceLevelIndicator serviceLevelIndicator) {
+    try {
+      Preconditions.checkArgument(isCoreUpdatable(serviceLevelIndicator));
+      ThresholdServiceLevelIndicator thresholdServiceLevelIndicator =
+          (ThresholdServiceLevelIndicator) serviceLevelIndicator;
+      Preconditions.checkArgument(this.getMetric1().equalsIgnoreCase(thresholdServiceLevelIndicator.getMetric1()));
+      return true;
+    } catch (IllegalArgumentException ex) {
+      return false;
+    }
+  }
+
+  @Override
+  public boolean shouldReAnalysis(ServiceLevelIndicator serviceLevelIndicator) {
+    try {
+      ThresholdServiceLevelIndicator thresholdServiceLevelIndicator =
+          (ThresholdServiceLevelIndicator) serviceLevelIndicator;
+      Preconditions.checkArgument(this.getThresholdValue().equals(thresholdServiceLevelIndicator.getThresholdValue()));
+      Preconditions.checkArgument(this.getThresholdType().equals(thresholdServiceLevelIndicator.getThresholdType()));
+      return false;
+    } catch (IllegalArgumentException ex) {
+      return true;
     }
   }
 }

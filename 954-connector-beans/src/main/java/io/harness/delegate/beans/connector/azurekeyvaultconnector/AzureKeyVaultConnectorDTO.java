@@ -36,7 +36,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Schema(name = "AzureKeyVaultConnector", description = "This contains of Azure KeyVault SecretManager configuration")
+@Schema(name = "AzureKeyVaultConnector", description = "Returns Azure KeyVault Secret Manager configuration")
 public class AzureKeyVaultConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @NotNull private String clientId;
   @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData secretKey;

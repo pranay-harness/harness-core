@@ -187,6 +187,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   public static final String APPLICATION_URL = "APPLICATION_URL";
   public static final String DEBUG_LINE = "stateMachine processor: ";
   private static final String STATE_PARAMS = "stateParams";
+  private static final String STATE_MACHINE_EXECUTOR_DEBUG_LINE = "STATE_MACHINE_EXECUTOR_DEBUG_LOG: ";
 
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
 
@@ -835,6 +836,16 @@ public class StateMachineExecutor implements StateInspectionListener {
       StateMachine stateMachine, StateExecutionInstance stateExecutionInstance, ExecutionContext context) {
     State state =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    if (state == null) {
+      log.warn(STATE_MACHINE_EXECUTOR_DEBUG_LINE + "State fetched from state machine is null. This is very bad");
+      stateMachine.clearCache();
+      state =
+          stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+      if (state == null) {
+        log.error(STATE_MACHINE_EXECUTOR_DEBUG_LINE
+            + "State fetched is still null. The states in the state machine are:" + stateMachine.getStates());
+      }
+    }
     Integer executionInstanceTimeout = getDefaultTimeout(state, context);
     final Query<StateExecutionInstance> stateExecutionInstanceQuery =
         wingsPersistence.createQuery(StateExecutionInstance.class)

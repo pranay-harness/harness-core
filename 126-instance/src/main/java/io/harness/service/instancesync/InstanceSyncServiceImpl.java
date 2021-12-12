@@ -287,8 +287,8 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     prepareInstancesToBeDeleted(instancesToBeModified, instancesInDBMap, instanceInfosFromServerMap);
     prepareInstancesToBeAdded(instanceSyncHandler, infrastructureMappingDTO, instancesInDB, instanceSyncKey,
         instancesToBeModified, instancesInDBMap, instanceInfosFromServerMap, !isNewDeploymentSync);
-    prepareInstancesToBeUpdated(
-        instanceSyncHandler, instancesInDBMap, instanceInfosFromServerMap, instancesToBeModified);
+    prepareInstancesToBeUpdated(instanceSyncHandler, instancesInDBMap, instanceInfosFromServerMap,
+        instancesToBeModified, instanceSyncKey, isNewDeploymentSync);
   }
 
   private void prepareInstancesToBeDeleted(Map<OperationsOnInstances, List<InstanceDTO>> instancesToBeModified,
@@ -317,9 +317,17 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
 
   private void prepareInstancesToBeUpdated(AbstractInstanceSyncHandler instanceSyncHandler,
       Map<String, InstanceDTO> instancesInDBMap, Map<String, InstanceInfoDTO> instanceInfosFromServerMap,
-      Map<OperationsOnInstances, List<InstanceDTO>> instancesToBeModified) {
+      Map<OperationsOnInstances, List<InstanceDTO>> instancesToBeModified, String instanceSyncKey,
+      boolean isNewDeploymentSync) {
     Sets.SetView<String> instancesToBeUpdated =
         Sets.intersection(instanceInfosFromServerMap.keySet(), instancesInDBMap.keySet());
+
+    // updating deployedAt field in accordance with pipeline execution time
+    if (isNewDeploymentSync) {
+      long deployedAt = getDeploymentSummaryFromDB(instanceSyncKey).getDeployedAt();
+      instancesToBeUpdated.forEach(instanceKey -> instancesInDBMap.get(instanceKey).setLastDeployedAt(deployedAt));
+    }
+
     instancesToBeUpdated.forEach(instanceKey
         -> instancesToBeModified.get(OperationsOnInstances.UPDATE)
                .add(instanceSyncHandler.updateInstance(

@@ -5,6 +5,7 @@ import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardApiFilter;
 import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
+import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
@@ -14,6 +15,7 @@ import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.ServiceLevelObjectiveKeys;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.SLOTargetTransformer;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.mapper.TagMapper;
@@ -22,7 +24,12 @@ import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.Builder;
@@ -38,8 +45,9 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
   @Inject private HPersistence hPersistence;
 
   @Inject private MonitoredServiceService monitoredServiceService;
-
+  @Inject Clock clock;
   @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
+  @Inject private Map<SLOTargetType, SLOTargetTransformer> sloTargetTypeSLOTargetTransformerMap;
 
   @Override
   public ServiceLevelObjectiveResponse create(
@@ -55,8 +63,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
     Preconditions.checkArgument(identifier.equals(serviceLevelObjectiveDTO.getIdentifier()),
         String.format("Identifier %s does not match with path identifier %s", serviceLevelObjectiveDTO.getIdentifier(),
             identifier));
-    ServiceLevelObjective serviceLevelObjective =
-        getServiceLevelObjective(projectParams, serviceLevelObjectiveDTO.getIdentifier());
+    ServiceLevelObjective serviceLevelObjective = getEntity(projectParams, serviceLevelObjectiveDTO.getIdentifier());
     if (serviceLevelObjective == null) {
       throw new InvalidRequestException(String.format(
           "SLO  with identifier %s, accountId %s, orgIdentifier %s and projectIdentifier %s  is not present",
@@ -70,13 +77,14 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
 
   @Override
   public boolean delete(ProjectParams projectParams, String identifier) {
-    ServiceLevelObjective serviceLevelObjective = getServiceLevelObjective(projectParams, identifier);
+    ServiceLevelObjective serviceLevelObjective = getEntity(projectParams, identifier);
     if (serviceLevelObjective == null) {
       throw new InvalidRequestException(String.format(
           "SLO  with identifier %s, accountId %s, orgIdentifier %s and projectIdentifier %s  is not present",
           identifier, projectParams.getAccountIdentifier(), projectParams.getOrgIdentifier(),
           projectParams.getProjectIdentifier()));
     }
+    serviceLevelIndicatorService.deleteByIdentifier(projectParams, serviceLevelObjective.getServiceLevelIndicators());
     return hPersistence.delete(serviceLevelObjective);
   }
 
@@ -125,7 +133,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
 
   @Override
   public ServiceLevelObjectiveResponse get(ProjectParams projectParams, String identifier) {
-    ServiceLevelObjective serviceLevelObjective = getServiceLevelObjective(projectParams, identifier);
+    ServiceLevelObjective serviceLevelObjective = getEntity(projectParams, identifier);
     if (Objects.isNull(serviceLevelObjective)) {
       return null;
     }
@@ -141,8 +149,8 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
             .userJourneys(filter.getUserJourneyIdentifiers())
             .build());
   }
-
-  private ServiceLevelObjective getServiceLevelObjective(ProjectParams projectParams, String identifier) {
+  @Override
+  public ServiceLevelObjective getEntity(ProjectParams projectParams, String identifier) {
     return hPersistence.createQuery(ServiceLevelObjective.class)
         .filter(ServiceLevelObjectiveKeys.accountId, projectParams.getAccountIdentifier())
         .filter(ServiceLevelObjectiveKeys.orgIdentifier, projectParams.getOrgIdentifier())
@@ -166,16 +174,22 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
         ServiceLevelObjectiveKeys.monitoredServiceIdentifier, serviceLevelObjectiveDTO.getMonitoredServiceRef());
     updateOperations.set(
         ServiceLevelObjectiveKeys.healthSourceIdentifier, serviceLevelObjectiveDTO.getHealthSourceRef());
+    LocalDate currentLocalDate = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC).toLocalDate();
     updateOperations.set(ServiceLevelObjectiveKeys.serviceLevelIndicators,
         serviceLevelIndicatorService.update(projectParams, serviceLevelObjectiveDTO.getServiceLevelIndicators(),
             serviceLevelObjectiveDTO.getIdentifier(), serviceLevelObjective.getServiceLevelIndicators(),
-            serviceLevelObjective.getMonitoredServiceIdentifier(), serviceLevelObjective.getHealthSourceIdentifier()));
-    updateOperations.set(ServiceLevelObjectiveKeys.sloTarget, serviceLevelObjectiveDTO.getTarget());
+            serviceLevelObjective.getMonitoredServiceIdentifier(), serviceLevelObjective.getHealthSourceIdentifier(),
+            serviceLevelObjective.getCurrentTimeRange(currentLocalDate)));
+    updateOperations.set(ServiceLevelObjectiveKeys.sloTarget,
+        sloTargetTypeSLOTargetTransformerMap.get(serviceLevelObjectiveDTO.getTarget().getType())
+            .getSLOTarget(serviceLevelObjectiveDTO.getTarget().getSpec()));
+    updateOperations.set(
+        ServiceLevelObjectiveKeys.sloTargetPercentage, serviceLevelObjectiveDTO.getTarget().getSloTargetPercentage());
     hPersistence.update(serviceLevelObjective, updateOperations);
   }
 
   private ServiceLevelObjectiveResponse getSLOResponse(String identifier, ProjectParams projectParams) {
-    ServiceLevelObjective serviceLevelObjective = getServiceLevelObjective(projectParams, identifier);
+    ServiceLevelObjective serviceLevelObjective = getEntity(projectParams, identifier);
 
     return sloEntityToSLOResponse(serviceLevelObjective);
   }
@@ -188,6 +202,8 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
                                       .build();
     ServiceLevelObjectiveDTO serviceLevelObjectiveDTO =
         ServiceLevelObjectiveDTO.builder()
+            .orgIdentifier(serviceLevelObjective.getOrgIdentifier())
+            .projectIdentifier(serviceLevelObjective.getProjectIdentifier())
             .identifier(serviceLevelObjective.getIdentifier())
             .name(serviceLevelObjective.getName())
             .description(serviceLevelObjective.getDesc())
@@ -195,7 +211,12 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
             .healthSourceRef(serviceLevelObjective.getHealthSourceIdentifier())
             .serviceLevelIndicators(
                 serviceLevelIndicatorService.get(projectParams, serviceLevelObjective.getServiceLevelIndicators()))
-            .target(serviceLevelObjective.getSloTarget())
+            .target(SLOTarget.builder()
+                        .type(serviceLevelObjective.getSloTarget().getType())
+                        .spec(sloTargetTypeSLOTargetTransformerMap.get(serviceLevelObjective.getSloTarget().getType())
+                                  .getSLOTargetSpec(serviceLevelObjective.getSloTarget()))
+                        .sloTargetPercentage(serviceLevelObjective.getSloTargetPercentage())
+                        .build())
             .tags(TagMapper.convertToMap(serviceLevelObjective.getTags()))
             .userJourneyRef(serviceLevelObjective.getUserJourneyIdentifier())
             .build();
@@ -223,7 +244,9 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
             .monitoredServiceIdentifier(serviceLevelObjectiveDTO.getMonitoredServiceRef())
             .healthSourceIdentifier(serviceLevelObjectiveDTO.getHealthSourceRef())
             .tags(TagMapper.convertToList(serviceLevelObjectiveDTO.getTags()))
-            .sloTarget(serviceLevelObjectiveDTO.getTarget())
+            .sloTarget(sloTargetTypeSLOTargetTransformerMap.get(serviceLevelObjectiveDTO.getTarget().getType())
+                           .getSLOTarget(serviceLevelObjectiveDTO.getTarget().getSpec()))
+            .sloTargetPercentage(serviceLevelObjectiveDTO.getTarget().getSloTargetPercentage())
             .userJourneyIdentifier(serviceLevelObjectiveDTO.getUserJourneyRef())
             .build();
 

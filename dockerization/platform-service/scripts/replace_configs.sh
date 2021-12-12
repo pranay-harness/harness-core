@@ -203,7 +203,6 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   done
 fi
 
-
 if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$LOCK_CONFIG_REDIS_SENTINELS"
   INDEX=0
@@ -212,6 +211,45 @@ if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
     INDEX=$(expr $INDEX + 1)
   done
 fi
+
+if [[ "" != "$NOTIFICATION_MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE notificationServiceConfig.mongo.uri
+  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.hosts[0].host ${NOTIFICATION_MONGO_HOSTS_AND_PORTS%%:*}
+  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.hosts[0].port ${NOTIFICATION_MONGO_HOSTS_AND_PORTS##*:}
+fi
+
+if [[ "" != "$AUDIT_MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE auditServiceConfig.mongo.uri
+  yq write -i $CONFIG_FILE auditServiceConfig.mongo.hosts[0].host ${AUDIT_MONGO_HOSTS_AND_PORTS%%:*}
+  yq write -i $CONFIG_FILE auditServiceConfig.mongo.hosts[0].port ${AUDIT_MONGO_HOSTS_AND_PORTS##*:}
+fi
+
+if [[ "" != "$RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE resourceGroupServiceConfig.mongo.uri
+  yq write -i $CONFIG_FILE resourceGroupServiceConfig.mongo.hosts[0].host ${RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS%%:*}
+  yq write -i $CONFIG_FILE resourceGroupServiceConfig.mongo.hosts[0].port ${RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS##*:}
+fi
+
+replace_key_value resourceGroupServiceConfig.mongo.username "$RESOURCE_GROUP_MONGO_USERNAME"
+replace_key_value resourceGroupServiceConfig.mongo.password "$RESOURCE_GROUP_MONGO_PASSWORD"
+
+replace_key_value auditServiceConfig.mongo.username "$AUDIT_MONGO_USERNAME"
+replace_key_value auditServiceConfig.mongo.password "$AUDIT_MONGO_PASSWORD"
+
+replace_key_value notificationServiceConfig.mongo.username "$NOTIFICATION_MONGO_USERNAME"
+replace_key_value notificationServiceConfig.mongo.password "$NOTIFICATION_MONGO_PASSWORD"
+
+replace_key_value resourceGroupServiceConfig.mongo.params.replicaSet "$RESOURCE_GROUP_MONGO_REPLICA_SET"
+
+replace_key_value resourceGroupServiceConfig.mongo.params.authSource "$RESOURCE_GROUP_MONGO_AUTH_SOURCE"
+
+replace_key_value auditServiceConfig.mongo.params.replicaSet "$AUDIT_MONGO_REPLICA_SET"
+
+replace_key_value auditServiceConfig.mongo.params.authSource "$AUDIT_MONGO_AUTH_SOURCE"
+
+replace_key_value notificationServiceConfig.mongo.params.replicaSet "$NOTIFICATION_MONGO_REPLICA_SET"
+
+replace_key_value notificationServiceConfig.mongo.params.authSource "$NOTIFICATION_MONGO_AUTH_SOURCE"
 
 replace_key_value resourceGroupServiceConfig.redisLockConfig.redisUrl "$LOCK_CONFIG_REDIS_URL"
 

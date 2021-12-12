@@ -29,7 +29,7 @@ public interface InstanceService {
 
   List<InstanceDTO> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
 
-  List<InstanceDTO> getInstancesModifiedInInterval(String accountIdentifier, long startTimestamp, long endTimeStamp);
+  List<InstanceDTO> getInstancesDeployedInInterval(String accountIdentifier, long startTimestamp, long endTimeStamp);
 
   List<InstanceDTO> getInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId);

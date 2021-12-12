@@ -1,5 +1,8 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.secrets.SecretPermissions.SECRET_ACCESS_PERMISSION;
@@ -46,6 +49,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -80,6 +89,19 @@ import retrofit2.http.Body;
 @Api("/v2/secrets")
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
+@Tag(name = "Secrets", description = "This contains APIs related to Secrets as defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -99,11 +121,21 @@ public class NGSecretResourceV2 {
   @GET
   @Path("/validateUniqueIdentifier/{identifier}")
   @ApiOperation(value = "Validate Secret Identifier is unique", nickname = "validateSecretIdentifierIsUnique")
-  public ResponseDTO<Boolean> validateTheIdentifierIsUnique(
-      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @EntityIdentifier String identifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+  @Operation(operationId = "validateSecretIdentifierIsUnique",
+      summary = "Checks whether the identifier is unique or not",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "It returns true if the Identifier is unique and false if the Identifier is not unique.")
+      })
+  public ResponseDTO<Boolean>
+  validateTheIdentifierIsUnique(@Parameter(description = "Secret Identifier") @NotNull @PathParam(
+                                    NGCommonEntityConstants.IDENTIFIER_KEY) @EntityIdentifier String identifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     return ResponseDTO.newResponse(
         ngSecretService.validateTheIdentifierIsUnique(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
@@ -111,10 +143,19 @@ public class NGSecretResourceV2 {
   @POST
   @Consumes({"application/json"})
   @ApiOperation(value = "Create a secret", nickname = "postSecret")
-  public ResponseDTO<SecretResponseWrapper> create(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+  @Operation(operationId = "postSecret", summary = "Creates a Secret at given Scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns created Secret")
+      })
+  public ResponseDTO<SecretResponseWrapper>
+  create(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "This specifies whether the secret is private or not. If left empty default is false")
       @QueryParam("privateSecret") @DefaultValue("false") boolean privateSecret,
       @Valid @NotNull SecretRequestWrapper dto) {
     if (!Objects.equals(orgIdentifier, dto.getSecret().getOrgIdentifier())
@@ -136,11 +177,20 @@ public class NGSecretResourceV2 {
   @Path("/validate")
   @Consumes({"application/json", "application/yaml"})
   @ApiOperation(value = "Validate a secret", nickname = "validateSecret")
-  public ResponseDTO<SecretValidationResultDTO> validateSecret(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier, @Valid SecretValidationMetaData metadata) {
+  @Operation(operationId = "validateSecret", summary = "Validates Secret",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns validation response")
+      })
+  public ResponseDTO<SecretValidationResultDTO>
+  validateSecret(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                     NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "Secret Identifier") @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY)
+      String identifier, @Valid SecretValidationMetaData metadata) {
     SecretResponseWrapper secret =
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null);
 
@@ -157,10 +207,19 @@ public class NGSecretResourceV2 {
   @Path("/yaml")
   @Consumes({"application/yaml"})
   @ApiOperation(value = "Create a secret via yaml", nickname = "postSecretViaYaml")
-  public ResponseDTO<SecretResponseWrapper> createViaYaml(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+  @Operation(operationId = "postSecretViaYaml", summary = "Creates a secret via YAML",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns created Secret")
+      })
+  public ResponseDTO<SecretResponseWrapper>
+  createViaYaml(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                    NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "This specifies whether the secret is private or not. If left empty default is false")
       @QueryParam("privateSecret") @DefaultValue("false") boolean privateSecret, @Valid SecretRequestWrapper dto) {
     if (!Objects.equals(orgIdentifier, dto.getSecret().getOrgIdentifier())
         || !Objects.equals(projectIdentifier, dto.getSecret().getProjectIdentifier())) {
@@ -178,18 +237,37 @@ public class NGSecretResourceV2 {
 
   @GET
   @ApiOperation(value = "Get secrets", nickname = "listSecretsV2")
+  @Operation(operationId = "listSecretsV2",
+      summary = "Get the list of Secrets satisfying the criteria (if any) in the request",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns created Secret")
+      })
   @Deprecated
-  public ResponseDTO<PageResponse<SecretResponseWrapper>> list(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
-      @QueryParam("type") SecretType secretType,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+  public ResponseDTO<PageResponse<SecretResponseWrapper>>
+  list(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+           NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "Specify SecretIdentifiers of Secrets") @QueryParam(
+          NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
+      @Parameter(description = "Type of Secret whether it is SecretFile, SecretText or SSH key") @QueryParam(
+          "type") SecretType secretType,
+      @Parameter(description = "Filter Secrets based on name, Identifier and tags by this search term") @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @Parameter(description = "Add multiple secret types like SecretFile, SecretText or SSH key to criteria")
       @QueryParam("types") List<SecretType> secretTypes,
+      @Parameter(
+          description =
+              "Source Category like CLOUD_PROVIDER, SECRET_MANAGER, CLOUD_COST, ARTIFACTORY, CODE_REPO, MONITORING or TICKETING")
       @QueryParam("source_category") ConnectorCategory sourceCategory,
+      @Parameter(description = "Specify whether or not to include secrets from all the sub-scopes of the given Scope")
       @QueryParam(INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE) @DefaultValue("false") boolean includeSecretsFromEverySubScope,
-      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+      @Parameter(description = "Page number of navigation. If left empty, default value of 0 is assumed") @QueryParam(
+          NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+      @Parameter(description = "Number of entries per page. If left empty, default value of 100 is assumed ")
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size) {
     secretPermissionValidator.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of(SECRET_RESOURCE_TYPE, null),
@@ -205,12 +283,22 @@ public class NGSecretResourceV2 {
   @POST
   @Path("/list")
   @ApiOperation(value = "List secrets", nickname = "listSecretsV3")
-  public ResponseDTO<PageResponse<SecretResponseWrapper>> listSecrets(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Body SecretResourceFilterDTO secretResourceFilterDTO,
-      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+  @Operation(operationId = "listSecretsV3",
+      summary = "Get the list of Secrets satisfying the criteria (if any) in the request",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the list of Secrets")
+      })
+  public ResponseDTO<PageResponse<SecretResponseWrapper>>
+  listSecrets(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                  NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY)
+      String projectIdentifier, @Body SecretResourceFilterDTO secretResourceFilterDTO,
+      @Parameter(description = "Page number of navigation. If left empty, default value of 0 is assumed") @QueryParam(
+          NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+      @Parameter(description = "Number of entries per page. If left empty, default value of 100 is assumed")
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size) {
     secretPermissionValidator.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of(SECRET_RESOURCE_TYPE, null),
@@ -224,11 +312,20 @@ public class NGSecretResourceV2 {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Gets secret", nickname = "getSecretV2")
-  public ResponseDTO<SecretResponseWrapper> get(
-      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+  @Operation(operationId = "getSecretV2", summary = "Get the Secret by Identifier and Scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "default", description = "Returns the Secret with the requested Identifier and scope")
+      })
+  public ResponseDTO<SecretResponseWrapper>
+  get(@Parameter(description = "Secret Identifier") @PathParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     SecretResponseWrapper secret =
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null);
     secretPermissionValidator.checkForAccessOrThrow(
@@ -242,10 +339,20 @@ public class NGSecretResourceV2 {
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete secret", nickname = "deleteSecretV2")
-  public ResponseDTO<Boolean> delete(@PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+  @Operation(operationId = "deleteSecretV2", summary = "Deletes Secret by Identifier and Scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "It returns true if the secret is successfully deleted and false if it is not deleted")
+      })
+  public ResponseDTO<Boolean>
+  delete(@Parameter(description = "Secret Identifier") @PathParam(
+             NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     SecretResponseWrapper secret =
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null);
     secretPermissionValidator.checkForAccessOrThrow(
@@ -259,12 +366,21 @@ public class NGSecretResourceV2 {
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update a secret", nickname = "putSecret")
+  @Operation(operationId = "putSecret", summary = "Updates the Secret by Identifier and Scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated Secret")
+      })
   @Consumes({"application/json"})
-  public ResponseDTO<SecretResponseWrapper> updateSecret(
-      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Valid SecretRequestWrapper dto) {
+  public ResponseDTO<SecretResponseWrapper>
+  updateSecret(@Parameter(description = "Secret Identifier") @PathParam(
+                   NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY)
+      String projectIdentifier, @Valid SecretRequestWrapper dto) {
     SecretResponseWrapper secret =
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null);
     secretPermissionValidator.checkForAccessOrThrow(
@@ -280,11 +396,20 @@ public class NGSecretResourceV2 {
   @Path("{identifier}/yaml")
   @Consumes({"application/yaml"})
   @ApiOperation(value = "Update a secret via yaml", nickname = "putSecretViaYaml")
-  public ResponseDTO<SecretResponseWrapper> updateSecretViaYaml(
-      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Valid SecretRequestWrapper dto) {
+  @Operation(operationId = "putSecretViaYaml", summary = "Updates the Secret by Identifier and Scope via YAML",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated Secret")
+      })
+  public ResponseDTO<SecretResponseWrapper>
+  updateSecretViaYaml(@Parameter(description = "Secret Identifier") @PathParam(
+                          NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY)
+      String projectIdentifier, @Valid SecretRequestWrapper dto) {
     SecretResponseWrapper secret =
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null);
     secretPermissionValidator.checkForAccessOrThrow(
@@ -306,13 +431,21 @@ public class NGSecretResourceV2 {
   @PUT
   @Path("files/{identifier}")
   @ApiOperation(value = "Update a secret file", nickname = "putSecretFileV2")
+  @Operation(operationId = "putSecretFileV2", summary = "Updates the Secret file by Identifier and Scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated Secret file")
+      })
   @Consumes(MediaType.MULTIPART_FORM_DATA)
-  public ResponseDTO<SecretResponseWrapper> updateSecretFile(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("spec") String spec) {
+  public ResponseDTO<SecretResponseWrapper>
+  updateSecretFile(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                       NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "Secret Identifier") @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY)
+      String identifier, @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("spec") String spec) {
     SecretRequestWrapper dto = JsonUtils.asObject(spec, SecretRequestWrapper.class);
     validateRequestPayload(dto);
 
@@ -330,11 +463,20 @@ public class NGSecretResourceV2 {
   @POST
   @Path("files")
   @ApiOperation(value = "Create a secret file", nickname = "postSecretFileV2")
+  @Operation(operationId = "postSecretFileV2", summary = "Creates a Secret File",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns created Secret file")
+      })
   @Consumes(MediaType.MULTIPART_FORM_DATA)
-  public ResponseDTO<SecretResponseWrapper> createSecretFile(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+  public ResponseDTO<SecretResponseWrapper>
+  createSecretFile(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                       NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "This specifies whether the secret is private or not. If left empty default is false")
       @QueryParam("privateSecret") @DefaultValue("false") boolean privateSecret,
       @NotNull @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("spec") String spec) {
     SecretRequestWrapper dto = JsonUtils.asObject(spec, SecretRequestWrapper.class);
@@ -356,27 +498,43 @@ public class NGSecretResourceV2 {
   }
 
   @POST
+  @Hidden
   @Path("decrypt-encryption-details")
   @Consumes("application/x-kryo")
   @Produces("application/x-kryo")
   @ApiOperation(hidden = true, value = "Decrypt Encrypted Details", nickname = "postDecryptEncryptedDetails")
+  @Operation(operationId = "postDecryptEncryptedDetails", summary = "Decrypt the encrypted details",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns decrypted details")
+      })
   @InternalApi
-  public ResponseDTO<DecryptableEntity> decryptEncryptedDetails(
-      @Body DecryptableEntityWithEncryptionConsumers decryptableEntityWithEncryptionConsumers,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+  public ResponseDTO<DecryptableEntity>
+  decryptEncryptedDetails(@Body DecryptableEntityWithEncryptionConsumers decryptableEntityWithEncryptionConsumers,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(
         ngEncryptorService.decryptEncryptedDetails(decryptableEntityWithEncryptionConsumers.getDecryptableEntity(),
             decryptableEntityWithEncryptionConsumers.getEncryptedDataDetailList(), accountIdentifier));
   }
 
   @POST
+  @Hidden
   @Path("encryption-details")
   @Consumes("application/x-kryo")
   @Produces("application/x-kryo")
   @ApiOperation(hidden = true, value = "Get Encryption Details", nickname = "postEncryptionDetails")
+  @Operation(operationId = "postEncryptionDetails",
+      summary = "Gets the encryption details of the Secret referenced fields that are passed in request",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns encryption details")
+      })
   @InternalApi
-  public ResponseDTO<List<EncryptedDataDetail>> getEncryptionDetails(
-      @NotNull NGAccessWithEncryptionConsumer ngAccessWithEncryptionConsumer) {
+  public ResponseDTO<List<EncryptedDataDetail>>
+  getEncryptionDetails(@NotNull NGAccessWithEncryptionConsumer ngAccessWithEncryptionConsumer) {
     NGAccess ngAccess = ngAccessWithEncryptionConsumer.getNgAccess();
     DecryptableEntity decryptableEntity = ngAccessWithEncryptionConsumer.getDecryptableEntity();
     if (ngAccess == null || decryptableEntity == null) {

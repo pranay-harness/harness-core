@@ -41,13 +41,11 @@ public class EntityReferenceExtractorVisitorTest extends CDNGTestBase {
     String ACCOUNT = "ACCOUNT";
     String ORG = "ORG";
     String PROJECT = "PROJECT";
-    Set<String> expectedReferences = Sets.newHashSet(
-        "pipeline.stages.stage_1.spec.infrastructure.infrastructureDefinition.spec.connectorRef",
-        "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.manifests.manifest1.spec.store.spec.connectorRef",
-        "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.manifests.values.spec.store.spec.connectorRef",
-        "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.connectorRef",
-        "pipeline.stages.stage_1.spec.serviceConfig.service.identifier",
-        "pipeline.stages.stage_1.spec.infrastructure.environment.identifier");
+    Set<String> expectedReferences =
+        Sets.newHashSet("pipeline.stages.stage_1.spec.infrastructure.infrastructureDefinition.spec.connectorRef",
+            "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.connectorRef",
+            "pipeline.stages.stage_1.spec.serviceConfig.service.identifier",
+            "pipeline.stages.stage_1.spec.infrastructure.environment.identifier");
 
     ClassLoader classLoader = getClass().getClassLoader();
     String pipelineFilename = "visitor-framework-pipeline.yml";

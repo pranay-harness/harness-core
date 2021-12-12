@@ -82,12 +82,16 @@ import io.harness.connector.mappers.secretmanagermapper.LocalDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.LocalEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.VaultDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.VaultEntityToDTO;
+import io.harness.connector.mappers.servicenow.ServiceNowDTOtoEntity;
+import io.harness.connector.mappers.servicenow.ServiceNowEntityToDTO;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.mappers.sumologicmapper.SumoLogicDTOToEntity;
 import io.harness.connector.mappers.sumologicmapper.SumoLogicEntityToDTO;
 import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.connector.task.NotSupportedValidationHandler;
+import io.harness.connector.task.git.GitValidationHandler;
+import io.harness.connector.validator.AlwaysTrueConnectorValidator;
 import io.harness.connector.validator.ArtifactoryConnectionValidator;
 import io.harness.connector.validator.AwsConnectorValidator;
 import io.harness.connector.validator.CEAwsConnectorValidator;
@@ -213,7 +217,7 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.GITHUB,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, GithubConnectorValidator.class,
             ScmConnectorValidationParamsProvider.class, GithubDTOToEntity.class, GithubEntityToDTO.class,
-            NotSupportedValidationHandler.class));
+            GitValidationHandler.class));
     registrar.put(ConnectorType.GITLAB,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, GitlabConnectorValidator.class,
             ScmConnectorValidationParamsProvider.class, GitlabDTOToEntity.class, GitlabEntityToDTO.class,
@@ -245,6 +249,10 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.CUSTOM_HEALTH,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
             CVConnectorParamsProvider.class, CustomHealthDTOToEntity.class, CustomHealthEntityToDTO.class,
+            NotSupportedValidationHandler.class));
+    registrar.put(ConnectorType.SERVICENOW,
+        new ConnectorRegistrar(ConnectorCategory.TICKETING, AlwaysTrueConnectorValidator.class,
+            NoOpConnectorValidationParamsProvider.class, ServiceNowDTOtoEntity.class, ServiceNowEntityToDTO.class,
             NotSupportedValidationHandler.class));
   }
 

@@ -34,6 +34,12 @@ if [[ "${ENABLE_APPDYNAMICS}" == "true" ]]; then
     echo "Using Appdynamics java agent"
 fi
 
+if [[ "${ENABLE_OVEROPS}" == "true" ]] ; then
+    echo "OverOps is enabled"
+    JAVA_OPTS=$JAVA_OPTS" -agentpath:/opt/harness/takipi/lib/libTakipiAgent.so -Dtakipi.etl -Dtakipi.application.name=${OVEROPS_APPLICATION_NAME}"
+    echo "Using Overops Java Agent"
+fi
+
 JAVA_OPTS=$JAVA_OPTS" -Xbootclasspath/p:/opt/harness/alpn-boot-8.1.13.v20181017.jar"
 
 if [[ "${DEPLOY_MODE}" == "KUBERNETES" || "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" || "${DEPLOY_VERSION}" == "COMMUNITY" ]]; then

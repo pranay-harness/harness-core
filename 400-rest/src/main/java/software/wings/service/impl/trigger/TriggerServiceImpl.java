@@ -2108,7 +2108,7 @@ public class TriggerServiceImpl implements TriggerService {
       nextIterations = trigger.getNextIterations();
       if (nextIterations.size() > 1 && ((nextIterations.get(1) - nextIterations.get(0)) / 1000 < MIN_INTERVAL)) {
         throw new InvalidRequestException(
-            "Deployments can be triggered only at 5 minute intervals. Cron Expression should evaluate to time intervals of at least "
+            "Deployments must be triggered at intervals greater than or equal to 5 minutes. Cron Expression should evaluate to time intervals of at least "
             + MIN_INTERVAL + " seconds.");
       }
     }

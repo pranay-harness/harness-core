@@ -2,7 +2,6 @@ package io.harness.pms.plan.execution.handlers;
 
 import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 
-import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
@@ -35,7 +34,6 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PipelineStatusUpdateEventHandler implements PlanStatusUpdateObserver, OrchestrationEndObserver {
-  private static final String PRIVATE_REPO_BUILD_CI = "ci_private_build";
   private final PlanExecutionService planExecutionService;
   private final PmsExecutionSummaryRespository pmsExecutionSummaryRepository;
   private final AccountExecutionMetadataRepository accountExecutionMetadataRepository;
@@ -87,13 +85,6 @@ public class PipelineStatusUpdateEventHandler implements PlanStatusUpdateObserve
       Query query = new Query(criteria);
       PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity1 =
           pmsExecutionSummaryRepository.update(query, update);
-      if (executedModules.contains(ModuleType.CI.name().toLowerCase())
-          && pipelineExecutionSummaryEntity.get().getModuleInfo() != null
-          && pipelineExecutionSummaryEntity.get().getModuleInfo().get("ci") != null) {
-        if (pipelineExecutionSummaryEntity.get().getModuleInfo().get("ci").getBoolean("isPrivateRepo", false)) {
-          executedModules.add(PRIVATE_REPO_BUILD_CI);
-        }
-      }
       accountExecutionMetadataRepository.updateAccountExecutionMetadata(
           AmbianceUtils.getAccountId(ambiance), executedModules, pipelineExecutionSummaryEntity1.getStartTs());
       for (String module : executedModules) {

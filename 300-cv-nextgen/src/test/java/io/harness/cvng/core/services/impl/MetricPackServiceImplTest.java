@@ -26,6 +26,7 @@ import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.rule.Owner;
 
@@ -106,6 +107,11 @@ public class MetricPackServiceImplTest extends CvNextGenTestBase {
         assertThat(metricDefinition.getPath()).isNotEmpty();
       });
     });
+    // Validate APPD Custom metric pack is hidden
+    assertThat(metricPacks.stream()
+                   .filter(metricPack -> metricPack.getIdentifier().equals(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER))
+                   .filter(metricPack -> metricPack.getDataSourceType().equals(DataSourceType.APP_DYNAMICS)))
+        .hasSize(0);
   }
 
   @Test
@@ -113,7 +119,7 @@ public class MetricPackServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetMetricPack_withExistingCategory() {
     MetricPack metricPack = metricPackService.getMetricPack(
-        accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, CVMonitoringCategory.ERRORS);
+        accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, ERRORS_PACK_IDENTIFIER);
     assertThat(metricPack.getAccountId()).isEqualTo(accountId);
     assertThat(metricPack.getOrgIdentifier()).isEqualTo(orgIdentifier);
     assertThat(metricPack.getProjectIdentifier()).isEqualTo(projectIdentifier);

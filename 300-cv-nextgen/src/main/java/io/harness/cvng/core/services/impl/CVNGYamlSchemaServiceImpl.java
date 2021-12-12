@@ -11,6 +11,7 @@ import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
@@ -53,6 +54,8 @@ public class CVNGYamlSchemaServiceImpl implements CVNGYamlSchemaService {
     JsonNode deploymentSteps =
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STEPS, orgIdentifier, projectIdentifier, scope);
     JsonNode definitions = deploymentSteps.get(DEFINITIONS_NODE);
+    yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier, scope, (ObjectNode) definitions,
+        YamlSchemaTransientHelper.cvStepV2EntityTypes);
 
     JsonNode stepElementConfigNode = definitions.get(StepElementConfig.class.getSimpleName());
     if (stepElementConfigNode != null && stepElementConfigNode.isObject()) {

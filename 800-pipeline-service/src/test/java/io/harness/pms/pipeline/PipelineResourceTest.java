@@ -83,7 +83,7 @@ public class PipelineResourceTest extends CategoryTest {
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
     pipelineResource = new PipelineResource(pmsPipelineService, pmsYamlSchemaService, nodeExecutionService,
-        nodeExecutionToExecutioNodeMapper, pipelineTemplateHelper, mockGovernanceService);
+        nodeExecutionToExecutioNodeMapper, pipelineTemplateHelper, mockGovernanceService, null);
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "failure-strategy.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
@@ -342,5 +342,17 @@ public class PipelineResourceTest extends CategoryTest {
     assertThat(responseDTO.getVersion()).isEqualTo(1L);
     assertThat(responseDTO.getNumOfStages()).isEqualTo(1L);
     assertThat(responseDTO.getStageNames().get(0)).isEqualTo("qaStage");
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetExpandedPipelineJson() {
+    doReturn("look, a JSON")
+        .when(pmsPipelineService)
+        .fetchExpandedPipelineJSON(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER);
+    ResponseDTO<ExpandedPipelineJsonDTO> expandedPipelineJson = pipelineResource.getExpandedPipelineJson(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null);
+    assertThat(expandedPipelineJson.getData().getExpandedJson()).isEqualTo("look, a JSON");
   }
 }

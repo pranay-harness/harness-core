@@ -105,7 +105,7 @@ marketoConfig:
 segmentConfig:
   enabled: false #segmentConfigEnable
   url: "segment_url_place_holder"
-  apiKey: "segment_api_key"
+  apiKey: ""
 
 segmentConfiguration:
   enabled: false
@@ -123,7 +123,7 @@ salesforceConfig:
 
 datadogConfig:
   enabled: false #datadogConfigEnable
-  apiKey: "datadog_api_key"
+  apiKey: ""
 
 distributedLockImplementation: MONGO
 

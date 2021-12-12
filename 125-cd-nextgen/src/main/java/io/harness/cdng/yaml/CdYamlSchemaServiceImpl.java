@@ -15,6 +15,7 @@ import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
@@ -76,7 +77,8 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
     JsonNode deploymentStepDefinitions = deploymentStepsSchema.get(DEFINITIONS_NODE);
 
     JsonNodeUtils.merge(definitions, deploymentStepDefinitions);
-
+    yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier, scope, (ObjectNode) definitions,
+        YamlSchemaTransientHelper.cdStepV2EntityTypes);
     JsonNode jsonNode = definitions.get(ParallelStepElementConfig.class.getSimpleName());
     if (jsonNode.isObject()) {
       flattenParallelStepElementConfig((ObjectNode) jsonNode);
