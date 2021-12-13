@@ -18,14 +18,24 @@ while Var:index !=  Var:lengthOfItems {
     Request metricRequest = new Request(url=Var:fullQuery, header=Env:commonHeaders)
     Var resp = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
 
-    Var metricVal = extract(Var:resp,Var:metricValuePath)
-    Var timestamp = extract(Var:resp,Var:timestampPath)
+    Var metricValArr = extract(Var:resp,Var:metricValuePath)
+    Var timestampArr = extract(Var:resp,Var:timestampPath)
+
     Var nullVal = null
-    if Var:metricVal != Var:nullVal  {
-        if
-        Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp)
-        Var:returnList.append(Var:tsRecord)
+    Var innerIndex = 0
+    Var lengthOfResults = Var:metricValArr.length()
+    print Var:lengthOfResults
+
+    while Var:innerIndex !=  Var:lengthOfResults {
+        Var metricVal = Var:metricValArr[Var:innerIndex]
+        Var timestamp = Var:timestampArr[Var:innerIndex]
+        if Var:metricVal != Var:nullVal  {
+            Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp)
+            Var:returnList.append(Var:tsRecord)
+        }
+        innerIndex = Var:innerIndex + Var:one
     }
+
     index = Var:index + Var:one
 }
 return Var:returnList
