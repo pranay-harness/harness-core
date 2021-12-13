@@ -11,7 +11,8 @@ import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml;
-import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml.VmInfraYamlSpec;
+import io.harness.beans.yaml.extended.infrastrucutre.VmPoolYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.VmPoolYaml.VmPoolYamlSpec;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.beans.entities.TIServiceConfig;
@@ -57,12 +58,14 @@ public class VmInitializeTaskUtilsTest extends CIExecutionTestBase {
   @Category(UnitTests.class)
   public void getInitializeTaskParams() {
     String poolId = "test";
+    VmPoolYaml vmPoolYaml =
+        VmPoolYaml.builder().spec(VmPoolYamlSpec.builder().identifier(poolId).build()).build();
+
     String stageRuntimeId = "test";
-    InitializeStepInfo initializeStepInfo =
-        InitializeStepInfo.builder()
-            .infrastructure(VmInfraYaml.builder().spec(VmInfraYamlSpec.builder().poolId(poolId).build()).build())
-            .buildJobEnvInfo(VmBuildJobInfo.builder().build())
-            .build();
+    InitializeStepInfo initializeStepInfo = InitializeStepInfo.builder()
+                                                .infrastructure(VmInfraYaml.builder().spec(vmPoolYaml).build())
+                                                .buildJobEnvInfo(VmBuildJobInfo.builder().build())
+                                                .build();
     when(executionSweepingOutputResolver.consume(any(), any(), any(), any())).thenReturn("");
     when(executionSweepingOutputResolver.resolveOptional(
              ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails)))
