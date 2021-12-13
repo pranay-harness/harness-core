@@ -72,7 +72,7 @@ public class ResourceGroupFactory {
     } else if (resourceSelector instanceof DynamicResourceSelector) {
       DynamicResourceSelector dynamicResourceSelector = (DynamicResourceSelector) resourceSelector;
       if (Boolean.TRUE.equals(dynamicResourceSelector.getIncludeChildScopes())) {
-        return Collections.singleton(PATH_DELIMITER.concat(ResourceGroup.NESTED_SCOPES_IDENTIFIER)
+        return Collections.singleton(PATH_DELIMITER.concat(ResourceGroup.INCLUDE_CHILD_SCOPES_IDENTIFIER)
                                          .concat(PATH_DELIMITER)
                                          .concat(dynamicResourceSelector.getResourceType())
                                          .concat(PATH_DELIMITER)
@@ -84,7 +84,7 @@ public class ResourceGroupFactory {
     } else if (resourceSelector instanceof ResourceSelectorByScope) {
       ResourceSelectorByScope resourceSelectorByScope = (ResourceSelectorByScope) resourceSelector;
       if (resourceSelectorByScope.isIncludeChildScopes()) {
-        return Collections.singleton(PATH_DELIMITER.concat(ResourceGroup.NESTED_SCOPES_IDENTIFIER)
+        return Collections.singleton(PATH_DELIMITER.concat(ResourceGroup.INCLUDE_CHILD_SCOPES_IDENTIFIER)
                                          .concat(PATH_DELIMITER)
                                          .concat(ResourceGroup.ALL_RESOURCES_IDENTIFIER)
                                          .concat(PATH_DELIMITER)
