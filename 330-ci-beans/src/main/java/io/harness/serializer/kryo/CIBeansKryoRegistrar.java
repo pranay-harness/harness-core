@@ -65,8 +65,10 @@ import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml.K8sDirectInfraYamlSpec;
 import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.VmInfraSpec;
 import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml;
-import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml.VmInfraYamlSpec;
+import io.harness.beans.yaml.extended.infrastrucutre.VmPoolYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.VmPoolYaml.VmPoolYamlSpec;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.stdvars.BuildStandardVariables;
 import io.harness.ci.stdvars.GitVariables;
@@ -150,11 +152,13 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(StageDetails.class, 100094);
     kryo.register(VmBuildJobInfo.class, 100095);
     kryo.register(VmInfraYaml.class, 100096);
-    kryo.register(VmInfraYamlSpec.class, 100097);
     kryo.register(VmStageInfraDetails.class, 100098);
     kryo.register(StageInfraDetails.class, 100099);
     kryo.register(K8StageInfraDetails.class, 100100);
 
     kryo.register(VmDetailsOutcome.class, 110101); // quantum change in order because 100101 is already assigned.
+    kryo.register(VmInfraSpec.Type.class, 110102);
+    kryo.register(VmPoolYaml.class, 110103);
+    kryo.register(VmPoolYamlSpec.class, 110104);
   }
 }

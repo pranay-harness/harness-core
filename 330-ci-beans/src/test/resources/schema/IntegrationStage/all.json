@@ -4776,6 +4776,19 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "VmInfraSpec": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Pool"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "VmInfraYaml": {
       "allOf": [
         {
@@ -4789,7 +4802,11 @@
           ],
           "properties": {
             "spec": {
-              "$ref": "#/definitions/VmInfraYamlSpec"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/VmPoolYaml"
+                }
+              ]
             },
             "type": {
               "type": "string",
@@ -4804,13 +4821,39 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "VmInfraYamlSpec": {
+    "VmPoolYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/VmInfraSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "$ref": "#/definitions/VmPoolYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Pool"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VmPoolYamlSpec": {
       "type": "object",
       "required": [
-        "poolId"
+        "identifier"
       ],
       "properties": {
-        "poolId": {
+        "identifier": {
           "type": "string"
         }
       },
