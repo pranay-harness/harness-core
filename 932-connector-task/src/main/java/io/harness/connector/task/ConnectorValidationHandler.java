@@ -11,7 +11,7 @@ import io.harness.delegate.beans.connector.ConnectorValidationParams;
 public interface ConnectorValidationHandler {
   ConnectorValidationResult validate(ConnectorValidationParams connectorValidationParams, String accountIdentifier);
 
-  default ConnectorValidationResponseData validateThis(
+  default ConnectorValidationResponseData validateConnector(
       ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
     return null;
   }

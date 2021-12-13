@@ -45,7 +45,7 @@ public class GitValidationHandler implements ConnectorValidationHandler {
   }
 
   @Override
-  public ConnectorValidationResponseData validateThis(
+  public ConnectorValidationResponseData validateConnector(
       ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
     final ConnectorValidationResult validate = validate(connectorValidationParams, accountIdentifier);
     return ManagerGitCommandExecutionResponse.builder().connectorValidationResult(validate).build();
