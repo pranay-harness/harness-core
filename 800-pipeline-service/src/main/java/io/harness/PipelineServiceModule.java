@@ -114,6 +114,7 @@ import io.harness.service.DelegateServiceDriverModule;
 import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.jira.JiraStepHelperService;
+import io.harness.steps.jira.create.JiraCreateStepNode;
 import io.harness.steps.shellscript.ShellScriptHelperService;
 import io.harness.steps.shellscript.ShellScriptHelperServiceImpl;
 import io.harness.steps.shellscript.ShellScriptStepNode;
@@ -180,6 +181,7 @@ public class PipelineServiceModule extends AbstractModule {
   public static Set<Class<?>> commonStepsMovedToNewSchema = new HashSet() {
     {
       add(HttpStepNode.class);
+      add(JiraCreateStepNode.class);
       add(ShellScriptStepNode.class);
       add(TemplateStepNode.class);
     }

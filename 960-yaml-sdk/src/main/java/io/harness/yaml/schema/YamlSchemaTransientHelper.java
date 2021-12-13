@@ -32,6 +32,7 @@ public class YamlSchemaTransientHelper {
   public static final List<EntityType> allStepV2EntityTypes = new ArrayList<EntityType>() {
     {
       add(EntityType.HTTP_STEP);
+      add(EntityType.JIRA_CREATE_STEP);
       add(EntityType.SHELL_SCRIPT_STEP);
       add(EntityType.K8S_CANARY_DEPLOY_STEP);
       add(EntityType.TEMPLATE);
@@ -42,6 +43,7 @@ public class YamlSchemaTransientHelper {
   public static final List<EntityType> pipelineStepV2EntityTypes = new ArrayList<EntityType>() {
     {
       add(EntityType.HTTP_STEP);
+      add(EntityType.JIRA_CREATE_STEP);
       add(EntityType.SHELL_SCRIPT_STEP);
       add(EntityType.TEMPLATE);
     }
