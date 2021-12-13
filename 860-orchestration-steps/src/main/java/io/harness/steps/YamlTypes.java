@@ -11,4 +11,6 @@ public interface YamlTypes {
   String OUTPUT_VARIABLES = "outputVariables";
   String ENVIRONMENT_VARIABLES = "environmentVariables";
   String SPEC = "spec";
+  String APPROVAL_INPUTS = "approverInputs";
+  String APPROVERS = "approvers";
 }

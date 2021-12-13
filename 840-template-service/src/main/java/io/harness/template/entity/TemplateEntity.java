@@ -66,7 +66,7 @@ public class TemplateEntity
   @NotEmpty String accountId;
   @Wither @Trimmed String orgIdentifier;
   @Wither @Trimmed String projectIdentifier;
-  @NotEmpty @EntityIdentifier String identifier;
+  @Wither @NotEmpty @EntityIdentifier String identifier;
 
   @Wither @EntityName String name;
   @Wither @Size(max = 1024) String description;
@@ -91,13 +91,13 @@ public class TemplateEntity
   @CreatedBy Principal createdBy;
   @LastModifiedBy Principal lastUpdatedBy;
 
-  @Setter @NonFinal String objectIdOfYaml;
+  @Wither @Setter @NonFinal String objectIdOfYaml;
   @Setter @NonFinal Boolean isFromDefaultBranch;
   @Setter @NonFinal String branch;
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
-  @NonFinal Boolean isEntityInvalid;
+  @Wither @NonFinal Boolean isEntityInvalid;
 
   @Override
   public String getAccountIdentifier() {

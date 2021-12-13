@@ -12,7 +12,7 @@ public class ThresholdServiceLevelIndicatorTransformer
   @Override
   public ThresholdServiceLevelIndicator getEntity(ProjectParams projectParams,
       ServiceLevelIndicatorDTO serviceLevelIndicatorDTO, String monitoredServiceIdentifier,
-      String healthSourceIndicator) {
+      String healthSourceIdentifier) {
     ThresholdSLIMetricSpec thresholdSLIMetricSpec =
         (ThresholdSLIMetricSpec) serviceLevelIndicatorDTO.getSpec().getSpec();
 
@@ -23,9 +23,12 @@ public class ThresholdServiceLevelIndicatorTransformer
         .identifier(serviceLevelIndicatorDTO.getIdentifier())
         .name(serviceLevelIndicatorDTO.getName())
         .type(serviceLevelIndicatorDTO.getType())
+        .sliMissingDataType(serviceLevelIndicatorDTO.getSliMissingDataType())
         .metric1(thresholdSLIMetricSpec.getMetric1())
+        .thresholdValue(thresholdSLIMetricSpec.getThresholdValue())
+        .thresholdType(thresholdSLIMetricSpec.getThresholdType())
         .monitoredServiceIdentifier(monitoredServiceIdentifier)
-        .healthSourceIdentifier(healthSourceIndicator)
+        .healthSourceIdentifier(healthSourceIdentifier)
         .build();
   }
 
@@ -33,7 +36,11 @@ public class ThresholdServiceLevelIndicatorTransformer
   protected ServiceLevelIndicatorSpec getSpec(ThresholdServiceLevelIndicator serviceLevelIndicator) {
     return ServiceLevelIndicatorSpec.builder()
         .type(SLIMetricType.THRESHOLD)
-        .spec(ThresholdSLIMetricSpec.builder().metric1(serviceLevelIndicator.getMetric1()).build())
+        .spec(ThresholdSLIMetricSpec.builder()
+                  .metric1(serviceLevelIndicator.getMetric1())
+                  .thresholdValue(serviceLevelIndicator.getThresholdValue())
+                  .thresholdType(serviceLevelIndicator.getThresholdType())
+                  .build())
         .build();
   }
 }

@@ -19,6 +19,7 @@ import io.harness.beans.NGTemplateReference;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.template.TemplateEntityType;
 import io.harness.rule.Owner;
@@ -99,8 +100,8 @@ public class TemplateEntityGitSyncHandlerTest extends CategoryTest {
         .when(templateService)
         .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, false);
 
-    String lastObjectIdIfExists = templateEntityGitSyncHandler.getLastObjectIdIfExists(ACCOUNT_ID, yaml);
-    assertThat(lastObjectIdIfExists).isEqualTo(objectId);
+    EntityGitDetails lastEntityDetails = templateEntityGitSyncHandler.getEntityDetailsIfExists(ACCOUNT_ID, yaml).get();
+    assertThat(lastEntityDetails.getObjectId()).isEqualTo(objectId);
   }
 
   @Test

@@ -1,34 +1,22 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.entities.DataCollectionTask.Type.SERVICE_GUARD;
-import static io.harness.cvng.core.entities.DataCollectionTask.Type.SLI;
 import static io.harness.cvng.core.services.CVNextGenConstants.CVNG_MAX_PARALLEL_THREADS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
-import io.harness.cvng.beans.DataSourceType;
-import io.harness.cvng.client.VerificationManagerService;
-import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
 import io.harness.cvng.core.entities.MetricCVConfig;
-import io.harness.cvng.core.entities.SLIDataCollectionTask;
-import io.harness.cvng.core.entities.ServiceGuardDataCollectionTask;
-import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
+import io.harness.cvng.core.services.api.DataCollectionTaskManagementService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
-import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.metrics.CVNGMetricsUtils;
 import io.harness.cvng.metrics.services.impl.MetricContextBuilder;
-import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
-import io.harness.cvng.servicelevelobjective.services.ServiceLevelIndicatorService;
 import io.harness.cvng.statemachine.services.api.OrchestrationService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.DataCollectionProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
@@ -36,13 +24,9 @@ import io.harness.metrics.AutoMetricContext;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.HPersistence;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import io.fabric8.utils.Lists;
 import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -58,19 +42,14 @@ import org.mongodb.morphia.query.UpdateResults;
 @Slf4j
 public class DataCollectionTaskServiceImpl implements DataCollectionTaskService {
   @Inject private HPersistence hPersistence;
-  @Inject private Map<DataSourceType, DataCollectionInfoMapper> dataSourceTypeDataCollectionInfoMapperMap;
   @Inject private Clock clock;
   @Inject private MetricPackService metricPackService;
-  // move this dependency out and use helper method with no exposure to client directly
-  @Inject private VerificationManagerService verificationManagerService;
-  @Inject private CVConfigService cvConfigService;
   @Inject private OrchestrationService orchestrationService;
-  @Inject private VerificationTaskService verificationTaskService;
-  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private MetricService metricService;
   @Inject private MetricContextBuilder metricContextBuilder;
-  @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
-  @Inject private HealthSourceService healthSourceService;
+  @Inject
+  private Map<DataCollectionTask.Type, DataCollectionTaskManagementService>
+      dataCollectionTaskManagementServiceMapBinder;
 
   // TODO: this is creating reverse dependency. Find a way to get rid of this dependency.
   // Probabally by moving ProgressLog concept to a separate service and model.
@@ -166,7 +145,8 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     if (result.getStatus() == DataCollectionExecutionStatus.SUCCESS) {
       // TODO: make this an atomic operation
       if (dataCollectionTask.shouldCreateNextTask()) {
-        createNextTask((ServiceGuardDataCollectionTask) dataCollectionTask);
+        dataCollectionTaskManagementServiceMapBinder.get(dataCollectionTask.getType())
+            .createNextTask(dataCollectionTask);
       } else {
         enqueueNextTask(dataCollectionTask);
         if (dataCollectionTask instanceof DeploymentDataCollectionTask) {
@@ -201,32 +181,10 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   @Override
-  public void handleCreateNextTask(CVConfig cvConfig) {
-    Preconditions.checkState(cvConfig.isEnabled(), "CVConfig should be enabled");
-    String serviceGuardVerificationTaskId =
-        verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid());
-
-    DataCollectionTask dataCollectionTask =
-        getLastDataCollectionTask(cvConfig.getAccountId(), serviceGuardVerificationTaskId);
-    if (dataCollectionTask == null) {
-      enqueueFirstTask(cvConfig);
-    } else {
-      if (Instant.ofEpochMilli(dataCollectionTask.getLastUpdatedAt())
-              .isBefore(clock.instant().minus(Duration.ofMinutes(2)))
-          && dataCollectionTask.getStatus().equals(DataCollectionExecutionStatus.SUCCESS)) {
-        createNextTask((ServiceGuardDataCollectionTask) dataCollectionTask);
-        log.warn(
-            "Recovered from next task creation issue. DataCollectionTask uuid: {}, account: {}, projectIdentifier: {}, orgIdentifier: {}, ",
-            dataCollectionTask.getUuid(), cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
-            cvConfig.getOrgIdentifier());
-      }
-    }
-  }
-
-  private DataCollectionTask getLastDataCollectionTask(String accountId, String serviceGuardVerificationTaskId) {
+  public DataCollectionTask getLastDataCollectionTask(String accountId, String verificationTaskId) {
     return hPersistence.createQuery(DataCollectionTask.class)
         .filter(DataCollectionTaskKeys.accountId, accountId)
-        .filter(DataCollectionTaskKeys.verificationTaskId, serviceGuardVerificationTaskId)
+        .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
         .order(Sort.descending(DataCollectionTaskKeys.startTime))
         .get();
   }
@@ -284,11 +242,8 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     } else {
       markDependentTasksFailed(dataCollectionTask);
       if (dataCollectionTask.shouldCreateNextTask()) {
-        if (dataCollectionTask instanceof ServiceGuardDataCollectionTask) {
-          createNextTask((ServiceGuardDataCollectionTask) dataCollectionTask);
-        }
-      } else if (dataCollectionTask instanceof SLIDataCollectionTask) {
-        createNextSLITask((SLIDataCollectionTask) dataCollectionTask);
+        dataCollectionTaskManagementServiceMapBinder.get(dataCollectionTask.getType())
+            .createNextTask(dataCollectionTask);
       }
       // TODO: handle this logic in a better way and setup alert.
       log.error("Task is in the past. Enqueuing next task with new data collection startTime. {}, {}, {}",
@@ -296,34 +251,8 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     }
   }
 
-  private void createNextTask(ServiceGuardDataCollectionTask prevTask) {
-    CVConfig cvConfig = cvConfigService.get(verificationTaskService.getCVConfigId(prevTask.getVerificationTaskId()));
-    if (cvConfig == null) {
-      log.info("CVConfig no longer exists for verificationTaskId {}", prevTask.getVerificationTaskId());
-      return;
-    }
-    if (!cvConfig.isEnabled()) {
-      log.info("Not creating next task as CVConfig is disabled. cvConfigId: {}", cvConfig.getUuid());
-      return;
-    }
-    populateMetricPack(cvConfig);
-    Instant nextTaskStartTime = prevTask.getEndTime();
-    Instant currentTime = clock.instant();
-    if (nextTaskStartTime.isBefore(prevTask.getDataCollectionPastTimeCutoff(currentTime))) {
-      nextTaskStartTime = prevTask.getDataCollectionPastTimeCutoff(currentTime);
-      log.info("Restarting Data collection startTime: {}", nextTaskStartTime);
-    }
-    DataCollectionTask dataCollectionTask =
-        getDataCollectionTask(cvConfig, nextTaskStartTime, nextTaskStartTime.plus(5, ChronoUnit.MINUTES));
-    if (prevTask.getStatus() != DataCollectionExecutionStatus.SUCCESS) {
-      dataCollectionTask.setRetryCount(prevTask.getRetryCount());
-      dataCollectionTask.setValidAfter(dataCollectionTask.getNextValidAfter(clock.instant()));
-    }
-    validateIfAlreadyExists(dataCollectionTask);
-    save(dataCollectionTask);
-  }
-
-  private void validateIfAlreadyExists(DataCollectionTask dataCollectionTask) {
+  @Override
+  public void validateIfAlreadyExists(DataCollectionTask dataCollectionTask) {
     if (hPersistence.createQuery(DataCollectionTask.class)
             .filter(DataCollectionTaskKeys.accountId, dataCollectionTask.getAccountId())
             .filter(DataCollectionTaskKeys.verificationTaskId, dataCollectionTask.getVerificationTaskId())
@@ -338,22 +267,14 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     }
   }
 
-  private void populateMetricPack(CVConfig cvConfig) {
+  @Override
+  public void populateMetricPack(CVConfig cvConfig) {
     if (cvConfig instanceof MetricCVConfig) {
       // TODO: get rid of this. Adding it to unblock. We need to redesign how are we setting DSL.
       metricPackService.populateDataCollectionDsl(cvConfig.getType(), ((MetricCVConfig) cvConfig).getMetricPack());
       metricPackService.populatePaths(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
           cvConfig.getProjectIdentifier(), cvConfig.getType(), ((MetricCVConfig) cvConfig).getMetricPack());
     }
-  }
-
-  private void enqueueFirstTask(CVConfig cvConfig) {
-    populateMetricPack(cvConfig);
-    TimeRange dataCollectionRange = cvConfig.getFirstTimeDataCollectionTimeRange();
-    DataCollectionTask dataCollectionTask =
-        getDataCollectionTask(cvConfig, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime());
-    save(dataCollectionTask);
-    log.info("Enqueued cvConfigId successfully: {}", cvConfig.getUuid());
   }
 
   @Override
@@ -386,107 +307,5 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
         hPersistence.createUpdateOperations(DataCollectionTask.class)
             .set(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.ABORTED);
     hPersistence.update(query, abortDCTaskOperation);
-  }
-
-  private DataCollectionTask getDataCollectionTask(CVConfig cvConfig, Instant startTime, Instant endTime) {
-    String dataCollectionWorkerId = monitoringSourcePerpetualTaskService.getLiveMonitoringWorkerId(
-        cvConfig.getAccountId(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(),
-        cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier());
-    return ServiceGuardDataCollectionTask.builder()
-        .accountId(cvConfig.getAccountId())
-        .type(SERVICE_GUARD)
-        .dataCollectionWorkerId(dataCollectionWorkerId)
-        .status(DataCollectionExecutionStatus.QUEUED)
-        .startTime(startTime)
-        .endTime(endTime)
-        .verificationTaskId(
-            verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid()))
-        .dataCollectionInfo(
-            dataSourceTypeDataCollectionInfoMapperMap.get(cvConfig.getType()).toDataCollectionInfo(cvConfig))
-        .build();
-  }
-
-  @Override
-  public void handleCreateNextSLITask(ServiceLevelIndicator serviceLevelIndicator) {
-    String serviceGuardVerificationTaskId = verificationTaskService.getSLIVerificationTaskId(
-        serviceLevelIndicator.getAccountId(), serviceLevelIndicator.getUuid());
-
-    DataCollectionTask dataCollectionTask =
-        getLastDataCollectionTask(serviceLevelIndicator.getAccountId(), serviceGuardVerificationTaskId);
-    if (dataCollectionTask == null) {
-      enqueueFirstSLITask(serviceLevelIndicator);
-    } else {
-      if (Instant.ofEpochMilli(dataCollectionTask.getLastUpdatedAt())
-              .isBefore(clock.instant().minus(Duration.ofMinutes(2)))
-          && dataCollectionTask.getStatus().equals(DataCollectionExecutionStatus.SUCCESS)) {
-        createNextSLITask((SLIDataCollectionTask) dataCollectionTask);
-        log.warn(
-            "Recovered from next task creation issue. DataCollectionTask uuid: {}, account: {}, projectIdentifier: {}, orgIdentifier: {}, ",
-            dataCollectionTask.getUuid(), serviceLevelIndicator.getAccountId(),
-            serviceLevelIndicator.getProjectIdentifier(), serviceLevelIndicator.getOrgIdentifier());
-      }
-    }
-  }
-
-  private void enqueueFirstSLITask(ServiceLevelIndicator serviceLevelIndicator) {
-    List<CVConfig> cvConfigList = fetchCVConfigForSLI(serviceLevelIndicator);
-    cvConfigList.forEach(this::populateMetricPack);
-    TimeRange dataCollectionRange = cvConfigList.get(0).getFirstTimeDataCollectionTimeRange();
-    DataCollectionTask dataCollectionTask = getDataCollectionTaskForSLI(
-        cvConfigList, serviceLevelIndicator, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime());
-    save(dataCollectionTask);
-    log.info("Enqueued serviceLevelIndicator successfully: {}", serviceLevelIndicator.getUuid());
-  }
-
-  private void createNextSLITask(SLIDataCollectionTask prevTask) {
-    ServiceLevelIndicator serviceLevelIndicator =
-        serviceLevelIndicatorService.get(verificationTaskService.getSliId(prevTask.getVerificationTaskId()));
-    if (serviceLevelIndicator == null) {
-      log.info("ServiceLevelIndicator no longer exists for verificationTaskId {}", prevTask.getVerificationTaskId());
-      return;
-    }
-    List<CVConfig> cvConfigList = fetchCVConfigForSLI(serviceLevelIndicator);
-    cvConfigList.forEach(this::populateMetricPack);
-    Instant nextTaskStartTime = prevTask.getEndTime();
-    Instant currentTime = clock.instant();
-    if (nextTaskStartTime.isBefore(prevTask.getDataCollectionPastTimeCutoff(currentTime))) {
-      nextTaskStartTime = prevTask.getDataCollectionPastTimeCutoff(currentTime);
-      log.info("Restarting Data collection startTime: {}", nextTaskStartTime);
-    }
-    DataCollectionTask dataCollectionTask = getDataCollectionTaskForSLI(
-        cvConfigList, serviceLevelIndicator, nextTaskStartTime, nextTaskStartTime.plus(5, ChronoUnit.MINUTES));
-    if (prevTask.getStatus() != DataCollectionExecutionStatus.SUCCESS) {
-      dataCollectionTask.setRetryCount(prevTask.getRetryCount());
-      dataCollectionTask.setValidAfter(dataCollectionTask.getNextValidAfter(clock.instant()));
-    }
-    validateIfAlreadyExists(dataCollectionTask);
-    save(dataCollectionTask);
-  }
-
-  private List<CVConfig> fetchCVConfigForSLI(ServiceLevelIndicator serviceLevelIndicator) {
-    return healthSourceService.getCVConfigs(serviceLevelIndicator.getAccountId(),
-        serviceLevelIndicator.getOrgIdentifier(), serviceLevelIndicator.getProjectIdentifier(),
-        serviceLevelIndicator.getMonitoredServiceIdentifier(), serviceLevelIndicator.getHealthSourceIdentifier());
-  }
-
-  private DataCollectionTask getDataCollectionTaskForSLI(
-      List<CVConfig> cvConfigList, ServiceLevelIndicator serviceLevelIndicator, Instant startTime, Instant endTime) {
-    CVConfig cvConfigForVerificationTask = cvConfigList.get(0);
-    String dataCollectionWorkerId =
-        monitoringSourcePerpetualTaskService.getLiveMonitoringWorkerId(cvConfigForVerificationTask.getAccountId(),
-            cvConfigForVerificationTask.getOrgIdentifier(), cvConfigForVerificationTask.getProjectIdentifier(),
-            cvConfigForVerificationTask.getConnectorIdentifier(), cvConfigForVerificationTask.getIdentifier());
-    return SLIDataCollectionTask.builder()
-        .accountId(serviceLevelIndicator.getAccountId())
-        .type(SLI)
-        .dataCollectionWorkerId(dataCollectionWorkerId)
-        .status(DataCollectionExecutionStatus.QUEUED)
-        .startTime(startTime)
-        .endTime(endTime)
-        .verificationTaskId(verificationTaskService.getSLIVerificationTaskId(
-            cvConfigForVerificationTask.getAccountId(), serviceLevelIndicator.getUuid()))
-        .dataCollectionInfo(dataSourceTypeDataCollectionInfoMapperMap.get(cvConfigList.get(0).getType())
-                                .toDataCollectionInfoForSLI(cvConfigList, serviceLevelIndicator))
-        .build();
   }
 }

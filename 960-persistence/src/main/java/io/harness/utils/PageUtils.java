@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
@@ -115,5 +117,17 @@ public class PageUtils {
         .pageItemCount(returnList.size())
         .content(returnList)
         .build();
+  }
+
+  public Pageable getPageRequest(int page, int size, List<String> sort, Sort sortBy) {
+    try {
+      if (EmptyPredicate.isEmpty(sort)) {
+        return org.springframework.data.domain.PageRequest.of(page, size, sortBy);
+      } else {
+        return PageUtils.getPageRequest(page, size, sort);
+      }
+    } catch (Exception e) {
+      throw new InvalidRequestException(e.getMessage(), e);
+    }
   }
 }

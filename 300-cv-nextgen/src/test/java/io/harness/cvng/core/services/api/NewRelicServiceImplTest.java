@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
@@ -21,14 +23,18 @@ import io.harness.cvng.client.VerificationManagerClient;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.MetricPackValidationResponse;
 import io.harness.cvng.core.beans.MetricPackValidationResponse.MetricValidationResponse;
+import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.datacollection.exception.DataCollectionException;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -46,12 +52,13 @@ public class NewRelicServiceImplTest extends CvNextGenTestBase {
   @Mock private RequestExecutor requestExecutor;
   private String accountId;
   private String connectorIdentifier;
+  private BuilderFactory builderFactory;
 
   @Before
   public void setup() throws IllegalAccessException {
     accountId = generateUuid();
     connectorIdentifier = generateUuid();
-
+    builderFactory = BuilderFactory.getDefault();
     FieldUtils.writeField(newRelicService, "onboardingService", onboardingService, true);
     FieldUtils.writeField(onboardingService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(onboardingService, "verificationManagerService", verificationManagerService, true);
@@ -194,5 +201,118 @@ public class NewRelicServiceImplTest extends CvNextGenTestBase {
     assertThat(metricPackValidationResponse.getOverallStatus().name())
         .isEqualTo(ThirdPartyApiResponseStatus.FAILED.name());
     assertThat(metricPackValidationResponse.getMetricValidationResponses()).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testParseSampleData() throws Exception {
+    String responseObject = Resources.toString(
+        NewRelicServiceImplTest.class.getResource("/newrelic/newrelic-custom-response.json"), Charsets.UTF_8);
+    String metricValuesPath = "$.data.[*].metricValue";
+    String timestampPath = "$.data.[*].timestamp";
+    String timestampFormat = null;
+
+    List<TimeSeriesSampleDTO> sampleData = newRelicService.parseSampleData(
+        builderFactory.getProjectParams(), responseObject, "myNRTxn", metricValuesPath, timestampPath, timestampFormat);
+
+    assertThat(sampleData).isNotEmpty();
+    assertThat(sampleData.size()).isEqualTo(15);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testFetchSampleData() {
+    List<NewRelicApplication> newRelicApplications = new ArrayList<>();
+    for (int i = 0; i < 100; i++) {
+      newRelicApplications.add(
+          NewRelicApplication.builder().applicationName("application - " + i).applicationId(i).build());
+    }
+    when(verificationManagerService.getDataCollectionResponse(
+             anyString(), anyString(), anyString(), any(DataCollectionRequest.class)))
+        .thenReturn(JsonUtils.asJson(
+            NewRelicApplication.builder().applicationName("application - ").applicationId(12).build()));
+    String query =
+        "SELECT average(`apm.service.transaction.duration`) FROM Metric WHERE appName = 'My Application' TIMESERIES";
+    LinkedHashMap response =
+        newRelicService.fetchSampleData(builderFactory.getProjectParams(), connectorIdentifier, query, generateUuid());
+    assertThat(response).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testFetchSampleData_badQueryWithTime() {
+    List<NewRelicApplication> newRelicApplications = new ArrayList<>();
+    for (int i = 0; i < 100; i++) {
+      newRelicApplications.add(
+          NewRelicApplication.builder().applicationName("application - " + i).applicationId(i).build());
+    }
+    when(verificationManagerService.getDataCollectionResponse(
+             anyString(), anyString(), anyString(), any(DataCollectionRequest.class)))
+        .thenReturn(JsonUtils.asJson(newRelicApplications));
+    String query =
+        "SELECT average(`apm.service.transaction.duration`) FROM Metric WHERE appName = 'My Application' TIMESERIES SINCE 30 MINUTES AGO";
+    assertThatThrownBy(()
+                           -> newRelicService.fetchSampleData(
+                               builderFactory.getProjectParams(), connectorIdentifier, query, generateUuid()))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining(
+            "Query should not contain any time duration. Please remove SINCE or any time related keywords");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testFetchSampleData_badQueryWithoutTimeseries() {
+    List<NewRelicApplication> newRelicApplications = new ArrayList<>();
+    for (int i = 0; i < 100; i++) {
+      newRelicApplications.add(
+          NewRelicApplication.builder().applicationName("application - " + i).applicationId(i).build());
+    }
+    when(verificationManagerService.getDataCollectionResponse(
+             anyString(), anyString(), anyString(), any(DataCollectionRequest.class)))
+        .thenReturn(JsonUtils.asJson(newRelicApplications));
+    String query = "SELECT average(`apm.service.transaction.duration`) FROM Metric WHERE appName = 'My Application'";
+    assertThatThrownBy(()
+                           -> newRelicService.fetchSampleData(
+                               builderFactory.getProjectParams(), connectorIdentifier, query, generateUuid()))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Query should end with the TIMESERIES keyword");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testParseSampleData_withArrays() throws Exception {
+    String responseObject = Resources.toString(
+        NewRelicServiceImplTest.class.getResource("/newrelic/newrelic-custom-response-witharray.json"), Charsets.UTF_8);
+    String metricValuesPath = "$.timeSeries.[*].results.[0].average";
+    String timestampPath = "$.timeSeries.[*].endTimeSeconds";
+    String timestampFormat = null;
+
+    List<TimeSeriesSampleDTO> sampleData = newRelicService.parseSampleData(
+        builderFactory.getProjectParams(), responseObject, "myNRTxn", metricValuesPath, timestampPath, timestampFormat);
+
+    assertThat(sampleData).isNotEmpty();
+    assertThat(sampleData.size()).isEqualTo(30);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testParseSampleData_badPath() throws Exception {
+    String responseObject = Resources.toString(
+        NewRelicServiceImplTest.class.getResource("/newrelic/newrelic-custom-response.json"), Charsets.UTF_8);
+    String metricValuesPath = "$.data.[*].metricValues";
+    String timestampPath = "$.data.[*].timestamp";
+    String timestampFormat = null;
+
+    assertThatThrownBy(()
+                           -> newRelicService.parseSampleData(builderFactory.getProjectParams(), responseObject,
+                               "myNRTxn", metricValuesPath, timestampPath, timestampFormat))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Unable to parse the response object with the given json paths");
   }
 }

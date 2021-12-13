@@ -51,6 +51,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware {
   Map<String, String> staticAliases;
   List<String> sdkFunctors;
   List<SdkStep> supportedSdkSteps;
+  List<String> expandableFields;
 
   SdkModuleInfo sdkModuleInfo;
 

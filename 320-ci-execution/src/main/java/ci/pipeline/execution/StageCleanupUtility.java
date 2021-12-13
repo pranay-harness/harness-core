@@ -10,12 +10,13 @@ import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.sweepingoutputs.StageInfraDetails;
+import io.harness.beans.sweepingoutputs.VmStageInfraDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.delegate.beans.ci.CICleanupTaskParams;
-import io.harness.delegate.beans.ci.awsvm.CIAwsVmCleanupTaskParams;
 import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.ci.vm.CIVmCleanupTaskParams;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -58,8 +59,9 @@ public class StageCleanupUtility {
     if (stageInfraDetails.getType() == StageInfraDetails.Type.K8) {
       K8StageInfraDetails k8StageInfraDetails = (K8StageInfraDetails) stageInfraDetails;
       return buildK8CleanupParameters(k8StageInfraDetails, ambiance);
-    } else if (stageInfraDetails.getType() == StageInfraDetails.Type.AWS_VM) {
-      return buildAwsVmCleanupParameters(ambiance);
+    } else if (stageInfraDetails.getType() == StageInfraDetails.Type.VM) {
+      VmStageInfraDetails vmStageInfraDetails = (VmStageInfraDetails) stageInfraDetails;
+      return buildVmCleanupParameters(ambiance, vmStageInfraDetails);
     } else {
       throw new CIStageExecutionException("Unknown infra type");
     }
@@ -92,7 +94,7 @@ public class StageCleanupUtility {
         .build();
   }
 
-  public CIAwsVmCleanupTaskParams buildAwsVmCleanupParameters(Ambiance ambiance) {
+  public CIVmCleanupTaskParams buildVmCleanupParameters(Ambiance ambiance, VmStageInfraDetails vmStageInfraDetails) {
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputResolver.resolveOptional(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails));
     if (!optionalSweepingOutput.isFound()) {
@@ -100,6 +102,9 @@ public class StageCleanupUtility {
     }
 
     StageDetails stageDetails = (StageDetails) optionalSweepingOutput.getOutput();
-    return CIAwsVmCleanupTaskParams.builder().stageRuntimeId(stageDetails.getStageRuntimeID()).build();
+    return CIVmCleanupTaskParams.builder()
+        .stageRuntimeId(stageDetails.getStageRuntimeID())
+        .poolId(vmStageInfraDetails.getPoolId())
+        .build();
   }
 }

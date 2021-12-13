@@ -40,7 +40,7 @@ public class ApprovalStageVariableCreatorTest extends CategoryTest {
     LinkedHashMap<String, VariableCreationResponse> variablesMap =
         approvalStageVariableCreator.createVariablesForChildrenNodes(null, yamlField);
     assertThat(variablesMap.get(STAGE_ID)).isNotNull();
-    String yamlPath = variablesMap.get(STAGE_ID).getDependenciesForVariable().getDependenciesMap().get(STAGE_ID);
+    String yamlPath = variablesMap.get(STAGE_ID).getDependencies().getDependenciesMap().get(STAGE_ID);
     YamlField specYaml = YamlField.fromYamlPath(json, yamlPath);
     assertThat(yamlField.getNode().getFieldName()).isNotEmpty();
     assertThat(specYaml.getName()).isEqualTo("execution");

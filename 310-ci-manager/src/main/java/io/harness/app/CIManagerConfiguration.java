@@ -15,6 +15,7 @@ import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.opaclient.OpaServiceConfiguration;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.threading.ThreadPoolConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -54,7 +55,8 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
   @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
-
+  @JsonProperty("pmsSdkOrchestrationEventPoolConfig") private ThreadPoolConfig pmsSdkOrchestrationEventPoolConfig;
+  @JsonProperty("pmsSdkExecutionPoolConfig") private ThreadPoolConfig pmsSdkExecutionPoolConfig;
   private String ngManagerServiceSecret;
   private LogServiceConfig logServiceConfig;
   private TIServiceConfig tiServiceConfig;

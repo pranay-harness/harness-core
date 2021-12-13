@@ -4,6 +4,7 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.newrelic.NewRelicApplication;
 import io.harness.cvng.core.beans.MetricPackValidationResponse;
+import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -18,6 +19,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.LinkedHashMap;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -87,7 +89,7 @@ public class NewRelicResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get sample data for given nrql", nickname = "getSampleDataForNRQL")
-  public ResponseDTO<String> getSampleDataForNRQL(@QueryParam("accountId") @NotNull String accountId,
+  public ResponseDTO<LinkedHashMap> getSampleDataForNRQL(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("connectorIdentifier") @NotNull String connectorIdentifier,
@@ -99,5 +101,26 @@ public class NewRelicResource {
                                       .build();
     return ResponseDTO.newResponse(
         newRelicService.fetchSampleData(projectParams, connectorIdentifier, nrql, requestGuid));
+  }
+
+  @GET
+  @Path("/parse-sample-data")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "parse sample data for given json response", nickname = "getParsedTimeseries")
+  public ResponseDTO<List<TimeSeriesSampleDTO>> parseSampleData(@QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @QueryParam("jsonResponse") @NotNull String jsonResponse, @QueryParam("groupName") @NotNull String groupName,
+      @QueryParam("metricValueJsonPath") @NotNull String metricValueJsonPath,
+      @QueryParam("timestampJsonPath") @NotNull String timestampJsonPath,
+      @QueryParam("timestampFormat") String timestampFormat) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return ResponseDTO.newResponse(newRelicService.parseSampleData(
+        projectParams, jsonResponse, groupName, metricValueJsonPath, timestampJsonPath, timestampFormat));
   }
 }

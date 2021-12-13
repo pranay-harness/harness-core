@@ -6,6 +6,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
@@ -13,6 +14,7 @@ import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -30,6 +32,7 @@ public class GitSyncErrorDTO {
   String repoUrl;
   String repoId;
   String branchName;
+  List<Scope> scopes;
   ChangeType changeType;
   String completeFilePath;
   EntityType entityType;

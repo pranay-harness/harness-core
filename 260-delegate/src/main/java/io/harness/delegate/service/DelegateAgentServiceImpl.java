@@ -308,7 +308,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
       : 0;
-
+  private final String delegateTokenName = System.getenv().get("DELEGATE_TOKEN_NAME");
   public static final String JAVA_VERSION = "java.version";
 
   private static volatile String delegateId;
@@ -518,6 +518,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             DELEGATE_TYPE, DELEGATE_GROUP_NAME, supportedTasks);
       }
 
+      if (isNotEmpty(delegateTokenName)) {
+        log.info("Registering Delegate with Token: {}", delegateTokenName);
+      }
+
       final DelegateParamsBuilder builder =
           DelegateParams.builder()
               .ip(getLocalHostAddress())
@@ -540,7 +544,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                              : emptyList())
               .sampleDelegate(isSample)
               .location(Paths.get("").toAbsolutePath().toString())
-              .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
+              .ceEnabled(Boolean.parseBoolean(System.getenv("ENABLE_CE")))
+              .delegateTokenName(delegateTokenName);
 
       delegateId = registerDelegate(builder);
       log.info("[New] Delegate registered in {} ms", clock.millis() - start);
@@ -1043,7 +1048,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                             .description(delegateConfiguration.getDescription())
                                             //.proxy(set to true if there is a system proxy)
                                             .pollingModeEnabled(delegateConfiguration.isPollForTasks())
-                                            .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")))
+                                            .ceEnabled(Boolean.parseBoolean(System.getenv("ENABLE_CE")))
                                             .build();
         restResponse = executeRestCall(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
       } catch (Exception e) {
@@ -2262,16 +2267,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       try {
         response = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(30), () -> {
           Response<ResponseBody> resp = null;
-          int retries = 3;
-          while (retries-- > 0) {
+          int retries = 5;
+          for (int attempt = 0; attempt < retries; attempt++) {
             resp = delegateAgentManagerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
             if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
               log.info("Task {} response sent to manager", taskId);
               return resp;
             } else {
-              log.warn("Response received for sent task {}: {}. {}", taskId, resp == null ? "null" : resp.code(),
+              log.warn("Failed to send response for task {}: {}. {}", taskId, resp == null ? "null" : resp.code(),
                   retries > 0 ? "Retrying." : "Giving up.");
-              sleep(ofMillis(200));
+              sleep(ofSeconds(FibonacciBackOff.getFibonacciElement(attempt)));
             }
           }
           return resp;

@@ -206,14 +206,10 @@ public class ReflectionUtils {
     field.set(obj, value);
   }
 
-  public static Method getMethod(Class clazz, String methodName, Object... params) {
+  public static Method getMethod(Class clazz, String methodName, Class<?>... paramClasses) {
     try {
-      if (isNotEmpty(params)) {
-        Class<?>[] paramClass = new Class<?>[ params.length ];
-        for (int i = 0; i < params.length; i++) {
-          paramClass[i] = params[i].getClass();
-        }
-        return clazz.getMethod(methodName, paramClass);
+      if (isNotEmpty(paramClasses)) {
+        return clazz.getMethod(methodName, paramClasses);
       } else {
         return clazz.getMethod(methodName);
       }

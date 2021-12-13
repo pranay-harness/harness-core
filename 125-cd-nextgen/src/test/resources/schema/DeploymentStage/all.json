@@ -1446,6 +1446,34 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "HelmDeployStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "HelmManifestCommandFlag": {
       "type": "object",
       "required": [
@@ -1465,6 +1493,34 @@
           "type": "string"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HelmRollbackStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "HoldingScope": {
@@ -3768,7 +3824,8 @@
         "type": {
           "type": "string",
           "enum": [
-            "Kubernetes"
+            "Kubernetes",
+            "NativeHelm"
           ]
         }
       },
@@ -4471,6 +4528,38 @@
               "if": {
                 "properties": {
                   "type": {
+                    "const": "HelmDeploy"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/HelmDeployStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "HelmRollback"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/HelmRollbackStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
                     "const": "Http"
                   }
                 }
@@ -4761,7 +4850,8 @@
           "type": "object",
           "required": [
             "identifier",
-            "name"
+            "name",
+            "template"
           ],
           "properties": {
             "description": {
@@ -5056,7 +5146,7 @@
         },
         "versionLabel": {
           "type": "string",
-          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+          "pattern": "^[0-9a-zA-Z][^\\s]{0,63}$"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"

@@ -169,6 +169,10 @@ if [[ "" != "$WEEKLY_REPORT_JOB_CRON" ]]; then
   yq write -i $CONFIG_FILE scheduler-jobs-config.weeklyReportsJobCron "$WEEKLY_REPORT_JOB_CRON"
 fi
 
+if [[ "" != "$CONNECTOR_HEALTH_UPDATE_CRON" ]]; then
+  yq write -i $CONFIG_FILE scheduler-jobs-config.connectorHealthUpdateJobCron "$CONNECTOR_HEALTH_UPDATE_CRON"
+fi
+
 if [[ "" != "$HARNESS_CE_AZURE_CLIENTID" ]]; then
   yq write -i $CONFIG_FILE azureStorageSyncConfig.azureAppClientId "$HARNESS_CE_AZURE_CLIENTID"
 fi

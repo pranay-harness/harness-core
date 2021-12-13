@@ -28,7 +28,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class CICleanupTaskTest extends CategoryTest {
-  @Mock @Named(CITaskConstants.CLEANUP_AWS_VM) private CICleanupTaskHandler ciAwsVmCleanupTaskHandler;
+  @Mock @Named(CITaskConstants.CLEANUP_VM) private CICleanupTaskHandler ciVmCleanupTaskHandler;
   @Mock @Named(CITaskConstants.CLEANUP_K8) private CICleanupTaskHandler ciK8CleanupTaskHandler;
 
   @InjectMocks

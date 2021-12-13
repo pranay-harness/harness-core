@@ -27,6 +27,7 @@ import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.plancreator.pipeline.PipelineConfig;
@@ -145,9 +146,10 @@ public class PipelineEntityGitSyncHelperTest extends CategoryTest {
     doReturn(Optional.of(PipelineEntity.builder().objectIdOfYaml(objectId).build()))
         .when(pipelineService)
         .get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
-    String returnedObjectId = pipelineEntityGitSyncHelper.getLastObjectIdIfExists(accountId, pipelineYaml);
+    EntityGitDetails returnedEntityDetails =
+        pipelineEntityGitSyncHelper.getEntityDetailsIfExists(accountId, pipelineYaml).get();
     verify(pipelineService, times(1)).get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
-    assertEquals(returnedObjectId, objectId);
+    assertEquals(returnedEntityDetails.getObjectId(), objectId);
   }
 
   @Test

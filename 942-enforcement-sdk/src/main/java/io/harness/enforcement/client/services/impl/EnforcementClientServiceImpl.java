@@ -1,8 +1,10 @@
 package io.harness.enforcement.client.services.impl;
 
+import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import io.harness.ModuleType;
+import io.harness.configuration.DeployVariant;
 import io.harness.enforcement.beans.CustomRestrictionEvaluationDTO;
 import io.harness.enforcement.beans.details.FeatureRestrictionDetailListRequestDTO;
 import io.harness.enforcement.beans.details.FeatureRestrictionDetailRequestDTO;
@@ -51,6 +53,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
 
   private static final String ENABLED = "enabled";
   private static final String MESSAGE = "message";
+  private static String deployVersion = System.getenv().get(DEPLOY_VERSION);
 
   @Inject
   public EnforcementClientServiceImpl(EnforcementClient enforcementClient,
@@ -59,6 +62,11 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
     this.enforcementClient = enforcementClient;
     this.enforcementSdkRegisterService = enforcementSdkRegisterService;
     this.enforcementClientConfiguration = enforcementClientConfiguration;
+  }
+
+  @Override
+  public boolean isEnforcementEnabled() {
+    return enforcementClientConfiguration.isEnforcementCheckEnabled() || DeployVariant.isCommunity(deployVersion);
   }
 
   @Override
@@ -96,7 +104,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
   @Override
   public void checkAvailabilityWithIncrement(
       FeatureRestrictionName featureRestrictionName, String accountIdentifier, long increment) {
-    if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
+    if (!isEnforcementEnabled()) {
       return;
     }
 
@@ -133,7 +141,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
 
   @Override
   public boolean isRemoteFeatureAvailable(FeatureRestrictionName featureRestrictionName, String accountIdentifier) {
-    if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
+    if (!isEnforcementEnabled()) {
       return true;
     }
 
@@ -162,7 +170,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
     for (FeatureRestrictionName name : featureRestrictionNames) {
       result.put(name, true);
     }
-    if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
+    if (!isEnforcementEnabled()) {
       return result;
     }
 
@@ -191,7 +199,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
       result.put(name, true);
     }
 
-    if (!enforcementClientConfiguration.isEnforcementCheckEnabled()) {
+    if (!isEnforcementEnabled()) {
       return result;
     }
 
@@ -313,6 +321,10 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
           throw new FeatureNotSupportedException(
               String.format("Feature [%s] is not enabled", featureRestrictionName.name()));
         }
+        break;
+      case LICENSE_RATE_LIMIT:
+      case LICENSE_STATIC_LIMIT:
+        // bypass license type check
         break;
       default:
         throw new IllegalArgumentException("Unknown restriction type");

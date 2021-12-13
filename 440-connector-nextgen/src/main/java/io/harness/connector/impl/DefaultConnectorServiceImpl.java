@@ -34,6 +34,7 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
+import io.harness.connector.ManagerExecutable;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.events.ConnectorCreateEvent;
@@ -64,7 +65,6 @@ import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DuplicateFieldException;
-import io.harness.exception.InvalidEntityException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -387,18 +387,27 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
     setGitDetails(existingConnector, newConnector);
 
+    final boolean executeOnDelegate = checkConnectorExecutableOnDelegate(connector);
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
+        newConnector.getOrgIdentifier(), newConnector.getProjectIdentifier(), newConnector.getIdentifier());
+
     if (existingConnector.getIsFromDefaultBranch() == null || existingConnector.getIsFromDefaultBranch()) {
       if (existingConnector.getHeartbeatPerpetualTaskId() == null
-          && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
+          && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector) && executeOnDelegate) {
         PerpetualTaskId connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
             accountIdentifier, existingConnector.getOrgIdentifier(), existingConnector.getProjectIdentifier(),
             existingConnector.getIdentifier());
         newConnector.setHeartbeatPerpetualTaskId(
             connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
       } else if (existingConnector.getHeartbeatPerpetualTaskId() != null) {
-        connectorHeartbeatService.resetPerpetualTask(
-            accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
-        newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+        if (executeOnDelegate) {
+          connectorHeartbeatService.resetPerpetualTask(
+              accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
+          newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+        } else {
+          connectorHeartbeatService.deletePerpetualTask(
+              accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId(), fullyQualifiedIdentifier);
+        }
       }
     }
     try {
@@ -513,9 +522,14 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   public ConnectorValidationResult validate(ConnectorDTO connectorRequest, String accountIdentifier) {
-    ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
-    return validateSafely(connector, accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(),
-        connector.getIdentifier());
+    ConnectorInfoDTO connectorInfoDTO = connectorRequest.getConnectorInfo();
+    Connector connector =
+        getConnectorOrThrowException(accountIdentifier, connectorRequest.getConnectorInfo().getOrgIdentifier(),
+            connectorRequest.getConnectorInfo().getProjectIdentifier(),
+            connectorRequest.getConnectorInfo().getIdentifier());
+    ConnectorResponseDTO connectorResponseDTO = connectorMapper.writeDTO(connector);
+    return validateSafely(connectorResponseDTO, connectorInfoDTO, accountIdentifier, connector.getOrgIdentifier(),
+        connector.getProjectIdentifier(), connector.getIdentifier());
   }
 
   public boolean validateTheIdentifierIsUnique(
@@ -533,7 +547,16 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         getConnectorOrThrowException(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connector);
     if (!connectorDTO.getEntityValidityDetails().isValid()) {
-      throw new InvalidEntityException("Invalid connector yaml", USER);
+      return ConnectorValidationResult.builder()
+          .status(FAILURE)
+          .testedAt(System.currentTimeMillis())
+          .errorSummary("Invalid connector yaml")
+          .errors(Collections.singletonList(ErrorDetail.builder()
+                                                .message("Invalid connector yaml")
+                                                .reason("Invalid connector yaml")
+                                                .code(400)
+                                                .build()))
+          .build();
     }
     ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
     return validateConnector(connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier,
@@ -585,11 +608,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     }
   }
 
-  private ConnectorValidationResult validateConnector(Connector connector, ConnectorResponseDTO connectorDTO,
+  private ConnectorValidationResult validateConnector(Connector connector, ConnectorResponseDTO connectorResponseDTO,
       ConnectorInfoDTO connectorInfo, String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier) {
     ConnectorValidationResult validationResult;
-    validationResult = validateSafely(connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    validationResult = validateSafely(
+        connectorResponseDTO, connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return validationResult;
   }
 
@@ -610,13 +634,22 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     }
   }
 
-  private ConnectorValidationResult validateSafely(ConnectorInfoDTO connectorInfo, String accountIdentifier,
-      String orgIdentifier, String projectIdentifier, String identifier) {
+  private ConnectorValidationResult validateSafely(ConnectorResponseDTO connectorResponseDTO,
+      ConnectorInfoDTO connectorInfo, String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier) {
     ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorInfo.getConnectorType().toString());
     ConnectorValidationResult validationResult;
     try {
-      validationResult = connectionValidator.validate(
-          connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+      log.info("connectorInfo.getConnectorType() {}", connectorInfo.getConnectorType());
+      if (isCCMConnector(connectorInfo)) {
+        validationResult = connectionValidator.validate(
+            connectorResponseDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        log.info("validation result {}", validationResult);
+      } else {
+        validationResult = connectionValidator.validate(
+            connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+      }
+
     } catch (ConnectorValidationException | DelegateServiceDriverException ex) {
       log.error("Test Connection failed for connector with identifier[{}] in account[{}]",
           connectorInfo.getIdentifier(), accountIdentifier, ex);
@@ -640,6 +673,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       return createValidationResultWithGenericError(ex);
     }
     return validationResult;
+  }
+
+  private boolean isCCMConnector(ConnectorInfoDTO connectorInfo) {
+    return connectorInfo.getConnectorType().equals(ConnectorType.CE_AWS)
+        || connectorInfo.getConnectorType().equals(ConnectorType.GCP_CLOUD_COST)
+        || connectorInfo.getConnectorType().equals(ConnectorType.CE_AZURE);
   }
 
   private ConnectorValidationResult createValidationResultWithGenericError(Exception ex) {
@@ -811,8 +850,22 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     existingConnector.setObjectIdOfYaml(EntityObjectIdUtils.getObjectIdOfYaml(invalidYaml));
     connectorRepository.save(existingConnector, ChangeType.NONE);
     if (existingConnector.getHeartbeatPerpetualTaskId() != null) {
+      log.info("Reset invalid connector heartbeat");
       connectorHeartbeatService.resetPerpetualTask(accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
     }
     return true;
+  }
+  @Override
+  public boolean checkConnectorExecutableOnDelegate(ConnectorInfoDTO connectorInfo) {
+    final ConnectorConfigDTO connectorConfig = connectorInfo.getConnectorConfig();
+    if (connectorConfig instanceof ManagerExecutable) {
+      final Boolean executeOnDelegate = ((ManagerExecutable) connectorConfig).getExecuteOnDelegate();
+      if (executeOnDelegate == null) {
+        return Boolean.TRUE;
+      } else {
+        return executeOnDelegate;
+      }
+    }
+    return Boolean.TRUE;
   }
 }

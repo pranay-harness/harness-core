@@ -3,6 +3,7 @@ package io.harness.connector.validator.scmValidators;
 import static software.wings.beans.TaskType.NG_AWS_CODE_COMMIT_TASK;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.validator.AbstractConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -37,5 +38,11 @@ public class AwsCodeCommitValidator extends AbstractConnectorValidator {
     AwsValidateTaskResponse responseData = (AwsValidateTaskResponse) super.validateConnector(
         connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return responseData.getConnectorValidationResult();
+  }
+
+  @Override
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    return null;
   }
 }

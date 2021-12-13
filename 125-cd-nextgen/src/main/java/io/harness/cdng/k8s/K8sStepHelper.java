@@ -2,8 +2,6 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.OPTIMIZED_GIT_FETCH_FILES;
-import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
-import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
 import static io.harness.common.ParameterFieldHelper.getBooleanParameterFieldValue;
 import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
@@ -32,11 +30,11 @@ import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.FeatureName;
+import io.harness.cdng.AggregatedManifestHelper;
+import io.harness.cdng.ReleaseNameHelper;
 import io.harness.cdng.expressions.CDExpressionResolveFunctor;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
-import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
@@ -123,7 +121,6 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
-import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
@@ -157,7 +154,6 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.pms.yaml.validation.ExpressionUtils;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -188,7 +184,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDP)
@@ -221,40 +216,10 @@ public class K8sStepHelper {
   @Inject private K8sEntityHelper k8sEntityHelper;
   @Inject private AccountClient accountClient;
   @Inject private CDFeatureFlagHelper cdFeatureFlagHelper;
+  @Inject private ReleaseNameHelper releaseNameHelper;
 
   String getReleaseName(Ambiance ambiance, InfrastructureOutcome infrastructure) {
-    String releaseName;
-    switch (infrastructure.getKind()) {
-      case KUBERNETES_DIRECT:
-        K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
-        releaseName = k8SDirectInfrastructure.getReleaseName();
-        break;
-      case KUBERNETES_GCP:
-        K8sGcpInfrastructureOutcome k8sGcpInfrastructure = (K8sGcpInfrastructureOutcome) infrastructure;
-        releaseName = k8sGcpInfrastructure.getReleaseName();
-        break;
-      default:
-        throw new UnsupportedOperationException(format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
-    }
-    if (EngineExpressionEvaluator.hasExpressions(releaseName)) {
-      releaseName = engineExpressionService.renderExpression(ambiance, releaseName);
-    }
-
-    validateReleaseName(releaseName);
-    return releaseName;
-  }
-
-  private static void validateReleaseName(String name) {
-    if (isEmpty(name)) {
-      throw new InvalidArgumentsException(Pair.of("releaseName", "Cannot be empty"));
-    }
-
-    if (!ExpressionUtils.matchesPattern(releaseNamePattern, name)) {
-      throw new InvalidRequestException(format(
-          "Invalid Release name format: %s. Release name must consist of lower case alphanumeric characters, '-' or '.'"
-              + ", and must start and end with an alphanumeric character (e.g. 'example.com')",
-          name));
-    }
+    return releaseNameHelper.getReleaseName(ambiance, infrastructure);
   }
 
   public ConnectorInfoDTO getConnector(String connectorId, Ambiance ambiance) {
@@ -934,8 +899,15 @@ public class K8sStepHelper {
     ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(manifestsOutcome.values());
     if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
       if (isUseLatestKustomizeVersion(AmbianceUtils.getAccountId(ambiance))) {
+
+        List<KustomizePatchesManifestOutcome> kustomizePatchesManifests = getKustomizePatchesManifests(getOrderedManifestOutcome(manifestsOutcome.values()));
+        if (isEmpty(kustomizePatchesManifests)) {
+          return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
+                  K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true, null);
+        }
+
         return prepareKustomizeTemplateWithPatchesManifest(k8sStepExecutor,
-            getOrderedManifestOutcome(manifestsOutcome.values()), k8sManifestOutcome, ambiance, stepElementParameters,
+                kustomizePatchesManifests, k8sManifestOutcome, ambiance, stepElementParameters,
             infrastructureOutcome);
       } else {
         return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
@@ -991,11 +963,9 @@ public class K8sStepHelper {
   }
 
   private TaskChainResponse prepareKustomizeTemplateWithPatchesManifest(K8sStepExecutor k8sStepExecutor,
-      List<ManifestOutcome> manifestOutcomes, ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
+      List<KustomizePatchesManifestOutcome> kustomizePatchesManifests, ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       StepElementParameters stepElementParameters, InfrastructureOutcome infrastructureOutcome) {
-    List<KustomizePatchesManifestOutcome> kustomizePatchesManifests = getKustomizePatchesManifests(manifestOutcomes);
-
-    if (isNotEmpty(kustomizePatchesManifests) && !isAnyRemoteStore(kustomizePatchesManifests)) {
+    if (!isAnyRemoteStore(kustomizePatchesManifests)) {
       List<String> kustomizePatchesContentsForLocalStore =
           getPatchesFileContentsForLocalStore(kustomizePatchesManifests);
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters,
@@ -1045,18 +1015,7 @@ public class K8sStepHelper {
 
   @VisibleForTesting
   public List<ValuesManifestOutcome> getAggregatedValuesManifests(@NotEmpty List<ManifestOutcome> manifestOutcomeList) {
-    List<ValuesManifestOutcome> aggregateValuesManifests = new ArrayList<>();
-
-    List<ValuesManifestOutcome> serviceValuesManifests =
-        manifestOutcomeList.stream()
-            .filter(manifestOutcome -> ManifestType.VALUES.equals(manifestOutcome.getType()))
-            .map(manifestOutcome -> (ValuesManifestOutcome) manifestOutcome)
-            .collect(Collectors.toList());
-
-    if (isNotEmpty(serviceValuesManifests)) {
-      aggregateValuesManifests.addAll(serviceValuesManifests);
-    }
-    return aggregateValuesManifests;
+    return AggregatedManifestHelper.getAggregatedValuesManifests(manifestOutcomeList);
   }
 
   public List<KustomizePatchesManifestOutcome> getKustomizePatchesManifests(

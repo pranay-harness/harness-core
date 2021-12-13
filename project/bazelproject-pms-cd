@@ -127,6 +127,7 @@ targets:
 import_run_configurations:
   project/run-configurations/Analyser_Service.xml
   project/run-configurations/DelegateApp.xml
+  project/run-configurations/DelegateAgentApp.xml
   project/run-configurations/DelegateServiceApp.xml
   project/run-configurations/NextGenManager.xml
   project/run-configurations/PlatformMicroservice.xml

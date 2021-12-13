@@ -30,6 +30,7 @@ import io.harness.connector.ConnectorsTestBase;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -324,6 +325,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     String identifier = "identifier";
     String name = "name";
     SecretRefData secretRefDataCACert = SecretRefData.builder().identifier(cacert).scope(Scope.ACCOUNT).build();
+    createConnector(identifier, name);
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
@@ -350,9 +352,12 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
                                            .build();
 
     when(connectionValidatorMap.get(any())).thenReturn(kubernetesConnectionValidator);
-    when(kubernetesConnectionValidator.validate(any(), anyString(), any(), anyString(), anyString())).thenReturn(null);
-    connectorService.validate(connectorRequestDTO, "accountId");
-    verify(kubernetesConnectionValidator, times(1)).validate(any(), anyString(), any(), anyString(), anyString());
+    when(kubernetesConnectionValidator.validate(
+             (ConnectorConfigDTO) any(), anyString(), any(), anyString(), anyString()))
+        .thenReturn(null);
+    connectorService.validate(connectorRequestDTO, accountIdentifier);
+    verify(kubernetesConnectionValidator, times(1))
+        .validate((ConnectorConfigDTO) any(), anyString(), any(), anyString(), anyString());
   }
 
   @Test
@@ -361,10 +366,12 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   public void testConnection() {
     createConnector(identifier, name);
     when(connectionValidatorMap.get(any())).thenReturn(kubernetesConnectionValidator);
-    when(kubernetesConnectionValidator.validate(any(), anyString(), anyString(), anyString(), anyString()))
+    when(kubernetesConnectionValidator.validate(
+             (ConnectorConfigDTO) any(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(ConnectorValidationResult.builder().status(SUCCESS).build());
     connectorService.testConnection(accountIdentifier, null, null, identifier);
-    verify(kubernetesConnectionValidator, times(1)).validate(any(), anyString(), anyString(), anyString(), anyString());
+    verify(kubernetesConnectionValidator, times(1))
+        .validate((ConnectorConfigDTO) any(), anyString(), anyString(), anyString(), anyString());
   }
 
   @Test

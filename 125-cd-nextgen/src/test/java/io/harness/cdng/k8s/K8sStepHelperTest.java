@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -44,6 +45,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.ReleaseNameHelper;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -225,6 +227,7 @@ public class K8sStepHelperTest extends CategoryTest {
     doAnswer(invocation -> invocation.getArgumentAt(1, String.class))
         .when(engineExpressionService)
         .renderExpression(eq(ambiance), anyString());
+    on(k8sStepHelper).set("releaseNameHelper", new ReleaseNameHelper());
   }
 
   @Test
@@ -703,28 +706,28 @@ public class K8sStepHelperTest extends CategoryTest {
   public void shouldGetGitStoreDelegateConfigOptimizedFilesFetchWithKustomize() {
     List<String> paths = asList("path/to");
     GitStoreConfig gitStoreConfig = GithubStore.builder()
-            .repoName(ParameterField.createValueField("parent-repo/module"))
-            .paths(ParameterField.createValueField(paths))
-            .build();
+                                        .repoName(ParameterField.createValueField("parent-repo/module"))
+                                        .paths(ParameterField.createValueField(paths))
+                                        .build();
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
     List<EncryptedDataDetail> apiEncryptedDataDetails = new ArrayList<>();
     GithubConnectorDTO githubConnectorDTO =
-            GithubConnectorDTO.builder()
-                    .connectionType(GitConnectionType.ACCOUNT)
-                    .url("http://localhost")
-                    .apiAccess(GithubApiAccessDTO.builder().spec(GithubTokenSpecDTO.builder().build()).build())
-                    .authentication(GithubAuthenticationDTO.builder()
-                            .authType(GitAuthType.HTTP)
-                            .credentials(GithubHttpCredentialsDTO.builder()
-                                    .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                                    .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
-                                            .username("usermane")
-                                            .passwordRef(SecretRefData.builder().build())
-                                            .build())
-                                    .build())
-                            .build())
-                    .build();
+        GithubConnectorDTO.builder()
+            .connectionType(GitConnectionType.ACCOUNT)
+            .url("http://localhost")
+            .apiAccess(GithubApiAccessDTO.builder().spec(GithubTokenSpecDTO.builder().build()).build())
+            .authentication(GithubAuthenticationDTO.builder()
+                                .authType(GitAuthType.HTTP)
+                                .credentials(GithubHttpCredentialsDTO.builder()
+                                                 .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                                                 .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
+                                                                          .username("usermane")
+                                                                          .passwordRef(SecretRefData.builder().build())
+                                                                          .build())
+                                                 .build())
+                                .build())
+            .build();
     connectorInfoDTO.setConnectorConfig(githubConnectorDTO);
 
     doReturn(true).when(cdFeatureFlagHelper).isEnabled(any(), eq(OPTIMIZED_GIT_FETCH_FILES));
@@ -732,7 +735,7 @@ public class K8sStepHelperTest extends CategoryTest {
     doReturn(apiEncryptedDataDetails).when(secretManagerClientService).getEncryptionDetails(any(), any());
 
     GitStoreDelegateConfig gitStoreDelegateConfig = k8sStepHelper.getGitStoreDelegateConfig(
-            gitStoreConfig, connectorInfoDTO, KustomizeManifestOutcome.builder().build(), paths, ambiance);
+        gitStoreConfig, connectorInfoDTO, KustomizeManifestOutcome.builder().build(), paths, ambiance);
 
     assertThat(gitStoreDelegateConfig).isNotNull();
     assertThat(gitStoreDelegateConfig.isOptimizedFilesFetch()).isFalse();

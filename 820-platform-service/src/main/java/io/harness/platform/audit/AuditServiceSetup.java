@@ -1,7 +1,7 @@
 package io.harness.platform.audit;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.platform.PlatformConfiguration.getAuditServiceResourceClasses;
+import static io.harness.platform.PlatformConfiguration.AUDIT_SERVICE_RESOURCES;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.retention.AuditAccountSyncService;
@@ -46,7 +46,7 @@ public class AuditServiceSetup {
   }
 
   private void registerResources(Environment environment, Injector injector) {
-    for (Class<?> resource : getAuditServiceResourceClasses()) {
+    for (Class<?> resource : AUDIT_SERVICE_RESOURCES) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }

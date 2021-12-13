@@ -205,7 +205,7 @@ public class BillingCalculationService {
   @VisibleForTesting
   public IdleCostData getIdleCostForResource(
       BillingAmountBreakup billingDataForResource, UtilizationData utilizationData, InstanceData instanceData) {
-    if (instanceData.getInstanceType() == InstanceType.ECS_TASK_FARGATE || utilizationData == null) {
+    if (utilizationData == null) {
       return new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
     }
     BigDecimal cpuIdleCost = BigDecimal.ZERO;

@@ -9,7 +9,6 @@ import lombok.EqualsAndHashCode;
 @Builder
 public class TimeSeriesDataCollectionRecord {
   private String accountId;
-  private String cvConfigId;
   private String verificationTaskId;
   private String host;
   private long timeStamp;

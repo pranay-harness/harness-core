@@ -17,6 +17,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.service.git.NGGitService;
 import io.harness.connector.task.git.GitCommandTaskHandler;
+import io.harness.connector.task.git.GitDecryptionHelper;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.scm.ScmConnector;

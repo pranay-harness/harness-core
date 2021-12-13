@@ -22,6 +22,6 @@ public class ManagerObserverEventProducer extends AbstractRemoteInformer impleme
 
   @Override
   public void sendEvent(Method method, Class<?> subjectClazz, Object... params) {
-    super.fireInform(method.getName(), method.getDeclaringClass(), subjectClazz, params);
+    super.fireInform(method, subjectClazz, params);
   }
 }

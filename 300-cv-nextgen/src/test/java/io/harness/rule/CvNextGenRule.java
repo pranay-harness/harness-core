@@ -10,6 +10,7 @@ import io.harness.cache.CacheModule;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
+import io.harness.cvng.CVNGTestConstants;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.CVServiceModule;
 import io.harness.cvng.EventsFrameworkModule;
@@ -59,6 +60,7 @@ import io.dropwizard.jersey.validation.Validators;
 import java.io.Closeable;
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -125,6 +127,7 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(Modules.override(new CVServiceModule(verificationConfiguration)).with(binder -> {
       binder.bind(FeatureFlagService.class).to(AlwaysFalseFeatureFlagServiceImpl.class);
       binder.bind(VerificationManagerService.class).to(MockedVerificationManagerService.class);
+      binder.bind(Clock.class).toInstance(CVNGTestConstants.FIXED_TIME_FOR_TESTS);
     }));
     MongoBackendConfiguration mongoBackendConfiguration =
         MongoBackendConfiguration.builder().uri("mongodb://localhost:27017/notificationChannel").build();

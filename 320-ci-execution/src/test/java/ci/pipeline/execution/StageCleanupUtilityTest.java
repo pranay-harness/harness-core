@@ -9,10 +9,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.sweepingoutputs.AwsVmStageInfraDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
 import io.harness.beans.sweepingoutputs.StageDetails;
+import io.harness.beans.sweepingoutputs.VmStageInfraDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.CICleanupTaskParams;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -82,7 +82,7 @@ public class StageCleanupUtilityTest extends CIExecutionTestBase {
              ambiance, RefObjectUtils.getSweepingOutputRefObject(STAGE_INFRA_DETAILS)))
         .thenReturn(OptionalSweepingOutput.builder()
                         .found(true)
-                        .output(AwsVmStageInfraDetails.builder().poolId(poolId).build())
+                        .output(VmStageInfraDetails.builder().poolId(poolId).build())
                         .build());
     when(executionSweepingOutputResolver.resolveOptional(
              ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails)))
@@ -94,6 +94,6 @@ public class StageCleanupUtilityTest extends CIExecutionTestBase {
     CICleanupTaskParams cleanupTaskParams = stageCleanupUtility.buildAndfetchCleanUpParameters(ambiance);
 
     assertThat(cleanupTaskParams).isNotNull();
-    assertEquals(cleanupTaskParams.getType(), CICleanupTaskParams.Type.AWS_VM);
+    assertEquals(cleanupTaskParams.getType(), CICleanupTaskParams.Type.VM);
   }
 }

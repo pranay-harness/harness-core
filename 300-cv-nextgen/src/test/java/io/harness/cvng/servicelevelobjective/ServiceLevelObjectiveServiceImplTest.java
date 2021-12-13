@@ -11,7 +11,10 @@ import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
+import io.harness.cvng.servicelevelobjective.beans.DayOfWeek;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
+import io.harness.cvng.servicelevelobjective.beans.SLOCalenderType;
 import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
 import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
@@ -19,10 +22,14 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricEventType;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTargetSpec;
+import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTargetSpec.WeeklyCalendarSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
-import io.harness.cvng.servicelevelobjective.services.ServiceLevelObjectiveService;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
@@ -42,6 +49,8 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   @Inject ServiceLevelObjectiveService serviceLevelObjectiveService;
 
   @Inject MonitoredServiceService monitoredServiceService;
+
+  @Inject ServiceLevelIndicatorService serviceLevelIndicatorService;
   String accountId;
   String orgIdentifier;
   String projectIdentifier;
@@ -80,7 +89,7 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
                                                            .spec(ServiceLevelIndicatorSpec.builder()
                                                                      .type(SLIMetricType.RATIO)
                                                                      .spec(RatioSLIMetricSpec.builder()
-                                                                               .eventType("eventName")
+                                                                               .eventType(RatioSLIMetricEventType.GOOD)
                                                                                .metric1("metric1")
                                                                                .metric2("metric2")
                                                                                .build())
@@ -90,16 +99,17 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
     sloTarget = SLOTarget.builder()
                     .type(SLOTargetType.ROLLING)
                     .sloTargetPercentage(80.0)
-                    .spec(RollingSLOTargetSpec.builder().periodLength("30D").build())
+                    .spec(RollingSLOTargetSpec.builder().periodLength("30d").build())
                     .build();
 
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     calendarSloTarget = SLOTarget.builder()
-                            .type(SLOTargetType.ROLLING)
+                            .type(SLOTargetType.CALENDER)
                             .sloTargetPercentage(80.0)
                             .spec(CalenderSLOTargetSpec.builder()
-                                      .startDate(sdf.parse("2021-12-01"))
-                                      .endDate(sdf.parse("2021-12-31"))
+                                      .type(SLOCalenderType.WEEKLY)
+                                      .spec(WeeklyCalendarSpec.builder().dayOfWeek(DayOfWeek.MONDAY).build())
+
                                       .build())
                             .build();
     userJourneyIdentifier = "userJourney";
@@ -215,11 +225,17 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
     ratioSLIMetricSpec.setMetric1("newMetric");
     serviceLevelIndicatorDTO1.getSpec().setSpec(ratioSLIMetricSpec);
     ServiceLevelIndicatorDTO serviceLevelIndicatorDTO2 = builderFactory.getServiceLevelIndicatorDTOBuilder();
-    serviceLevelIndicatorDTO2.setSpec(
-        ServiceLevelIndicatorSpec.builder()
-            .type(SLIMetricType.RATIO)
-            .spec(RatioSLIMetricSpec.builder().eventType("Bad").metric1("metric4").metric2("metric5").build())
-            .build());
+    serviceLevelIndicatorDTO2.setSliMissingDataType(SLIMissingDataType.GOOD);
+    serviceLevelIndicatorDTO2.setSpec(ServiceLevelIndicatorSpec.builder()
+                                          .type(SLIMetricType.RATIO)
+                                          .spec(RatioSLIMetricSpec.builder()
+                                                    .thresholdValue(20.0)
+                                                    .thresholdType(ThresholdType.GREATER_THAN)
+                                                    .eventType(RatioSLIMetricEventType.BAD)
+                                                    .metric1("metric4")
+                                                    .metric2("metric5")
+                                                    .build())
+                                          .build());
     List<ServiceLevelIndicatorDTO> serviceLevelIndicatorDTOList = new ArrayList<>();
     serviceLevelIndicatorDTOList.add(serviceLevelIndicatorDTO1);
     serviceLevelIndicatorDTOList.add(serviceLevelIndicatorDTO2);
@@ -228,6 +244,72 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
         serviceLevelObjectiveService.update(projectParams, sloDTO.getIdentifier(), sloDTO);
     assertThat(updateServiceLevelObjectiveResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators())
         .isEqualTo(serviceLevelIndicatorDTOList);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testUpdate_SLIUpdate() {
+    ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    createMonitoredService();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    assertThat(serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
+    ServiceLevelIndicatorDTO responseSLIDTO =
+        serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators().get(0);
+    String sliIndicator =
+        serviceLevelIndicatorService
+            .getServiceLevelIndicator(builderFactory.getProjectParams(), responseSLIDTO.getIdentifier())
+            .getUuid();
+    ServiceLevelIndicatorDTO serviceLevelIndicatorDTO1 = sloDTO.getServiceLevelIndicators().get(0);
+    RatioSLIMetricSpec ratioSLIMetricSpec = (RatioSLIMetricSpec) serviceLevelIndicatorDTO1.getSpec().getSpec();
+    ratioSLIMetricSpec.setThresholdType(ThresholdType.LESS_THAN);
+    serviceLevelIndicatorDTO1.setIdentifier(responseSLIDTO.getIdentifier());
+    serviceLevelIndicatorDTO1.setName(responseSLIDTO.getName());
+    serviceLevelIndicatorDTO1.getSpec().setSpec(ratioSLIMetricSpec);
+    ServiceLevelObjectiveResponse updateServiceLevelObjectiveResponse =
+        serviceLevelObjectiveService.update(projectParams, sloDTO.getIdentifier(), sloDTO);
+    String updatedSliIndicator = serviceLevelIndicatorService
+                                     .getServiceLevelIndicator(builderFactory.getProjectParams(),
+                                         updateServiceLevelObjectiveResponse.getServiceLevelObjectiveDTO()
+                                             .getServiceLevelIndicators()
+                                             .get(0)
+                                             .getIdentifier())
+                                     .getUuid();
+    assertThat(sliIndicator).isEqualTo(updatedSliIndicator);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testUpdate_UpdateNewSLI() {
+    ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    createMonitoredService();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    assertThat(serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
+    ServiceLevelIndicatorDTO responseSLIDTO =
+        serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators().get(0);
+    String sliIndicator =
+        serviceLevelIndicatorService
+            .getServiceLevelIndicator(builderFactory.getProjectParams(), responseSLIDTO.getIdentifier())
+            .getUuid();
+    ServiceLevelIndicatorDTO serviceLevelIndicatorDTO1 = sloDTO.getServiceLevelIndicators().get(0);
+    RatioSLIMetricSpec ratioSLIMetricSpec = (RatioSLIMetricSpec) serviceLevelIndicatorDTO1.getSpec().getSpec();
+    serviceLevelIndicatorDTO1.setIdentifier(responseSLIDTO.getIdentifier());
+    serviceLevelIndicatorDTO1.setName(responseSLIDTO.getName());
+    ratioSLIMetricSpec.setMetric1("metric7");
+    serviceLevelIndicatorDTO1.getSpec().setSpec(ratioSLIMetricSpec);
+    ServiceLevelObjectiveResponse updateServiceLevelObjectiveResponse =
+        serviceLevelObjectiveService.update(projectParams, sloDTO.getIdentifier(), sloDTO);
+    String updatedSliIndicator = serviceLevelIndicatorService
+                                     .getServiceLevelIndicator(builderFactory.getProjectParams(),
+                                         updateServiceLevelObjectiveResponse.getServiceLevelObjectiveDTO()
+                                             .getServiceLevelIndicators()
+                                             .get(0)
+                                             .getIdentifier())
+                                     .getUuid();
+    assertThat(sliIndicator).isNotEqualTo(updatedSliIndicator);
   }
 
   @Test
@@ -262,7 +344,7 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   }
 
   private ServiceLevelObjectiveDTO createSLOBuilder() {
-    return builderFactory.getServiceLevelObjectiveDTOBuilder();
+    return builderFactory.getServiceLevelObjectiveDTOBuilder().build();
   }
 
   private void createMonitoredService() {

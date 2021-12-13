@@ -369,7 +369,11 @@ gitFileActivity {"name": "accountId_procCommitId_status", "background": true} {"
 gitFileActivityNG {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedAt": 1}
 gitFileActivitySummary {"name": "gitCommits_createdAt_direction_indx", "background": true} {"accountId": 1, "createdAt": 1, "gitToHarness": 1}
 gitFileActivitySummary {"name": "gitCommits_for_appId_indx", "background": true} {"accountId": 1, "appId": 1, "gitToHarness": 1}
+gitFullSyncConfig {"name": "unique_accountIdentifier_organizationIdentifier_projectIdentifier", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
+gitFullSyncEntityInfo {"name": "account_org_project_entityType_status_filePath_name_repo_branch_idx", "background": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "entityDetail.type": 1, "syncStatus": 1, "filePath": 1, "entityDetail.name": 1, "entityDetail.entityRef.repoIdentifier": 1, "entityDetail.entityRef.branch": 1}
 gitFullSyncEntityInfo {"name": "nextRuntime_1", "background": true} {"nextRuntime": 1}
+gitFullSyncJob {"name": "messageId_1", "unique": true} {"messageId": 1}
+gitFullSyncJob {"name": "nextRuntime_1", "background": true} {"nextRuntime": 1}
 gitProcessRequestSdk {"name": "accountId_repo_branch_commit_index", "background": true} {"accountId": 1, "repoUrl": 1, "branch": 1, "commitId": 1}
 gitSyncError {"name": "accountId_createdAt", "background": true} {"accountId": 1, "createdAt": 1}
 gitSyncError {"name": "account_filepath_direction_idx", "unique": true} {"accountId": 1, "yamlFilePath": 1, "gitSyncDirection": 1}
@@ -380,10 +384,8 @@ gitSyncError {"name": "gitCommitId_idx_for_app_filter", "background": true} {"ac
 gitSyncError {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 gitSyncError {"name": "previousErrors_idx", "background": true} {"accountId": 1, "gitSyncDirection": 1, "additionalErrorDetails.previousCommitIdsWithError": 1}
 gitSyncError {"name": "previousErrors_idx_for_app_filter", "background": true} {"accountId": 1, "appId": 1, "gitSyncDirection": 1, "additionalErrorDetails.previousCommitIdsWithError": 1}
-gitSyncErrorNG {"name": "accountId_commitId_repo_branch_filePath_unique_Index", "unique": true} {"accountIdentifier": 1, "additionalErrorDetails.gitCommitId": 1, "repoUrl": 1, "branchName": 1, "completeFilePath": 1}
-gitSyncErrorNG {"name": "accountId_errorType_repo_branch_status_sort_Index", "background": true} {"accountIdentifier": 1, "errorType": 1, "repoUrl": 1, "branchName": 1, "status": 1, "createdAt": -1}
-gitSyncErrorNG {"name": "accountId_orgId_projectId_errorType_repo_branch_sort_Index", "background": true} {"accountIdentifier": 1, "additionalErrorDetails.orgIdentifier": 1, "additionalErrorDetails.projectIdentifier": 1, "errorType": 1, "repoUrl": 1, "branchName": 1, "createdAt": -1}
-gitSyncErrorNG {"name": "accountId_repo_branch_filePath_status_Index", "background": true} {"accountIdentifier": 1, "repoUrl": 1, "branchName": 1, "completeFilePath": 1, "status": 1}
+gitSyncErrorNG {"name": "accountId_errorType_commitId_repo_branch_filePath_unique_Index", "unique": true} {"accountIdentifier": 1, "errorType": 1, "additionalErrorDetails.gitCommitId": 1, "repoUrl": 1, "branchName": 1, "completeFilePath": 1}
+gitSyncErrorNG {"name": "accountId_scopes_errorType_repo_branch_filepath_status_sort_Index", "background": true} {"accountIdentifier": 1, "scopes": 1, "errorType": 1, "repoUrl": 1, "branchName": 1, "completeFilePath": 1, "status": 1, "createdAt": -1}
 gitSyncSettings {"name": "account_org_project_index", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
 gitSyncWebhook {"name": "appId_1", "background": true} {"appId": 1}
 gitSyncWebhook {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -608,9 +610,9 @@ pipelineExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
 pipelineExecutions {"name": "pipelineId_1", "background": true} {"pipelineId": 1}
 pipelineGovernanceConfigs {"name": "accountId_1", "background": true} {"accountId": 1}
 pipelines {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": -1}
-pipelines {"name": "accountId_1", "background": true} {"accountId": 1}
 pipelines {"name": "accountId_name", "background": true} {"accountId": 1, "name": 1}
 pipelines {"name": "appId_1", "background": true} {"appId": 1}
+pipelines {"name": "appId_name", "background": true} {"appId": 1, "name": 1}
 pipelines {"name": "createdAt_1", "background": true} {"createdAt": 1}
 pollingDocuments {"name": "accountId", "background": true} {"accountId": 1}
 pollingDocuments {"name": "accountId_organizationIdentifier_projectIdentifier_pollingType_pollingItem", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "pollingType": 1, "pollingInfo": 1, "signatures": 1}
@@ -969,10 +971,10 @@ workflowVerificationResults {"name": "lastUpdatedAt_1", "background": true} {"la
 workflowVerificationResults {"name": "stateExecutionId_1", "unique": true} {"stateExecutionId": 1}
 workflowVerificationResults {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 workflows {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": -1}
-workflows {"name": "accountId_1", "background": true} {"accountId": 1}
 workflows {"name": "accountId_name", "background": true} {"accountId": 1, "name": 1}
 workflows {"name": "account_orchestrationWorkflowTypeIndex", "background": true} {"accountId": 1, "orchestration.orchestrationWorkflowType": 1}
 workflows {"name": "appId_1", "background": true} {"appId": 1}
+workflows {"name": "appId_name", "background": true} {"appId": 1, "name": 1}
 workflows {"name": "createdAt_1", "background": true} {"createdAt": 1}
 workflows {"name": "linkedArtifactStreamIds_1", "background": true} {"linkedArtifactStreamIds": 1}
 workflows {"name": "linkedTemplateUuids_1", "background": true} {"linkedTemplateUuids": 1}

@@ -51,8 +51,12 @@ import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
+import io.harness.cdng.k8s.K8sCanaryStepNode;
 import io.harness.connector.ConnectorModule;
+import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.connector.events.ConnectorEventHandler;
+import io.harness.connector.helper.DecryptionHelper;
+import io.harness.connector.helper.DecryptionHelperViaManager;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -155,6 +159,8 @@ import io.harness.ng.overview.service.CDLandingDashboardService;
 import io.harness.ng.overview.service.CDLandingDashboardServiceImpl;
 import io.harness.ng.overview.service.CDOverviewDashboardService;
 import io.harness.ng.overview.service.CDOverviewDashboardServiceImpl;
+import io.harness.ng.scim.NGScimGroupServiceImpl;
+import io.harness.ng.scim.NGScimUserServiceImpl;
 import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
 import io.harness.ng.serviceaccounts.service.impl.ServiceAccountServiceImpl;
 import io.harness.ng.userprofile.commons.SCMType;
@@ -177,10 +183,8 @@ import io.harness.notification.module.NotificationClientModule;
 import io.harness.opaclient.OpaClientModule;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
-import io.harness.packages.HarnessPackages;
 import io.harness.persistence.UserProvider;
 import io.harness.pipeline.PipelineRemoteClientModule;
-import io.harness.plancreator.steps.StepSchemaUtils;
 import io.harness.plancreator.steps.http.PmsAbstractStepNode;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.polling.service.impl.PollingPerpetualTaskServiceImpl;
@@ -188,9 +192,11 @@ import io.harness.polling.service.impl.PollingServiceImpl;
 import io.harness.polling.service.intfc.PollingPerpetualTaskService;
 import io.harness.polling.service.intfc.PollingService;
 import io.harness.redis.RedisConfig;
+import io.harness.reflection.HarnessReflections;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.CEAzureSetupConfig;
 import io.harness.remote.CEGcpSetupConfig;
+import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
@@ -220,9 +226,10 @@ import io.harness.utils.featureflaghelper.NGFeatureFlagHelperServiceImpl;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
-import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
+import software.wings.scim.ScimGroupService;
+import software.wings.scim.ScimUserService;
 import software.wings.security.ThreadLocalUserProvider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -250,7 +257,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.jooq.ExecuteListener;
 import org.mongodb.morphia.converters.TypeConverter;
-import org.reflections.Reflections;
 import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
@@ -259,7 +265,9 @@ import ru.vyarus.guice.validator.ValidationModule;
 public class NextGenModule extends AbstractModule {
   public static final String SECRET_MANAGER_CONNECTOR_SERVICE = "secretManagerConnectorService";
   public static final String CONNECTOR_DECORATOR_SERVICE = "connectorDecoratorService";
-  public static Set<Class<?>> cdStepsMovedToNewSchema = new HashSet<>();
+  public static Set<Class<?>> cdStepsMovedToNewSchema = new HashSet() {
+    { add(K8sCanaryStepNode.class); }
+  };
   private final NextGenConfiguration appConfig;
   public NextGenModule(NextGenConfiguration appConfig) {
     this.appConfig = appConfig;
@@ -355,11 +363,9 @@ public class NextGenModule extends AbstractModule {
   @Named("yaml-schema-subtypes")
   @Singleton
   public Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes() {
-    Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS);
-
-    Set<Class<? extends StepSpecType>> subTypesOfStepSpecType = reflections.getSubTypesOf(StepSpecType.class);
+    Set<Class<? extends StepSpecType>> subTypesOfStepSpecType =
+        HarnessReflections.get().getSubTypesOf(StepSpecType.class);
     Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
-    set = YamlSchemaTransientHelper.removeNewSchemaStepsSubtypes(set, StepSchemaUtils.getStepsMovedToNewSchema());
     return ImmutableMap.of(StepSpecType.class, set);
   }
 
@@ -460,6 +466,8 @@ public class NextGenModule extends AbstractModule {
                         .logStreamingServiceBaseUrl(appConfig.getLogStreamingServiceConfig().getBaseUrl())
                         .build());
     bind(WebhookEventService.class).to(WebhookServiceImpl.class);
+    bind(ScimUserService.class).to(NGScimUserServiceImpl.class);
+    bind(ScimGroupService.class).to(NGScimGroupServiceImpl.class);
     install(new OpaClientModule(
         appConfig.getOpaServerConfig().getBaseUrl(), appConfig.getNextGenConfig().getJwtAuthSecret()));
 
@@ -479,7 +487,6 @@ public class NextGenModule extends AbstractModule {
     install(new SignupModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId(),
         appConfig.getSignupNotificationConfiguration(), appConfig.getAccessControlClientConfiguration()));
-    install(ConnectorModule.getInstance());
     install(GitopsModule.getInstance());
     install(new GitSyncModule());
     install(JooqModule.getInstance());
@@ -496,6 +503,8 @@ public class NextGenModule extends AbstractModule {
     install(new PipelineRemoteClientModule(
         ServiceHttpClientConfig.builder().baseUrl(appConfig.getPipelineServiceClientConfig().getBaseUrl()).build(),
         appConfig.getNextGenConfig().getPipelineServiceSecret(), NG_MANAGER.toString()));
+    install(new ConnectorResourceClientModule(appConfig.getNgManagerClientConfig(),
+        appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(), ClientMode.PRIVILEGED));
     install(new SecretManagementClientModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new SecretNGManagerClientModule(this.appConfig.getNgManagerClientConfig(),
@@ -520,6 +529,7 @@ public class NextGenModule extends AbstractModule {
         appConfig.getEnforcementClientConfiguration()));
     install(new AuthenticationSettingsModule(
         this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
+    install(ConnectorModule.getInstance(appConfig.getNextGenConfig(), appConfig.getCeNextGenClientConfig()));
     install(new ProviderModule() {
       @Provides
       @Singleton
@@ -628,9 +638,9 @@ public class NextGenModule extends AbstractModule {
         appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
     install(CeLicenseClientModule.getInstance(appConfig.getManagerClientConfig(),
         appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
-    install(NgSMTPSettingsHttpClientModule.getInstance(appConfig.getManagerClientConfig(),
-        appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
-
+    bind(DecryptionHelper.class).to(DecryptionHelperViaManager.class);
+    install(new NgSMTPSettingsHttpClientModule(
+        this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
     bind(SmtpNgService.class).to(SmtpNgServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);

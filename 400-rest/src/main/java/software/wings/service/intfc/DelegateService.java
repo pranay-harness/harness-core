@@ -181,21 +181,17 @@ public interface DelegateService extends OwnedByAccount {
 
   DelegateSizeDetails fetchDefaultDelegateSize();
 
-  void validateDockerSetupDetails(String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType);
+  void validateDelegateSetupDetails(String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType);
 
   File downloadNgDocker(String managerHost, String verificationServiceUrl, String accountId,
       DelegateSetupDetails delegateSetupDetails) throws IOException;
 
   String createDelegateGroup(String accountId, DelegateSetupDetails delegateSetupDetails);
 
-  File generateKubernetesYamlUsingNgToken(String accountId, DelegateSetupDetails delegateSetupDetails,
-      String managerHost, String verificationServiceUrl, MediaType fileFormat) throws IOException;
+  void validateDockerSetupDetailsNg(String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType);
 
-  DelegateSetupDetails validateKubernetesYamlUsingNgToken(String accountId, DelegateSetupDetails delegateSetupDetails);
+  File generateKubernetesYamlNg(String accountId, DelegateSetupDetails delegateSetupDetails, String managerHost,
+      String verificationServiceUrl, MediaType fileFormat) throws IOException;
 
-  void validateDockerSetupDetailsUsingNgToken(
-      String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType);
-
-  File downloadNgDockerUsingToken(String managerHost, String verificationServiceUrl, String accountId,
-      DelegateSetupDetails delegateSetupDetails) throws IOException;
+  DelegateSetupDetails validateKubernetesYamlNg(String accountId, DelegateSetupDetails delegateSetupDetails);
 }

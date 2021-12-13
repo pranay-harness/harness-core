@@ -5,12 +5,15 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.filters.DeploymentStageFilterJsonCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepFilterJsonCreator;
+import io.harness.cdng.creator.plan.steps.CDPMSStepFilterJsonCreatorV2;
 import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
 import io.harness.cdng.creator.plan.steps.K8sBGSwapServicesPMSStepPlanCreator;
 import io.harness.cdng.creator.plan.steps.K8sCanaryDeletePMSStepPlanCreator;
+import io.harness.cdng.creator.plan.steps.K8sCanaryStepPlanCreator;
 import io.harness.cdng.creator.plan.steps.K8sRollingDeployPMSStepPlanCreator;
 import io.harness.cdng.creator.plan.steps.K8sRollingRollbackPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
+import io.harness.cdng.creator.variables.HelmStepVariableCreator;
 import io.harness.cdng.creator.variables.K8sStepVariableCreator;
 import io.harness.cdng.provision.terraform.variablecreator.TerraformStepsVariableCreator;
 import io.harness.enforcement.constants.FeatureRestrictionName;
@@ -43,10 +46,12 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     List<PartialPlanCreator<?>> planCreators = new LinkedList<>();
     planCreators.add(new DeploymentStagePMSPlanCreator());
     planCreators.add(new CDPMSStepPlanCreator());
+    planCreators.add(new K8sCanaryStepPlanCreator());
     planCreators.add(new K8sRollingRollbackPMSStepPlanCreator());
     planCreators.add(new K8sCanaryDeletePMSStepPlanCreator());
     planCreators.add(new K8sRollingDeployPMSStepPlanCreator());
     planCreators.add(new K8sBGSwapServicesPMSStepPlanCreator());
+    planCreators.add(new HelmRollbackStepPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
   }
@@ -56,6 +61,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     List<FilterJsonCreator> filterJsonCreators = new ArrayList<>();
     filterJsonCreators.add(new DeploymentStageFilterJsonCreator());
     filterJsonCreators.add(new CDPMSStepFilterJsonCreator());
+    filterJsonCreators.add(new CDPMSStepFilterJsonCreatorV2());
     injectorUtils.injectMembers(filterJsonCreators);
 
     return filterJsonCreators;
@@ -68,6 +74,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     variableCreators.add(new ExecutionVariableCreator());
     variableCreators.add(new K8sStepVariableCreator());
     variableCreators.add(new TerraformStepsVariableCreator());
+    variableCreators.add(new HelmStepVariableCreator());
     return variableCreators;
   }
 
@@ -178,6 +185,20 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
                                                           .build())
                                      .build();
 
+    StepInfo helmDeploy =
+        StepInfo.newBuilder()
+            .setName("Helm Deploy")
+            .setType(StepSpecTypeConstants.HELM_DEPLOY)
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Helm").setFolderPath("Helm").build())
+            .build();
+
+    StepInfo helmRollback =
+        StepInfo.newBuilder()
+            .setName("Helm Rollback")
+            .setType(StepSpecTypeConstants.HELM_ROLLBACK)
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Helm").setFolderPath("Helm").build())
+            .build();
+
     List<StepInfo> stepInfos = new ArrayList<>();
 
     stepInfos.add(k8sRolling);
@@ -193,6 +214,8 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     stepInfos.add(terraformPlan);
     stepInfos.add(terraformRollback);
     stepInfos.add(terraformDestroy);
+    stepInfos.add(helmDeploy);
+    stepInfos.add(helmRollback);
     return stepInfos;
   }
 }

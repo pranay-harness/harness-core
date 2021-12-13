@@ -219,7 +219,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
       if (maskSecret) {
         cyberArkConfig.maskSecrets();
       } else {
-        cyberArkConfig.setClientCertificate(String.valueOf(decryptUsingBaseAlgo(encryptedClientCert)));
+        cyberArkConfig.setClientCertificate(String.valueOf(decryptUsingAlgoOfSecret(encryptedClientCert)));
       }
     }
   }

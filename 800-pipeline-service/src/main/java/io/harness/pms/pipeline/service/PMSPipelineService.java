@@ -35,7 +35,7 @@ public interface PMSPipelineService {
   void saveExecutionInfo(
       String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo);
 
-  Optional<PipelineEntity> incrementRunSequence(
+  int incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean b);
 
   boolean markEntityInvalid(
@@ -47,6 +47,10 @@ public interface PMSPipelineService {
   Page<PipelineEntity> list(Criteria criteria, Pageable pageable, String accountId, String orgIdentifier,
       String projectIdentifier, Boolean getDistinctFromBranches);
 
+  PipelineEntity findFirstPipeline(Criteria criteria);
+
+  Long countAllPipelines(Criteria criteria);
+
   StepCategory getSteps(String module, String category, String accountId);
 
   StepCategory getStepsV2(String accountId, StepPalleteFilterWrapper stepPalleteFilterWrapper);
@@ -57,4 +61,7 @@ public interface PMSPipelineService {
       PipelineFilterPropertiesDto filterProperties, boolean deleted, String module, String searchTerm);
 
   boolean deleteAllPipelinesInAProject(String accountId, String orgId, String projectId);
+
+  String fetchExpandedPipelineJSON(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
 }

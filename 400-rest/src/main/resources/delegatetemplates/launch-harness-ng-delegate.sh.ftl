@@ -35,6 +35,6 @@ docker run -d --restart unless-stopped --memory=${delegateXmx} --cpus=${delegate
 -e HELM_PATH= \
 -e KUSTOMIZE_PATH= \
 -e KUBECTL_PATH= \
--e ENABlE_CE=${enableCE} \
+-e ENABLE_CE=${enableCE} \
 -e VERSION_CHECK_DISABLED=${versionCheckDisabled}
 ${delegateDockerImage}

@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +18,7 @@ import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHe
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
@@ -26,6 +28,7 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -99,8 +102,8 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
     assertThat(cvConfig.getCategory()).isEqualTo(CVMonitoringCategory.ERRORS);
     assertThat(cvConfig.isEnabled()).isTrue();
     assertThat(cvConfig.getMetricPack())
-        .isEqualTo(metricPackService.getMetricPack(
-            accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, CVMonitoringCategory.ERRORS));
+        .isEqualTo(metricPackService.getMetricPack(accountId, orgIdentifier, projectIdentifier,
+            DataSourceType.APP_DYNAMICS, CVNextGenConstants.ERRORS_PACK_IDENTIFIER));
   }
 
   @Test
@@ -129,6 +132,18 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
     List<CVConfig> cvConfigs =
         cvConfigService.list(accountId, orgIdentifier, projectIdentifier, healthSource.getIdentifier());
     assertThat(cvConfigs.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testFetchCVConfig() {
+    HealthSource healthSource = createHealthSource(CVMonitoringCategory.ERRORS);
+    healthSourceService.create(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,
+        nameSpaceIdentifier, Sets.newHashSet(healthSource), true);
+    List<CVConfig> cvConfigs = healthSourceService.getCVConfigs(
+        accountId, orgIdentifier, projectIdentifier, nameSpaceIdentifier, healthSource.getIdentifier());
+    assertThat(cvConfigs.size()).isEqualTo(1);
   }
 
   @Test
@@ -205,8 +220,8 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
     AppDynamicsHealthSourceSpec appDynamicsHealthSourceSpec = (AppDynamicsHealthSourceSpec) healthSource.getSpec();
     appDynamicsHealthSourceSpec.setMetricPacks(
         Arrays
-            .asList(MetricPackDTO.builder().identifier(CVMonitoringCategory.ERRORS).build(),
-                MetricPackDTO.builder().identifier(CVMonitoringCategory.PERFORMANCE).build())
+            .asList(MetricPackDTO.builder().identifier(CVNextGenConstants.ERRORS_PACK_IDENTIFIER).build(),
+                MetricPackDTO.builder().identifier(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER).build())
             .stream()
             .collect(Collectors.toSet()));
     appDynamicsHealthSourceSpec.setFeature("new-feature");
@@ -251,9 +266,11 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
             .tierName(appTierName)
             .connectorRef(connectorIdentifier)
             .feature(feature)
-            .metricPacks(Arrays.asList(MetricPackDTO.builder().identifier(cvMonitoringCategory).build())
-                             .stream()
-                             .collect(Collectors.toSet()))
+            .metricPacks(
+                Arrays.asList(MetricPackDTO.builder().identifier(cvMonitoringCategory.getDisplayName()).build())
+                    .stream()
+                    .collect(Collectors.toSet()))
+            .metricDefinitions(Collections.EMPTY_LIST)
             .build();
     return HealthSource.builder()
         .identifier(identifier)

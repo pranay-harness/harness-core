@@ -57,6 +57,7 @@ import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.service.git.NGGitService;
+import io.harness.connector.task.git.GitDecryptionHelper;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.CEFeatures;
@@ -77,7 +78,6 @@ import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
-import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.git.ScmFetchFilesHelperNG;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
@@ -2508,7 +2508,7 @@ public class K8sTaskHelperBase {
                              .message("Please install metrics server on your cluster")
                              .reason("couldn't access metrics server")
                              .build());
-        errorSummary += metricsServerCheck.getMessage();
+        errorSummary += metricsServerCheck.getMessage() + ", ";
       }
 
       List<CEK8sDelegatePrerequisite.Rule> ruleList =
@@ -2524,13 +2524,15 @@ public class K8sTaskHelperBase {
                                            .code(0)
                                            .build())
                                 .collect(toList()));
-        errorSummary += "; few permissions are missing.";
+        errorSummary += "few of the visibility permissions are missing, ";
       }
 
       if (featuresEnabled.contains(CEFeatures.OPTIMIZATION)) {
         errorDetails.addAll(this.validateLightwingResourceExists(kubernetesConfig));
 
         errorDetails.addAll(this.validateLightwingResourcePermissions(kubernetesConfig));
+
+        errorSummary += "few of the optimization permissions are missing, ";
       }
 
       if (!errorDetails.isEmpty()) {

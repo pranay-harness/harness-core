@@ -1,0 +1,53 @@
+Var auth
+if Env:tokenBasedAuth == "true" {
+  Var authUrlSuffix = "api/oauth/access_token"
+  Var authUrl = concat(Env:baseUrl,Var:authUrlSuffix)
+  Var bodyMap = {}
+  Var:bodyMap.put("grant_type", "client_credentials")
+  Var:bodyMap.put("client_id", Env:clientId)
+  Var:bodyMap.put("client_secret", Env:clientSecret)
+  Var authResponse = sync-call(url=Var:authUrl, header=Env:commonHeaders, body=Var:bodyMap, bodyType=FORM_URL_ENCODED)
+  Var token = extract(Var:authResponse,$.access_token)
+  Var bearerStr = concat("Bearer ", Var:token)
+  Env:commonHeaders.put("Authorization", Var:bearerStr)
+
+}
+
+Var metricDataUrl = concat(Env:baseUrl, "rest/applications/", Env:applicationName, "/metric-data?output=JSON&time-range-type=BETWEEN_TIMES&rollup=false&start-time=", Env:startTimeMillis, "&end-time=", Env:endTimeMillis, "&metric-path=")
+Var metricRequests = []
+Var metricsToReturn = []
+Var index = 0
+Var one = 1
+
+Var lengthOfItems = Env:metricPaths.length()
+while Var:index !=  Var:lengthOfItems {
+    Var queryMetricPath =  Env:metricPaths[Var:index]
+    Var metricName =  Env:metricNames[Var:index]
+    Var metricCall = concat(Var:metricDataUrl, Var:queryMetricPath)
+    Var metricArr = sync-call(url=Var:metricCall, header=Env:commonHeaders)
+
+    foreach metric in Var:metricArr {
+        if Var:metricName != "METRIC DATA NOT FOUND" {
+            Var metricPath = extract(Var:metric,$.metricPath)
+            Var metricValues = extract(Var:metric,$.metricValues)
+            foreach metricValue in Var:metricValues {
+                Var value = extract(Var:metricValue,$.value)
+                Var timestamp = extract(Var:metricValue,$.startTimeInMillis)
+                if Env:collectHostData != "true" {
+                    Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp)
+                    Var:metricsToReturn.append(Var:tsRecord)
+                }
+                if Env:collectHostData == "true" {
+                    Var hostIndex =  Env:serviceInstanceIndexes[Var:index]
+                    Var metricPathSplit = Var:metricPath.split("|")
+                    Var hostname = Var:metricPathSplit[Var:hostIndex]
+                    Var tsRecord = new TimeseriesRecord(txnName=Var:metricName, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp, host=Var:hostname)
+                    Var:metricsToReturn.append(Var:tsRecord)
+                }
+             }
+        }
+    }
+    index = Var:index + Var:one
+}
+
+return Var:metricsToReturn

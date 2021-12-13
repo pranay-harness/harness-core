@@ -70,7 +70,8 @@ public class ApplicationManifest extends Base implements AccountAccess {
 
   private Boolean pollForChanges;
   @Transient private String serviceName;
-  private enum ManifestCollectionStatus { UNSTABLE, COLLECTING, STABLE }
+
+  public enum ManifestCollectionStatus { UNSTABLE, COLLECTING, STABLE }
   private ManifestCollectionStatus collectionStatus;
   private String perpetualTaskId;
   private int failedAttempts;

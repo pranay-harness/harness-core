@@ -16,6 +16,8 @@ import io.harness.gitsync.FileChange;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
+import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.grpc.utils.StringValueUtils;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
@@ -170,7 +172,7 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
   }
 
   @Override
-  public String getLastObjectIdIfExists(String accountIdentifier, String yaml) {
+  public Optional<EntityGitDetails> getEntityDetailsIfExists(String accountIdentifier, String yaml) {
     final InputSetYamlDTO inputSetYamlDTO = getYamlDTO(yaml);
     final Optional<InputSetEntity> inputSetEntity;
     if (inputSetYamlDTO.getInputSetInfo() != null) {
@@ -184,7 +186,7 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
           overlayInputSetInfo.getProjectIdentifier(), overlayInputSetInfo.getPipelineIdentifier(),
           overlayInputSetInfo.getIdentifier(), false);
     }
-    return inputSetEntity.map(InputSetEntity::getObjectIdOfYaml).orElse(null);
+    return inputSetEntity.map(entity -> EntityGitDetailsMapper.mapEntityGitDetails(entity));
   }
 
   @Override

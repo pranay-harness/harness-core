@@ -53,6 +53,12 @@ if [[ "${ENABLE_APPDYNAMICS}" == "true" ]] && [[ "${DISABLE_NEW_RELIC}" == "true
     echo "Using Appdynamics java agent"
 fi
 
+if [[ "${ENABLE_OVEROPS}" == "true" ]] ; then
+    echo "OverOps is enabled"
+    JAVA_OPTS=$JAVA_OPTS" -agentpath:/opt/harness/takipi/lib/libTakipiAgent.so -Dtakipi.etl -Dtakipi.application.name=${OVEROPS_APPLICATION_NAME}"
+    echo "Using Overops Java Agent"
+fi
+
 if [[ "${DISABLE_NEW_RELIC}" != "true" ]]; then
     JAVA_OPTS=$JAVA_OPTS" -Dnewrelic.environment=$NEWRELIC_ENV"
     echo "Using new relic env " $NEWRELIC_ENV

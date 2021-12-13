@@ -17,8 +17,8 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("BillingExportSpec")
 @Schema(name = "BillingExportSpec",
-    description = "This contains Billing details like storageAccountName,"
-        + " containerName, directoryName, reportName and subscription Id")
+    description = "Returns Billing details like StorageAccount's Name,"
+        + " container's Name, directory's Name, report Name and subscription Id")
 public class BillingExportSpecDTO {
   @NotNull String storageAccountName;
   @NotNull String containerName;

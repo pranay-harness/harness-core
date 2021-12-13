@@ -5,7 +5,7 @@ import io.harness.cvng.servicelevelobjective.beans.UserJourneyDTO;
 import io.harness.cvng.servicelevelobjective.beans.UserJourneyResponse;
 import io.harness.cvng.servicelevelobjective.entities.UserJourney;
 import io.harness.cvng.servicelevelobjective.entities.UserJourney.UserJourneyKeys;
-import io.harness.cvng.servicelevelobjective.services.UserJourneyService;
+import io.harness.cvng.servicelevelobjective.services.api.UserJourneyService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.utils.PageUtils;

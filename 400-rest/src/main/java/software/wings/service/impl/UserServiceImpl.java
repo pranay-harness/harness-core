@@ -305,7 +305,7 @@ public class UserServiceImpl implements UserService {
    * The Executor service.
    */
   @Inject ExecutorService executorService;
-  @Inject private software.wings.service.impl.UserServiceLimitChecker userServiceLimitChecker;
+  @Inject private UserServiceLimitChecker userServiceLimitChecker;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EmailNotificationService emailNotificationService;
   @Inject private MainConfiguration configuration;
@@ -537,7 +537,7 @@ public class UserServiceImpl implements UserService {
                                .licenseUnits(50)
                                .build());
 
-    Account createdAccount = accountService.save(account, false);
+    Account createdAccount = accountService.save(account, false, false);
 
     // create user
     User user = User.Builder.anUser()
@@ -2447,8 +2447,11 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User createUser(User user, String accountId) {
+    boolean isExistingUser = user.getUuid() != null;
     user = wingsPersistence.saveAndGet(User.class, user);
-    evictUserFromCache(user.getUuid());
+    if (isExistingUser) {
+      evictUserFromCache(user.getUuid());
+    }
     eventPublishHelper.publishSetupRbacEvent(accountId, user.getUuid(), EntityType.USER);
     publishUserEvent(null, user);
     return user;

@@ -56,7 +56,7 @@ public class PmsYamlSchemaResource implements YamlSchemaResource {
   public ResponseDTO<JsonNode> getYamlSchema(@QueryParam("entityType") @NotNull EntityType entityType,
       @QueryParam(PROJECT_KEY) String projectIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
       @QueryParam("scope") Scope scope, @QueryParam(IDENTIFIER_KEY) String identifier,
-      @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
+      @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
     JsonNode schema = null;
     if (entityType == PIPELINES) {
       schema = pmsYamlSchemaService.getPipelineYamlSchema(accountIdentifier, projectIdentifier, orgIdentifier, scope);

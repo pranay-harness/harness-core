@@ -14,6 +14,9 @@ public class UniqueIdentifierValidator
   @Override
   public boolean isValid(
       List<? extends WithIdentifier> withIdentifiers, ConstraintValidatorContext constraintValidatorContext) {
+    if (withIdentifiers == null) {
+      return true;
+    }
     return withIdentifiers.size()
         == withIdentifiers.stream().map(withIdentifier -> withIdentifier.getIdentifier()).distinct().count();
   }
