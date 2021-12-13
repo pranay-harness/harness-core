@@ -39,6 +39,7 @@ import io.harness.beans.event.cg.entities.ServiceEntity;
 import io.harness.beans.event.cg.pipeline.ExecutionArgsEventData;
 import io.harness.beans.event.cg.pipeline.PipelineEventData;
 import io.harness.beans.event.cg.pipeline.PipelineStageInfo;
+import io.harness.beans.event.cg.workflow.WorkflowEventData;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
@@ -68,6 +69,7 @@ import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionInstance;
@@ -127,6 +129,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AccountService accountService;
+  @Inject private WorkflowService workflowService;
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private SegmentHandler segmentHandler;
   @Inject private HarnessTagService harnessTagService;
@@ -363,6 +366,10 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                                 .stream()
                                 .map(id -> EnvironmentEntity.builder().id(id).build())
                                 .collect(Collectors.toList()))
+                  .workflow(WorkflowEventData.builder()
+                                .id(execution.getWorkflowId())
+                                .name(workflowService.fetchWorkflowName(appId, execution.getWorkflowId()))
+                                .build())
                   .pipeline(getPipelineEventData(summary))
                   .startedAt(execution.getCreatedAt())
                   .completedAt(endTs)
