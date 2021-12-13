@@ -13,6 +13,7 @@ import java.util.Set;
 public class PmsStepFilterJsonCreatorV2 extends GenericStepPMSFilterJsonCreatorV2 {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet(StepSpecTypeConstants.HTTP, StepSpecTypeConstants.SHELL_SCRIPT);
+    return Sets.newHashSet(
+        StepSpecTypeConstants.HTTP, StepSpecTypeConstants.JIRA_CREATE, StepSpecTypeConstants.SHELL_SCRIPT);
   }
 }
