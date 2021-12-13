@@ -35,24 +35,17 @@ public class ResourceGroupConfig {
   @Size(max = 128) Map<String, String> tags = new HashMap<>();
   @Size(max = 256) @Valid List<ResourceSelector> resourceSelectors = new ArrayList<>();
   boolean fullScopeSelected;
-  Boolean nestedScopesSelected;
   @NotEmpty Set<String> allowedScopeLevels = new HashSet<>();
 
   @Builder
   public ResourceGroupConfig(String name, String identifier, String description, Map<String, String> tags,
-      List<ResourceSelector> resourceSelectors, boolean fullScopeSelected, Boolean nestedScopesSelected,
-      Set<String> allowedScopeLevels) {
+      List<ResourceSelector> resourceSelectors, boolean fullScopeSelected, Set<String> allowedScopeLevels) {
     this.name = name;
     this.identifier = identifier;
     this.description = description;
     this.tags = tags == null ? new HashMap<>() : tags;
     this.resourceSelectors = resourceSelectors == null ? new ArrayList<>() : resourceSelectors;
     this.fullScopeSelected = fullScopeSelected;
-    this.nestedScopesSelected = Boolean.TRUE.equals(nestedScopesSelected);
     this.allowedScopeLevels = allowedScopeLevels == null ? new HashSet<>() : allowedScopeLevels;
-  }
-
-  public boolean getNestedScopesSelected() {
-    return Boolean.TRUE.equals(this.nestedScopesSelected);
   }
 }

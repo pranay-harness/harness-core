@@ -77,7 +77,6 @@ public class ResourceGroupDaoImplTest {
         .scopeIdentifier(randomAlphabetic(10))
         .allowedScopeLevels(Sets.newHashSet(TestScopeLevels.TEST_SCOPE.toString()))
         .resourceSelectors(resourceSelectors)
-        .nestedScopesSelected(false)
         .build();
   }
 

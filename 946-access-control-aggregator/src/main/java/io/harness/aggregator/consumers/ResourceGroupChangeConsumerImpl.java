@@ -135,9 +135,7 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
       Set<String> existingResourceSelectors =
           Sets.newHashSet(aclRepository.getDistinctResourceSelectorsInACLs(roleAssignmentDBO.getId()));
       Set<String> newResourceSelectors = new HashSet<>();
-      if (Boolean.TRUE.equals(updatedResourceGroup.getNestedScopesSelected())) {
-        newResourceSelectors.add("/**/*/*");
-      } else if (updatedResourceGroup.isFullScopeSelected()) {
+      if (updatedResourceGroup.isFullScopeSelected()) {
         newResourceSelectors.add("/*/*");
       } else if (updatedResourceGroup.getResourceSelectors() != null) {
         newResourceSelectors = updatedResourceGroup.getResourceSelectors();

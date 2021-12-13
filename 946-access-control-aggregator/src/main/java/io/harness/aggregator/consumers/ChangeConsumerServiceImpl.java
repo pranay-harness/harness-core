@@ -57,9 +57,7 @@ public class ChangeConsumerServiceImpl implements ChangeConsumerService {
     }
 
     Set<String> resourceSelectors = new HashSet<>();
-    if (Boolean.TRUE.equals(resourceGroup.get().getNestedScopesSelected())) {
-      resourceSelectors = singleton("/**/*/*");
-    } else if (resourceGroup.get().isFullScopeSelected()) {
+    if (resourceGroup.get().isFullScopeSelected()) {
       resourceSelectors = singleton("/*/*");
     } else if (resourceGroup.get().getResourceSelectors() != null) {
       resourceSelectors = resourceGroup.get().getResourceSelectors();

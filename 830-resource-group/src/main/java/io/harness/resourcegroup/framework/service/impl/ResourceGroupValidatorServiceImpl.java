@@ -1,7 +1,6 @@
 package io.harness.resourcegroup.framework.service.impl;
 
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
-import static io.harness.resourcegroup.beans.ValidatorType.NESTED_DYNAMIC;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import io.harness.beans.Scope;
@@ -9,9 +8,9 @@ import io.harness.beans.ScopeLevel;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
 import io.harness.resourcegroup.model.DynamicResourceSelector;
-import io.harness.resourcegroup.model.NestedDynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.ResourceSelector;
+import io.harness.resourcegroup.model.ResourceSelectorByScope;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 
 import com.google.inject.Inject;
@@ -54,9 +53,9 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
           iterator.remove();
           updated = true;
         }
-      } else if (resourceSelector instanceof NestedDynamicResourceSelector) {
-        NestedDynamicResourceSelector nestedDynamicResourceSelector = (NestedDynamicResourceSelector) resourceSelector;
-        if (!isValidNestedDynamicResourceSelector(scope, nestedDynamicResourceSelector)) {
+      } else if (resourceSelector instanceof ResourceSelectorByScope) {
+        ResourceSelectorByScope resourceSelectorByScope = (ResourceSelectorByScope) resourceSelector;
+        if (!isValidResourceSelectorByScope(scope, resourceSelectorByScope)) {
           iterator.remove();
           updated = true;
         }
@@ -66,14 +65,8 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
     return updated;
   }
 
-  private boolean isValidNestedDynamicResourceSelector(Scope scope, NestedDynamicResourceSelector resourceSelector) {
-    String resourceType = resourceSelector.getResourceType();
-    ScopeLevel scopeLevel =
-        ScopeLevel.of(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
-
-    return resourceMap.containsKey(resourceType)
-        && resourceMap.get(resourceType).getValidScopeLevels().contains(scopeLevel)
-        && resourceMap.get(resourceType).getSelectorKind().contains(NESTED_DYNAMIC);
+  private boolean isValidResourceSelectorByScope(Scope scope, ResourceSelectorByScope resourceSelector) {
+    return true;
   }
 
   private boolean isValidDynamicResourceSelector(Scope scope, DynamicResourceSelector resourceSelector) {

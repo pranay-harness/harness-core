@@ -37,7 +37,8 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
-import io.harness.resourcegroup.model.NestedDynamicResourceSelector;
+import io.harness.resourcegroup.model.DynamicResourceSelector;
+import io.harness.resourcegroup.model.ResourceSelectorByScope;
 import io.harness.resourcegroup.remote.dto.ManagedFilter;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupFilterDTO;
@@ -283,13 +284,17 @@ public class HarnessResourceGroupResource {
       return;
     }
     ResourceGroupDTO resourceGroupDTO = resourceGroupRequest.getResourceGroup();
-    if (Boolean.TRUE.equals(resourceGroupDTO.getNestedScopesSelected())) {
-      throw new InvalidRequestException("Nested Scope Selection not supported yet.");
+    if (resourceGroupDTO.isFullScopeSelected()) {
+      throw new InvalidRequestException("Full scope selected cannot be provided for custom resource groups.");
     }
     if (isNotEmpty(resourceGroupDTO.getResourceSelectors())) {
       resourceGroupDTO.getResourceSelectors().forEach(resourceSelector -> {
-        if (resourceSelector instanceof NestedDynamicResourceSelector) {
-          throw new InvalidRequestException("Nested Dynamic Resource Selector not supported yet.");
+        if (resourceSelector instanceof ResourceSelectorByScope) {
+          throw new InvalidRequestException("Resource Selector by scope not supported yet.");
+        }
+        if ((resourceSelector instanceof DynamicResourceSelector)
+            && Boolean.TRUE.equals(((DynamicResourceSelector) resourceSelector).getIncludeChildScopes())) {
+          throw new InvalidRequestException("Including child scopes not supported yet.");
         }
       });
     }

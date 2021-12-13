@@ -32,7 +32,6 @@ public class ResourceGroup {
   final Set<String> allowedScopeLevels;
   @NotNull final Set<String> resourceSelectors;
   final boolean fullScopeSelected;
-  final Boolean nestedScopesSelected;
   final boolean managed;
   @EqualsAndHashCode.Exclude @Setter Long createdAt;
   @EqualsAndHashCode.Exclude @Setter Long lastModifiedAt;

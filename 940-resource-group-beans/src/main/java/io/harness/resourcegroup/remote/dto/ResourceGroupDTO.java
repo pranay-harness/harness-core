@@ -9,8 +9,8 @@ import io.harness.beans.Scope;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.resourcegroup.model.DynamicResourceSelector;
-import io.harness.resourcegroup.model.NestedDynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceSelector;
+import io.harness.resourcegroup.model.ResourceSelectorByScope;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -43,7 +43,6 @@ public class ResourceGroupDTO {
   @NGEntityName @ApiModelProperty(required = true) @NotNull @Size(max = 128) @NotEmpty String name;
   @Size(max = 256) @Valid List<ResourceSelector> resourceSelectors;
   boolean fullScopeSelected;
-  Boolean nestedScopesSelected;
   @Size(max = 128) Map<String, String> tags;
   @Size(max = 1024) String description;
   Set<String> allowedScopeLevels;
@@ -65,16 +64,15 @@ public class ResourceGroupDTO {
                                                                    .distinct()
                                                                    .collect(toList());
 
-    List<ResourceSelector> sanitizedNestedDynamicResourceSelectors =
-        getResourceSelectors()
-            .stream()
-            .filter(NestedDynamicResourceSelector.class ::isInstance)
-            .map(NestedDynamicResourceSelector.class ::cast)
-            .distinct()
-            .collect(toList());
+    List<ResourceSelector> sanitizedResourceSelectorsByScope = getResourceSelectors()
+                                                                   .stream()
+                                                                   .filter(ResourceSelectorByScope.class ::isInstance)
+                                                                   .map(ResourceSelectorByScope.class ::cast)
+                                                                   .distinct()
+                                                                   .collect(toList());
 
     sanitizedResourceSelectors.addAll(sanitizedDynamicResourceSelectors);
-    sanitizedResourceSelectors.addAll(sanitizedNestedDynamicResourceSelectors);
+    sanitizedResourceSelectors.addAll(sanitizedResourceSelectorsByScope);
 
     Map<String, List<String>> staticResources =
         getResourceSelectors()
