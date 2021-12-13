@@ -21,6 +21,6 @@ public enum DayOfWeek {
     return java.time.DayOfWeek.of(this.dayOfWeek);
   }
   public LocalDate getNextDayOfWeek(LocalDate currentDate) {
-    return currentDate.with(TemporalAdjusters.next(this.getJavaDayOfWeek()));
+    return currentDate.with(TemporalAdjusters.nextOrSame(this.getJavaDayOfWeek()));
   }
 }
