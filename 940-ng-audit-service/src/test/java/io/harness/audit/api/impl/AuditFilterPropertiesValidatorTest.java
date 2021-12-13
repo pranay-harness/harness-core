@@ -11,6 +11,7 @@ import static org.mockito.Mockito.spy;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.ResourceType;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.beans.Environment;
 import io.harness.audit.beans.Principal;
@@ -20,6 +21,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
+import java.util.Arrays;
+import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -56,7 +59,8 @@ public class AuditFilterPropertiesValidatorTest extends CategoryTest {
   public void testInvalidResourceAuditFilter() {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
-    String resourceType = randomAlphabetic(10);
+    ResourceType resourceType =
+        Arrays.asList(ResourceType.values()).get(RandomUtils.nextInt(ResourceType.values().length));
     String randomValue = randomAlphabetic(10);
     AuditFilterPropertiesDTO invalidResourceFilter =
         AuditFilterPropertiesDTO.builder()

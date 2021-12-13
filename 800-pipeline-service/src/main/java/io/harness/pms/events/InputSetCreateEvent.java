@@ -3,7 +3,7 @@ package io.harness.pms.events;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.audit.ResourceTypeEnum;
+import io.harness.audit.ResourceType;
 import io.harness.event.Event;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
@@ -38,7 +38,7 @@ public class InputSetCreateEvent implements Event {
   public Resource getResource() {
     return Resource.builder()
         .identifier(inputSet.getIdentifier())
-        .type(Resource.Type.INPUT_SET)
+        .type(ResourceType.INPUT_SET.name())
         .labels(ImmutableMap.<String, String>builder().put("pipelineIdentifier", pipelineIdentifier).build())
         .build();
   }

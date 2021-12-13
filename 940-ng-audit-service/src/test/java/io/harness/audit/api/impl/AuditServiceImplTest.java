@@ -21,6 +21,7 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
+import io.harness.audit.ResourceType;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.api.AuditYamlService;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
@@ -38,7 +39,9 @@ import io.harness.rule.Owner;
 
 import com.mongodb.BasicDBList;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.lang.math.RandomUtils;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -126,7 +129,8 @@ public class AuditServiceImplTest extends CategoryTest {
   public void testResourceAuditFilter() {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
-    String resourceType = randomAlphabetic(10);
+    ResourceType resourceType =
+        Arrays.asList(ResourceType.values()).get(RandomUtils.nextInt(ResourceType.values().length));
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
     when(auditRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
     AuditFilterPropertiesDTO correctFilter =

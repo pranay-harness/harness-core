@@ -20,6 +20,7 @@ import io.harness.CategoryTest;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
+import io.harness.audit.ResourceType;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.PrincipalType;
@@ -55,7 +56,8 @@ public class AuditClientServiceImplTest extends CategoryTest {
 
   private AuditEntry getAuditEntry() {
     ResourceScopeDTO resourceScope = ResourceScopeDTO.builder().accountIdentifier(randomAlphabetic(10)).build();
-    ResourceDTO resource = ResourceDTO.builder().type("ORGANIZATION").identifier(randomAlphabetic(10)).build();
+    ResourceDTO resource =
+        ResourceDTO.builder().type(ResourceType.ORGANIZATION).identifier(randomAlphabetic(10)).build();
     long timestamp = 171819;
     return AuditEntry.builder()
         .resourceScope(resourceScope)

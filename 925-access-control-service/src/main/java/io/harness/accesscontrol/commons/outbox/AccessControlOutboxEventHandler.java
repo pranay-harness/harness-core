@@ -3,6 +3,7 @@ package io.harness.accesscontrol.commons.outbox;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.ResourceType;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
 
@@ -26,12 +27,11 @@ public class AccessControlOutboxEventHandler implements OutboxEventHandler {
   public boolean handle(OutboxEvent outboxEvent) {
     try {
       // TODO {karan} remove extra lowercase cases after some days
-      switch (outboxEvent.getResource().getType()) {
+      ResourceType resourceType = ResourceType.getFromString(outboxEvent.getResource().getType());
+      switch (resourceType) {
         case ROLE:
-          // case "role":
           return roleEventHandler.handle(outboxEvent);
         case ROLE_ASSIGNMENT:
-          // case "roleassignment":
           return roleAssignmentEventHandler.handle(outboxEvent);
         default:
           return false;

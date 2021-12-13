@@ -1,9 +1,9 @@
 package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.audit.ResourceTypeEnum.SERVICE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.ResourceType;
 import io.harness.event.Event;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
@@ -34,7 +34,7 @@ public class ServiceCreateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(service.getIdentifier()).type(Resource.Type.SERVICE).build();
+    return Resource.builder().identifier(service.getIdentifier()).type(ResourceType.SERVICE.name()).build();
   }
 
   @JsonIgnore

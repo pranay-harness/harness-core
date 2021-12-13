@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.ResourceType;
 import io.harness.event.Event;
 import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.OrgScope;
@@ -45,7 +46,7 @@ public class SecretDeleteEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(secret.getIdentifier()).type(Resource.Type.SECRET).build();
+    return Resource.builder().identifier(secret.getIdentifier()).type(ResourceType.SECRET.name()).build();
   }
 
   @JsonIgnore

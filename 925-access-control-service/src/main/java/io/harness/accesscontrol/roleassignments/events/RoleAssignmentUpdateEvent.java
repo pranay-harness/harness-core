@@ -1,12 +1,12 @@
 package io.harness.accesscontrol.roleassignments.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.audit.ResourceTypeEnum.ROLE_ASSIGNMENT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.accesscontrol.scopes.ScopeDTO;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.ResourceType;
 import io.harness.event.Event;
 import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.OrgScope;
@@ -50,7 +50,10 @@ public class RoleAssignmentUpdateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(newRoleAssignment.getIdentifier()).type(Resource.Type.ROLE_ASSIGNMENT).build();
+    return Resource.builder()
+        .identifier(newRoleAssignment.getIdentifier())
+        .type(ResourceType.ROLE_ASSIGNMENT.name())
+        .build();
   }
 
   @JsonIgnore

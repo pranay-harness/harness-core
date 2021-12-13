@@ -11,6 +11,7 @@ import lombok.experimental.UtilityClass;
 public class NGCommonEntityConstants {
   public static final String ACCOUNT_KEY = "accountIdentifier";
   public static final String ORG_KEY = "orgIdentifier";
+  public static final String ORG_IDENTIFIERS_KEY = "orgIdentifiers";
   public static final String PROJECT_KEY = "projectIdentifier";
   public static final String VERSION_LABEL_KEY = "versionLabel";
   public static final String SERVICE_KEY = "serviceId";

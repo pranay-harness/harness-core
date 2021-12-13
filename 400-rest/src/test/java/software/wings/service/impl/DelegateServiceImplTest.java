@@ -39,6 +39,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.audit.ResourceType;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -973,7 +974,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     OutboxEvent outboxEvent = outboxEvents.get(0);
     assertThat(outboxEvent.getResourceScope().equals(new ProjectScope(ACCOUNT_ID, ORG_ID, PROJECT_ID))).isTrue();
     assertThat(outboxEvent.getResource())
-        .isEqualTo(Resource.builder().type(Resource.Type.DELEGATE).identifier(returnedDelegateGroup.getUuid()).build());
+        .isEqualTo(
+            Resource.builder().type(ResourceType.DELEGATE.name()).identifier(returnedDelegateGroup.getUuid()).build());
     assertThat(outboxEvent.getEventType()).isEqualTo(DelegateGroupUpsertEvent.builder().build().getEventType());
     DelegateGroupUpsertEvent delegateGroupUpsertEvent = NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER.readValue(
         outboxEvent.getEventData(), DelegateGroupUpsertEvent.class);
@@ -1000,7 +1002,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     outboxEvent = outboxEvents.get(1);
     assertThat(outboxEvent.getResourceScope().equals(new ProjectScope(ACCOUNT_ID, ORG_ID, PROJECT_ID))).isTrue();
     assertThat(outboxEvent.getResource())
-        .isEqualTo(Resource.builder().type(Resource.Type.DELEGATE).identifier(returnedDelegateGroup.getUuid()).build());
+        .isEqualTo(
+            Resource.builder().type(ResourceType.DELEGATE.name()).identifier(returnedDelegateGroup.getUuid()).build());
     assertThat(outboxEvent.getEventType()).isEqualTo(DelegateGroupDeleteEvent.builder().build().getEventType());
     DelegateGroupDeleteEvent delegateGroupDeleteEvent = NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER.readValue(
         outboxEvent.getEventData(), DelegateGroupDeleteEvent.class);

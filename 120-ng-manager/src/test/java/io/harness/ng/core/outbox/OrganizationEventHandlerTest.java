@@ -28,6 +28,7 @@ import io.harness.CategoryTest;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
+import io.harness.audit.ResourceType;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.category.element.UnitTests;
@@ -257,7 +258,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
       String accountIdentifier, String identifier, AuditEntry auditEntry, OutboxEvent outboxEvent) {
     assertNotNull(auditEntry);
     assertEquals(outboxEvent.getId(), auditEntry.getInsertId());
-    assertEquals(Resource.Type.ORGANIZATION, auditEntry.getResource().getType());
+    assertEquals(ResourceType.ORGANIZATION, auditEntry.getResource().getType());
     assertEquals(identifier, auditEntry.getResource().getIdentifier());
     assertEquals(accountIdentifier, auditEntry.getResourceScope().getAccountIdentifier());
     assertEquals(identifier, auditEntry.getResourceScope().getOrgIdentifier());

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.ResourceType;
 import io.harness.ng.core.common.beans.KeyValuePair;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -22,7 +23,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonInclude(NON_NULL)
 @FieldNameConstants(innerTypeName = "ResourceKeys")
 public class Resource {
-  @NotNull @NotEmpty io.harness.ng.core.Resource.Type type;
+  @NotNull @NotEmpty ResourceType type;
   @NotNull @NotEmpty String identifier;
   @Size(max = 10) List<KeyValuePair> labels;
 }

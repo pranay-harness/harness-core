@@ -3,6 +3,7 @@ package io.harness.ng.core.events;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.ResourceType;
 import io.harness.beans.Scope;
 import io.harness.event.Event;
 import io.harness.ng.core.Resource;
@@ -35,7 +36,10 @@ public class ServiceAccountCreateEvent implements Event {
   @Override
   @JsonIgnore
   public Resource getResource() {
-    return Resource.builder().identifier(serviceAccount.getIdentifier()).type(Resource.Type.SERVICE_ACCOUNT).build();
+    return Resource.builder()
+        .identifier(serviceAccount.getIdentifier())
+        .type(ResourceType.SERVICE_ACCOUNT.name())
+        .build();
   }
 
   @Override

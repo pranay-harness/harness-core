@@ -11,7 +11,6 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SECRET
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_SCOPE_RECONCILIATION;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
-import static io.harness.ng.core.Resource.Type.*;
 
 import static java.lang.Boolean.TRUE;
 
@@ -31,6 +30,7 @@ import io.harness.account.AccountConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.audit.ResourceType;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -682,20 +682,21 @@ public class NextGenModule extends AbstractModule {
   }
 
   private void registerOutboxEventHandlers() {
-    MapBinder<Resource.Type, OutboxEventHandler> outboxEventHandlerMapBinder =
-        MapBinder.newMapBinder(binder(), Resource.Type.class, OutboxEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(ORGANIZATION).to(OrganizationEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(PROJECT).to(ProjectEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(USER_GROUP).to(UserGroupEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(SECRET).to(SecretEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(USER).to(UserEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(DELEGATE_CONFIGURATION).to(DelegateProfileEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(SERVICE_ACCOUNT).to(ServiceAccountEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(CONNECTOR).to(ConnectorEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(SERVICE).to(ServiceOutBoxEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(ENVIRONMENT).to(EnvironmentEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(API_KEY).to(ApiKeyEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(TOKEN).to(TokenEventHandler.class);
+    MapBinder<String, OutboxEventHandler> outboxEventHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, OutboxEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceType.ORGANIZATION.name()).to(OrganizationEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceType.PROJECT.name()).to(ProjectEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceType.USER_GROUP.name()).to(UserGroupEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceType.SECRET.name()).to(SecretEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceType.USER.name()).to(UserEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceType.DELEGATE_CONFIGURATION.name())
+        .to(DelegateProfileEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceType.SERVICE_ACCOUNT.name()).to(ServiceAccountEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceType.CONNECTOR.name()).to(ConnectorEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceType.SERVICE.name()).to(ServiceOutBoxEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceType.ENVIRONMENT.name()).to(EnvironmentEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceType.API_KEY.name()).to(ApiKeyEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceType.TOKEN.name()).to(TokenEventHandler.class);
   }
 
   private void registerEventsFrameworkMessageListeners() {

@@ -1,10 +1,10 @@
 package io.harness.resourcegroup.framework.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.audit.ResourceTypeEnum.RESOURCE_GROUP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.ResourceType;
 import io.harness.event.Event;
 import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.OrgScope;
@@ -43,7 +43,10 @@ public class ResourceGroupDeleteEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(resourceGroup.getIdentifier()).type(Resource.Type.RESOURCE_GROUP).build();
+    return Resource.builder()
+        .identifier(resourceGroup.getIdentifier())
+        .type(ResourceType.RESOURCE_GROUP.name())
+        .build();
   }
 
   @JsonIgnore

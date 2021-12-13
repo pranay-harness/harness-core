@@ -3,6 +3,7 @@ package io.harness.ng.core.events;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.ResourceType;
 import io.harness.event.Event;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
@@ -34,7 +35,7 @@ public class ProjectCreateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(project.getIdentifier()).type(Resource.Type.PROJECT).build();
+    return Resource.builder().identifier(project.getIdentifier()).type(ResourceType.PROJECT.name()).build();
   }
 
   @JsonIgnore

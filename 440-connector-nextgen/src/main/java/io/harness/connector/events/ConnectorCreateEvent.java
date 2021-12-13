@@ -1,12 +1,12 @@
 package io.harness.connector.events;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.audit.ResourceTypeEnum.CONNECTOR;
 import static io.harness.connector.ConnectorEvent.CONNECTOR_CREATED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.ResourceType;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.event.Event;
 import io.harness.ng.core.AccountScope;
@@ -48,7 +48,7 @@ public class ConnectorCreateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(connectorDTO.getIdentifier()).type(Resource.Type.CONNECTOR).build();
+    return Resource.builder().identifier(connectorDTO.getIdentifier()).type(ResourceType.CONNECTOR.name()).build();
   }
 
   @JsonIgnore

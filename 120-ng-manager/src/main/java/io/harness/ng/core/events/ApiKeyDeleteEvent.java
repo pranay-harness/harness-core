@@ -3,6 +3,7 @@ package io.harness.ng.core.events;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.ResourceType;
 import io.harness.beans.Scope;
 import io.harness.event.Event;
 import io.harness.ng.core.Resource;
@@ -35,7 +36,7 @@ public class ApiKeyDeleteEvent implements Event {
   @Override
   @JsonIgnore
   public Resource getResource() {
-    return Resource.builder().identifier(apiKey.getIdentifier()).type(Resource.Type.API_KEY).build();
+    return Resource.builder().identifier(apiKey.getIdentifier()).type(ResourceType.API_KEY.name()).build();
   }
 
   @Override

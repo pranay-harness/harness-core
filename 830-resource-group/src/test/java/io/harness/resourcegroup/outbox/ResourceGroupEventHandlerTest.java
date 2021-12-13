@@ -27,6 +27,7 @@ import io.harness.CategoryTest;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
+import io.harness.audit.ResourceType;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.category.element.UnitTests;
@@ -135,7 +136,7 @@ public class ResourceGroupEventHandlerTest extends CategoryTest {
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
     assertNotNull(auditEntry);
     assertEquals(outboxEvent.getId(), auditEntry.getInsertId());
-    assertEquals(Resource.Type.RESOURCE_GROUP, auditEntry.getResource().getType());
+    assertEquals(ResourceType.RESOURCE_GROUP, auditEntry.getResource().getType());
     assertEquals(identifier, auditEntry.getResource().getIdentifier());
     assertEquals(accountIdentifier, auditEntry.getResourceScope().getAccountIdentifier());
     assertEquals(orgIdentifier, auditEntry.getResourceScope().getOrgIdentifier());
@@ -193,7 +194,7 @@ public class ResourceGroupEventHandlerTest extends CategoryTest {
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
     assertNotNull(auditEntry);
     assertEquals(outboxEvent.getId(), auditEntry.getInsertId());
-    assertEquals(Resource.Type.RESOURCE_GROUP, auditEntry.getResource().getType());
+    assertEquals(ResourceType.RESOURCE_GROUP, auditEntry.getResource().getType());
     assertEquals(identifier, auditEntry.getResource().getIdentifier());
     assertEquals(accountIdentifier, auditEntry.getResourceScope().getAccountIdentifier());
     assertEquals(orgIdentifier, auditEntry.getResourceScope().getOrgIdentifier());
@@ -249,7 +250,7 @@ public class ResourceGroupEventHandlerTest extends CategoryTest {
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
     assertNotNull(auditEntry);
     assertEquals(outboxEvent.getId(), auditEntry.getInsertId());
-    assertEquals(Resource.Type.RESOURCE_GROUP, auditEntry.getResource().getType());
+    assertEquals(ResourceType.RESOURCE_GROUP, auditEntry.getResource().getType());
     assertEquals(identifier, auditEntry.getResource().getIdentifier());
     assertEquals(accountIdentifier, auditEntry.getResourceScope().getAccountIdentifier());
     assertEquals(orgIdentifier, auditEntry.getResourceScope().getOrgIdentifier());

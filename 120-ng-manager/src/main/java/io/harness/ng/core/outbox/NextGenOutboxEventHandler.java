@@ -14,10 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Slf4j
 public class NextGenOutboxEventHandler implements OutboxEventHandler {
-  private final Map<Resource.Type, OutboxEventHandler> outboxEventHandlerMap;
+  private final Map<String, OutboxEventHandler> outboxEventHandlerMap;
 
   @Inject
-  public NextGenOutboxEventHandler(Map<Resource.Type, OutboxEventHandler> outboxEventHandlerMap) {
+  public NextGenOutboxEventHandler(Map<String, OutboxEventHandler> outboxEventHandlerMap) {
     this.outboxEventHandlerMap = outboxEventHandlerMap;
   }
 
