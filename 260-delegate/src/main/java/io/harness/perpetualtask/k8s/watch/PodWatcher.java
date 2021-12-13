@@ -42,6 +42,7 @@ import io.kubernetes.client.openapi.models.V1PodStatus;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.util.CallGeneratorParams;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,7 +50,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTime;
 
 @OwnedBy(HarnessTeam.CE)
 @Slf4j
@@ -122,8 +122,9 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
   public void onAdd(V1Pod pod) {
     try {
       log.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.ADDED);
-      DateTime creationTimestamp = pod.getMetadata().getCreationTimestamp();
-      if (!isClusterSeen || creationTimestamp == null || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
+      OffsetDateTime creationTimestamp = pod.getMetadata().getCreationTimestamp();
+      if (!isClusterSeen || creationTimestamp == null
+          || creationTimestamp.isAfter(OffsetDateTime.now().minusHours(2))) {
         eventReceived(pod);
       } else {
         publishedPods.add(pod.getMetadata().getUid());
@@ -160,7 +161,8 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
     V1PodCondition podScheduledCondition = getPodScheduledCondition(pod);
 
     if (podScheduledCondition != null && !publishedPods.contains(uid)) {
-      Timestamp creationTimestamp = HTimestamps.fromMillis(pod.getMetadata().getCreationTimestamp().getMillis());
+      Timestamp creationTimestamp =
+          HTimestamps.fromMillis(pod.getMetadata().getCreationTimestamp().toInstant().toEpochMilli());
 
       PodInfo podInfo =
           PodInfo.newBuilder(podInfoPrototype)
@@ -195,7 +197,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
     }
 
     if (isPodDeleted(pod)) {
-      Timestamp timestamp = HTimestamps.fromMillis(pod.getMetadata().getDeletionTimestamp().getMillis());
+      Timestamp timestamp = HTimestamps.fromMillis(pod.getMetadata().getDeletionTimestamp().toInstant().toEpochMilli());
       PodEvent podEvent = PodEvent.newBuilder(podEventPrototype)
                               .setPodUid(uid)
                               .setType(EVENT_TYPE_TERMINATED)
