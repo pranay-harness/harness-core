@@ -34,6 +34,7 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -217,6 +218,68 @@ public class NewRelicServiceImplTest extends CvNextGenTestBase {
 
     assertThat(sampleData).isNotEmpty();
     assertThat(sampleData.size()).isEqualTo(15);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testFetchSampleData() {
+    List<NewRelicApplication> newRelicApplications = new ArrayList<>();
+    for (int i = 0; i < 100; i++) {
+      newRelicApplications.add(
+          NewRelicApplication.builder().applicationName("application - " + i).applicationId(i).build());
+    }
+    when(verificationManagerService.getDataCollectionResponse(
+             anyString(), anyString(), anyString(), any(DataCollectionRequest.class)))
+        .thenReturn(JsonUtils.asJson(
+            NewRelicApplication.builder().applicationName("application - ").applicationId(12).build()));
+    String query =
+        "SELECT average(`apm.service.transaction.duration`) FROM Metric WHERE appName = 'My Application' TIMESERIES";
+    LinkedHashMap response =
+        newRelicService.fetchSampleData(builderFactory.getProjectParams(), connectorIdentifier, query, generateUuid());
+    assertThat(response).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testFetchSampleData_badQueryWithTime() {
+    List<NewRelicApplication> newRelicApplications = new ArrayList<>();
+    for (int i = 0; i < 100; i++) {
+      newRelicApplications.add(
+          NewRelicApplication.builder().applicationName("application - " + i).applicationId(i).build());
+    }
+    when(verificationManagerService.getDataCollectionResponse(
+             anyString(), anyString(), anyString(), any(DataCollectionRequest.class)))
+        .thenReturn(JsonUtils.asJson(newRelicApplications));
+    String query =
+        "SELECT average(`apm.service.transaction.duration`) FROM Metric WHERE appName = 'My Application' TIMESERIES SINCE 30 MINUTES AGO";
+    assertThatThrownBy(()
+                           -> newRelicService.fetchSampleData(
+                               builderFactory.getProjectParams(), connectorIdentifier, query, generateUuid()))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining(
+            "Query should not contain any time duration. Please remove SINCE or any time related keywords");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testFetchSampleData_badQueryWithoutTimeseries() {
+    List<NewRelicApplication> newRelicApplications = new ArrayList<>();
+    for (int i = 0; i < 100; i++) {
+      newRelicApplications.add(
+          NewRelicApplication.builder().applicationName("application - " + i).applicationId(i).build());
+    }
+    when(verificationManagerService.getDataCollectionResponse(
+             anyString(), anyString(), anyString(), any(DataCollectionRequest.class)))
+        .thenReturn(JsonUtils.asJson(newRelicApplications));
+    String query = "SELECT average(`apm.service.transaction.duration`) FROM Metric WHERE appName = 'My Application'";
+    assertThatThrownBy(()
+                           -> newRelicService.fetchSampleData(
+                               builderFactory.getProjectParams(), connectorIdentifier, query, generateUuid()))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Query should end with the TIMESERIES keyword");
   }
 
   @Test
