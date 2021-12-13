@@ -1,6 +1,8 @@
 package io.harness.delegate.task.citasks.vm;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.RUNTEST_STEP_KIND;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.RUN_STEP_KIND;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.WORKDIR_VOLUME_NAME;
@@ -8,6 +10,7 @@ import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.WORKDIR_V
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.pod.SecretParams;
 import io.harness.delegate.beans.ci.vm.CIVmExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
 import io.harness.delegate.beans.ci.vm.runner.ExecuteStepRequest;
@@ -22,11 +25,16 @@ import io.harness.delegate.beans.ci.vm.steps.VmRunTestStep;
 import io.harness.delegate.beans.ci.vm.steps.VmStepInfo;
 import io.harness.delegate.beans.ci.vm.steps.VmUnitTestReport;
 import io.harness.delegate.task.citasks.CIExecuteStepTaskHandler;
+import io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder;
 import io.harness.delegate.task.citasks.vm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Response;
@@ -35,6 +43,7 @@ import retrofit2.Response;
 @OwnedBy(HarnessTeam.CI)
 public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   @Inject private HttpHelper httpHelper;
+  @Inject private SecretSpecBuilder secretSpecBuilder;
   @NotNull private Type type = Type.VM;
 
   @Override
@@ -118,6 +127,20 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   }
 
   private void setPluginConfig(VmPluginStep pluginStep, ConfigBuilder configBuilder) {
+    Map<String, String> env = new HashMap<>();
+    List<String> secrets = new ArrayList<>();
+    if (isNotEmpty(pluginStep.getEnvVariables())) {
+      env = pluginStep.getEnvVariables();
+    }
+
+    if (pluginStep.getConnector() != null) {
+      Map<String, SecretParams> secretVars = secretSpecBuilder.decryptConnectorSecret(pluginStep.getConnector());
+      for (Map.Entry<String, SecretParams> entry : secretVars.entrySet()) {
+        String secret = new String(decodeBase64(entry.getValue().getValue()));
+        env.put(entry.getKey(), secret);
+        secrets.add(secret);
+      }
+    }
     configBuilder.kind(RUN_STEP_KIND)
         .runConfig(ExecuteStepRequest.RunConfig.builder().build())
         .image(pluginStep.getImage())
