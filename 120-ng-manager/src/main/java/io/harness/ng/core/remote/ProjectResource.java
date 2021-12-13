@@ -201,6 +201,46 @@ public class ProjectResource {
     return ResponseDTO.newResponse(getNGPageResponse(projects.map(ProjectMapper::toResponseWrapper)));
   }
 
+  @GET
+  @Path("/list")
+  @ApiOperation(value = "Get Project list", nickname = "getProjectListWithMultiOrgFilter")
+  @Operation(operationId = "getProjectListWithMultiOrgFilter", summary = "List user's project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Paginated list of Projects with support to filter by multiple organizations")
+      })
+  public ResponseDTO<PageResponse<ProjectResponse>>
+  listWithMultiOrg(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                       NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_IDENTIFIERS_KEY) Set<String> orgIdentifiers,
+      @Parameter(description = "This boolean specifies whether to Filter Projects which has the Module of type "
+              + "passed in the module type parameter or to Filter Projects which does not has the Module of type "
+              + "passed in the module type parameter") @QueryParam("hasModule") @DefaultValue("true") boolean hasModule,
+      @Parameter(description = "list of Project Ids for filtering results") @QueryParam(
+          NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
+      @Parameter(description = "Filter Projects by module type") @QueryParam(
+          NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
+      @Parameter(description = "Filter Projects by searching for this word in Name, Id, and Tag")
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder order =
+          SortOrder.Builder.aSortOrder().withField(ProjectKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
+      pageRequest.setSortOrders(ImmutableList.of(order));
+    }
+    ProjectFilterDTO projectFilterDTO = ProjectFilterDTO.builder()
+                                            .searchTerm(searchTerm)
+                                            .orgIdentifiers(orgIdentifiers)
+                                            .hasModule(hasModule)
+                                            .moduleType(moduleType)
+                                            .identifiers(identifiers)
+                                            .build();
+    Page<Project> projects =
+        projectService.listPermittedProjects(accountIdentifier, getPageRequest(pageRequest), projectFilterDTO);
+    return ResponseDTO.newResponse(getNGPageResponse(projects.map(ProjectMapper::toResponseWrapper)));
+  }
+
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update a Project by identifier", nickname = "putProject")
