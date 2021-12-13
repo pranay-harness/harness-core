@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.environment.VmBuildJobInfo;
 import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.StageDetails;
@@ -18,6 +19,7 @@ import io.harness.delegate.beans.ci.vm.CIVmInitializeTaskParams;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -38,6 +40,7 @@ public class VmInitializeTaskUtilsTest extends CIExecutionTestBase {
   @InjectMocks private VmInitializeTaskUtils vmInitializeTaskUtils;
   @Mock private CILogServiceUtils logServiceUtils;
   @Mock private TIServiceUtils tiServiceUtils;
+  @Mock private CodebaseUtils codebaseUtils;
 
   private Ambiance ambiance;
 
@@ -58,6 +61,7 @@ public class VmInitializeTaskUtilsTest extends CIExecutionTestBase {
     InitializeStepInfo initializeStepInfo =
         InitializeStepInfo.builder()
             .infrastructure(VmInfraYaml.builder().spec(VmInfraYamlSpec.builder().poolId(poolId).build()).build())
+            .buildJobEnvInfo(VmBuildJobInfo.builder().build())
             .build();
     when(executionSweepingOutputResolver.consume(any(), any(), any(), any())).thenReturn("");
     when(executionSweepingOutputResolver.resolveOptional(
@@ -67,6 +71,12 @@ public class VmInitializeTaskUtilsTest extends CIExecutionTestBase {
                         .output(StageDetails.builder().stageRuntimeID(stageRuntimeId).build())
                         .build());
 
+    Map<String, String> m = new HashMap<>();
+    when(codebaseUtils.getGitConnector(AmbianceUtils.getNgAccess(ambiance), initializeStepInfo.getCiCodebase(),
+             initializeStepInfo.isSkipGitClone()))
+        .thenReturn(null);
+    when(codebaseUtils.getCodebaseVars(any(), any())).thenReturn(m);
+    when(codebaseUtils.getGitEnvVariables(null, initializeStepInfo.getCiCodebase())).thenReturn(m);
     when(logServiceUtils.getLogServiceConfig()).thenReturn(LogServiceConfig.builder().baseUrl("1.1.1.1").build());
     when(logServiceUtils.getLogServiceToken(any())).thenReturn("test");
     when(tiServiceUtils.getTiServiceConfig()).thenReturn(TIServiceConfig.builder().baseUrl("1.1.1.2").build());

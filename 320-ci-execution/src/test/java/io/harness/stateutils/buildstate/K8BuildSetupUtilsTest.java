@@ -94,6 +94,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
   @Mock CILogServiceUtils logServiceUtils;
   @Mock TIServiceUtils tiServiceUtils;
   @Mock PipelineRbacHelper pipelineRbacHelper;
+  @Mock CodebaseUtils codebaseUtils;
 
   @Before
   public void setUp() {
@@ -273,7 +274,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
             .build();
     doNothing().when(pipelineRbacHelper).checkRuntimePermissions(any(), any(), any());
     CodeBase codeBase = CodeBase.builder().repoName("test").build();
-    Map<String, String> gitEnvVariables = k8BuildSetupUtils.getGitEnvVariables(gitConnector, codeBase);
+    Map<String, String> gitEnvVariables = codebaseUtils.getGitEnvVariables(gitConnector, codeBase);
     assertThat(gitEnvVariables).containsKeys(DRONE_REMOTE_URL, DRONE_AWS_REGION);
     assertThat(gitEnvVariables.get(DRONE_REMOTE_URL))
         .isEqualTo("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test.git");

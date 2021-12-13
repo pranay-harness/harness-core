@@ -45,7 +45,7 @@ public class BuildJobEnvInfoBuilder {
           stageElementConfig, ciExecutionArgs, steps, accountId);
     } // TODO (shubham): Handle Use from stage for AWS VM
     else if (infrastructure.getType() == Type.VM) {
-      return VmBuildJobInfo.builder().workDir(STEP_WORK_DIR).build();
+      return VmBuildJobInfo.builder().workDir(STEP_WORK_DIR).ciExecutionArgs(ciExecutionArgs).build();
     } else {
       throw new IllegalArgumentException("Input infrastructure type is not of type kubernetes");
     }

@@ -315,6 +315,37 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "BranchWebhookEvent": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/WebhookEvent"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "baseAttributes": {
+              "$ref": "#/definitions/WebhookBaseAttributes"
+            },
+            "branchName": {
+              "type": "string"
+            },
+            "commitDetailsList": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CommitDetails"
+              }
+            },
+            "link": {
+              "type": "string"
+            },
+            "repository": {
+              "$ref": "#/definitions/Repository"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "Build": {
       "type": "object",
       "required": [
@@ -350,8 +381,42 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "BuildNumberDetails": {
+      "type": "object",
+      "required": [
+        "uuid"
+      ],
+      "properties": {
+        "buildNumber": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "uuid": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "BuildSpec": {
       "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CIExecutionArgs": {
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "buildNumberDetails": {
+          "$ref": "#/definitions/BuildNumberDetails"
+        },
+        "executionSource": {
+          "$ref": "#/definitions/ExecutionSource"
+        },
+        "inputSet": {
+          "$ref": "#/definitions/InputSet"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "CIServiceInfo": {
@@ -559,6 +624,34 @@
         },
         "sslVerify": {
           "type": "boolean"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CommitDetails": {
+      "type": "object",
+      "properties": {
+        "commitId": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "ownerEmail": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "ownerName": {
+          "type": "string"
+        },
+        "timeStamp": {
+          "type": "integer",
+          "format": "int64"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -791,6 +884,25 @@
           }
         }
       ]
+    },
+    "CustomExecutionSource": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExecutionSource"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "branch": {
+              "type": "string"
+            },
+            "tag": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "DependencyElement": {
       "type": "object",
@@ -1108,6 +1220,21 @@
           },
           "maxItems": 2147483647,
           "minItems": 1
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ExecutionSource": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "WEBHOOK",
+            "MANUAL",
+            "CUSTOM"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1563,6 +1690,20 @@
           }
         }
       ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InputSet": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Manual",
+            "Webhook"
+          ]
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "InputSetValidator": {
@@ -2073,6 +2214,31 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ManualExecutionSource": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExecutionSource"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "branch": {
+              "type": "string"
+            },
+            "commitSha": {
+              "type": "string"
+            },
+            "prNumber": {
+              "type": "string"
+            },
+            "tag": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ManualFailureSpecConfig": {
       "type": "object",
       "required": [
@@ -2344,6 +2510,56 @@
           ],
           "properties": {
             "number": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PRWebhookEvent": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/WebhookEvent"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "baseAttributes": {
+              "$ref": "#/definitions/WebhookBaseAttributes"
+            },
+            "closed": {
+              "type": "boolean"
+            },
+            "commitDetailsList": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CommitDetails"
+              }
+            },
+            "merged": {
+              "type": "boolean"
+            },
+            "pullRequestBody": {
+              "type": "string"
+            },
+            "pullRequestId": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "pullRequestLink": {
+              "type": "string"
+            },
+            "repository": {
+              "$ref": "#/definitions/Repository"
+            },
+            "sourceBranch": {
+              "type": "string"
+            },
+            "targetBranch": {
+              "type": "string"
+            },
+            "title": {
               "type": "string"
             }
           }
@@ -2733,6 +2949,36 @@
           }
         },
         "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Repository": {
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "httpURL": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "private": {
+          "type": "boolean"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "sshURL": {
           "type": "string"
         }
       },
@@ -4572,6 +4818,9 @@
         {
           "type": "object",
           "properties": {
+            "ciExecutionArgs": {
+              "$ref": "#/definitions/CIExecutionArgs"
+            },
             "workDir": {
               "type": "string"
             }
@@ -4618,6 +4867,121 @@
           "type": "string"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "WebhookBaseAttributes": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "after": {
+          "type": "string"
+        },
+        "authorAvatar": {
+          "type": "string"
+        },
+        "authorEmail": {
+          "type": "string"
+        },
+        "authorLogin": {
+          "type": "string"
+        },
+        "authorName": {
+          "type": "string"
+        },
+        "before": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "sender": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "WebhookEvent": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "PR",
+            "BRANCH"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "WebhookExecutionSource": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExecutionSource"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "triggerName": {
+              "type": "string"
+            },
+            "user": {
+              "$ref": "#/definitions/WebhookGitUser"
+            },
+            "webhookEvent": {
+              "$ref": "#/definitions/WebhookEvent"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "WebhookGitUser": {
+      "type": "object",
+      "properties": {
+        "avatar": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "gitId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "WebhookTriggerExecutionInputSet": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/InputSet"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "payload": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "WeightedVariation": {
