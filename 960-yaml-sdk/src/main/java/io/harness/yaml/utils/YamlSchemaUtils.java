@@ -294,10 +294,8 @@ public class YamlSchemaUtils {
 
     for (Set<Class<?>> classes : newYamlSchemaSubtypesToBeAdded.values()) {
       for (Class<?> clazz : classes) {
-        if (YamlSchemaUtils.getTypedField(clazz) != null) {
-          oneOfNode.add(JsonNodeUtils.upsertPropertyInObjectNode(new ObjectNode(JsonNodeFactory.instance), REF_NODE,
-              "#/definitions/" + nameSpaceString + clazz.getSimpleName()));
-        }
+        oneOfNode.add(JsonNodeUtils.upsertPropertyInObjectNode(new ObjectNode(JsonNodeFactory.instance), REF_NODE,
+            "#/definitions/" + nameSpaceString + clazz.getSimpleName()));
       }
     }
     ((ObjectNode) stepsNode).set(ONE_OF_NODE, oneOfNode);

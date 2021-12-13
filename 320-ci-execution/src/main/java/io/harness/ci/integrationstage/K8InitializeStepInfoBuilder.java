@@ -529,54 +529,13 @@ public class K8InitializeStepInfoBuilder implements InitializeStepInfoBuilder {
     Map<String, K8BuildJobEnvInfo.ConnectorConversionInfo> map = new HashMap<>();
     if (stepElement.getStepSpecType() instanceof PluginCompatibleStep) {
       PluginCompatibleStep step = (PluginCompatibleStep) stepElement.getStepSpecType();
-      switch (stepElement.getType()) {
-        case "BuildAndPushECR":
-        case "RestoreCacheS3":
-        case "SaveCacheS3":
-        case "S3Upload":
-          map.put(stepElement.getIdentifier(),
-              K8BuildJobEnvInfo.ConnectorConversionInfo.builder()
-                  .connectorRef(resolveStringParameter(
-                      "connectorRef", stepElement.getType(), stepElement.getIdentifier(), step.getConnectorRef(), true))
-                  .envToSecretEntry(EnvVariableEnum.AWS_ACCESS_KEY, PLUGIN_ACCESS_KEY)
-                  .envToSecretEntry(EnvVariableEnum.AWS_SECRET_KEY, PLUGIN_SECRET_KEY)
-                  .build());
-          break;
-        case "BuildAndPushGCR":
-        case "GCSUpload":
-        case "SaveCacheGCS":
-        case "RestoreCacheGCS":
-          map.put(stepElement.getIdentifier(),
-              K8BuildJobEnvInfo.ConnectorConversionInfo.builder()
-                  .connectorRef(resolveStringParameter(
-                      "connectorRef", stepElement.getType(), stepElement.getIdentifier(), step.getConnectorRef(), true))
-                  .envToSecretEntry(EnvVariableEnum.GCP_KEY, PLUGIN_JSON_KEY)
-                  .build());
-
-          break;
-        case "BuildAndPushDockerRegistry":
-          map.put(stepElement.getIdentifier(),
-              K8BuildJobEnvInfo.ConnectorConversionInfo.builder()
-                  .connectorRef(resolveStringParameter(
-                      "connectorRef", stepElement.getType(), stepElement.getIdentifier(), step.getConnectorRef(), true))
-                  .envToSecretEntry(EnvVariableEnum.DOCKER_USERNAME, PLUGIN_USERNAME)
-                  .envToSecretEntry(EnvVariableEnum.DOCKER_PASSWORD, PLUGIN_PASSW)
-                  .envToSecretEntry(EnvVariableEnum.DOCKER_REGISTRY, PLUGIN_REGISTRY)
-                  .build());
-          break;
-        case "ArtifactoryUpload":
-          map.put(stepElement.getIdentifier(),
-              K8BuildJobEnvInfo.ConnectorConversionInfo.builder()
-                  .connectorRef(resolveStringParameter(
-                      "connectorRef", stepElement.getType(), stepElement.getIdentifier(), step.getConnectorRef(), true))
-                  .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_ENDPOINT, PLUGIN_URL)
-                  .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_USERNAME, PLUGIN_USERNAME)
-                  .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_PASSWORD, PLUGIN_PASSW)
-                  .build());
-          break;
-        default:
-          throw new IllegalStateException("Unexpected value: " + stepElement.getType());
-      }
+      String connectorRef = PluginSettingUtils.getConnectorRef(step);
+      Map<EnvVariableEnum, String> envToSecretMap = PluginSettingUtils.getConnectorSecretEnvMap(step);
+      map.put(stepElement.getIdentifier(),
+          K8BuildJobEnvInfo.ConnectorConversionInfo.builder()
+              .connectorRef(connectorRef)
+              .envToSecretsMap(envToSecretMap)
+              .build());
     }
     return map;
   }

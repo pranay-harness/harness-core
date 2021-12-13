@@ -6,7 +6,13 @@ import static io.harness.beans.serializer.RunTimeInputHandler.resolveBooleanPara
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveListParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
+import static io.harness.common.CIExecutionConstants.PLUGIN_ACCESS_KEY;
 import static io.harness.common.CIExecutionConstants.PLUGIN_ARTIFACT_FILE_VALUE;
+import static io.harness.common.CIExecutionConstants.PLUGIN_JSON_KEY;
+import static io.harness.common.CIExecutionConstants.PLUGIN_PASSW;
+import static io.harness.common.CIExecutionConstants.PLUGIN_SECRET_KEY;
+import static io.harness.common.CIExecutionConstants.PLUGIN_URL;
+import static io.harness.common.CIExecutionConstants.PLUGIN_USERNAME;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -17,6 +23,8 @@ import static org.springframework.util.StringUtils.trimTrailingCharacter;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
+import io.harness.beans.serializer.RunTimeInputHandler;
+import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
 import io.harness.beans.steps.stepinfo.ECRStepInfo;
 import io.harness.beans.steps.stepinfo.GCRStepInfo;
@@ -28,6 +36,7 @@ import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
 import io.harness.beans.yaml.extended.ArchiveFormat;
+import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
 import io.harness.exception.InvalidArgumentsException;
 
 import java.util.HashMap;
@@ -91,6 +100,43 @@ public class PluginSettingUtils {
         return getSaveCacheS3StepInfoEnvVariables((SaveCacheS3StepInfo) stepInfo, identifier, timeout);
       case RESTORE_CACHE_S3:
         return getRestoreCacheS3StepInfoEnvVariables((RestoreCacheS3StepInfo) stepInfo, identifier, timeout);
+      default:
+        throw new IllegalStateException("Unexpected value: " + stepInfo.getNonYamlInfo().getStepInfoType());
+    }
+  }
+
+  public String getConnectorRef(PluginCompatibleStep stepInfo) {
+    String stepType = stepInfo.getNonYamlInfo().getStepInfoType().getDisplayName();
+    return RunTimeInputHandler.resolveStringParameter(
+        "connectorRef", stepType, stepInfo.getIdentifier(), stepInfo.getConnectorRef(), true);
+  }
+
+  public Map<EnvVariableEnum, String> getConnectorSecretEnvMap(CIStepInfo stepInfo) {
+    Map<EnvVariableEnum, String> map = new HashMap<>();
+    switch (stepInfo.getNonYamlInfo().getStepInfoType()) {
+      case ECR:
+      case RESTORE_CACHE_S3:
+      case SAVE_CACHE_S3:
+      case UPLOAD_S3:
+        map.put(EnvVariableEnum.AWS_ACCESS_KEY, PLUGIN_ACCESS_KEY);
+        map.put(EnvVariableEnum.AWS_SECRET_KEY, PLUGIN_SECRET_KEY);
+        return map;
+      case GCR:
+      case RESTORE_CACHE_GCS:
+      case SAVE_CACHE_GCS:
+      case UPLOAD_GCS:
+        map.put(EnvVariableEnum.GCP_KEY, PLUGIN_JSON_KEY);
+        return map;
+      case DOCKER:
+        map.put(EnvVariableEnum.DOCKER_USERNAME, PLUGIN_USERNAME);
+        map.put(EnvVariableEnum.DOCKER_PASSWORD, PLUGIN_PASSW);
+        map.put(EnvVariableEnum.DOCKER_REGISTRY, PLUGIN_REGISTRY);
+        return map;
+      case UPLOAD_ARTIFACTORY:
+        map.put(EnvVariableEnum.ARTIFACTORY_ENDPOINT, PLUGIN_URL);
+        map.put(EnvVariableEnum.ARTIFACTORY_USERNAME, PLUGIN_USERNAME);
+        map.put(EnvVariableEnum.ARTIFACTORY_PASSWORD, PLUGIN_PASSW);
+        return map;
       default:
         throw new IllegalStateException("Unexpected value: " + stepInfo.getNonYamlInfo().getStepInfoType());
     }

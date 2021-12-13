@@ -59,15 +59,17 @@ public class PmsSdkModule extends AbstractModule {
   @NotNull
   private List<Module> getModules() {
     List<Module> modules = new ArrayList<>();
-    modules.add(PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder()
-                                                 .serviceName(config.getServiceName())
-                                                 .grpcClientConfig(config.getPmsGrpcClientConfig())
-                                                 .grpcServerConfig(config.getGrpcServerConfig())
-                                                 .sdkDeployMode(config.getDeploymentMode())
-                                                 .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
-                                                 .executionPoolConfig(config.getExecutionPoolConfig())
-                                                 .orchestrationEventPoolConfig(config.getOrchestrationEventPoolConfig())
-                                                 .build()));
+    modules.add(
+        PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder()
+                                         .serviceName(config.getServiceName())
+                                         .grpcClientConfig(config.getPmsGrpcClientConfig())
+                                         .grpcServerConfig(config.getGrpcServerConfig())
+                                         .sdkDeployMode(config.getDeploymentMode())
+                                         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
+                                         .executionPoolConfig(config.getExecutionPoolConfig())
+                                         .orchestrationEventPoolConfig(config.getOrchestrationEventPoolConfig())
+                                         .planCreatorServicePoolConfig(config.getPlanCreatorServiceInternalConfig())
+                                         .build()));
     modules.add(
         PmsSdkEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));
     modules.add(PmsSdkRegistryModule.getInstance(config));

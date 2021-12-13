@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -38,6 +40,7 @@ import retrofit2.Response;
 public class PMSPipelineTemplateHelperTest extends CategoryTest {
   @Mock private PmsFeatureFlagHelper pmsFeatureFlagHelper;
   @Mock private TemplateResourceClient templateResourceClient;
+  @Mock private PipelineEnforcementService pipelineEnforcementService;
   @InjectMocks private PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   private static final String ACCOUNT_ID = "accountId";
@@ -48,7 +51,9 @@ public class PMSPipelineTemplateHelperTest extends CategoryTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    pipelineTemplateHelper = new PMSPipelineTemplateHelper(pmsFeatureFlagHelper, templateResourceClient);
+    pipelineTemplateHelper =
+        new PMSPipelineTemplateHelper(pmsFeatureFlagHelper, templateResourceClient, pipelineEnforcementService);
+    doReturn(true).when(pipelineEnforcementService).isFeatureRestricted(any(), anyString());
   }
 
   @Test

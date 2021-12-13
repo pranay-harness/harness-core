@@ -3,6 +3,7 @@ package io.harness.cvng.core.beans.monitoredService.healthSouceSpec;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.HealthSourceMetricDefinition;
+import io.harness.cvng.core.beans.HealthSourceQueryType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.entities.CVConfig;
@@ -19,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -29,17 +28,16 @@ import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.apache.commons.collections4.CollectionUtils;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NewRelicHealthSourceSpec extends HealthSourceSpec {
-  @NotEmpty String applicationName;
-  @NotEmpty String applicationId;
-  @NotNull String feature;
-  @NotNull @NotEmpty @Valid Set<MetricPackDTO> metricPacks;
+  String applicationName;
+  String applicationId;
+  String feature;
+  Set<MetricPackDTO> metricPacks;
   @UniqueIdentifierCheck List<NewRelicMetricDefinition> newRelicMetricDefinitions;
 
   @Override
@@ -93,7 +91,7 @@ public class NewRelicHealthSourceSpec extends HealthSourceSpec {
   private List<NewRelicCVConfig> toCVConfigs(String accountId, String orgIdentifier, String projectIdentifier,
       String environmentRef, String serviceRef, String identifier, String name, MetricPackService metricPackService) {
     List<NewRelicCVConfig> cvConfigs = new ArrayList<>();
-    metricPacks.forEach(metricPack -> {
+    CollectionUtils.emptyIfNull(metricPacks).forEach(metricPack -> {
       MetricPack metricPackFromDb =
           metricPack.toMetricPack(accountId, orgIdentifier, projectIdentifier, getType(), metricPackService);
       NewRelicCVConfig newRelicCVConfig = NewRelicCVConfig.builder()
@@ -132,6 +130,7 @@ public class NewRelicHealthSourceSpec extends HealthSourceSpec {
                                               .envIdentifier(environmentRef)
                                               .serviceIdentifier(serviceRef)
                                               .groupName(definitionList.get(0).getGroupName())
+                                              .queryType(definitionList.get(0).getQueryType())
                                               .category(definitionList.get(0).getRiskProfile().getCategory())
                                               .build();
       newRelicCVConfig.populateFromMetricDefinitions(
@@ -160,6 +159,7 @@ public class NewRelicHealthSourceSpec extends HealthSourceSpec {
     String groupName;
     String nrql;
     MetricResponseMapping responseMapping;
+    HealthSourceQueryType queryType;
   }
 
   @Value
@@ -187,10 +187,13 @@ public class NewRelicHealthSourceSpec extends HealthSourceSpec {
   private static class MetricDefinitionKey {
     String groupName;
     CVMonitoringCategory category;
+    HealthSourceQueryType queryType;
+
     public static MetricDefinitionKey fromMetricDefinition(NewRelicMetricDefinition metricDefinition) {
       return MetricDefinitionKey.builder()
           .category(metricDefinition.getRiskProfile().getCategory())
           .groupName(metricDefinition.getGroupName())
+          .queryType(metricDefinition.getQueryType())
           .build();
     }
   }

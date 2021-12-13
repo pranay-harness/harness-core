@@ -50,7 +50,7 @@ public class HelmCommandRequestNG implements TaskParameters, ExecutionCapability
   private K8sInfraDelegateConfig k8sInfraDelegateConfig;
   private ManifestDelegateConfig manifestDelegateConfig;
   private String accountId;
-  private boolean skipSteadyStateCheck;
+  private boolean k8SteadyStateCheckEnabled;
   @Builder.Default private boolean shouldOpenFetchFilesLogStream = true;
   private CommandUnitsProgress commandUnitsProgress;
   private transient LogCallback logCallback;

@@ -25,12 +25,12 @@ public class StackdriverDataCollectionInfoMapper
   @Override
   public StackdriverDataCollectionInfo toDataCollectionInfo(
       List<StackdriverCVConfig> cvConfigList, ServiceLevelIndicator serviceLevelIndicator) {
-    List<String> sliMetricNames = serviceLevelIndicator.getMetricNames();
+    List<String> sliMetricIdentifiers = serviceLevelIndicator.getMetricNames();
     Preconditions.checkNotNull(cvConfigList);
     StackdriverCVConfig baseCvConfig = cvConfigList.get(0);
     List<StackDriverMetricDefinition> metricDefinitions = new ArrayList<>();
     cvConfigList.forEach(cvConfig -> cvConfig.getMetricInfoList().forEach(metricInfo -> {
-      if (sliMetricNames.contains(metricInfo.getMetricName())) {
+      if (sliMetricIdentifiers.contains(metricInfo.getIdentifier())) {
         metricDefinitions.add(getMetricCollectionInfo(metricInfo));
       }
     }));
@@ -41,6 +41,7 @@ public class StackdriverDataCollectionInfoMapper
     StackDriverMetricDefinition metricDefinition =
         StackDriverMetricDefinition.extractFromJson(metricInfo.getJsonMetricDefinition());
     metricDefinition.setServiceInstanceField(metricInfo.getServiceInstanceField());
+    metricDefinition.setMetricIdentifier(metricInfo.getIdentifier());
     return metricDefinition;
   }
 

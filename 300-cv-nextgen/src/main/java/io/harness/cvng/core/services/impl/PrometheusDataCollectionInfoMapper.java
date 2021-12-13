@@ -27,12 +27,12 @@ public class PrometheusDataCollectionInfoMapper
   @Override
   public PrometheusDataCollectionInfo toDataCollectionInfo(
       List<PrometheusCVConfig> cvConfigList, ServiceLevelIndicator serviceLevelIndicator) {
-    List<String> sliMetricNames = serviceLevelIndicator.getMetricNames();
+    List<String> sliMetricIdentifiers = serviceLevelIndicator.getMetricNames();
     Preconditions.checkNotNull(cvConfigList);
     PrometheusCVConfig baseCvConfig = cvConfigList.get(0);
     List<PrometheusDataCollectionInfo.MetricCollectionInfo> metricCollectionInfoList = new ArrayList<>();
     cvConfigList.forEach(cvConfig -> cvConfig.getMetricInfoList().forEach(metricInfo -> {
-      if (sliMetricNames.contains(metricInfo.getMetricName())) {
+      if (sliMetricIdentifiers.contains(metricInfo.getIdentifier())) {
         metricCollectionInfoList.add(getMetricCollectionInfo(metricInfo));
       }
     }));
@@ -43,6 +43,7 @@ public class PrometheusDataCollectionInfoMapper
   private MetricCollectionInfo getMetricCollectionInfo(MetricInfo metricInfo) {
     return PrometheusDataCollectionInfo.MetricCollectionInfo.builder()
         .metricName(metricInfo.getMetricName())
+        .metricIdentifier(metricInfo.getIdentifier())
         .query(metricInfo.getQuery())
         .filters(metricInfo.getFilters())
         .serviceInstanceField(metricInfo.getServiceInstanceFieldName())

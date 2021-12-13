@@ -1,9 +1,11 @@
 package io.harness.cvng.servicelevelobjective.entities;
 
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricEventType;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
@@ -20,7 +22,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @FieldNameConstants(innerTypeName = "RatioServiceLevelIndicatorKeys")
 @EqualsAndHashCode(callSuper = true)
 public class RatioServiceLevelIndicator extends ServiceLevelIndicator {
-  String eventType;
+  RatioSLIMetricEventType eventType;
   String metric1;
   String metric2;
   Double thresholdValue;
@@ -50,6 +52,31 @@ public class RatioServiceLevelIndicator extends ServiceLevelIndicator {
           .set(RatioServiceLevelIndicatorKeys.metric2, ratioServiceLevelIndicator.getMetric2())
           .set(RatioServiceLevelIndicatorKeys.thresholdValue, ratioServiceLevelIndicator.getThresholdValue())
           .set(RatioServiceLevelIndicatorKeys.thresholdType, ratioServiceLevelIndicator.getThresholdType());
+    }
+  }
+
+  public boolean isUpdatable(ServiceLevelIndicator serviceLevelIndicator) {
+    try {
+      Preconditions.checkArgument(isCoreUpdatable(serviceLevelIndicator));
+      RatioServiceLevelIndicator ratioServiceLevelIndicator = (RatioServiceLevelIndicator) serviceLevelIndicator;
+      Preconditions.checkArgument(this.getEventType().equals(ratioServiceLevelIndicator.getEventType()));
+      Preconditions.checkArgument(this.getMetric1().equalsIgnoreCase(ratioServiceLevelIndicator.getMetric1()));
+      Preconditions.checkArgument(this.getMetric2().equalsIgnoreCase(ratioServiceLevelIndicator.getMetric2()));
+      return true;
+    } catch (IllegalArgumentException ex) {
+      return false;
+    }
+  }
+
+  @Override
+  public boolean shouldReAnalysis(ServiceLevelIndicator serviceLevelIndicator) {
+    try {
+      RatioServiceLevelIndicator ratioServiceLevelIndicator = (RatioServiceLevelIndicator) serviceLevelIndicator;
+      Preconditions.checkArgument(this.getThresholdValue().equals(ratioServiceLevelIndicator.getThresholdValue()));
+      Preconditions.checkArgument(this.getThresholdType().equals(ratioServiceLevelIndicator.getThresholdType()));
+      return false;
+    } catch (IllegalArgumentException ex) {
+      return true;
     }
   }
 }

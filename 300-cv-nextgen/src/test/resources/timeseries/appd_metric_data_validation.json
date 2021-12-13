@@ -3,21 +3,25 @@
   "result" : [ {
 	"txnName" : "Overall Application Performance",
 	"metricName" : "Errors per Minute",
-	"metricValue" : 233.0,
+	  "metricIdentifier" : "Errors per Minute",
+	  "metricValue" : 233.0,
 	"timestamp" : 1616754300000
   }, {
 	"txnName" : "Overall Application Performance",
 	"metricName" : "Calls per Minute",
-	"metricValue" : 343.0,
+	  "metricIdentifier" : "Calls per Minute",
+	  "metricValue" : 343.0,
 	"timestamp" : 1595760660000
   }, {
 	"txnName" : "Overall Application Performance",
 	"metricName" : "Average Response Time (ms)",
-	"metricValue" : 46.0,
+	  "metricIdentifier" : "Average Response Time (ms)",
+	  "metricValue" : 46.0,
 	"timestamp" : 1616754300000
   },{
 	  "txnName" : "Overall Application Performance",
 	  "metricName" : "Exceptions per Minute",
+	  "metricIdentifier" : "Exceptions per Minute",
 	  "metricValue" : 233.0,
 	  "timestamp" : 1616754300000
   } ],

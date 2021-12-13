@@ -6,14 +6,16 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 
 import io.harness.TemplateServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
+import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.NGTemplateException;
-import io.harness.filter.service.FilterService;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.ng.core.template.TemplateEntityType;
@@ -54,7 +56,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(CDC)
 public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
-  @Mock FilterService filterService;
+  @Mock EnforcementClientService enforcementClientService;
   @InjectMocks private NGTemplateServiceHelper templateServiceHelper;
   @Inject private GitSyncSdkService gitSyncSdkService;
   @Inject private NGTemplateRepository templateRepository;
@@ -82,6 +84,9 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
     on(templateService).set("gitSyncSdkService", gitSyncSdkService);
     on(templateService).set("transactionHelper", transactionHelper);
     on(templateService).set("templateServiceHelper", templateServiceHelper);
+    on(templateService).set("enforcementClientService", enforcementClientService);
+
+    doNothing().when(enforcementClientService).checkAvailability(any(), any());
     entity = TemplateEntity.builder()
                  .accountId(ACCOUNT_ID)
                  .orgIdentifier(ORG_IDENTIFIER)

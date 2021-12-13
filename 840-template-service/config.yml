@@ -114,3 +114,6 @@ managerAuthority: localhost
 hostname: ${HOSTNAME:-localhost}
 
 basePathPrefix: ${BASE_PATH_PREFIX:-""}
+
+enforcementClientConfiguration:
+  enforcementCheckEnabled: ${ENFORCEMENT_CHECK_ENABLED:-false}

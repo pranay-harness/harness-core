@@ -20,6 +20,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -61,17 +62,39 @@ public abstract class ServiceLevelIndicator
   private ServiceLevelIndicatorType type;
   private SLIMetricType sliMetricType;
   private SLIMissingDataType sliMissingDataType;
+  private int version;
 
   public abstract SLIMetricType getSLIMetricType();
 
   public abstract List<String> getMetricNames();
+
+  public abstract boolean isUpdatable(ServiceLevelIndicator serviceLevelIndicator);
+
+  public abstract boolean shouldReAnalysis(ServiceLevelIndicator serviceLevelIndicator);
+
+  protected boolean isCoreUpdatable(ServiceLevelIndicator serviceLevelIndicator) {
+    try {
+      Preconditions.checkNotNull(serviceLevelIndicator);
+      Preconditions.checkArgument(
+          this.getHealthSourceIdentifier().equals(serviceLevelIndicator.getHealthSourceIdentifier()));
+      Preconditions.checkArgument(
+          this.getMonitoredServiceIdentifier().equals(serviceLevelIndicator.getMonitoredServiceIdentifier()));
+      Preconditions.checkArgument(this.getSliMissingDataType() == serviceLevelIndicator.getSliMissingDataType());
+      Preconditions.checkArgument(this.getSLIMetricType() == serviceLevelIndicator.getSLIMetricType());
+      Preconditions.checkArgument(this.getType() == serviceLevelIndicator.getType());
+      return true;
+    } catch (Exception ex) {
+      return false;
+    }
+  }
 
   public abstract static class ServiceLevelIndicatorUpdatableEntity<T extends ServiceLevelIndicator, D
                                                                         extends ServiceLevelIndicator>
       implements UpdatableEntity<T, D> {
     protected void setCommonOperations(UpdateOperations<T> updateOperations, D serviceLevelIndicator) {
       updateOperations.set(ServiceLevelIndicatorKeys.type, serviceLevelIndicator.getType())
-          .set(ServiceLevelIndicatorKeys.sliMissingDataType, serviceLevelIndicator.getSliMissingDataType());
+          .set(ServiceLevelIndicatorKeys.sliMissingDataType, serviceLevelIndicator.getSliMissingDataType())
+          .inc(ServiceLevelIndicatorKeys.version);
     }
   }
   @FdIndex Long createNextTaskIteration;
