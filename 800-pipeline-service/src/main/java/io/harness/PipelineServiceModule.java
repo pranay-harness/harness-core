@@ -117,6 +117,7 @@ import io.harness.steps.jira.JiraStepHelperService;
 import io.harness.steps.shellscript.ShellScriptHelperService;
 import io.harness.steps.shellscript.ShellScriptHelperServiceImpl;
 import io.harness.steps.shellscript.ShellScriptStepNode;
+import io.harness.steps.template.TemplateStepNode;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.template.TemplateResourceClientModule;
@@ -179,6 +180,7 @@ public class PipelineServiceModule extends AbstractModule {
     {
       add(HttpStepNode.class);
       add(ShellScriptStepNode.class);
+      add(TemplateStepNode.class);
     }
   };
 
