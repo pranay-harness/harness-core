@@ -14,8 +14,11 @@ Var:requests.append(Var:metricRequest)
 Var metricResponses = execute-parallel(Var:requests)
 Var returnList = []
 
+Var index = 0
+Var one = 1
 foreach metricResponse in Var:metricResponses {
-Var timeSeriesPointsList = extract(Var:metricResponse, $.series)
+  Var metricIdentifier =  Env:metricIdentifiers[Var:index]
+  Var timeSeriesPointsList = extract(Var:metricResponse, $.series)
   foreach timeSeriesPoints in Var:timeSeriesPointsList {
      Var metricName = extract(Var:timeSeriesPoints, $.metric)
         Var tagSets = extract(Var:timeSeriesPoints, $.tag_set)
@@ -31,11 +34,12 @@ Var timeSeriesPointsList = extract(Var:metricResponse, $.series)
             Var timestamp = Var:point[0]
             Var value = Var:point[1]
             if Var:value != Var:nullObject {
-              Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp)
+              Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp)
                Var:returnList.append(Var:tsRecord)
             }
         }
-}
+  }
+  index = Var:index + Var:one
 }
 
 return Var:returnList

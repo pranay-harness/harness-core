@@ -44,11 +44,15 @@ public class StackdriverDataCollectionSLIInfoMapperTest extends CvNextGenTestBas
   public void testToDataCollectionInfoForSLI() {
     StackdriverCVConfig stackdriverCVConfig = StackdriverCVConfig.builder().dashboardName("dashboard").build();
     ServiceLevelIndicator serviceLevelIndicator = ThresholdServiceLevelIndicator.builder().metric1("metric1").build();
-    StackdriverCVConfig.MetricInfo metricInfo =
-        StackdriverCVConfig.MetricInfo.builder().metricName("metric1").jsonMetricDefinition(metricDef).build();
+    StackdriverCVConfig.MetricInfo metricInfo = StackdriverCVConfig.MetricInfo.builder()
+                                                    .metricName("metric1")
+                                                    .identifier("metric1")
+                                                    .jsonMetricDefinition(metricDef)
+                                                    .build();
     stackdriverCVConfig.setMetricPack(metricPack);
     stackdriverCVConfig.setMetricInfoList(Arrays.asList(metricInfo));
     StackDriverMetricDefinition stackDriverMetricDefinition = StackDriverMetricDefinition.extractFromJson(metricDef);
+    stackDriverMetricDefinition.setMetricIdentifier("metric1");
     StackdriverDataCollectionInfo info =
         mapper.toDataCollectionInfo(Collections.singletonList(stackdriverCVConfig), serviceLevelIndicator);
 

@@ -27,6 +27,7 @@ public class StackDriverMetricDefinition {
   private static final String metricTypeField = "metric.type";
 
   String metricName;
+  String metricIdentifier;
   String filter;
   Aggregation aggregation;
   String serviceInstanceField;

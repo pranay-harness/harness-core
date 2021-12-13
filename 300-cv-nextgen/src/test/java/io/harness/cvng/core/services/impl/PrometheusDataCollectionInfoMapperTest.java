@@ -41,6 +41,7 @@ public class PrometheusDataCollectionInfoMapperTest extends CvNextGenTestBase {
     PrometheusCVConfig.MetricInfo metricInfo =
         PrometheusCVConfig.MetricInfo.builder()
             .metricName("myMetric")
+            .identifier("metricIdentifier")
             .metricType(TimeSeriesMetricType.RESP_TIME)
             .prometheusMetricName("cpu_usage_total")
             .envFilter(Arrays.asList(PrometheusFilter.builder().labelName("namespace").labelValue("cv-demo").build()))
@@ -58,6 +59,7 @@ public class PrometheusDataCollectionInfoMapperTest extends CvNextGenTestBase {
     List<MetricCollectionInfo> metricCollectionInfoList = dataCollectionInfo.getMetricCollectionInfoList();
     metricCollectionInfoList.forEach(metricCollectionInfo -> {
       assertThat(metricCollectionInfo.getMetricName()).isEqualTo("myMetric");
+      assertThat(metricCollectionInfo.getMetricIdentifier()).isEqualTo("metricIdentifier");
       assertThat(metricCollectionInfo.getQuery())
           .isEqualTo("cpu_usage_total{app=\"cv-demo-app\",namespace=\"cv-demo\",filter2=\"cv-2\",filter3=\"cv-3\"}");
       assertThat(metricCollectionInfo.getFilters())
@@ -71,12 +73,14 @@ public class PrometheusDataCollectionInfoMapperTest extends CvNextGenTestBase {
   public void testToDataCollectionInfoForSLI() {
     MetricPack metricPack = MetricPack.builder().dataCollectionDsl("metric-pack-dsl").build();
     PrometheusCVConfig cvConfig = builderFactory.prometheusCVConfigBuilder().groupName("mygroupName").build();
-    ServiceLevelIndicator serviceLevelIndicator = ThresholdServiceLevelIndicator.builder().metric1("myMetric").build();
+    ServiceLevelIndicator serviceLevelIndicator =
+        ThresholdServiceLevelIndicator.builder().metric1("metricIdentifier").build();
 
     cvConfig.setMetricPack(metricPack);
 
     PrometheusCVConfig.MetricInfo metricInfo = PrometheusCVConfig.MetricInfo.builder()
                                                    .metricName("myMetric")
+                                                   .identifier("metricIdentifier")
                                                    .metricType(TimeSeriesMetricType.RESP_TIME)
                                                    .prometheusMetricName("cpu_usage_total")
                                                    .build();
@@ -85,6 +89,8 @@ public class PrometheusDataCollectionInfoMapperTest extends CvNextGenTestBase {
     PrometheusDataCollectionInfo dataCollectionInfo =
         mapper.toDataCollectionInfo(Collections.singletonList(cvConfig), serviceLevelIndicator);
     assertThat(dataCollectionInfo.getMetricCollectionInfoList().size()).isEqualTo(1);
+    assertThat(dataCollectionInfo.getMetricCollectionInfoList().get(0).getMetricIdentifier())
+        .isEqualTo("metricIdentifier");
   }
 
   @Test
@@ -93,12 +99,14 @@ public class PrometheusDataCollectionInfoMapperTest extends CvNextGenTestBase {
   public void testToDataCollectionInfoForSLIWithDifferentMetricName() {
     MetricPack metricPack = MetricPack.builder().dataCollectionDsl("metric-pack-dsl").build();
     PrometheusCVConfig cvConfig = builderFactory.prometheusCVConfigBuilder().groupName("mygroupName").build();
-    ServiceLevelIndicator serviceLevelIndicator = ThresholdServiceLevelIndicator.builder().metric1("metric1").build();
+    ServiceLevelIndicator serviceLevelIndicator =
+        ThresholdServiceLevelIndicator.builder().metric1("metricIdentifier2").build();
 
     cvConfig.setMetricPack(metricPack);
 
     PrometheusCVConfig.MetricInfo metricInfo = PrometheusCVConfig.MetricInfo.builder()
                                                    .metricName("myMetric")
+                                                   .identifier("metricIdentifier")
                                                    .metricType(TimeSeriesMetricType.RESP_TIME)
                                                    .prometheusMetricName("cpu_usage_total")
                                                    .build();

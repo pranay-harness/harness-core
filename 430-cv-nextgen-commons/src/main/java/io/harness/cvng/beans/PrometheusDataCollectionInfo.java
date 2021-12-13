@@ -22,6 +22,7 @@ public class PrometheusDataCollectionInfo extends TimeSeriesDataCollectionInfo<P
   public static class MetricCollectionInfo {
     private String query;
     private String metricName;
+    private String metricIdentifier;
     private String filters;
     private String serviceInstanceField;
   }
@@ -30,12 +31,14 @@ public class PrometheusDataCollectionInfo extends TimeSeriesDataCollectionInfo<P
     Map<String, Object> collectionEnvs = new HashMap<>();
     List<String> queryList = new ArrayList<>();
     List<String> metricNameList = new ArrayList<>();
+    List<String> metricIdentifierList = new ArrayList<>();
     List<String> filterList = new ArrayList<>();
     List<String> serviceInstanceFieldList = new ArrayList<>();
 
     metricCollectionInfoList.forEach(metricCollectionInfo -> {
       queryList.add(metricCollectionInfo.getQuery());
       metricNameList.add(metricCollectionInfo.getMetricName());
+      metricIdentifierList.add(metricCollectionInfo.getMetricIdentifier());
       filterList.add(metricCollectionInfo.getFilters());
       serviceInstanceFieldList.add(metricCollectionInfo.getServiceInstanceField());
     });
@@ -43,6 +46,7 @@ public class PrometheusDataCollectionInfo extends TimeSeriesDataCollectionInfo<P
     Preconditions.checkState(queryList.size() == metricNameList.size());
     collectionEnvs.put("queryList", queryList);
     collectionEnvs.put("metricNameList", metricNameList);
+    collectionEnvs.put("metricIdentifiers", metricIdentifierList);
     collectionEnvs.put("filterList", filterList);
     collectionEnvs.put("serviceInstanceFieldList", serviceInstanceFieldList);
     collectionEnvs.put("groupName", groupName);

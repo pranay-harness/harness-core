@@ -33,9 +33,12 @@ foreach metricDefinition in Env:metricsToCollect {
 Var metrics = execute-parallel(Var:metricRequests)
 
 Var metricsToReturn = []
+Var index = 0
+Var one = 1
 foreach metricArr in Var:metrics {
   foreach metric in Var:metricArr {
     Var metricName = extract(Var:metric,$.metricName)
+    Var metricIdentifier =  Env:metricIdentifiers[Var:index]
     if Var:metricName != "METRIC DATA NOT FOUND" {
       Var metricPath = extract(Var:metric,$.metricPath)
       Var metricPathSplit = Var:metricPath.split("|")
@@ -46,7 +49,7 @@ foreach metricArr in Var:metrics {
         foreach metricValue in Var:metricValues {
           Var value = extract(Var:metricValue,$.value)
           Var timestamp = extract(Var:metricValue,$.startTimeInMillis)
-          Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:mName, metricValue=Var:value, timestamp=Var:timestamp)
+          Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricIdentifier=Var:metricIdentifier, metricName=Var:mName, metricValue=Var:value, timestamp=Var:timestamp)
           Var:metricsToReturn.append(Var:tsRecord)
         }
       }
@@ -57,11 +60,12 @@ foreach metricArr in Var:metrics {
         foreach metricValue in Var:metricValues {
           Var value = extract(Var:metricValue,$.value)
           Var timestamp = extract(Var:metricValue,$.startTimeInMillis)
-          Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:mName, metricValue=Var:value, timestamp=Var:timestamp, host=Var:hostname)
+          Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricIdentifier=Var:metricIdentifier, metricName=Var:mName, metricValue=Var:value, timestamp=Var:timestamp, host=Var:hostname)
           Var:metricsToReturn.append(Var:tsRecord)
         }
       }
     }
   }
+  index = Var:index + Var:one
 }
 return Var:metricsToReturn

@@ -37,6 +37,7 @@ public class PrometheusDataCollectionSLIInfoMapperTest extends CvNextGenTestBase
 
     PrometheusCVConfig.MetricInfo metricInfo = PrometheusCVConfig.MetricInfo.builder()
                                                    .metricName("myMetric")
+                                                   .identifier("myMetric")
                                                    .metricType(TimeSeriesMetricType.RESP_TIME)
                                                    .prometheusMetricName("cpu_usage_total")
                                                    .build();

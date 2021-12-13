@@ -31,6 +31,7 @@ public class AppDynamicsDataCollectionInfoMapper
                         -> AppMetricInfoDTO.builder()
                                .baseFolder(metricInfo.getBaseFolder())
                                .metricName(metricInfo.getMetricName())
+                               .metricIdentifier(metricInfo.getIdentifier())
                                .metricPath(metricInfo.getMetricPath())
                                .serviceInstanceMetricPath(metricInfo.getDeploymentVerification() == null
                                        ? null
@@ -69,7 +70,8 @@ public class AppDynamicsDataCollectionInfoMapper
                     .map(metricInfo
                         -> AppMetricInfoDTO.builder()
                                .baseFolder(metricInfo.getBaseFolder())
-                               .metricName(metricInfo.getIdentifier())
+                               .metricName(metricInfo.getMetricName())
+                               .metricIdentifier(metricInfo.getIdentifier())
                                .metricPath(metricInfo.getMetricPath())
                                .serviceInstanceMetricPath(metricInfo.getDeploymentVerification() == null
                                        ? null
