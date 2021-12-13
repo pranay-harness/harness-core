@@ -378,9 +378,17 @@ public class YamlSchemaGenerator {
         List<ObjectNode> allOfNodeContents = new ArrayList<>();
         addConditionalBlock(mapper, allOfNodeContents, fieldSubtypeData);
         externalPropertyFieldNamesToAllOfNodeMap.put(fieldSubtypeData.getFieldName(), allOfNodeContents);
+        emptyFieldWithRefFromSchema(value, fieldSubtypeData.getFieldName());
       } else {
         addInternalConditionalBlock(value, mapper, fieldSubtypeData);
       }
+    }
+  }
+
+  private void emptyFieldWithRefFromSchema(ObjectNode value, String fieldName) {
+    ObjectNode propertiesNode = (ObjectNode) value.findValue(PROPERTIES_NODE);
+    if (propertiesNode != null && propertiesNode.has(fieldName)) {
+      ((ObjectNode) propertiesNode.get(fieldName)).removeAll();
     }
   }
 
