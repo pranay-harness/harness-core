@@ -1,5 +1,7 @@
 package io.harness.cvng.analysis.beans;
 
+import io.harness.cvng.core.utils.Thresholds;
+
 import com.google.common.base.Preconditions;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,11 +39,11 @@ public enum Risk {
       return Risk.NO_DATA;
     } else if (riskScore < 0.0) {
       return Risk.NO_ANALYSIS;
-    } else if (healthScore >= 75) {
+    } else if (healthScore >= Thresholds.HEALTHY_PERCENTAGE) {
       return Risk.HEALTHY;
-    } else if (healthScore >= 50) {
+    } else if (healthScore >= Thresholds.OBSERVE_PERCENTAGE) {
       return Risk.OBSERVE;
-    } else if (healthScore >= 25) {
+    } else if (healthScore >= Thresholds.NEED_ATTENTION_PERCENTAGE) {
       return Risk.NEED_ATTENTION;
     } else {
       return Risk.UNHEALTHY;

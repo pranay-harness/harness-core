@@ -155,7 +155,7 @@ public class ServiceLevelObjective
     @Override
     public TimePeriod getCurrentTimeRange(LocalDate currentDate) {
       LocalDate nextDayOfWeek = dayOfWeek.getNextDayOfWeek(currentDate);
-      return TimePeriod.builder().startDate(nextDayOfWeek.minusDays(7)).endDate(nextDayOfWeek).build();
+      return TimePeriod.builder().startDate(nextDayOfWeek.minusDays(6)).endDate(nextDayOfWeek).build();
     }
   }
 
@@ -173,7 +173,7 @@ public class ServiceLevelObjective
       } else {
         windowEnd = getWindowEnd(currentDate.plusMonths(1));
       }
-      return TimePeriod.builder().startDate(windowEnd.minusMonths(1)).endDate(windowEnd).build();
+      return TimePeriod.builder().startDate(windowEnd.minusMonths(1).plusDays(1)).endDate(windowEnd).build();
     }
 
     private LocalDate getWindowEnd(LocalDate date) {
