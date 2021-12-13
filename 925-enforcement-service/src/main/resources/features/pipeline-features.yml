@@ -37,3 +37,18 @@ features:
       COMMUNITY:
         restrictionType: AVAILABILITY
         enabled: false
+  - name: TEMPLATE_SERVICE
+    description: Support for Templates with Harness
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: false
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
