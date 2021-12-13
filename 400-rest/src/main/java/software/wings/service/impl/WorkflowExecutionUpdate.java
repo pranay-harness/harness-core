@@ -342,7 +342,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   private EventPayload getWorkflowEndPayload(Application application, WorkflowExecution execution,
       ExecutionStatus status, Long endTs, PipelineSummary summary) {
     return EventPayload.builder()
-        .eventType(EventType.PIPELINE_END.getEventValue())
+        .eventType(EventType.WORKFLOW_END.getEventValue())
         .data(CgWorkflowCompletePayload.builder()
                   .application(ApplicationEventData.builder().id(appId).name(application.getName()).build())
                   .executionId(execution.getUuid())
@@ -464,10 +464,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       return;
     }
     switch (eventType) {
-      case PIPELINE_START:
-        break;
-      case PIPELINE_END:
-        break;
       case PIPELINE_CONTINUE:
         deliverPipelineResume(application, execution, statusUpdateInfo);
         break;
