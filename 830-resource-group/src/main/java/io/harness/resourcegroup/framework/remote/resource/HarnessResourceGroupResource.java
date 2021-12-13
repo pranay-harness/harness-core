@@ -220,7 +220,7 @@ public class HarnessResourceGroupResource {
         Resource.of(RESOURCE_GROUP, null), EDIT_RESOURCEGROUP_PERMISSION);
     resourceGroupRequest.getResourceGroup().setAllowedScopeLevels(
         Sets.newHashSet(ScopeLevel.of(accountIdentifier, orgIdentifier, projectIdentifier).toString().toLowerCase()));
-    verifyNestedSelectorNotUsed(resourceGroupRequest);
+    verifySupportedResourceSelectorsAreUsed(resourceGroupRequest);
     ResourceGroupResponse resourceGroupResponse =
         resourceGroupService.create(resourceGroupRequest.getResourceGroup(), false);
     return ResponseDTO.newResponse(resourceGroupResponse);
@@ -249,7 +249,7 @@ public class HarnessResourceGroupResource {
         Resource.of(RESOURCE_GROUP, identifier), EDIT_RESOURCEGROUP_PERMISSION);
     resourceGroupRequest.getResourceGroup().setAllowedScopeLevels(
         Sets.newHashSet(ScopeLevel.of(accountIdentifier, orgIdentifier, projectIdentifier).toString().toLowerCase()));
-    verifyNestedSelectorNotUsed(resourceGroupRequest);
+    verifySupportedResourceSelectorsAreUsed(resourceGroupRequest);
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
         resourceGroupService.update(resourceGroupRequest.getResourceGroup(), true, false);
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
@@ -279,7 +279,7 @@ public class HarnessResourceGroupResource {
         resourceGroupService.delete(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier));
   }
 
-  private void verifyNestedSelectorNotUsed(ResourceGroupRequest resourceGroupRequest) {
+  private void verifySupportedResourceSelectorsAreUsed(ResourceGroupRequest resourceGroupRequest) {
     if (resourceGroupRequest == null || resourceGroupRequest.getResourceGroup() == null) {
       return;
     }
