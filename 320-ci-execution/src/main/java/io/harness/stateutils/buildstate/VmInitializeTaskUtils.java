@@ -1,21 +1,23 @@
 package io.harness.stateutils.buildstate;
 
 import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
-import static io.harness.common.CIExecutionConstants.STEP_WORK_DIR;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.environment.VmBuildJobInfo;
 import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.sweepingoutputs.VmStageInfraDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.vm.CIVmInitializeTaskParams;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.logserviceclient.CILogServiceUtils;
+import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
@@ -27,6 +29,8 @@ import io.harness.tiserviceclient.TIServiceUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -38,6 +42,7 @@ public class VmInitializeTaskUtils {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject CILogServiceUtils logServiceUtils;
   @Inject TIServiceUtils tiServiceUtils;
+  @Inject CodebaseUtils codebaseUtils;
 
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
@@ -63,10 +68,23 @@ public class VmInitializeTaskUtils {
 
     StageDetails stageDetails = (StageDetails) optionalSweepingOutput.getOutput();
     String accountID = AmbianceUtils.getAccountId(ambiance);
-    // TODO (shubham): Handle git connector, git environment variables and stage variables.
+    VmBuildJobInfo vmBuildJobInfo = (VmBuildJobInfo) initializeStepInfo.getBuildJobEnvInfo();
+    NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
+
+    ConnectorDetails gitConnector = codebaseUtils.getGitConnector(
+        ngAccess, initializeStepInfo.getCiCodebase(), initializeStepInfo.isSkipGitClone());
+    Map<String, String> codebaseEnvVars = codebaseUtils.getCodebaseVars(ambiance, vmBuildJobInfo.getCiExecutionArgs());
+    Map<String, String> gitEnvVars = codebaseUtils.getGitEnvVariables(gitConnector, initializeStepInfo.getCiCodebase());
+
+    Map<String, String> envVars = new HashMap<>();
+    envVars.putAll(codebaseEnvVars);
+    envVars.putAll(gitEnvVars);
+    // TODO (shubham): Handle stage variables.
     return CIVmInitializeTaskParams.builder()
         .poolID(poolId)
-        .workingDir(STEP_WORK_DIR)
+        .workingDir(vmBuildJobInfo.getWorkDir())
+        .environment(envVars)
+        .gitConnector(gitConnector)
         .stageRuntimeId(stageDetails.getStageRuntimeID())
         .accountID(accountID)
         .orgID(AmbianceUtils.getOrgIdentifier(ambiance))

@@ -176,11 +176,6 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
 
   private AsyncExecutableResponse executeVmAsyncAfterRbac(Ambiance ambiance, String stepIdentifier, String runtimeId,
       CIStepInfo ciStepInfo, String accountId, String logKey, long timeoutInMillis, String stringTimeout) {
-    if (ciStepInfo.getNonYamlInfo().getStepInfoType() != CIStepInfoType.RUN) {
-      throw new CIStageExecutionException(
-          format("Unsupported step type for VM %s", ciStepInfo.getNonYamlInfo().getStepInfoType()));
-    }
-
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputResolver.resolveOptional(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails));
     if (!optionalSweepingOutput.isFound()) {
@@ -281,6 +276,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
   }
 
   private StepResponse handleVmStepResponse(String stepIdentifier, Map<String, ResponseData> responseDataMap) {
+    log.info("Received response for step {}", stepIdentifier);
     VmTaskExecutionResponse taskResponse = filterVmStepResponse(responseDataMap);
     if (taskResponse == null) {
       log.error("stepStatusTaskResponseData should not be null for step {}", stepIdentifier);
