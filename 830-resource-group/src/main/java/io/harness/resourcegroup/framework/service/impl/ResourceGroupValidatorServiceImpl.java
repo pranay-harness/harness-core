@@ -1,5 +1,6 @@
 package io.harness.resourcegroup.framework.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
@@ -66,7 +67,10 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
   }
 
   private boolean isValidResourceSelectorByScope(Scope scope, ResourceSelectorByScope resourceSelector) {
-    return true;
+    if (scope == null || isEmpty(scope.getAccountIdentifier())) {
+      return resourceSelector.getScope() == null || isEmpty(resourceSelector.getScope().getAccountIdentifier());
+    }
+    return scope.equals(resourceSelector.getScope());
   }
 
   private boolean isValidDynamicResourceSelector(Scope scope, DynamicResourceSelector resourceSelector) {
