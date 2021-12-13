@@ -14,14 +14,6 @@ foreach timeSeriesPoints in Var:timeSeriesPointsList {
     Var metricName = extract(Var:timeSeriesPoints, $.metric)
     Var txnName = extract(Var:timeSeriesPoints, $.display_name)
 
-    Var tagSets = extract(Var:timeSeriesPoints, $.tag_set)
-    Var host = null
-    Var tagListLength = Var:tagSets.length()
-    Var emptyListCount = 0
-    if Var:tagListLength != Var:emptyListCount {
-        Var:host = Var:tagSets[0]
-    }
-
     Var points = extract(Var:timeSeriesPoints, $.pointlist)
     foreach point in Var:points {
         Var timestamp = Var:point[0]
