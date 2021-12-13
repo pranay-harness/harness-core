@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.ngexception.NGTemplateException;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PMSPipelineTemplateHelper {
   private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
   private final TemplateResourceClient templateResourceClient;
+  private final PipelineEnforcementService pipelineEnforcementService;
 
   public TemplateMergeResponseDTO resolveTemplateRefsInPipeline(PipelineEntity pipelineEntity) {
     return resolveTemplateRefsInPipeline(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
@@ -43,7 +45,8 @@ public class PMSPipelineTemplateHelper {
 
   public TemplateMergeResponseDTO resolveTemplateRefsInPipeline(
       String accountId, String orgId, String projectId, String yaml, boolean checkForTemplateAccess) {
-    if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_TEMPLATES)) {
+    if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_TEMPLATES)
+        && pipelineEnforcementService.isFeatureRestricted(accountId, FeatureRestrictionName.TEMPLATE_SERVICE.name())) {
       String TEMPLATE_RESOLVE_EXCEPTION_MSG = "Exception in resolving template refs in given pipeline yaml.";
       try {
         return NGRestUtils.getResponse(templateResourceClient.applyTemplatesOnGivenYaml(accountId, orgId, projectId,

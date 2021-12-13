@@ -39,6 +39,7 @@ public enum FeatureRestrictionName {
   MAX_BUILDS_PER_MONTH,
   ACTIVE_COMMITTERS,
   TEST_INTELLIGENCE,
+  TEMPLATE_SERVICE,
 
   // CD Step Palette
   K8S_BG_SWAP_SERVICES,

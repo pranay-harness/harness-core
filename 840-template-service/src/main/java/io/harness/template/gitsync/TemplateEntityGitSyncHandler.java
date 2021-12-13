@@ -94,7 +94,10 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
 
   @Override
   public boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String erroneousYaml) {
-    return false;
+    NGTemplateReference ngTemplateReference = (NGTemplateReference) entityReference;
+    return templateService.markEntityInvalid(accountIdentifier, ngTemplateReference.getOrgIdentifier(),
+        ngTemplateReference.getProjectIdentifier(), ngTemplateReference.getIdentifier(),
+        ngTemplateReference.getVersionLabel(), erroneousYaml);
   }
 
   @Override
