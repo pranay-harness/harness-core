@@ -119,7 +119,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   public LinkedHashMap fetchSampleData(
       ProjectParams projectParams, String connectorIdentifier, String query, String tracingId) {
     try {
-      Preconditions.checkState(query.contains(" SINCE "),
+      Preconditions.checkState(!query.contains(" SINCE "),
           "Query should not contain any time duration. Please remove SINCE or any time related keywords");
       Preconditions.checkState(query.endsWith("TIMESERIES"), "Query should end with the TIMESERIES keyword");
       Instant now = Instant.now();
