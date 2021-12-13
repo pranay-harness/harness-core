@@ -4,7 +4,6 @@ import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.CONST_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ENUM_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.IF_NODE;
-import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.TYPE_NODE;
 
@@ -35,6 +34,7 @@ public class YamlSchemaTransientHelper {
       add(EntityType.HTTP_STEP);
       add(EntityType.SHELL_SCRIPT_STEP);
       add(EntityType.K8S_CANARY_DEPLOY_STEP);
+      add(EntityType.TEMPLATE);
     }
   };
 
@@ -43,6 +43,7 @@ public class YamlSchemaTransientHelper {
     {
       add(EntityType.HTTP_STEP);
       add(EntityType.SHELL_SCRIPT_STEP);
+      add(EntityType.TEMPLATE);
     }
   };
 
@@ -71,22 +72,17 @@ public class YamlSchemaTransientHelper {
   }
 
   public void removeV2StepEnumsFromStepElementConfig(JsonNode stepElementConfigNode) {
-    for (JsonNode oneOfElement : stepElementConfigNode.get(ONE_OF_NODE)) {
-      if (oneOfElement.get(PROPERTIES_NODE).get(TYPE_NODE) == null) {
-        continue;
-      }
-      Set<String> v2StepTypes = allStepV2EntityTypes.stream().map(EntityType::getYamlName).collect(Collectors.toSet());
-      removeV2StepFromStepElementConfigAllOf((ArrayNode) oneOfElement.get(ALL_OF_NODE), v2StepTypes);
-      ArrayNode enumNode = (ArrayNode) oneOfElement.get(PROPERTIES_NODE).get(TYPE_NODE).get(ENUM_NODE);
-      if (enumNode == null) {
-        return;
-      }
-      ArrayNode enumArray = enumNode.deepCopy();
-      enumNode.removeAll();
-      for (JsonNode arrayElement : enumArray) {
-        if (!v2StepTypes.contains(arrayElement.asText())) {
-          enumNode.add(arrayElement);
-        }
+    Set<String> v2StepTypes = allStepV2EntityTypes.stream().map(EntityType::getYamlName).collect(Collectors.toSet());
+    removeV2StepFromStepElementConfigAllOf((ArrayNode) stepElementConfigNode.get(ALL_OF_NODE), v2StepTypes);
+    ArrayNode enumNode = (ArrayNode) stepElementConfigNode.get(PROPERTIES_NODE).get(TYPE_NODE).get(ENUM_NODE);
+    if (enumNode == null) {
+      return;
+    }
+    ArrayNode enumArray = enumNode.deepCopy();
+    enumNode.removeAll();
+    for (JsonNode arrayElement : enumArray) {
+      if (!v2StepTypes.contains(arrayElement.asText())) {
+        enumNode.add(arrayElement);
       }
     }
   }
