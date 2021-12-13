@@ -18,6 +18,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +51,8 @@ public class SLIRecordServiceImpl implements SLIRecordService {
     if (Objects.nonNull(latestSLIRecord)
         && latestSLIRecord.getTimestamp().isAfter(firstSLIRecordParam.getTimeStamp())) {
       // Update flow: fetch SLI Records to be updated
-      List<SLIRecord> toBeUpdatedSLIRecords =
-          getSLIRecords(sliId, firstSLIRecordParam.getTimeStamp(), lastSLIRecordParam.getTimeStamp());
+      List<SLIRecord> toBeUpdatedSLIRecords = getSLIRecords(
+          sliId, firstSLIRecordParam.getTimeStamp(), lastSLIRecordParam.getTimeStamp().plus(1, ChronoUnit.MINUTES));
       Map<Instant, SLIRecordParam> sliRecordParamMap =
           sliRecordParamList.stream().collect(Collectors.toMap(SLIRecordParam::getTimeStamp, Function.identity()));
 
@@ -159,7 +160,7 @@ public class SLIRecordServiceImpl implements SLIRecordService {
         .field(SLIRecordKeys.timestamp)
         .greaterThanOrEq(startTimeStamp)
         .field(SLIRecordKeys.timestamp)
-        .lessThanOrEq(endTimeStamp)
+        .lessThan(endTimeStamp)
         .order(Sort.ascending(SLIRecordKeys.timestamp))
         .asList();
   }
