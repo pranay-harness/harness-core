@@ -18,9 +18,9 @@ public class SLIMetricAnalysisTransformer {
     Map<String, List<SLIAnalyseRequest>> sliAnalyseRequestMap = new HashMap<>();
     for (TimeSeriesRecordDTO timeSeriesRecordDTO : timeSeriesRecordDTOList) {
       List<SLIAnalyseRequest> sliAnalyseRequests =
-          sliAnalyseRequestMap.getOrDefault(timeSeriesRecordDTO.getMetricName(), new ArrayList<>());
+          sliAnalyseRequestMap.getOrDefault(timeSeriesRecordDTO.getMetricIdentifier(), new ArrayList<>());
       sliAnalyseRequests.add(getSLIAnalyseRequest(timeSeriesRecordDTO));
-      sliAnalyseRequestMap.put(timeSeriesRecordDTO.getMetricName(), sliAnalyseRequests);
+      sliAnalyseRequestMap.put(timeSeriesRecordDTO.getMetricIdentifier(), sliAnalyseRequests);
     }
     return sliAnalyseRequestMap;
   }

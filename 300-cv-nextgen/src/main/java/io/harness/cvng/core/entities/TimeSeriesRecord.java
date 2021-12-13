@@ -57,6 +57,7 @@ public final class TimeSeriesRecord
   @FdIndex private String verificationTaskId;
   @FdIndex private String host;
   @FdIndex private String metricName;
+  @FdIndex private String metricIdentifier;
   private double riskScore;
   private Instant bucketStartTime;
   private TimeSeriesMetricType metricType;

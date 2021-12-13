@@ -23,6 +23,7 @@ Var lengthOfItems = Env:metricPaths.length()
 while Var:index !=  Var:lengthOfItems {
     Var queryMetricPath =  Env:metricPaths[Var:index]
     Var metricName =  Env:metricNames[Var:index]
+    Var metricIdentifier =  Env:metricIdentifiers[Var:index]
     Var metricCall = concat(Var:metricDataUrl, Var:queryMetricPath)
     Var metricArr = sync-call(url=Var:metricCall, header=Env:commonHeaders)
 
@@ -34,14 +35,14 @@ while Var:index !=  Var:lengthOfItems {
                 Var value = extract(Var:metricValue,$.value)
                 Var timestamp = extract(Var:metricValue,$.startTimeInMillis)
                 if Env:collectHostData != "true" {
-                    Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp)
+                    Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp)
                     Var:metricsToReturn.append(Var:tsRecord)
                 }
                 if Env:collectHostData == "true" {
                     Var hostIndex =  Env:serviceInstanceIndexes[Var:index]
                     Var metricPathSplit = Var:metricPath.split("|")
                     Var hostname = Var:metricPathSplit[Var:hostIndex]
-                    Var tsRecord = new TimeseriesRecord(txnName=Var:metricName, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp, host=Var:hostname)
+                    Var tsRecord = new TimeseriesRecord(txnName=Var:metricName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp, host=Var:hostname)
                     Var:metricsToReturn.append(Var:tsRecord)
                 }
              }

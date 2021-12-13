@@ -126,7 +126,7 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
 
     Map<String, List<SLIAnalyseRequest>> sliAnalyseRequest =
         timeSeriesRecords.stream().collect(Collectors.groupingBy(timeSeriesRecord
-            -> timeSeriesRecord.getMetricName(),
+            -> timeSeriesRecord.getMetricIdentifier(),
             Collectors.mapping(timeSeriesRecord
                 -> SLIAnalyseRequest.builder()
                        .metricValue(timeSeriesRecord.getMetricValue())

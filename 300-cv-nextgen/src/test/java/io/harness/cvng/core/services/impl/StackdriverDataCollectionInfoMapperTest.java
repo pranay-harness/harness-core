@@ -40,10 +40,11 @@ public class StackdriverDataCollectionInfoMapperTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testToDataCollectionInfo() throws Exception {
     StackdriverCVConfig stackdriverCVConfig = StackdriverCVConfig.builder().dashboardName("dashboard").build();
-    MetricInfo metricInfo = MetricInfo.builder().jsonMetricDefinition(metricDef).build();
+    MetricInfo metricInfo = MetricInfo.builder().jsonMetricDefinition(metricDef).identifier("identifier").build();
     stackdriverCVConfig.setMetricPack(metricPack);
     stackdriverCVConfig.setMetricInfoList(Arrays.asList(metricInfo));
     StackDriverMetricDefinition stackDriverMetricDefinition = StackDriverMetricDefinition.extractFromJson(metricDef);
+    stackDriverMetricDefinition.setMetricIdentifier("identifier");
     StackdriverDataCollectionInfo info = mapper.toDataCollectionInfo(stackdriverCVConfig);
 
     assertThat(info).isNotNull();

@@ -41,6 +41,7 @@ public class DatadogMetricDataCollectionInfoMapper
   private MetricCollectionInfo getMetricCollectionInfo(MetricInfo metricInfo) {
     return DatadogMetricsDataCollectionInfo.MetricCollectionInfo.builder()
         .metricName(metricInfo.getMetricName())
+        .metricIdentifier(metricInfo.getIdentifier())
         .metric(metricInfo.getMetric())
         .query(metricInfo.getQuery())
         .groupingQuery(metricInfo.getGroupingQuery())
