@@ -13,12 +13,12 @@ public class HelmReleaseHistoryCommandRequestNG extends HelmCommandRequestNG {
   @Builder
   public HelmReleaseHistoryCommandRequestNG(boolean skipDryRun, String releaseName, List<String> valuesYamlList,
       K8sInfraDelegateConfig k8sInfraDelegateConfig, ManifestDelegateConfig manifestDelegateConfig, String accountId,
-      boolean skipSteadyStateCheck, boolean shouldOpenFetchFilesLogStream, CommandUnitsProgress commandUnitsProgress,
+      boolean k8SteadyStateCheckEnabled, boolean shouldOpenFetchFilesLogStream, CommandUnitsProgress commandUnitsProgress,
       LogCallback logCallback, String namespace, HelmVersion helmVersion, String commandFlags, String repoName,
       String workingDir, String kubeConfigLocation, String ocPath, String commandName,
       boolean useLatestKubectlVersion) {
     super(skipDryRun, releaseName, HelmCommandType.RELEASE_HISTORY, valuesYamlList, k8sInfraDelegateConfig,
-        manifestDelegateConfig, accountId, skipSteadyStateCheck, shouldOpenFetchFilesLogStream, commandUnitsProgress,
+        manifestDelegateConfig, accountId, k8SteadyStateCheckEnabled, shouldOpenFetchFilesLogStream, commandUnitsProgress,
         logCallback, namespace, helmVersion, commandFlags, repoName, workingDir, kubeConfigLocation, ocPath,
         commandName, useLatestKubectlVersion);
   }

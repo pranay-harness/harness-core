@@ -78,11 +78,10 @@ public class HelmCommandTaskNG extends AbstractDelegateRunnableTask {
       decryptRequestDTOs(helmCommandRequestNG);
 
       init(helmCommandRequestNG,
-          getLogCallback(getLogStreamingTaskClient(), Init, helmCommandRequestNG.isShouldOpenFetchFilesLogStream(),
-              helmCommandRequestNG.getCommandUnitsProgress()));
+          getLogCallback(getLogStreamingTaskClient(), Init, true, helmCommandRequestNG.getCommandUnitsProgress()));
 
-      helmCommandRequestNG.setLogCallback(getLogCallback(getLogStreamingTaskClient(), Prepare,
-          helmCommandRequestNG.isShouldOpenFetchFilesLogStream(), helmCommandRequestNG.getCommandUnitsProgress()));
+      helmCommandRequestNG.setLogCallback(
+          getLogCallback(getLogStreamingTaskClient(), Prepare, true, helmCommandRequestNG.getCommandUnitsProgress()));
 
       helmCommandRequestNG.getLogCallback().saveExecutionLog(
           getDeploymentMessage(helmCommandRequestNG), LogLevel.INFO, CommandExecutionStatus.RUNNING);
