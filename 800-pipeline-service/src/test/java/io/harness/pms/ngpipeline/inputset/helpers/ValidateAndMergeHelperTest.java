@@ -75,14 +75,14 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateInputSet(
                                accountId, orgId, projectId, pipelineId, inputSetYamlWithNoProjOrOrg, branch, repoId))
-        .hasMessage("Org identifier in input set does not match");
+        .hasMessage("Organization identifier is missing in the YAML. Please give a valid Organization identifier");
 
     String inputSetFileWithNoProj = "inputset1-with-org-id.yaml";
     String inputSetYamlWithNoProj = readFile(inputSetFileWithNoProj);
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateInputSet(
                                accountId, orgId, projectId, pipelineId, inputSetYamlWithNoProj, branch, repoId))
-        .hasMessage("Project identifier in input set does not match");
+        .hasMessage("Project identifier is missing in the YAML. Please give a valid Project identifier");
 
     String inputSetFile = "inputset1-with-org-proj-id.yaml";
     String inputSetYaml = readFile(inputSetFile);
@@ -118,19 +118,19 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateOverlayInputSet(
                                accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutOrgId))
-        .hasMessage("Org identifier in input set does not match");
+        .hasMessage("Organization identifier is missing in the YAML. Please give a valid Organization identifier");
 
     String overlayInputSetYamlWithoutProjectId = getOverlayInputSetYaml(true, true, false, true, false);
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateOverlayInputSet(
                                accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutProjectId))
-        .hasMessage("Project identifier in input set does not match");
+        .hasMessage("Project identifier is missing in the YAML. Please give a valid Project identifier");
 
     String overlayInputSetYamlWithoutPipelineId = getOverlayInputSetYaml(true, true, true, false, false);
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateOverlayInputSet(
                                accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutPipelineId))
-        .hasMessage("Pipeline identifier in input set does not match");
+        .hasMessage("Pipeline identifier is missing in the YAML. Please give a valid Pipeline identifier");
 
     String inputSetFile1 = "inputset1-with-org-proj-id.yaml";
     String inputSetYaml1 = readFile(inputSetFile1);
