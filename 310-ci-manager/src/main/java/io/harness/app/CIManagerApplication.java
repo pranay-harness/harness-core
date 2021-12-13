@@ -387,6 +387,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .executionPoolConfig(config.getPmsSdkExecutionPoolConfig())
         .orchestrationEventPoolConfig(config.getPmsSdkOrchestrationEventPoolConfig())
+        .planCreatorServiceInternalConfig(config.getPmsPlanCreatorServicePoolConfig())
         .build();
   }
 

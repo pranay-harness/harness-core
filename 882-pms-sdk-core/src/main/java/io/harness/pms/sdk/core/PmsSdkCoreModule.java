@@ -26,6 +26,7 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -80,6 +81,14 @@ public class PmsSdkCoreModule extends AbstractModule {
   public ExecutorService coreExecutorService() {
     return ThreadPool.create(config.getExecutionPoolConfig(),
         new ThreadFactoryBuilder().setNameFormat("PmsSdkCoreEventListener-%d").build());
+  }
+
+  @Provides
+  @Singleton
+  @Named(PmsSdkModuleUtils.PLAN_CREATOR_SERVICE_EXECUTOR)
+  public Executor planCreatorInternalExecutorService() {
+    return ThreadPool.create(config.getPlanCreatorServicePoolConfig(),
+        new ThreadFactoryBuilder().setNameFormat("PlanCreatorInternalExecutorService-%d").build());
   }
 
   @Provides

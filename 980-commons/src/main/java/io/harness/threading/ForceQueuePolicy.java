@@ -17,7 +17,8 @@ public class ForceQueuePolicy implements RejectedExecutionHandler {
   @Override
   public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
     try {
-      log.info("rejectedExecution occurred - will force the thread pool to increase pool size");
+      log.info("rejectedExecution occurred - will force the thread pool to increase pool size. Current queue size is"
+          + executor.getQueue().size());
       executor.getQueue().put(r);
     } catch (InterruptedException ex) {
       // should never happen since we never wait

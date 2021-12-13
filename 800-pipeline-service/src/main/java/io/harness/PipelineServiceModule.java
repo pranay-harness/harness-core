@@ -156,6 +156,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -527,6 +528,17 @@ public class PipelineServiceModule extends AbstractModule {
   public ExecutorService pipelineExecutorService() {
     return ThreadPool.create(
         5, 10, 10, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
+  }
+
+  @Provides
+  @Singleton
+  @Named("PlanCreatorMergeExecutorService")
+  public Executor planCreatorMergeExecutorService() {
+    return ThreadPool.create(configuration.getPlanCreatorMergeServicePoolConfig().getCorePoolSize(),
+        configuration.getPlanCreatorMergeServicePoolConfig().getMaxPoolSize(),
+        configuration.getPlanCreatorMergeServicePoolConfig().getIdleTime(),
+        configuration.getPlanCreatorMergeServicePoolConfig().getTimeUnit(),
+        new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
   }
 
   @Provides
