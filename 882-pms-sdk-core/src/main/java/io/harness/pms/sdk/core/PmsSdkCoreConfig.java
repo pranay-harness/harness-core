@@ -23,6 +23,7 @@ public class PmsSdkCoreConfig {
   GrpcClientConfig grpcClientConfig;
   ThreadPoolConfig executionPoolConfig;
   ThreadPoolConfig orchestrationEventPoolConfig;
+  ThreadPoolConfig planCreatorServicePoolConfig;
 
   @Default
   EventsFrameworkConfiguration eventsFrameworkConfiguration =

@@ -18,14 +18,14 @@ public class HelmInstallCommandRequestNG extends HelmCommandRequestNG {
   @Builder
   public HelmInstallCommandRequestNG(boolean skipDryRun, String releaseName, List<String> valuesYamlList,
       K8sInfraDelegateConfig k8sInfraDelegateConfig, ManifestDelegateConfig manifestDelegateConfig, String accountId,
-      boolean k8SteadyStateCheckEnabled, boolean shouldOpenFetchFilesLogStream, CommandUnitsProgress commandUnitsProgress,
-      LogCallback logCallback, String namespace, HelmVersion helmVersion, String commandFlags, String repoName,
-      String workingDir, String kubeConfigLocation, String ocPath, String commandName, boolean useLatestKubectlVersion,
-      Integer prevReleaseVersion, Integer newReleaseVersion) {
+      boolean k8SteadyStateCheckEnabled, boolean shouldOpenFetchFilesLogStream,
+      CommandUnitsProgress commandUnitsProgress, LogCallback logCallback, String namespace, HelmVersion helmVersion,
+      String commandFlags, String repoName, String workingDir, String kubeConfigLocation, String ocPath,
+      String commandName, boolean useLatestKubectlVersion, Integer prevReleaseVersion, Integer newReleaseVersion) {
     super(skipDryRun, releaseName, HelmCommandType.INSTALL, valuesYamlList, k8sInfraDelegateConfig,
-        manifestDelegateConfig, accountId, k8SteadyStateCheckEnabled, shouldOpenFetchFilesLogStream, commandUnitsProgress,
-        logCallback, namespace, helmVersion, commandFlags, repoName, workingDir, kubeConfigLocation, ocPath,
-        commandName, useLatestKubectlVersion);
+        manifestDelegateConfig, accountId, k8SteadyStateCheckEnabled, shouldOpenFetchFilesLogStream,
+        commandUnitsProgress, logCallback, namespace, helmVersion, commandFlags, repoName, workingDir,
+        kubeConfigLocation, ocPath, commandName, useLatestKubectlVersion);
     this.prevReleaseVersion = prevReleaseVersion;
     this.newReleaseVersion = newReleaseVersion;
   }

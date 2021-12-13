@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.plan.creation.creators;
 
+import static io.harness.pms.sdk.PmsSdkModuleUtils.PLAN_CREATOR_SERVICE_EXECUTOR;
+
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -9,7 +11,6 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.ExceptionManager;
-import io.harness.manage.ManagedExecutorService;
 import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
@@ -34,6 +35,7 @@ import io.harness.pms.yaml.YamlUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class PlanCreatorService extends PlanCreationServiceImplBase {
-  private final Executor executor = new ManagedExecutorService(Executors.newFixedThreadPool(2));
+  @Inject @Named(PLAN_CREATOR_SERVICE_EXECUTOR) private Executor executor;
   @Inject ExceptionManager exceptionManager;
 
   private final FilterCreatorService filterCreatorService;

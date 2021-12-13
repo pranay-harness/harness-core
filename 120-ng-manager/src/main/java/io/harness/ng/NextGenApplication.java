@@ -568,6 +568,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .engineEventHandlersMap(getOrchestrationEventHandlers())
         .executionPoolConfig(appConfig.getPmsSdkExecutionPoolConfig())
         .orchestrationEventPoolConfig(appConfig.getPmsSdkOrchestrationEventPoolConfig())
+        .planCreatorServiceInternalConfig(appConfig.getPmsPlanCreatorServicePoolConfig())
         .build();
   }
 
