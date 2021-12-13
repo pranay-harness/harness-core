@@ -142,6 +142,7 @@ import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskR
 import io.harness.delegate.beans.connector.vaultconnector.VaultValidationParams;
 import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapability;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
+import io.harness.delegate.beans.executioncapability.CIVmConnectionCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -991,5 +992,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(VmRunTestStep.class, 543451);
     kryo.register(VmJunitTestReport.class, 543452);
     kryo.register(VmUnitTestReport.class, 543453);
+    kryo.register(CIVmConnectionCapability.class, 543454);
   }
 }
