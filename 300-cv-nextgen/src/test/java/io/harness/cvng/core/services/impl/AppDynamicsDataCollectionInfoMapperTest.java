@@ -81,6 +81,16 @@ public class AppDynamicsDataCollectionInfoMapperTest extends CvNextGenTestBase {
         .isEqualTo(new HashSet<>(Arrays.asList("metricPath4", "metricPath2")));
     assertThat(appDynamicsDataCollectionInfo.getCustomMetrics()
                    .stream()
+                   .map(AppMetricInfoDTO::getMetricIdentifier)
+                   .collect(Collectors.toSet()))
+        .isEqualTo(new HashSet<>(Arrays.asList("metric4", "metric2")));
+    assertThat(appDynamicsDataCollectionInfo.getCustomMetrics()
+                   .stream()
+                   .map(AppMetricInfoDTO::getMetricName)
+                   .collect(Collectors.toSet()))
+        .isEqualTo(new HashSet<>(Arrays.asList("metricName4", "metricName2")));
+    assertThat(appDynamicsDataCollectionInfo.getCustomMetrics()
+                   .stream()
                    .map(AppMetricInfoDTO::getBaseFolder)
                    .collect(Collectors.toSet()))
         .isEqualTo(new HashSet<>(Arrays.asList("baseFolder2", "baseFolder4")));

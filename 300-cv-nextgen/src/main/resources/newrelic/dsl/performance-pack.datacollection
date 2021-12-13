@@ -10,6 +10,7 @@ while Var:index !=  Var:lengthOfItems {
   Var query = Env:queries[Var:index]
   Var jsonPath = Env:jsonPaths[Var:index]
   Var metricName = Env:metricNames[Var:index]
+  Var metricIdentifier =  Env:metricIdentifiers[Var:index]
   Var hostGrouping = ""
   if Env:collectHostData == "true" {
     hostGrouping = ",host"
@@ -35,12 +36,12 @@ while Var:index !=  Var:lengthOfItems {
         if Var:metricVal != Var:nullVal  {
             if Env:collectHostData == "true" {
               Var hostname = extract(Var:metricObject,$.name.[1])
-              Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp, host=Var:hostname)
+              Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp, host=Var:hostname)
               Var:returnList.append(Var:tsRecord)
             }
 
             if Env:collectHostData != "true" {
-              Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp)
+              Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp)
               Var:returnList.append(Var:tsRecord)
             }
 

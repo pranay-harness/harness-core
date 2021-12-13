@@ -22,6 +22,7 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j
@@ -53,7 +54,12 @@ public class TimeSeriesDataStoreService {
       timeSeriesRecordsGroup.stream()
           .collect(groupingBy(TimeSeriesRecord::getMetricName))
           .forEach((metricName, timeSeriesRecordsGroupByMetricName) -> {
+            String metricIdentifier = timeSeriesRecordsGroupByMetricName.size() > 0
+                    && StringUtils.isNotEmpty(timeSeriesRecordsGroupByMetricName.get(0).getMetricIdentifier())
+                ? timeSeriesRecordsGroupByMetricName.get(0).getMetricIdentifier()
+                : metricName;
             TimeSeriesDataRecordMetricValue timeSeriesDataRecordMetricValue = TimeSeriesDataRecordMetricValue.builder()
+                                                                                  .metricIdentifier(metricIdentifier)
                                                                                   .metricName(metricName)
                                                                                   .timeSeriesValues(new HashSet<>())
                                                                                   .build();

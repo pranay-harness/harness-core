@@ -11,6 +11,7 @@ while Var:index !=  Var:lengthOfItems {
     Var metricValuePath = Env:metricJsonPaths[Var:index]
     Var timestampPath = Env:timestampJsonPaths[Var:index]
     Var metricName = Env:metricNames[Var:index]
+    Var metricIdentifier =  Env:metricIdentifiers[Var:index]
 
     Var fullQuery = concat(Env:baseUrl, "query?nrql=", Var:query, Var:queryConcat)
 
@@ -30,7 +31,7 @@ while Var:index !=  Var:lengthOfItems {
         Var metricVal = Var:metricValArr[Var:innerIndex]
         Var timestamp = Var:timestampArr[Var:innerIndex]
         if Var:metricVal != Var:nullVal  {
-            Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp)
+            Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp)
             Var:returnList.append(Var:tsRecord)
         }
         innerIndex = Var:innerIndex + Var:one

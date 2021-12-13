@@ -139,6 +139,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
       for (int j = 0; j < numOfMetrics; j++) {
         TimeSeriesDataRecordMetricValue metricValue = TimeSeriesDataRecordMetricValue.builder()
                                                           .metricName("metric-" + j)
+                                                          .metricIdentifier("metricIdentifier-" + j)
                                                           .timeSeriesValues(new HashSet<>())
                                                           .build();
         for (int k = 0; k < numOfTxnx; k++) {
@@ -201,6 +202,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
       for (int j = 0; j < numOfMetrics; j++) {
         TimeSeriesDataRecordMetricValue metricValue = TimeSeriesDataRecordMetricValue.builder()
                                                           .metricName("metric-" + j)
+                                                          .metricIdentifier("metricIdentifier-" + j)
                                                           .timeSeriesValues(new HashSet<>())
                                                           .build();
         for (int k = 0; k < numOfTxnx; k++) {
@@ -256,6 +258,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
       for (int j = 0; j < numOfMetrics; j++) {
         TimeSeriesDataRecordMetricValue metricValue = TimeSeriesDataRecordMetricValue.builder()
                                                           .metricName("metric-" + j)
+                                                          .metricIdentifier("metricIdentifier-" + j)
                                                           .timeSeriesValues(new HashSet<>())
                                                           .build();
         for (int k = 0; k < numOfTxnx; k++) {
@@ -416,6 +419,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
       assertThat(timeSeriesRecord.getAccountId()).isEqualTo(accountId);
       assertThat(timeSeriesRecord.getBucketStartTime().toEpochMilli()).isEqualTo(0);
       assertThat(timeSeriesRecord.getMetricName()).isEqualTo("metric-" + i);
+      assertThat(timeSeriesRecord.getMetricIdentifier()).isEqualTo("metricIdentifier-" + i);
       assertThat(timeSeriesRecord.getTimeSeriesGroupValues().size()).isEqualTo(numOfTxnx * numOfMins);
       ArrayList<TimeSeriesRecord.TimeSeriesGroupValue> timeSeriesGroupValues =
           Lists.newArrayList(timeSeriesRecord.getTimeSeriesGroupValues());

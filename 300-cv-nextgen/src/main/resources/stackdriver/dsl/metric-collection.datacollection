@@ -48,7 +48,10 @@ while Var:index !=  Var:lengthOfItems {
 
 Var metricResponses = execute-parallel(Var:requests)
 Var returnList = []
+Var index = 0
+Var one = 1
 foreach metricResponse in Var:metricResponses {
+  Var metricIdentifier =  Env:metricIdentifiers[Var:index]
   Var timeseriesList = extract(Var:metricResponse, $.timeSeries)
   foreach timeseries in Var:timeseriesList {
       Var metricName = extract(Var:timeseries, $.metric.type)
@@ -80,14 +83,15 @@ foreach metricResponse in Var:metricResponses {
           Var timestamp = extract(Var:point, $.interval.endTime)
           Var timeStampVal = string-to-time(Var:timestamp)
           if Env:collectHostData != "true" {
-              Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal)
+              Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal)
               Var:returnList.append(Var:tsRecord)
           }
           if Env:collectHostData == "true" {
-            Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal, host=Var:hostname)
+            Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal, host=Var:hostname)
             Var:returnList.append(Var:tsRecord)
           }
       }
   }
+  index = Var:index + Var:one
 }
 return Var:returnList
