@@ -15,6 +15,7 @@ import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardApiFilter;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget;
+import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget.ErrorBudgetRisk;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.services.api.SLODashboardService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
@@ -92,5 +93,7 @@ public class SLODashboardServiceImplTest extends CvNextGenTestBase {
         .isEqualTo(Instant.parse("2020-07-28T00:00:00Z").toEpochMilli());
     assertThat(sloDashboardWidget.getErrorBudgetRemaining()).isEqualTo(8640);
     assertThat(sloDashboardWidget.getSloTargetPercentage()).isCloseTo(80, offset(.0001));
+    assertThat(sloDashboardWidget.getErrorBudgetRemainingPercentage()).isCloseTo(100, offset(0.0001));
+    assertThat(sloDashboardWidget.getErrorBudgetRisk()).isEqualTo(ErrorBudgetRisk.HEALTHY);
   }
 }

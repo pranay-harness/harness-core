@@ -40,23 +40,25 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
   @Inject private SLIRecordServiceImpl sliRecordService;
   @Inject private Clock clock;
   @Inject private HPersistence hPersistence;
+  private String verificationTaskId;
+  private String sliId;
   @Before
   public void setup() {
     SLIRecordServiceImpl.MAX_NUMBER_OF_POINTS = 5;
+    verificationTaskId = generateUuid();
+    sliId = generateUuid();
   }
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCreate_multipleSaves() {
-    String verificationTaskId = generateUuid();
-    String sliId = generateUuid();
     Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(10));
     List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
-    createData(verificationTaskId, sliId, startTime, sliStates);
+    createData(startTime, sliStates);
     SLIRecord lastRecord = getLastRecord(sliId);
     assertThat(lastRecord.getRunningBadCount()).isEqualTo(5);
     assertThat(lastRecord.getRunningGoodCount()).isEqualTo(4);
-    createData(verificationTaskId, sliId, startTime.plus(Duration.ofMinutes(10)), sliStates);
+    createData(startTime.plus(Duration.ofMinutes(10)), sliStates);
     lastRecord = getLastRecord(sliId);
     assertThat(lastRecord.getRunningBadCount()).isEqualTo(10);
     assertThat(lastRecord.getRunningGoodCount()).isEqualTo(8);
@@ -66,8 +68,6 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = DEEPAK_CHHIKARA)
   @Category(UnitTests.class)
   public void testUpdate_completeOverlap() {
-    String verificationTaskId = generateUuid();
-    String sliId = generateUuid();
     Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(10));
     List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
     List<SLIRecordParam> sliRecordParams = getSLIRecordParam(startTime, sliStates);
@@ -89,8 +89,6 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = DEEPAK_CHHIKARA)
   @Category(UnitTests.class)
   public void testUpdate_partiallOverlap() {
-    String verificationTaskId = generateUuid();
-    String sliId = generateUuid();
     Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(10));
     List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
     List<SLIRecordParam> sliRecordParams = getSLIRecordParam(startTime, sliStates);
@@ -123,11 +121,9 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetGraphData_withAllStates() {
-    String verificationTaskId = generateUuid();
-    String sliId = generateUuid();
     Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(10));
     List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
-    createData(verificationTaskId, sliId, startTime, sliStates);
+    createData(startTime, sliStates);
 
     assertThat(sliRecordService
                    .getGraphData(sliId, startTime, startTime.plus(Duration.ofMinutes(11)), 10, SLIMissingDataType.GOOD)
@@ -139,11 +135,9 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetGraphData_9TotalPointsWith5AsMaxValue() {
-    String verificationTaskId = generateUuid();
-    String sliId = generateUuid();
     Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(9));
     List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD);
-    createData(verificationTaskId, sliId, startTime, sliStates);
+    createData(startTime, sliStates);
 
     assertThat(sliRecordService
                    .getGraphData(sliId, startTime, startTime.plus(Duration.ofMinutes(10)), 10, SLIMissingDataType.GOOD)
@@ -155,11 +149,9 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetGraphData_perMinute() {
-    String verificationTaskId = generateUuid();
-    String sliId = generateUuid();
     Instant startTime = DateTimeUtils.roundDownTo1MinBoundary(clock.instant().minus(Duration.ofMinutes(4)));
     List<SLIState> sliStates = Arrays.asList(GOOD, NO_DATA, BAD, GOOD);
-    createData(verificationTaskId, sliId, startTime, sliStates);
+    createData(startTime, sliStates);
     SLOGraphData sloGraphData = sliRecordService.getGraphData(
         sliId, startTime, startTime.plus(Duration.ofMinutes(5)), 100, SLIMissingDataType.GOOD);
     List<Double> expectedSLITrend = Lists.newArrayList(100.0, 100.0, 66.66, 75.0);
@@ -183,11 +175,9 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetGraphData_noDataConsideredBad() {
-    String verificationTaskId = generateUuid();
-    String sliId = generateUuid();
     Instant startTime = DateTimeUtils.roundDownTo1MinBoundary(clock.instant().minus(Duration.ofMinutes(4)));
     List<SLIState> sliStates = Arrays.asList(GOOD, NO_DATA, BAD, GOOD);
-    createData(verificationTaskId, sliId, startTime, sliStates);
+    createData(startTime, sliStates);
     SLOGraphData sloGraphData = sliRecordService.getGraphData(
         sliId, startTime, startTime.plus(Duration.ofMinutes(5)), 100, SLIMissingDataType.BAD);
     List<Double> expectedSLITrend = Lists.newArrayList(100.0, 50.0, 33.33, 50.0);
@@ -207,7 +197,7 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
     assertThat(sloGraphData.getErrorBudgetRemaining()).isEqualTo(98);
   }
 
-  private void createData(String verificationTaskId, String sliId, Instant startTime, List<SLIState> sliStates) {
+  private void createData(Instant startTime, List<SLIState> sliStates) {
     List<SLIRecordParam> sliRecordParams = getSLIRecordParam(startTime, sliStates);
     sliRecordService.create(sliRecordParams, sliId, verificationTaskId, 0);
   }
