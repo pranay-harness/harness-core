@@ -72,22 +72,27 @@ public class GitValidationHandlerTest extends CategoryTest {
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void testValidationForAccountLevelConnector() {
+    ConnectorValidationResult result = ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
+    doReturn(result)
+        .when(gitCommandTaskHandler)
+        .validateGitCredentials(
+            any(GitConfigDTO.class), any(ScmConnector.class), any(String.class), any(SshSessionConfig.class));
+
+    GitConfigDTO gitconfigDTO = GitConfigDTO.builder()
+                                    .gitConnectionType(GitConnectionType.ACCOUNT)
+                                    .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                 .username("username")
+                                                 .passwordRef(SecretRefData.builder().identifier("passwordRef").build())
+                                                 .build())
+                                    .gitAuthType(GitAuthType.HTTP)
+                                    .build();
     ScmValidationParams gitValidationParameters =
-        ScmValidationParams.builder()
-            .gitConfigDTO(GitConfigDTO.builder()
-                              .gitConnectionType(GitConnectionType.ACCOUNT)
-                              .gitAuth(GitHTTPAuthenticationDTO.builder()
-                                           .username("username")
-                                           .passwordRef(SecretRefData.builder().identifier("passwordRef").build())
-                                           .build())
-                              .gitAuthType(GitAuthType.HTTP)
-                              .build())
-            .build();
+        ScmValidationParams.builder().scmConnector(gitconfigDTO).gitConfigDTO(gitconfigDTO).build();
     ConnectorValidationResult validationResult =
         gitValidationHandler.validate(gitValidationParameters, "accountIdentifier");
     assertThat(validationResult.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
     verify(decryptionHelper, times(0)).decrypt(any(DecryptableEntity.class), anyListOf(EncryptedDataDetail.class));
-    verify(gitDecryptionHelper, times(0))
+    verify(gitDecryptionHelper, times(1))
         .decryptGitConfig(any(GitConfigDTO.class), anyListOf(EncryptedDataDetail.class));
   }
 
