@@ -6,6 +6,7 @@ import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.delegate.beans.ci.vm.steps.VmStepInfo;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.timeout.Timeout;
 
@@ -16,7 +17,8 @@ import com.google.inject.Singleton;
 public class VmStepSerializer {
   @Inject VmPluginCompatibleStepSerializer vmPluginCompatibleStepSerializer;
 
-  public VmStepInfo serialize(CIStepInfo stepInfo, String identifier, ParameterField<Timeout> parameterFieldTimeout) {
+  public VmStepInfo serialize(
+      Ambiance ambiance, CIStepInfo stepInfo, String identifier, ParameterField<Timeout> parameterFieldTimeout) {
     String stepName = stepInfo.getNonYamlInfo().getStepInfoType().getDisplayName();
     switch (stepInfo.getNonYamlInfo().getStepInfoType()) {
       case RUN:
@@ -37,7 +39,7 @@ public class VmStepSerializer {
       case SAVE_CACHE_S3:
       case RESTORE_CACHE_S3:
         return vmPluginCompatibleStepSerializer.serialize(
-            (PluginCompatibleStep) stepInfo, identifier, parameterFieldTimeout, stepName);
+            ambiance, (PluginCompatibleStep) stepInfo, identifier, parameterFieldTimeout, stepName);
       case CLEANUP:
       case TEST:
       case BUILD:

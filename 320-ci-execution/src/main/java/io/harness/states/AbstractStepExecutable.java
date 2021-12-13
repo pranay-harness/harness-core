@@ -206,7 +206,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
                                            .stageRuntimeId(stageDetails.getStageRuntimeID())
                                            .stepRuntimeId(runtimeId)
                                            .stepId(stepIdentifier)
-                                           .stepInfo(vmStepSerializer.serialize(ciStepInfo, stepIdentifier,
+                                           .stepInfo(vmStepSerializer.serialize(ambiance, ciStepInfo, stepIdentifier,
                                                ParameterField.createValueField(Timeout.fromString(stringTimeout))))
                                            .logKey(logKey)
                                            .workingDir(STEP_WORK_DIR)
