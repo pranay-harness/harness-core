@@ -17,28 +17,40 @@ Var returnList = []
 Var index = 0
 Var one = 1
 foreach metricResponse in Var:metricResponses {
+
+  Var groupByArray = extract(Var:metricResponse, $.group_by)
+  Var lengthOfGroupByItems = Var:groupByArray.length()
+  Var serviceInstanceIdentifier = null
+  Var emptyListCount = 0
+  if Var:lengthOfGroupByItems != Var:emptyListCount {
+   serviceInstanceIdentifier = Var:groupByArray[0]
+  }
+
   Var metricIdentifier =  Env:metricIdentifiers[Var:index]
   Var timeSeriesPointsList = extract(Var:metricResponse, $.series)
   foreach timeSeriesPoints in Var:timeSeriesPointsList {
      Var metricName = extract(Var:timeSeriesPoints, $.metric)
-        Var tagSets = extract(Var:timeSeriesPoints, $.tag_set)
-        Var host = null
-        Var tagListLength = Var:tagSets.length()
-        Var emptyListCount = 0
-        if Var:tagListLength != Var:emptyListCount {
-            Var:host = Var:tagSets[0]
+     Var tagSets = extract(Var:timeSeriesPoints, $.tag_set)
+     Var host = null
+     foreach tag in Var:tagSets {
+        Var tagSplitResult = Var:tag.split(":")
+        Var tagKey = Var:tagSplitResult[0]
+        if Var:tagKey == Var:serviceInstanceIdentifier {
+           host = Var:tagSplitResult[1]
         }
+     }
 
-        Var points = extract(Var:timeSeriesPoints, $.pointlist)
-        foreach point in Var:points {
-            Var timestamp = Var:point[0]
-            Var value = Var:point[1]
-            if Var:value != Var:nullObject {
-              Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp)
-               Var:returnList.append(Var:tsRecord)
-            }
+     Var points = extract(Var:timeSeriesPoints, $.pointlist)
+     foreach point in Var:points {
+        Var timestamp = Var:point[0]
+        Var value = Var:point[1]
+        if Var:value != Var:nullObject {
+           Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp, host=Var:host)
+             Var:returnList.append(Var:tsRecord)
+           }
         }
   }
+
   index = Var:index + Var:one
 }
 
