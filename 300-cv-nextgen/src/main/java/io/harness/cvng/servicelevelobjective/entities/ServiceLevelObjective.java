@@ -1,5 +1,7 @@
 package io.harness.cvng.servicelevelobjective.entities;
 
+import static java.time.temporal.ChronoUnit.DAYS;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
@@ -19,8 +21,11 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -69,11 +74,14 @@ public class ServiceLevelObjective
   private long lastUpdatedAt;
   private long createdAt;
   private Double sloTargetPercentage;
+  public ZoneOffset getZoneOffset() {
+    return ZoneOffset.UTC; // hardcoding it to UTC for now. We need to ask it from user.
+  }
 
   public int getTotalErrorBudgetMinutes(LocalDate currentDate) {
     int currentWindowMinutes = getCurrentTimeRange(currentDate).totalMinutes();
     Double errorBudgetPercentage = getSloTargetPercentage();
-    return (int) ((100 - errorBudgetPercentage) * currentWindowMinutes);
+    return (int) ((100 - errorBudgetPercentage) * currentWindowMinutes) / 100;
   }
 
   public static List<MongoIndex> mongoIndexes() {
@@ -102,11 +110,26 @@ public class ServiceLevelObjective
     public Period getRemainingDays(LocalDate currentDate) {
       return Period.between(currentDate, endDate);
     }
-    public Period getTotalDays() {
-      return Period.between(startDate, endDate);
+    public int getTotalDays() {
+      return (int) DAYS.between(startDate, endDate);
     }
     public int totalMinutes() {
-      return Period.between(startDate, endDate).getDays() * 24 * 60;
+      return getTotalDays() * 24 * 60;
+    }
+
+    /**
+     * Start time is inclusive.
+     */
+    public Instant getStartTime(ZoneId zoneId) {
+      return getStartDate().atStartOfDay(zoneId).toInstant();
+    }
+
+    /**
+     * End time is exclusive.
+     */
+    public Instant getEndTime(ZoneId zoneId) {
+      // this will end at start of next day.
+      return getEndDate().plusDays(1).atStartOfDay(zoneId).toInstant();
     }
   }
 

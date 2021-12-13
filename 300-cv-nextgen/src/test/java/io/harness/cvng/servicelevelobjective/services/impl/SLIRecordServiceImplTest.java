@@ -4,6 +4,7 @@ import static io.harness.cvng.servicelevelobjective.entities.SLIRecord.SLIState.
 import static io.harness.cvng.servicelevelobjective.entities.SLIRecord.SLIState.GOOD;
 import static io.harness.cvng.servicelevelobjective.entities.SLIRecord.SLIState.NO_DATA;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
 import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,7 +17,10 @@ import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget.Point;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget.SLOGraphData;
 import io.harness.cvng.servicelevelobjective.entities.SLIRecord;
+import io.harness.cvng.servicelevelobjective.entities.SLIRecord.SLIRecordKeys;
+import io.harness.cvng.servicelevelobjective.entities.SLIRecord.SLIRecordParam;
 import io.harness.cvng.servicelevelobjective.entities.SLIRecord.SLIState;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
@@ -24,19 +28,85 @@ import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mongodb.morphia.query.Sort;
 
 public class SLIRecordServiceImplTest extends CvNextGenTestBase {
   @Inject private SLIRecordServiceImpl sliRecordService;
   @Inject private Clock clock;
-
+  @Inject private HPersistence hPersistence;
   @Before
   public void setup() {
     SLIRecordServiceImpl.MAX_NUMBER_OF_POINTS = 5;
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreate_multipleSaves() {
+    String verificationTaskId = generateUuid();
+    String sliId = generateUuid();
+    Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(10));
+    List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
+    createData(verificationTaskId, sliId, startTime, sliStates);
+    SLIRecord lastRecord = getLastRecord(sliId);
+    assertThat(lastRecord.getRunningBadCount()).isEqualTo(5);
+    assertThat(lastRecord.getRunningGoodCount()).isEqualTo(4);
+    createData(verificationTaskId, sliId, startTime.plus(Duration.ofMinutes(10)), sliStates);
+    lastRecord = getLastRecord(sliId);
+    assertThat(lastRecord.getRunningBadCount()).isEqualTo(10);
+    assertThat(lastRecord.getRunningGoodCount()).isEqualTo(8);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testUpdate_completeOverlap() {
+    String verificationTaskId = generateUuid();
+    String sliId = generateUuid();
+    Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(10));
+    List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
+    List<SLIRecordParam> sliRecordParams = getSLIRecordParam(startTime, sliStates);
+    sliRecordService.create(sliRecordParams, sliId, verificationTaskId, 0);
+    SLIRecord lastRecord = getLastRecord(sliId);
+    assertThat(lastRecord.getRunningBadCount()).isEqualTo(5);
+    assertThat(lastRecord.getRunningGoodCount()).isEqualTo(4);
+    assertThat(lastRecord.getSliVersion()).isEqualTo(0);
+    List<SLIState> updatedSliStates = Arrays.asList(GOOD, BAD, BAD, NO_DATA, GOOD, BAD, BAD, BAD, BAD, BAD);
+    List<SLIRecordParam> updatedSliRecordParams = getSLIRecordParam(startTime, updatedSliStates);
+    sliRecordService.create(updatedSliRecordParams, sliId, verificationTaskId, 1);
+    SLIRecord updatedLastRecord = getLastRecord(sliId);
+    assertThat(updatedLastRecord.getRunningBadCount()).isEqualTo(7);
+    assertThat(updatedLastRecord.getRunningGoodCount()).isEqualTo(2);
+    assertThat(updatedLastRecord.getSliVersion()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testUpdate_partiallOverlap() {
+    String verificationTaskId = generateUuid();
+    String sliId = generateUuid();
+    Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(10));
+    List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
+    List<SLIRecordParam> sliRecordParams = getSLIRecordParam(startTime, sliStates);
+    sliRecordService.create(sliRecordParams, sliId, verificationTaskId, 0);
+    SLIRecord lastRecord = getLastRecord(sliId);
+    assertThat(lastRecord.getRunningBadCount()).isEqualTo(5);
+    assertThat(lastRecord.getRunningGoodCount()).isEqualTo(4);
+    assertThat(lastRecord.getSliVersion()).isEqualTo(0);
+    Instant updatedStartTime = Instant.parse("2020-07-27T10:55:00Z").minus(Duration.ofMinutes(10));
+    List<SLIState> updatedSliStates = Arrays.asList(BAD, BAD, BAD, BAD, BAD);
+    List<SLIRecordParam> updatedSliRecordParams = getSLIRecordParam(updatedStartTime, updatedSliStates);
+    sliRecordService.create(updatedSliRecordParams, sliId, verificationTaskId, 1);
+    SLIRecord updatedLastRecord = getLastRecord(sliId);
+    assertThat(updatedLastRecord.getRunningBadCount()).isEqualTo(6);
+    assertThat(updatedLastRecord.getRunningGoodCount()).isEqualTo(3);
+    assertThat(updatedLastRecord.getSliVersion()).isEqualTo(1);
   }
 
   @Test
@@ -106,26 +176,55 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
       assertThat(errorBudgetBurndown.get(i).getValue()).isCloseTo(expectedBurndown.get(i), offset(0.01));
     }
     assertThat(sloGraphData.getErrorBudgetRemainingPercentage()).isCloseTo(99, offset(0.01));
+    assertThat(sloGraphData.getErrorBudgetRemaining()).isEqualTo(99);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetGraphData_noDataConsideredBad() {
+    String verificationTaskId = generateUuid();
+    String sliId = generateUuid();
+    Instant startTime = DateTimeUtils.roundDownTo1MinBoundary(clock.instant().minus(Duration.ofMinutes(4)));
+    List<SLIState> sliStates = Arrays.asList(GOOD, NO_DATA, BAD, GOOD);
+    createData(verificationTaskId, sliId, startTime, sliStates);
+    SLOGraphData sloGraphData = sliRecordService.getGraphData(
+        sliId, startTime, startTime.plus(Duration.ofMinutes(5)), 100, SLIMissingDataType.BAD);
+    List<Double> expectedSLITrend = Lists.newArrayList(100.0, 50.0, 33.33, 50.0);
+    List<Double> expectedBurndown = Lists.newArrayList(100.0, 99.0, 98.0, 98.0);
+    assertThat(sloGraphData.getSloPerformanceTrend()).hasSize(4);
+    List<Point> sloPerformanceTrend = sloGraphData.getSloPerformanceTrend();
+    List<Point> errorBudgetBurndown = sloGraphData.getErrorBudgetBurndown();
+    for (int i = 0; i < expectedSLITrend.size(); i++) {
+      assertThat(sloPerformanceTrend.get(i).getTimestamp())
+          .isEqualTo(startTime.plus(Duration.ofMinutes(i)).toEpochMilli());
+      assertThat(sloPerformanceTrend.get(i).getValue()).isCloseTo(expectedSLITrend.get(i), offset(0.01));
+      assertThat(errorBudgetBurndown.get(i).getTimestamp())
+          .isEqualTo(startTime.plus(Duration.ofMinutes(i)).toEpochMilli());
+      assertThat(errorBudgetBurndown.get(i).getValue()).isCloseTo(expectedBurndown.get(i), offset(0.01));
+    }
+    assertThat(sloGraphData.getErrorBudgetRemainingPercentage()).isCloseTo(98, offset(0.01));
+    assertThat(sloGraphData.getErrorBudgetRemaining()).isEqualTo(98);
   }
 
   private void createData(String verificationTaskId, String sliId, Instant startTime, List<SLIState> sliStates) {
-    int runningGoodCount = 10;
-    int runningBadCount = 5;
+    List<SLIRecordParam> sliRecordParams = getSLIRecordParam(startTime, sliStates);
+    sliRecordService.create(sliRecordParams, sliId, verificationTaskId, 0);
+  }
+
+  private List<SLIRecordParam> getSLIRecordParam(Instant startTime, List<SLIState> sliStates) {
+    List<SLIRecordParam> sliRecordParams = new ArrayList<>();
     for (int i = 0; i < sliStates.size(); i++) {
       SLIState sliState = sliStates.get(i);
-      if (sliState == GOOD) {
-        runningGoodCount++;
-      } else if (sliState == BAD) {
-        runningBadCount++;
-      }
-      sliRecordService.create(SLIRecord.builder()
-                                  .verificationTaskId(verificationTaskId)
-                                  .sliId(sliId)
-                                  .runningGoodCount(runningGoodCount)
-                                  .runningBadCount(runningBadCount)
-                                  .timestamp(startTime.plus(Duration.ofMinutes(i)))
-                                  .sliState(sliState)
-                                  .build());
+      sliRecordParams.add(
+          SLIRecordParam.builder().sliState(sliState).timeStamp(startTime.plus(Duration.ofMinutes(i))).build());
     }
+    return sliRecordParams;
+  }
+  private SLIRecord getLastRecord(String sliId) {
+    return hPersistence.createQuery(SLIRecord.class)
+        .filter(SLIRecordKeys.sliId, sliId)
+        .order(Sort.descending(SLIRecordKeys.timestamp))
+        .get();
   }
 }

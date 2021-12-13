@@ -12,6 +12,7 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.TimePeriod;
 import io.harness.cvng.servicelevelobjective.services.api.SLIRecordService;
 import io.harness.cvng.servicelevelobjective.services.api.SLODashboardService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
@@ -24,7 +25,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -80,19 +80,24 @@ public class SLODashboardServiceImpl implements SLODashboardService {
     ServiceLevelObjective serviceLevelObjective =
         serviceLevelObjectiveService.getEntity(projectParams, slo.getIdentifier());
     MonitoredServiceDTO monitoredService = identifierToMonitoredServiceMap.get(slo.getMonitoredServiceRef());
-    LocalDate currentLocalDate = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC).toLocalDate();
-    ServiceLevelObjective.TimePeriod timePeriod = serviceLevelObjective.getCurrentTimeRange(currentLocalDate);
+    LocalDate currentLocalDate =
+        LocalDateTime.ofInstant(clock.instant(), serviceLevelObjective.getZoneOffset()).toLocalDate();
+    TimePeriod timePeriod = serviceLevelObjective.getCurrentTimeRange(currentLocalDate);
     Instant currentTimeMinute = DateTimeUtils.roundDownTo1MinBoundary(clock.instant());
+    int totalErrorBudgetMinutes = serviceLevelObjective.getTotalErrorBudgetMinutes(currentLocalDate);
     SLODashboardWidget.SLOGraphData sloGraphData = sliRecordService.getGraphData(serviceLevelIndicator.getUuid(),
-        timePeriod.getStartDate().atStartOfDay().toInstant(ZoneOffset.UTC), currentTimeMinute,
-        serviceLevelObjective.getTotalErrorBudgetMinutes(currentLocalDate),
-        serviceLevelIndicator.getSliMissingDataType());
+        timePeriod.getStartDate().atStartOfDay().toInstant(serviceLevelObjective.getZoneOffset()), currentTimeMinute,
+        totalErrorBudgetMinutes, serviceLevelIndicator.getSliMissingDataType());
     int remainingDays = timePeriod.getRemainingDays(currentLocalDate).getDays();
-    double dailyBurnRate =
-        sloGraphData.errorBudgetSpentPercentage() / (timePeriod.getTotalDays().getDays() - remainingDays);
-    return SLODashboardWidget.builder()
+    double dailyBurnRate = sloGraphData.errorBudgetSpentPercentage() / (timePeriod.getTotalDays() - remainingDays);
+    return SLODashboardWidget.withGraphData(sloGraphData)
         .sloIdentifier(slo.getIdentifier())
         .title(slo.getName())
+        .sloTargetType(slo.getTarget().getType())
+        .currentPeriodLengthDays(timePeriod.getTotalDays())
+        .currentPeriodStartTime(timePeriod.getStartTime(serviceLevelObjective.getZoneOffset()).toEpochMilli())
+        .currentPeriodEndTime(timePeriod.getEndTime(serviceLevelObjective.getZoneOffset()).toEpochMilli())
+        .sloTargetPercentage(serviceLevelObjective.getSloTargetPercentage())
         .monitoredServiceIdentifier(slo.getMonitoredServiceRef())
         .monitoredServiceName(monitoredService.getName())
         .healthSourceIdentifier(slo.getHealthSourceRef())
@@ -100,9 +105,7 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .tags(slo.getTags())
         .type(slo.getServiceLevelIndicators().get(0).getType())
         .burnRate(SLODashboardWidget.BurnRate.builder().currentRatePercentage(dailyBurnRate).build())
-        .errorBudgetRemainingPercentage(sloGraphData.getErrorBudgetRemainingPercentage())
-        .sloPerformanceTrend(sloGraphData.getSloPerformanceTrend())
-        .errorBudgetBurndown(sloGraphData.getErrorBudgetBurndown())
+        .totalErrorBudget(totalErrorBudgetMinutes)
         .timeRemainingDays(remainingDays)
         .build();
   }

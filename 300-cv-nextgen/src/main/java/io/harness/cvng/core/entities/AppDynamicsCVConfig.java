@@ -15,8 +15,9 @@ import io.harness.cvng.core.utils.analysisinfo.SLIMetricTransformer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -72,31 +73,43 @@ public class AppDynamicsCVConfig extends MetricCVConfig {
 
   public void populateFromMetricDefinitions(
       List<AppDMetricDefinitions> metricDefinitions, CVMonitoringCategory category) {
-    this.metricInfos = metricDefinitions.stream()
-                           .filter(md -> md.getGroupName().equals(getGroupName()))
-                           .map(md
-                               -> MetricInfo.builder()
-                                      .identifier(md.getIdentifier())
-                                      .metricName(md.getMetricName())
-                                      .baseFolder(md.getBaseFolder())
-                                      .metricPath(md.getMetricPath())
-                                      .sli(SLIMetricTransformer.transformDTOtoEntity(md.getSli()))
-                                      .liveMonitoring(LiveMonitoringTransformer.transformDTOtoEntity(md.getAnalysis()))
-                                      .deploymentVerification(
-                                          DevelopmentVerificationTransformer.transformDTOtoEntity(md.getAnalysis()))
-                                      .metricType(md.getRiskProfile().getMetricType())
-                                      .build())
-                           .collect(Collectors.toList());
-    // setting metric-pack for the DSL to be set for data Collection
-    this.setMetricPack(MetricPack.builder()
-                           .category(category)
-                           .accountId(getAccountId())
-                           .dataSourceType(DataSourceType.APP_DYNAMICS)
-                           .projectIdentifier(getProjectIdentifier())
-                           .orgIdentifier(getOrgIdentifier())
-                           .identifier(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER)
-                           .category(category)
-                           .build());
+    MetricPack metricPack = MetricPack.builder()
+                                .category(category)
+                                .accountId(getAccountId())
+                                .dataSourceType(DataSourceType.APP_DYNAMICS)
+                                .projectIdentifier(getProjectIdentifier())
+                                .orgIdentifier(getOrgIdentifier())
+                                .identifier(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER)
+                                .category(category)
+                                .build();
+    if (this.metricInfos == null) {
+      this.metricInfos = new ArrayList<>();
+    }
+
+    metricDefinitions.stream().filter(md -> md.getGroupName().equals(getGroupName())).forEach(md -> {
+      MetricInfo metricInfo =
+          MetricInfo.builder()
+              .identifier(md.getIdentifier())
+              .metricName(md.getMetricName())
+              .baseFolder(md.getBaseFolder())
+              .metricPath(md.getMetricPath())
+              .sli(SLIMetricTransformer.transformDTOtoEntity(md.getSli()))
+              .liveMonitoring(LiveMonitoringTransformer.transformDTOtoEntity(md.getAnalysis()))
+              .deploymentVerification(DevelopmentVerificationTransformer.transformDTOtoEntity(md.getAnalysis()))
+              .metricType(md.getRiskProfile().getMetricType())
+              .build();
+      this.metricInfos.add(metricInfo);
+      Set<TimeSeriesThreshold> thresholds = getThresholdsToCreateOnSaveForCustomProviders(
+          metricInfo.getMetricName(), metricInfo.getMetricType(), md.getRiskProfile().getThresholdTypes());
+
+      metricPack.addToMetrics(MetricPack.MetricDefinition.builder()
+                                  .thresholds(new ArrayList<>(thresholds))
+                                  .type(metricInfo.getMetricType())
+                                  .name(metricInfo.getMetricName())
+                                  .included(true)
+                                  .build());
+    });
+    this.setMetricPack(metricPack);
   }
 
   @Value

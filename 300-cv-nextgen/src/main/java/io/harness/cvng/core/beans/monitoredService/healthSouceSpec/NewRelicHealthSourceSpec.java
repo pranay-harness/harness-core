@@ -133,6 +133,7 @@ public class NewRelicHealthSourceSpec extends HealthSourceSpec {
                                               .envIdentifier(environmentRef)
                                               .serviceIdentifier(serviceRef)
                                               .groupName(definitionList.get(0).getGroupName())
+                                              .queryType(definitionList.get(0).getQueryType())
                                               .category(definitionList.get(0).getRiskProfile().getCategory())
                                               .build();
       newRelicCVConfig.populateFromMetricDefinitions(
