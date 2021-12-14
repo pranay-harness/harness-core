@@ -6,10 +6,12 @@ import io.harness.beans.Scope;
 
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(HarnessTeam.PL)
 @Data
 @Builder
+@TypeAlias("ResourceSelectorByScope")
 public class ResourceSelectorByScope implements ResourceSelector {
   boolean includeChildScopes;
   Scope scope;
