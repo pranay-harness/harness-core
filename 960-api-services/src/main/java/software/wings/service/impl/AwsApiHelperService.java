@@ -65,6 +65,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -95,6 +96,12 @@ public class AwsApiHelperService {
         AmazonS3ClientBuilder.standard().withRegion(region).withForceGlobalBucketAccessEnabled(Boolean.TRUE);
     attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonS3Client) builder.build();
+  }
+
+  public AWSSecurityTokenServiceClient getAWSSecurityTokenServiceClient(AwsInternalConfig awsConfig, String region) {
+    AWSSecurityTokenServiceClientBuilder builder = AWSSecurityTokenServiceClientBuilder.standard().withRegion(region);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    return (AWSSecurityTokenServiceClient) builder.build();
   }
 
   public List<String> listRegions(AwsInternalConfig awsConfig) {
@@ -181,6 +188,16 @@ public class AwsApiHelperService {
   }
 
   public void attachCredentialsAndBackoffPolicy(AwsClientBuilder builder, AwsInternalConfig awsConfig) {
+    AWSCredentialsProvider credentialsProvider = getAwsCredentialsProvider(awsConfig);
+    builder.withCredentials(credentialsProvider);
+    ClientConfiguration clientConfiguration = new ClientConfiguration();
+    RetryPolicy retryPolicy = new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
+        new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
+    clientConfiguration.setRetryPolicy(retryPolicy);
+    builder.withClientConfiguration(clientConfiguration);
+  }
+
+  public AWSCredentialsProvider getAwsCredentialsProvider(AwsInternalConfig awsConfig) {
     AWSCredentialsProvider credentialsProvider;
     if (awsConfig.isUseEc2IamCredentials()) {
       log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
@@ -208,13 +225,7 @@ public class AwsApiHelperService {
                                 .withExternalId(crossAccountAttributes.getExternalId())
                                 .build();
     }
-
-    builder.withCredentials(credentialsProvider);
-    ClientConfiguration clientConfiguration = new ClientConfiguration();
-    RetryPolicy retryPolicy = new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
-        new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
-    clientConfiguration.setRetryPolicy(retryPolicy);
-    builder.withClientConfiguration(clientConfiguration);
+    return credentialsProvider;
   }
 
   public void handleAmazonClientException(AmazonClientException amazonClientException) {

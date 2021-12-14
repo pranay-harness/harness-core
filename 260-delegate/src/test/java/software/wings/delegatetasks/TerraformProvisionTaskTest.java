@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -20,6 +21,8 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
@@ -48,15 +51,23 @@ import io.harness.security.encryption.EncryptedRecordData;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.TerraformExecutionData;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.beans.delegation.TerraformProvisionParameters.TerraformProvisionParametersBuilder;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 import software.wings.utils.WingsTestConstants;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
+import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
+import com.amazonaws.services.securitytoken.model.Credentials;
 import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -87,6 +98,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Mock private GitClientHelper gitClientHelper;
   @Mock private DelegateFileManager delegateFileManager;
   @Mock private EncryptDecryptHelper planEncryptDecryptHelper;
+  @Mock private AwsHelperService awsHelperService;
   @InjectMocks private TerraformBaseHelperImpl terraformBaseHelper;
 
   private static final String GIT_BRANCH = "test/git_branch";
@@ -120,6 +132,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     on(terraformProvisionTask).set("delegateFileManager", delegateFileManager);
     on(terraformProvisionTask).set("planEncryptDecryptHelper", planEncryptDecryptHelper);
     on(terraformProvisionTask).set("terraformBaseHelper", terraformBaseHelper);
+    on(terraformProvisionTask).set("awsHelperService", awsHelperService);
 
     gitConfig = GitConfig.builder().branch(GIT_BRANCH).build();
     gitConfig.setReference(COMMIT_REFERENCE);
@@ -199,6 +212,148 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         false, false, null, TerraformCommandUnit.Apply, TerraformCommand.APPLY, false, false);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verify(terraformExecutionData, TerraformCommand.APPLY);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testRunApplyAwsCPAuthDetailsArnPresentFailedToAssumeRole()
+      throws IOException, TimeoutException, InterruptedException {
+    setupForApply();
+    Map<String, String> backendConfigs = new HashMap<>();
+    backendConfigs.put("var1", "value1");
+
+    Map<String, String> variables = new HashMap<>();
+    variables.put("var3", "val3");
+
+    Map<String, String> environmentVariables = new HashMap<>();
+    environmentVariables.put("TF_LOG", "TRACE");
+
+    List<String> tfVarFiles = Arrays.asList("tfVarFile");
+
+    AwsConfig awsConfig = new AwsConfig();
+    List<EncryptedDataDetail> awsConfigEncryptionDetails = new ArrayList<>();
+    AWSSecurityTokenServiceClient awsSecurityTokenServiceClient = mock(AWSSecurityTokenServiceClient.class);
+
+    doReturn(null).when(mockEncryptionService).decrypt(awsConfig, awsConfigEncryptionDetails, false);
+    doReturn(awsSecurityTokenServiceClient).when(awsHelperService).getAmazonAWSSecurityTokenServiceClient(any(), any());
+    doThrow(new RuntimeException("failed to assume role")).when(awsSecurityTokenServiceClient).assumeRole(any());
+
+    // regular apply
+    TerraformProvisionParametersBuilder terraformProvisionParametersBuilder =
+        getTerraformProvisionParametersBuilder(false, false, null, TerraformCommandUnit.Apply, TerraformCommand.APPLY,
+            false, false, backendConfigs, variables, environmentVariables, tfVarFiles)
+            .awsConfigId("awsConfigId")
+            .awsRoleArn("awsRoleArn")
+            .awsConfig(awsConfig)
+            .awsRegion("awsRegion")
+            .awsConfigEncryptionDetails(awsConfigEncryptionDetails);
+    TerraformProvisionParameters parameters = terraformProvisionParametersBuilder.build();
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(parameters);
+    assertThat(terraformExecutionData.getErrorMessage()).isEqualTo("Invalid request: failed to assume role");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testRunApplyAwsCPAuthDetailsArnPresent() throws IOException, TimeoutException, InterruptedException {
+    setupForApply();
+    Map<String, String> backendConfigs = new HashMap<>();
+    backendConfigs.put("var1", "value1");
+
+    Map<String, String> variables = new HashMap<>();
+    variables.put("var3", "val3");
+
+    Map<String, String> environmentVariables = new HashMap<>();
+    environmentVariables.put("TF_LOG", "TRACE");
+
+    List<String> tfVarFiles = Arrays.asList("tfVarFile");
+
+    AwsConfig awsConfig = new AwsConfig();
+    AssumeRoleResult assumeRoleResult = new AssumeRoleResult();
+    List<EncryptedDataDetail> awsConfigEncryptionDetails = new ArrayList<>();
+    AWSSecurityTokenServiceClient awsSecurityTokenServiceClient = mock(AWSSecurityTokenServiceClient.class);
+    assumeRoleResult.setCredentials(new Credentials()
+                                        .withAccessKeyId("accessKeyId")
+                                        .withSecretAccessKey("secretAccessKey")
+                                        .withSessionToken("sessionToken"));
+
+    doReturn(null).when(mockEncryptionService).decrypt(awsConfig, awsConfigEncryptionDetails, false);
+    doReturn(awsSecurityTokenServiceClient).when(awsHelperService).getAmazonAWSSecurityTokenServiceClient(any(), any());
+    doReturn(assumeRoleResult).when(awsSecurityTokenServiceClient).assumeRole(any());
+
+    // regular apply
+    TerraformProvisionParametersBuilder terraformProvisionParametersBuilder =
+        getTerraformProvisionParametersBuilder(false, false, null, TerraformCommandUnit.Apply, TerraformCommand.APPLY,
+            false, false, backendConfigs, variables, environmentVariables, tfVarFiles)
+            .awsConfigId("awsConfigId")
+            .awsRoleArn("awsRoleArn")
+            .awsConfig(awsConfig)
+            .awsRegion("awsRegion")
+            .awsConfigEncryptionDetails(awsConfigEncryptionDetails);
+    TerraformProvisionParameters parameters = terraformProvisionParametersBuilder.build();
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(parameters);
+    verify(terraformExecutionData, TerraformCommand.APPLY);
+    ArgumentCaptor<Map> argument = ArgumentCaptor.forClass(Map.class);
+    Mockito.verify(terraformProvisionTaskSpy, atLeastOnce())
+        .executeShellCommand(any(), any(), any(), argument.capture(), any());
+    Map<String, String> envVars = argument.getValue();
+    assertThat(envVars.get("AWS_ACCESS_KEY_ID")).isEqualTo("accessKeyId");
+    assertThat(envVars.get("AWS_SECRET_ACCESS_KEY")).isEqualTo("secretAccessKey");
+    assertThat(envVars.get("AWS_SESSION_TOKEN")).isEqualTo("sessionToken");
+
+    assertThat(terraformExecutionData.getAwsConfigId()).isEqualTo(parameters.getAwsConfigId());
+    assertThat(terraformExecutionData.getAwsRoleArn()).isEqualTo(parameters.getAwsRoleArn());
+    assertThat(terraformExecutionData.getAwsRegion()).isEqualTo(parameters.getAwsRegion());
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testRunApplyAwsCPAuthDetailsNoArnPresent() throws IOException, TimeoutException, InterruptedException {
+    setupForApply();
+    Map<String, String> backendConfigs = new HashMap<>();
+    backendConfigs.put("var1", "value1");
+
+    Map<String, String> variables = new HashMap<>();
+    variables.put("var3", "val3");
+
+    Map<String, String> environmentVariables = new HashMap<>();
+    environmentVariables.put("TF_LOG", "TRACE");
+
+    List<String> tfVarFiles = Arrays.asList("tfVarFile");
+
+    AwsConfig awsConfig = new AwsConfig();
+    List<EncryptedDataDetail> awsConfigEncryptionDetails = new ArrayList<>();
+    AWSCredentialsProvider awsCredentialsProvider = mock(AWSCredentialsProvider.class);
+    BasicAWSCredentials credentials = new BasicAWSCredentials("accessKeyId", "secretAccessKey");
+
+    doReturn(null).when(mockEncryptionService).decrypt(awsConfig, awsConfigEncryptionDetails, false);
+    doReturn(awsCredentialsProvider).when(awsHelperService).getAWSCredentialsProvider(any());
+    doReturn(credentials).when(awsCredentialsProvider).getCredentials();
+
+    // regular apply
+    TerraformProvisionParametersBuilder terraformProvisionParametersBuilder =
+        getTerraformProvisionParametersBuilder(false, false, null, TerraformCommandUnit.Apply, TerraformCommand.APPLY,
+            false, false, backendConfigs, variables, environmentVariables, tfVarFiles)
+            .awsConfigId("awsConfigId")
+            .awsConfig(awsConfig)
+            .awsRegion("awsRegion")
+            .awsConfigEncryptionDetails(awsConfigEncryptionDetails);
+    TerraformProvisionParameters parameters = terraformProvisionParametersBuilder.build();
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(parameters);
+    verify(terraformExecutionData, TerraformCommand.APPLY);
+    ArgumentCaptor<Map> argument = ArgumentCaptor.forClass(Map.class);
+    Mockito.verify(terraformProvisionTaskSpy, atLeastOnce())
+        .executeShellCommand(any(), any(), any(), argument.capture(), any());
+    Map<String, String> envVars = argument.getValue();
+    assertThat(envVars.get("AWS_ACCESS_KEY_ID")).isEqualTo("accessKeyId");
+    assertThat(envVars.get("AWS_SECRET_ACCESS_KEY")).isEqualTo("secretAccessKey");
+    assertThat(envVars.get("AWS_SESSION_TOKEN")).isEqualTo(null);
+
+    assertThat(terraformExecutionData.getAwsConfigId()).isEqualTo(parameters.getAwsConfigId());
+    assertThat(terraformExecutionData.getAwsRoleArn()).isEqualTo(parameters.getAwsRoleArn());
+    assertThat(terraformExecutionData.getAwsRegion()).isEqualTo(parameters.getAwsRegion());
   }
 
   private void setupForApply() throws IOException {
@@ -479,6 +634,15 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
 
     List<String> tfVarFiles = Arrays.asList("tfVarFile");
 
+    return getTerraformProvisionParametersBuilder(runPlanOnly, exportPlanToApplyStep, encryptedTfPlan, commandUnit,
+        command, saveTerraformJson, skipRefresh, backendConfigs, variables, environmentVariables, tfVarFiles)
+        .build();
+  }
+
+  private TerraformProvisionParametersBuilder getTerraformProvisionParametersBuilder(boolean runPlanOnly,
+      boolean exportPlanToApplyStep, EncryptedRecordData encryptedTfPlan, TerraformCommandUnit commandUnit,
+      TerraformCommand command, boolean saveTerraformJson, boolean skipRefresh, Map<String, String> backendConfigs,
+      Map<String, String> variables, Map<String, String> environmentVariables, List<String> tfVarFiles) {
     return TerraformProvisionParameters.builder()
         .sourceRepo(gitConfig)
         .sourceRepoSettingId(SOURCE_REPO_SETTINGS_ID)
@@ -500,8 +664,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         .tfVarFiles(tfVarFiles)
         .saveTerraformJson(saveTerraformJson)
         .skipRefreshBeforeApplyingPlan(skipRefresh)
-        .secretManagerConfig(KmsConfig.builder().name("config").uuid("uuid").build())
-        .build();
+        .secretManagerConfig(KmsConfig.builder().name("config").uuid("uuid").build());
   }
 
   @Test
