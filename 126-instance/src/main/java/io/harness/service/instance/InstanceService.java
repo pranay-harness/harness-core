@@ -32,6 +32,8 @@ public interface InstanceService {
 
   List<InstanceDTO> getInstancesDeployedInInterval(String accountIdentifier, long startTimestamp, long endTimeStamp);
 
+  List<InstanceDTO> getInstancesDeployedInInterval(String accountIdentifier, String organizationId, String projectId, long startTimestamp, long endTimeStamp);
+
   List<InstanceDTO> getInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId);
 
