@@ -65,7 +65,6 @@ public class CreateEventsConfigDataFetcher
                                       .enabled(parameter.isEnabled())
                                       .build();
     eventsConfigValidationHelper.validatePipelineIds(cgeventConfig, accountId, parameter.getAppId());
-    eventsConfigValidationHelper.validateWorkflowIds(cgeventConfig, accountId, parameter.getAppId());
     CgEventConfig eventConfig = eventConfigService.createEventsConfig(accountId, parameter.getAppId(), cgeventConfig);
     return QLCreateEventsConfigPayload.builder()
         .clientMutationId(parameter.getClientMutationId())

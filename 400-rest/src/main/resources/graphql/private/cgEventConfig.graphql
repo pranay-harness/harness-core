@@ -10,12 +10,6 @@ extend type Query {
   # Get details about Events Configs.
   eventsConfigs(appId: String!): [EventsConfig] @dataFetcher(name: eventsConfigConnection)
 
-  # Get details about Workflow Events Configs.
-  workflowEventsConfigs(appId: String!): [EventsConfig] @dataFetcher(name: workflowEventsConfigConnection)
-
-  # Get details about Workflow Events Configs.
-  pipelineEventsConfigs(appId: String!): [EventsConfig] @dataFetcher(name: pipelineEventsConfigConnection)
-
   # Fetch details about a Events Config by it's name
   eventsConfigsByName(appId: String!, name: String!): EventsConfig @dataFetcher(name: eventsConfig)
 }
@@ -58,12 +52,10 @@ type WebhookHeader {
 }
 
 input EventRuleInput {
-  #Allowed values are ALL, PIPELINE and WORKFLOW
+  #Allowed values are ALL, PIPELINE
   type: RuleType!
   #The Pipeline and Event details. Only applicable when the type is PIPELINE
   pipelineRule: PipelineRuleInput
-  #The Workflow and Event details. Only applicable when the type is WORKFLOW
-  workflowRule: WorkflowRuleInput
 }
 
 type EventRule {
@@ -71,8 +63,6 @@ type EventRule {
   type: RuleType!
   #The Pipeline and Event details
   pipelineRule: PipelineRule
-  #The Workflow and Event details
-  workflowRule: WorkflowRule
 }
 
 enum RuleType {
@@ -80,8 +70,6 @@ enum RuleType {
   ALL
   #Send for specific Pipelines
   PIPELINE
-  #Send for specific Workflows
-  WORKFLOW
 }
 
 enum EventType {
@@ -89,8 +77,6 @@ enum EventType {
   pipeline_end
   pipeline_pause
   pipeline_continue
-  workflow_end
-  workflow_start
 }
 
 type PipelineRule {
@@ -105,13 +91,9 @@ type PipelineRule {
 }
 
 type WorkflowRule {
-  #Receive all current and future Workflow events
   allEvents: Boolean!
-  #Receive the Events for all the Workflows in the application
   allWorkflows: Boolean!
-  #Workflow IDs to receive the events for. Only applicable when allWorkflows is false
   workflowIds: [String]
-  #The specific events which are configured. Only applicable if allEvents is false
   events: [EventType]
 }
 
@@ -127,13 +109,9 @@ input PipelineRuleInput {
 }
 
 input WorkflowRuleInput {
-  #Receive all current and future Workflow events
   allEvents: Boolean!
-  #Receive the Events for all the Workflows in the application
   allWorkflows: Boolean!
-  #Workflow IDs to receive the events for. Only applicable when allWorkflows is false
   workflowIds: [String]
-  #The specific events which are configured. Only applicable if allEvents is false
   events: [EventType]
 }
 
