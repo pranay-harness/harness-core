@@ -917,6 +917,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(stateExecutionInstance.getNotifyElements()).isEqualTo(originalNotifyElements);
     assertThat(stateExecutionInstance.isRetry()).isEqualTo(true);
     assertThat(stateExecutionInstance.getRetryCount()).isEqualTo(1);
+    assertThat(stateExecutionInstance.isWaitingForManualIntervention()).isEqualTo(false);
   }
 
   @Test

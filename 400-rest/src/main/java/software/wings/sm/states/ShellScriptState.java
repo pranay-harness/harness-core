@@ -502,8 +502,12 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .disableWinRMEnvVariables(featureFlagService.isNotEnabled(
                 FeatureName.ENABLE_WINRM_ENV_VARIABLES, executionContext.getApp().getAccountId()))
             .saveExecutionLogs(true)
-            .enableJSchLogs(isJSchLogsEnabledPerAccount(executionContext.getApp().getAccountId()))
-            .sshTimeOut(getTimeoutMillis());
+            .enableJSchLogs(isJSchLogsEnabledPerAccount(executionContext.getApp().getAccountId()));
+
+    if (featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, context.getAccountId())) {
+      shellScriptParameters.sshTimeOut(getTimeoutMillis());
+    }
+
     Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
         Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
     Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();

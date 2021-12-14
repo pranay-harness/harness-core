@@ -5,6 +5,7 @@ import static io.harness.beans.DelegateTask.Status.PARKED;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
@@ -28,6 +29,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.exception.FailureType;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
@@ -82,6 +84,7 @@ public class DelegateQueueTask implements Runnable {
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject private ConfigurationController configurationController;
   @Inject private DelegateTaskService delegateTaskService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
   @Inject private DelegateMetricsService delegateMetricsService;
 
@@ -219,7 +222,7 @@ public class DelegateQueueTask implements Runnable {
           log.info("Marking task as failed - {}: {}", taskId, errorMessage);
 
           if (delegateTasks.get(taskId) != null) {
-            if (delegateTasks.get(taskId).getData().getTaskType().equals(TaskType.SCRIPT.name())) {
+            if (featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, delegateTasks.get(taskId).getAccountId())) {
               delegateTaskService.handleResponse(delegateTasks.get(taskId), null,
                   DelegateTaskResponse.builder()
                       .accountId(delegateTasks.get(taskId).getAccountId())

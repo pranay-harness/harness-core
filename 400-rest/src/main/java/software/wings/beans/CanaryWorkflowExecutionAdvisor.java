@@ -5,6 +5,7 @@ import static io.harness.beans.ExecutionInterruptType.ABORT_ALL;
 import static io.harness.beans.ExecutionInterruptType.ROLLBACK;
 import static io.harness.beans.ExecutionInterruptType.ROLLBACK_PROVISIONER_AFTER_PHASES;
 import static io.harness.beans.ExecutionStatus.ERROR;
+import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -267,7 +268,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         PhaseStep phaseStep = findPhaseStep(orchestrationWorkflow, phaseElement, state);
         return shouldSkipStep(context, phaseStep, state, featureFlagService);
       } else if (!(executionEvent.getExecutionStatus() == FAILED || executionEvent.getExecutionStatus() == ERROR
-                     || featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, context.getAccountId()))) {
+                     || (featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, context.getAccountId())
+                         && executionEvent.getExecutionStatus() == EXPIRED))) {
         return null;
       }
 
