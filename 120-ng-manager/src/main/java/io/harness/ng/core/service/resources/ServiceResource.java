@@ -13,6 +13,8 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.manifest.yaml.HelmCommandFlagType;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -31,8 +33,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -159,5 +163,21 @@ public class ServiceResource {
     Page<ServiceResponseDTO> serviceList =
         serviceEntityService.list(criteria, pageRequest).map(ServiceElementMapper::writeDTO);
     return ResponseDTO.newResponse(getNGPageResponse(serviceList));
+  }
+
+  @GET
+  @Path("helmCmdFlags")
+  @ApiOperation(value = "Get Command flags based on Deployment Type", nickname = "helmCmdFlags")
+  public ResponseDTO<Set<HelmCommandFlagType>> getHelmCommandFlags(
+      @QueryParam("serviceSpecType") @NotNull String serviceSpecType,
+      @QueryParam("version") @NotNull HelmVersion version) {
+    Set<HelmCommandFlagType> helmCmdFlags = new HashSet<>();
+    for (HelmCommandFlagType helmCommandFlagType : HelmCommandFlagType.values()) {
+      if (helmCommandFlagType.getServiceSpecTypes().contains(serviceSpecType)
+          && helmCommandFlagType.getSubCommandType().getHelmVersions().contains(version)) {
+        helmCmdFlags.add(helmCommandFlagType);
+      }
+    }
+    return ResponseDTO.newResponse(helmCmdFlags);
   }
 }
