@@ -184,6 +184,26 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
     verify(pmsInputSetService, times(1)).get(accountId, orgId, projectId, pipelineId, nonExistentReference, false);
   }
 
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testValidateEmptyReferencesInOverlayInputSet() {
+    String emptyReferencesOverlay = "overlayInputSet:\n"
+        + "  identifier: a\n"
+        + "  orgIdentifier: orgId\n"
+        + "  projectIdentifier: projectId\n"
+        + "  pipelineIdentifier: Test_Pipline11\n"
+        + "  inputSetReferences:\n"
+        + "    - \"\"\n"
+        + "    - \"\"";
+
+    assertThatThrownBy(()
+                           -> validateAndMergeHelper.validateOverlayInputSet(
+                               accountId, orgId, projectId, pipelineId, emptyReferencesOverlay))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Empty Input Set Identifier not allowed in Input Set References");
+  }
+
   private String getOverlayInputSetWithNonExistentReference() {
     return getOverlayInputSetYaml(true, true, true, true, true);
   }
