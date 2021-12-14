@@ -55,7 +55,7 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
     String repoURL = yamlChangeSetDTO.getRepoUrl();
     String branch = yamlChangeSetDTO.getBranch();
 
-    List<YamlGitConfigDTO> yamlGitConfigDTOList = yamlGitConfigService.getByRepo(repoURL);
+    List<YamlGitConfigDTO> yamlGitConfigDTOList = yamlGitConfigService.getByAccountAndRepo(accountIdentifier, repoURL);
     if (yamlGitConfigDTOList.isEmpty()) {
       log.info("Repo {} doesn't exist, ignoring the branch sync change set event : {}", repoURL, yamlChangeSetDTO);
       return YamlChangeSetStatus.SKIPPED;
