@@ -1,6 +1,8 @@
-package software.wings.scim;
+package io.harness.scim.service;
 
-import software.wings.beans.scim.ScimUser;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimUser;
 
 import javax.ws.rs.core.Response;
 
@@ -16,4 +18,6 @@ public interface ScimUserService {
   ScimUser updateUser(String accountId, String userId, PatchRequest patchRequest);
 
   Response updateUser(String userId, String accountId, ScimUser scimUser);
+
+  boolean changeScimUserDisabled(String accountId, String userId, boolean disabled);
 }

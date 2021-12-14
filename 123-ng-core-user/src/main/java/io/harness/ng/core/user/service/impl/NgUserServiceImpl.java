@@ -74,6 +74,9 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.user.spring.UserMembershipRepository;
 import io.harness.repositories.user.spring.UserMetadataRepository;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimUser;
 import io.harness.user.remote.UserClient;
 import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.PageUtils;
@@ -280,6 +283,8 @@ public class NgUserServiceImpl implements NgUserService {
                                                        .name(user.getName())
                                                        .email(user.getEmail())
                                                        .locked(user.isLocked())
+                                                       .disabled(user.isDisabled())
+                                                       .externallyManaged(user.isExternallyManaged())
                                                        .build())
                                             .orElse(null);
       return Optional.ofNullable(userMetadataDTO);
@@ -290,6 +295,13 @@ public class NgUserServiceImpl implements NgUserService {
   public List<UserInfo> listCurrentGenUsers(String accountId, UserFilterNG userFilter) {
     return RestClientUtils.getResponse(userClient.listUsers(
         accountId, UserFilterNG.builder().emailIds(userFilter.getEmailIds()).userIds(userFilter.getUserIds()).build()));
+  }
+
+  @Override
+
+  public ScimListResponse<ScimUser> searchScimUsersByEmailQuery(
+      String accountId, String searchQuery, Integer count, Integer startIndex) {
+    return RestClientUtils.getResponse(userClient.searchScimUsers(accountId, searchQuery, count, startIndex));
   }
 
   @Override
@@ -571,6 +583,8 @@ public class NgUserServiceImpl implements NgUserService {
                                     .name(userInfo.getName())
                                     .email(userInfo.getEmail())
                                     .locked(userInfo.isLocked())
+                                    .disabled(userInfo.isDisabled())
+                                    .externallyManaged(userInfo.isExternallyManaged())
                                     .build();
     try {
       userMetadataRepository.save(userMetadata);
@@ -661,6 +675,8 @@ public class NgUserServiceImpl implements NgUserService {
       Update update = new Update();
       update.set(UserMetadataKeys.name, user.getName());
       update.set(UserMetadataKeys.locked, user.isLocked());
+      update.set(UserMetadataKeys.disabled, user.isDisabled());
+      update.set(UserMetadataKeys.externallyManaged, user.isExternallyManaged());
       return userMetadataRepository.updateFirst(user.getUuid(), update) != null;
     }
     return true;
@@ -801,5 +817,25 @@ public class NgUserServiceImpl implements NgUserService {
           .collect(Collectors.toList());
     }
     return Collections.emptyList();
+  }
+
+  @Override
+  public boolean removeUser(String userId, String accountId) {
+    return RestClientUtils.getResponse(userClient.deleteUser(userId, accountId));
+  }
+
+  @Override
+  public ScimUser updateScimUser(String accountId, String userId, PatchRequest patchRequest) {
+    return RestClientUtils.getResponse(userClient.scimUserPatchUpdate(accountId, userId, patchRequest));
+  }
+
+  @Override
+  public boolean updateScimUser(String accountId, String userId, ScimUser scimUser) {
+    return RestClientUtils.getResponse(userClient.scimUserUpdate(accountId, userId, scimUser));
+  }
+
+  @Override
+  public boolean updateUserDisabled(String accountId, String userId, boolean disabled) {
+    return RestClientUtils.getResponse(userClient.updateUserDisabled(accountId, userId, disabled));
   }
 }

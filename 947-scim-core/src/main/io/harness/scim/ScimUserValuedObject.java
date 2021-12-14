@@ -1,4 +1,4 @@
-package software.wings.scim;
+package io.harness.scim;
 
 import lombok.AccessLevel;
 import lombok.Data;

@@ -1,5 +1,6 @@
-package software.wings.scim;
+package io.harness.scim;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -8,37 +9,38 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OktaAddOperation extends PatchOperation {
-  @JsonProperty protected final JsonNode value;
+public class OktaReplaceOperation extends PatchOperation {
+  @JsonProperty private final JsonNode value;
 
   @JsonIgnore private ObjectMapper jsonObjectMapper = new ObjectMapper();
 
-  public OktaAddOperation(
+  @JsonCreator
+  public OktaReplaceOperation(
       @JsonProperty(value = "path") String path, @JsonProperty(value = "value") final JsonNode value) {
     super(path);
     this.value = value;
   }
 
   @Override
-  public <T> T getValue(final Class<T> cls) throws JsonProcessingException {
-    if (value.isArray()) {
-      throw new IllegalArgumentException("Add Patch operation contains "
-          + "multiple values");
-    }
-    return jsonObjectMapper.treeToValue(value, cls);
+  public String getOpType() {
+    return "replace";
   }
 
   @Override
   public <T> List<T> getValues(final Class<T> cls) throws JsonProcessingException {
-    ArrayList<T> objects = new ArrayList<>(value.size());
+    ArrayList<T> replaceObjects = new ArrayList<>(value.size());
     for (JsonNode node : value) {
-      objects.add(jsonObjectMapper.treeToValue(node, cls));
+      replaceObjects.add(jsonObjectMapper.treeToValue(node, cls));
     }
-    return objects;
+    return replaceObjects;
   }
 
   @Override
-  public String getOpType() {
-    return "add";
+  public <T> T getValue(final Class<T> cls) throws JsonProcessingException {
+    if (value.isArray()) {
+      throw new IllegalArgumentException("Replace Patch operation contains "
+          + "multiple values");
+    }
+    return jsonObjectMapper.treeToValue(value, cls);
   }
 }
