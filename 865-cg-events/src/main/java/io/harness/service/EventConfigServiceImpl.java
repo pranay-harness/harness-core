@@ -30,6 +30,7 @@ import io.dropwizard.validation.Validated;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
@@ -49,6 +50,24 @@ public class EventConfigServiceImpl implements EventConfigService {
                                          .build();
     PageResponse<CgEventConfig> pageResponse = hPersistence.query(CgEventConfig.class, req);
     return pageResponse.getResponse();
+  }
+
+  @Override
+  public List<CgEventConfig> listAllWorkflowEventsConfig(String accountId, String appId) {
+    List<CgEventConfig> cgEventConfigs = listAllEventsConfig(accountId, appId);
+    return cgEventConfigs.stream()
+        .filter(cgEventConfig
+            -> cgEventConfig.getRule() != null && cgEventConfig.getRule().getType() == CgEventRule.CgRuleType.WORKFLOW)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<CgEventConfig> listAllPipelineEventsConfig(String accountId, String appId) {
+    List<CgEventConfig> cgEventConfigs = listAllEventsConfig(accountId, appId);
+    return cgEventConfigs.stream()
+        .filter(cgEventConfig
+            -> cgEventConfig.getRule() != null && cgEventConfig.getRule().getType() == CgEventRule.CgRuleType.PIPELINE)
+        .collect(Collectors.toList());
   }
 
   @Override

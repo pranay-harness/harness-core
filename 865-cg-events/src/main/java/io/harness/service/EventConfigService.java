@@ -20,6 +20,10 @@ import java.util.List;
 public interface EventConfigService extends OwnedByApplication {
   List<CgEventConfig> listAllEventsConfig(String accountId, String appId);
 
+  List<CgEventConfig> listAllWorkflowEventsConfig(String accountId, String appId);
+
+  List<CgEventConfig> listAllPipelineEventsConfig(String accountId, String appId);
+
   CgEventConfig getEventsConfig(String accountId, String appId, String eventConfigId);
 
   CgEventConfig getEventsConfigByName(String accountId, String appId, String eventConfigName);
