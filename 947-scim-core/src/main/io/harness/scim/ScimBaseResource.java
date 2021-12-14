@@ -1,4 +1,4 @@
-package software.wings.beans.scim;
+package io.harness.scim;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;

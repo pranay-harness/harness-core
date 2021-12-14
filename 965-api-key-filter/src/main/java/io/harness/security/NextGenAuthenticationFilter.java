@@ -138,7 +138,7 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
   }
 
   private String getBearerToken(String authorizationHeader) {
-    String bearerPrefix = "Bearer: ";
+    String bearerPrefix = "Bearer ";
     if (!authorizationHeader.contains(bearerPrefix)) {
       throw new UnauthorizedException("Bearer prefix not found", USER);
     }

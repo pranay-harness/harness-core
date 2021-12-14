@@ -16,6 +16,8 @@ public class UserMetadataMapper {
         .name(user.getName())
         .email(user.getEmail())
         .uuid(user.getUuid())
+        .externallyManaged(user.isExternallyManaged())
+        .disabled(user.isDisabled())
         .locked(user.isLocked())
         .build();
   }
@@ -25,6 +27,8 @@ public class UserMetadataMapper {
         .name(user.getName())
         .email(user.getEmail())
         .uuid(user.getUserId())
+        .disabled(user.isDisabled())
+        .externallyManaged(user.isExternallyManaged())
         .locked(Boolean.TRUE.equals(user.isLocked()))
         .build();
   }

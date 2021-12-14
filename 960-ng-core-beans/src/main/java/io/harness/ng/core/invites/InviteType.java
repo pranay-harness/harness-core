@@ -9,7 +9,8 @@ import org.codehaus.jackson.annotate.JsonProperty;
 @OwnedBy(PL)
 public enum InviteType {
   @JsonProperty("USER_INITIATED_INVITE") USER_INITIATED_INVITE("USER_INITIATED_INVITE"),
-  @JsonProperty("ADMIN_INITIATED_INVITE") ADMIN_INITIATED_INVITE("ADMIN_INITIATED_INVITE");
+  @JsonProperty("ADMIN_INITIATED_INVITE") ADMIN_INITIATED_INVITE("ADMIN_INITIATED_INVITE"),
+  @JsonProperty("SCIM_INITIATED_INVITE") SCIM_INITIATED_INVITE("SCIM_INITIATED_INVITE");
 
   private final String type;
   InviteType(String type) {

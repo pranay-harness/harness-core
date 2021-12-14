@@ -133,6 +133,7 @@ BAZEL_MODULES="\
   //945-ng-audit-client:module \
   //946-access-control-aggregator:module \
   //947-access-control-core:module \
+  //947-scim-core:module \
   //948-access-control-admin-client:module \
   //948-access-control-sdk:module \
   //949-access-control-commons:module \
@@ -338,6 +339,7 @@ build_bazel_module 940-secret-manager-client
 build_bazel_module 945-ng-audit-client
 build_bazel_module 946-access-control-aggregator
 build_bazel_module 947-access-control-core
+build_bazel_module 947-scim-core
 build_bazel_module 948-access-control-admin-client
 build_bazel_module 948-access-control-sdk
 build_bazel_module 949-access-control-commons

@@ -1,4 +1,4 @@
-package software.wings.beans.scim;
+package io.harness.scim;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

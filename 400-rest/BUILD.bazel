@@ -45,6 +45,7 @@ java_library(
         "//940-notification-client:module",
         "//940-secret-manager-client:module",
         "//945-ng-audit-client:module",
+        "//947-scim-core:module",
         "//948-access-control-admin-client:module",
         "//948-access-control-sdk:module",
         "//950-command-library-common:module",

@@ -13,12 +13,16 @@ import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.rest.RestResponse;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimUser;
 import io.harness.signup.dto.SignupInviteDTO;
 
 import java.util.List;
 import java.util.Optional;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -34,6 +38,10 @@ public interface UserClient {
   String USERS_SIGNUP_INVITE_API = "ng/user/signup-invite";
   String USER_SIGNUP_COMMUNITY = "ng/user/signup-invite/community";
   String USER_BATCH_LIST_API = "ng/user/batch";
+  String SCIM_USER_SEARCH = "ng/user/scim/search";
+  String SCIM_USER_PATCH_UPDATE = "ng/user/scim/patch";
+  String SCIM_USER_UPDATE = "ng/user/scim";
+  String SCIM_USER_DISABLED_UPDATE = "ng/user/scim/disabled";
   String USER_IN_ACCOUNT_VERIFICATION = "ng/user/user-account";
   String USER_SAFE_DELETE = "ng/user/safeDelete/{userId}";
   String UPDATE_USER_API = "ng/user/user";
@@ -46,6 +54,9 @@ public interface UserClient {
 
   @POST(USERS_API) Call<RestResponse<UserInfo>> createNewUser(@Body UserRequestDTO userRequest);
 
+  @DELETE(USERS_API)
+  Call<RestResponse<Boolean>> deleteUser(@Query("userId") String userId, @Query("accountId") String accountId);
+
   @POST(USERS_API_OAUTH) Call<RestResponse<UserInfo>> createNewOAuthUser(@Body UserRequestDTO userRequest);
 
   @POST(USERS_SIGNUP_INVITE_API)
@@ -54,6 +65,18 @@ public interface UserClient {
   @GET(USERS_SIGNUP_INVITE_API) Call<RestResponse<SignupInviteDTO>> getSignupInvite(@Query("email") String email);
 
   @PUT(USERS_SIGNUP_INVITE_API) Call<RestResponse<UserInfo>> completeSignupInvite(@Query("email") String email);
+
+  @PUT(SCIM_USER_PATCH_UPDATE)
+  Call<RestResponse<ScimUser>> scimUserPatchUpdate(
+      @Query("accountId") String accountId, @Query("userId") String userId, @Body PatchRequest patchRequest);
+
+  @PUT(SCIM_USER_UPDATE)
+  Call<RestResponse<Boolean>> scimUserUpdate(
+      @Query("accountId") String accountId, @Query("userId") String userId, @Body ScimUser scimUser);
+
+  @PUT(SCIM_USER_DISABLED_UPDATE)
+  Call<RestResponse<Boolean>> updateUserDisabled(@Query(value = "accountId") String accountId,
+      @Query(value = "userId") String userId, @Query("disabled") boolean disabled);
 
   @POST(USER_SIGNUP_COMMUNITY)
   Call<RestResponse<UserInfo>> createCommunityUserAndCompleteSignup(@Body SignupInviteDTO userRequest);
@@ -71,10 +94,15 @@ public interface UserClient {
   @POST(USER_BATCH_LIST_API)
   Call<RestResponse<List<UserInfo>>> listUsers(@Query("accountId") String accountId, @Body UserFilterNG userFilterNG);
 
+  @GET(SCIM_USER_SEARCH)
+  Call<RestResponse<ScimListResponse<ScimUser>>> searchScimUsers(@Query("accountId") String accountId,
+      @Query("searchQuery") String searchQuery, @Query("count") Integer count, @Query("startIndex") Integer startIndex);
+
   @PUT(UPDATE_USER_API) Call<RestResponse<Optional<UserInfo>>> updateUser(@Body UserInfo userInfo);
 
   @PUT(CREATE_USER_VIA_INVITE)
-  Call<RestResponse<Boolean>> createUserAndCompleteNGInvite(@Body UserInviteDTO userInviteDTO);
+  Call<RestResponse<Boolean>> createUserAndCompleteNGInvite(
+      @Body UserInviteDTO userInviteDTO, @Query("isScimInvite") boolean isScimInvite);
 
   @GET(USER_IN_ACCOUNT_VERIFICATION)
   Call<RestResponse<Boolean>> isUserInAccount(
