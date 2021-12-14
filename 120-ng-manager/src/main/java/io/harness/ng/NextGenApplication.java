@@ -112,6 +112,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.expressions.functors.ImagePullSecretFunctor;
+import io.harness.pms.governance.EnvironmentRefExpansionHandler;
+import io.harness.pms.governance.ServiceRefExpansionHandler;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -120,7 +122,6 @@ import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
 import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
-import io.harness.pms.sdk.core.governance.NoOpExpansionHandler;
 import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
@@ -591,8 +592,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private Map<String, Class<? extends JsonExpansionHandler>> getJsonExpansionHandlers() {
     Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers = new HashMap<>();
     jsonExpansionHandlers.put(YAMLFieldNameConstants.CONNECTOR_REF, DefaultConnectorRefExpansionHandler.class);
-    jsonExpansionHandlers.put(YamlTypes.SERVICE_REF, NoOpExpansionHandler.class);
-    jsonExpansionHandlers.put(YamlTypes.ENVIRONMENT_REF, NoOpExpansionHandler.class);
+    jsonExpansionHandlers.put(YamlTypes.SERVICE_REF, ServiceRefExpansionHandler.class);
+    jsonExpansionHandlers.put(YamlTypes.ENVIRONMENT_REF, EnvironmentRefExpansionHandler.class);
     return jsonExpansionHandlers;
   }
 
