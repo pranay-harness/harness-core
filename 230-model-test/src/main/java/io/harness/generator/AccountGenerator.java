@@ -203,7 +203,6 @@ public class AccountGenerator {
                     .withAccountName(accountName)
                     .withCompanyName(companyName)
                     .withDefaultExperience(DefaultExperience.CG)
-                    .withRingName(defaultRingName)
                     .withLicenseInfo(LicenseInfo.builder()
                                          .accountType(accountType)
                                          .accountStatus(AccountStatus.ACTIVE)

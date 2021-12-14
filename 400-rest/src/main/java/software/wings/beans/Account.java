@@ -803,7 +803,6 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String licenseExpiryCheckIteration = "licenseExpiryCheckIteration";
     public static final String accountDeletionIteration = "accountDeletionIteration";
     public static final String subdomainUrl = "subdomainUrl";
-    public static final String ringName = "ring3";
     public static final String gitSyncExpiryCheckIteration = "gitSyncExpiryCheckIteration";
     public static final String ceLicenseExpiryIteration = "ceLicenseExpiryIteration";
     public static final String ceLicenseInfo = "ceLicenseInfo";

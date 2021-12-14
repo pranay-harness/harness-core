@@ -2,6 +2,7 @@ package io.harness.migrations.all;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.utils.DelegateRingConstants;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
@@ -18,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.DEL)
 public class AddRingsToAccountMigration implements Migration {
   @Inject private HPersistence persistence;
-  private static final String DEFAULT_RING_NAME = "ring3";
 
   @Override
   public void migrate() {
@@ -34,7 +34,8 @@ public class AddRingsToAccountMigration implements Migration {
         updated++;
         if (updated != 0 && idsToUpdate.size() % 500 == 0) {
           persistence.update(persistence.createQuery(Account.class).field(AccountKeys.uuid).in(idsToUpdate),
-              persistence.createUpdateOperations(Account.class).set(AccountKeys.ringName, DEFAULT_RING_NAME));
+              persistence.createUpdateOperations(Account.class)
+                  .set(AccountKeys.ringName, DelegateRingConstants.DEFAULT_RING_NAME));
           log.info("updated: " + updated);
           idsToUpdate.clear();
         }
@@ -42,7 +43,8 @@ public class AddRingsToAccountMigration implements Migration {
 
       if (!idsToUpdate.isEmpty()) {
         persistence.update(persistence.createQuery(Account.class).field(AccountKeys.uuid).in(idsToUpdate),
-            persistence.createUpdateOperations(Account.class).set(AccountKeys.ringName, DEFAULT_RING_NAME));
+            persistence.createUpdateOperations(Account.class)
+                .set(AccountKeys.ringName, DelegateRingConstants.DEFAULT_RING_NAME));
 
         log.info("updated: " + updated);
         idsToUpdate.clear();
