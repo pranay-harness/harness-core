@@ -81,9 +81,11 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.ApprovalStateParams;
+import software.wings.beans.approval.ApprovalStateParams.ApprovalStateParamsKeys;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.approval.ShellScriptApprovalParams;
+import software.wings.beans.approval.ShellScriptApprovalParams.ShellScriptApprovalParamsKeys;
 import software.wings.beans.approval.SlackApprovalParams;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
@@ -149,6 +151,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
@@ -381,7 +385,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     if (isDisabled && properties.get(EnvStateKeys.disableAssertion) == null) {
       properties.put(EnvStateKeys.disableAssertion, "true");
     }
-    super.parseProperties(properties);
+    mapApprovalObject(properties, this);
   }
 
   /*
@@ -760,6 +764,55 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
               .errorMessage("Failed to schedule Approval" + e.getMessage())
               .stateExecutionData(executionData));
     }
+  }
+
+  void mapApprovalObject(Object from, Object to) {
+    ModelMapper modelMapper = new ModelMapper();
+    modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+
+    // need to remove delegate selector due to modelmapper issue
+    Object delegateSelectors = removeDelegateSelectorsForShellScriptApproval((HashMap<String, Object>) from);
+    modelMapper.map(from, to);
+    repopulateDelegateSelector(from, delegateSelectors, to);
+  }
+
+  private void repopulateDelegateSelector(Object from, Object delegateSelectors, Object to) {
+    repopulateSourceHashmapWithDelegateSelector((HashMap<String, Object>) from, delegateSelectors);
+    setDelegateSelectorForShellScriptApproval(delegateSelectors, to);
+  }
+
+  private void repopulateSourceHashmapWithDelegateSelector(HashMap<String, Object> source, Object delegateSelectors) {
+    if (delegateSelectors != null) {
+      HashMap<String, Object> approvalStateParams =
+          (HashMap<String, Object>) source.get(ApprovalStateKeys.approvalStateParams);
+      HashMap<String, Object> shellScriptApprovalParams =
+          (HashMap<String, Object>) approvalStateParams.get(ApprovalStateParamsKeys.shellScriptApprovalParams);
+      shellScriptApprovalParams.put(ShellScriptApprovalParamsKeys.delegateSelectors, delegateSelectors);
+    }
+  }
+
+  private void setDelegateSelectorForShellScriptApproval(Object delegateSelectors, Object to) {
+    if (delegateSelectors != null) {
+      ApprovalState approvalState = (ApprovalState) to;
+
+      approvalState.getApprovalStateParams().getShellScriptApprovalParams().setDelegateSelectors(
+          (List<String>) delegateSelectors);
+    }
+  }
+
+  private Object removeDelegateSelectorsForShellScriptApproval(HashMap<String, Object> source) {
+    if (source.get(ApprovalStateKeys.approvalStateParams) != null) {
+      HashMap<String, Object> approvalStateParams =
+          (HashMap<String, Object>) source.get(ApprovalStateKeys.approvalStateParams);
+      if (approvalStateParams.get(ApprovalStateParamsKeys.shellScriptApprovalParams) != null) {
+        HashMap<String, Object> shellScriptApprovalParams =
+            (HashMap<String, Object>) approvalStateParams.get(ApprovalStateParamsKeys.shellScriptApprovalParams);
+        Object delegateSelector = shellScriptApprovalParams.get(ShellScriptApprovalParamsKeys.delegateSelectors);
+        shellScriptApprovalParams.remove(ShellScriptApprovalParamsKeys.delegateSelectors);
+        return delegateSelector;
+      }
+    }
+    return null;
   }
 
   @Nullable
