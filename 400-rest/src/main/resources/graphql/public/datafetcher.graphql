@@ -164,8 +164,6 @@ enum DataFetcherEnum {
   deleteEventsConfig
   eventsConfig
   eventsConfigConnection
-  workflowEventsConfigConnection
-  pipelineEventsConfigConnection
   eventsConfigByName
   verificationStats
   approvalDetails

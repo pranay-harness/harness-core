@@ -56,31 +56,4 @@ public class EventsConfigValidationHelper {
       }
     }
   }
-
-  public void validateWorkflowIds(CgEventConfig cgEventConfig, String accountId, String appId) {
-    CgEventRule cgEventRule = cgEventConfig.getRule();
-    if (cgEventRule == null || cgEventRule.getType() == null) {
-      return;
-    }
-    if (cgEventRule.getType().equals(CgEventRule.CgRuleType.WORKFLOW)) {
-      CgEventRule.WorkflowRule workflowRule = cgEventRule.getWorkflowRule();
-      if (workflowRule == null || workflowRule.isAllWorkflows() || isEmpty(workflowRule.getWorkflowIds())) {
-        return;
-      }
-      List<String> workflowIds = workflowRule.getWorkflowIds();
-      Set<String> workflowIdSet = wingsPersistence.createQuery(Pipeline.class)
-                                      .filter(WorkflowKeys.accountId, accountId)
-                                      .filter(WorkflowKeys.appId, appId)
-                                      .project(WorkflowKeys.uuid, true)
-                                      .asList()
-                                      .stream()
-                                      .map(workflow -> workflow.getUuid())
-                                      .collect(Collectors.toSet());
-      List<String> invalidIds =
-          workflowIds.stream().filter(id -> !workflowIdSet.contains(id)).collect(Collectors.toList());
-      if (isNotEmpty(invalidIds)) {
-        throw new InvalidRequestException("The following workflow ids are invalid :" + invalidIds.toString());
-      }
-    }
-  }
 }

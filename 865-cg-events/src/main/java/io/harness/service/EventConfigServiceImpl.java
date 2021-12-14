@@ -53,24 +53,6 @@ public class EventConfigServiceImpl implements EventConfigService {
   }
 
   @Override
-  public List<CgEventConfig> listAllWorkflowEventsConfig(String accountId, String appId) {
-    List<CgEventConfig> cgEventConfigs = listAllEventsConfig(accountId, appId);
-    return cgEventConfigs.stream()
-        .filter(cgEventConfig
-            -> cgEventConfig.getRule() != null && cgEventConfig.getRule().getType() == CgEventRule.CgRuleType.WORKFLOW)
-        .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<CgEventConfig> listAllPipelineEventsConfig(String accountId, String appId) {
-    List<CgEventConfig> cgEventConfigs = listAllEventsConfig(accountId, appId);
-    return cgEventConfigs.stream()
-        .filter(cgEventConfig
-            -> cgEventConfig.getRule() != null && cgEventConfig.getRule().getType() == CgEventRule.CgRuleType.PIPELINE)
-        .collect(Collectors.toList());
-  }
-
-  @Override
   public CgEventConfig createEventsConfig(String accountId, String appId, @Valid CgEventConfig eventConfig) {
     validateEventConfig(eventConfig);
     duplicateCheck(() -> hPersistence.insert(eventConfig), "name", eventConfig.getName());
