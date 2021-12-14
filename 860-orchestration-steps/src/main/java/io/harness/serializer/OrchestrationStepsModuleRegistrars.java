@@ -9,6 +9,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.plancreator.steps.http.HttpStepNode;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.NGCoreBeansKryoRegistrar;
@@ -110,7 +111,7 @@ public class OrchestrationStepsModuleRegistrars {
                    .clazz(HttpStepNode.class)
                    .yamlSchemaMetadata(YamlSchemaMetadata.builder()
                                            .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS))
-                                           .yamlGroup(YamlGroup.builder().group("step").build())
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
                                            .build())
                    .build())
           .add(YamlSchemaRootClass.builder()
@@ -121,7 +122,7 @@ public class OrchestrationStepsModuleRegistrars {
                    .clazz(ShellScriptStepNode.class)
                    .yamlSchemaMetadata(YamlSchemaMetadata.builder()
                                            .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS))
-                                           .yamlGroup(YamlGroup.builder().group("step").build())
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
                                            .build())
                    .build())
           .add(YamlSchemaRootClass.builder()
@@ -132,7 +133,7 @@ public class OrchestrationStepsModuleRegistrars {
                    .clazz(JiraCreateStepNode.class)
                    .yamlSchemaMetadata(YamlSchemaMetadata.builder()
                                            .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS))
-                                           .yamlGroup(YamlGroup.builder().group("step").build())
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
                                            .build())
                    .build())
           .add(YamlSchemaRootClass.builder()
@@ -144,7 +145,7 @@ public class OrchestrationStepsModuleRegistrars {
                    .yamlSchemaMetadata(YamlSchemaMetadata.builder()
                                            .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS, ModuleType.CE,
                                                ModuleType.CF, ModuleType.CI))
-                                           .yamlGroup(YamlGroup.builder().group("step").build())
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
                                            .build())
                    .build())
           .build();
