@@ -7,12 +7,9 @@ import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.environment.SystemEnvironment;
 import io.harness.ff.FeatureFlagService;
@@ -78,7 +75,6 @@ public class InfraDownloadServiceTest extends CategoryTest {
     when(mainConfiguration.getPortal()).thenReturn(portalConfig);
     PowerMockito.when(GoogleCredential.fromStream(any(InputStream.class))).thenReturn(credential);
     when(credential.createScoped(any())).thenReturn(credential);
-    when(featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, eq(anyString()))).thenReturn(true);
   }
 
   @Test
