@@ -4,6 +4,7 @@ import io.harness.ModuleType;
 import io.harness.enforcement.bases.AvailabilityRestriction;
 import io.harness.enforcement.bases.FeatureRestriction;
 import io.harness.enforcement.bases.Restriction;
+import io.harness.enforcement.beans.details.AvailabilityRestrictionDTO;
 import io.harness.enforcement.beans.details.FeatureRestrictionDetailsDTO;
 import io.harness.enforcement.beans.internal.RestrictionMetadataMapResponseDTO;
 import io.harness.enforcement.beans.metadata.FeatureRestrictionMetadataDTO;
@@ -122,8 +123,15 @@ public class EnforcementServiceImpl implements EnforcementService {
       throw new InvalidRequestException(String.format("Feature [%s] is not defined", featureRestrictionName));
     }
     FeatureRestriction featureRestriction = featureRestrictionMap.get(featureRestrictionName);
-    Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
-    return toFeatureDetailsDTO(accountIdentifier, featureRestriction, edition);
+    try {
+      Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
+      return toFeatureDetailsDTO(accountIdentifier, featureRestriction, edition);
+    } catch (FeatureNotSupportedException e) {
+      log.error(String.format("Invalid license state on account [%s] and moduleType [%s]", accountIdentifier,
+                    featureRestriction.getModuleType()),
+          e);
+      return toDisallowedFeatureDetailsDTO(featureRestriction);
+    }
   }
 
   @Override
@@ -136,8 +144,13 @@ public class EnforcementServiceImpl implements EnforcementService {
         throw new InvalidRequestException(String.format("Feature [%s] is not defined", name));
       }
       FeatureRestriction featureRestriction = featureRestrictionMap.get(name);
-      Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
-      result.add(toFeatureDetailsDTO(accountIdentifier, featureRestriction, edition));
+
+      try {
+        Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
+        result.add(toFeatureDetailsDTO(accountIdentifier, featureRestriction, edition));
+      } catch (FeatureNotSupportedException e) {
+        result.add(toDisallowedFeatureDetailsDTO(featureRestriction));
+      }
     }
     return result;
   }
@@ -218,6 +231,17 @@ public class EnforcementServiceImpl implements EnforcementService {
                                                          .build();
     handler.fillRestrictionDTO(feature.getName(), restriction, accountIdentifier, edition, featureDetailsDTO);
     return featureDetailsDTO;
+  }
+
+  private FeatureRestrictionDetailsDTO toDisallowedFeatureDetailsDTO(FeatureRestriction feature) {
+    return FeatureRestrictionDetailsDTO.builder()
+        .name(feature.getName())
+        .moduleType(feature.getModuleType())
+        .description(feature.getDescription())
+        .allowed(false)
+        .restrictionType(RestrictionType.AVAILABILITY)
+        .restriction(AvailabilityRestrictionDTO.builder().enabled(false).build())
+        .build();
   }
 
   private FeatureRestrictionMetadataDTO toFeatureMetadataDTO(
