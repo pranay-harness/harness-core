@@ -3,6 +3,7 @@ package io.harness.pms.pipeline.service.yamlschema;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.jackson.JsonNodeUtils;
@@ -10,6 +11,7 @@ import io.harness.plancreator.stages.parallel.ParallelStageElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaTransientHelper;
@@ -19,6 +21,7 @@ import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -49,15 +52,14 @@ public class PmsYamlSchemaHelper {
   public static final Class<StageElementConfig> STAGE_ELEMENT_CONFIG_CLASS = StageElementConfig.class;
 
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
-  private final Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypesToBeAdded;
+  private final List<YamlSchemaRootClass> yamlSchemaRootClasses;
   private final YamlSchemaGenerator yamlSchemaGenerator;
 
   @Inject
   public PmsYamlSchemaHelper(@Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
-      @Named("new-yaml-schema-subtypes-pms") Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypesToBeAdded,
-      YamlSchemaGenerator yamlSchemaGenerator) {
+      List<YamlSchemaRootClass> yamlSchemaRootClasses, YamlSchemaGenerator yamlSchemaGenerator) {
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
-    this.newYamlSchemaSubtypesToBeAdded = newYamlSchemaSubtypesToBeAdded;
+    this.yamlSchemaRootClasses = yamlSchemaRootClasses;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
   }
 
@@ -116,8 +118,8 @@ public class PmsYamlSchemaHelper {
         partialSchemaDTO.getNodeName(), (ObjectNode) partialSchemaDTO.getSchema(), partialSchemaDTO.getNamespace());
 
     mergePipelineStepsIntoStage(stageDefinitionsNode, pipelineSteps, partialSchemaDTO);
-    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
-        stageDefinitionsNode.get(partialSchemaDTO.getNamespace()), newYamlSchemaSubtypesToBeAdded, "");
+    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(stageDefinitionsNode.get(partialSchemaDTO.getNamespace()),
+        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), "");
     mergeStageElementConfig(stageElementConfig, subtypeClassMap);
 
     pipelineDefinitions.set(partialSchemaDTO.getNamespace(), stageDefinitionsNode.get(partialSchemaDTO.getNamespace()));
@@ -195,5 +197,9 @@ public class PmsYamlSchemaHelper {
                                .fieldName("type")
                                .enumValues(ImmutableSet.of(subtypeClassMap.getSubtypeEnum()))
                                .build());
+  }
+
+  public List<EntityType> getNodeEntityTypesByYamlGroup(String yamlGroup) {
+    return YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, yamlGroup);
   }
 }
