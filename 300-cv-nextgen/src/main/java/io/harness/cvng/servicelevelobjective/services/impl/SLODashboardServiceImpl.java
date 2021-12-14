@@ -23,7 +23,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -53,9 +52,7 @@ public class SLODashboardServiceImpl implements SLODashboardService {
     List<SLODashboardWidget> sloDashboardWidgets =
         sloPageResponse.getContent()
             .stream()
-            .map(sloResponse -> {
-              return getSloDashboardWidget(projectParams, identifierToMonitoredServiceMap, sloResponse);
-            })
+            .map(sloResponse -> getSloDashboardWidget(projectParams, identifierToMonitoredServiceMap, sloResponse))
             .collect(Collectors.toList());
     return PageResponse.<SLODashboardWidget>builder()
         .pageSize(sloPageResponse.getPageSize())
@@ -80,14 +77,13 @@ public class SLODashboardServiceImpl implements SLODashboardService {
     ServiceLevelObjective serviceLevelObjective =
         serviceLevelObjectiveService.getEntity(projectParams, slo.getIdentifier());
     MonitoredServiceDTO monitoredService = identifierToMonitoredServiceMap.get(slo.getMonitoredServiceRef());
-    LocalDate currentLocalDate =
-        LocalDateTime.ofInstant(clock.instant(), serviceLevelObjective.getZoneOffset()).toLocalDate();
+    LocalDateTime currentLocalDate = LocalDateTime.ofInstant(clock.instant(), serviceLevelObjective.getZoneOffset());
     TimePeriod timePeriod = serviceLevelObjective.getCurrentTimeRange(currentLocalDate);
     Instant currentTimeMinute = DateTimeUtils.roundDownTo1MinBoundary(clock.instant());
     int totalErrorBudgetMinutes = serviceLevelObjective.getTotalErrorBudgetMinutes(currentLocalDate);
     SLODashboardWidget.SLOGraphData sloGraphData = sliRecordService.getGraphData(serviceLevelIndicator.getUuid(),
-        timePeriod.getStartDate().atStartOfDay().toInstant(serviceLevelObjective.getZoneOffset()), currentTimeMinute,
-        totalErrorBudgetMinutes, serviceLevelIndicator.getSliMissingDataType(), serviceLevelIndicator.getVersion());
+        timePeriod.getStartTime(serviceLevelObjective.getZoneOffset()), currentTimeMinute, totalErrorBudgetMinutes,
+        serviceLevelIndicator.getSliMissingDataType(), serviceLevelIndicator.getVersion());
     int remainingDays = timePeriod.getRemainingDays(currentLocalDate).getDays();
     double dailyBurnRate = sloGraphData.errorBudgetSpentPercentage() / (timePeriod.getTotalDays() - remainingDays);
     return SLODashboardWidget.withGraphData(sloGraphData)

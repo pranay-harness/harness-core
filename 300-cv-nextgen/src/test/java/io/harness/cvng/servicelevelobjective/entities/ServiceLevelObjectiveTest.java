@@ -10,10 +10,12 @@ import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.servicelevelobjective.beans.DayOfWeek;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.MonthlyCalenderTarget;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.RollingSLOTarget;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.TimePeriod;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.WeeklyCalenderTarget;
 import io.harness.rule.Owner;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,16 +34,12 @@ public class ServiceLevelObjectiveTest extends CategoryTest {
         builderFactory.getServiceLevelObjectiveBuilder()
             .sloTarget(RollingSLOTarget.builder().periodLengthDays(30).build())
             .build();
-    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDate.parse("2021-12-03")))
-        .isEqualTo(ServiceLevelObjective.TimePeriod.builder()
-                       .startDate(LocalDate.parse("2021-11-03"))
-                       .endDate(LocalDate.parse("2021-12-03"))
-                       .build());
-    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDate.parse("2021-12-31")))
-        .isEqualTo(ServiceLevelObjective.TimePeriod.builder()
-                       .startDate(LocalDate.parse("2021-12-01"))
-                       .endDate(LocalDate.parse("2021-12-31"))
-                       .build());
+    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDateTime.parse("2021-12-03T10:15:00")))
+        .isEqualTo(TimePeriod.createWithLocalTime(
+            LocalDateTime.parse("2021-11-03T10:15:00"), LocalDateTime.parse("2021-12-03T10:15:00")));
+    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDateTime.parse("2021-12-31T10:15:00")))
+        .isEqualTo(TimePeriod.createWithLocalTime(
+            LocalDateTime.parse("2021-12-01T10:15:00"), LocalDateTime.parse("2021-12-31T10:15:00")));
   }
 
   @Test
@@ -52,15 +50,15 @@ public class ServiceLevelObjectiveTest extends CategoryTest {
         builderFactory.getServiceLevelObjectiveBuilder()
             .sloTarget(WeeklyCalenderTarget.builder().dayOfWeek(DayOfWeek.MONDAY).build())
             .build();
-    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDate.parse("2021-12-03")))
-        .isEqualTo(ServiceLevelObjective.TimePeriod.builder()
+    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDateTime.parse("2021-12-03T10:15:00")))
+        .isEqualTo(TimePeriod.builder()
                        .startDate(LocalDate.parse("2021-11-30"))
-                       .endDate(LocalDate.parse("2021-12-06"))
+                       .endDate(LocalDate.parse("2021-12-07"))
                        .build());
-    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDate.parse("2021-12-06")))
-        .isEqualTo(ServiceLevelObjective.TimePeriod.builder()
+    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDateTime.parse("2021-12-06T10:15:00")))
+        .isEqualTo(TimePeriod.builder()
                        .startDate(LocalDate.parse("2021-11-30"))
-                       .endDate(LocalDate.parse("2021-12-06"))
+                       .endDate(LocalDate.parse("2021-12-07"))
                        .build());
   }
 
@@ -72,43 +70,96 @@ public class ServiceLevelObjectiveTest extends CategoryTest {
         builderFactory.getServiceLevelObjectiveBuilder()
             .sloTarget(ServiceLevelObjective.QuarterlyCalenderTarget.builder().build())
             .build();
-    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDate.parse("2021-12-03")))
-        .isEqualTo(ServiceLevelObjective.TimePeriod.builder()
+    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDateTime.parse("2021-12-03T10:15:00")))
+        .isEqualTo(TimePeriod.builder()
                        .startDate(LocalDate.parse("2021-10-01"))
-                       .endDate(LocalDate.parse("2021-12-31"))
+                       .endDate(LocalDate.parse("2022-01-01"))
                        .build());
-    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDate.parse("2021-12-31")))
-        .isEqualTo(ServiceLevelObjective.TimePeriod.builder()
+    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDateTime.parse("2021-12-31T10:15:00")))
+        .isEqualTo(TimePeriod.builder()
                        .startDate(LocalDate.parse("2021-10-01"))
-                       .endDate(LocalDate.parse("2021-12-31"))
+                       .endDate(LocalDate.parse("2022-01-01"))
                        .build());
-    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDate.parse("2021-10-01")))
-        .isEqualTo(ServiceLevelObjective.TimePeriod.builder()
+    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDateTime.parse("2021-10-01T10:15:00")))
+        .isEqualTo(TimePeriod.builder()
                        .startDate(LocalDate.parse("2021-10-01"))
-                       .endDate(LocalDate.parse("2021-12-31"))
+                       .endDate(LocalDate.parse("2022-01-01"))
                        .build());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testTotalDays_Quarterly() {
+    ServiceLevelObjective serviceLevelObjective =
+        builderFactory.getServiceLevelObjectiveBuilder()
+            .sloTarget(ServiceLevelObjective.QuarterlyCalenderTarget.builder().build())
+            .build();
+    assertThat(serviceLevelObjective.getSloTarget()
+                   .getCurrentTimeRange(LocalDateTime.parse("2021-12-03T10:15:00"))
+                   .getTotalDays())
+        .isEqualTo(92);
+    assertThat(serviceLevelObjective.getSloTarget()
+                   .getCurrentTimeRange(LocalDateTime.parse("2021-09-30T10:15:00"))
+                   .getTotalDays())
+        .isEqualTo(92);
+    assertThat(serviceLevelObjective.getSloTarget()
+                   .getCurrentTimeRange(LocalDateTime.parse("2021-05-27T10:15:00"))
+                   .getTotalDays())
+        .isEqualTo(91);
+    assertThat(serviceLevelObjective.getSloTarget()
+                   .getCurrentTimeRange(LocalDateTime.parse("2021-01-01T10:15:00"))
+                   .getTotalDays())
+        .isEqualTo(90);
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testTotalDays_rolling() {
+    ServiceLevelObjective serviceLevelObjective =
+        builderFactory.getServiceLevelObjectiveBuilder()
+            .sloTarget(ServiceLevelObjective.RollingSLOTarget.builder().periodLengthDays(7).build())
+            .build();
+    assertThat(serviceLevelObjective.getSloTarget()
+                   .getCurrentTimeRange(LocalDateTime.parse("2021-12-03T10:15:00"))
+                   .getTotalDays())
+        .isEqualTo(7);
+    assertThat(serviceLevelObjective.getSloTarget()
+                   .getCurrentTimeRange(LocalDateTime.parse("2021-09-30T10:15:00"))
+                   .getTotalDays())
+        .isEqualTo(7);
+    assertThat(serviceLevelObjective.getSloTarget()
+                   .getCurrentTimeRange(LocalDateTime.parse("2021-05-27T10:15:00"))
+                   .getTotalDays())
+        .isEqualTo(7);
+    assertThat(serviceLevelObjective.getSloTarget()
+                   .getCurrentTimeRange(LocalDateTime.parse("2021-01-01T10:15:00"))
+                   .getTotalDays())
+        .isEqualTo(7);
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetCurrentTimeRange_calenderMonthlyMiddleRange() {
-    testCurrentTimeRangeMonthly(3, "2021-12-03", "2021-11-04", "2021-12-03");
-    testCurrentTimeRangeMonthly(3, "2021-11-30", "2021-11-04", "2021-12-03");
-    testCurrentTimeRangeMonthly(3, "2021-11-04", "2021-11-04", "2021-12-03");
+    testCurrentTimeRangeMonthly(3, "2021-12-03", "2021-11-04", "2021-12-04");
+    testCurrentTimeRangeMonthly(3, "2021-11-30", "2021-11-04", "2021-12-04");
+    testCurrentTimeRangeMonthly(3, "2021-11-04", "2021-11-04", "2021-12-04");
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetCurrentTimeRange_calenderMonthlyEndOfMonth() {
-    testCurrentTimeRangeMonthly(31, "2021-12-03", "2021-12-01", "2021-12-31");
-    testCurrentTimeRangeMonthly(31, "2021-11-30", "2021-11-01", "2021-11-30");
-    testCurrentTimeRangeMonthly(31, "2021-02-28", "2021-02-01", "2021-02-28");
-    testCurrentTimeRangeMonthly(28, "2021-12-03", "2021-11-29", "2021-12-28");
-    testCurrentTimeRangeMonthly(28, "2021-11-30", "2021-11-29", "2021-12-28");
-    testCurrentTimeRangeMonthly(28, "2021-11-28", "2021-10-29", "2021-11-28");
+    testCurrentTimeRangeMonthly(31, "2021-12-03", "2021-12-01", "2022-01-01");
+    testCurrentTimeRangeMonthly(31, "2021-11-30", "2021-11-01", "2021-12-01");
+    testCurrentTimeRangeMonthly(31, "2021-02-28", "2021-02-01", "2021-03-01");
+    testCurrentTimeRangeMonthly(28, "2021-12-03", "2021-11-29", "2021-12-29");
+    testCurrentTimeRangeMonthly(28, "2021-11-30", "2021-11-29", "2021-12-29");
+    testCurrentTimeRangeMonthly(28, "2021-11-28", "2021-10-29", "2021-11-29");
+    testCurrentTimeRangeMonthly(28, "2021-03-01", "2021-03-01", "2021-03-29");
   }
+
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
@@ -118,7 +169,19 @@ public class ServiceLevelObjectiveTest extends CategoryTest {
             .sloTargetPercentage(99.0)
             .sloTarget(WeeklyCalenderTarget.builder().dayOfWeek(DayOfWeek.MONDAY).build())
             .build();
-    assertThat(serviceLevelObjective.getTotalErrorBudgetMinutes(LocalDate.parse("2021-12-03"))).isEqualTo(101);
+    assertThat(serviceLevelObjective.getTotalErrorBudgetMinutes(LocalDateTime.parse("2021-12-03T10:15:00")))
+        .isEqualTo(101);
+
+    serviceLevelObjective = builderFactory.getServiceLevelObjectiveBuilder()
+                                .sloTargetPercentage(99.0)
+                                .sloTarget(MonthlyCalenderTarget.builder().windowEndDayOfMonth(28).build())
+                                .build();
+    assertThat(serviceLevelObjective.getTotalErrorBudgetMinutes(LocalDateTime.parse("2021-02-01T10:15:00")))
+        .isEqualTo(446); // 31 days
+    assertThat(serviceLevelObjective.getTotalErrorBudgetMinutes(LocalDateTime.parse("2021-01-01T10:15:00")))
+        .isEqualTo(446);
+    assertThat(serviceLevelObjective.getTotalErrorBudgetMinutes(LocalDateTime.parse("2021-03-01T10:15:00")))
+        .isEqualTo(403); // 28 days
   }
 
   private void testCurrentTimeRangeMonthly(
@@ -127,8 +190,10 @@ public class ServiceLevelObjectiveTest extends CategoryTest {
         builderFactory.getServiceLevelObjectiveBuilder()
             .sloTarget(MonthlyCalenderTarget.builder().windowEndDayOfMonth(windowEndDate).build())
             .build();
-    assertThat(serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDate.parse(currentDate)))
-        .isEqualTo(ServiceLevelObjective.TimePeriod.builder()
+    TimePeriod timePeriod =
+        serviceLevelObjective.getSloTarget().getCurrentTimeRange(LocalDate.parse(currentDate).atStartOfDay());
+    assertThat(timePeriod)
+        .isEqualTo(TimePeriod.builder()
                        .startDate(LocalDate.parse(expectedStartDate))
                        .endDate(LocalDate.parse(expectedEndDate))
                        .build());

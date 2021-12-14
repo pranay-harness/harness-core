@@ -24,11 +24,12 @@ import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -79,8 +80,8 @@ public class ServiceLevelObjective
     return ZoneOffset.UTC; // hardcoding it to UTC for now. We need to ask it from user.
   }
 
-  public int getTotalErrorBudgetMinutes(LocalDate currentDate) {
-    int currentWindowMinutes = getCurrentTimeRange(currentDate).totalMinutes(getZoneOffset());
+  public int getTotalErrorBudgetMinutes(LocalDateTime currentDateTime) {
+    int currentWindowMinutes = getCurrentTimeRange(currentDateTime).totalMinutes();
     Double errorBudgetPercentage = getSloTargetPercentage();
     return (int) Math.round(((100 - errorBudgetPercentage) * currentWindowMinutes) / 100);
   }
@@ -98,46 +99,56 @@ public class ServiceLevelObjective
         .build();
   }
 
-  public TimePeriod getCurrentTimeRange(LocalDate currentDate) {
-    return sloTarget.getCurrentTimeRange(currentDate);
+  public TimePeriod getCurrentTimeRange(LocalDateTime currentDateTime) {
+    return sloTarget.getCurrentTimeRange(currentDateTime);
   }
 
   @Value
-  @Builder
   public static class TimePeriod {
-    LocalDate startDate;
-    LocalDate endDate;
+    LocalDateTime startTime;
+    LocalDateTime endTime;
+    @Builder
+    public TimePeriod(LocalDate startDate, LocalDate endDate) {
+      this(startDate.atStartOfDay(), endDate.atStartOfDay());
+    }
+    public static TimePeriod createWithLocalTime(LocalDateTime startTime, LocalDateTime endTime) {
+      return new TimePeriod(startTime, endTime);
+    }
 
-    public Period getRemainingDays(LocalDate currentDate) {
-      return Period.between(currentDate, endDate);
+    private TimePeriod(LocalDateTime startTime, LocalDateTime endTime) {
+      this.startTime = startTime;
+      this.endTime = endTime;
+    }
+
+    public Period getRemainingDays(LocalDateTime currentDateTime) {
+      return Period.between(currentDateTime.toLocalDate(), endTime.toLocalDate()).minusDays(1);
     }
     public int getTotalDays() {
-      return (int) DAYS.between(startDate, endDate);
+      return (int) DAYS.between(getStartTime(), getEndTime());
     }
-    public int totalMinutes(ZoneId zoneId) {
-      return (int) Duration.between(getStartTime(zoneId), getEndTime(zoneId)).toMinutes();
+    public int totalMinutes() {
+      return (int) Duration.between(getStartTime(), getEndTime()).toMinutes();
     }
 
     /**
      * Start time is inclusive.
      */
-    public Instant getStartTime(ZoneId zoneId) {
-      return getStartDate().atStartOfDay(zoneId).toInstant();
+    public Instant getStartTime(ZoneOffset zoneId) {
+      return getStartTime().toInstant(zoneId);
     }
 
     /**
      * End time is exclusive.
      */
-    public Instant getEndTime(ZoneId zoneId) {
-      // this will end at start of next day.
-      return getEndDate().plusDays(1).atStartOfDay(zoneId).toInstant();
+    public Instant getEndTime(ZoneOffset zoneId) {
+      return getEndTime().toInstant(zoneId);
     }
   }
 
   @Data
   @SuperBuilder
   public abstract static class SLOTarget {
-    public abstract TimePeriod getCurrentTimeRange(LocalDate currentDate);
+    public abstract TimePeriod getCurrentTimeRange(LocalDateTime currentDateTime);
     public abstract SLOTargetType getType();
   }
   @Data
@@ -154,9 +165,9 @@ public class ServiceLevelObjective
     private final SLOCalenderType calenderType = SLOCalenderType.WEEKLY;
 
     @Override
-    public TimePeriod getCurrentTimeRange(LocalDate currentDate) {
-      LocalDate nextDayOfWeek = dayOfWeek.getNextDayOfWeek(currentDate);
-      return TimePeriod.builder().startDate(nextDayOfWeek.minusDays(6)).endDate(nextDayOfWeek).build();
+    public TimePeriod getCurrentTimeRange(LocalDateTime currentDateTime) {
+      LocalDate nextDayOfWeek = dayOfWeek.getNextDayOfWeek(currentDateTime.toLocalDate());
+      return TimePeriod.builder().startDate(nextDayOfWeek.minusDays(6)).endDate(nextDayOfWeek.plusDays(1)).build();
     }
   }
 
@@ -167,19 +178,20 @@ public class ServiceLevelObjective
     private final SLOCalenderType calenderType = SLOCalenderType.MONTHLY;
 
     @Override
-    public TimePeriod getCurrentTimeRange(LocalDate currentDate) {
-      LocalDate windowStart = getWindowEnd(currentDate.minusMonths(1), windowEndDayOfMonth).plusDays(1);
-      LocalDate windowEnd = getWindowEnd(currentDate, windowEndDayOfMonth);
+    public TimePeriod getCurrentTimeRange(LocalDateTime currentDateTime) {
+      LocalDate windowStart =
+          getWindowEnd(currentDateTime.toLocalDate().minusMonths(1), windowEndDayOfMonth).plusDays(1);
+      LocalDate windowEnd = getWindowEnd(currentDateTime.toLocalDate(), windowEndDayOfMonth).plusDays(1);
       return TimePeriod.builder().startDate(windowStart).endDate(windowEnd).build();
     }
-    private LocalDate getWindowEnd(LocalDate currentDate, int windowEndDayOfMonth) {
+    private LocalDate getWindowEnd(LocalDate currentDateTime, int windowEndDayOfMonth) {
       LocalDate windowEnd;
       if (windowEndDayOfMonth > 28) {
-        windowEnd = currentDate.with(TemporalAdjusters.lastDayOfMonth());
-      } else if (currentDate.getDayOfMonth() <= windowEndDayOfMonth) {
-        windowEnd = getWindowEnd(currentDate);
+        windowEnd = currentDateTime.with(TemporalAdjusters.lastDayOfMonth());
+      } else if (currentDateTime.getDayOfMonth() <= windowEndDayOfMonth) {
+        windowEnd = getWindowEnd(currentDateTime);
       } else {
-        windowEnd = getWindowEnd(currentDate.plusMonths(1));
+        windowEnd = getWindowEnd(currentDateTime.plusMonths(1));
       }
       return windowEnd;
     }
@@ -195,12 +207,13 @@ public class ServiceLevelObjective
     private final SLOCalenderType calenderType = SLOCalenderType.QUARTERLY;
 
     @Override
-    public TimePeriod getCurrentTimeRange(LocalDate currentDate) {
-      LocalDate firstDayOfQuarter =
-          currentDate.with(currentDate.getMonth().firstMonthOfQuarter()).with(TemporalAdjusters.firstDayOfMonth());
+    public TimePeriod getCurrentTimeRange(LocalDateTime currentDateTime) {
+      LocalDate firstDayOfQuarter = currentDateTime.toLocalDate()
+                                        .with(currentDateTime.toLocalDate().getMonth().firstMonthOfQuarter())
+                                        .with(TemporalAdjusters.firstDayOfMonth());
 
       LocalDate lastDayOfQuarter = firstDayOfQuarter.plusMonths(2).with(TemporalAdjusters.lastDayOfMonth());
-      return TimePeriod.builder().startDate(firstDayOfQuarter).endDate(lastDayOfQuarter).build();
+      return TimePeriod.builder().startDate(firstDayOfQuarter).endDate(lastDayOfQuarter.plusDays(1)).build();
     }
   }
 
@@ -211,9 +224,9 @@ public class ServiceLevelObjective
     private final SLOTargetType type = SLOTargetType.ROLLING;
 
     @Override
-    public TimePeriod getCurrentTimeRange(LocalDate currentDate) {
-      // TODO: change to minute based.
-      return TimePeriod.builder().endDate(currentDate).startDate(currentDate.minusDays(periodLengthDays)).build();
+    public TimePeriod getCurrentTimeRange(LocalDateTime currentDateTime) {
+      return TimePeriod.createWithLocalTime(
+          currentDateTime.minusMinutes(TimeUnit.DAYS.toMinutes(periodLengthDays)), currentDateTime);
     }
   }
 }
