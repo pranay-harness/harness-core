@@ -20,7 +20,6 @@ import java.util.Set;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
-// todo(@NamanVerma): write test
 @OwnedBy(PIPELINE)
 @UtilityClass
 @Slf4j
@@ -55,10 +54,10 @@ public class ExpansionsMerger {
   String getNewFQN(String fqn, String key, ExpansionPlacementStrategy placementStrategy) {
     switch (placementStrategy) {
       case MOVE_UP:
-        List<String> split = Arrays.asList(fqn.split(YamlNode.PATH_SEP));
-        split.remove(split.size() - 1);
-        split.add(split.size() - 1, key);
-        return String.join(YamlNode.PATH_SEP, split);
+        String[] split = fqn.split(YamlNode.PATH_SEP);
+        List<String> newSplit = new ArrayList<>(Arrays.asList(split).subList(0, split.length - 2));
+        newSplit.add(key);
+        return String.join(YamlNode.PATH_SEP, newSplit);
       case REPLACE:
       case PARALLEL:
         String[] fqnSplit = fqn.split(YamlNode.PATH_SEP);
