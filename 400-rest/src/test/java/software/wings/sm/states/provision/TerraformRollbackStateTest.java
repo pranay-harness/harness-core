@@ -1,9 +1,11 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.TERRAFORM_AWS_CP_AUTHENTICATION;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.TATHAGAT;
+import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -22,6 +24,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -49,9 +52,11 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.infrastructure.TerraformConfig;
@@ -60,6 +65,7 @@ import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
@@ -71,6 +77,7 @@ import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.GitUtilsManager;
 
 import com.mongodb.DBCursor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -107,6 +114,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
   @Mock private GitConfigHelperService gitConfigHelperService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private SettingsService settingsService;
   @InjectMocks TerraformRollbackState terraformRollbackState = new TerraformRollbackState("Rollback Terraform Test");
 
   @Before
@@ -214,6 +222,32 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     verifyResponse(executionResponse, "sourceRepoBranch", true, 3, TerraformCommand.APPLY);
   }
 
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteInternalAwsCPAuthEnabled() {
+    setUp("sourceRepoBranch", true, WORKFLOW_EXECUTION_ID);
+    List<EncryptedDataDetail> encryptionDetails = new ArrayList();
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setUuid("UUID");
+    settingAttribute.setValue(new AwsConfig());
+    doReturn(true).when(featureFlagService).isEnabled(eq(TERRAFORM_AWS_CP_AUTHENTICATION), any());
+    doReturn(settingAttribute).when(settingsService).get(any());
+    doReturn(encryptionDetails).when(secretManager).getEncryptionDetails(any(), any(), any());
+    ExecutionResponse executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
+    verifyResponse(executionResponse, "sourceRepoBranch", true, 1, TerraformCommand.DESTROY);
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    assertThat(delegateTask.getData().getParameters().length).isEqualTo(1);
+    TerraformProvisionParameters parameters = (TerraformProvisionParameters) delegateTask.getData().getParameters()[0];
+    assertThat(parameters.getAwsConfigId()).isEqualTo("UUID");
+    assertThat(parameters.getAwsConfig()).isEqualTo(settingAttribute.getValue());
+    assertThat(parameters.getAwsRoleArn()).isEqualTo("arn");
+    assertThat(parameters.getAwsRegion()).isEqualTo("region");
+  }
+
   private void setUp(String sourceRepoBranch, boolean setVarsAndBackendConfigs, String workflowExecutionId) {
     terraformRollbackState.setWorkspace(WORKSPACE);
     when(executionContext.getWorkflowExecutionId()).thenReturn(workflowExecutionId);
@@ -249,6 +283,9 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
             .backendConfigs(setVarsAndBackendConfigs ? getTerraformBackendConfigs() : null)
             .variables(setVarsAndBackendConfigs ? getTerraformVariables() : null)
             .environmentVariables(setVarsAndBackendConfigs ? getTerraformEnvironmentVariables() : null)
+            .awsRegion("region")
+            .awsConfigId("UUID")
+            .awsRoleArn("arn")
             .build();
 
     MorphiaIterator<TerraformConfig, TerraformConfig> morphiaIterator = mock(MorphiaIterator.class);

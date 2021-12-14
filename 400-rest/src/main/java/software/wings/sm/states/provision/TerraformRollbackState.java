@@ -3,6 +3,7 @@ package software.wings.sm.states.provision;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
+import static io.harness.beans.FeatureName.TERRAFORM_AWS_CP_AUTHENTICATION;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.FileBucket.TERRAFORM_STATE;
 import static io.harness.validation.Validator.notNullCheck;
@@ -26,11 +27,14 @@ import io.harness.tasks.ResponseData;
 
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.beans.delegation.TerraformProvisionParameters.TerraformProvisionParametersBuilder;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.TerraformConfig.TerraformConfigKeys;
 import software.wings.sm.ExecutionContext;
@@ -212,7 +216,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
       log.info("{} fileId with old entityId", fileId == null ? "Didn't retrieve" : "Retrieved");
     }
 
-    TerraformProvisionParameters parameters =
+    TerraformProvisionParametersBuilder terraformProvisionParametersBuilder =
         TerraformProvisionParameters.builder()
             .timeoutInMillis(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES)))
             .accountId(executionContext.getApp().getAccountId())
@@ -241,10 +245,21 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .workspace(workspace)
             .delegateTag(configParameter.getDelegateTag())
             .isGitHostConnectivityCheck(
-                featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, executionContext.getApp().getAccountId()))
-            .build();
+                featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, executionContext.getApp().getAccountId()));
 
-    return createAndRunTask(activityId, executionContext, parameters, configParameter.getDelegateTag());
+    if (featureFlagService.isEnabled(TERRAFORM_AWS_CP_AUTHENTICATION, context.getAccountId())) {
+      SettingAttribute settingAttribute = getAwsConfigSettingAttribute(configParameter.getAwsConfigId());
+      AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+      terraformProvisionParametersBuilder.awsConfig(awsConfig)
+          .awsConfigId(configParameter.getAwsConfigId())
+          .awsConfigEncryptionDetails(
+              secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId()))
+          .awsRoleArn(configParameter.getAwsRoleArn())
+          .awsRegion(configParameter.getAwsRegion());
+    }
+
+    return createAndRunTask(
+        activityId, executionContext, terraformProvisionParametersBuilder.build(), configParameter.getDelegateTag());
   }
 
   /**
