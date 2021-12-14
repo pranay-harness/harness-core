@@ -122,6 +122,11 @@ public class InputSetYamlHelper {
     }
     ArrayNode list = (ArrayNode) innerMap.get("inputSetReferences");
     List<String> res = new ArrayList<>();
+
+    if (list == null) {
+      throw new InvalidRequestException(
+          "Input Set References cannot be empty. Please give valid Input Set References.");
+    }
     list.forEach(element -> res.add(element.asText()));
     return res;
   }
