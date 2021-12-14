@@ -132,7 +132,7 @@ public class WaitNotifyEngine {
     Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
 
     if (log.isDebugEnabled()) {
-      log.debug("notify request received for the correlationId : {}", correlationId);
+      log.debug("done with notify request received for the correlationId : {}", correlationId);
     }
 
     try {
