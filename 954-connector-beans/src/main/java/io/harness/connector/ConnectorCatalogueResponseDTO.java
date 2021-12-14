@@ -19,7 +19,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @ApiModel("ConnectorCatalogueResponse")
-@Schema(name = "ConnectorCatalogueRespone",
+@Schema(name = "ConnectorCatalogueResponse",
     description = "This is the view of connector catalogue response as defined in harness")
 public class ConnectorCatalogueResponseDTO {
   List<ConnectorCatalogueItem> catalogue;
