@@ -68,7 +68,7 @@ public class WorkflowServiceTemplateHelper {
   private static final String APPD_TIER_VAR_DESC = "Variable for AppDynamics Tier entity";
   private static final String ELK_SERVER_VAR_DESC = "Variable for Elastic Search Server entity";
   private static final String ELK_INDICES_VAR_DESC = "Variable for Elastic Search Indices entity";
-  private static final String CF_AWSCONFIG_VAR_DESC = "Variable for CloudFormation AWS Config entity";
+  private static final String CF_AWSCONFIG_VAR_DESC = "Variable for AWS Config entity";
   private static final String HELM_GITCONFIG_VAR_DESC = "Variable for Helm Git Config entity";
   private static final String SSH_CONNECTION_ATTRIBUTE_DESC = "Variable for SSH Connection Attribute entity";
   private static final String USER_GROUP_DESC = "Variable for User Group entity";
