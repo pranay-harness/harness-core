@@ -35,6 +35,7 @@ public class SLODashboardWidget {
   @NotNull double sloTargetPercentage;
   @NotNull List<Point> errorBudgetBurndown;
   @NotNull List<Point> sloPerformanceTrend;
+  @NotNull boolean isRecalculatingSLI;
   @Value
   @Builder
   public static class BurnRate {
@@ -49,6 +50,7 @@ public class SLODashboardWidget {
 
   public static SLODashboardWidgetBuilder withGraphData(SLOGraphData sloGraphData) {
     return SLODashboardWidget.builder()
+        .isRecalculatingSLI(sloGraphData.isRecalculatingSLI())
         .errorBudgetRemaining(sloGraphData.getErrorBudgetRemaining())
         .errorBudgetRemainingPercentage(sloGraphData.getErrorBudgetRemainingPercentage())
         .errorBudgetBurndown(sloGraphData.getErrorBudgetBurndown())
@@ -61,6 +63,7 @@ public class SLODashboardWidget {
     int errorBudgetRemaining;
     List<Point> errorBudgetBurndown;
     List<Point> sloPerformanceTrend;
+    boolean isRecalculatingSLI;
     public double errorBudgetSpentPercentage() {
       return 100 - errorBudgetRemainingPercentage;
     }

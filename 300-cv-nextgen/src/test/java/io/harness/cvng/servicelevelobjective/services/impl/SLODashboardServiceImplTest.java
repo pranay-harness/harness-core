@@ -91,9 +91,10 @@ public class SLODashboardServiceImplTest extends CvNextGenTestBase {
         .isEqualTo(Instant.parse("2020-06-27T00:00:00Z").toEpochMilli());
     assertThat(sloDashboardWidget.getCurrentPeriodEndTime())
         .isEqualTo(Instant.parse("2020-07-28T00:00:00Z").toEpochMilli());
-    assertThat(sloDashboardWidget.getErrorBudgetRemaining()).isEqualTo(8640);
+    assertThat(sloDashboardWidget.getErrorBudgetRemaining()).isEqualTo(8928);
     assertThat(sloDashboardWidget.getSloTargetPercentage()).isCloseTo(80, offset(.0001));
     assertThat(sloDashboardWidget.getErrorBudgetRemainingPercentage()).isCloseTo(100, offset(0.0001));
     assertThat(sloDashboardWidget.getErrorBudgetRisk()).isEqualTo(ErrorBudgetRisk.HEALTHY);
+    assertThat(sloDashboardWidget.isRecalculatingSLI()).isFalse();
   }
 }
