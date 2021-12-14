@@ -69,7 +69,6 @@ import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionInstance;
