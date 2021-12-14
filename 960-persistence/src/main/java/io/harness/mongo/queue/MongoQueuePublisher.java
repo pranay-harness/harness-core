@@ -31,6 +31,8 @@ public class MongoQueuePublisher<T extends Queuable> implements QueuePublisher<T
     try (AutoLogRemoveContext ignore = new AutoLogRemoveContext(
              MessageLogContext.MESSAGE_CLASS, MessageLogContext.MESSAGE_ID, MessageLogContext.MESSAGE_TOPIC)) {
       payload.setGlobalContext(obtainGlobalContext());
+      log.debug("Notification saved [{}]", payload);
+      log.debug("Current Size: [{}]", persistence.createQuery(payload.getClass()).count());
     }
     persistence.insertIgnoringDuplicateKeys(payload);
   }
