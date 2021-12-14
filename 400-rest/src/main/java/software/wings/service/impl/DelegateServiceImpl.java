@@ -3683,6 +3683,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (task.getUuid() == null) {
       task.setUuid(generateUuid());
     }
+    log.debug("Task id [{}] has wait Id [{}], task Object: [{}]", task.getUuid(), task.getWaitId(), task);
     if (mainConfiguration.isDisableDelegateMgmtInManager()) {
       return delegateServiceClassicGrpcClient.queueTask(task);
     }
