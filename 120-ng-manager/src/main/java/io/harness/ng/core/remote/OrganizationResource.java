@@ -106,11 +106,11 @@ public class OrganizationResource {
 
   @POST
   @ApiOperation(value = "Create an Organization", nickname = "postOrganization")
-  @Operation(operationId = "createOrganization", summary = "Creates an Organization",
+  @Operation(operationId = "postOrganization", summary = "Creates an Organization",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns created organization")
+        ApiResponse(responseCode = "default", description = "Returns created Organization details")
       })
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = CREATE_ORGANIZATION_PERMISSION)
   public ResponseDTO<OrganizationResponse>
@@ -133,7 +133,7 @@ public class OrganizationResource {
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
-            description = "Returns the organization with the passed accountIdentifier and orgIdentifier")
+            description = "Returns the Organization details with the passed Account Identifier and Org Identifier")
       })
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   public ResponseDTO<OrganizationResponse>
@@ -152,18 +152,21 @@ public class OrganizationResource {
   @GET
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
   @Operation(operationId = "getOrganizationList",
-      summary = "Get the list of organizations satisfying the criteria (if any) in the request",
+      summary = "Get the list of Organizations satisfying the criteria (if any) in the request",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns Organization details")
+        ApiResponse(responseCode = "default", description = "Returns list of Organizations")
       })
   public ResponseDTO<PageResponse<OrganizationResponse>>
   list(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
            NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Parameter(description = "list of Project Ids for filtering results") @QueryParam(
-          NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
-      @Parameter(description = "Search Term") @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @Parameter(description = "This is the list of Org Key IDs. Details specific to these IDs would be fetched.")
+      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
+      @Parameter(
+          description =
+              "This would be used to filter Organizations. Any Organization having the specified string in its Name, ID and Tag would be filtered.")
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @BeanParam PageRequest pageRequest) {
     OrganizationFilterDTO organizationFilterDTO =
         OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
@@ -200,16 +203,16 @@ public class OrganizationResource {
 
   @PUT
   @Path("{identifier}")
-  @ApiOperation(value = "Update an Organization by identifier", nickname = "putOrganization")
+  @ApiOperation(value = "Update an Organization by ID", nickname = "putOrganization")
   @Operation(operationId = "putOrganization", summary = "Updates the Organization",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns the updated Organization")
+        ApiResponse(responseCode = "default", description = "Returns the updated Organization details")
       })
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = EDIT_ORGANIZATION_PERMISSION)
   public ResponseDTO<OrganizationResponse>
-  update(@HeaderParam(IF_MATCH) String ifMatch,
+  update(@Parameter(description = "Version number of the Organization") @HeaderParam(IF_MATCH) String ifMatch,
       @Parameter(description = ORG_PARAM_MESSAGE) @NotNull @PathParam(
           NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
@@ -233,15 +236,17 @@ public class OrganizationResource {
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete an Organization by identifier", nickname = "deleteOrganization")
-  @Operation(operationId = "deleteOrganization", summary = "Deletes Organization by identifier",
+  @Operation(operationId = "deleteOrganization",
+      summary = "Deletes the Organization corresponding to the specified Organization ID.",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns the boolean status")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "It returns true if the Organization is deleted successfully and false if the Organization is not deleted.")
       })
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = DELETE_ORGANIZATION_PERMISSION)
   public ResponseDTO<Boolean>
-  delete(@HeaderParam(IF_MATCH) String ifMatch,
+  delete(@Parameter(description = "Version number of the Organization") @HeaderParam(IF_MATCH) String ifMatch,
       @Parameter(description = ORG_PARAM_MESSAGE) @NotNull @PathParam(
           NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
