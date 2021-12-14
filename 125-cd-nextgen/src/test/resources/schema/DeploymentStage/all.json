@@ -1486,7 +1486,14 @@
             "Fetch",
             "Version",
             "Template",
-            "Pull"
+            "Pull",
+            "Install",
+            "Upgrade",
+            "Rollback",
+            "History",
+            "Delete",
+            "Uninstall",
+            "List"
           ]
         },
         "flag": {
