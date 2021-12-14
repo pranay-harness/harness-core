@@ -64,4 +64,7 @@ public class TerraformConfig implements PersistentEntity, UuidAware, CreatedAtAw
   @FdIndex private final String entityId;
   private final String workflowExecutionId;
   private final String delegateTag;
+  private final String awsConfigId;
+  private final String awsRoleArn;
+  private final String awsRegion;
 }

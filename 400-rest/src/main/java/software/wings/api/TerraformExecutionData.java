@@ -51,6 +51,10 @@ public class TerraformExecutionData extends StateExecutionData implements Delega
   private String tfPlanJson;
   private EncryptedRecordData encryptedTfPlan;
 
+  private String awsConfigId;
+  private String awsRoleArn;
+  private String awsRegion;
+
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
