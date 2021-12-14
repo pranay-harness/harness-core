@@ -25,6 +25,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 
 import software.wings.api.terraform.TfVarGitSource;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
@@ -93,6 +94,11 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private boolean skipRefreshBeforeApplyingPlan;
   private boolean isGitHostConnectivityCheck;
   private final boolean useTfConfigInspectLatestVersion;
+  private final AwsConfig awsConfig;
+  private final String awsConfigId;
+  private final String awsRoleArn;
+  private final String awsRegion;
+  private List<EncryptedDataDetail> awsConfigEncryptionDetails;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
@@ -125,6 +131,10 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
     if (secretManagerConfig != null) {
       capabilities.addAll(
           EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilityForSecretManager(secretManagerConfig, null));
+    }
+    if (awsConfig != null) {
+      capabilities.addAll(
+          CapabilityHelper.generateDelegateCapabilities(awsConfig, awsConfigEncryptionDetails, maskingEvaluator));
     }
     return capabilities;
   }

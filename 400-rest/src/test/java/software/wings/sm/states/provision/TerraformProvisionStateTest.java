@@ -2,6 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
+import static io.harness.beans.FeatureName.TERRAFORM_AWS_CP_AUTHENTICATION;
 import static io.harness.beans.SweepingOutputInstance.Scope;
 import static io.harness.beans.SweepingOutputInstance.builder;
 import static io.harness.context.ContextElementType.TERRAFORM_INHERIT_PLAN;
@@ -91,6 +92,7 @@ import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terraform.TfVarGitSource;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
@@ -98,9 +100,12 @@ import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.infrastructure.TerraformConfig;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.GitFileConfigHelperService;
@@ -108,6 +113,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
@@ -165,6 +171,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ManagerExecutionLogCallback managerExecutionLogCallback;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private TemplateExpressionProcessor templateExpressionProcessor;
+  @Mock private SettingsService settingsService;
   @InjectMocks private TerraformProvisionState state = new ApplyTerraformProvisionState("tf");
   @InjectMocks private TerraformProvisionState destroyProvisionState = new DestroyTerraformProvisionState("tf");
 
@@ -841,6 +849,193 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(parameters.getEnvironmentVariables()).isNotEmpty();
     assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isTrue();
     assertParametersEnvironmentVariables(parameters);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteRegularWithEnvironmentVariablesAwsCPAuthEnabled() {
+    state.setProvisionerId(PROVISIONER_ID);
+    List<NameValuePair> nameValuePairList =
+        asList(NameValuePair.builder().name("TF_LOG").value("TRACE").valueType("TEXT").build(),
+            NameValuePair.builder().name("access_token").value("access_token").valueType("ENCRYPTED_TEXT").build(),
+            NameValuePair.builder().name("nil").valueType("TEXT").build(),
+            NameValuePair.builder().name("noValueType").value("value").valueType(null).build());
+    state.setEnvironmentVariables(nameValuePairList);
+    state.setAwsConfigId("UUID");
+    state.setAwsRoleArn("arn");
+    state.setAwsRegion("region");
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .environmentVariables(getTerraformEnvironmentVariables())
+                                                         .skipRefreshBeforeApplyingPlan(true)
+                                                         .build();
+    GitConfig gitConfig = GitConfig.builder().branch("master").build();
+    List<EncryptedDataDetail> encryptionDetails = new ArrayList();
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setUuid("UUID");
+    settingAttribute.setValue(new AwsConfig());
+
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn("taskId").when(delegateService).queueTask(any(DelegateTask.class));
+    doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
+    doReturn(true).when(featureFlagService).isEnabled(eq(TERRAFORM_AWS_CP_AUTHENTICATION), any());
+    doReturn(settingAttribute).when(settingsService).get(any());
+    doReturn(encryptionDetails).when(secretManager).getEncryptionDetails(any(), any(), any());
+    ExecutionResponse response = state.execute(executionContext);
+
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    DelegateTask createdTask = taskCaptor.getValue();
+    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
+
+    assertThat(response.isAsync()).isTrue();
+    assertThat(createdTask.getData().getParameters()).isNotEmpty();
+    TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
+    assertThat(parameters.getEnvironmentVariables()).isNotEmpty();
+    assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isTrue();
+    assertParametersEnvironmentVariables(parameters);
+    assertThat(parameters.getAwsConfigId()).isEqualTo("UUID");
+    assertThat(parameters.getAwsConfig()).isEqualTo(settingAttribute.getValue());
+    assertThat(parameters.getAwsRoleArn()).isEqualTo("arn");
+    assertThat(parameters.getAwsRegion()).isEqualTo("region");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteRegularWithEnvironmentVariablesAwsCPAuthEnabledTemplate() {
+    state.setProvisionerId(PROVISIONER_ID);
+    List<NameValuePair> nameValuePairList =
+        asList(NameValuePair.builder().name("TF_LOG").value("TRACE").valueType("TEXT").build(),
+            NameValuePair.builder().name("access_token").value("access_token").valueType("ENCRYPTED_TEXT").build(),
+            NameValuePair.builder().name("nil").valueType("TEXT").build(),
+            NameValuePair.builder().name("noValueType").value("value").valueType(null).build());
+    state.setEnvironmentVariables(nameValuePairList);
+    List<TemplateExpression> templateExpressions = Collections.singletonList(new TemplateExpression());
+    state.setTemplateExpressions(templateExpressions);
+    state.setAwsRegion("region");
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .environmentVariables(getTerraformEnvironmentVariables())
+                                                         .skipRefreshBeforeApplyingPlan(true)
+                                                         .build();
+    GitConfig gitConfig = GitConfig.builder().branch("master").build();
+    List<EncryptedDataDetail> encryptionDetails = new ArrayList();
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setUuid("UUID");
+    settingAttribute.setValue(new AwsConfig());
+
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn("taskId").when(delegateService).queueTask(any(DelegateTask.class));
+    doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
+    doReturn(true).when(featureFlagService).isEnabled(eq(TERRAFORM_AWS_CP_AUTHENTICATION), any());
+    doReturn(encryptionDetails).when(secretManager).getEncryptionDetails(any(), any(), any());
+    doReturn(new TemplateExpression())
+        .when(templateExpressionProcessor)
+        .getTemplateExpression(any(), eq("awsConfigId"));
+    doReturn(settingAttribute).when(templateExpressionProcessor).resolveSettingAttributeByNameOrId(any(), any(), any());
+    doReturn("arn").when(executionContext).renderExpression(any());
+
+    ExecutionResponse response = state.execute(executionContext);
+
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    DelegateTask createdTask = taskCaptor.getValue();
+    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
+
+    assertThat(response.isAsync()).isTrue();
+    assertThat(createdTask.getData().getParameters()).isNotEmpty();
+    TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
+    assertThat(parameters.getEnvironmentVariables()).isNotEmpty();
+    assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isTrue();
+    assertParametersEnvironmentVariables(parameters);
+    assertThat(parameters.getAwsConfigId()).isEqualTo("UUID");
+    assertThat(parameters.getAwsConfig()).isEqualTo(settingAttribute.getValue());
+    assertThat(parameters.getAwsRoleArn()).isEqualTo("arn");
+    assertThat(parameters.getAwsRegion()).isEqualTo("region");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteInheritApprovedPlanAwsCPAuthEnabled() {
+    state.setInheritApprovedPlan(true);
+    EncryptedRecordData encryptedPlan =
+        EncryptedRecordData.builder().name("terraformPlan").encryptedValue("terraformPlan".toCharArray()).build();
+    List<ContextElement> terraformProvisionInheritPlanElements = new ArrayList<>();
+    TfVarGitSource tfVarGitSource = TfVarGitSource.builder().gitFileConfig(new GitFileConfig()).build();
+    TerraformProvisionInheritPlanElement terraformProvisionInheritPlanElement =
+        TerraformProvisionInheritPlanElement.builder()
+            .provisionerId(PROVISIONER_ID)
+            .workspace("workspace")
+            .sourceRepoReference("sourceRepoReference")
+            .backendConfigs(getTerraformBackendConfigs())
+            .environmentVariables(getTerraformEnvironmentVariables())
+            .targets(Arrays.asList("target1"))
+            .variables(getTerraformVariables())
+            .tfVarSource(tfVarGitSource)
+            .encryptedTfPlan(encryptedPlan)
+            .build();
+    state.setAwsConfigId("UUID");
+    state.setAwsRoleArn("arn");
+    state.setAwsRegion("region");
+    List<EncryptedDataDetail> encryptionDetails = new ArrayList();
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setUuid("UUID");
+    settingAttribute.setValue(new AwsConfig());
+    terraformProvisionInheritPlanElements.add(terraformProvisionInheritPlanElement);
+    when(executionContext.getContextElementList(TERRAFORM_INHERIT_PLAN))
+        .thenReturn(terraformProvisionInheritPlanElements);
+
+    when(executionContext.getAppId()).thenReturn(APP_ID);
+    doReturn(Environment.Builder.anEnvironment().build()).when(executionContext).getEnv();
+    state.setProvisionerId(PROVISIONER_ID);
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .sourceRepoBranch("sourceRepoBranch")
+                                                         .kmsId("kmsId")
+                                                         .build();
+    GitConfig gitConfig = GitConfig.builder().branch("master").build();
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn("fileId").when(fileService).getLatestFileId(anyString(), eq(FileBucket.TERRAFORM_STATE));
+    doReturn(ACCOUNT_ID).when(executionContext).getAccountId();
+    doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
+    when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
+    when(executionContext.prepareSweepingOutputInquiryBuilder()).thenReturn(SweepingOutputInquiry.builder());
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    when(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, WORKFLOW_EXECUTION_ID))
+        .thenReturn(encryptedDataDetails);
+    doReturn(true).when(featureFlagService).isEnabled(eq(TERRAFORM_AWS_CP_AUTHENTICATION), any());
+    doReturn(settingAttribute).when(settingsService).get(any());
+    doReturn(encryptionDetails).when(secretManager).getEncryptionDetails(any(), any(), any());
+    ExecutionResponse executionResponse = state.execute(executionContext);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    DelegateTask createdTask = taskCaptor.getValue();
+    TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
+    verify(gitConfigHelperService, times(2)).convertToRepoGitConfig(any(GitConfig.class), anyString());
+    verify(infrastructureProvisionerService, times(1)).get(APP_ID, PROVISIONER_ID);
+    verify(fileService, times(1)).getLatestFileId(anyString(), any(FileBucket.class));
+    verify(gitUtilsManager, times(2)).getGitConfig(anyString());
+    verify(infrastructureProvisionerService, times(1)).extractTextVariables(anyList(), any(ExecutionContext.class));
+    // once for environment variables, once for variables, once for backend configs
+    verify(infrastructureProvisionerService, times(3))
+        .extractEncryptedTextVariables(anyList(), eq(APP_ID), anyString());
+    // once for environment variables, once for variables
+    verify(infrastructureProvisionerService, times(2)).extractUnresolvedTextVariables(anyList());
+    verify(secretManager, times(3)).getEncryptionDetails(any(GitConfig.class), anyString(), anyString());
+    verify(secretManagerConfigService, times(1)).getSecretManager(anyString(), anyString(), anyBoolean());
+    assertThat(executionResponse.getCorrelationIds().get(0)).isEqualTo("uuid");
+    assertThat(((ScriptStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
+        .isEqualTo("uuid");
+    assertThat(parameters.getAwsConfigId()).isEqualTo("UUID");
+    assertThat(parameters.getAwsConfig()).isEqualTo(settingAttribute.getValue());
+    assertThat(parameters.getAwsRoleArn()).isEqualTo("arn");
+    assertThat(parameters.getAwsRegion()).isEqualTo("region");
   }
 
   @Test

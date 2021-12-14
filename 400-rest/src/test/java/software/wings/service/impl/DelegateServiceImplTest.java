@@ -1377,6 +1377,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                                             .build())
                                     .build();
     when(mainConfiguration.getJreConfigs()).thenReturn(jreConfigMap);
+    when(mainConfiguration.useCdnForDelegateStorage()).thenReturn(false);
     CdnConfig cdnConfig = new CdnConfig();
     cdnConfig.setUrl("/");
     when(mainConfiguration.getCdnConfig()).thenReturn(cdnConfig);
