@@ -4,7 +4,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.YamlException;
 import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
@@ -12,10 +11,8 @@ import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.YamlUpdates;
-import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.merger.helpers.MergeHelper;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
@@ -155,24 +152,6 @@ public class PlanCreationBlobResponseUtils {
    * Takes the current pipeline yaml and updates the yaml based on the fqn to yaml snippet passed in as param
    */
   public String mergeYamlUpdates(String pipelineJson, Map<String, String> fqnToJsonMap) {
-    if (EmptyPredicate.isEmpty(fqnToJsonMap)) {
-      return pipelineJson;
-    }
-    YamlNode pipelineNode;
-    try {
-      pipelineNode = YamlUtils.readTree(pipelineJson).getNode();
-    } catch (IOException e) {
-      log.error("Could not read the pipeline json:\n" + pipelineJson, e);
-      throw new YamlException("Could not read the pipeline json");
-    }
-    fqnToJsonMap.keySet().forEach(fqn -> {
-      try {
-        pipelineNode.replacePath(fqn, YamlUtils.readTree(fqnToJsonMap.get(fqn)).getNode().getCurrJsonNode());
-      } catch (IOException e) {
-        log.error("Could not read json provided for the fqn: " + fqn + ". Json:\n" + fqnToJsonMap.get(fqn), e);
-        throw new YamlException("Could not read json provided for the fqn: " + fqn);
-      }
-    });
-    return pipelineNode.toString();
+    return MergeHelper.mergeUpdatesIntoJson(pipelineJson, fqnToJsonMap);
   }
 }
