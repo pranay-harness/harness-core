@@ -379,8 +379,9 @@ public interface UserService extends OwnedByAccount {
    * Complete NG invite and create user
    *
    * @param userInvite the user invite DTO
+   * @param isScimInvite if the Invite is created for a SCIM user
    */
-  void completeNGInvite(UserInviteDTO userInvite);
+  void completeNGInvite(UserInviteDTO userInvite, boolean isScimInvite);
 
   /**
    * Complete the user invite and login the user in one call.

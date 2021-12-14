@@ -50,6 +50,8 @@ public class UserMetadata implements PersistentEntity {
   @NotEmpty String email;
   String name;
   @Getter(value = AccessLevel.PRIVATE) @NotEmpty Boolean locked;
+  @Getter(value = AccessLevel.PRIVATE) @NotEmpty Boolean disabled;
+  @Getter(value = AccessLevel.PRIVATE) @NotEmpty Boolean externallyManaged;
 
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
@@ -57,5 +59,13 @@ public class UserMetadata implements PersistentEntity {
 
   public Boolean isLocked() {
     return this.locked;
+  }
+
+  public boolean isDisabled() {
+    return Boolean.TRUE.equals(disabled);
+  }
+
+  public boolean isExternallyManaged() {
+    return Boolean.TRUE.equals(externallyManaged);
   }
 }
