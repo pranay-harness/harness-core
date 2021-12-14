@@ -101,17 +101,17 @@ public class MergeHelper {
     }
   }
 
-  // todo(@NamanVerma): write test
   public String mergeUpdatesIntoJson(String pipelineJson, Map<String, String> fqnToJsonMap) {
-    if (EmptyPredicate.isEmpty(fqnToJsonMap)) {
-      return pipelineJson;
-    }
     YamlNode pipelineNode;
     try {
       pipelineNode = YamlUtils.readTree(pipelineJson).getNode();
     } catch (IOException e) {
       log.error("Could not read the pipeline json:\n" + pipelineJson, e);
       throw new YamlException("Could not read the pipeline json");
+    }
+    if (EmptyPredicate.isEmpty(fqnToJsonMap)) {
+      // the input pipelineJson could actually be a YAML. Need to ensure a JSON is sent
+      return JsonUtils.asJson(pipelineNode.getCurrJsonNode());
     }
     fqnToJsonMap.keySet().forEach(fqn -> {
       try {
@@ -121,10 +121,9 @@ public class MergeHelper {
         throw new YamlException("Could not read json provided for the fqn: " + fqn);
       }
     });
-    return JsonUtils.asJson(pipelineNode);
+    return JsonUtils.asJson(pipelineNode.getCurrJsonNode());
   }
 
-  // todo(@NamanVerma): write test
   public String removeFQNs(String json, List<String> toBeRemovedFQNs) {
     if (EmptyPredicate.isEmpty(toBeRemovedFQNs)) {
       return json;
@@ -137,6 +136,6 @@ public class MergeHelper {
       throw new YamlException("Could not read the json");
     }
     toBeRemovedFQNs.forEach(pipelineNode::removePath);
-    return JsonUtils.asJson(pipelineNode);
+    return JsonUtils.asJson(pipelineNode.getCurrJsonNode());
   }
 }
