@@ -96,6 +96,8 @@ public class AccountGenerator {
   private static final String default2faEmail = "default2fa@harness.io";
   private static final SecretName default2faPassword = new SecretName("user_default_password");
 
+  private static final String defaultRingName = "ring3";
+
   @Inject AccountService accountService;
   @Inject AuthHandler authHandler;
   @Inject HarnessUserGroupService harnessUserGroupService;
@@ -201,6 +203,7 @@ public class AccountGenerator {
                     .withAccountName(accountName)
                     .withCompanyName(companyName)
                     .withDefaultExperience(DefaultExperience.CG)
+                    .withRingName(defaultRingName)
                     .withLicenseInfo(LicenseInfo.builder()
                                          .accountType(accountType)
                                          .accountStatus(AccountStatus.ACTIVE)

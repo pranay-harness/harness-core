@@ -137,6 +137,8 @@ public class Account extends Base implements PersistentRegularIterable {
 
   private boolean oauthEnabled;
 
+  private String ringName;
+
   @Getter @Setter @JsonIgnore private boolean backgroundJobsDisabled;
 
   @FdIndex @Getter @Setter private boolean isHarnessSupportAccessAllowed = true;
@@ -351,6 +353,14 @@ public class Account extends Base implements PersistentRegularIterable {
     this.techStacks = techStacks;
   }
 
+  public String getRingName() {
+    return ringName;
+  }
+
+  public void setRingName(String ringName) {
+    this.ringName = ringName;
+  }
+
   public boolean isOauthEnabled() {
     return this.oauthEnabled;
   }
@@ -530,6 +540,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private boolean cloudCostEnabled;
     private boolean ceK8sEventCollectionEnabled;
     private String subdomainUrl;
+    private String ringName;
     private boolean backgroundJobsDisabled;
     private boolean isHarnessSupportAccessAllowed = true;
     private AccountPreferences accountPreferences;
@@ -673,6 +684,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withRingName(String ringName) {
+      this.ringName = ringName;
+      return this;
+    }
+
     public Builder withHarnessGroupAccessAllowed(boolean isAllowed) {
       this.isHarnessSupportAccessAllowed = isAllowed;
       return this;
@@ -716,6 +732,7 @@ public class Account extends Base implements PersistentRegularIterable {
           .withLicenseExpiryRemindersSentAt(licenseExpiryRemindersSentAt)
           .withOauthEnabled(oauthEnabled)
           .withSubdomainUrl(subdomainUrl)
+          .withRingName(ringName)
           .withBackgroundJobsDisabled(backgroundJobsDisabled)
           .withDefaultExperience(defaultExperience)
           .withCreatedFromNG(createdFromNG)
@@ -748,6 +765,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setCloudCostEnabled(cloudCostEnabled);
       account.setCeAutoCollectK8sEvents(ceK8sEventCollectionEnabled);
       account.setSubdomainUrl(subdomainUrl);
+      account.setRingName(ringName);
       account.setHarnessSupportAccessAllowed(isHarnessSupportAccessAllowed);
       account.setBackgroundJobsDisabled(backgroundJobsDisabled);
       account.setDefaultExperience(defaultExperience);
@@ -785,6 +803,7 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String licenseExpiryCheckIteration = "licenseExpiryCheckIteration";
     public static final String accountDeletionIteration = "accountDeletionIteration";
     public static final String subdomainUrl = "subdomainUrl";
+    public static final String ringName = "ring3";
     public static final String gitSyncExpiryCheckIteration = "gitSyncExpiryCheckIteration";
     public static final String ceLicenseExpiryIteration = "ceLicenseExpiryIteration";
     public static final String ceLicenseInfo = "ceLicenseInfo";
