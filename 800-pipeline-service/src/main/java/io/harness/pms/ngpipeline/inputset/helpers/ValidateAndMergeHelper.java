@@ -121,9 +121,13 @@ public class ValidateAndMergeHelper {
   private List<Optional<InputSetEntity>> findAllReferredInputSets(List<String> referencesInOverlay, String accountId,
       String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
     List<Optional<InputSetEntity>> inputSets = new ArrayList<>();
-    referencesInOverlay.forEach(identifier
-        -> inputSets.add(pmsInputSetService.get(
-            accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false)));
+    referencesInOverlay.forEach(identifier -> {
+      if (EmptyPredicate.isEmpty(identifier)) {
+        throw new InvalidRequestException("Empty Input Set Identifier not allowed in Input Set References");
+      }
+      inputSets.add(
+          pmsInputSetService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false));
+    });
     return inputSets;
   }
 
