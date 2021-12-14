@@ -3,6 +3,7 @@ package io.harness.pms.ngpipeline.inputset.helpers;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType.INPUT_SET;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.VED;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -270,5 +271,76 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
                                pipelineId, Arrays.asList(invalidIdentifier, validIdentifier), branch, repoId, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("invalidIdentifier is invalid. Pipeline update has made this input set outdated");
+  }
+
+  @Test
+  @Owner(developers = VED)
+  @Category(UnitTests.class)
+  public void testForLengthCheckOnInputSetIdentifiers() {
+    String yaml1 = getInputSetYamlWithLongIdentifier(true);
+    String yaml2 = addOrgIdentifier(yaml1);
+    String yaml3 = addProjectIdentifier(yaml2);
+    String yaml4 = addPipelineIdentifier(yaml3);
+    assertThatThrownBy(
+        () -> validateAndMergeHelper.validateInputSet(accountId, orgId, projectId, pipelineId, yaml4, branch, repoId))
+        .hasMessage("Input Set identifier length cannot be more that 63 characters.");
+  }
+
+  @Test
+  @Owner(developers = VED)
+  @Category(UnitTests.class)
+  public void testForLengthCheckOnOverlayInputSetIdentifiers() {
+    String yaml1 = getOverlayInputSetYamlWithLongIdentifier(false, true);
+    String yaml2 = addOrgIdentifier(yaml1);
+    String yaml3 = addProjectIdentifier(yaml2);
+    String yaml4 = addPipelineIdentifier(yaml3);
+    assertThatThrownBy(
+        () -> validateAndMergeHelper.validateOverlayInputSet(accountId, orgId, projectId, pipelineId, yaml4))
+        .hasMessage("Overlay Input Set identifier length cannot be more that 63 characters.");
+  }
+
+  private String getInputSetYamlWithLongIdentifier(boolean hasPipelineComponent) {
+    return getInputSetYamlWithLongIdentifier(hasPipelineComponent, false);
+  }
+
+  private String getInputSetYamlWithLongIdentifier(boolean hasPipelineComponent, boolean hasTags) {
+    String base = "inputSet:\n"
+        + "  name: n1\n"
+        + "  identifier: abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n";
+    String tags = "  tags:\n"
+        + "    a : b\n";
+    String pipelineComponent = "  pipeline:\n"
+        + "    name: n2\n"
+        + "    identifier: n2\n";
+    return base + (hasTags ? tags : "") + (hasPipelineComponent ? pipelineComponent : "");
+  }
+
+  private String getOverlayInputSetYamlWithLongIdentifier(boolean hasTags, boolean hasReferences) {
+    String base = "overlayInputSet:\n"
+        + "  name: n1\n"
+        + "  identifier: abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n";
+    String noReferences = "  inputSetReferences: []\n";
+    String references = "  inputSetReferences:\n"
+        + "    - s1\n"
+        + "    - s2\n";
+    String tags = "  tags:\n"
+        + "    a : b\n";
+
+    return base + (hasTags ? tags : "") + (hasReferences ? references : noReferences);
+  }
+
+  private String addOrgIdentifier(String yaml) {
+    String orgId = "  orgIdentifier: o1\n";
+    return yaml + orgId;
+  }
+
+  private String addProjectIdentifier(String yaml) {
+    String projectId = "  projectIdentifier: p1\n";
+    return yaml + projectId;
+  }
+
+  private String addPipelineIdentifier(String yaml) {
+    String pipelineId = "  pipelineIdentifier: n2\n";
+    return yaml + pipelineId;
   }
 }

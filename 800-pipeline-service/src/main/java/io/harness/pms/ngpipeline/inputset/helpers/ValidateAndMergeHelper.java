@@ -50,6 +50,9 @@ public class ValidateAndMergeHelper {
     if (EmptyPredicate.isEmpty(identifier)) {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
+    if (identifier.length() > 63) {
+      throw new InvalidRequestException("Input Set identifier length cannot be more that 63 characters.");
+    }
     InputSetYamlHelper.confirmPipelineIdentifierInInputSet(yaml, pipelineIdentifier);
     InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml, "inputSet", orgIdentifier, projectIdentifier);
 
@@ -84,6 +87,9 @@ public class ValidateAndMergeHelper {
     String identifier = InputSetYamlHelper.getStringField(yaml, "identifier", "overlayInputSet");
     if (EmptyPredicate.isEmpty(identifier)) {
       throw new InvalidRequestException("Identifier cannot be empty");
+    }
+    if (identifier.length() > 63) {
+      throw new InvalidRequestException("Overlay Input Set identifier length cannot be more that 63 characters.");
     }
     List<String> inputSetReferences = InputSetYamlHelper.getReferencesFromOverlayInputSetYaml(yaml);
     if (inputSetReferences.isEmpty()) {
