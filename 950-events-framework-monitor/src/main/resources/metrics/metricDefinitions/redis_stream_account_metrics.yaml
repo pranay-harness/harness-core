@@ -1,0 +1,8 @@
+name: Account metrics
+identifier: account
+metricGroup: account
+metrics:
+  - metricName: account_count
+    metricDefinition: account count
+    type: Count
+    unit: "1"

@@ -4,6 +4,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.INSTANCE_STATS
 
 import static java.util.stream.Collectors.groupingBy;
 
+import com.google.protobuf.Descriptors;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -75,7 +76,7 @@ public class UsageMetricsEventPublisherImpl implements UsageMetricsEventPublishe
       eventProducer.send(Message.newBuilder()
                              .putAllMetadata(ImmutableMap.of(
                                  "accountId", accountId, EventsFrameworkMetadataConstants.ENTITY_TYPE, INSTANCE_STATS))
-                             .setData(eventInfo.toByteString())
+                             .setData(eventInfo.toByteString()).setAccountId(accountId)
                              .build());
     } catch (Exception ex) {
       log.error(
