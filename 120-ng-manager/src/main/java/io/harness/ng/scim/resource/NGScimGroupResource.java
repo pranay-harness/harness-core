@@ -1,12 +1,11 @@
 package io.harness.ng.scim.resource;
 
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimGroup;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimResource;
+import io.harness.scim.service.ScimGroupService;
 import io.harness.security.annotations.ScimAPI;
-
-import software.wings.resources.ScimResource;
-import software.wings.scim.PatchRequest;
-import software.wings.scim.ScimGroup;
-import software.wings.scim.ScimGroupService;
-import software.wings.scim.ScimListResponse;
 
 import com.google.inject.Inject;
 import io.dropwizard.jersey.PATCH;

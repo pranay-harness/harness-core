@@ -30,8 +30,11 @@ public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionIn
               return metricCollectionInfo.getQuery();
             })
             .collect(Collectors.toList());
+    List<String> metricIdentifiers =
+        metricDefinitions.stream().map(MetricCollectionInfo::getMetricIdentifier).collect(Collectors.toList());
     dslEnvVariables.put("queries", queries);
     dslEnvVariables.put("groupName", groupName);
+    dslEnvVariables.put("metricIdentifiers", metricIdentifiers);
     return dslEnvVariables;
   }
 
@@ -56,6 +59,7 @@ public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionIn
     private String query;
     private String groupingQuery;
     private String metricName;
+    private String metricIdentifier;
     private String metric;
     private String serviceInstanceIdentifierTag;
   }

@@ -58,12 +58,9 @@ public class SLIAnalyserServiceImplTest extends CvNextGenTestBase {
     ServiceLevelIndicatorDTO serviceLevelIndicatorDTO = createThresholdServiceLevelIndicator();
     Map<String, Double> requestMap = new HashMap<>();
     requestMap.put("metric2", 225.0);
-    try {
-      thresholdAnalyserServiceImpl.analyse(
-          requestMap, (ThresholdSLIMetricSpec) serviceLevelIndicatorDTO.getSpec().getSpec());
-    } catch (NullPointerException ex) {
-      assertThat(ex.getMessage()).isEqualTo("metric value for metric identifier metric1 not found.");
-    }
+    SLIState sliState = thresholdAnalyserServiceImpl.analyse(
+        requestMap, (ThresholdSLIMetricSpec) serviceLevelIndicatorDTO.getSpec().getSpec());
+    assertThat(SLIState.NO_DATA).isEqualTo(sliState);
   }
 
   @Test

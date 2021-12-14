@@ -31,7 +31,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.notification.bean.NotificationRules;
 import io.harness.opaclient.model.OpaConstants;
-import io.harness.plancreator.steps.http.HttpStepNode;
+import io.harness.plancreator.steps.http.PmsAbstractStepNode;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.governance.PipelineSaveResponse;
@@ -44,7 +44,9 @@ import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.rbac.PipelineRbacPermissions;
 import io.harness.pms.variables.VariableMergeServiceResponse;
+import io.harness.steps.template.TemplateStepNode;
 import io.harness.utils.PageUtils;
+import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.YamlSchemaResource;
 
 import com.google.inject.Inject;
@@ -548,11 +550,29 @@ public class PipelineResource implements YamlSchemaResource {
         nodeExecutionToExecutioNodeMapper.mapNodeExecutionToExecutionNode(nodeExecutionService.get(nodeExecutionId)));
   }
 
-  // TODO: Will delete this dummy api
   @GET
-  @Path("/dummy-api")
-  public ResponseDTO<HttpStepNode> getStepNode() {
-    return ResponseDTO.newResponse(new HttpStepNode());
+  @Path("/dummy-pmsSteps-api")
+  @ApiOperation(value = "This is dummy api to expose pmsSteps", nickname = "dummyPmsStepsApi")
+  public ResponseDTO<PmsAbstractStepNode> getPmsStepNodes() {
+    return ResponseDTO.newResponse(new PmsAbstractStepNode() {
+      @Override
+      public String getType() {
+        return null;
+      }
+
+      @Override
+      public StepSpecType getStepSpecType() {
+        return null;
+      }
+    });
+  }
+
+  @GET
+  @Path("/dummy-templateStep-api")
+  @ApiOperation(value = "This is dummy api to expose templateStepNode", nickname = "dummyTemplateStepApi")
+  // do not delete this.
+  public ResponseDTO<TemplateStepNode> getTemplateStepNode() {
+    return ResponseDTO.newResponse(new TemplateStepNode());
   }
 
   @GET

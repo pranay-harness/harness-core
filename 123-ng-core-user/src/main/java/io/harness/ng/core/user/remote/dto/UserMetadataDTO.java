@@ -25,12 +25,17 @@ public class UserMetadataDTO {
   @ApiModelProperty(required = true) @NotEmpty String email;
   @ApiModelProperty(required = true) @NotEmpty String uuid;
   @NotEmpty boolean locked;
+  @NotEmpty boolean disabled;
+  @NotEmpty boolean externallyManaged;
 
   @Builder
-  public UserMetadataDTO(String name, String email, String uuid, boolean locked) {
+  public UserMetadataDTO(
+      String name, String email, String uuid, boolean locked, boolean disabled, boolean externallyManaged) {
     this.name = name;
     this.email = email;
     this.uuid = uuid;
     this.locked = locked;
+    this.disabled = disabled;
+    this.externallyManaged = externallyManaged;
   }
 }

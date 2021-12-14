@@ -2,6 +2,8 @@ package io.harness.cdng.helm;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
+import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.helm.NativeHelmRollbackOutcome.NativeHelmRollbackOutcomeBuilder;
 import io.harness.cdng.helm.beans.NativeHelmExecutionPassThroughData;
 import io.harness.cdng.helm.rollback.HelmRollbackStepParams;
@@ -58,6 +60,7 @@ public class HelmRollbackStep extends TaskExecutableWithRollbackAndRbac<HelmCmdE
   @Inject private OutcomeService outcomeService;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private StepHelper stepHelper;
+  @Inject CDFeatureFlagHelper cdFeatureFlagHelper;
 
   NativeHelmRollbackOutcomeBuilder nativeHelmRollbackOutcomeBuilder = NativeHelmRollbackOutcome.builder();
 
@@ -156,6 +159,8 @@ public class HelmRollbackStep extends TaskExecutableWithRollbackAndRbac<HelmCmdE
         .releaseName(releaseName)
         .helmVersion(helmChartManifestOutcome.getHelmVersion())
         .namespace(nativeHelmStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance).getNamespace())
+        .k8SteadyStateCheckEnabled(cdFeatureFlagHelper.isEnabled(
+            AmbianceUtils.getAccountId(ambiance), FeatureName.HELM_STEADY_STATE_CHECK_1_16))
         .shouldOpenFetchFilesLogStream(true);
 
     return nativeHelmStepHelper

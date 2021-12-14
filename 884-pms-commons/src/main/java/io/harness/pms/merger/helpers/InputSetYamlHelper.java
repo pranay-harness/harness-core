@@ -122,6 +122,11 @@ public class InputSetYamlHelper {
     }
     ArrayNode list = (ArrayNode) innerMap.get("inputSetReferences");
     List<String> res = new ArrayList<>();
+
+    if (list == null) {
+      throw new InvalidRequestException(
+          "Input Set References cannot be empty. Please give valid Input Set References.");
+    }
     list.forEach(element -> res.add(element.asText()));
     return res;
   }
@@ -133,6 +138,10 @@ public class InputSetYamlHelper {
     }
     String pipelineComponent = getPipelineComponent(inputSetYaml);
     String identifierInYaml = InputSetYamlHelper.getStringField(pipelineComponent, "identifier", "pipeline");
+    if (EmptyPredicate.isEmpty(identifierInYaml)) {
+      throw new InvalidRequestException(
+          "Pipeline identifier is missing in the YAML. Please give a valid Pipeline identifier");
+    }
     if (!pipelineIdentifier.equals(identifierInYaml)) {
       throw new InvalidRequestException("Pipeline identifier in input set does not match");
     }
@@ -140,6 +149,10 @@ public class InputSetYamlHelper {
 
   public void confirmPipelineIdentifierInOverlayInputSet(String inputSetYaml, String pipelineIdentifier) {
     String identifierInYaml = InputSetYamlHelper.getStringField(inputSetYaml, "pipelineIdentifier", "overlayInputSet");
+    if (EmptyPredicate.isEmpty(identifierInYaml)) {
+      throw new InvalidRequestException(
+          "Pipeline identifier is missing in the YAML. Please give a valid Pipeline identifier");
+    }
     if (!pipelineIdentifier.equals(identifierInYaml)) {
       throw new InvalidRequestException("Pipeline identifier in input set does not match");
     }
@@ -149,6 +162,15 @@ public class InputSetYamlHelper {
       String yaml, String rootNode, String orgIdentifier, String projectIdentifier) {
     String orgIdInYaml = InputSetYamlHelper.getStringField(yaml, "orgIdentifier", rootNode);
     String projectIdInYaml = InputSetYamlHelper.getStringField(yaml, "projectIdentifier", rootNode);
+
+    if (EmptyPredicate.isEmpty(orgIdInYaml)) {
+      throw new InvalidRequestException(
+          "Organization identifier is missing in the YAML. Please give a valid Organization identifier");
+    }
+    if (EmptyPredicate.isEmpty(projectIdInYaml)) {
+      throw new InvalidRequestException(
+          "Project identifier is missing in the YAML. Please give a valid Project identifier");
+    }
 
     if (!orgIdentifier.equals(orgIdInYaml)) {
       throw new InvalidRequestException("Org identifier in input set does not match");

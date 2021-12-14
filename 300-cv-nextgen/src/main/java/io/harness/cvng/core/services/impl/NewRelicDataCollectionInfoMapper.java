@@ -26,6 +26,7 @@ public class NewRelicDataCollectionInfoMapper
       cvConfig.getMetricInfos().forEach(newRelicMetricInfo -> {
         NewRelicMetricInfoDTO dto = NewRelicMetricInfoDTO.builder()
                                         .metricName(newRelicMetricInfo.getMetricName())
+                                        .metricIdentifier(newRelicMetricInfo.getIdentifier())
                                         .nrql(newRelicMetricInfo.getNrql())
                                         .responseMapping(newRelicMetricInfo.getResponseMapping().toDto())
                                         .build();

@@ -12,12 +12,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 @OwnedBy(CDC)
 @NoArgsConstructor
 @AllArgsConstructor
 @TargetModule(HarnessModule._957_CG_BEANS)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@FieldNameConstants(innerTypeName = "ShellScriptApprovalParamsKeys")
 public class ShellScriptApprovalParams {
   @Getter @Setter private String scriptString;
 

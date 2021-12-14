@@ -8,6 +8,8 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
+import io.harness.enforcement.client.services.EnforcementClientService;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -51,12 +53,15 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   @Inject private NGTemplateServiceHelper templateServiceHelper;
   @Inject private GitSyncSdkService gitSyncSdkService;
   @Inject private TransactionHelper transactionHelper;
+  @Inject EnforcementClientService enforcementClientService;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Template [%s] of versionLabel [%s] under Project[%s], Organization [%s] already exists";
 
   @Override
   public TemplateEntity create(TemplateEntity templateEntity, boolean setStableTemplate, String comments) {
+    enforcementClientService.checkAvailability(
+        FeatureRestrictionName.TEMPLATE_SERVICE, templateEntity.getAccountIdentifier());
     try {
       NGTemplateServiceHelper.validatePresenceOfRequiredFields(
           templateEntity.getAccountId(), templateEntity.getIdentifier(), templateEntity.getVersionLabel());
@@ -116,6 +121,8 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   @Override
   public TemplateEntity updateTemplateEntity(
       TemplateEntity templateEntity, ChangeType changeType, boolean setDefaultTemplate, String comments) {
+    enforcementClientService.checkAvailability(
+        FeatureRestrictionName.TEMPLATE_SERVICE, templateEntity.getAccountIdentifier());
     return transactionHelper.performTransaction(() -> {
       makePreviousLastUpdatedTemplateFalse(templateEntity.getAccountIdentifier(), templateEntity.getOrgIdentifier(),
           templateEntity.getProjectIdentifier(), templateEntity.getIdentifier());
@@ -210,6 +217,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   @Override
   public Optional<TemplateEntity> get(String accountId, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, String versionLabel, boolean deleted) {
+    enforcementClientService.checkAvailability(FeatureRestrictionName.TEMPLATE_SERVICE, accountId);
     try {
       if (EmptyPredicate.isEmpty(versionLabel)) {
         return templateRepository
@@ -232,6 +240,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   @Override
   public Optional<TemplateEntity> getOrThrowExceptionIfInvalid(String accountId, String orgIdentifier,
       String projectIdentifier, String templateIdentifier, String versionLabel, boolean deleted) {
+    enforcementClientService.checkAvailability(FeatureRestrictionName.TEMPLATE_SERVICE, accountId);
     try {
       Optional<TemplateEntity> optionalTemplate;
       if (EmptyPredicate.isEmpty(versionLabel)) {
@@ -268,6 +277,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   @Override
   public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String templateIdentifier,
       String deleteVersionLabel, Long version, String comments) {
+    enforcementClientService.checkAvailability(FeatureRestrictionName.TEMPLATE_SERVICE, accountId);
     List<TemplateEntity> templateEntities =
         getAllTemplatesForGivenIdentifier(accountId, orgIdentifier, projectIdentifier, templateIdentifier, false);
 
@@ -302,6 +312,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   @Override
   public boolean deleteTemplates(String accountId, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, Set<String> deleteTemplateVersions, String comments) {
+    enforcementClientService.checkAvailability(FeatureRestrictionName.TEMPLATE_SERVICE, accountId);
     List<TemplateEntity> templateEntities =
         getAllTemplatesForGivenIdentifier(accountId, orgIdentifier, projectIdentifier, templateIdentifier, false);
     boolean canDeleteStableTemplate = templateEntities.size() == deleteTemplateVersions.size();
@@ -395,6 +406,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   @Override
   public Page<TemplateEntity> list(Criteria criteria, Pageable pageable, String accountId, String orgIdentifier,
       String projectIdentifier, Boolean getDistinctFromBranches) {
+    enforcementClientService.checkAvailability(FeatureRestrictionName.TEMPLATE_SERVICE, accountId);
     if (Boolean.TRUE.equals(getDistinctFromBranches)
         && gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier)) {
       return templateRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier, true);
@@ -405,6 +417,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   @Override
   public TemplateEntity updateStableTemplateVersion(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String templateIdentifier, String newStableTemplateVersion, String comments) {
+    enforcementClientService.checkAvailability(FeatureRestrictionName.TEMPLATE_SERVICE, accountIdentifier);
     return transactionHelper.performTransaction(
         ()
             -> updateStableTemplateVersionHelper(accountIdentifier, orgIdentifier, projectIdentifier,
@@ -415,6 +428,8 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   public boolean updateTemplateSettings(String accountId, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, Scope currentScope, Scope updateScope, String updateStableTemplateVersion,
       Boolean getDistinctFromBranches) {
+    enforcementClientService.checkAvailability(FeatureRestrictionName.TEMPLATE_SERVICE, accountId);
+
     // if both current and update scope of template are same, check for updating stable template version
     if (currentScope.equals(updateScope)) {
       String orgIdBasedOnScope = currentScope.equals(Scope.ACCOUNT) ? null : orgIdentifier;
@@ -434,6 +449,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   @Override
   public boolean markEntityInvalid(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, String versionLabel, String invalidYaml) {
+    enforcementClientService.checkAvailability(FeatureRestrictionName.TEMPLATE_SERVICE, accountIdentifier);
     Optional<TemplateEntity> optionalTemplateEntity =
         get(accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, false);
     if (!optionalTemplateEntity.isPresent()) {

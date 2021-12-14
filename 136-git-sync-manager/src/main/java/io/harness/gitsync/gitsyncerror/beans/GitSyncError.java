@@ -120,9 +120,10 @@ public class GitSyncError
                  .descSortField(GitSyncErrorKeys.createdAt)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("accountId_commitId_repo_branch_filePath_unique_Index")
-                 .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.gitCommitId,
-                     GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName, GitSyncErrorKeys.completeFilePath))
+                 .name("accountId_errorType_commitId_repo_branch_filePath_unique_Index")
+                 .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.errorType,
+                     GitSyncErrorKeys.gitCommitId, GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName,
+                     GitSyncErrorKeys.completeFilePath))
                  .unique(true)
                  .build())
         .build();

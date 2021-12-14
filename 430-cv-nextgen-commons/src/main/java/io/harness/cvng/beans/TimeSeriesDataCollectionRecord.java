@@ -19,6 +19,7 @@ public class TimeSeriesDataCollectionRecord {
   @EqualsAndHashCode(of = "metricName")
   public static class TimeSeriesDataRecordMetricValue {
     private String metricName;
+    private String metricIdentifier;
     private Set<TimeSeriesDataRecordGroupValue> timeSeriesValues;
   }
 

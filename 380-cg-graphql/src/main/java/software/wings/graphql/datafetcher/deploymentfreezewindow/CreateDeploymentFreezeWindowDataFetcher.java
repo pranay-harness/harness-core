@@ -31,6 +31,7 @@ public class CreateDeploymentFreezeWindowDataFetcher
   @Inject GovernanceConfigService governanceConfigService;
   @Inject DeploymentFreezeWindowController deploymentFreezeWindowController;
 
+  @Inject
   public CreateDeploymentFreezeWindowDataFetcher() {
     super(QLCreateDeploymentFreezeWindowInput.class, QLDeploymentFreezeWindowPayload.class);
   }

@@ -26,6 +26,7 @@ public class StackdriverDataCollectionInfo extends TimeSeriesDataCollectionInfo<
     Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(connectorConfigDTO, METRIC_SCOPE);
     List<String> crossSeriesReducerList = new ArrayList<>();
     List<String> perSeriesAlignerList = new ArrayList<>();
+    List<String> metricIdentifiers = new ArrayList<>();
     List<String> filterList = new ArrayList<>();
     List<List<String>> groupByFieldsList = new ArrayList<>();
     Map<String, List<String>> groupByResponseList = new HashMap<>();
@@ -37,6 +38,7 @@ public class StackdriverDataCollectionInfo extends TimeSeriesDataCollectionInfo<
         serviceInstanceResponseFields.put(metricDefinition.getMetricName(),
             metricDefinition.getServiceInstanceField().replace("\"", "").replace("label", "labels"));
       }
+      metricIdentifiers.add(metricDefinition.getMetricIdentifier());
       crossSeriesReducerList.add(
           checkForNullAndReturnValue(metricDefinition.getAggregation().getCrossSeriesReducer(), ""));
       perSeriesAlignerList.add(checkForNullAndReturnValue(metricDefinition.getAggregation().getPerSeriesAligner(), ""));
@@ -60,6 +62,7 @@ public class StackdriverDataCollectionInfo extends TimeSeriesDataCollectionInfo<
     dslEnvVariables.put("perSeriesAlignerList", perSeriesAlignerList);
     dslEnvVariables.put("groupByFieldsList", groupByFieldsList);
     dslEnvVariables.put("groupByResponseList", groupByResponseList);
+    dslEnvVariables.put("metricIdentifiers", metricIdentifiers);
     dslEnvVariables.put("filterList", filterList);
 
     if (this.isCollectHostData()) {

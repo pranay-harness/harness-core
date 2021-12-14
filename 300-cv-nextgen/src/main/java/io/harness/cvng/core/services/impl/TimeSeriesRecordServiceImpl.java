@@ -114,6 +114,9 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
       if (Objects.nonNull(metricType)) {
         updateOperations.setOnInsert(TimeSeriesRecordKeys.metricType, metricType);
       }
+      if (Objects.nonNull(timeSeriesRecord.getMetricIdentifier())) {
+        updateOperations.set(TimeSeriesRecordKeys.metricIdentifier, timeSeriesRecord.getMetricIdentifier());
+      }
       hPersistence.getDatastore(TimeSeriesRecord.class).update(query, updateOperations, options);
     });
 
@@ -173,6 +176,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
           - Math.floorMod(dataRecord.getTimeStamp(), TimeUnit.MINUTES.toMillis(CV_ANALYSIS_WINDOW_MINUTES));
       dataRecord.getMetricValues().forEach(timeSeriesDataRecordMetricValue -> {
         String metricName = timeSeriesDataRecordMetricValue.getMetricName();
+        String metricIdentifier = timeSeriesDataRecordMetricValue.getMetricIdentifier();
         TimeSeriesRecordBucketKey timeSeriesRecordBucketKey = TimeSeriesRecordBucketKey.builder()
                                                                   .host(dataRecord.getHost())
                                                                   .metricName(metricName)
@@ -187,6 +191,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
                   .accountId(dataRecord.getAccountId())
                   .bucketStartTime(Instant.ofEpochMilli(bucketBoundary))
                   .metricName(metricName)
+                  .metricIdentifier(metricIdentifier)
                   .build());
         }
 
@@ -459,6 +464,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
                   .groupName(record.getGroupName())
                   .host(timeSeriesRecord.getHost())
                   .metricName(timeSeriesRecord.getMetricName())
+                  .metricIdentifier(timeSeriesRecord.getMetricIdentifier())
                   .epochMinute(TimeUnit.MILLISECONDS.toMinutes(record.getTimeStamp().toEpochMilli()))
                   .verificationTaskId(timeSeriesRecord.getVerificationTaskId())
                   .metricValue(record.getMetricValue())

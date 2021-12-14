@@ -7,6 +7,13 @@ import static io.harness.exception.WingsException.GROUP;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
+import io.harness.scim.Member;
+import io.harness.scim.PatchOperation;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimGroup;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimMultiValuedObject;
+import io.harness.scim.service.ScimGroupService;
 
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
@@ -168,7 +175,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
   }
 
   @Override
-  public Response updateGroup(String groupId, String accountId, software.wings.scim.PatchRequest patchRequest) {
+  public Response updateGroup(String groupId, String accountId, PatchRequest patchRequest) {
     UserGroup existingGroup = userGroupService.get(accountId, groupId);
 
     if (existingGroup == null) {
@@ -180,7 +187,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     Set<String> newMemberIds = new HashSet<>(existingMemberIds);
     String newGroupName = null;
 
-    for (software.wings.scim.PatchOperation patchOperation : patchRequest.getOperations()) {
+    for (PatchOperation patchOperation : patchRequest.getOperations()) {
       Set<String> userIdsFromOperation = getUserIdsFromOperation(patchOperation, accountId, groupId);
       switch (patchOperation.getOpType()) {
         case REPLACE: {

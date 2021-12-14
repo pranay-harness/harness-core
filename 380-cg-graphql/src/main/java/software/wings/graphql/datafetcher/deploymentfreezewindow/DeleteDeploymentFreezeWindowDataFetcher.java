@@ -37,7 +37,7 @@ public class DeleteDeploymentFreezeWindowDataFetcher
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES)
-  protected QLDeleteDeploymentFreezeWindowPayload mutateAndFetch(
+  public QLDeleteDeploymentFreezeWindowPayload mutateAndFetch(
       QLDeleteDeploymentFreezeWindowInput parameter, MutationContext mutationContext) {
     // FEATURE FLAG CHECK
     if (!featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, mutationContext.getAccountId())) {

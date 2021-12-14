@@ -10,6 +10,8 @@ while Var:index !=  Var:lengthOfItems {
     Var query = Env:queryList[Var:index]
     Var filters = Env:filterList[Var:index]
     Var serviceInstanceField = Env:serviceInstanceFieldList[Var:index]
+    Var metricIdentifier =  Env:metricIdentifiers[Var:index]
+
     if Env:collectHostData == "true" {
         Var hostQuery = concat(Env:baseUrl, "api/v1/label/", Var:serviceInstanceField, "/values?start=", Env:startTimeSeconds,"&end=", Env:endTimeSeconds, "&match[]=", Var:filters)
         Var hostResult = sync-call(url=Var:hostQuery, header=Env:commonHeaders)
@@ -28,7 +30,7 @@ while Var:index !=  Var:lengthOfItems {
               foreach meticData in Var:data {
                 Var val = extract(Var:meticData,$.[1])
                 Var timeStampVal = extract(Var:meticData,$.[0])
-                Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal, host=Var:host)
+                Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal, host=Var:host)
                 Var:returnList.append(Var:tsRecord)
               }
             }
@@ -47,7 +49,7 @@ while Var:index !=  Var:lengthOfItems {
           foreach meticData in Var:data {
             Var val = extract(Var:meticData,$.[1])
             Var timeStampVal = extract(Var:meticData,$.[0])
-            Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal)
+            Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal)
             Var:returnList.append(Var:tsRecord)
           }
         }

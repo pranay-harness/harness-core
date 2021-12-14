@@ -398,3 +398,9 @@ enforcementClientConfiguration:
 opaServerConfig:
   baseUrl: http://localhost:3000
   secret: secret
+
+pmsPlanCreatorServicePoolConfig:
+  corePoolSize: ${PLAN_CREATOR_SERVICE_EXECUTOR_POOL_CORE_SIZE:-2}
+  maxPoolSize: ${PLAN_CREATOR_SERVICE_EXECUTOR_POOL_MAX_SIZE:-3}
+  idleTime: ${PLAN_CREATOR_SERVICE_EXECUTOR_POOL_IDLE_TIME:-30}
+  timeUnit: ${PLAN_CREATOR_SERVICE_EXECUTOR_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}

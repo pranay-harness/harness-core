@@ -137,7 +137,7 @@ public class InviteServiceImplTest extends CategoryTest {
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
   public void testCreate_NullInvite() {
-    InviteOperationResponse inviteOperationResponse = inviteService.create(null);
+    InviteOperationResponse inviteOperationResponse = inviteService.create(null, false);
     assertThat(inviteOperationResponse).isEqualTo(InviteOperationResponse.FAIL);
   }
 
@@ -149,7 +149,7 @@ public class InviteServiceImplTest extends CategoryTest {
     when(ngUserService.getUserByEmail(any(), anyBoolean()))
         .thenReturn(Optional.of(UserMetadataDTO.builder().uuid(userId).build()));
 
-    InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite());
+    InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite(), false);
     assertThat(inviteOperationResponse).isEqualTo(USER_ALREADY_ADDED);
   }
 
@@ -166,7 +166,7 @@ public class InviteServiceImplTest extends CategoryTest {
 
     when(accountClient.checkAutoInviteAcceptanceEnabledForAccount(any()).execute())
         .thenReturn(Response.success(new RestResponse(false)));
-    InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite());
+    InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite(), false);
 
     assertThat(inviteOperationResponse).isEqualTo(USER_INVITED_SUCCESSFULLY);
     verify(notificationClient, times(1)).sendNotificationAsync(any());
@@ -184,7 +184,7 @@ public class InviteServiceImplTest extends CategoryTest {
 
     when(accountClient.checkAutoInviteAcceptanceEnabledForAccount(any()).execute())
         .thenReturn(Response.success(new RestResponse(false)));
-    InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite());
+    InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite(), false);
 
     assertThat(inviteOperationResponse).isEqualTo(USER_INVITED_SUCCESSFULLY);
     verify(notificationClient, times(1)).sendNotificationAsync(any());
@@ -204,7 +204,7 @@ public class InviteServiceImplTest extends CategoryTest {
         .thenReturn(Optional.of(getDummyInvite()));
 
     //    when user exists
-    InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite());
+    InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite(), false);
 
     assertThat(inviteOperationResponse).isEqualTo(USER_ALREADY_INVITED);
     verify(inviteRepository, atLeast(2)).updateInvite(idArgumentCaptor.capture(), any());
@@ -213,7 +213,7 @@ public class InviteServiceImplTest extends CategoryTest {
     verify(notificationClient, times(1)).sendNotificationAsync(any());
 
     //    when user doesn't exists
-    inviteOperationResponse = inviteService.create(getDummyInvite());
+    inviteOperationResponse = inviteService.create(getDummyInvite(), false);
 
     assertThat(inviteOperationResponse).isEqualTo(USER_ALREADY_INVITED);
     verify(inviteRepository, atLeast(2)).updateInvite(idArgumentCaptor.capture(), any());
@@ -243,7 +243,7 @@ public class InviteServiceImplTest extends CategoryTest {
              any(), any(), any(), any()))
         .thenReturn(Optional.of(invite));
 
-    InviteOperationResponse inviteOperationResponse = inviteService.create(invite);
+    InviteOperationResponse inviteOperationResponse = inviteService.create(invite, false);
 
     assertThat(inviteOperationResponse).isEqualTo(ACCOUNT_INVITE_ACCEPTED);
   }

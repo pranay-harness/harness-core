@@ -132,22 +132,29 @@ public class SecretSpecBuilder {
 
     for (Map.Entry<String, ConnectorDetails> connectorDetailsEntry : connectorDetailsMap.entrySet()) {
       ConnectorDetails connectorDetails = connectorDetailsEntry.getValue();
-
-      log.info("Decrypting connector id:[{}], type:[{}]", connectorDetails.getIdentifier(),
-          connectorDetails.getConnectorType());
-      if (connectorDetails.getConnectorType() == ConnectorType.DOCKER) {
-        secretData.putAll(connectorEnvVariablesHelper.getDockerSecretVariables(connectorDetails));
-      } else if (connectorDetails.getConnectorType() == ConnectorType.AWS) {
-        secretData.putAll(connectorEnvVariablesHelper.getAwsSecretVariables(connectorDetails));
-      } else if (connectorDetails.getConnectorType() == ConnectorType.GCP) {
-        secretData.putAll(connectorEnvVariablesHelper.getGcpSecretVariables(connectorDetails));
-      } else if (connectorDetails.getConnectorType() == ConnectorType.ARTIFACTORY) {
-        secretData.putAll(connectorEnvVariablesHelper.getArtifactorySecretVariables(connectorDetails));
-      }
-      log.info("Decrypted connector id:[{}], type:[{}]", connectorDetails.getIdentifier(),
-          connectorDetails.getConnectorType());
+      secretData.putAll(decryptConnectorSecret(connectorDetails));
     }
     return secretData;
+  }
+
+  public Map<String, SecretParams> decryptConnectorSecret(ConnectorDetails connectorDetails) {
+    log.info("Decrypting connector id:[{}], type:[{}]", connectorDetails.getIdentifier(),
+        connectorDetails.getConnectorType());
+    Map<String, SecretParams> secretParamsMap = new HashMap<>();
+    if (connectorDetails.getConnectorType() == ConnectorType.DOCKER) {
+      secretParamsMap = connectorEnvVariablesHelper.getDockerSecretVariables(connectorDetails);
+    } else if (connectorDetails.getConnectorType() == ConnectorType.AWS) {
+      secretParamsMap = connectorEnvVariablesHelper.getAwsSecretVariables(connectorDetails);
+    } else if (connectorDetails.getConnectorType() == ConnectorType.GCP) {
+      secretParamsMap = connectorEnvVariablesHelper.getGcpSecretVariables(connectorDetails);
+    } else if (connectorDetails.getConnectorType() == ConnectorType.ARTIFACTORY) {
+      secretParamsMap = connectorEnvVariablesHelper.getArtifactorySecretVariables(connectorDetails);
+    } else {
+      log.info("Decrypting connector of unknown type: {}", connectorDetails.getConnectorType());
+    }
+    log.info("Decrypted connector id:[{}], type:[{}]", connectorDetails.getIdentifier(),
+        connectorDetails.getConnectorType());
+    return secretParamsMap;
   }
 
   public Map<String, SecretParams> decryptGitSecretVariables(ConnectorDetails gitConnector) {

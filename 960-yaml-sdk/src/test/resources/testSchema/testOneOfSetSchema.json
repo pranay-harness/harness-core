@@ -55,9 +55,7 @@
         "jsontypeinfo": {
           "type": "string"
         },
-        "spec": {
-          "$ref": "#/definitions/TestInterface"
-        },
+        "spec": {},
         "type": {
           "type": "string",
           "enum": [
@@ -161,9 +159,7 @@
             "jsontypeinfo": {
               "type": "string"
             },
-            "spec": {
-              "$ref": "#/definitions/TestInterface"
-            },
+            "spec": {},
             "type": {
               "type": "string",
               "enum": [

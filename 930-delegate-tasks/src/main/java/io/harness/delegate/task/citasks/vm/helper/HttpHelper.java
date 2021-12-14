@@ -10,6 +10,7 @@ import io.harness.delegate.beans.ci.vm.runner.ExecuteStepRequest;
 import io.harness.delegate.beans.ci.vm.runner.ExecuteStepResponse;
 import io.harness.delegate.beans.ci.vm.runner.SetupVmRequest;
 import io.harness.delegate.beans.ci.vm.runner.SetupVmResponse;
+import io.harness.delegate.beans.ci.vm.runner.PoolOwnerStepResponse;
 import io.harness.network.Http;
 
 import com.google.inject.Singleton;
@@ -58,6 +59,12 @@ public class HttpHelper {
     RetryPolicy<Object> retryPolicy = getRetryPolicyForDeletion(
         "[Retrying failed to cleanup stage; attempt: {}", "Failing to cleanup stage after retrying {} times");
     return Failsafe.with(retryPolicy).get(() -> getRunnerClient(600).destroy(destroyVmRequest).execute());
+  }
+
+  public Response<PoolOwnerStepResponse> isPoolOwner(String poolId) {
+    RetryPolicy<Object> retryPolicy = getRetryPolicy("[Retrying failed to check for pool_owner; attempt: {}",
+        "Failing to check for pool_owner after retrying {} times");
+    return Failsafe.with(retryPolicy).get(() -> getRunnerClient(30).poolOwner(poolId).execute());
   }
 
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {

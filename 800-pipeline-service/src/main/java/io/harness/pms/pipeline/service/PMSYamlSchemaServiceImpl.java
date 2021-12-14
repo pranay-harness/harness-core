@@ -242,10 +242,10 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   }
 
   private void populateAllOfForCD(JsonNode cdDefinitions, JsonNode cdDefinitionsCopy) {
-    ArrayNode cdDefinitionsAllOfNode = getAllOfNodeWithTypeAndSpec(
-        (ArrayNode) cdDefinitions.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ONE_OF_NODE));
-    ArrayNode cdDefinitionsCopyAllOfNode = getAllOfNodeWithTypeAndSpec(
-        (ArrayNode) cdDefinitionsCopy.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ONE_OF_NODE));
+    ArrayNode cdDefinitionsAllOfNode =
+        (ArrayNode) cdDefinitions.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ALL_OF_NODE);
+    ArrayNode cdDefinitionsCopyAllOfNode =
+        (ArrayNode) cdDefinitionsCopy.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ALL_OF_NODE);
 
     if (cdDefinitionsCopyAllOfNode == null || cdDefinitionsAllOfNode == null) {
       return;

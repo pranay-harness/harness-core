@@ -61,6 +61,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.aggregation.SortOperation;
@@ -71,10 +72,11 @@ import org.springframework.data.mongodb.core.query.Update;
 @Slf4j
 @OwnedBy(PL)
 public class GitSyncErrorServiceImpl implements GitSyncErrorService {
+  private static final String IS_ACTIVE_ERROR = "isActiveError";
   private final YamlGitConfigService yamlGitConfigService;
   private final GitSyncErrorRepository gitSyncErrorRepository;
   private final ScheduledExecutorService executorService;
-  public static final String EMPTY_STR = "";
+  public static final String ERROR_DOCUMENT = "errorDocument";
   public static final Long DEFAULT_COMMIT_TIME = 0L;
 
   @Inject
@@ -94,31 +96,11 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     Criteria criteria = createGitToHarnessErrorFilterCriteria(
         accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, repoId, branch);
     criteria.and(GitSyncErrorKeys.status).in(GitSyncErrorStatus.ACTIVE, GitSyncErrorStatus.RESOLVED);
-    GroupOperation groupOperation = group(GitSyncErrorKeys.gitCommitId)
-                                        .count()
-                                        .as(GitSyncErrorAggregateByCommitKeys.failedCount)
-                                        .first(GitSyncErrorKeys.gitCommitId)
-                                        .as(GitSyncErrorAggregateByCommitKeys.gitCommitId)
-                                        .first(GitSyncErrorKeys.commitMessage)
-                                        .as(GitSyncErrorAggregateByCommitKeys.commitMessage)
-                                        .first(GitSyncErrorKeys.branchName)
-                                        .as(GitSyncErrorAggregateByCommitKeys.branchName)
-                                        .first(GitSyncErrorKeys.createdAt)
-                                        .as(GitSyncErrorAggregateByCommitKeys.createdAt)
-                                        .push(ROOT)
-                                        .as(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView);
-    ProjectionOperation projectOperation = project()
-                                               .andInclude(GitSyncErrorAggregateByCommitKeys.gitCommitId)
-                                               .andInclude(GitSyncErrorAggregateByCommitKeys.createdAt)
-                                               .andInclude(GitSyncErrorAggregateByCommitKeys.commitMessage)
-                                               .andInclude(GitSyncErrorAggregateByCommitKeys.branchName)
-                                               .andInclude(GitSyncErrorAggregateByCommitKeys.failedCount)
-                                               .andExpression(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView)
-                                               .slice(numberOfErrorsInSummary)
-                                               .as(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView);
     SortOperation sortOperation = sort(Sort.Direction.DESC, GitSyncErrorAggregateByCommitKeys.createdAt);
 
-    Aggregation aggregation = newAggregation(match(criteria), groupOperation, projectOperation, sortOperation,
+    Aggregation aggregation = newAggregation(match(criteria), getProjectionOperationForProjectingActiveError(),
+        getGroupOperationForGroupingErrorsWithCommitId(),
+        getProjectionOperationForProjectingGitSyncErrorAggregateByCommitKeys(numberOfErrorsInSummary), sortOperation,
         skip(pageable.getOffset()), limit(pageable.getPageSize()));
     List<GitSyncErrorAggregateByCommit> gitSyncErrorAggregateByCommitList =
         gitSyncErrorRepository.aggregate(aggregation, GitSyncErrorAggregateByCommit.class).getMappedResults();
@@ -141,6 +123,51 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     Page<GitSyncErrorAggregateByCommitDTO> page =
         new PageImpl<>(gitSyncErrorAggregateByCommitDTOList, pageable, totalCount);
     return getNGPageResponse(page);
+  }
+
+  private ProjectionOperation getProjectionOperationForProjectingActiveError() {
+    Criteria activeErrorCriteria = Criteria.where(GitSyncErrorKeys.status).is(GitSyncErrorStatus.ACTIVE);
+    return Aggregation.project()
+        .and(ConditionalOperators.Cond.when(activeErrorCriteria).then(1).otherwise(0))
+        .as(IS_ACTIVE_ERROR)
+        .andExpression(ROOT)
+        .as(ERROR_DOCUMENT)
+        .andExpression(GitSyncErrorKeys.gitCommitId)
+        .as(GitSyncErrorKeys.gitCommitId)
+        .andExpression(GitSyncErrorKeys.commitMessage)
+        .as(GitSyncErrorKeys.commitMessage)
+        .andInclude(GitSyncErrorKeys.branchName)
+        .andInclude(GitSyncErrorKeys.createdAt);
+  }
+
+  private GroupOperation getGroupOperationForGroupingErrorsWithCommitId() {
+    return group(GitSyncErrorKeys.gitCommitId)
+        .sum(IS_ACTIVE_ERROR)
+        .as(GitSyncErrorAggregateByCommitKeys.failedCount)
+        .first(GitSyncErrorKeys.gitCommitId)
+        .as(GitSyncErrorAggregateByCommitKeys.gitCommitId)
+        .first(GitSyncErrorKeys.commitMessage)
+        .as(GitSyncErrorAggregateByCommitKeys.commitMessage)
+        .first(GitSyncErrorKeys.branchName)
+        .as(GitSyncErrorAggregateByCommitKeys.branchName)
+        .first(GitSyncErrorKeys.createdAt)
+        .as(GitSyncErrorAggregateByCommitKeys.createdAt)
+        .push(ERROR_DOCUMENT)
+        .as(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView);
+  }
+
+  private ProjectionOperation getProjectionOperationForProjectingGitSyncErrorAggregateByCommitKeys(
+      Integer numberOfErrorsInSummary) {
+    return project()
+        .andInclude(GitSyncErrorAggregateByCommitKeys.gitCommitId)
+        .andInclude(GitSyncErrorAggregateByCommitKeys.createdAt)
+        .andInclude(GitSyncErrorAggregateByCommitKeys.commitMessage)
+        .andInclude(GitSyncErrorAggregateByCommitKeys.branchName)
+        .andInclude(GitSyncErrorAggregateByCommitKeys.failedCount)
+        .andExpression(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView)
+        .slice(numberOfErrorsInSummary)
+        .as(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView);
+    //
   }
 
   private Map<String, String> getRepoIds(Set<String> repoUrls, String accountId, String orgId, String projectId) {

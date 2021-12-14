@@ -20,6 +20,7 @@ import io.harness.cvng.migration.list.FixOrchestratorStatusMigration;
 import io.harness.cvng.migration.list.FixRuntimeParamInCanaryBlueGreenVerificationJob;
 import io.harness.cvng.migration.list.FixRuntimeParamsInDefaultHealthJob;
 import io.harness.cvng.migration.list.MigrateSetupEvents;
+import io.harness.cvng.migration.list.NewRelicCustomPackForExistingProjects;
 import io.harness.cvng.migration.list.RecoverMonitoringSourceWorkerId;
 import io.harness.cvng.migration.list.RecreateMetricPackAndThresholdMigration;
 import io.harness.cvng.migration.list.UpdateActivitySourceTasksMigration;
@@ -71,6 +72,7 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(26, AddDefaultFieldsToMonitoredService.class))
         .add(Pair.of(27, AppDCustomMetricForExistingProjects.class))
         .add(Pair.of(28, DeleteSLISLOMigration.class))
+        .add(Pair.of(29, NewRelicCustomPackForExistingProjects.class))
         .build();
   }
 }

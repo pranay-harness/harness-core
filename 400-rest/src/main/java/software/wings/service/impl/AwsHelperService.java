@@ -55,6 +55,7 @@ import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
@@ -184,6 +185,7 @@ import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.waiters.FixedDelayStrategy;
 import com.amazonaws.waiters.MaxAttemptsRetryStrategy;
 import com.amazonaws.waiters.PollingStrategy;
@@ -231,6 +233,15 @@ public class AwsHelperService {
   }
   public AmazonEC2Client getAmazonEc2Client(AwsConfig awsConfig) {
     return awsApiHelperService.getAmazonEc2Client(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
+  }
+
+  public AWSSecurityTokenServiceClient getAmazonAWSSecurityTokenServiceClient(AwsConfig awsConfig, String region) {
+    return awsApiHelperService.getAWSSecurityTokenServiceClient(
+        AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), region);
+  }
+
+  public AWSCredentialsProvider getAWSCredentialsProvider(AwsConfig awsConfig) {
+    return awsApiHelperService.getAwsCredentialsProvider(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
   }
 
   public boolean validateAwsAccountCredential(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {

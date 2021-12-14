@@ -25,6 +25,7 @@ import org.junit.experimental.categories.Category;
 public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase {
   private static final String MOCKED_DASHBOARD_NAME = "MockedDashboardName";
   private static final String MOCKED_METRIC_NAME = "testMetricName";
+  private static final String MOCKED_METRIC_IDENTIFIER = "testMetricIdentifier";
   private static final String MOCKED_METRIC_QUERY = "system.user.cpu{*}";
 
   @Inject private DatadogMetricDataCollectionInfoMapper classUnderTest;
@@ -38,6 +39,7 @@ public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase
     DatadogMetricCVConfig.MetricInfo metricInfo = DatadogMetricCVConfig.MetricInfo.builder()
                                                       .query(MOCKED_METRIC_QUERY)
                                                       .metricName(MOCKED_METRIC_NAME)
+                                                      .identifier(MOCKED_METRIC_IDENTIFIER)
                                                       .metricType(TimeSeriesMetricType.INFRA)
                                                       .build();
 
@@ -52,6 +54,7 @@ public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase
     assertThat(collectionInfoResult).isNotNull();
     collectionInfoResult.getMetricDefinitions().forEach(metricInfoToCheck -> {
       assertThat(metricInfoToCheck.getMetricName()).isEqualTo(MOCKED_METRIC_NAME);
+      assertThat(metricInfoToCheck.getMetricIdentifier()).isEqualTo(MOCKED_METRIC_IDENTIFIER);
       assertThat(metricInfoToCheck.getQuery()).isEqualTo(MOCKED_METRIC_QUERY);
     });
   }
@@ -64,6 +67,7 @@ public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase
     DatadogMetricCVConfig.MetricInfo metricInfo = DatadogMetricCVConfig.MetricInfo.builder()
                                                       .query(MOCKED_METRIC_QUERY)
                                                       .metricName(MOCKED_METRIC_NAME)
+                                                      .identifier(MOCKED_METRIC_IDENTIFIER)
                                                       .metricType(TimeSeriesMetricType.INFRA)
                                                       .build();
     ServiceLevelIndicator serviceLevelIndicator =
@@ -82,6 +86,7 @@ public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase
     assertThat(collectionInfoResult.getMetricDefinitions().size()).isEqualTo(1);
     collectionInfoResult.getMetricDefinitions().forEach(metricInfoToCheck -> {
       assertThat(metricInfoToCheck.getMetricName()).isEqualTo(MOCKED_METRIC_NAME);
+      assertThat(metricInfoToCheck.getMetricIdentifier()).isEqualTo(MOCKED_METRIC_IDENTIFIER);
       assertThat(metricInfoToCheck.getQuery()).isEqualTo(MOCKED_METRIC_QUERY);
     });
   }
@@ -94,6 +99,7 @@ public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase
     DatadogMetricCVConfig.MetricInfo metricInfo = DatadogMetricCVConfig.MetricInfo.builder()
                                                       .query(MOCKED_METRIC_QUERY)
                                                       .metricName(MOCKED_METRIC_NAME)
+                                                      .identifier(MOCKED_METRIC_IDENTIFIER)
                                                       .metricType(TimeSeriesMetricType.INFRA)
                                                       .build();
     ServiceLevelIndicator serviceLevelIndicator = ThresholdServiceLevelIndicator.builder().metric1("metric1").build();

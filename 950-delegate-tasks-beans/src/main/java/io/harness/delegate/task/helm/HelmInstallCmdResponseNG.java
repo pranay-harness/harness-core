@@ -11,12 +11,16 @@ import lombok.Data;
 public class HelmInstallCmdResponseNG extends HelmCommandResponseNG {
   private List<ContainerInfo> containerInfoList;
   private HelmChartInfo helmChartInfo;
+  private int prevReleaseVersion;
+  private String releaseName;
 
   @Builder
   public HelmInstallCmdResponseNG(CommandExecutionStatus commandExecutionStatus, String output,
-      List<ContainerInfo> containerInfoList, HelmChartInfo helmChartInfo) {
+      List<ContainerInfo> containerInfoList, HelmChartInfo helmChartInfo, int prevReleaseVersion, String releaseName) {
     super(commandExecutionStatus, output);
     this.containerInfoList = containerInfoList;
     this.helmChartInfo = helmChartInfo;
+    this.prevReleaseVersion = prevReleaseVersion;
+    this.releaseName = releaseName;
   }
 }
