@@ -36,10 +36,12 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.api.ServiceNowExecutionData;
@@ -79,6 +81,7 @@ public class ServiceNowCreateUpdateStateTest extends CategoryTest {
   @Mock DelegateService delegateService;
   @Mock SweepingOutputService sweepingOutputService;
   @Mock StateExecutionService stateExecutionService;
+  @Mock FeatureFlagService featureFlagService;
   @InjectMocks ServiceNowCreateUpdateState serviceNowCreateUpdateState = new ServiceNowCreateUpdateState(STATE_NAME);
 
   @Before
@@ -101,6 +104,7 @@ public class ServiceNowCreateUpdateStateTest extends CategoryTest {
              ServiceNowConfig.builder().password(PASSWORD).build(), APP_ID, WORKFLOW_EXECUTION_ID))
         .thenReturn(Collections.emptyList());
     when(delegateService.queueTask(any(DelegateTask.class))).thenReturn(UUID);
+    when(featureFlagService.isEnabled(eq(FeatureName.HONOR_DELEGATE_SCOPING), anyString())).thenReturn(true);
   }
 
   @Test
