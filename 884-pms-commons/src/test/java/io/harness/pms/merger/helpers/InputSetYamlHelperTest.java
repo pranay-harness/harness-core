@@ -203,6 +203,15 @@ public class InputSetYamlHelperTest extends CategoryTest {
     InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml3, "overlayInputSet", "o1", "p1");
   }
 
+  @Test
+  @Owner(developers = VED)
+  @Category(UnitTests.class)
+  public void testOverlayInputSetWithEmptyReferences() {
+    String yaml1 = getOverlayInputSetYamlWithNullReferences(false);
+    assertThatThrownBy(() -> InputSetYamlHelper.getReferencesFromOverlayInputSetYaml(yaml1))
+        .hasMessage("Input Set References cannot be empty. Please give valid Input Set References.");
+  }
+
   private String getInputSetYaml(boolean hasPipelineComponent) {
     return getInputSetYaml(hasPipelineComponent, false);
   }
@@ -237,6 +246,16 @@ public class InputSetYamlHelperTest extends CategoryTest {
         + "    a : b\n";
 
     return base + (hasTags ? tags : "") + (hasReferences ? references : noReferences);
+  }
+
+  private String getOverlayInputSetYamlWithNullReferences(boolean hasTags) {
+    String base = "overlayInputSet:\n"
+        + "  name: n1\n"
+        + "  identifier: n1\n";
+    String tags = "  tags:\n"
+        + "    a : b\n";
+
+    return base + (hasTags ? tags : "");
   }
 
   private String addOrgIdentifier(String yaml) {
