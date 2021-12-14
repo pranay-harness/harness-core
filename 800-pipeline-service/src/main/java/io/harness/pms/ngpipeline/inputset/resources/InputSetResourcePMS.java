@@ -144,13 +144,11 @@ public class InputSetResourcePMS {
           description =
               "Pipeline ID for the Input Set. The Input Set will work only for the Pipeline corresponding to this identifier.")
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
-      @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") @Parameter(
-          description = "Whether the Input Set is deleted or not.") boolean deleted,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info(String.format("Retrieving input set with identifier %s for pipeline %s in project %s, org %s, account %s",
         inputSetIdentifier, pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
     Optional<InputSetEntity> inputSetEntity = pmsInputSetService.get(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, false);
     String version = "0";
     if (inputSetEntity.isPresent()) {
       version = inputSetEntity.get().getVersion().toString();
@@ -189,14 +187,12 @@ public class InputSetResourcePMS {
           description =
               "This is the Pipeline Id specific to the Overlay Input Set. Overlay Input Set corresponding to the Pipeline with this Id would be fetched")
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
-      @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") @Parameter(
-          description = "Whether the Input Set is deleted or not.") boolean deleted,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info(String.format(
         "Retrieving overlay input set with identifier %s for pipeline %s in project %s, org %s, account %s",
         inputSetIdentifier, pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
     Optional<InputSetEntity> inputSetEntity = pmsInputSetService.get(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, false);
     String version = "0";
     if (inputSetEntity.isPresent()) {
       version = inputSetEntity.get().getVersion().toString();
