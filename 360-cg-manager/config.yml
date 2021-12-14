@@ -322,7 +322,7 @@ deployVariant: SAAS
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: 72f01538
+scmVersion: 99697771
 
 ngAuthUIEnabled: false
 
