@@ -33,7 +33,10 @@ import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
+import io.harness.ng.core.exceptionmappers.NotAllowedExceptionMapper;
+import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.request.RequestContextFilter;
@@ -303,6 +306,9 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
 
   private void registerJerseyProviders(Environment environment, Injector injector) {
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
+    environment.jersey().register(GenericExceptionMapperV2.class);
+    environment.jersey().register(NotFoundExceptionMapper.class);
+    environment.jersey().register(NotAllowedExceptionMapper.class);
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);

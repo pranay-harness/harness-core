@@ -60,6 +60,8 @@ import io.harness.ng.DbAliases;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
+import io.harness.ng.core.exceptionmappers.NotAllowedExceptionMapper;
+import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
@@ -508,10 +510,14 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
   private void registerAuthFilters(PipelineServiceConfiguration config, Environment environment, Injector injector) {
     Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
-        -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(PipelineServiceAuth.class) != null
-        || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(PipelineServiceAuth.class) != null
-        || resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
-        || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+        -> (resourceInfoAndRequest.getKey().getResourceMethod() != null
+               && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(PipelineServiceAuth.class) != null)
+        || (resourceInfoAndRequest.getKey().getResourceClass() != null
+            && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(PipelineServiceAuth.class) != null)
+        || (resourceInfoAndRequest.getKey().getResourceMethod() != null
+            && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null)
+        || (resourceInfoAndRequest.getKey().getResourceClass() != null
+            && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null);
     Map<String, String> serviceToSecretMapping = new HashMap<>();
     serviceToSecretMapping.put(AuthorizationServiceHeader.BEARER.getServiceId(), config.getJwtAuthSecret());
     serviceToSecretMapping.put(
@@ -723,6 +729,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
+    environment.jersey().register(NotFoundExceptionMapper.class);
+    environment.jersey().register(NotAllowedExceptionMapper.class);
 
     environment.jersey().register(MultiPartFeature.class);
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
