@@ -31,4 +31,4 @@ RUN sed -i "s|^security.provider.10=.*$||" /usr/lib/jvm/default-jvm/jre/lib/secu
 
 #BT-608: Adding condition for on-prem/saas
 ARG SETUP
-RUN if [ "SETUP" = "ON_PREM" ] ; RUN mkdir -p /opt/harness/; COPY ./AppServerAgent-20.8.0.30686.zip /opt/harness/ ; fi
+RUN if [ "$SETUP" = "ON_PREM" ] ;then; RUN mkdir -p /opt/harness/; COPY ./AppServerAgent-20.8.0.30686.zip /opt/harness/ ; fi

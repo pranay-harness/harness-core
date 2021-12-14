@@ -1,4 +1,4 @@
-package software.wings.scim;
+package io.harness.scim;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

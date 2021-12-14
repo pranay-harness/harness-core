@@ -21,6 +21,7 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
@@ -79,9 +80,9 @@ public class ServiceLevelObjective
   }
 
   public int getTotalErrorBudgetMinutes(LocalDate currentDate) {
-    int currentWindowMinutes = getCurrentTimeRange(currentDate).totalMinutes();
+    int currentWindowMinutes = getCurrentTimeRange(currentDate).totalMinutes(getZoneOffset());
     Double errorBudgetPercentage = getSloTargetPercentage();
-    return (int) ((100 - errorBudgetPercentage) * currentWindowMinutes) / 100;
+    return (int) Math.round(((100 - errorBudgetPercentage) * currentWindowMinutes) / 100);
   }
 
   public static List<MongoIndex> mongoIndexes() {
@@ -113,8 +114,8 @@ public class ServiceLevelObjective
     public int getTotalDays() {
       return (int) DAYS.between(startDate, endDate);
     }
-    public int totalMinutes() {
-      return getTotalDays() * 24 * 60;
+    public int totalMinutes(ZoneId zoneId) {
+      return (int) Duration.between(getStartTime(zoneId), getEndTime(zoneId)).toMinutes();
     }
 
     /**
@@ -167,22 +168,24 @@ public class ServiceLevelObjective
 
     @Override
     public TimePeriod getCurrentTimeRange(LocalDate currentDate) {
+      LocalDate windowStart = getWindowEnd(currentDate.minusMonths(1), windowEndDayOfMonth).plusDays(1);
+      LocalDate windowEnd = getWindowEnd(currentDate, windowEndDayOfMonth);
+      return TimePeriod.builder().startDate(windowStart).endDate(windowEnd).build();
+    }
+    private LocalDate getWindowEnd(LocalDate currentDate, int windowEndDayOfMonth) {
       LocalDate windowEnd;
-      if (currentDate.getDayOfMonth() <= windowEndDayOfMonth) {
+      if (windowEndDayOfMonth > 28) {
+        windowEnd = currentDate.with(TemporalAdjusters.lastDayOfMonth());
+      } else if (currentDate.getDayOfMonth() <= windowEndDayOfMonth) {
         windowEnd = getWindowEnd(currentDate);
       } else {
         windowEnd = getWindowEnd(currentDate.plusMonths(1));
       }
-      return TimePeriod.builder().startDate(windowEnd.minusMonths(1).plusDays(1)).endDate(windowEnd).build();
+      return windowEnd;
     }
 
     private LocalDate getWindowEnd(LocalDate date) {
-      LocalDate windowEnd = date.plusDays(windowEndDayOfMonth - date.getDayOfMonth());
-      // currentDate.
-      if (!windowEnd.getMonth().equals(date.getMonth())) {
-        windowEnd = date.with(TemporalAdjusters.lastDayOfMonth());
-      }
-      return windowEnd;
+      return date.plusDays(windowEndDayOfMonth - date.getDayOfMonth());
     }
   }
 
@@ -209,6 +212,7 @@ public class ServiceLevelObjective
 
     @Override
     public TimePeriod getCurrentTimeRange(LocalDate currentDate) {
+      // TODO: change to minute based.
       return TimePeriod.builder().endDate(currentDate).startDate(currentDate.minusDays(periodLengthDays)).build();
     }
   }

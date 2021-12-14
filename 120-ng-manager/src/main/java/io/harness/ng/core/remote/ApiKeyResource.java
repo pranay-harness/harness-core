@@ -1,9 +1,12 @@
 package io.harness.ng.core.remote;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
 import static io.harness.NGCommonEntityConstants.ORG_KEY;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.NGResourceFilterConstants.IDENTIFIER;
 import static io.harness.NGResourceFilterConstants.IDENTIFIERS;
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -36,6 +39,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -58,6 +66,19 @@ import lombok.extern.slf4j.Slf4j;
 @Produces({"application/json", "application/yaml", "text/plain"})
 @Consumes({"application/json", "application/yaml", "text/plain"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@Tag(name = "ApiKey", description = "This fetches API keys defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -69,8 +90,15 @@ public class ApiKeyResource {
   private final ApiKeyService apiKeyService;
 
   @POST
-  @ApiOperation(value = "Create api key", nickname = "createApiKey")
-  public ResponseDTO<ApiKeyDTO> createApiKey(@Valid ApiKeyDTO apiKeyDTO) {
+  @ApiOperation(value = "Create API key", nickname = "createApiKey")
+  @Operation(operationId = "createApiKey", summary = "Creates an API key",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the created API key")
+      })
+  public ResponseDTO<ApiKeyDTO>
+  createApiKey(@Valid ApiKeyDTO apiKeyDTO) {
     apiKeyService.validateParentIdentifier(apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(),
         apiKeyDTO.getProjectIdentifier(), apiKeyDTO.getApiKeyType(), apiKeyDTO.getParentIdentifier());
     ApiKeyDTO apiKey = apiKeyService.createApiKey(apiKeyDTO);
@@ -79,9 +107,16 @@ public class ApiKeyResource {
 
   @PUT
   @Path("{identifier}")
-  @ApiOperation(value = "Update api key", nickname = "updateApiKey")
-  public ResponseDTO<ApiKeyDTO> updateApiKey(
-      @Valid ApiKeyDTO apiKeyDTO, @NotNull @PathParam("identifier") String identifier) {
+  @ApiOperation(value = "Update API key", nickname = "updateApiKey")
+  @Operation(operationId = "updateApiKey", summary = "Updates API Key for the provided ID",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated API key")
+      })
+  public ResponseDTO<ApiKeyDTO>
+  updateApiKey(@Valid ApiKeyDTO apiKeyDTO,
+      @Parameter(description = "This is the API key ID") @NotNull @PathParam("identifier") String identifier) {
     apiKeyService.validateParentIdentifier(apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(),
         apiKeyDTO.getProjectIdentifier(), apiKeyDTO.getApiKeyType(), apiKeyDTO.getParentIdentifier());
     ApiKeyDTO apiKey = apiKeyService.updateApiKey(apiKeyDTO);
@@ -90,12 +125,24 @@ public class ApiKeyResource {
 
   @DELETE
   @Path("{identifier}")
-  @ApiOperation(value = "Delete api key", nickname = "deleteApiKey")
-  public ResponseDTO<Boolean> deleteApiKey(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @Optional @QueryParam(ORG_KEY) String orgIdentifier, @Optional @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam("apiKeyType") ApiKeyType apiKeyType,
-      @NotNull @QueryParam("parentIdentifier") String parentIdentifier,
-      @NotNull @PathParam(IDENTIFIER_KEY) String identifier) {
+  @ApiOperation(value = "Delete API key", nickname = "deleteApiKey")
+  @Operation(operationId = "deleteApiKey", summary = "Deletes the API Key corresponding to the provided ID.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "Returns a boolean value. The value is True if the API Key is successfully deleted, else it is False.")
+      })
+  public ResponseDTO<Boolean>
+  deleteApiKey(
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @Optional @QueryParam(ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @Optional @QueryParam(PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "This is the API Key type like Personal Access Key or Service Account Key.") @NotNull
+      @QueryParam("apiKeyType") ApiKeyType apiKeyType,
+      @Parameter(description = "Id of API key's Parent Service Account") @NotNull @QueryParam(
+          "parentIdentifier") String parentIdentifier,
+      @Parameter(description = "This is the API key ID") @NotNull @PathParam(IDENTIFIER_KEY) String identifier) {
     apiKeyService.validateParentIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
     boolean deleted = apiKeyService.deleteApiKey(
@@ -105,10 +152,23 @@ public class ApiKeyResource {
 
   @GET
   @ApiOperation(value = "List api keys", nickname = "listApiKeys")
-  public ResponseDTO<List<ApiKeyDTO>> listApiKeys(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @Optional @QueryParam(ORG_KEY) String orgIdentifier, @Optional @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam("apiKeyType") ApiKeyType apiKeyType,
-      @NotNull @QueryParam("parentIdentifier") String parentIdentifier,
+  @Operation(operationId = "listApiKeys",
+      summary = "Fetches the list of API Keys corresponding to the request's filter criteria.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the list of API keys.")
+      })
+  public ResponseDTO<List<ApiKeyDTO>>
+  listApiKeys(
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @Optional @QueryParam(ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @Optional @QueryParam(PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "This is the API Key type like Personal Access Key or Service Account Key.") @NotNull
+      @QueryParam("apiKeyType") ApiKeyType apiKeyType,
+      @Parameter(description = "ID of API key's Parent Service Account") @NotNull @QueryParam(
+          "parentIdentifier") String parentIdentifier,
+      @Parameter(description = "This is the list of API Key IDs. Details specific to these IDs would be fetched.")
       @Optional @QueryParam(IDENTIFIERS) List<String> identifiers) {
     apiKeyService.validateParentIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
@@ -120,13 +180,28 @@ public class ApiKeyResource {
   @GET
   @Path("aggregate")
   @ApiOperation(value = "List api key", nickname = "listAggregatedApiKeys")
-  public ResponseDTO<PageResponse<ApiKeyAggregateDTO>> listAggregatedApiKeys(
-      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @QueryParam("apiKeyType") ApiKeyType apiKeyType,
-      @NotNull @QueryParam("parentIdentifier") String parentIdentifier,
+  @Operation(operationId = "listApiKeys",
+      summary = "Fetches the list of Aggregated API Keys corresponding to the request's filter criteria.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the Paginated list of Aggregated API keys.")
+      })
+  public ResponseDTO<PageResponse<ApiKeyAggregateDTO>>
+  listAggregatedApiKeys(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                            ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @Optional @QueryParam(
+          PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = "This is the API Key type like Personal Access Key or Service Account Key.") @NotNull
+      @QueryParam("apiKeyType") ApiKeyType apiKeyType,
+      @Parameter(description = "ID of API key's Parent Service Account") @NotNull @QueryParam(
+          "parentIdentifier") String parentIdentifier,
+      @Parameter(description = "This is the list of API Key IDs. Details specific to these IDs would be fetched.")
       @Optional @QueryParam(IDENTIFIERS) List<String> identifiers, @BeanParam PageRequest pageRequest,
+      @Parameter(
+          description =
+              "This would be used to filter API keys. Any API key having the specified string in its Name, ID and Tag would be filtered.")
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     apiKeyService.validateParentIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
@@ -151,14 +226,25 @@ public class ApiKeyResource {
 
   @GET
   @Path("aggregate/{identifier}")
-  @ApiOperation(value = "Get api key", nickname = "getAggregatedApiKey")
-  public ResponseDTO<ApiKeyAggregateDTO> getAggregatedApiKey(
-      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @QueryParam("apiKeyType") ApiKeyType apiKeyType,
-      @NotNull @QueryParam("parentIdentifier") String parentIdentifier,
-      @PathParam(IDENTIFIER) @ResourceIdentifier String identifier) {
+  @ApiOperation(value = "Get API key", nickname = "getAggregatedApiKey")
+  @Operation(operationId = "getAggregatedApiKey",
+      summary = "Fetches the API Keys details corresponding to the provided ID and Scope.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the API key")
+      })
+  public ResponseDTO<ApiKeyAggregateDTO>
+  getAggregatedApiKey(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                          ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @Optional @QueryParam(
+          PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = "This is the API Key type like Personal Access Key or Service Account Key.") @NotNull
+      @QueryParam("apiKeyType") ApiKeyType apiKeyType,
+      @Parameter(description = "ID of API key's Parent Service Account") @NotNull @QueryParam(
+          "parentIdentifier") String parentIdentifier,
+      @Parameter(description = "This is the API key ID") @PathParam(IDENTIFIER) @ResourceIdentifier String identifier) {
     apiKeyService.validateParentIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
     ApiKeyAggregateDTO aggregateDTO = apiKeyService.getApiKeyAggregateDTO(

@@ -10,5 +10,5 @@ import java.util.List;
 public interface SLIRecordService {
   void create(List<SLIRecordParam> sliRecordList, String sliId, String verificationTaskId, int sliVersion);
   SLOGraphData getGraphData(String sliId, Instant startTime, Instant endTime, int totalErrorBudgetMinutes,
-      SLIMissingDataType sliMissingDataType);
+      SLIMissingDataType sliMissingDataType, int sliVersion);
 }

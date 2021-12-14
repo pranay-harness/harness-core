@@ -10,6 +10,7 @@ java_library(
         "//:lombok",
         "//940-resource-group-beans:module",
         "//940-secret-manager-client:module",
+        "//947-scim-core:module",
         "//950-delegate-tasks-beans:module",
         "//950-ng-core:module",
         "//950-ng-signup-beans:module",

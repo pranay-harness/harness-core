@@ -1,4 +1,4 @@
-package software.wings.scim;
+package io.harness.scim;
 
 import java.net.URI;
 import lombok.Getter;

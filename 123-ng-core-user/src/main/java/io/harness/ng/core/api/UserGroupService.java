@@ -32,6 +32,8 @@ public interface UserGroupService {
 
   List<UserGroup> getUserGroupsBySsoId(String ssoId);
 
+  List<UserGroup> getExternallyManagedGroups(String accountIdentifier);
+
   UserGroup update(UserGroupDTO userGroupDTO);
 
   Page<UserGroup> list(

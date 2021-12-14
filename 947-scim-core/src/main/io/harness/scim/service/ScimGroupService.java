@@ -1,4 +1,8 @@
-package software.wings.scim;
+package io.harness.scim.service;
+
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimGroup;
+import io.harness.scim.ScimListResponse;
 
 import javax.ws.rs.core.Response;
 

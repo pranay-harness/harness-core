@@ -1,8 +1,11 @@
 package io.harness.ng.serviceaccounts.resource;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.ORG_KEY;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.NGResourceFilterConstants.IDENTIFIER;
 import static io.harness.NGResourceFilterConstants.IDENTIFIERS;
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -37,6 +40,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -59,6 +68,19 @@ import lombok.extern.slf4j.Slf4j;
 @Produces({"application/json", "application/yaml", "text/plain"})
 @Consumes({"application/json", "application/yaml", "text/plain"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@Tag(name = "Service Account", description = "This has all the APIs specific to the Service Accounts in Harness.")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -71,11 +93,20 @@ public class ServiceAccountResource {
 
   @POST
   @ApiOperation(value = "Create service account", nickname = "createServiceAccount")
+  @Operation(operationId = "createServiceAccount", summary = "Creates a Service Account",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns details of the created Service Account")
+      })
   @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.EDIT_SERVICEACCOUNT_PERMISSION)
-  public ResponseDTO<ServiceAccountDTO> createServiceAccount(
-      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+  public ResponseDTO<ServiceAccountDTO>
+  createServiceAccount(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                           ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @Optional @QueryParam(
+          PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @RequestBody(required = true, description = "Details required to create Service Account")
       @Valid ServiceAccountDTO serviceAccountRequestDTO) {
     ServiceAccountDTO serviceAccountDTO = serviceAccountService.createServiceAccount(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceAccountRequestDTO);
@@ -85,13 +116,23 @@ public class ServiceAccountResource {
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update service account", nickname = "updateServiceAccount")
+  @Operation(operationId = "updateServiceAccount", summary = "Updates the Service Account.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated Service Account details.")
+      })
   @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.EDIT_SERVICEACCOUNT_PERMISSION)
-  public ResponseDTO<ServiceAccountDTO> updateServiceAccount(
-      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @PathParam(IDENTIFIER) @ResourceIdentifier String identifier,
-      @Valid ServiceAccountDTO serviceAccountRequestDTO) {
+  public ResponseDTO<ServiceAccountDTO>
+  updateServiceAccount(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                           ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @Optional @QueryParam(
+          PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = "Service Account ID") @NotNull @PathParam(
+          IDENTIFIER) @ResourceIdentifier String identifier,
+      @RequestBody(required = true,
+          description = "Details of the updated Service Account") @Valid ServiceAccountDTO serviceAccountRequestDTO) {
     ServiceAccountDTO serviceAccountDTO = serviceAccountService.updateServiceAccount(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier, serviceAccountRequestDTO);
     return ResponseDTO.newResponse(serviceAccountDTO);
@@ -100,13 +141,23 @@ public class ServiceAccountResource {
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete service account", nickname = "deleteServiceAccount")
+  @Operation(operationId = "deleteServiceAccount", summary = "Deletes Service Account by ID",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "It returns true if the Service Account is deleted successfully and false if the Service Account is not deleted.")
+      })
   @NGAccessControlCheck(
       resourceType = SERVICEACCOUNT, permission = PlatformPermissions.DELETE_SERVICEACCOUNT_PERMISSION)
   public ResponseDTO<Boolean>
-  deleteServiceAccount(@NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @PathParam(IDENTIFIER) @ResourceIdentifier String identifier) {
+  deleteServiceAccount(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                           ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @Optional @QueryParam(
+          PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = "Service Account ID") @NotNull @PathParam(
+          IDENTIFIER) @ResourceIdentifier String identifier) {
     boolean deleted =
         serviceAccountService.deleteServiceAccount(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return ResponseDTO.newResponse(deleted);
@@ -114,11 +165,22 @@ public class ServiceAccountResource {
 
   @GET
   @ApiOperation(value = "List service account", nickname = "listServiceAccount")
+  @Operation(operationId = "listServiceAccount",
+      summary = "Fetches the list of Service Accounts corresponding to the request's filter criteria.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the list of Service Accounts.")
+      })
   @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.VIEW_SERVICEACCOUNT_PERMISSION)
-  public ResponseDTO<List<ServiceAccountDTO>> listServiceAccounts(
-      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+  public ResponseDTO<List<ServiceAccountDTO>>
+  listServiceAccounts(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                          ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @Optional @QueryParam(
+          PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(
+          description = "This is the list of Service Account IDs. Details specific to these IDs would be fetched.")
       @Optional @QueryParam(IDENTIFIERS) List<String> identifiers) {
     List<ServiceAccountDTO> requestDTOS =
         serviceAccountService.listServiceAccounts(accountIdentifier, orgIdentifier, projectIdentifier, identifiers);
@@ -128,12 +190,27 @@ public class ServiceAccountResource {
   @GET
   @Path("aggregate")
   @ApiOperation(value = "List service account", nickname = "listAggregatedServiceAccounts")
+  @Operation(operationId = "listAggregatedServiceAccounts",
+      summary = "Fetches the list of Aggregated Service Accounts corresponding to the request's filter criteria.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "default", description = "Returns the paginated list of Aggregated Service Accounts.")
+      })
   @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.VIEW_SERVICEACCOUNT_PERMISSION)
-  public ResponseDTO<PageResponse<ServiceAccountAggregateDTO>> listAggregatedServiceAccounts(
-      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @Optional @QueryParam(IDENTIFIERS) List<String> identifiers, @BeanParam PageRequest pageRequest,
+  public ResponseDTO<PageResponse<ServiceAccountAggregateDTO>>
+  listAggregatedServiceAccounts(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                                    ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @Optional @QueryParam(
+          PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(
+          description = "This is the list of Service Account IDs. Details specific to these IDs would be fetched.")
+      @Optional @QueryParam(IDENTIFIERS) List<String> identifiers,
+      @BeanParam PageRequest pageRequest,
+      @Parameter(
+          description =
+              "This would be used to filter Service Accounts. Any Service Account having the specified string in its Name, ID and Tag would be filtered.")
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
@@ -155,12 +232,23 @@ public class ServiceAccountResource {
   @GET
   @Path("aggregate/{identifier}")
   @ApiOperation(value = "Get service account", nickname = "getAggregatedServiceAccount")
+  @Operation(operationId = "getAggregatedServiceAccount",
+      summary = "Get the Service Account by accountIdentifier and Service Account ID and Scope.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "Returns the Service Account details corresponding to the specified Account Identifier and Service Account Identifier")
+      })
   @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.VIEW_SERVICEACCOUNT_PERMISSION)
-  public ResponseDTO<ServiceAccountAggregateDTO> getAggregatedServiceAccount(
-      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @PathParam(IDENTIFIER) @ResourceIdentifier String identifier) {
+  public ResponseDTO<ServiceAccountAggregateDTO>
+  getAggregatedServiceAccount(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                                  ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @Optional @QueryParam(
+          PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = "Service Account IDr") @NotNull @PathParam(
+          IDENTIFIER) @ResourceIdentifier String identifier) {
     ServiceAccountAggregateDTO aggregateDTO = serviceAccountService.getServiceAccountAggregateDTO(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return ResponseDTO.newResponse(aggregateDTO);

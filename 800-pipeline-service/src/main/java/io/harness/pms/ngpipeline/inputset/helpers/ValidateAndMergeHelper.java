@@ -50,6 +50,9 @@ public class ValidateAndMergeHelper {
     if (EmptyPredicate.isEmpty(identifier)) {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
+    if (identifier.length() > 63) {
+      throw new InvalidRequestException("Input Set identifier length cannot be more that 63 characters.");
+    }
     InputSetYamlHelper.confirmPipelineIdentifierInInputSet(yaml, pipelineIdentifier);
     InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml, "inputSet", orgIdentifier, projectIdentifier);
 
@@ -85,6 +88,9 @@ public class ValidateAndMergeHelper {
     if (EmptyPredicate.isEmpty(identifier)) {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
+    if (identifier.length() > 63) {
+      throw new InvalidRequestException("Overlay Input Set identifier length cannot be more that 63 characters.");
+    }
     List<String> inputSetReferences = InputSetYamlHelper.getReferencesFromOverlayInputSetYaml(yaml);
     if (inputSetReferences.isEmpty()) {
       throw new InvalidRequestException("Input Set References can't be empty");
@@ -115,9 +121,13 @@ public class ValidateAndMergeHelper {
   private List<Optional<InputSetEntity>> findAllReferredInputSets(List<String> referencesInOverlay, String accountId,
       String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
     List<Optional<InputSetEntity>> inputSets = new ArrayList<>();
-    referencesInOverlay.forEach(identifier
-        -> inputSets.add(pmsInputSetService.get(
-            accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false)));
+    referencesInOverlay.forEach(identifier -> {
+      if (EmptyPredicate.isEmpty(identifier)) {
+        throw new InvalidRequestException("Empty Input Set Identifier not allowed in Input Set References");
+      }
+      inputSets.add(
+          pmsInputSetService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false));
+    });
     return inputSets;
   }
 

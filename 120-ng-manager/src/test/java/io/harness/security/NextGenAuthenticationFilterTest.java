@@ -134,7 +134,7 @@ public class NextGenAuthenticationFilterTest extends ApiKeyFilterTestBase {
     String uuid = generateUuid();
     String rawPassword = generateUuid();
     apiKey = "sat" + delimiter + uuid + delimiter + rawPassword;
-    when(containerRequestContext.getHeaderString(AUTHORIZATION_HEADER)).thenReturn("Bearer: " + apiKey);
+    when(containerRequestContext.getHeaderString(AUTHORIZATION_HEADER)).thenReturn("Bearer " + apiKey);
     when(authenticationFilter.testRequestPredicate(containerRequestContext)).thenReturn(true);
     PowerMockito.mockStatic(NGRestUtils.class);
     assertThatThrownBy(() -> authenticationFilter.filter(containerRequestContext))
