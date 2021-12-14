@@ -77,6 +77,23 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
   }
 
   @Override
+  public List<Instance> getInstancesDeployedInInterval(
+      String accountIdentifier, String organizationId, String projectId, long startTimestamp, long endTimeStamp) {
+    Criteria criteria = Criteria.where(InstanceKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(InstanceKeys.orgIdentifier)
+                            .is(organizationId)
+                            .and(InstanceKeys.projectIdentifier)
+                            .is(projectId)
+                            .and(InstanceKeys.lastDeployedAt)
+                            .gte(startTimestamp)
+                            .lte(endTimeStamp);
+
+    Query query = new Query().addCriteria(criteria);
+    return mongoTemplate.find(query, Instance.class);
+  }
+
+  @Override
   public List<Instance> getInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId) {
     // TODO
