@@ -401,7 +401,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     if (task.getUuid() == null) {
       task.setUuid(generateUuid());
     }
-
+    log.info("Save delegate request received {}, current time: {} ", task.getUuid(), currentTimeMillis());
     if (task.getWaitId() == null) {
       task.setWaitId(task.getUuid());
     }
@@ -417,6 +417,15 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         // capabilities created,then appended to task.executionCapabilities to get eligible delegates
         generateCapabilitiesForTask(task);
         convertToExecutionCapability(task);
+<<<<<<< HEAD
+=======
+        task.setPreAssignedDelegateId(obtainCapableDelegateId(task, Collections.emptySet()));
+        log.info("Set first attempt delegate complete for task [{}] time: ", task, currentTimeMillis());
+        // Ensure that broadcast happens at least 5 seconds from current time for async tasks
+        if (task.getData().isAsync()) {
+          task.setNextBroadcast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
+        }
+>>>>>>> cfa4f5ed592... agent fixes
 
         List<String> eligibleListOfDelegates = assignDelegateService.getEligibleDelegatesToExecuteTask(task, batch);
 
@@ -789,9 +798,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         return null;
       }
     } finally {
-      if (log.isDebugEnabled()) {
-        log.debug("Done with acquire delegate task method");
-      }
+        log.info("Done with acquire delegate task method id: {}", taskId);
     }
   }
 
@@ -1141,7 +1148,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
 
-    log.info("Assigning {} task to delegate", delegateTask.getData().isAsync() ? ASYNC : SYNC);
+    log.info("ADelegate is not scoped for task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
     Query<DelegateTask> query = persistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                     .filter(DelegateTaskKeys.uuid, taskId)

@@ -305,8 +305,8 @@ public class DelegateQueueTask implements Runnable {
              AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId(), OVERRIDE_ERROR)) {
           log.info(delegateTask.getBroadcastCount() > 1 ? "Rebroadcast"
                                                         : "Broadcast"
-                      + " queued task id {}. Broadcast count: {}",
-              delegateTask.getUuid(), delegateTask.getBroadcastCount());
+                      + " queued task id {}. Broadcast count: {} task id: {} ",
+              delegateTask.getUuid(), delegateTask.getBroadcastCount(), delegateTask.getUuid());
           broadcastHelper.rebroadcastDelegateTask(delegateTask);
           count++;
         }
