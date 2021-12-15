@@ -1776,7 +1776,8 @@ public class K8sTaskHelperBase {
     for (int i = 0; i < patchesFiles.size(); i++) {
       validateValuesFileContents(patchesFiles.get(i));
       String patchesFileName = format(patchYaml, i);
-      FileIo.writeUtf8StringToFile(Paths.get(outputTemporaryDir.toString(), patchesFileName).toString(), patchesFiles.get(i));
+      FileIo.writeUtf8StringToFile(
+          Paths.get(outputTemporaryDir.toString(), patchesFileName).toString(), patchesFiles.get(i));
       patchesFilesOptionsBuilder.append(" -f ").append(patchesFileName);
       patchList.put(Paths.get(kustomizePatchesDir, patchesFileName));
     }
