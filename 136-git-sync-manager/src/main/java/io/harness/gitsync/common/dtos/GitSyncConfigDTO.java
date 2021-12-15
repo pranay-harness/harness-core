@@ -1,10 +1,13 @@
 package io.harness.gitsync.common.dtos;
 
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.gitsync.sdk.GitSyncApiConstants;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -26,13 +29,16 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(DX)
 @ApiModel("GitSyncConfig")
 public class GitSyncConfigDTO {
-  @Trimmed @NotEmpty private String identifier;
-  @Trimmed @NotEmpty private String name;
-  @Trimmed private String projectIdentifier;
-  @Trimmed private String orgIdentifier;
-  @Trimmed @NotEmpty private String gitConnectorRef;
-  @Trimmed @NotEmpty private String repo;
-  @Trimmed @NotEmpty private String branch;
-  @ApiModelProperty(allowableValues = "Github, Gitlab, Bitbucket") @NotNull private ConnectorType gitConnectorType;
-  private List<GitSyncFolderConfigDTO> gitSyncFolderConfigDTOs;
+  @Schema(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE) @Trimmed @NotEmpty private String identifier;
+  @Schema(description = "Repo Name") @Trimmed @NotEmpty private String name;
+  @Schema(description = PROJECT_PARAM_MESSAGE) @Trimmed private String projectIdentifier;
+  @Schema(description = ORG_PARAM_MESSAGE) @Trimmed private String orgIdentifier;
+  @Schema(description = "Referenced Connector Identifier") @Trimmed @NotEmpty private String gitConnectorRef;
+  @Schema(description = "Repo Url") @Trimmed @NotEmpty private String repo;
+  @Schema(description = GitSyncApiConstants.BRANCH_PARAM_MESSAGE) @Trimmed @NotEmpty private String branch;
+  @Schema(description = "Connector Type")
+  @ApiModelProperty(allowableValues = "Github, Gitlab, Bitbucket")
+  @NotNull
+  private ConnectorType gitConnectorType;
+  @Schema(description = "List of all Root Folder Details") private List<GitSyncFolderConfigDTO> gitSyncFolderConfigDTOs;
 }
