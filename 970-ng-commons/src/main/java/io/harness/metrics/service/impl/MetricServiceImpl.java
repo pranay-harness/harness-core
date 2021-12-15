@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -136,6 +137,7 @@ public class MetricServiceImpl implements MetricService {
             StackdriverStatsConfiguration.builder()
                 .setExportInterval(Duration.fromMillis(TimeUnit.MINUTES.toMillis(1)))
                 .setDeadline(Duration.fromMillis(TimeUnit.MINUTES.toMillis(5)))
+                .setConstantLabels(Collections.emptyMap())
                 .build();
         StackdriverStatsExporter.createAndRegister(configuration);
         log.info("StackdriverStatsExporter created");
