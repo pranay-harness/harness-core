@@ -13,7 +13,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretText;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -72,11 +71,6 @@ public class SettingResourceNg {
   @InternalApi
   public RestResponse<SettingAttribute> save(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
-    RestResponse<SettingAttribute> existingConfig = get(accountId);
-    if (existingConfig.getResource() != null) {
-      throw new InvalidRequestException(
-          "SMTP is already configured for this Account. Each Account can have only one SMTP configuration. Use the UPDATE API call to modify this configuration.");
-    }
     SmtpConfig smtpConfig = (SmtpConfig) variable.getValue();
     SecretManagerConfig secretManagerConfig = secretManagerConfigService.getDefaultSecretManager(accountId);
     SecretText secretText = new SecretText();
@@ -154,10 +148,6 @@ public class SettingResourceNg {
   public RestResponse<SettingAttribute> update(@PathParam("attrId") String attrId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, SettingAttribute variable) {
     SettingAttribute existingAttribute = settingsService.get(appId, attrId);
-    if (existingAttribute == null) {
-      throw new InvalidRequestException(
-          "SMTP configuration with this ID does not exist. Enter a valid Configuration ID.");
-    }
     SmtpConfig existingSmtpConfig = (SmtpConfig) existingAttribute.getValue();
     SmtpConfig smtpConfig = (SmtpConfig) variable.getValue();
     SecretManagerConfig secretManagerConfig =
@@ -188,10 +178,6 @@ public class SettingResourceNg {
   public RestResponse<Boolean> delete(
       @PathParam("attrId") String attrId, @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId) {
     SettingAttribute existingAttribute = settingsService.get(appId, attrId);
-    if (existingAttribute == null) {
-      throw new InvalidRequestException(
-          "SMTP configuration with this ID does not exist. Enter a valid Configuration ID.");
-    }
     SmtpConfig existingSmtpConfig = (SmtpConfig) existingAttribute.getValue();
     String storedSecretId = existingSmtpConfig.getEncryptedPassword();
     settingAuthHandler.authorize(appId, attrId);
