@@ -176,7 +176,6 @@ public class GcpSyncTasklet implements Tasklet {
         ConnectorFilterPropertiesDTO.builder()
             .types(Arrays.asList(ConnectorType.GCP_CLOUD_COST))
             .ccmConnectorFilter(CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
-            .connectivityStatuses(Arrays.asList(ConnectivityStatus.SUCCESS))
             .build();
     connectorFilterPropertiesDTO.setFilterType(FilterType.CONNECTOR);
     int page = 0;

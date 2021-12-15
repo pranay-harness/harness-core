@@ -579,9 +579,9 @@ public class BillingCalculationServiceTest extends CategoryTest {
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
         instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
     Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("24.0"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(BigDecimal.ZERO);
-    Assertions.assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(BigDecimal.ZERO);
-    Assertions.assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(BigDecimal.ZERO);
+    Assertions.assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(BigDecimal.valueOf(12.0));
+    Assertions.assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(BigDecimal.valueOf(6.0));
+    Assertions.assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(BigDecimal.valueOf(6.0));
     Assertions.assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
     Assertions.assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(320 * HALF_DAY_SECONDS);
     Assertions.assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(2048 * HALF_DAY_SECONDS);

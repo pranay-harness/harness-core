@@ -106,7 +106,6 @@ public class AzureStorageSyncEventWriter extends EventWriter implements ItemWrit
         ConnectorFilterPropertiesDTO.builder()
             .types(Arrays.asList(ConnectorType.CE_AZURE))
             .ccmConnectorFilter(CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
-            .connectivityStatuses(Arrays.asList(ConnectivityStatus.SUCCESS))
             .build();
     connectorFilterPropertiesDTO.setFilterType(FilterType.CONNECTOR);
     int page = 0;
