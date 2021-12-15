@@ -132,9 +132,9 @@ if [[ "" != "$SCM_SERVICE_URI" ]]; then
   yq write -i $CONFIG_FILE scmConnectionConfig.url "$SCM_SERVICE_URI"
 fi
 
-if [[ "" != "$LOG_SERVICE_ENDPOINT" ]]; then
-  yq write -i $CONFIG_FILE logServiceConfig.baseUrl "$LOG_SERVICE_ENDPOINT"
-fi
+#if [[ "" != "$LOG_SERVICE_ENDPOINT" ]]; then
+#  yq write -i $CONFIG_FILE logServiceConfig.baseUrl "$LOG_SERVICE_ENDPOINT"
+#fi
 
 if [[ "" != "$LOG_SERVICE_GLOBAL_TOKEN" ]]; then
   yq write -i $CONFIG_FILE logServiceConfig.globalToken "$LOG_SERVICE_GLOBAL_TOKEN"

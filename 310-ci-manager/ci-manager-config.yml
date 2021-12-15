@@ -75,7 +75,7 @@ scmConnectionConfig:
   url: localhost:8091
 
 logServiceConfig:
-  baseUrl: https://uat.harness.io/log-service/
+  baseUrl: https://webhooks-proxy-pr.harness.io/cie-aws-vm/log-service/
   globalToken: "c76e567a-b341-404d-a8dd-d9738714eb82"
 
 tiServiceConfig:
@@ -111,7 +111,7 @@ ciExecutionServiceConfig:
   isLocal: false
   stepConfig:
     gitCloneConfig:
-      image: harness/drone-git:v1.0.4
+      image: harness/drone-git:latest
       entrypoint:
         - /usr/local/bin/clone
     buildAndPushDockerRegistryConfig:
