@@ -43,8 +43,11 @@ public class CIVMExecuteStepTaskHandlerTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void executeTaskInternal() throws IOException {
-    CIVmExecuteStepTaskParams params =
-        CIVmExecuteStepTaskParams.builder().stageRuntimeId("stage").stepInfo(VmRunStep.builder().build()).build();
+    CIVmExecuteStepTaskParams params = CIVmExecuteStepTaskParams.builder()
+                                           .stageRuntimeId("stage")
+                                           .stepRuntimeId("step")
+                                           .stepInfo(VmRunStep.builder().build())
+                                           .build();
     Response<ExecuteStepResponse> executeStepResponse =
         Response.success(ExecuteStepResponse.builder().error("").build());
     when(httpHelper.executeStepWithRetries(any())).thenReturn(executeStepResponse);
