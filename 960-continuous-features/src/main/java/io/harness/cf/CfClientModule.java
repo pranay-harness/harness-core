@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.cf.client.api.CfClient;
 import io.harness.cf.client.api.Config;
+import io.harness.cf.client.api.FeatureFlagInitializeException;
 import io.harness.cf.openapi.ApiClient;
 
 import com.google.inject.AbstractModule;
@@ -42,7 +43,15 @@ public class CfClientModule extends AbstractModule {
                         .connectionTimeout(cfClientConfig.getConnectionTimeout())
                         .build();
 
-    return new CfClient(apiKey, config);
+    CfClient client = new CfClient(apiKey, config);
+    try {
+      client.waitForInitialization();
+      return client;
+    } catch (InterruptedException | FeatureFlagInitializeException exception) {
+      log.error("failed to initialize the CF Client because {}", exception.getMessage());
+    }
+
+    return null;
   }
 
   @Provides
