@@ -5,6 +5,8 @@ import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ShellExecutionException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -27,6 +29,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
+@OwnedBy(HarnessTeam.CDP)
 @Singleton
 @Slf4j
 public class CustomManifestServiceImpl implements CustomManifestService {
@@ -90,7 +93,7 @@ public class CustomManifestServiceImpl implements CustomManifestService {
     }
   }
 
-  private void cleanup(String path) {
+  public void cleanup(String path) {
     if (isNotEmpty(path)) {
       try {
         deleteDirectoryAndItsContentIfExists(path);
