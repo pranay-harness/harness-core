@@ -32,10 +32,12 @@ public class UserInfo {
   boolean twoFactorAuthenticationEnabled;
   boolean emailVerified;
   @Getter(value = AccessLevel.PRIVATE) boolean locked;
+  boolean disabled;
   String signupAction;
   String edition;
   String billingFrequency;
   UtmInfo utmInfo;
+  boolean externallyManaged;
 
   public boolean isLocked() {
     return this.locked;

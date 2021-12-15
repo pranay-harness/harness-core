@@ -8,4 +8,6 @@ import org.apache.commons.lang3.tuple.Pair;
 @OwnedBy(HarnessTeam.DEL)
 public interface DelegateUpgraderService {
   Pair<Boolean, String> getDelegateImageTag(String accountId, String currentDelegateImageTag);
+
+  Pair<Boolean, String> getUpgraderImageTag(String accountId, String currentUpgraderImageTag);
 }

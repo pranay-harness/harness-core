@@ -22,6 +22,7 @@ import io.harness.manage.ManagedExecutorService;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.merger.helpers.FQNMapGenerator;
 import io.harness.pms.pipeline.service.yamlschema.PmsYamlSchemaHelper;
 import io.harness.pms.pipeline.service.yamlschema.SchemaFetcher;
@@ -154,7 +155,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
     // Merging the schema for all steps that are moved to new schema.
     ObjectNode finalMergedDefinitions = yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier,
-        scope, mergedDefinitions, YamlSchemaTransientHelper.pipelineStepV2EntityTypes);
+        scope, mergedDefinitions, pmsYamlSchemaHelper.getNodeEntityTypesByYamlGroup(StepCategory.STEP.name()));
     YamlSchemaTransientHelper.removeV2StepEnumsFromStepElementConfig(finalMergedDefinitions.get(STEP_ELEMENT_CONFIG));
     ObjectNode stageElementConfig = (ObjectNode) pipelineDefinitions.get(STAGE_ELEMENT_CONFIG);
     YamlSchemaTransientHelper.deleteSpecNodeInStageElementConfig(stageElementConfig);

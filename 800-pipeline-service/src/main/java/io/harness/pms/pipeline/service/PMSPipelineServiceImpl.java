@@ -30,6 +30,7 @@ import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.governance.ExpansionRequest;
 import io.harness.pms.governance.ExpansionRequestsExtractor;
+import io.harness.pms.governance.ExpansionsMerger;
 import io.harness.pms.governance.JsonExpander;
 import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
@@ -455,10 +456,10 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         PIPELINE_SAVE, properties, Collections.singletonMap(AMPLITUDE, true), io.harness.telemetry.Category.GLOBAL);
   }
 
+  // todo(@Naman Verma): add test for this method
   @Override
   public String fetchExpandedPipelineJSON(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
-    // todo(@NamanVerma): add all parts of the flow as and when implemented. Add test when full method is ready
     Optional<PipelineEntity> pipelineEntityOptional =
         get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntityOptional.isPresent()) {
@@ -472,7 +473,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         expansionRequestsExtractor.fetchExpansionRequests(pipelineEntityOptional.get().getYaml());
     Set<ExpansionResponseBatch> expansionResponseBatches =
         jsonExpander.fetchExpansionResponses(expansionRequests, expansionRequestMetadata);
-    return null;
+    return ExpansionsMerger.mergeExpansions(pipelineEntityOptional.get().getYaml(), expansionResponseBatches);
   }
 
   ExpansionRequestMetadata getRequestMetadata(String accountId, String orgIdentifier, String projectIdentifier) {

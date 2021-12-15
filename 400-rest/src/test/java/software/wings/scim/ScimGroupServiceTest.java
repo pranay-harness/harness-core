@@ -14,6 +14,16 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnauthorizedException;
 import io.harness.rule.Owner;
+import io.harness.scim.AddOperation;
+import io.harness.scim.Member;
+import io.harness.scim.OktaAddOperation;
+import io.harness.scim.OktaRemoveOperation;
+import io.harness.scim.OktaReplaceOperation;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.RemoveOperation;
+import io.harness.scim.ScimGroup;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.service.ScimGroupService;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;

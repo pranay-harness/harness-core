@@ -16,6 +16,7 @@ import io.harness.packages.HarnessPackages;
 import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -39,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -283,7 +283,7 @@ public class YamlSchemaUtils {
   }
 
   public void addOneOfInExecutionWrapperConfig(
-      JsonNode pipelineSchema, Map<Class<?>, Set<Class<?>>> newYamlSchemaSubtypesToBeAdded, String namespace) {
+      JsonNode pipelineSchema, Set<Class<?>> newYamlSchemaSubtypesToBeAdded, String namespace) {
     String nameSpaceString = "";
     if (isNotEmpty(namespace)) {
       nameSpaceString = namespace + "/";
@@ -292,11 +292,9 @@ public class YamlSchemaUtils {
     ArrayNode oneOfNode = getOneOfNode(executionWrapperConfigProperties);
     JsonNode stepsNode = executionWrapperConfigProperties.get(STEP_NODE);
 
-    for (Set<Class<?>> classes : newYamlSchemaSubtypesToBeAdded.values()) {
-      for (Class<?> clazz : classes) {
-        oneOfNode.add(JsonNodeUtils.upsertPropertyInObjectNode(new ObjectNode(JsonNodeFactory.instance), REF_NODE,
-            "#/definitions/" + nameSpaceString + clazz.getSimpleName()));
-      }
+    for (Class<?> clazz : newYamlSchemaSubtypesToBeAdded) {
+      oneOfNode.add(JsonNodeUtils.upsertPropertyInObjectNode(new ObjectNode(JsonNodeFactory.instance), REF_NODE,
+          "#/definitions/" + nameSpaceString + clazz.getSimpleName()));
     }
     ((ObjectNode) stepsNode).set(ONE_OF_NODE, oneOfNode);
   }
@@ -313,5 +311,24 @@ public class YamlSchemaUtils {
       return (ArrayNode) executionWrapperConfig.get(STEP_NODE).get(ONE_OF_NODE);
     }
     return oneOfList;
+  }
+
+  public Set<Class<?>> getNodeClassesByYamlGroup(List<YamlSchemaRootClass> yamlSchemaRootClasses, String yamlGroup) {
+    return yamlSchemaRootClasses.stream()
+        .filter(yamlSchemaRootClass
+            -> yamlSchemaRootClass.getYamlSchemaMetadata() != null
+                && yamlSchemaRootClass.getYamlSchemaMetadata().getYamlGroup().getGroup().equals(yamlGroup))
+        .map(YamlSchemaRootClass::getClazz)
+        .collect(Collectors.toSet());
+  }
+
+  public List<EntityType> getNodeEntityTypesByYamlGroup(
+      List<YamlSchemaRootClass> yamlSchemaRootClasses, String yamlGroup) {
+    return yamlSchemaRootClasses.stream()
+        .filter(yamlSchemaRootClass
+            -> yamlSchemaRootClass.getYamlSchemaMetadata() != null
+                && yamlSchemaRootClass.getYamlSchemaMetadata().getYamlGroup().getGroup().equals(yamlGroup))
+        .map(YamlSchemaRootClass::getEntityType)
+        .collect(Collectors.toList());
   }
 }

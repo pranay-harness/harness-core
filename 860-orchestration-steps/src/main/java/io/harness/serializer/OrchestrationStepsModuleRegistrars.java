@@ -3,11 +3,13 @@ package io.harness.serializer;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.EntityType;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.plancreator.steps.http.HttpStepNode;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.NGCoreBeansKryoRegistrar;
@@ -19,10 +21,13 @@ import io.harness.steps.approval.stage.ApprovalStageConfig;
 import io.harness.steps.jira.create.JiraCreateStepNode;
 import io.harness.steps.shellscript.ShellScriptStepNode;
 import io.harness.steps.template.TemplateStepNode;
+import io.harness.yaml.schema.beans.YamlGroup;
+import io.harness.yaml.schema.beans.YamlSchemaMetadata;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Arrays;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
@@ -104,6 +109,10 @@ public class OrchestrationStepsModuleRegistrars {
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
                    .clazz(HttpStepNode.class)
+                   .yamlSchemaMetadata(YamlSchemaMetadata.builder()
+                                           .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS))
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
+                                           .build())
                    .build())
           .add(YamlSchemaRootClass.builder()
                    .entityType(EntityType.SHELL_SCRIPT_STEP)
@@ -111,6 +120,10 @@ public class OrchestrationStepsModuleRegistrars {
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
                    .clazz(ShellScriptStepNode.class)
+                   .yamlSchemaMetadata(YamlSchemaMetadata.builder()
+                                           .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS))
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
+                                           .build())
                    .build())
           .add(YamlSchemaRootClass.builder()
                    .entityType(EntityType.JIRA_CREATE_STEP)
@@ -118,6 +131,10 @@ public class OrchestrationStepsModuleRegistrars {
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
                    .clazz(JiraCreateStepNode.class)
+                   .yamlSchemaMetadata(YamlSchemaMetadata.builder()
+                                           .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS))
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
+                                           .build())
                    .build())
           .add(YamlSchemaRootClass.builder()
                    .entityType(EntityType.TEMPLATE)
@@ -125,6 +142,11 @@ public class OrchestrationStepsModuleRegistrars {
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
                    .clazz(TemplateStepNode.class)
+                   .yamlSchemaMetadata(YamlSchemaMetadata.builder()
+                                           .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS, ModuleType.CE,
+                                               ModuleType.CF, ModuleType.CI))
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
+                                           .build())
                    .build())
           .build();
 }

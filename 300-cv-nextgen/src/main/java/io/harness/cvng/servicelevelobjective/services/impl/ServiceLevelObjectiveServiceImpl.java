@@ -25,7 +25,6 @@ import io.harness.utils.PageUtils;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Clock;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -174,12 +173,11 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
         ServiceLevelObjectiveKeys.monitoredServiceIdentifier, serviceLevelObjectiveDTO.getMonitoredServiceRef());
     updateOperations.set(
         ServiceLevelObjectiveKeys.healthSourceIdentifier, serviceLevelObjectiveDTO.getHealthSourceRef());
-    LocalDate currentLocalDate = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC).toLocalDate();
     updateOperations.set(ServiceLevelObjectiveKeys.serviceLevelIndicators,
         serviceLevelIndicatorService.update(projectParams, serviceLevelObjectiveDTO.getServiceLevelIndicators(),
             serviceLevelObjectiveDTO.getIdentifier(), serviceLevelObjective.getServiceLevelIndicators(),
             serviceLevelObjective.getMonitoredServiceIdentifier(), serviceLevelObjective.getHealthSourceIdentifier(),
-            serviceLevelObjective.getCurrentTimeRange(currentLocalDate)));
+            serviceLevelObjective.getCurrentTimeRange(LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC))));
     updateOperations.set(ServiceLevelObjectiveKeys.sloTarget,
         sloTargetTypeSLOTargetTransformerMap.get(serviceLevelObjectiveDTO.getTarget().getType())
             .getSLOTarget(serviceLevelObjectiveDTO.getTarget().getSpec()));

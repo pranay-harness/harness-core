@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.dto.ServiceResponse;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
+import io.harness.ng.core.service.entity.ServiceBasicInfo;
 import io.harness.ng.core.service.entity.ServiceEntity;
 
 import lombok.experimental.UtilityClass;
@@ -46,6 +47,18 @@ public class ServiceElementMapper {
         .service(writeDTO(serviceEntity))
         .createdAt(serviceEntity.getCreatedAt())
         .lastModifiedAt(serviceEntity.getLastModifiedAt())
+        .build();
+  }
+
+  public ServiceBasicInfo toBasicInfo(ServiceEntity serviceEntity) {
+    return ServiceBasicInfo.builder()
+        .identifier(serviceEntity.getIdentifier())
+        .name(serviceEntity.getName())
+        .description(serviceEntity.getDescription())
+        .accountIdentifier(serviceEntity.getAccountId())
+        .orgIdentifier(serviceEntity.getOrgIdentifier())
+        .projectIdentifier(serviceEntity.getProjectIdentifier())
+        .tags(convertToMap(serviceEntity.getTags()))
         .build();
   }
 }

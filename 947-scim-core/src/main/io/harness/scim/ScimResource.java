@@ -1,4 +1,4 @@
-package software.wings.resources;
+package io.harness.scim;
 
 import com.google.common.collect.Sets;
 import javax.ws.rs.core.Response;

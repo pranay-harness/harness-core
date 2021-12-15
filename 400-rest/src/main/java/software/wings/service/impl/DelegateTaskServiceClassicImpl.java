@@ -419,7 +419,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         generateCapabilitiesForTaskIfFeatureEnabled(task);
         convertToExecutionCapability(task);
         task.setPreAssignedDelegateId(obtainCapableDelegateId(task, Collections.emptySet()));
-
+        log.debug("Set first attempt delegate complete for task [{}]", task);
         // Ensure that broadcast happens at least 5 seconds from current time for async tasks
         if (task.getData().isAsync()) {
           task.setNextBroadcast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));

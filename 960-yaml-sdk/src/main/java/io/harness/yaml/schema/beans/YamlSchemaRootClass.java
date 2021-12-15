@@ -16,6 +16,8 @@ public class YamlSchemaRootClass {
 
   Class<?> clazz;
 
+  YamlSchemaMetadata yamlSchemaMetadata;
+
   /**
    * If an entity is available at org level, a schema is prepared by removing <b>projectIdentifier</b> from schema.
    */

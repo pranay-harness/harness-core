@@ -1735,7 +1735,7 @@ public class UserServiceImpl implements UserService {
     if (!validateNgInvite(userInvite)) {
       throw new InvalidRequestException("User invite token invalid");
     }
-    completeNGInvite(userInvite);
+    completeNGInvite(userInvite, false);
     return authenticationManager.defaultLogin(userInvite.getEmail(), userInvite.getPassword());
   }
 
@@ -1795,7 +1795,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void completeNGInvite(UserInviteDTO userInvite) {
+  public void completeNGInvite(UserInviteDTO userInvite, boolean isScimInvite) {
     String accountId = userInvite.getAccountId();
     limitCheck(accountId, userInvite.getEmail());
     Account account = accountService.get(accountId);
@@ -1809,6 +1809,11 @@ public class UserServiceImpl implements UserService {
       user.setAppId(GLOBAL_APP_ID);
       user.setAccounts(new ArrayList<>(Collections.singletonList(account)));
     }
+
+    if (isScimInvite) {
+      user.setImported(true);
+    }
+
     String name = userInvite.getName().trim();
     user.setName(name);
     if (userInvite.getPassword() != null) {
@@ -3768,7 +3773,7 @@ public class UserServiceImpl implements UserService {
                                           .name(email.trim())
                                           .token(userInvite.getUuid())
                                           .build();
-        completeNGInvite(userInviteDTO);
+        completeNGInvite(userInviteDTO, false);
         return ACCOUNT_INVITE_ACCEPTED;
       }
     } else {

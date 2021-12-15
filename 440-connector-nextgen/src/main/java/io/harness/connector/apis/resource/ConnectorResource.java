@@ -141,7 +141,7 @@ public class ConnectorResource {
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.CONNECTOR, permission = VIEW_CONNECTOR_PERMISSION)
   public ResponseDTO<ConnectorResponseDTO>
-  get(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotBlank @QueryParam(
+  get(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @OrgIdentifier @QueryParam(
           NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
@@ -163,20 +163,20 @@ public class ConnectorResource {
   @Path("validateUniqueIdentifier")
   @ApiOperation(value = "Validate Identifier is unique", nickname = "validateTheIdentifierIsUnique")
   @Operation(operationId = "validateTheIdentifierIsUnique",
-      summary = "Validate the Connector by accountIdentifier and connectorIdentifier",
+      summary = "Validate the Connector by Account Identifier and Connector Identifier",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns the boolean status")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "It returns true if the Identifier is unique and false if the Identifier is not unique")
       })
   public ResponseDTO<Boolean>
-  validateTheIdentifierIsUnique(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotBlank @QueryParam(
+  validateTheIdentifierIsUnique(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
                                     NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Connector Identifier") @QueryParam(
+      @Parameter(description = "Connector ID") @QueryParam(
           NGCommonEntityConstants.IDENTIFIER_KEY) @EntityIdentifier String connectorIdentifier) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
       return ResponseDTO.newResponse(false);
@@ -188,7 +188,7 @@ public class ConnectorResource {
   @GET
   @ApiOperation(value = "Gets Connector list", nickname = "getConnectorList")
   @Operation(operationId = "getConnectorList",
-      summary = "Get the list of Connectors satisfying the criteria (if any) in the request",
+      summary = "Fetches the list of Connectors corresponding to the request's filter criteria.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -196,18 +196,20 @@ public class ConnectorResource {
       })
   @Deprecated
   public ResponseDTO<PageResponse<ConnectorResponseDTO>>
-  list(@Parameter(description = "Page number of navigation. If left empty, default value of 0 is assumed") @QueryParam(
+  list(@Parameter(description = "Page number of navigation. The default value is 0") @QueryParam(
            NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
-      @Parameter(description = "Number of entries per page. If left empty, default value of 100 is assumed ")
-      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
-      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotBlank @QueryParam(
+      @Parameter(description = "Number of entries per page. The default value is 100") @QueryParam(
+          NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Filter Connectors by searching for this word in Name, Id, and Tag") @QueryParam(
-          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @Parameter(
+          description =
+              "This would be used to filter Connectors. Any Connector having the specified string in its Name, ID and Tag would be filtered.")
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @Parameter(description = "Filter Connectors by type") @QueryParam(
           NGResourceFilterConstants.TYPE_KEY) ConnectorType type,
       @Parameter(description = "Filter Connectors by category") @QueryParam(CATEGORY_KEY) ConnectorCategory category,
@@ -225,21 +227,23 @@ public class ConnectorResource {
   @Path("/listV2")
   @ApiOperation(value = "Gets Connector list", nickname = "getConnectorListV2")
   @Operation(operationId = "getConnectorListV2",
-      summary = "Get the list of Connectors satisfying the criteria (if any) in the request",
+      summary = "Fetches the list of Connectors corresponding to the request's filter criteria.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(responseCode = "default", description = "Returns the list of Connectors")
       })
   public ResponseDTO<PageResponse<ConnectorResponseDTO>>
-  list(@Parameter(description = "Page number of navigation. If left empty, default value of 0 is assumed") @QueryParam(
+  list(@Parameter(description = "Page number of navigation. The default value is 0") @QueryParam(
            NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
-      @Parameter(description = "Number of entries per page. If left empty, default value of 100 is assumed")
-      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
-      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotBlank @QueryParam(
+      @Parameter(description = "Number of entries per page. The default value is 100") @QueryParam(
+          NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Parameter(description = "Filter Connectors based on this word in Connectors name, id and tag") @QueryParam(
-          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @Parameter(
+          description =
+              "This would be used to filter Connectors. Any Connector having the specified string in its Name, ID and Tag would be filtered.")
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
@@ -274,9 +278,8 @@ public class ConnectorResource {
   public ResponseDTO<ConnectorResponseDTO>
   create(@RequestBody(required = true,
              description = "Details of the Connector to create") @Valid @NotNull ConnectorDTO connector,
-      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotBlank @QueryParam(
-          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo) {
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY)
+      String accountIdentifier, @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier()),
@@ -306,9 +309,8 @@ public class ConnectorResource {
           description =
               "This is the updated Connector. Please provide values for all fields, not just the fields you are updating")
       @NotNull @Valid ConnectorDTO connector,
-      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotBlank @QueryParam(
-          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo) {
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY)
+      @AccountIdentifier String accountIdentifier, @BeanParam GitEntityUpdateInfoDTO gitEntityInfo) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier()),
@@ -322,21 +324,22 @@ public class ConnectorResource {
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete a connector by identifier", nickname = "deleteConnector")
-  @Operation(operationId = "deleteConnector", summary = "Deletes Connector by identifier",
+  @Operation(operationId = "deleteConnector", summary = "Deletes Connector by ID",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns the boolean status")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "It returns true if the Connector is deleted successfully and false if the Connector is not deleted")
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.CONNECTOR, permission = DELETE_CONNECTOR_PERMISSION)
   public ResponseDTO<Boolean>
-  delete(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @QueryParam(
+  delete(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
              NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
-      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY)
-      @ProjectIdentifier @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Connector Identifier") @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotBlank
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = "Connector ID") @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotBlank
       @ResourceIdentifier String connectorIdentifier, @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
       throw new InvalidRequestException("Delete operation not supported for Harness Secret Manager");
@@ -348,20 +351,20 @@ public class ConnectorResource {
   @POST
   @Path("testConnection/{identifier}")
   @ApiOperation(value = "Test the connection", nickname = "getTestConnectionResult")
-  @Operation(operationId = "getTestConnectionResult", summary = "Tests the connection of the Connector by Identifier",
+  @Operation(operationId = "getTestConnectionResult", summary = "Tests the connection of the Connector by ID",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(responseCode = "default", description = "Returns the Connector validation result")
       })
   public ResponseDTO<ConnectorValidationResult>
-  testConnection(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotBlank @QueryParam(
+  testConnection(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
                      NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Connector Identifier") @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY)
+      @Parameter(description = "Connector ID") @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY)
       String connectorIdentifier, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier)
         .map(connector
@@ -376,6 +379,7 @@ public class ConnectorResource {
   }
 
   @POST
+  @Hidden
   @InternalApi
   @Path("testConnectionInternal/{identifier}")
   @ApiOperation(value = "Test the connection internal api", nickname = "getTestConnectionResultInternal")
@@ -406,14 +410,14 @@ public class ConnectorResource {
   @POST
   @Path("testGitRepoConnection/{identifier}")
   @ApiOperation(value = "Test the connection", nickname = "getTestGitRepoConnectionResult")
-  @Operation(operationId = "getTestGitRepoConnectionResult", summary = "Tests the created Connector's connection",
+  @Operation(operationId = "getTestGitRepoConnectionResult", summary = "Tests the Git Repo connection",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(responseCode = "default", description = "Returns the Connector validation result")
       })
   public ResponseDTO<ConnectorValidationResult>
-  testGitRepoConnection(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotBlank @QueryParam(
+  testGitRepoConnection(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
                             NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
@@ -421,7 +425,7 @@ public class ConnectorResource {
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @Parameter(description = "URL of the repository, specify only in the case of Account Type"
               + " Git Connector") @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL,
-      @Parameter(description = "Connector Identifier") @PathParam(
+      @Parameter(description = "Connector ID") @PathParam(
           NGCommonEntityConstants.IDENTIFIER_KEY) @EntityIdentifier String connectorIdentifier) {
     return ResponseDTO.newResponse(connectorService.testGitRepoConnection(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, getDecodedString(repoURL)));
@@ -430,14 +434,14 @@ public class ConnectorResource {
   @GET
   @Path("catalogue")
   @ApiOperation(value = "Get Connector Catalogue", nickname = "getConnectorCatalogue")
-  @Operation(operationId = "getConnectorCatalogue", summary = "Gets the connector catalogue by accountIdentifier",
+  @Operation(operationId = "getConnectorCatalogue", summary = "Gets the Connector catalogue by Account Identifier",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(responseCode = "default", description = "Returns the Connector catalogue response")
       })
   public ResponseDTO<ConnectorCatalogueResponseDTO>
-  getConnectorCatalogue(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotBlank @QueryParam(
+  getConnectorCatalogue(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
       NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(connectorService.getConnectorCatalogue());
   }
@@ -446,14 +450,14 @@ public class ConnectorResource {
   @Path("/stats")
   @ApiOperation(value = "Get Connectors statistics", nickname = "getConnectorStatistics")
   @Operation(operationId = "getConnectorStatistics",
-      summary = "Gets the connector's statistics by accountIdentifier, projectIdentifier and orgIdentifier",
+      summary = "Gets the connector's statistics by Account Identifier, Project Identifier and Organization Identifier",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(responseCode = "default", description = "Returns the Connector's statistics")
       })
   public ResponseDTO<ConnectorStatistics>
-  getConnectorStats(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotBlank @QueryParam(
+  getConnectorStats(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
                         NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY)
@@ -475,7 +479,7 @@ public class ConnectorResource {
         ApiResponse(responseCode = "default", description = "Returns the list of Connectors")
       })
   public ResponseDTO<List<ConnectorResponseDTO>>
-  listConnectorByFQN(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotBlank @QueryParam(
+  listConnectorByFQN(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
                          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @RequestBody(
           required = true, description = "List of ConnectorsFQN as strings") @Body List<String> connectorsFQN) {
@@ -489,7 +493,7 @@ public class ConnectorResource {
   @InternalApi
   @Produces("application/x-kryo")
   public ResponseDTO<ConnectorValidationParameterResponse> getConnectorValidationParams(
-      @Parameter(description = "Connector Identifier") @PathParam(
+      @Parameter(description = "Connector ID") @PathParam(
           NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotBlank @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,

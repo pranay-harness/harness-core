@@ -1757,7 +1757,8 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
       ArgumentCaptor<JSONArray> captor = ArgumentCaptor.forClass(JSONArray.class);
       verify(spyK8sTaskHelperBase, times(1)).updateKustomizationYaml(any(), captor.capture());
       assertThat(captor.getValue()).isNotNull();
-      assertThat(captor.getValue().get(0)).isEqualTo("patches-0.yaml");
+      assertThat(captor.getValue().get(0).toString()).endsWith("patches-0.yaml");
+      assertThat(captor.getValue().get(1).toString()).endsWith("patches-1.yaml");
       // no patches case
       spyK8sTaskHelperBase.savingPatchesToDirectory(temp.toString(), emptyList(), executionLogCallback);
       verify(executionLogCallback, times(1))
@@ -1776,7 +1777,8 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
       ArgumentCaptor<JSONArray> captor = ArgumentCaptor.forClass(JSONArray.class);
       verify(spyK8sTaskHelperBase, times(2)).updateKustomizationYaml(any(), captor.capture());
       assertThat(captor.getValue()).isNotNull();
-      assertThat(captor.getValue().get(0)).isEqualTo("patches-0.yaml");
+      assertThat(captor.getValue().get(0).toString()).endsWith("patches-0.yaml");
+      assertThat(captor.getValue().get(1).toString()).endsWith("patches-1.yaml");
     } finally {
       deleteDirectoryAndItsContentIfExists(temp.toString());
     }

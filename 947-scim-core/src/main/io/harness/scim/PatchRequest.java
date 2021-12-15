@@ -1,6 +1,4 @@
-package software.wings.scim;
-
-import software.wings.beans.scim.ScimBaseResource;
+package io.harness.scim;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

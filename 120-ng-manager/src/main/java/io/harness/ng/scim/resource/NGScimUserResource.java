@@ -2,13 +2,12 @@ package io.harness.ng.scim.resource;
 
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimResource;
+import io.harness.scim.ScimUser;
+import io.harness.scim.service.ScimUserService;
 import io.harness.security.annotations.ScimAPI;
-
-import software.wings.beans.scim.ScimUser;
-import software.wings.resources.ScimResource;
-import software.wings.scim.PatchRequest;
-import software.wings.scim.ScimListResponse;
-import software.wings.scim.ScimUserService;
 
 import com.google.inject.Inject;
 import io.dropwizard.jersey.PATCH;
@@ -65,7 +64,7 @@ public class NGScimUserResource extends ScimResource {
     try {
       return scimUserService.createUser(userQuery, accountIdentifier);
     } catch (Exception ex) {
-      log.error("Failed to create the user", ex);
+      log.error("NGSCIM: Failed to create the user", ex);
       return getExceptionResponse(ex, Response.Status.NOT_FOUND.getStatusCode(), Response.Status.CONFLICT);
     }
   }
@@ -78,7 +77,7 @@ public class NGScimUserResource extends ScimResource {
     try {
       return scimUserService.updateUser(userIdentifier, accountIdentifier, userQuery);
     } catch (Exception ex) {
-      log.info("Failed to update the user with id: {} for account: {}", userIdentifier, accountIdentifier, ex);
+      log.info("NGSCIM: Failed to update the user with id: {} for account: {}", userIdentifier, accountIdentifier, ex);
       return getExceptionResponse(ex, Response.Status.NOT_FOUND.getStatusCode(), Response.Status.NOT_FOUND);
     }
   }
@@ -93,7 +92,7 @@ public class NGScimUserResource extends ScimResource {
           .entity(scimUserService.getUser(userIdentifier, accountIdentifier))
           .build();
     } catch (Exception ex) {
-      log.info("Failed to fetch the user with id: {} for account: {}", userIdentifier, accountIdentifier);
+      log.error("NGSCIM: Failed to fetch the user with id: {} for account: {}", userIdentifier, accountIdentifier);
       return getExceptionResponse(ex, Response.Status.NOT_FOUND.getStatusCode(), Response.Status.NOT_FOUND);
     }
   }
@@ -112,8 +111,8 @@ public class NGScimUserResource extends ScimResource {
           scimUserService.searchUser(accountIdentifier, filter, count, startIndex);
       return Response.status(Response.Status.OK).entity(searchUserResponse).build();
     } catch (Exception ex) {
-      log.error("SCIM: Search user call failed. AccountId: {}, filter: {}, count: {}, startIndex{}", accountIdentifier,
-          filter, count, startIndex, ex);
+      log.error("NGSCIM: Search user call failed. AccountId: {}, filter: {}, count: {}, startIndex: {}",
+          accountIdentifier, filter, count, startIndex, ex);
       return getExceptionResponse(ex, Response.Status.NOT_FOUND.getStatusCode(), Response.Status.NOT_FOUND);
     }
   }

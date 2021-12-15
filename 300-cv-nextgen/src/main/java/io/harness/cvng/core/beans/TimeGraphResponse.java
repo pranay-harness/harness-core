@@ -2,11 +2,13 @@ package io.harness.cvng.core.beans;
 
 import java.util.List;
 import lombok.Builder;
+import lombok.Data;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.experimental.SuperBuilder;
 
-@Value
-@Builder
+@Data
+@SuperBuilder
 public class TimeGraphResponse {
   @NonNull Long startTime;
   @NonNull Long endTime;

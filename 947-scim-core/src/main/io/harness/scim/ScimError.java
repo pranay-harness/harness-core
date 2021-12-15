@@ -1,6 +1,4 @@
-package software.wings.resources;
-
-import software.wings.beans.scim.ScimBaseResource;
+package io.harness.scim;
 
 import java.util.Set;
 import lombok.Builder;

@@ -463,7 +463,12 @@ public class AccountServiceImpl implements AccountService {
 
     enableFeatureFlags(account, fromDataGen);
     if (shouldCreateSampleApp) {
-      sampleDataProviderService.createK8sV2SampleApp(account);
+      if (account.isCreatedFromNG()) {
+        // Asynchronous creates the sample app in NG
+        executorService.submit(() -> sampleDataProviderService.createK8sV2SampleApp(account));
+      } else {
+        sampleDataProviderService.createK8sV2SampleApp(account);
+      }
     }
   }
 
