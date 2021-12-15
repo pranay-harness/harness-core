@@ -17,6 +17,8 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.RESTOR
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateEntityOwner;
+import io.harness.delegate.beans.DelegateTokenDetails;
+import io.harness.delegate.beans.DelegateTokenStatus;
 import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
@@ -97,17 +99,20 @@ public class ProjectEntityCRUDEventListener implements MessageListener {
     try {
       final DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(
           projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
-      delegateNgTokenService.revokeDelegateToken(
+      DelegateTokenDetails defaultTokenForProject = delegateNgTokenService.getDelegateToken(
           projectEntityChangeDTO.getAccountIdentifier(), owner, DelegateNgTokenService.DEFAULT_TOKEN_NAME);
-      log.info("Project {}/{} restored and new default Delegate Token generated.",
-          projectEntityChangeDTO.getAccountIdentifier(), owner.getIdentifier());
-      return true;
+      if (defaultTokenForProject != null && DelegateTokenStatus.ACTIVE.equals(defaultTokenForProject.getStatus())) {
+        delegateNgTokenService.revokeDelegateToken(
+            projectEntityChangeDTO.getAccountIdentifier(), owner, DelegateNgTokenService.DEFAULT_TOKEN_NAME);
+        log.info("Project {}/{} deleted and default Delegate Token revoked.",
+            projectEntityChangeDTO.getAccountIdentifier(), owner.getIdentifier());
+      }
     } catch (final Exception e) {
       log.error("Failed to revoke default Delegate Token for project {}/{}/{}, caused by: {}",
           projectEntityChangeDTO.getAccountIdentifier(), projectEntityChangeDTO.getOrgIdentifier(),
           projectEntityChangeDTO.getIdentifier(), e);
-      return false;
     }
+    return true;
   }
 
   private boolean handleRestoreEvent(final ProjectEntityChangeDTO projectEntityChangeDTO) {

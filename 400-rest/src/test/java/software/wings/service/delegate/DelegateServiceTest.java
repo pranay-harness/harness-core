@@ -97,37 +97,9 @@ import io.harness.capability.service.CapabilityService;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
 import io.harness.delegate.NoEligibleDelegatesInAccountException;
-import io.harness.delegate.beans.ConnectionMode;
-import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.*;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
-import io.harness.delegate.beans.DelegateApproval;
-import io.harness.delegate.beans.DelegateConfiguration;
-import io.harness.delegate.beans.DelegateConnectionHeartbeat;
-import io.harness.delegate.beans.DelegateEntityOwner;
-import io.harness.delegate.beans.DelegateGroup;
-import io.harness.delegate.beans.DelegateGroupStatus;
-import io.harness.delegate.beans.DelegateInstanceStatus;
-import io.harness.delegate.beans.DelegateMetaInfo;
-import io.harness.delegate.beans.DelegateParams;
-import io.harness.delegate.beans.DelegateProfile;
-import io.harness.delegate.beans.DelegateProfileParams;
-import io.harness.delegate.beans.DelegateRegisterResponse;
-import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.beans.DelegateSetupDetails;
-import io.harness.delegate.beans.DelegateSize;
-import io.harness.delegate.beans.DelegateSizeDetails;
-import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.DelegateType;
-import io.harness.delegate.beans.DuplicateDelegateException;
-import io.harness.delegate.beans.FileBucket;
-import io.harness.delegate.beans.FileMetadata;
-import io.harness.delegate.beans.FileUploadLimit;
-import io.harness.delegate.beans.K8sConfigDetails;
-import io.harness.delegate.beans.K8sPermissionType;
-import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
@@ -146,13 +118,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
-import io.harness.service.intfc.DelegateCache;
-import io.harness.service.intfc.DelegateInsightsService;
-import io.harness.service.intfc.DelegateProfileObserver;
-import io.harness.service.intfc.DelegateSyncService;
-import io.harness.service.intfc.DelegateTaskRetryObserver;
-import io.harness.service.intfc.DelegateTaskService;
-import io.harness.service.intfc.DelegateTokenService;
+import io.harness.service.intfc.*;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
@@ -293,6 +259,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private DelegateTokenService delegateTokenService;
   @Mock private Producer eventProducer;
   @Mock private OutboxService outboxService;
+  @Mock private DelegateNgTokenService delegateNgTokenService;
 
   @Inject private FeatureTestHelper featureTestHelper;
   @Inject private DelegateConnectionDao delegateConnectionDao;
@@ -3594,6 +3561,22 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
 
+    DelegateTokenDetails defaultToken = DelegateTokenDetails.builder()
+            .name("default")
+            .status(DelegateTokenStatus.ACTIVE)
+            .value("TOKEN_VALUE")
+            .build();
+    when(delegateNgTokenService.getDelegateToken(
+            ACCOUNT_ID,
+            DelegateEntityOwner.builder().identifier("9S5HMP0xROugl3_QgO62rQO/9S5HMP0xROugl3_QgO62rQP").build(),
+            "default"))
+            .thenReturn(defaultToken);
+    when(delegateNgTokenService.getDelegateTokenValue(
+            ACCOUNT_ID,
+            DelegateEntityOwner.builder().identifier("9S5HMP0xROugl3_QgO62rQO/9S5HMP0xROugl3_QgO62rQP").build(),
+            "default"))
+            .thenReturn("TOKEN_VALUE");
+
     DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
                                             .orgIdentifier("9S5HMP0xROugl3_QgO62rQO")
                                             .projectIdentifier("9S5HMP0xROugl3_QgO62rQP")
@@ -3601,6 +3584,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                             .identifier("_delegateGroupId1")
                                             .description("desc")
                                             .delegateType(DelegateType.DOCKER)
+                                            .tokenName("default")
                                             .build();
 
     File file =

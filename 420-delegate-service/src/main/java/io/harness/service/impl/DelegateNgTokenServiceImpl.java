@@ -9,6 +9,8 @@ package io.harness.service.impl;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
+import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -33,6 +35,7 @@ import io.harness.utils.Misc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
@@ -40,18 +43,29 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Singleton
 @Slf4j
 @ValidateOnExecution
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateNgTokenServiceImpl implements DelegateNgTokenService {
-  @Inject private HPersistence persistence;
-  @Inject private OutboxService outboxService;
+  private final HPersistence persistence;
+  private final OutboxService outboxService;
+  private final TransactionTemplate transactionTemplate;
+
+  @Inject
+  public DelegateNgTokenServiceImpl(HPersistence persistence, OutboxService outboxService,
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
+    this.persistence = persistence;
+    this.outboxService = outboxService;
+    this.transactionTemplate = transactionTemplate;
+  }
 
   @Override
   public DelegateTokenDetails createToken(String accountId, DelegateEntityOwner owner, String name) {
@@ -145,6 +159,7 @@ public class DelegateNgTokenServiceImpl implements DelegateNgTokenService {
     DelegateNgToken delegateToken = persistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
     log.info("Default Delegate NG Token inserted/updated for account {}, organization {} and project {}",
         accountIdentifier, extractOrganization(owner), extractProject(owner));
+    publishCreateTokenAuditEvent(delegateToken);
     return getDelegateTokenDetails(delegateToken, true);
   }
 
@@ -179,6 +194,16 @@ public class DelegateNgTokenServiceImpl implements DelegateNgTokenService {
         .asList();
   }
 
+  public List<DelegateTokenDetails> getDelegateTokensForAccountByStatus(String accountId, DelegateTokenStatus status) {
+    Query<DelegateNgToken> query = persistence.createQuery(DelegateNgToken.class)
+                                       .field(DelegateNgTokenKeys.accountId)
+                                       .equal(accountId)
+                                       .field(DelegateNgTokenKeys.status)
+                                       .equal(status);
+    List<DelegateNgToken> queryResult = query.asList();
+    return queryResult.stream().map(token -> getDelegateTokenDetails(token, true)).collect(Collectors.toList());
+  }
+
   private Query<DelegateNgToken> nameStartsWithTokenQuery(
       String accountId, DelegateEntityOwner owner, String tokenName) {
     Query<DelegateNgToken> query =
@@ -210,12 +235,12 @@ public class DelegateNgTokenServiceImpl implements DelegateNgTokenService {
         .createdBy(delegateToken.getCreatedBy())
         .status(delegateToken.getStatus());
 
-    if (includeTokenValue) {
-      delegateTokenDetailsBuilder.value(decodeBase64ToString(delegateToken.getValue()));
-    }
-
     if (delegateToken.getOwner() != null) {
       delegateTokenDetailsBuilder.ownerIdentifier(delegateToken.getOwner().getIdentifier());
+    }
+
+    if (includeTokenValue) {
+      delegateTokenDetailsBuilder.value(decodeBase64ToString(delegateToken.getValue()));
     }
 
     return delegateTokenDetailsBuilder.build();
@@ -223,12 +248,22 @@ public class DelegateNgTokenServiceImpl implements DelegateNgTokenService {
 
   private OutboxEvent publishCreateTokenAuditEvent(DelegateNgToken delegateToken) {
     DelegateNgTokenDTO token = convert(delegateToken);
-    return outboxService.save(DelegateNgTokenCreateEvent.builder().token(token).build());
+    log.info("Sending outbox event for create delegate token {}/{}/{}", delegateToken.getAccountId(),
+        delegateToken.getOwner() != null ? delegateToken.getOwner().getIdentifier() : "", delegateToken.getName());
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY)
+        .get(()
+                 -> transactionTemplate.execute(
+                     status -> outboxService.save(DelegateNgTokenCreateEvent.builder().token(token).build())));
   }
 
   private OutboxEvent publishRevokeTokenAuditEvent(DelegateNgToken delegateToken) {
     DelegateNgTokenDTO token = convert(delegateToken);
-    return outboxService.save(DelegateNgTokenRevokeEvent.builder().token(token).build());
+    log.info("Sending outbox event for revoke delegate token {}/{}/{}", delegateToken.getAccountId(),
+        delegateToken.getOwner() != null ? delegateToken.getOwner().getIdentifier() : "", delegateToken.getName());
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY)
+        .get(()
+                 -> transactionTemplate.execute(
+                     status -> outboxService.save(DelegateNgTokenRevokeEvent.builder().token(token).build())));
   }
 
   private DelegateNgTokenDTO convert(DelegateNgToken delegateToken) {

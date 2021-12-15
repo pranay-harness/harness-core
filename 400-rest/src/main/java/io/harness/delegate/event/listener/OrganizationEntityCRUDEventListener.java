@@ -17,6 +17,8 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.RESTOR
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateEntityOwner;
+import io.harness.delegate.beans.DelegateTokenDetails;
+import io.harness.delegate.beans.DelegateTokenStatus;
 import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
@@ -97,17 +99,22 @@ public class OrganizationEntityCRUDEventListener implements MessageListener {
 
   private boolean handleDeleteEvent(final OrganizationEntityChangeDTO organizationEntityChangeDTO) {
     try {
-      delegateNgTokenService.revokeDelegateToken(organizationEntityChangeDTO.getAccountIdentifier(),
-          DelegateEntityOwnerHelper.buildOwner(organizationEntityChangeDTO.getIdentifier(), StringUtils.EMPTY),
-          DelegateNgTokenService.DEFAULT_TOKEN_NAME);
-      log.info("Organization {}/{} deleted and default Delegate Token revoked.",
-          organizationEntityChangeDTO.getAccountIdentifier(), organizationEntityChangeDTO.getIdentifier());
-      return true;
+      final DelegateEntityOwner owner =
+          DelegateEntityOwnerHelper.buildOwner(organizationEntityChangeDTO.getIdentifier(), StringUtils.EMPTY);
+      DelegateTokenDetails defaultTokenForOrganization = delegateNgTokenService.getDelegateToken(
+          organizationEntityChangeDTO.getAccountIdentifier(), owner, DelegateNgTokenService.DEFAULT_TOKEN_NAME);
+      if (defaultTokenForOrganization != null
+          && DelegateTokenStatus.ACTIVE.equals(defaultTokenForOrganization.getStatus())) {
+        delegateNgTokenService.revokeDelegateToken(
+            organizationEntityChangeDTO.getAccountIdentifier(), owner, DelegateNgTokenService.DEFAULT_TOKEN_NAME);
+        log.info("Organization {}/{} deleted and default Delegate Token revoked.",
+            organizationEntityChangeDTO.getAccountIdentifier(), organizationEntityChangeDTO.getIdentifier());
+      }
     } catch (final Exception e) {
       log.error("Failed to revoke default Delegate Token for organization {}/{}, caused by: {}",
           organizationEntityChangeDTO.getAccountIdentifier(), organizationEntityChangeDTO.getIdentifier(), e);
-      return false;
     }
+    return true;
   }
 
   private boolean handleRestoreEvent(final OrganizationEntityChangeDTO organizationEntityChangeDTO) {

@@ -10,8 +10,9 @@ package io.harness.security;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.security.dto.DelegateTokenInfo;
 
 @OwnedBy(DEL)
 public interface DelegateTokenAuthenticator {
-  void validateDelegateToken(String accountId, String tokenString);
+  DelegateTokenInfo validateDelegateToken(String accountId, String tokenString);
 }

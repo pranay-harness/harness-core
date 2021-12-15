@@ -9,6 +9,7 @@ package io.harness.rule;
 
 import static io.harness.lock.DistributedLockImplementation.NOOP;
 
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static org.mockito.Mockito.mock;
 
 import io.harness.cf.AbstractCfModule;
@@ -41,6 +42,7 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.service.DelegateServiceModule;
+import io.harness.springdata.HTransactionTemplate;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -69,6 +71,8 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.data.mongodb.MongoTransactionManager;
 
 @Slf4j
 public class DelegateServiceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
@@ -128,6 +132,14 @@ public class DelegateServiceRule implements MethodRule, InjectorRuleMixin, Mongo
       @Singleton
       DistributedLockImplementation distributedLockImplementation() {
         return NOOP;
+      }
+
+      @Provides
+      @Named(OUTBOX_TRANSACTION_TEMPLATE)
+      @Singleton
+      TransactionTemplate getTransactionTemplate(
+              MongoTransactionManager mongoTransactionManager) {
+        return new HTransactionTemplate(mongoTransactionManager, false);
       }
     });
 

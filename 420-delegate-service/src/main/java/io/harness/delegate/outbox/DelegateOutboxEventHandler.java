@@ -22,24 +22,38 @@ import io.harness.delegate.events.DelegateGroupDeleteEvent;
 import io.harness.delegate.events.DelegateGroupUpsertEvent;
 import io.harness.delegate.events.DelegateNgTokenCreateEvent;
 import io.harness.delegate.events.DelegateNgTokenRevokeEvent;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.entity_crud.EntityChangeDTO;
+import io.harness.eventsframework.producer.Message;
+import io.harness.ng.core.ProjectScope;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.remote.NGObjectMapperHelper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.google.protobuf.StringValue;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
 public class DelegateOutboxEventHandler implements OutboxEventHandler {
-  private ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
   private final AuditClientService auditClientService;
+  private final Producer eventProducer;
+
   @Inject
-  DelegateOutboxEventHandler(AuditClientService auditClientService) {
+  DelegateOutboxEventHandler(
+      AuditClientService auditClientService, @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer) {
     this.objectMapper = NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
     this.auditClientService = auditClientService;
+    this.eventProducer = eventProducer;
   }
 
   @Override
@@ -96,6 +110,13 @@ public class DelegateOutboxEventHandler implements OutboxEventHandler {
 
   private boolean handleDelegateNgTokenCreateEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
+
+    String accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    String orgIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getOrgIdentifier();
+    String projectIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getProjectIdentifier();
+    boolean publishedToRedis = publishEvent(accountIdentifier, orgIdentifier, projectIdentifier,
+        outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.CREATE_ACTION);
+
     DelegateNgTokenCreateEvent delegateNgTokenCreateEvent =
         objectMapper.readValue(outboxEvent.getEventData(), DelegateNgTokenCreateEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
@@ -107,11 +128,18 @@ public class DelegateOutboxEventHandler implements OutboxEventHandler {
                                 .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
                                 .insertId(outboxEvent.getId())
                                 .build();
-    return auditClientService.publishAudit(auditEntry, globalContext);
+    return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
   }
 
   private boolean handleDelegateNgTokenRevokeEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
+
+    String accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    String orgIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getOrgIdentifier();
+    String projectIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getProjectIdentifier();
+    boolean publishedToRedis = publishEvent(accountIdentifier, orgIdentifier, projectIdentifier,
+        outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.REVOKE_ACTION);
+
     DelegateNgTokenRevokeEvent delegateNgTokenRevokeEvent =
         objectMapper.readValue(outboxEvent.getEventData(), DelegateNgTokenRevokeEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
@@ -123,6 +151,31 @@ public class DelegateOutboxEventHandler implements OutboxEventHandler {
                                 .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
                                 .insertId(outboxEvent.getId())
                                 .build();
-    return auditClientService.publishAudit(auditEntry, globalContext);
+    return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
+  }
+
+  private boolean publishEvent(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String action) {
+    try {
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(
+                  ImmutableMap.of("accountId", accountIdentifier, EventsFrameworkMetadataConstants.ENTITY_TYPE,
+                      EventsFrameworkMetadataConstants.DELEGATE_NG_TOKEN_ENTITY,
+                      EventsFrameworkMetadataConstants.ACTION, action))
+              .setData(EntityChangeDTO.newBuilder()
+                           .setIdentifier(StringValue.of(identifier))
+                           .setOrgIdentifier(orgIdentifier != null ? StringValue.of(orgIdentifier) : StringValue.of(""))
+                           .setProjectIdentifier(
+                               projectIdentifier != null ? StringValue.of(projectIdentifier) : StringValue.of(""))
+                           .setIdentifier(StringValue.of(identifier))
+                           .build()
+                           .toByteString())
+              .build());
+      return true;
+    } catch (EventsFrameworkDownException e) {
+      log.error("Failed to send " + action + " event to events framework api for Delegate NG Token: " + identifier, e);
+      return false;
+    }
   }
 }

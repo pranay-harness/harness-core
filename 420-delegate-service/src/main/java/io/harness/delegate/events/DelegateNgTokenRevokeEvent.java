@@ -11,7 +11,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.ResourceTypeConstants;
 import io.harness.beans.Scope;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.dto.DelegateNgTokenDTO;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.mapper.ResourceScopeMapper;
@@ -33,7 +35,7 @@ public class DelegateNgTokenRevokeEvent extends AbstractDelegateConfigurationEve
 
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(token.getIdentifier()).type(ResourceTypeConstants.DELEGATE_TOKEN).build();
+    return Resource.builder().identifier(createTokenIdentifier()).type(ResourceTypeConstants.DELEGATE_TOKEN).build();
   }
 
   @Override
@@ -46,5 +48,11 @@ public class DelegateNgTokenRevokeEvent extends AbstractDelegateConfigurationEve
   public ResourceScope getResourceScope() {
     return ResourceScopeMapper.getResourceScope(
         Scope.of(token.getAccountIdentifier(), token.getOrgIdentifier(), token.getProjectIdentifier()));
+  }
+
+  private String createTokenIdentifier() {
+    DelegateEntityOwner owner =
+        DelegateEntityOwnerHelper.buildOwner(token.getOrgIdentifier(), token.getProjectIdentifier());
+    return token.getAccountIdentifier() + (owner != null ? "/" + owner.getIdentifier() : "") + ":" + token.getName();
   }
 }

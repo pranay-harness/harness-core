@@ -54,6 +54,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HPersistence;
 import io.harness.security.DelegateTokenAuthenticator;
+import io.harness.security.dto.DelegateTokenInfo;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.version.VersionInfoManager;
 
@@ -395,8 +396,8 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public void validateDelegateToken(String accountId, String tokenString) {
-    delegateTokenAuthenticator.validateDelegateToken(accountId, tokenString);
+  public DelegateTokenInfo validateDelegateToken(String accountId, String tokenString) {
+    return delegateTokenAuthenticator.validateDelegateToken(accountId, tokenString);
   }
 
   @Override

@@ -25,6 +25,7 @@ public final class EventsFrameworkMetadataConstants {
   public static final String UPSERT_ACTION = "upsert";
   public static final String DELETE_ACTION = "delete";
   public static final String FLUSH_CREATE_ACTION = "flushCreate";
+  public static final String REVOKE_ACTION = "revoke";
 
   public static final String PROJECT_ENTITY = "project";
   public static final String ORGANIZATION_ENTITY = "organization";
@@ -36,6 +37,7 @@ public final class EventsFrameworkMetadataConstants {
   public static final String DELEGATE_ENTITY = "delegate";
   public static final String DELEGATE_CONFIGURATION_ENTITY = "delegateconfiguration";
   public static final String USER_SCOPE_RECONCILIATION = "userScopeReconciliation";
+  public static final String DELEGATE_NG_TOKEN_ENTITY = "delegateNgToken";
 
   public static final String SERVICE_ENTITY = "service";
   public static final String ENVIRONMENT_ENTITY = "environment";

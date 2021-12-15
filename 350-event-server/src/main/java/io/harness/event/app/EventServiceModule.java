@@ -63,7 +63,6 @@ public class EventServiceModule extends AbstractModule {
     bind(EventServiceConfig.class).toInstance(eventServiceConfig);
     bind(HPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
-    bind(DelegateTokenAuthenticator.class).to(DelegateTokenEventServerAuthenticatorImpl.class).in(Singleton.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
     bind(EncryptedSettingAttributes.class).to(NoOpSecretManagerImpl.class);
     bind(LastReceivedPublishedMessageRepository.class).to(LastReceivedPublishedMessageRepositoryImpl.class);
@@ -100,6 +99,7 @@ public class EventServiceModule extends AbstractModule {
 
     install(new MetricsModule());
     bind(MetricsPublisher.class).to(EventServiceMetricsPublisher.class).in(Scopes.SINGLETON);
+    bind(DelegateTokenAuthenticator.class).to(DelegateTokenEventServerAuthenticatorImpl.class).in(Scopes.SINGLETON);
   }
 
   @Provides

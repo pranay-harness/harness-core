@@ -995,10 +995,20 @@ public class DelegateSetupResourceV3 {
       { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Validates docker delegate details.") })
   public RestResponse<Void>
   validateDockerSetupDetails(@Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Delegate name") @QueryParam("delegateName") String delegateName) {
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @Parameter(description = "Delegate name") @QueryParam("delegateName") String delegateName,
+      @Parameter(description = "Delegate Token name") @QueryParam("tokenName") String tokenName) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      DelegateSetupDetails delegateSetupDetails =
-          DelegateSetupDetails.builder().delegateType(DOCKER).name(delegateName).build();
+      DelegateSetupDetails delegateSetupDetails = DelegateSetupDetails.builder()
+                                                      .delegateType(DOCKER)
+                                                      .name(delegateName)
+                                                      .tokenName(tokenName)
+                                                      .orgIdentifier(orgId)
+                                                      .projectIdentifier(projectId)
+                                                      .build();
       delegateService.validateDockerSetupDetailsNg(accountId, delegateSetupDetails, DOCKER);
 
       return new RestResponse<>();
@@ -1074,7 +1084,7 @@ public class DelegateSetupResourceV3 {
   public Response
   generateKubernetesYamlUsingNgToken(@Context HttpServletRequest request,
       @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @QueryParam(
-          NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountId,
+          "accountId") @NotEmpty String accountId,
       @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ORG_KEY) String orgId,
       @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(

@@ -11,6 +11,7 @@ import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.audit.ResourceTypeConstants.API_KEY;
 import static io.harness.audit.ResourceTypeConstants.CONNECTOR;
 import static io.harness.audit.ResourceTypeConstants.DELEGATE_CONFIGURATION;
+import static io.harness.audit.ResourceTypeConstants.DELEGATE_TOKEN;
 import static io.harness.audit.ResourceTypeConstants.ENVIRONMENT;
 import static io.harness.audit.ResourceTypeConstants.ORGANIZATION;
 import static io.harness.audit.ResourceTypeConstants.PROJECT;
@@ -68,6 +69,7 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.delegate.outbox.DelegateOutboxEventHandler;
 import io.harness.encryptors.Encryptors;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.VaultEncryptor;
@@ -738,6 +740,7 @@ public class NextGenModule extends AbstractModule {
     outboxEventHandlerMapBinder.addBinding(ENVIRONMENT).to(EnvironmentEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(API_KEY).to(ApiKeyEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(TOKEN).to(TokenEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(DELEGATE_TOKEN).to(DelegateOutboxEventHandler.class);
   }
 
   private void registerEventsFrameworkMessageListeners() {

@@ -600,9 +600,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateSetupDetails validateKubernetesYamlNg(String accountId, DelegateSetupDetails delegateSetupDetails) {
     validateKubernetesSetupDetails(accountId, delegateSetupDetails);
-    if (hasToken(delegateSetupDetails)) {
-      validateDelegateToken(accountId, delegateSetupDetails);
-    }
+    validateDelegateToken(accountId, delegateSetupDetails);
     return delegateSetupDetails;
   }
 
@@ -887,6 +885,7 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, DelegateKeys.ceEnabled, delegate.isCeEnabled());
     setUnset(updateOperations, DelegateKeys.supportedTaskTypes, delegate.getSupportedTaskTypes());
     setUnset(updateOperations, DelegateKeys.delegateTokenName, delegate.getDelegateTokenName());
+    setUnset(updateOperations, DelegateKeys.owner_identifier, delegate.getOwner());
     return updateOperations;
   }
 
@@ -1101,10 +1100,14 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateScripts getDelegateScripts(String accountId, String version, String managerHost,
       String verificationHost, String delegateName) throws IOException {
     String delegateTokenName = EMPTY;
+    String tokenOrgIdentifier = EMPTY;
+    String tokenProjectIdentifier = EMPTY;
     DelegateTokenGlobalContextData delegateTokenGlobalContextData =
         GlobalContextManager.get(DelegateTokenGlobalContextData.TOKEN_NAME);
     if (delegateTokenGlobalContextData != null) {
       delegateTokenName = delegateTokenGlobalContextData.getTokenName();
+      tokenOrgIdentifier = delegateTokenGlobalContextData.getOrgIdentifier();
+      tokenProjectIdentifier = delegateTokenGlobalContextData.getProjectIdentifier();
     } else {
       log.warn("DelegateTokenGlobalContextData was found null in GlobalContextManager");
     }
@@ -1117,6 +1120,8 @@ public class DelegateServiceImpl implements DelegateService {
             .verificationHost(verificationHost)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(delegateTokenName)
+            .delegateOrgIdentifier(tokenOrgIdentifier)
+            .delegateProjectIdentifier(tokenProjectIdentifier)
             .delegateName(StringUtils.defaultString(delegateName))
             .build(),
         false);
@@ -1434,14 +1439,25 @@ public class DelegateServiceImpl implements DelegateService {
   private String getAccountSecret(final TemplateParameters inquiry, final boolean useNgToken) {
     final Account account = accountService.get(inquiry.getAccountId());
     if (isNotBlank(inquiry.getDelegateTokenName())) {
+      String delegateTokenValue = null;
       if (useNgToken) {
-        return delegateNgTokenService.getDelegateTokenValue(inquiry.getAccountId(),
+        delegateTokenValue = delegateNgTokenService.getDelegateTokenValue(inquiry.getAccountId(),
             DelegateEntityOwnerHelper.buildOwner(
                 inquiry.getDelegateOrgIdentifier(), inquiry.getDelegateProjectIdentifier()),
             inquiry.getDelegateTokenName());
+        if (null == delegateTokenValue) {
+          throw new InvalidRequestException(
+              format("Delegate NG Token %s with owner %s/%s can not be found.", inquiry.getDelegateTokenName(),
+                  inquiry.getDelegateOrgIdentifier(), inquiry.getDelegateProjectIdentifier()));
+        }
       } else {
-        return delegateTokenService.getTokenValue(inquiry.getAccountId(), inquiry.getDelegateTokenName());
+        delegateTokenValue = delegateTokenService.getTokenValue(inquiry.getAccountId(), inquiry.getDelegateTokenName());
+        if (null == delegateTokenValue) {
+          throw new InvalidRequestException(
+              format("Delegate Token %s can not be found.", inquiry.getDelegateTokenName()));
+        }
       }
+      return delegateTokenValue;
     } else {
       return account.getAccountKey();
     }
@@ -3774,13 +3790,7 @@ public class DelegateServiceImpl implements DelegateService {
   public void validateDockerSetupDetailsNg(
       String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType) {
     validateDelegateSetupDetails(accountId, delegateSetupDetails, delegateType);
-    if (hasToken(delegateSetupDetails)) {
-      validateDelegateToken(accountId, delegateSetupDetails);
-    }
-  }
-
-  private boolean hasToken(DelegateSetupDetails delegateSetupDetails) {
-    return delegateSetupDetails != null && isNotBlank(delegateSetupDetails.getTokenName());
+    validateDelegateToken(accountId, delegateSetupDetails);
   }
 
   public void validateDelegateSetupDetails(
@@ -3949,6 +3959,7 @@ public class DelegateServiceImpl implements DelegateService {
             .managerHost(managerHost)
             .verificationHost(verificationServiceUrl)
             .delegateName(delegateName)
+            .delegateTokenName(delegateSetupDetails != null ? delegateSetupDetails.getTokenName() : null)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .ceEnabled(false)
             .build();

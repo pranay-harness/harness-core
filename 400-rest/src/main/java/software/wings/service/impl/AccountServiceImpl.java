@@ -1165,7 +1165,11 @@ public class AccountServiceImpl implements AccountService {
     updateMigratedToClusterUrl(account, migratedToClusterUrl);
     // Also need to prevent all existing users in the migration account from logging in after completion of migration.
     setUserStatusInAccount(accountId, false);
-    delegateNgTokenService.revokeDelegateToken(accountId, null, delegateNgTokenService.DEFAULT_TOKEN_NAME);
+    try {
+      delegateNgTokenService.revokeDelegateToken(accountId, null, delegateNgTokenService.DEFAULT_TOKEN_NAME);
+    } catch (InvalidRequestException e) {
+      log.warn("Failed to revoke Delegate Token.", e);
+    }
     return setAccountStatusInternal(account, AccountStatus.INACTIVE);
   }
 

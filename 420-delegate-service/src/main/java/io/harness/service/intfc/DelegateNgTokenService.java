@@ -14,7 +14,7 @@ import io.harness.delegate.beans.DelegateTokenStatus;
 import java.util.List;
 
 public interface DelegateNgTokenService {
-  String DEFAULT_TOKEN_NAME = "Default";
+  String DEFAULT_TOKEN_NAME = "default";
 
   DelegateTokenDetails createToken(String accountId, DelegateEntityOwner owner, String name);
 
@@ -31,4 +31,6 @@ public interface DelegateNgTokenService {
   List<String> getOrgsWithActiveDefaultDelegateTokens(String accountId);
 
   List<String> getProjectsWithActiveDefaultDelegateTokens(String accountId);
+
+  List<DelegateTokenDetails> getDelegateTokensForAccountByStatus(String accountId, DelegateTokenStatus status);
 }

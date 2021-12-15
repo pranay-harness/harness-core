@@ -21,6 +21,8 @@ import lombok.Value;
 public class DelegateTokenGlobalContextData implements GlobalContextData {
   public static final String TOKEN_NAME = "TOKEN_NAME";
   private String tokenName;
+  private String orgIdentifier;
+  private String projectIdentifier;
 
   @Override
   public String getKey() {
