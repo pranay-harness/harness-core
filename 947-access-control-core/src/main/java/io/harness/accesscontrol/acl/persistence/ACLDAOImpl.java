@@ -29,6 +29,8 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 public class ACLDAOImpl implements ACLDAO {
   private static final String PATH_DELIMITER = "/";
+  private static final String ALL_RESOURCES_IDENTIFIER = "*";
+  private static final String INCLUDE_CHILD_SCOPES_IDENTIFIER = "**";
   private final ACLRepository aclRepository;
   private final Set<String> scopeResourceTypes;
   private final Set<String> createScopePermissions = Sets.newHashSet("core_project_create", "core_organization_create");
@@ -45,7 +47,11 @@ public class ACLDAOImpl implements ACLDAO {
   }
 
   private String getIncludeChildScopesResourceSelector(String resourceType) {
-    return PATH_DELIMITER.concat("**").concat(PATH_DELIMITER).concat(resourceType).concat(PATH_DELIMITER).concat("*");
+    return PATH_DELIMITER.concat(INCLUDE_CHILD_SCOPES_IDENTIFIER)
+        .concat(PATH_DELIMITER)
+        .concat(resourceType)
+        .concat(PATH_DELIMITER)
+        .concat(ALL_RESOURCES_IDENTIFIER);
   }
 
   private Set<String> getQueryStrings(PermissionCheck permissionCheck, Principal principal) {
@@ -64,12 +70,12 @@ public class ACLDAOImpl implements ACLDAO {
     if (!scopeResourceTypes.contains(resourceType)
         || createScopePermissions.contains(permissionCheck.getPermission())) {
       // query for resource=/RESOURCE_TYPE/* in given scope
-      queryStrings.add(getAclQueryString(scope, getResourceSelector(resourceType, "*"),
+      queryStrings.add(getAclQueryString(scope, getResourceSelector(resourceType, ALL_RESOURCES_IDENTIFIER),
           principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
 
       // query for resource=/*/* in given scope
-      queryStrings.add(getAclQueryString(scope, getResourceSelector("*", "*"), principal.getPrincipalType().name(),
-          principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+      queryStrings.add(getAclQueryString(scope, getResourceSelector(ALL_RESOURCES_IDENTIFIER, ALL_RESOURCES_IDENTIFIER),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
     }
 
     Scope currentScope = permissionCheck.getResourceScope();
@@ -79,8 +85,9 @@ public class ACLDAOImpl implements ACLDAO {
           principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
 
       // query for resource=/**/*/* in given scope
-      queryStrings.add(getAclQueryString(currentScope.toString(), getIncludeChildScopesResourceSelector("*"),
-          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+      queryStrings.add(getAclQueryString(currentScope.toString(),
+          getIncludeChildScopesResourceSelector(ALL_RESOURCES_IDENTIFIER), principal.getPrincipalType().name(),
+          principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
 
       currentScope = currentScope.getParentScope();
     }
@@ -96,19 +103,19 @@ public class ACLDAOImpl implements ACLDAO {
       }
 
       // and resource = /RESOURCE_TYPE/*
-      queryStrings.add(getAclQueryString(scope, getResourceSelector(resourceType, "*"),
+      queryStrings.add(getAclQueryString(scope, getResourceSelector(resourceType, ALL_RESOURCES_IDENTIFIER),
           principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
 
       // and resource = /*/*
-      queryStrings.add(getAclQueryString(scope, getResourceSelector("*", "*"), principal.getPrincipalType().name(),
-          principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+      queryStrings.add(getAclQueryString(scope, getResourceSelector(ALL_RESOURCES_IDENTIFIER, ALL_RESOURCES_IDENTIFIER),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
 
       // query for resource=/**/RESOURCE_TYPE/* in given scope
       queryStrings.add(getAclQueryString(scope, getIncludeChildScopesResourceSelector(resourceType),
           principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
 
       // query for resource=/**/*/* in given scope
-      queryStrings.add(getAclQueryString(scope, getIncludeChildScopesResourceSelector("*"),
+      queryStrings.add(getAclQueryString(scope, getIncludeChildScopesResourceSelector(ALL_RESOURCES_IDENTIFIER),
           principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
     }
     return queryStrings;
