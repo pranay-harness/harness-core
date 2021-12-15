@@ -3217,9 +3217,7 @@
         {
           "type": "object",
           "required": [
-            "command",
-            "connectorRef",
-            "image"
+            "command"
           ],
           "properties": {
             "command": {
@@ -4767,6 +4765,12 @@
           "properties": {
             "ciExecutionArgs": {
               "$ref": "#/definitions/CIExecutionArgs"
+            },
+            "connectorRefIdentifierList": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "stageVars": {
               "type": "array",
