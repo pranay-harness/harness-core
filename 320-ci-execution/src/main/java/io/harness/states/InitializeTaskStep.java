@@ -13,7 +13,7 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.dependencies.ServiceDependency;
-import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.environment.*;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
@@ -344,6 +344,13 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
 
     // TODO (shubham): Add entity details for aws vm
     if (infrastructure.getType() == Infrastructure.Type.VM) {
+      ArrayList<String> connectorRefIdentifierList =
+          ((VmBuildJobInfo) initializeStepInfo.getBuildJobEnvInfo()).getConnectorRefIdentifierList();
+      entityDetails.addAll(
+          connectorRefIdentifierList.stream()
+              .map(connectorIdentifier
+                  -> createEntityDetails(connectorIdentifier, accountIdentifier, projectIdentifier, orgIdentifier))
+              .collect(Collectors.toList()));
       return entityDetails;
     }
 

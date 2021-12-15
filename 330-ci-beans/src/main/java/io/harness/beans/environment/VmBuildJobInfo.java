@@ -2,6 +2,7 @@ package io.harness.beans.environment;
 
 import io.harness.beans.executionargs.CIExecutionArgs;
 
+import java.util.*;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
@@ -19,6 +20,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class VmBuildJobInfo implements BuildJobEnvInfo {
   @NotEmpty private String workDir;
   private CIExecutionArgs ciExecutionArgs;
+  private ArrayList<String> connectorRefIdentifierList;
 
   @Override
   public Type getType() {

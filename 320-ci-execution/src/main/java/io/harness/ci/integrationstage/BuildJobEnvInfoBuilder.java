@@ -9,18 +9,23 @@ import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.VmBuildJobInfo;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.stages.IntegrationStageConfig;
+import io.harness.beans.steps.CIStepInfo;
+import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.stepinfo.InitializeStepInfo;
+import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure.Type;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.timeout.Timeout;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,9 +50,21 @@ public class BuildJobEnvInfoBuilder {
           stageElementConfig, ciExecutionArgs, steps, accountId);
     } // TODO (shubham): Handle Use from stage for AWS VM
     else if (infrastructure.getType() == Type.VM) {
+      for (ExecutionWrapperConfig executionWrapper : steps) {
+        StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
+        if (stepElementConfig.getStepSpecType() instanceof CIStepInfo) {
+          CIStepInfo ciStepInfo = (CIStepInfo) stepElementConfig.getStepSpecType();
+          if (ciStepInfo.getNonYamlInfo().getStepInfoType() == CIStepInfoType.RUN) {
+            RunStepInfo runStepInfo = (RunStepInfo) ciStepInfo;
+            if (runStepInfo.getImage() != null && runStepInfo.getConnectorRef() == null) {
+              throw new CIStageExecutionException("connector ref can't be empty if image is provided");
+            }
+          }
+        }
+      }
       return VmBuildJobInfo.builder().workDir(STEP_WORK_DIR).ciExecutionArgs(ciExecutionArgs).build();
     } else {
-      throw new IllegalArgumentException("Input infrastructure type is not of type kubernetes");
+      throw new IllegalArgumentException("Input infrastructure type is not of type kubernetes or VM");
     }
   }
 
