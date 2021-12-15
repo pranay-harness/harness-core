@@ -137,6 +137,9 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskP
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
 import io.harness.delegate.beans.connector.nexusconnector.NexusValidationParams;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
+import io.harness.delegate.beans.connector.servicenow.ServiceNowConnectionTaskParams;
+import io.harness.delegate.beans.connector.servicenow.ServiceNowValidationParams;
+import io.harness.delegate.beans.connector.servicenow.connection.ServiceNowTestConnectionTaskNGResponse;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskParams;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskResponse;
 import io.harness.delegate.beans.connector.vaultconnector.VaultValidationParams;
@@ -378,6 +381,7 @@ import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskParams;
 import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskResponse;
 import io.harness.delegate.task.scm.ScmPushTaskParams;
 import io.harness.delegate.task.scm.ScmPushTaskResponseData;
+import io.harness.delegate.task.servicenow.ServiceNowTaskNGResponse;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.task.shell.ShellScriptTaskParametersNG;
 import io.harness.delegate.task.shell.ShellScriptTaskResponseNG;
@@ -993,5 +997,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(VmJunitTestReport.class, 543452);
     kryo.register(VmUnitTestReport.class, 543453);
     kryo.register(CIVmConnectionCapability.class, 543454);
+    kryo.register(ServiceNowConnectionTaskParams.class, 543455);
+    kryo.register(ServiceNowTestConnectionTaskNGResponse.class, 543456);
+    kryo.register(ServiceNowValidationParams.class, 543457);
+    kryo.register(ServiceNowTaskNGResponse.class, 543458);
   }
 }

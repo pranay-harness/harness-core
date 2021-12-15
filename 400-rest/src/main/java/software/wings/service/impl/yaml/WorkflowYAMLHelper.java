@@ -219,8 +219,7 @@ public class WorkflowYAMLHelper {
       case CF_AWS_CONFIG_ID:
         uuidAccess = settingsService.fetchSettingAttributeByName(accountId, variableValue, SettingVariableTypes.AWS);
         notNullCheck(
-            "Aws Cloud Provider [" + variableValue + "] associated to the State does not exist",
-            uuidAccess, USER);
+            "Aws Cloud Provider [" + variableValue + "] associated to the State does not exist", uuidAccess, USER);
         break;
       case HELM_GIT_CONFIG_ID:
         uuidAccess = settingsService.fetchSettingAttributeByName(accountId, variableValue, SettingVariableTypes.GIT);

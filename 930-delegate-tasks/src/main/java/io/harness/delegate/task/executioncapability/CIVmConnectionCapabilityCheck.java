@@ -1,6 +1,5 @@
 package io.harness.delegate.task.executioncapability;
 
-import com.google.inject.Inject;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
@@ -10,6 +9,7 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.citasks.vm.helper.HttpHelper;
 
+import com.google.inject.Inject;
 import retrofit2.Response;
 
 public class CIVmConnectionCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
