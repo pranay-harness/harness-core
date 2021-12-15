@@ -16,4 +16,7 @@ public interface PipelineResourceConstants {
   String USE_FQN_IF_ERROR_RESPONSE_ERROR_MESSAGE = "Use FQN in error response";
   String INPUT_SET_ID_PARAM_MESSAGE = "Identifier of the Input Set";
   String OVERLAY_INPUT_SET_ID_PARAM_MESSAGE = "Identifier of the Overlay Input Set";
+
+  String START_TIME_EPOCH_PARAM_MESSAGE = "Start Date Epoch time in ms";
+  String END_TIME_EPOCH_PARAM_MESSAGE = "End Date Epoch time in ms";
 }

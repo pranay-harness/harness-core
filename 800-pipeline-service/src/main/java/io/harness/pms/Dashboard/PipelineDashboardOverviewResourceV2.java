@@ -38,8 +38,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PIPELINE)
-@Api("pipelines")
-@Path("pipelines")
+@Api("dashboard")
+@Path("dashboard")
 @Produces({"application/json"})
 @Consumes({"application/json"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
@@ -57,25 +57,23 @@ import lombok.extern.slf4j.Slf4j;
     })
 @PipelineServiceAuth
 @Slf4j
-public class PipelineDashboardOverviewResource {
+public class PipelineDashboardOverviewResourceV2 {
   private final PipelineDashboardService pipelineDashboardService;
   @GET
   @Path("/pipelineHealth")
-  @ApiOperation(value = "Get pipeline health", nickname = "getPipelinedHealth")
+  @ApiOperation(value = "Get pipeline health", nickname = "fetchPipelineHealth")
   @Operation(operationId = "getPipelinedHealth",
-      summary = "Fetches Pipeline Health data for a given Interval and will be presented in day wise format"
-          + "\n",
+      summary = "Fetches Pipeline Health data for a given Interval and will be presented in day wise format",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
             description = "Fetches Pipeline Health data for a given Interval and will be presented in day wise format")
-      },
-      deprecated = true)
+      })
   @NGAccessControlCheck(resourceType = "PROJECT", permission = "core_project_view")
-  @Deprecated
   public ResponseDTO<DashboardPipelineHealthInfo>
-  getPipelinedHealth(@Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true) @NotNull
-                     @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+  fetchPipelinedHealth(
+      @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
@@ -98,20 +96,18 @@ public class PipelineDashboardOverviewResource {
 
   @GET
   @Path("/pipelineExecution")
-  @ApiOperation(value = "Get pipeline execution", nickname = "getPipelineExecution")
-  @Operation(operationId = "getPipelineExecution",
+  @ApiOperation(value = "Get pipeline dashboard Execution", nickname = "getPipelineDashboardExecution")
+  @Operation(operationId = "getPipelineDashboardExecution",
       summary = "Fetches Pipeline Executions details for a given Interval and will be presented in day wise format",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
             description =
                 "Fetches Pipeline Executions details for a given Interval and will be presented in day wise format")
-      },
-      deprecated = true)
+      })
   @NGAccessControlCheck(resourceType = "PROJECT", permission = "core_project_view")
-  @Deprecated
   public ResponseDTO<DashboardPipelineExecutionInfo>
-  getPipelineExecution(
+  getPipelineDashboardExecution(
       @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
