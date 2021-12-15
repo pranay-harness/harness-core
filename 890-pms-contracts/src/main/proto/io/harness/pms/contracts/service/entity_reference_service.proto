@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.service;
+
+option java_multiple_files = true;
+
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
+
+service EntityReferenceService {
+  rpc getReferences(EntityReferenceRequest) returns (EntityReferenceResponse);
+}
+
+message EntityReferenceRequest {
+  string yaml = 1;  // yaml construct that pms understands
+}
+
+message EntityReferenceResponse {
+  repeated io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO referredEntities = 1;
+}
