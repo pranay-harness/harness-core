@@ -9,6 +9,7 @@ import static io.harness.delegate.configuration.InstallUtils.installChartMuseum;
 import static io.harness.delegate.configuration.InstallUtils.installGoTemplateTool;
 import static io.harness.delegate.configuration.InstallUtils.installHarnessPywinrm;
 import static io.harness.delegate.configuration.InstallUtils.installHelm;
+import static java.lang.System.currentTimeMillis;
 import static io.harness.delegate.configuration.InstallUtils.installKubectl;
 import static io.harness.delegate.configuration.InstallUtils.installKustomize;
 import static io.harness.delegate.configuration.InstallUtils.installOc;
@@ -309,7 +310,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       || (isNotBlank(System.getenv().get("NEXT_GEN")) && Boolean.parseBoolean(System.getenv().get("NEXT_GEN")));
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
-      : 0;
+      : 50;
   private final String delegateTokenName = System.getenv().get("DELEGATE_TOKEN_NAME");
   public static final String JAVA_VERSION = "java.version";
 
@@ -392,6 +393,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private String upgradeVersion;
   private String migrateTo;
   private long startTime;
+  private long taskReceivedTime;
   private long upgradeStartedAt;
   private long stoppedAcquiringAt;
   private String accountId;
@@ -870,10 +872,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void handleMessageSubmit(String message) {
-    if (log.isDebugEnabled()) {
-      log.debug("^^MSG: " + message);
-    }
+    log.info("^^MSG: " + message + " queue size " + (currentlyExecutingTasks.size() + currentlyValidatingTasks.size()));
     systemExecutor.submit(() -> handleMessage(message));
+
   }
 
   @SuppressWarnings("PMD")
@@ -928,9 +929,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.warn("Delegate used revoked token. It will be frozen and drained.");
       freeze();
     } else if (!StringUtils.equals(message, "X")) {
-      if (log.isDebugEnabled()) {
-        log.debug("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
-      }
+
+        log.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
+
       try {
         DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
         try (TaskLogContext ignore = new TaskLogContext(delegateTaskEvent.getDelegateTaskId(), OVERRIDE_ERROR)) {
@@ -1828,7 +1829,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       return;
     }
 
-    log.info("DelegateTaskEvent received - {}", delegateTaskEvent);
+    taskReceivedTime = currentTimeMillis();
 
     String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
     if (delegateTaskId == null) {
@@ -1853,23 +1854,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
 
     if (currentlyAcquiringTasks.contains(delegateTaskId)) {
-      if (log.isDebugEnabled()) {
-        log.debug("Task [DelegateTaskEvent: {}] currently acquiring. Don't acquire again", delegateTaskEvent);
-      }
+        log.info("Task [DelegateTaskEvent: {}] currently acquiring. Don't acquire again", delegateTaskEvent);
       return;
     }
 
     if (currentlyValidatingTasks.containsKey(delegateTaskId)) {
-      if (log.isDebugEnabled()) {
-        log.debug("Task [DelegateTaskEvent: {}] already validating. Don't validate again", delegateTaskEvent);
-      }
+        log.info("Task [DelegateTaskEvent: {}] already validating. Don't validate again", delegateTaskEvent);
       return;
     }
 
     if (currentlyExecutingTasks.containsKey(delegateTaskId)) {
-      if (log.isDebugEnabled()) {
-        log.debug("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
-      }
+        log.info("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
       return;
     }
 
@@ -1879,32 +1874,25 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         perpetualTaskCount = perpetualTaskWorker.getCurrentlyExecutingPerpetualTasksCount().intValue();
       }
 
-      if (delegateTaskLimit > 0
-          && (currentlyExecutingTasks.size() + currentlyValidatingTasks.size() + perpetualTaskCount)
-              >= delegateTaskLimit) {
-        log.info("Delegate reached Delegate Size Task Limit of {}. It will not acquire this time.", delegateTaskLimit);
-        return;
-      }
 
+      log.info("queue size {} ", (currentlyExecutingTasks.size() + currentlyValidatingTasks.size()));
       currentlyAcquiringTasks.add(delegateTaskId);
 
       // Delay response if already working on many tasks
       sleep(ofMillis(100 * Math.min(currentlyExecutingTasks.size() + currentlyValidatingTasks.size(), 10)));
 
-      if (log.isDebugEnabled()) {
-        log.debug("Try to acquire DelegateTask - accountId: {}", accountId);
-      }
+      log.info("Try to acquire DelegateTask - accountId: {} task id: {}", accountId, delegateTaskId);
+
 
       DelegateTaskPackage delegateTaskPackage = executeRestCall(
           delegateAgentManagerClient.acquireTask(delegateId, delegateTaskId, accountId, delegateInstanceId));
       if (delegateTaskPackage == null || delegateTaskPackage.getData() == null) {
-        if (log.isDebugEnabled()) {
-          log.debug("Delegate task data not available - accountId: {}", delegateTaskEvent.getAccountId());
-        }
+          log.info("Delegate task data not available - accountId: {} : {}", delegateTaskEvent.getAccountId(), delegateTaskId);
         return;
       }
 
       TaskData taskData = delegateTaskPackage.getData();
+      log.info("DelegateTaskEvent received - {} at: {} of type: {} id: {}", delegateTaskEvent, taskReceivedTime, taskData.getTaskType(), delegateTaskId);
       if (isEmpty(delegateTaskPackage.getDelegateId())) {
         // Not whitelisted. Perform validation.
         // TODO: Remove this once TaskValidation does not use secrets
@@ -2057,7 +2045,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     DelegateRunnableTask delegateRunnableTask = delegateTaskFactory.getDelegateRunnableTask(
         TaskType.valueOf(taskData.getTaskType()), delegateTaskPackage, logStreamingTaskClient,
         getPostExecutionFunction(
-            delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null), logStreamingTaskClient),
+            delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null), logStreamingTaskClient, delegateTaskPackage.getData().getTaskType()),
         getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null), logStreamingTaskClient));
     if (delegateRunnableTask instanceof AbstractDelegateRunnableTask) {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
@@ -2270,7 +2258,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private Consumer<DelegateTaskResponse> getPostExecutionFunction(
-      String taskId, LogSanitizer sanitizer, ILogStreamingTaskClient logStreamingTaskClient) {
+      String taskId, LogSanitizer sanitizer, ILogStreamingTaskClient logStreamingTaskClient, String taskType) {
     return taskResponse -> {
       if (logStreamingTaskClient != null) {
         try {
@@ -2283,10 +2271,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       Response<ResponseBody> response = null;
       try {
+        final long currentTime = currentTimeMillis();
+        log.info("Task completed at agent in time : {} at: {} for task type: {} id: {}", currentTime - taskReceivedTime, currentTime, taskType, taskId);
         response = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(30), () -> {
           Response<ResponseBody> resp = null;
           int retries = 5;
           for (int attempt = 0; attempt < retries; attempt++) {
+            log.info("Task completed at agent in time : {} ",  currentTimeMillis() - taskReceivedTime);
             resp = delegateAgentManagerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
             if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
               log.info("Task {} response sent to manager", taskId);

@@ -253,18 +253,8 @@ public class DelegateQueueTask implements Runnable {
             persistence.createUpdateOperations(DelegateTask.class)
                 .set(DelegateTaskKeys.lastBroadcastAt, now)
                 .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
-<<<<<<< HEAD
-                .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask));
-
-        // Old way with rebroadcasting
-        if (delegateTask.getPreAssignedDelegateId() != null && delegateTask.getBroadcastCount() > 0) {
-          updateOperations.unset(DelegateTaskKeys.preAssignedDelegateId);
-        }
-
-=======
                 .set(DelegateTaskKeys.eligibleToExecuteDelegateIds, eligibleDelegatesList)
                 .set(DelegateTaskKeys.nextBroadcast, now + TimeUnit.SECONDS.toMillis(5));
->>>>>>> cf1e7a0e8a5... [fix]: [DEL-2988]: Do not create new connection pool for every acquire call (#29595)
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {
@@ -274,14 +264,11 @@ public class DelegateQueueTask implements Runnable {
         try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR);
              AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId(), OVERRIDE_ERROR)) {
-<<<<<<< HEAD
-          log.info("Rebroadcast queued task. broadcast count: {}", delegateTask.getBroadcastCount());
-=======
+
           log.info(delegateTask.getBroadcastCount() > 1 ? "Rebroadcast"
                                                         : "Broadcast"
-                      + " queued task id {}. Broadcast count: {}",
-              delegateTask.getUuid(), delegateTask.getBroadcastCount());
->>>>>>> cf1e7a0e8a5... [fix]: [DEL-2988]: Do not create new connection pool for every acquire call (#29595)
+                      + " queued task id {}. Broadcast count: {} task id: {}",
+              delegateTask.getUuid(), delegateTask.getBroadcastCount(), delegateTask.getUuid());
           broadcastHelper.rebroadcastDelegateTask(delegateTask);
           count++;
         }
