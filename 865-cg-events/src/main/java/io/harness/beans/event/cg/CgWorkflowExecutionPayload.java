@@ -25,8 +25,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public abstract class CgWorkflowExecutionPayload extends EventPayloadData {
   private ApplicationEventData application;
-  private WorkflowEventData workflowEventData;
-  private PipelineEventData pipelineEventData;
+  private WorkflowEventData workflow;
+  private PipelineEventData pipeline;
   private ExecutionArgsEventData executionArgs;
   private EmbeddedUser triggeredBy;
   private CreatedByType triggeredByType;
@@ -38,6 +38,6 @@ public abstract class CgWorkflowExecutionPayload extends EventPayloadData {
 
   @Override
   public String getWorkflowId() {
-    return workflowEventData.getId();
+    return workflow.getId();
   }
 }
