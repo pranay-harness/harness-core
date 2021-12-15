@@ -10,6 +10,7 @@ import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.AutoLogContext;
@@ -93,7 +94,13 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       throw new InvalidArgumentsException(Pair.of("args", "response cannot be null"));
     }
 
-    log.debug("Response received for task with responseCode [{}]", response.getResponseCode());
+    if (response.getResponse() instanceof CommandExecutionResult) {
+      String name = ((CommandExecutionResult) response.getResponse()).getCommandExecutionData().getClass().getName();
+      if (name.contains("Shell")) {
+        log.info("Response received for task with responseCode [{}] at: {} for task id: {} task type: SCRIPT ",
+                response.getResponseCode(), currentTimeMillis(), taskId);
+      }
+    }
 
     Query<DelegateTask> taskQuery = persistence.createQuery(DelegateTask.class)
                                         .filter(DelegateTaskKeys.accountId, response.getAccountId())

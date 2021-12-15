@@ -82,14 +82,8 @@ import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue;
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.ExecutionResponse;
+import software.wings.sm.*;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
-import software.wings.sm.State;
-import software.wings.sm.StateExecutionContext;
-import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.stencils.DefaultValue;
 
@@ -188,14 +182,14 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     return super.getTimeoutMillis();
   }
 
-  private long startTime;
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
     try {
-      startTime = currentTimeMillis();
-      log.info("Execution of phase started at: {}", startTime);
-      return executeInternal(context, activityId);
+      ExecutionResponse resp = executeInternal(context, activityId);
+      String taskId = resp.getDelegateTaskId();
+      log.info("Execution of phase started at: {} id: {} ", currentTimeMillis(), taskId);
+      return resp;
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -210,9 +204,9 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    log.info("Phase response received at: {} took {} time to execute", currentTimeMillis(), currentTimeMillis() - startTime);
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     String activityId = response.keySet().iterator().next();
+    log.info("Phase response received at: {} for task", currentTimeMillis());
     DelegateResponseData data = (DelegateResponseData) response.values().iterator().next();
     boolean saveSweepingOutputToContext = false;
     if (data instanceof CommandExecutionResult) {

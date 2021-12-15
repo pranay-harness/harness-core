@@ -1813,7 +1813,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
 
     taskReceivedTime = currentTimeMillis();
-    log.info("DelegateTaskEvent received - {} at: {}", delegateTaskEvent, taskReceivedTime);
 
     String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
     if (delegateTaskId == null) {
@@ -1890,6 +1889,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
 
       TaskData taskData = delegateTaskPackage.getData();
+      log.info("DelegateTaskEvent received - {} at: {} of type: {} id: {}", delegateTaskEvent, taskReceivedTime, taskData.getTaskType(), delegateTaskId);
       if (isEmpty(delegateTaskPackage.getDelegateId())) {
         // Not whitelisted. Perform validation.
         // TODO: Remove this once TaskValidation does not use secrets
@@ -2042,7 +2042,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     DelegateRunnableTask delegateRunnableTask = delegateTaskFactory.getDelegateRunnableTask(
         TaskType.valueOf(taskData.getTaskType()), delegateTaskPackage, logStreamingTaskClient,
         getPostExecutionFunction(
-            delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null), logStreamingTaskClient),
+            delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null), logStreamingTaskClient, delegateTaskPackage.getData().getTaskType()),
         getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null), logStreamingTaskClient));
     if (delegateRunnableTask instanceof AbstractDelegateRunnableTask) {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
@@ -2255,7 +2255,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private Consumer<DelegateTaskResponse> getPostExecutionFunction(
-      String taskId, LogSanitizer sanitizer, ILogStreamingTaskClient logStreamingTaskClient) {
+      String taskId, LogSanitizer sanitizer, ILogStreamingTaskClient logStreamingTaskClient, String taskType) {
     return taskResponse -> {
       if (logStreamingTaskClient != null) {
         try {
@@ -2269,7 +2269,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       Response<ResponseBody> response = null;
       try {
         final long currentTime = currentTimeMillis();
-        log.info("Task completed at agent in time : {} at: {}", currentTime - taskReceivedTime, currentTime);
+        log.info("Task completed at agent in time : {} at: {} for task type: {} id: {}", currentTime - taskReceivedTime, currentTime, taskType, taskId);
         response = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(30), () -> {
           Response<ResponseBody> resp = null;
           int retries = 5;
