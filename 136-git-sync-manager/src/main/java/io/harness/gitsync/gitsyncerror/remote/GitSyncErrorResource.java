@@ -193,8 +193,8 @@ public class GitSyncErrorResource {
           gitSyncErrorService.listAllGitToHarnessErrors(pageRequest, accountIdentifier, orgIdentifier,
               projectIdentifier, searchTerm, gitEntityBasicInfo.getYamlGitConfigId(), gitEntityBasicInfo.getBranch()));
     } else {
-      return ResponseDTO.newResponse(gitSyncErrorService.listConnectivityErrors(accountIdentifier, orgIdentifier,
-          projectIdentifier, gitEntityBasicInfo.getYamlGitConfigId(), gitEntityBasicInfo.getBranch(), pageRequest));
+      return ResponseDTO.newResponse(gitSyncErrorService.listConnectivityErrors(
+          accountIdentifier, orgIdentifier, projectIdentifier, gitEntityBasicInfo.getYamlGitConfigId(), pageRequest));
     }
   }
 
