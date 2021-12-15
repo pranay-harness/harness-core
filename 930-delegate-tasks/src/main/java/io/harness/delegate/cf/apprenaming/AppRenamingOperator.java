@@ -70,28 +70,23 @@ public interface AppRenamingOperator {
     TreeMap<AppType, AppRenamingData> appTypeApplicationSummaryMap = new TreeMap<>(getComparatorForRenamingOrder());
 
     populateAppDetailsForRenaming(inActiveAppBeforeThisDeployment, activeAppBeforeThisDeployment, newApplicationDetails,
-        allReleases, appTypeApplicationSummaryMap);
+        allReleases, appTypeApplicationSummaryMap, cfRouteUpdateConfigData.getCfAppNamePrefix());
 
     return appTypeApplicationSummaryMap;
   }
 
   default void populateAppDetailsForRenaming(CfAppSetupTimeDetails inActiveApp, CfAppSetupTimeDetails activeApp,
       CfAppSetupTimeDetails newApp, List<ApplicationSummary> allReleases,
-      TreeMap<AppType, AppRenamingData> appTypeApplicationSummaryMap) {
+      TreeMap<AppType, AppRenamingData> appTypeApplicationSummaryMap, String cfAppNamePrefix) {
     for (ApplicationSummary appSummary : allReleases) {
       String appGuid = appSummary.getId();
-
-      if (isValidAppDetails(inActiveApp, appGuid)) {
-        appTypeApplicationSummaryMap.put(
-            AppType.INACTIVE, populateRenamingData(appSummary, appGuid, appSummary.getName(), null));
-
-      } else if (isValidAppDetails(activeApp, appGuid)) {
+      if (isValidAppDetails(activeApp, appGuid)) {
         appTypeApplicationSummaryMap.put(
             AppType.ACTIVE, populateRenamingData(appSummary, appGuid, appSummary.getName(), null));
 
       } else if (isValidAppDetails(newApp, appGuid)) {
         appTypeApplicationSummaryMap.put(
-            AppType.STAGE, populateRenamingData(appSummary, appGuid, appSummary.getName(), null));
+            AppType.NEW, populateRenamingData(appSummary, appGuid, appSummary.getName(), null));
       }
     }
   }
