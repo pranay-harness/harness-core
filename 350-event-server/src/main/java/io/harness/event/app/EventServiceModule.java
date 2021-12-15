@@ -15,10 +15,21 @@ import io.harness.grpc.exception.GrpcExceptionMapper;
 import io.harness.grpc.exception.WingsExceptionGrpcMapper;
 import io.harness.grpc.server.GrpcServerExceptionHandler;
 import io.harness.grpc.server.GrpcServerModule;
+import io.harness.lock.PersistentLockModule;
 import io.harness.metrics.modules.MetricsModule;
 import io.harness.metrics.service.api.MetricsPublisher;
+import io.harness.outbox.api.OutboxDao;
+import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.api.impl.OutboxDaoImpl;
+import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.persistence.HPersistence;
+import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.security.DelegateTokenAuthenticator;
+import io.harness.service.DelegateServiceModule;
+import io.harness.service.impl.DelegateNgTokenServiceImpl;
+import io.harness.service.impl.DelegateTokenServiceImpl;
+import io.harness.service.intfc.DelegateNgTokenService;
+import io.harness.service.intfc.DelegateTokenService;
 
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -56,7 +67,6 @@ public class EventServiceModule extends AbstractModule {
     bind(EventServiceConfig.class).toInstance(eventServiceConfig);
     bind(HPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
-    bind(DelegateTokenAuthenticator.class).to(DelegateTokenEventServerAuthenticatorImpl.class).in(Singleton.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
     bind(EncryptedSettingAttributes.class).to(NoOpSecretManagerImpl.class);
     bind(LastReceivedPublishedMessageRepository.class).to(LastReceivedPublishedMessageRepositoryImpl.class);
@@ -93,6 +103,7 @@ public class EventServiceModule extends AbstractModule {
 
     install(new MetricsModule());
     bind(MetricsPublisher.class).to(EventServiceMetricsPublisher.class).in(Scopes.SINGLETON);
+    bind(DelegateTokenAuthenticator.class).to(DelegateTokenEventServerAuthenticatorImpl.class).in(Scopes.SINGLETON);
   }
 
   @Provides

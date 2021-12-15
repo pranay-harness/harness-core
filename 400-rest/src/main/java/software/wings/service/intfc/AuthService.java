@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
+import io.harness.security.dto.DelegateTokenInfo;
 
 import software.wings.beans.AuthToken;
 import software.wings.beans.Pipeline;
@@ -92,7 +93,7 @@ public interface AuthService {
   void authorize(String accountId, List<String> appIds, String entityId, User user,
       List<PermissionAttribute> permissionAttributes);
 
-  void validateDelegateToken(String accountId, String tokenString);
+  DelegateTokenInfo validateDelegateToken(String accountId, String tokenString);
 
   void invalidateAllTokensForUser(String userId);
 

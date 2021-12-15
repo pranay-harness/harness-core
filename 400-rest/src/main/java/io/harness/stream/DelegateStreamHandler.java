@@ -1,5 +1,6 @@
 package io.harness.stream;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -7,6 +8,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.eraro.ErrorCode;
@@ -17,6 +19,7 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.security.dto.DelegateTokenInfo;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.DelegateCache;
 
@@ -59,7 +62,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
       try {
         List<String> pathSegments = SPLITTER.splitToList(req.getPathInfo());
         String accountId = pathSegments.get(1);
-        authService.validateDelegateToken(accountId, req.getParameter("token"));
+        DelegateTokenInfo token = authService.validateDelegateToken(accountId, req.getParameter("token"));
 
         String delegateId = req.getParameter("delegateId");
         try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -73,6 +76,10 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
 
           Delegate delegate = delegateCache.get(accountId, delegateId, true);
           delegate.setStatus(DelegateInstanceStatus.ENABLED);
+          if (null != token && isNotEmpty(token.getName())) {
+            delegate.setOwner(DelegateEntityOwner.builder().identifier(token.getOwnerIdentifier()).build());
+            delegate.setDelegateTokenName(token.getName());
+          }
 
           updateIfEcsDelegate(delegate, sequenceNum, delegateToken);
 

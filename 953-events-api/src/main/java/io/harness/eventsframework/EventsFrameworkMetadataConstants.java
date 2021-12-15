@@ -18,6 +18,7 @@ public final class EventsFrameworkMetadataConstants {
   public static final String UPSERT_ACTION = "upsert";
   public static final String DELETE_ACTION = "delete";
   public static final String FLUSH_CREATE_ACTION = "flushCreate";
+  public static final String REVOKE_ACTION = "revoke";
 
   public static final String PROJECT_ENTITY = "project";
   public static final String ORGANIZATION_ENTITY = "organization";
@@ -45,4 +46,5 @@ public final class EventsFrameworkMetadataConstants {
   public static final String API_KEY_ENTITY = "apiKey";
   public static final String TOKEN_ENTITY = "token";
   public static final String TEMPLATE_ENTITY = "template";
+  public static final String DELEGATE_NG_TOKEN_ENTITY = "delegateNgTokenEntity";
 }
