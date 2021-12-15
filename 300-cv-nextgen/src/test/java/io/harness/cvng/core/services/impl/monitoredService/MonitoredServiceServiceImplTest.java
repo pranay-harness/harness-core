@@ -896,6 +896,17 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetHealthSources_zeroHealthSources() {
+    MonitoredServiceDTO monitoredServiceDTO =
+        builderFactory.monitoredServiceDTOBuilder().sources(Sources.builder().build()).build();
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    List<HealthSourceDTO> healthSourceDTOS = monitoredServiceService.getHealthSources(environmentParams);
+    assertThat(healthSourceDTOS).isEmpty();
+  }
+
+  @Test
   @Owner(developers = ANJAN)
   @Category(UnitTests.class)
   public void testGetYamlTemplate() {
@@ -1032,6 +1043,22 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
 
     assertThat(monitoredServiceWithHealthSourcesList.size()).isEqualTo(2);
     assertThat(monitoredServiceWithHealthSourcesList.get(0).getIdentifier()).isEqualTo(identifier1);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetAll_noHealthSources() {
+    MonitoredServiceDTO monitoredServiceDTO =
+        builderFactory.monitoredServiceDTOBuilder().sources(Sources.builder().build()).build();
+    String serviceRef1 = "service1";
+    String identifier1 = "monitoredService1";
+    monitoredServiceDTO.setServiceRef(serviceRef1);
+    monitoredServiceDTO.setIdentifier(identifier1);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    List<MonitoredServiceWithHealthSources> monitoredServiceWithHealthSourcesList =
+        monitoredServiceService.getAllWithTimeSeriesHealthSources(projectParams);
+    assertThat(monitoredServiceWithHealthSourcesList.get(0).getHealthSources()).isEmpty();
   }
 
   @Test

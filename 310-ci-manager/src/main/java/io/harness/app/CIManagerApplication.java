@@ -395,6 +395,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
                                              .setFeatureRestrictionName(FeatureRestrictionName.BUILDS.name())
                                              .setErrorMessage("You have reached max number of builds")
                                              .build())
+        .planCreatorServiceInternalConfig(config.getPmsPlanCreatorServicePoolConfig())
         .build();
   }
 

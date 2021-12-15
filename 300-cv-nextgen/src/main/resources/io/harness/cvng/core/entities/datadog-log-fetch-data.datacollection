@@ -29,13 +29,14 @@ foreach logData in Var:logsData {
       Var timeStampVal = string-to-time(Var:timestamp)
       foreach tag in Var:tags {
         Var tagSplitResult = Var:tag.split(":")
-        if Env:serviceInstanceIdentifier == Var:tagSplitResult[0] {
-           Var:host = Var:tagSplitResult[1]
-        }
+        Var tagKey = Var:tagSplitResult[0]
+         if Env:serviceInstanceIdentifier == Var:tagKey {
+            host = Var:tagSplitResult[1]
+         }
       }
 
       if Var:host == Var:nullObject {
-           Var:host = extract(Var:logData, $.attributes.host)
+           host = extract(Var:logData, $.attributes.host)
       }
 
       Var logToReturn = new LogDataRecord(log=Var:message, timestamp=Var:timeStampVal, host=Var:host)

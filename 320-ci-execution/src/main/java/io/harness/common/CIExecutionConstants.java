@@ -106,6 +106,14 @@ public class CIExecutionConstants {
 
   public static final String HARNESS_WORKSPACE = "HARNESS_WORKSPACE";
 
+  public static final String PLUGIN_USERNAME = "PLUGIN_USERNAME";
+  public static final String PLUGIN_PASSW = "PLUGIN_PASSWORD";
+  public static final String PLUGIN_REGISTRY = "PLUGIN_REGISTRY";
+  public static final String PLUGIN_ACCESS_KEY = "PLUGIN_ACCESS_KEY";
+  public static final String PLUGIN_SECRET_KEY = "PLUGIN_SECRET_KEY";
+  public static final String PLUGIN_JSON_KEY = "PLUGIN_JSON_KEY";
+  public static final String PLUGIN_URL = "PLUGIN_URL";
+
   // All FFs go here
   public static final String HARNESS_CI_INDIRECT_LOG_UPLOAD_FF = "HARNESS_CI_INDIRECT_LOG_UPLOAD_FF";
 

@@ -330,4 +330,9 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
      */
     @JsonIgnore public abstract Map<String, String> getResourcePathToUriMappings();
   }
+
+  @JsonIgnore
+  public boolean useCdnForDelegateStorage() {
+    return !DeployMode.isOnPrem(getDeployMode().name());
+  }
 }

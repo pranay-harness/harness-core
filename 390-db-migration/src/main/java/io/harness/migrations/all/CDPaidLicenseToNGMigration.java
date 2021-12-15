@@ -1,5 +1,6 @@
 package io.harness.migrations.all;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
@@ -104,8 +105,9 @@ public class CDPaidLicenseToNGMigration implements Migration {
 
     if (migrationType.contains(licenseInfo.getAccountType())) {
       log.info("Account {} requires a migrate", account.getUuid());
+      List<ModuleLicenseDTO> CDNGLicenses = accountLicenseDTO.getAllModuleLicenses().get(ModuleType.CD);
       // Only migrate PAID and ESSENTIALS
-      if (accountLicenseDTO.getAllModuleLicenses().get(ModuleType.CD) == null) {
+      if (isEmpty(CDNGLicenses)) {
         // no ng cd license, create one
         log.info("Account {} doesn't have a NG CD license, create a new one", account.getUuid());
         createNewNGLicense(licenseInfo, account.getUuid());

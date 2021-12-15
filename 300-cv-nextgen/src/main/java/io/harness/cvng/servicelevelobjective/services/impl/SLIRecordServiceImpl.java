@@ -1,6 +1,7 @@
 package io.harness.cvng.servicelevelobjective.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.SLIValue;
@@ -18,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +52,8 @@ public class SLIRecordServiceImpl implements SLIRecordService {
     if (Objects.nonNull(latestSLIRecord)
         && latestSLIRecord.getTimestamp().isAfter(firstSLIRecordParam.getTimeStamp())) {
       // Update flow: fetch SLI Records to be updated
-      List<SLIRecord> toBeUpdatedSLIRecords =
-          getSLIRecords(sliId, firstSLIRecordParam.getTimeStamp(), lastSLIRecordParam.getTimeStamp());
+      List<SLIRecord> toBeUpdatedSLIRecords = getSLIRecords(
+          sliId, firstSLIRecordParam.getTimeStamp(), lastSLIRecordParam.getTimeStamp().plus(1, ChronoUnit.MINUTES));
       Map<Instant, SLIRecordParam> sliRecordParamMap =
           sliRecordParamList.stream().collect(Collectors.toMap(SLIRecordParam::getTimeStamp, Function.identity()));
 
@@ -93,12 +95,13 @@ public class SLIRecordServiceImpl implements SLIRecordService {
   }
   @Override
   public SLOGraphData getGraphData(String sliId, Instant startTime, Instant endTime, int totalErrorBudgetMinutes,
-      SLIMissingDataType sliMissingDataType) {
+      SLIMissingDataType sliMissingDataType, int sliVersion) {
     List<SLIRecord> sliRecords = sliRecords(sliId, startTime, endTime);
     List<Point> sliTread = new ArrayList<>();
     List<Point> errorBudgetBurndown = new ArrayList<>();
     double errorBudgetRemainingPercentage = 100;
     int errorBudgetRemaining = totalErrorBudgetMinutes;
+    boolean isRecalculatingSLI = false;
     if (!sliRecords.isEmpty()) {
       SLIValue sliValue = null;
       long beginningMinute = sliRecords.get(0).getEpochMinute();
@@ -110,6 +113,9 @@ public class SLIRecordServiceImpl implements SLIRecordService {
         long goodCountFromStart = sliRecord.getRunningGoodCount() - prevRecordGoodCount;
         long badCountFromStart = sliRecord.getRunningBadCount() - prevRecordBadCount;
         long minutesFromStart = sliRecord.getEpochMinute() - beginningMinute + 1;
+        if (!isRecalculatingSLI && sliRecord.getSliVersion() != sliVersion) {
+          isRecalculatingSLI = true;
+        }
         sliValue = sliMissingDataType.calculateSLIValue(goodCountFromStart, badCountFromStart, minutesFromStart);
         sliTread.add(
             Point.builder().timestamp(sliRecord.getTimestamp().toEpochMilli()).value(sliValue.sliPercentage()).build());
@@ -126,6 +132,7 @@ public class SLIRecordServiceImpl implements SLIRecordService {
         .errorBudgetBurndown(errorBudgetBurndown)
         .errorBudgetRemaining(errorBudgetRemaining)
         .sloPerformanceTrend(sliTread)
+        .isRecalculatingSLI(isRecalculatingSLI)
         .errorBudgetRemainingPercentage(errorBudgetRemainingPercentage)
         .build();
   }
@@ -145,7 +152,7 @@ public class SLIRecordServiceImpl implements SLIRecordService {
       minutes.add(current);
     }
     minutes.add(endTime.minus(Duration.ofMinutes(1))); // always include start and end minute.
-    return hPersistence.createQuery(SLIRecord.class)
+    return hPersistence.createQuery(SLIRecord.class, excludeAuthority)
         .filter(SLIRecordKeys.sliId, sliId)
         .field(SLIRecordKeys.timestamp)
         .in(minutes)
@@ -154,18 +161,18 @@ public class SLIRecordServiceImpl implements SLIRecordService {
   }
 
   private List<SLIRecord> getSLIRecords(String sliId, Instant startTimeStamp, Instant endTimeStamp) {
-    return hPersistence.createQuery(SLIRecord.class)
+    return hPersistence.createQuery(SLIRecord.class, excludeAuthority)
         .filter(SLIRecordKeys.sliId, sliId)
         .field(SLIRecordKeys.timestamp)
         .greaterThanOrEq(startTimeStamp)
         .field(SLIRecordKeys.timestamp)
-        .lessThanOrEq(endTimeStamp)
+        .lessThan(endTimeStamp)
         .order(Sort.ascending(SLIRecordKeys.timestamp))
         .asList();
   }
 
   private SLIRecord getLastSLIRecord(String sliId, Instant startTimeStamp) {
-    return hPersistence.createQuery(SLIRecord.class)
+    return hPersistence.createQuery(SLIRecord.class, excludeAuthority)
         .filter(SLIRecordKeys.sliId, sliId)
         .field(SLIRecordKeys.timestamp)
         .lessThan(startTimeStamp)
@@ -174,7 +181,7 @@ public class SLIRecordServiceImpl implements SLIRecordService {
   }
 
   private SLIRecord getLatestSLIRecord(String sliId) {
-    return hPersistence.createQuery(SLIRecord.class)
+    return hPersistence.createQuery(SLIRecord.class, excludeAuthority)
         .filter(SLIRecordKeys.sliId, sliId)
         .order(Sort.descending(SLIRecordKeys.timestamp))
         .get();

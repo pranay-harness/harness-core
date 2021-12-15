@@ -27,6 +27,7 @@ import static io.harness.provision.TfVarSource.TfVarSourceType;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.delegatetasks.validation.terraform.TerraformTaskUtils.fetchAllTfVarFilesArgument;
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -37,6 +38,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.cli.CliResponse;
 import io.harness.cli.LogCallbackOutputStream;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -77,10 +79,17 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.delegatetasks.validation.terraform.TerraformTaskUtils;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSSessionCredentials;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
+import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
@@ -97,6 +106,7 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -128,6 +138,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateFileManager delegateFileManager;
   @Inject private EncryptDecryptHelper planEncryptDecryptHelper;
   @Inject private TerraformBaseHelper terraformBaseHelper;
+  @Inject private AwsHelperService awsHelperService;
+
+  private static final String AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID";
+  private static final String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
+  private static final String AWS_SESSION_TOKEN = "AWS_SESSION_TOKEN";
 
   public TerraformProvisionTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -231,7 +246,17 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       String sourceRepoReference = parameters.getCommitId() != null
           ? parameters.getCommitId()
           : getLatestCommitSHAFromLocalRepo(gitOperationContext);
-      final Map<String, String> envVars = getEnvironmentVariables(parameters);
+
+      Map<String, String> awsAuthEnvVariables = null;
+      if (parameters.getAwsConfig() != null && parameters.getAwsConfigEncryptionDetails() != null) {
+        try {
+          awsAuthEnvVariables = getAwsAuthVariables(parameters);
+        } catch (Exception e) {
+          throw new InvalidRequestException(e.getMessage());
+        }
+      }
+
+      final Map<String, String> envVars = getEnvironmentVariables(parameters, awsAuthEnvVariables);
       saveExecutionLog(format("Environment variables: [%s]", collectEnvVarKeys(envVars)),
           CommandExecutionStatus.RUNNING, INFO, logCallback);
 
@@ -482,7 +507,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code)
               .workspace(parameters.getWorkspace())
-              .encryptedTfPlan(encryptedTfPlan);
+              .encryptedTfPlan(encryptedTfPlan)
+              .awsConfigId(parameters.getAwsConfigId())
+              .awsRoleArn(parameters.getAwsRoleArn())
+              .awsRegion(parameters.getAwsRegion());
 
       if (parameters.getCommandUnit() != TerraformCommandUnit.Destroy
           && commandExecutionStatus == CommandExecutionStatus.SUCCESS && !parameters.isRunPlanOnly()) {
@@ -523,6 +551,34 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         }
       }
     }
+  }
+
+  private Map<String, String> getAwsAuthVariables(TerraformProvisionParameters parameters) {
+    encryptionService.decrypt(parameters.getAwsConfig(), parameters.getAwsConfigEncryptionDetails(), false);
+    Map<String, String> awsAuthEnvVariables = new HashMap<>();
+    if (isNotEmpty(parameters.getAwsRoleArn())) {
+      String region = isNotEmpty(parameters.getAwsRegion()) ? parameters.getAwsRegion() : AWS_DEFAULT_REGION;
+      AWSSecurityTokenServiceClient awsSecurityTokenServiceClient =
+          awsHelperService.getAmazonAWSSecurityTokenServiceClient(parameters.getAwsConfig(), region);
+
+      AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest();
+      assumeRoleRequest.setRoleArn(parameters.getAwsRoleArn());
+      assumeRoleRequest.setRoleSessionName(UUIDGenerator.generateUuid());
+      AssumeRoleResult assumeRoleResult = awsSecurityTokenServiceClient.assumeRole(assumeRoleRequest);
+      awsAuthEnvVariables.put(AWS_SECRET_ACCESS_KEY, assumeRoleResult.getCredentials().getSecretAccessKey());
+      awsAuthEnvVariables.put(AWS_ACCESS_KEY_ID, assumeRoleResult.getCredentials().getAccessKeyId());
+      awsAuthEnvVariables.put(AWS_SESSION_TOKEN, assumeRoleResult.getCredentials().getSessionToken());
+    } else {
+      AWSCredentialsProvider awsCredentialsProvider =
+          awsHelperService.getAWSCredentialsProvider(parameters.getAwsConfig());
+      AWSCredentials awsCredentials = awsCredentialsProvider.getCredentials();
+      awsAuthEnvVariables.put(AWS_SECRET_ACCESS_KEY, awsCredentials.getAWSSecretKey());
+      awsAuthEnvVariables.put(AWS_ACCESS_KEY_ID, awsCredentials.getAWSAccessKeyId());
+      if (awsCredentials instanceof AWSSessionCredentials) {
+        awsAuthEnvVariables.put(AWS_SESSION_TOKEN, ((AWSSessionCredentials) awsCredentials).getSessionToken());
+      }
+    }
+    return awsAuthEnvVariables;
   }
 
   private int executeWithTerraformClient(TerraformProvisionParameters parameters, File tfBackendConfigsFile,
@@ -647,8 +703,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return code;
   }
 
-  private ImmutableMap<String, String> getEnvironmentVariables(TerraformProvisionParameters parameters)
-      throws IOException {
+  private ImmutableMap<String, String> getEnvironmentVariables(
+      TerraformProvisionParameters parameters, Map<String, String> awsAuthEnvVariables) throws IOException {
     ImmutableMap.Builder<String, String> envVars = ImmutableMap.builder();
     if (isNotEmpty(parameters.getEnvironmentVariables())) {
       envVars.putAll(parameters.getEnvironmentVariables());
@@ -658,6 +714,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue(), false));
         envVars.put(entry.getKey(), value);
       }
+    }
+    if (isNotEmpty(awsAuthEnvVariables)) {
+      envVars.putAll(awsAuthEnvVariables);
     }
     return envVars.build();
   }

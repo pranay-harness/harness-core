@@ -131,7 +131,7 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
         .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, INPUT_SET_ID, false);
 
     ResponseDTO<InputSetResponseDTOPMS> responseDTO = inputSetResourcePMS.getInputSet(
-        INPUT_SET_ID, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false, null);
+        INPUT_SET_ID, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null);
 
     assertThat(responseDTO.getData().getVersion()).isEqualTo(1L);
     assertThat(responseDTO.getData().getInputSetYaml()).isEqualTo(inputSetYaml);
@@ -150,7 +150,7 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
 
     assertThatThrownBy(()
                            -> inputSetResourcePMS.getInputSet(INVALID_INPUT_SET_ID, ACCOUNT_ID, ORG_IDENTIFIER,
-                               PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false, null))
+                               PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             String.format("InputSet with the given ID: %s does not exist or has been deleted", INVALID_INPUT_SET_ID));
@@ -165,7 +165,7 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
         .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, OVERLAY_INPUT_SET_ID, false);
 
     ResponseDTO<OverlayInputSetResponseDTOPMS> responseDTO = inputSetResourcePMS.getOverlayInputSet(
-        OVERLAY_INPUT_SET_ID, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false, null);
+        OVERLAY_INPUT_SET_ID, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null);
 
     assertThat(responseDTO.getData().getVersion()).isEqualTo(1L);
     assertThat(responseDTO.getData().getOverlayInputSetYaml()).isEqualTo(overlayInputSetYaml);
@@ -194,7 +194,7 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
 
     assertThatThrownBy(()
                            -> inputSetResourcePMS.getOverlayInputSet(INVALID_OVERLAY_INPUT_SET_ID, ACCOUNT_ID,
-                               ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false, null))
+                               ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(String.format(
             "InputSet with the given ID: %s does not exist or has been deleted", INVALID_OVERLAY_INPUT_SET_ID));

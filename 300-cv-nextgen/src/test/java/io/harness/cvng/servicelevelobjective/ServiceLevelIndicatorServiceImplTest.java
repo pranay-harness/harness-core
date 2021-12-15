@@ -14,8 +14,8 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
-import io.harness.cvng.core.beans.TimeGraphResponse;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.sli.SLIOnboardingGraphs;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.AppDynamicsServiceimplTest;
 import io.harness.cvng.core.services.api.OnboardingService;
@@ -77,14 +77,21 @@ public class ServiceLevelIndicatorServiceImplTest extends CvNextGenTestBase {
         .thenReturn(JsonUtils.asObject(textLoad, OnboardingResponseDTO.class));
 
     String tracingId = "tracingId";
-    TimeGraphResponse timeGraphResponse =
-        serviceLevelIndicatorService.getOnboardingGraph(builderFactory.getContext().getProjectParams(),
+    SLIOnboardingGraphs sliOnboardingGraphs =
+        serviceLevelIndicatorService.getOnboardingGraphs(builderFactory.getContext().getProjectParams(),
             monitoredServiceIdentifier, serviceLevelIndicatorDTO, tracingId);
 
-    assertThat(timeGraphResponse.getStartTime()).isEqualTo(1595760600000L);
-    assertThat(timeGraphResponse.getEndTime()).isEqualTo(1595847000000L);
-    assertThat(timeGraphResponse.getDataPoints().get(1).getValue()).isEqualTo(50.0);
-    assertThat(timeGraphResponse.getDataPoints().get(1).getTimeStamp()).isEqualTo(1595760660000L);
+    assertThat(sliOnboardingGraphs.getSliGraph().getStartTime()).isEqualTo(1595760600000L);
+    assertThat(sliOnboardingGraphs.getSliGraph().getEndTime()).isEqualTo(1595847000000L);
+    assertThat(sliOnboardingGraphs.getSliGraph().getDataPoints().get(1).getValue()).isEqualTo(50.0);
+    assertThat(sliOnboardingGraphs.getSliGraph().getDataPoints().get(1).getTimeStamp()).isEqualTo(1595760660000L);
+    assertThat(sliOnboardingGraphs.getMetricGraphs()).hasSize(1);
+    assertThat(sliOnboardingGraphs.getMetricGraphs().get("Calls per Minute").getMetricName())
+        .isEqualTo("Calls per Minute");
+    assertThat(sliOnboardingGraphs.getMetricGraphs().get("Calls per Minute").getMetricIdentifier())
+        .isEqualTo("Calls per Minute");
+    assertThat(sliOnboardingGraphs.getMetricGraphs().get("Calls per Minute").getDataPoints().get(0).getValue())
+        .isEqualTo(343.0);
   }
 
   @Test

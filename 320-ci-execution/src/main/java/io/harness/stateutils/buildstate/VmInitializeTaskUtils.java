@@ -12,7 +12,9 @@ import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.sweepingoutputs.VmStageInfraDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.beans.yaml.extended.infrastrucutre.VmInfraSpec;
 import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.VmPoolYaml;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.vm.CIVmInitializeTaskParams;
 import io.harness.exception.ngexception.CIStageExecutionException;
@@ -55,8 +57,14 @@ public class VmInitializeTaskUtils {
       throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
 
-    VmInfraYaml awsVmInfraYaml = (VmInfraYaml) infrastructure;
-    String poolId = awsVmInfraYaml.getSpec().getPoolId();
+    VmInfraYaml vmInfraYaml = (VmInfraYaml) infrastructure;
+    if (vmInfraYaml.getSpec().getType() != VmInfraSpec.Type.POOL) {
+      throw new CIStageExecutionException(
+          format("Invalid VM infrastructure spec type: %s", vmInfraYaml.getSpec().getType()));
+    }
+
+    VmPoolYaml vmPoolYaml = (VmPoolYaml) vmInfraYaml.getSpec();
+    String poolId = vmPoolYaml.getSpec().getIdentifier();
     executionSweepingOutputResolver.consume(ambiance, STAGE_INFRA_DETAILS,
         VmStageInfraDetails.builder().poolId(poolId).build(), StepOutcomeGroup.STAGE.name());
 

@@ -32,4 +32,5 @@ enum EntityTypeProtoEnum {
   HTTP_STEP = 24;
   SHELL_SCRIPT_STEP = 25;
   K8S_CANARY_DEPLOY_STEP = 26;
+  JIRA_CREATE_STEP = 27;
 }

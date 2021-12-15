@@ -7,6 +7,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.TimeGraphResponse;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.sli.SLIOnboardingGraphs;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.rest.RestResponse;
@@ -40,10 +41,25 @@ public class ServiceLevelIndicatorResource {
   @ExceptionMetered
   @Path("/onboarding-graph")
   @ApiOperation(value = "get Sli graph for onboarding UI", nickname = "getSliGraph")
+  @Deprecated
   public RestResponse<TimeGraphResponse> getGraph(@BeanParam ProjectParams projectParams,
       @PathParam("monitoredServiceIdentifier") String monitoredServiceIdentifier,
       @NotNull @Valid @Body ServiceLevelIndicatorDTO serviceLevelIndicatorDTO) {
-    return new RestResponse<>(sliService.getOnboardingGraph(
+    return new RestResponse<>(
+        sliService
+            .getOnboardingGraphs(projectParams, monitoredServiceIdentifier, serviceLevelIndicatorDTO, generateUuid())
+            .getSliGraph());
+  }
+
+  @POST
+  @Timed
+  @ExceptionMetered
+  @Path("/onboarding-graphs")
+  @ApiOperation(value = "get Sli and mertric graphs for onboarding UI", nickname = "getSliOnboardingGraphs")
+  public RestResponse<SLIOnboardingGraphs> getGraphs(@BeanParam ProjectParams projectParams,
+      @PathParam("monitoredServiceIdentifier") String monitoredServiceIdentifier,
+      @NotNull @Valid @Body ServiceLevelIndicatorDTO serviceLevelIndicatorDTO) {
+    return new RestResponse<>(sliService.getOnboardingGraphs(
         projectParams, monitoredServiceIdentifier, serviceLevelIndicatorDTO, generateUuid()));
   }
 }

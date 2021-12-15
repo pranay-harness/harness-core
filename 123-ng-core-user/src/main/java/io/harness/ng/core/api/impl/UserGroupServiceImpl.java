@@ -521,6 +521,14 @@ public class UserGroupServiceImpl implements UserGroupService {
     return userGroupRepository.findAll(criteria);
   }
 
+  @Override
+  public List<UserGroup> getExternallyManagedGroups(String accountIdentifier) {
+    Criteria criteria = new Criteria();
+    criteria.and(UserGroupKeys.accountIdentifier).is(accountIdentifier);
+    criteria.and(UserGroupKeys.externallyManaged).is(true);
+    return userGroupRepository.findAll(criteria);
+  }
+
   private Criteria getUserGroupbySsoIdCriteria(String ssoId) {
     Criteria criteria = new Criteria();
     criteria.and(UserGroupKeys.isSsoLinked).is(true);

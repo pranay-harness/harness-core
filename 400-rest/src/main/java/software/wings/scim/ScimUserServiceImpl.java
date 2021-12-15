@@ -6,13 +6,19 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.scim.PatchOperation;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimMultiValuedObject;
+import io.harness.scim.ScimUser;
+import io.harness.scim.ScimUserValuedObject;
+import io.harness.scim.service.ScimUserService;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
-import software.wings.beans.scim.ScimUser;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.dl.WingsPersistence;
@@ -241,18 +247,13 @@ public class ScimUserServiceImpl implements ScimUserService {
       updateOperation.set(UserKeys.name, patchOperation.getValue(String.class));
       userService.updateUser(user.getUuid(), updateOperation);
     }
-    if ("active".equals(patchOperation.getPath())) {
-      UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
-      if (patchOperation.getValue(Boolean.class) != null) {
-        updateOperation.set(UserKeys.disabled, !(patchOperation.getValue(Boolean.class)));
-      }
-      userService.updateUser(user.getUuid(), updateOperation);
+    if ("active".equals(patchOperation.getPath()) && patchOperation.getValue(Boolean.class) != null) {
+      changeScimUserDisabled(accountId, user.getUuid(), !(patchOperation.getValue(Boolean.class)));
     }
+
     if (patchOperation.getValue(ScimUserValuedObject.class) != null) {
-      UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
-      updateOperation.set(UserKeys.disabled, !(patchOperation.getValue(ScimUserValuedObject.class)).isActive());
-      removeUserFromAllScimGroups(accountId, userId);
-      userService.updateUser(user.getUuid(), updateOperation);
+      changeScimUserDisabled(
+          accountId, user.getUuid(), !(patchOperation.getValue(ScimUserValuedObject.class)).isActive());
     } else {
       // Not supporting any other updates as of now.
       log.error("SCIM: Unexpected patch operation received: accountId: {}, userId: {}, patchOperation: {}", accountId,
@@ -294,6 +295,7 @@ public class ScimUserServiceImpl implements ScimUserService {
     User user = userService.get(accountId, userId);
 
     if (user == null) {
+      log.error("SCIM: User is not found. userId: {}, accountId: {}", userId, accountId);
       return Response.status(Status.NOT_FOUND).build();
     } else {
       String displayName =
@@ -333,5 +335,16 @@ public class ScimUserServiceImpl implements ScimUserService {
       }
       return Response.status(Status.OK).entity(getUser(user.getUuid(), accountId)).build();
     }
+  }
+
+  @Override
+  public boolean changeScimUserDisabled(String accountId, String userId, boolean disabled) {
+    UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
+    updateOperation.set(UserKeys.disabled, disabled);
+    userService.updateUser(userId, updateOperation);
+    if (disabled) {
+      removeUserFromAllScimGroups(accountId, userId);
+    }
+    return true;
   }
 }

@@ -266,7 +266,7 @@ public class InviteResource {
         ApiResponse(responseCode = "default", description = "Returns the boolean status")
       })
   public ResponseDTO<Boolean>
-  completeInvite(@Parameter(description = "JWT Tokenn") @QueryParam("token") String token) {
+  completeInvite(@Parameter(description = "JWT Token") @QueryParam("token") String token) {
     Optional<Invite> inviteOpt = inviteService.getInviteFromToken(token, false);
     return ResponseDTO.newResponse(inviteService.completeInvite(inviteOpt));
   }
