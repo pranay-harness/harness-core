@@ -110,6 +110,7 @@ import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.plan.ExecutionFeatureRestrictionInfo;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.expressions.functors.ImagePullSecretFunctor;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
@@ -156,6 +157,7 @@ import io.harness.threading.ThreadPool;
 import io.harness.token.remote.TokenClient;
 import io.harness.tracing.MongoRedisTracer;
 import io.harness.utils.NGObjectMapperHelper;
+import io.harness.version.VersionInfoManager;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -568,6 +570,11 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .engineEventHandlersMap(getOrchestrationEventHandlers())
         .executionPoolConfig(appConfig.getPmsSdkExecutionPoolConfig())
         .orchestrationEventPoolConfig(appConfig.getPmsSdkOrchestrationEventPoolConfig())
+        .executionFeatureRestrictionInfo(
+            ExecutionFeatureRestrictionInfo.newBuilder()
+                .setFeatureRestrictionName(FeatureRestrictionName.DEPLOYMENTS_PER_MONTH.name())
+                .setErrorMessage("You have reached max number of deployments")
+                .build())
         .build();
   }
 

@@ -1,6 +1,5 @@
 package io.harness.pms.pipeline.service;
 
-import io.harness.ModuleType;
 import io.harness.PipelineUtils;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -8,6 +7,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.enforcement.exceptions.FeatureNotSupportedException;
+import io.harness.pms.contracts.plan.ExecutionFeatureRestrictionInfo;
 import io.harness.pms.contracts.steps.SdkStep;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepInfo;
@@ -16,6 +16,7 @@ import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.PmsSdkHelper;
+import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.yaml.YamlField;
 
@@ -25,6 +26,7 @@ import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -35,12 +37,11 @@ import java.util.stream.Collectors;
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class PipelineEnforcementServiceImpl implements PipelineEnforcementService {
-  private static final String DEPLOYMENT_EXCEEDED_KEY = "DeploymentExceeded";
-  private static final String BUILD_EXCEEDED_KEY = "BuildExceeded";
-
   private static final String EXECUTION_ERROR = "Your current plan does not support the use of following steps: %s.";
   private static final String UPGRADE_YOUR_PLAN_ERROR_MESSAGE = "Please upgrade your plan.";
   private static final Map<String, String> stageTypeToModule = new ConcurrentHashMap<>();
+  private static final Map<String, ExecutionFeatureRestrictionInfo> executionRestrictionInfo =
+      new ConcurrentHashMap<>();
 
   @Inject PmsSdkInstanceService pmsSdkInstanceService;
   @Inject EnforcementClientService enforcementClientService;
@@ -108,24 +109,38 @@ public class PipelineEnforcementServiceImpl implements PipelineEnforcementServic
   }
 
   private void validateExecutionFeatureRestrictions(String accountId, Set<String> modules) {
-    Multimap<String, String> featureRestrictionToStepNameMap = HashMultimap.create();
-    // Add featureRestriction based on executions (Builds or deployments)
+    Map<String, String> featureRestrictionToErrorMessageMap = new HashMap<>();
     for (String module : modules) {
-      // Todo: Take via PmsSdkInstance
-      if (module.equalsIgnoreCase(ModuleType.CD.name())) {
-        featureRestrictionToStepNameMap.put(
-            FeatureRestrictionName.DEPLOYMENTS_PER_MONTH.name(), DEPLOYMENT_EXCEEDED_KEY);
-      } else if (module.equalsIgnoreCase(ModuleType.CI.name())) {
-        featureRestrictionToStepNameMap.put(FeatureRestrictionName.BUILDS.name(), BUILD_EXCEEDED_KEY);
+      if (executionRestrictionInfo.containsKey(module)) {
+        featureRestrictionToErrorMessageMap.put(executionRestrictionInfo.get(module).getFeatureRestrictionName(),
+            executionRestrictionInfo.get(module).getErrorMessage());
+      } else {
+        List<PmsSdkInstance> sdkInstances = pmsSdkInstanceService.getActiveInstances();
+        for (PmsSdkInstance sdkInstance : sdkInstances) {
+          if (!sdkInstance.getExecutionFeatureRestrictionInfo().getFeatureRestrictionName().isEmpty()) {
+            executionRestrictionInfo.put(sdkInstance.getName(), sdkInstance.getExecutionFeatureRestrictionInfo());
+          }
+        }
+        if (executionRestrictionInfo.containsKey(module)) {
+          featureRestrictionToErrorMessageMap.put(executionRestrictionInfo.get(module).getFeatureRestrictionName(),
+              executionRestrictionInfo.get(module).getErrorMessage());
+        }
       }
     }
 
+    if (featureRestrictionToErrorMessageMap.keySet().isEmpty()) {
+      return;
+    }
     Set<FeatureRestrictionName> disabledFeatures =
-        getDisabledFeatureRestrictionNames(accountId, featureRestrictionToStepNameMap.keySet());
+        getDisabledFeatureRestrictionNames(accountId, featureRestrictionToErrorMessageMap.keySet());
     if (disabledFeatures.isEmpty()) {
       return;
     }
-    throw new FeatureNotSupportedException(constructErrorMessage(featureRestrictionToStepNameMap, disabledFeatures));
+    StringBuilder errorMessage = new StringBuilder();
+    for (FeatureRestrictionName featureRestrictionName : disabledFeatures) {
+      errorMessage.append(featureRestrictionToErrorMessageMap.get(featureRestrictionName.name()));
+    }
+    throw new FeatureNotSupportedException(errorMessage.toString());
   }
 
   /**
@@ -203,13 +218,6 @@ public class PipelineEnforcementServiceImpl implements PipelineEnforcementServic
     StringBuilder stringBuilder = new StringBuilder(40);
     if (!disabledSteps.isEmpty()) {
       stringBuilder.append(String.format(EXECUTION_ERROR, disabledSteps));
-    }
-    if (deploymentsExceeded && buildsExceeded) {
-      stringBuilder.append("You have exceeded max number of deployments and builds.");
-    } else if (deploymentsExceeded) {
-      stringBuilder.append("You have exceeded max number of deployments.");
-    } else if (buildsExceeded) {
-      stringBuilder.append("You have exceeded max number of builds.");
     }
     stringBuilder.append(UPGRADE_YOUR_PLAN_ERROR_MESSAGE);
     return stringBuilder.toString();

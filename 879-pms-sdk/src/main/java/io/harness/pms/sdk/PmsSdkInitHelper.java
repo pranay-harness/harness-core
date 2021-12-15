@@ -33,6 +33,7 @@ import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvide
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.redis.RedisConfig;
+import io.harness.version.VersionInfoManager;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ServiceManager;
@@ -128,6 +129,8 @@ public class PmsSdkInitHelper {
     return InitializeSdkRequest.newBuilder()
         .setName(sdkConfiguration.getServiceName())
         .putAllSupportedTypes(PmsSdkInitHelper.calculateSupportedTypes(infoProvider))
+        .setExecutionFeatureRestrictionInfo(sdkConfiguration.getExecutionFeatureRestrictionInfo())
+        .setVersion(injector.getInstance(VersionInfoManager.class).getFullVersion())
         .addAllSupportedSteps(mapToSdkStep(calculateStepTypes(injector), infoProvider.getStepInfo()))
         .setSdkModuleInfo(SdkModuleInfo.newBuilder().setDisplayName(moduleType.getDisplayName()).build())
         .setInterruptConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.INTERRUPT_EVENT))

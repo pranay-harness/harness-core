@@ -48,6 +48,8 @@ import io.harness.serializer.spring.converters.errorInfo.ExecutionErrorInfoReadC
 import io.harness.serializer.spring.converters.errorInfo.ExecutionErrorInfoWriteConverter;
 import io.harness.serializer.spring.converters.executableresponse.ExecutableResponseReadConverter;
 import io.harness.serializer.spring.converters.executableresponse.ExecutableResponseWriteConverter;
+import io.harness.serializer.spring.converters.executionFeatureRestrictionInfo.ExecutionFeatureRestrictionInfoReadConverter;
+import io.harness.serializer.spring.converters.executionFeatureRestrictionInfo.ExecutionFeatureRestrictionInfoWriteConverter;
 import io.harness.serializer.spring.converters.executionmetadata.ExecutionMetadataReadConverter;
 import io.harness.serializer.spring.converters.executionmetadata.ExecutionMetadataWriteConverter;
 import io.harness.serializer.spring.converters.executionmetadata.TriggerPayloadReadConverter;
@@ -218,7 +220,8 @@ public class OrchestrationRegistrars {
       PmsStepParametersWriteConverter.class, PmsStepDetailsReadConverter.class, PmsStepDetailsWriteConverter.class,
       PolicyMetadataReadConverter.class, PolicyMetadataWriteConverter.class, PolicySetMetadataReadConverter.class,
       PolicySetMetadataWriteConverter.class, GovernanceMetadataReadConverter.class,
-      GovernanceMetadataWriteConverter.class);
+      GovernanceMetadataWriteConverter.class, ExecutionFeatureRestrictionInfoWriteConverter.class,
+      ExecutionFeatureRestrictionInfoReadConverter.class);
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()

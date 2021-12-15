@@ -41,6 +41,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
+import io.harness.pms.contracts.plan.ExecutionFeatureRestrictionInfo;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
@@ -390,6 +391,10 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .executionPoolConfig(config.getPmsSdkExecutionPoolConfig())
         .orchestrationEventPoolConfig(config.getPmsSdkOrchestrationEventPoolConfig())
+        .executionFeatureRestrictionInfo(ExecutionFeatureRestrictionInfo.newBuilder()
+                                             .setFeatureRestrictionName(FeatureRestrictionName.BUILDS.name())
+                                             .setErrorMessage("You have reached max number of builds")
+                                             .build())
         .build();
   }
 

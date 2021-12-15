@@ -10,6 +10,7 @@ import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.plan.ConsumerConfig;
+import io.harness.pms.contracts.plan.ExecutionFeatureRestrictionInfo;
 import io.harness.pms.contracts.plan.SdkModuleInfo;
 import io.harness.pms.contracts.steps.SdkStep;
 
@@ -68,5 +69,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware {
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate Long lastUpdatedAt;
   @Setter @NonFinal @Version Long version;
 
+  ExecutionFeatureRestrictionInfo executionFeatureRestrictionInfo;
+  String serviceVersion;
   @Default Boolean active = false;
 }

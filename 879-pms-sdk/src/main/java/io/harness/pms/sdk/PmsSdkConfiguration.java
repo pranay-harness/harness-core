@@ -9,6 +9,7 @@ import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.plan.ExecutionFeatureRestrictionInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.adviser.Adviser;
@@ -51,6 +52,9 @@ public class PmsSdkConfiguration {
   @Builder.Default ThreadPoolConfig executionPoolConfig = ThreadPoolConfig.builder().build();
   @Builder.Default ThreadPoolConfig orchestrationEventPoolConfig = ThreadPoolConfig.builder().build();
   @Default Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers = new HashMap<>();
+  @Default
+  ExecutionFeatureRestrictionInfo executionFeatureRestrictionInfo =
+      ExecutionFeatureRestrictionInfo.newBuilder().build();
 
   @Default
   EventsFrameworkConfiguration eventsFrameworkConfiguration =
