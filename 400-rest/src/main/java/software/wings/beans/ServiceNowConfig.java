@@ -63,6 +63,7 @@ public class ServiceNowConfig extends SettingValue implements EncryptableSetting
 
   private List<String> delegateSelectors;
 
+  private boolean skipValidation;
   /**
    * Instantiates a new setting value.
    *
@@ -77,7 +78,7 @@ public class ServiceNowConfig extends SettingValue implements EncryptableSetting
   }
 
   public ServiceNowConfig(String baseUrl, String username, char[] password, String encryptedPassword, String accountId,
-      List<String> delegateSelectors) {
+      List<String> delegateSelectors, boolean skipValidation) {
     this();
     this.baseUrl = baseUrl;
     this.username = username;
@@ -85,6 +86,7 @@ public class ServiceNowConfig extends SettingValue implements EncryptableSetting
     this.encryptedPassword = encryptedPassword;
     this.accountId = accountId;
     this.delegateSelectors = delegateSelectors;
+    this.skipValidation = skipValidation;
   }
 
   @Override
@@ -106,15 +108,17 @@ public class ServiceNowConfig extends SettingValue implements EncryptableSetting
     private String username;
     private String password = ENCRYPTED_VALUE_STR;
     private List<String> delegateSelectors;
+    private boolean skipValidation;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String baseUrl, String username, String password,
-        List<String> delegateSelectors, UsageRestrictions.Yaml usageRestrictions) {
+        List<String> delegateSelectors, UsageRestrictions.Yaml usageRestrictions, boolean skipValidation) {
       super(type, harnessApiVersion, usageRestrictions);
       this.baseUrl = baseUrl;
       this.username = username;
       this.password = password;
       this.delegateSelectors = delegateSelectors;
+      this.skipValidation = skipValidation;
     }
   }
 }

@@ -320,11 +320,15 @@ public class SettingValidationService {
         validateKubernetesClusterConfig(settingAttribute, encryptedDataDetails);
       }
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
-        || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
-        || settingValue instanceof ArtifactoryConfig || settingValue instanceof SmbConfig
+        || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig || settingValue instanceof SmbConfig
         || settingValue instanceof SftpConfig || settingValue instanceof AzureArtifactsConfig) {
       buildSourceService.getBuildService(settingAttribute, GLOBAL_APP_ID)
           .validateArtifactServer(settingValue, encryptedDataDetails);
+    } else if (settingValue instanceof ArtifactoryConfig) {
+      if(!((ArtifactoryConfig) settingValue).isSkipValidation()) {
+        buildSourceService.getBuildService(settingAttribute, GLOBAL_APP_ID)
+                .validateArtifactServer(settingValue, encryptedDataDetails);
+      }
     } else if (settingValue instanceof AppDynamicsConfig) {
       newRelicService.validateConfig(settingAttribute, StateType.APP_DYNAMICS, encryptedDataDetails);
     } else if (settingValue instanceof DatadogConfig) {
@@ -375,7 +379,9 @@ public class SettingValidationService {
     } else if (settingValue instanceof JiraConfig) {
       jiraHelperService.validateCredential((JiraConfig) settingValue);
     } else if (settingValue instanceof ServiceNowConfig) {
-      servicenowServiceImpl.validateCredential(settingAttribute);
+      if (!((ServiceNowConfig) settingValue).isSkipValidation()) {
+        servicenowServiceImpl.validateCredential(settingAttribute);
+      }
     } else if (settingValue instanceof HelmRepoConfig) {
       validateHelmRepoConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof SpotInstConfig) {

@@ -33,6 +33,7 @@ public class ServiceNowConfigYamlHandler extends CollaborationProviderYamlHandle
     config.setUsername(yaml.getUsername());
     config.setPassword(yaml.getPassword().toCharArray());
     config.setDelegateSelectors(getDelegateSelectors(yaml.getDelegateSelectors()));
+    config.setSkipValidation(yaml.isSkipValidation());
 
     final String accountId = changeContext.getChange().getAccountId();
     config.setAccountId(accountId);
@@ -52,6 +53,7 @@ public class ServiceNowConfigYamlHandler extends CollaborationProviderYamlHandle
             .username(serviceNowConfig.getUsername())
             .password(getEncryptedYamlRef(serviceNowConfig.getAccountId(), serviceNowConfig.getEncryptedPassword()))
             .delegateSelectors(getDelegateSelectors(serviceNowConfig.getDelegateSelectors()))
+            .skipValidation(serviceNowConfig.isSkipValidation())
             .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
