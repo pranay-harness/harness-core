@@ -1,6 +1,7 @@
 package io.harness.ng.authenticationsettings;
 
 import static io.harness.rule.OwnerRule.MEENAKSHI;
+import static io.harness.rule.OwnerRule.PRATEEK;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -77,6 +78,30 @@ public class NGSamlUserGroupSyncTest extends AuthenticationSettingTestBase {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  public void testUserRemovalPostSync2() {
+    String accountId = "accountId1";
+    String orgId = "orgId1";
+    String projectId = "projectId1";
+    String userId = "userId";
+
+    UserGroup userGroup = UserGroup.builder()
+            .name("name")
+            .accountIdentifier(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projectId)
+            .identifier("userGroup")
+            .build();
+    List<UserGroup> userGroupList = new ArrayList<>();
+    userGroupList.add(userGroup);
+
+    when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
+    ngSamlUserGroupSync.removeUsersFromScopesPostSync(userId);
+    verify(ngUserService, times(0)).removeUserWithCriteria(anyString(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
   public void testUserRemovalPostSync3() {
     String userId = "userId";
 
@@ -88,27 +113,75 @@ public class NGSamlUserGroupSyncTest extends AuthenticationSettingTestBase {
   }
 
   @Test
-  @Owner(developers = UJJAWAL)
+  @Owner(developers = PRATEEK)
   @Category(UnitTests.class)
-  public void testUserRemovalPostSync2() {
+  public void testUserRemovalPostSyncOrgLevel() {
     String accountId = "accountId1";
     String orgId = "orgId1";
     String projectId = "projectId1";
     String userId = "userId";
 
     UserGroup userGroup = UserGroup.builder()
-                              .name("name")
-                              .accountIdentifier(accountId)
-                              .orgIdentifier(orgId)
-                              .projectIdentifier(projectId)
-                              .identifier("userGroup")
-                              .build();
+            .name("name")
+            .accountIdentifier(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projectId)
+            .identifier("userGroup")
+            .build();
     List<UserGroup> userGroupList = new ArrayList<>();
     userGroupList.add(userGroup);
 
     when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
-    ngSamlUserGroupSync.removeUsersFromScopesPostSync(userId);
+    ngSamlUserGroupSync.removeUsersFromGroupPostSyncOrgLevel(userId);
     verify(ngUserService, times(0)).removeUserWithCriteria(anyString(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = PRATEEK)
+  @Category(UnitTests.class)
+  public void testUserRemovalPostSyncOrgLevel2() {
+    String userId = "userId";
+    List<UserGroup> userGroupList = new ArrayList<>();
+
+    when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
+    ngSamlUserGroupSync.removeUsersFromGroupPostSyncOrgLevel(userId);
+    verify(ngUserService, times(2)).removeUserWithCriteria(anyString(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = PRATEEK)
+  @Category(UnitTests.class)
+  public void testUserRemovalPostSyncAccountLevel() {
+    String accountId = "accountId1";
+    String orgId = "orgId1";
+    String projectId = "projectId1";
+    String userId = "userId";
+
+    UserGroup userGroup = UserGroup.builder()
+            .name("name")
+            .accountIdentifier(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projectId)
+            .identifier("userGroup")
+            .build();
+    List<UserGroup> userGroupList = new ArrayList<>();
+    userGroupList.add(userGroup);
+
+    when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
+    ngSamlUserGroupSync.removeUsersFromGroupPostSyncAccountLevel(userId);
+    verify(ngUserService, times(0)).removeUserWithCriteria(anyString(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = PRATEEK)
+  @Category(UnitTests.class)
+  public void testUserRemovalPostSyncAccountLevel2() {
+    String userId = "userId";
+    List<UserGroup> userGroupList = new ArrayList<>();
+
+    when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
+    ngSamlUserGroupSync.removeUsersFromGroupPostSyncAccountLevel(userId);
+    verify(ngUserService, times(1)).removeUserWithCriteria(anyString(), any(), any());
   }
 
   @Test
