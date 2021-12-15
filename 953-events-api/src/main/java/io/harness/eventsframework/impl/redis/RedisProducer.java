@@ -1,11 +1,15 @@
 package io.harness.eventsframework.impl.redis;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eventsframework.impl.redis.RedisUtils.REDIS_STREAM_INTERNAL_KEY;
+import static io.harness.eventsframework.impl.redis.constants.EventFrameworkConstants.REDIS_EVENT_ACCOUNT_COUNT;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.eventsframework.impl.redis.dto.RedisEventDTO;
+import io.harness.eventsframework.impl.redis.publisher.RedisEventStatsPublisher;
 import io.harness.eventsframework.producer.Message;
 import io.harness.redis.RedisConfig;
 
@@ -30,6 +34,7 @@ public class RedisProducer extends AbstractProducer {
   private static final String PRODUCER = "producer";
   private RStream<String, String> stream;
   private RedissonClient redissonClient;
+  private RedisEventStatsPublisher redisEventStatsPublisher;
   // This is used when the consumer for the event are no longer accepting due to some failure and
   // the messages are continuously being accumulated in Redis. To come up with this number, it is
   // very important to understand the alerting on the consumers and the scale estimations of a
@@ -71,6 +76,10 @@ public class RedisProducer extends AbstractProducer {
     redisData.put(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(message.getData().toByteArray()));
     populateOtherProducerSpecificData(redisData);
 
+    if (isNotEmpty(message.getAccountId())) {
+      redisEventStatsPublisher.sendMetricWithEventContext(
+          RedisEventDTO.builder().accountId(message.getAccountId()).build(), REDIS_EVENT_ACCOUNT_COUNT);
+    }
     StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
 
     redisData.remove(REDIS_STREAM_INTERNAL_KEY);
