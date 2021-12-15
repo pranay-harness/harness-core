@@ -199,6 +199,8 @@ import io.harness.remote.CEGcpSetupConfig;
 import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
+import io.harness.scim.service.ScimGroupService;
+import io.harness.scim.service.ScimUserService;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.security.ServiceTokenGenerator;
@@ -228,8 +230,6 @@ import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
-import software.wings.scim.ScimGroupService;
-import software.wings.scim.ScimUserService;
 import software.wings.security.ThreadLocalUserProvider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

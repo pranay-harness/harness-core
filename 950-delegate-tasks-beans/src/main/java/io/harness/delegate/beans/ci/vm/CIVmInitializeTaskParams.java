@@ -1,10 +1,19 @@
 package io.harness.delegate.beans.ci.vm;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.delegate.beans.ci.CIInitializeTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.ConnectorTaskParams;
+import io.harness.delegate.beans.executioncapability.CIVmConnectionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.Expression;
+import io.harness.expression.ExpressionEvaluator;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -14,7 +23,8 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CIVmInitializeTaskParams extends ConnectorTaskParams implements CIInitializeTaskParams {
+public class CIVmInitializeTaskParams
+    extends ConnectorTaskParams implements CIInitializeTaskParams, ExecutionCapabilityDemander {
   @NotNull private String poolID;
   @NotNull private String workingDir;
 
@@ -32,7 +42,8 @@ public class CIVmInitializeTaskParams extends ConnectorTaskParams implements CII
   @NotNull private String stageID;
   @NotNull private String buildID;
 
-  Map<String, String> environment;
+  @Expression(ALLOW_SECRETS) Map<String, String> environment;
+  @Expression(ALLOW_SECRETS) private List<String> secrets;
   private ConnectorDetails gitConnector;
 
   private String stageRuntimeId;
@@ -41,5 +52,10 @@ public class CIVmInitializeTaskParams extends ConnectorTaskParams implements CII
   @Override
   public Type getType() {
     return type;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return Collections.singletonList(CIVmConnectionCapability.builder().poolId(poolID).build());
   }
 }

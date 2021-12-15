@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.perpetualtask.k8s.utils.ResourceVersionMatch.MOST_RECENT;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -34,8 +36,8 @@ public class PVCFetcher {
                              -> {
                            try {
                              return this.coreV1Api.listPersistentVolumeClaimForAllNamespacesCall(null, null, null, null,
-                                 null, null, callGeneratorParams.resourceVersion, callGeneratorParams.timeoutSeconds,
-                                 callGeneratorParams.watch, null);
+                                 null, null, callGeneratorParams.resourceVersion, MOST_RECENT,
+                                 callGeneratorParams.timeoutSeconds, callGeneratorParams.watch, null);
                            } catch (ApiException e) {
                              log.error("Exception occurred creatingCall; code=[{}] headres=[{}] body=[{}]", e.getCode(),
                                  e.getResponseHeaders(), e.getResponseBody(), e);

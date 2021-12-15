@@ -114,6 +114,7 @@ import io.harness.service.DelegateServiceDriverModule;
 import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.jira.JiraStepHelperService;
+import io.harness.steps.jira.create.JiraCreateStepNode;
 import io.harness.steps.shellscript.ShellScriptHelperService;
 import io.harness.steps.shellscript.ShellScriptHelperServiceImpl;
 import io.harness.steps.shellscript.ShellScriptStepNode;
@@ -156,6 +157,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -179,6 +181,7 @@ public class PipelineServiceModule extends AbstractModule {
   public static Set<Class<?>> commonStepsMovedToNewSchema = new HashSet() {
     {
       add(HttpStepNode.class);
+      add(JiraCreateStepNode.class);
       add(ShellScriptStepNode.class);
       add(TemplateStepNode.class);
     }
@@ -547,6 +550,17 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getPipelineExecutionPoolConfig().getMaxPoolSize(),
         configuration.getPipelineExecutionPoolConfig().getIdleTime(),
         configuration.getPipelineExecutionPoolConfig().getTimeUnit(),
+        new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
+  }
+
+  @Provides
+  @Singleton
+  @Named("PlanCreatorMergeExecutorService")
+  public Executor planCreatorMergeExecutorService() {
+    return ThreadPool.create(configuration.getPlanCreatorMergeServicePoolConfig().getCorePoolSize(),
+        configuration.getPlanCreatorMergeServicePoolConfig().getMaxPoolSize(),
+        configuration.getPlanCreatorMergeServicePoolConfig().getIdleTime(),
+        configuration.getPlanCreatorMergeServicePoolConfig().getTimeUnit(),
         new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
   }
 

@@ -1,10 +1,11 @@
 package software.wings.resources;
 
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimResource;
+import io.harness.scim.ScimUser;
 import io.harness.security.annotations.ScimAPI;
 
-import software.wings.beans.scim.ScimUser;
-import software.wings.scim.PatchRequest;
-import software.wings.scim.ScimListResponse;
 import software.wings.scim.ScimUserServiceImpl;
 
 import com.google.inject.Inject;

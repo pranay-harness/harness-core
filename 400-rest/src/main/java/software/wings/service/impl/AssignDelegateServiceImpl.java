@@ -749,7 +749,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   public void saveConnectionResults(List<DelegateConnectionResult> results) {
     List<DelegateConnectionResult> resultsToSave =
         results.stream().filter(result -> isNotBlank(result.getCriteria())).collect(toList());
-
+    log.debug("Delegate connection results [{}]  ", results);
     for (DelegateConnectionResult result : resultsToSave) {
       Query<DelegateConnectionResult> query =
           persistence.createQuery(DelegateConnectionResult.class)

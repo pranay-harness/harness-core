@@ -1,5 +1,7 @@
 package io.harness.cvng.servicelevelobjective.beans;
 
+import io.harness.cvng.core.utils.Thresholds;
+
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -20,6 +22,10 @@ public class SLODashboardWidget {
   @NotNull BurnRate burnRate;
   @NotNull int timeRemainingDays;
   @NotNull double errorBudgetRemainingPercentage;
+  @NotNull
+  public ErrorBudgetRisk getErrorBudgetRisk() {
+    return ErrorBudgetRisk.getFromPercentage(errorBudgetRemainingPercentage);
+  }
   @NotNull int errorBudgetRemaining;
   @NotNull int totalErrorBudget;
   @NotNull SLOTargetType sloTargetType;
@@ -29,6 +35,7 @@ public class SLODashboardWidget {
   @NotNull double sloTargetPercentage;
   @NotNull List<Point> errorBudgetBurndown;
   @NotNull List<Point> sloPerformanceTrend;
+  @NotNull boolean isRecalculatingSLI;
   @Value
   @Builder
   public static class BurnRate {
@@ -43,6 +50,7 @@ public class SLODashboardWidget {
 
   public static SLODashboardWidgetBuilder withGraphData(SLOGraphData sloGraphData) {
     return SLODashboardWidget.builder()
+        .isRecalculatingSLI(sloGraphData.isRecalculatingSLI())
         .errorBudgetRemaining(sloGraphData.getErrorBudgetRemaining())
         .errorBudgetRemainingPercentage(sloGraphData.getErrorBudgetRemainingPercentage())
         .errorBudgetBurndown(sloGraphData.getErrorBudgetBurndown())
@@ -55,8 +63,26 @@ public class SLODashboardWidget {
     int errorBudgetRemaining;
     List<Point> errorBudgetBurndown;
     List<Point> sloPerformanceTrend;
+    boolean isRecalculatingSLI;
     public double errorBudgetSpentPercentage() {
       return 100 - errorBudgetRemainingPercentage;
+    }
+  }
+  public enum ErrorBudgetRisk {
+    HEALTHY,
+    OBSERVE,
+    NEED_ATTENTION,
+    UNHEALTHY;
+    public static ErrorBudgetRisk getFromPercentage(double errorBudgetRemainingPercentage) {
+      if (errorBudgetRemainingPercentage >= Thresholds.HEALTHY_PERCENTAGE) {
+        return ErrorBudgetRisk.HEALTHY;
+      } else if (errorBudgetRemainingPercentage >= Thresholds.NEED_ATTENTION_PERCENTAGE) {
+        return ErrorBudgetRisk.NEED_ATTENTION;
+      } else if (errorBudgetRemainingPercentage >= Thresholds.OBSERVE_PERCENTAGE) {
+        return ErrorBudgetRisk.OBSERVE;
+      } else {
+        return ErrorBudgetRisk.UNHEALTHY;
+      }
     }
   }
 }

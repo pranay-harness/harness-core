@@ -210,6 +210,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -230,6 +231,7 @@ public class K8sTaskHelperBase {
   public static final String kustomizeFileName = "kustomization.yaml";
   public static final String patchFieldName = "patchesStrategicMerge";
   public static final String patchYaml = "patches-%d.yaml";
+  public static final String kustomizePatchesDirPrefix = "kustomizePatches-";
 
   @Inject private TimeLimiter timeLimiter;
   @Inject private KubernetesContainerService kubernetesContainerService;
@@ -1735,7 +1737,8 @@ public class K8sTaskHelperBase {
 
   public String convertJsonToYaml(JSONObject jsonObject) {
     String prettyJSONString = jsonObject.toString();
-    Yaml yaml = new Yaml(new io.kubernetes.client.util.Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+    Yaml yaml =
+        new Yaml(new io.kubernetes.client.util.Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
     Map<String, Object> map = yaml.load(prettyJSONString);
     return yaml.dump(map);
   }
@@ -1767,13 +1770,15 @@ public class K8sTaskHelperBase {
   public JSONArray writePatchesToDirectory(String kustomizePath, List<String> patchesFiles) throws IOException {
     StringBuilder patchesFilesOptionsBuilder = new StringBuilder(128);
     JSONArray patchList = new JSONArray();
+    String kustomizePatchesDir = kustomizePatchesDirPrefix + RandomStringUtils.randomAlphanumeric(4);
+    Path outputTemporaryDir = Files.createDirectories(Paths.get(kustomizePath, kustomizePatchesDir));
 
     for (int i = 0; i < patchesFiles.size(); i++) {
       validateValuesFileContents(patchesFiles.get(i));
       String patchesFileName = format(patchYaml, i);
-      FileIo.writeUtf8StringToFile(kustomizePath + '/' + patchesFileName, patchesFiles.get(i));
+      FileIo.writeUtf8StringToFile(Paths.get(outputTemporaryDir.toString(), patchesFileName).toString(), patchesFiles.get(i));
       patchesFilesOptionsBuilder.append(" -f ").append(patchesFileName);
-      patchList.put(patchesFileName);
+      patchList.put(Paths.get(kustomizePatchesDir, patchesFileName));
     }
 
     log.info("Patches file options: " + patchesFilesOptionsBuilder.toString());

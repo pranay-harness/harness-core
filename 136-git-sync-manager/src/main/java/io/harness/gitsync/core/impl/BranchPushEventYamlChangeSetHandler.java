@@ -70,7 +70,8 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
     String repoURL = yamlChangeSetDTO.getRepoUrl();
 
-    List<YamlGitConfigDTO> yamlGitConfigDTOList = yamlGitConfigService.getByRepo(repoURL);
+    List<YamlGitConfigDTO> yamlGitConfigDTOList =
+        yamlGitConfigService.getByAccountAndRepo(yamlChangeSetDTO.getAccountId(), repoURL);
     if (yamlGitConfigDTOList.isEmpty()) {
       log.info("Repo {} doesn't exist, ignoring the branch push change set event : {}", repoURL, yamlChangeSetDTO);
       return YamlChangeSetStatus.SKIPPED;

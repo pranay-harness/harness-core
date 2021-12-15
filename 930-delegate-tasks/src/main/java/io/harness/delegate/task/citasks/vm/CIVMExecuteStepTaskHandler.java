@@ -7,6 +7,8 @@ import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.RUNTEST_S
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.RUN_STEP_KIND;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.WORKDIR_VOLUME_NAME;
 
+import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
@@ -88,7 +90,7 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
         ExecuteStepRequest.VolumeMount.builder().name(WORKDIR_VOLUME_NAME).path(params.getWorkingDir()).build();
 
     ConfigBuilder configBuilder = ExecuteStepRequest.Config.builder()
-                                      .id(params.getStepRuntimeId())
+                                      .id(getIdentifier(params.getStepRuntimeId()))
                                       .name(params.getStepId())
                                       .logKey(params.getLogKey())
                                       .workingDir(params.getWorkingDir())
@@ -102,6 +104,9 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     } else if (params.getStepInfo().getType() == VmStepInfo.Type.RUN_TEST) {
       VmRunTestStep runTestStep = (VmRunTestStep) params.getStepInfo();
       setRunTestConfig(runTestStep, configBuilder);
+    }
+    if (isNotEmpty(params.getSecrets())) {
+      params.getSecrets().forEach(secret -> configBuilder.secret(secret));
     }
     return ExecuteStepRequest.builder()
         .poolId(params.getPoolId())
@@ -146,6 +151,7 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
         .image(pluginStep.getImage())
         .pull(pluginStep.getPullPolicy())
         .user(pluginStep.getRunAsUser())
+        .secrets(secrets)
         .envs(pluginStep.getEnvVariables())
         .privileged(pluginStep.isPrivileged())
         .testReport(convertTestReport(pluginStep.getUnitTestReport()))
@@ -189,5 +195,18 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
         .kind("Junit")
         .junitReport(JunitReport.builder().paths(junitTestReport.getPaths()).build())
         .build();
+  }
+
+  public String getIdentifier(String identifier) {
+    StringBuilder sb = new StringBuilder(15);
+    for (char c : identifier.toCharArray()) {
+      if (isAsciiAlphanumeric(c)) {
+        sb.append(c);
+      }
+      if (sb.length() == 15) {
+        return sb.toString();
+      }
+    }
+    return sb.toString();
   }
 }

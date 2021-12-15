@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CI)
 public class BuildJobEnvInfoBuilder {
   @Inject private InitializeStepInfoBuilder initializeStepInfoBuilder;
+  @Inject private VmInitializeStepUtil vmInitializeStepUtil;
 
   public BuildJobEnvInfo getCIBuildJobEnvInfo(StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs,
       List<ExecutionWrapperConfig> steps, String accountId) {
@@ -50,19 +51,7 @@ public class BuildJobEnvInfoBuilder {
           stageElementConfig, ciExecutionArgs, steps, accountId);
     } // TODO (shubham): Handle Use from stage for AWS VM
     else if (infrastructure.getType() == Type.VM) {
-      for (ExecutionWrapperConfig executionWrapper : steps) {
-        StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
-        if (stepElementConfig.getStepSpecType() instanceof CIStepInfo) {
-          CIStepInfo ciStepInfo = (CIStepInfo) stepElementConfig.getStepSpecType();
-          if (ciStepInfo.getNonYamlInfo().getStepInfoType() == CIStepInfoType.RUN) {
-            RunStepInfo runStepInfo = (RunStepInfo) ciStepInfo;
-            if (runStepInfo.getImage() != null && runStepInfo.getConnectorRef() == null) {
-              throw new CIStageExecutionException("connector ref can't be empty if image is provided");
-            }
-          }
-        }
-      }
-      return VmBuildJobInfo.builder().workDir(STEP_WORK_DIR).ciExecutionArgs(ciExecutionArgs).build();
+      return vmInitializeStepUtil.getInitializeStepInfoBuilder(stageElementConfig, ciExecutionArgs, steps, accountId);
     } else {
       throw new IllegalArgumentException("Input infrastructure type is not of type kubernetes or VM");
     }

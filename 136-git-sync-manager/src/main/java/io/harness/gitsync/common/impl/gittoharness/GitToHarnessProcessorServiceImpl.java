@@ -115,7 +115,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       gitSyncErrorService.resolveConnectivityErrors(accountId, repoUrl, branchName);
     }
 
-    final List<YamlGitConfigDTO> yamlGitConfigs = yamlGitConfigService.getByRepo(repoUrl);
+    final List<YamlGitConfigDTO> yamlGitConfigs = yamlGitConfigService.getByAccountAndRepo(accountId, repoUrl);
 
     GitToHarnessProcessingInfo gitToHarnessProcessingInfo =
         GitToHarnessProcessingInfo.builder()
@@ -578,7 +578,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   }
 
   private List<Scope> getScopes(String repoUrl, String accountId) {
-    List<YamlGitConfigDTO> yamlGitConfigDTOS = yamlGitConfigService.getByRepo(repoUrl);
+    List<YamlGitConfigDTO> yamlGitConfigDTOS = yamlGitConfigService.getByAccountAndRepo(accountId, repoUrl);
     return yamlGitConfigDTOS.stream()
         .filter(yamlGitConfigDTO -> yamlGitConfigDTO.getAccountIdentifier().equals(accountId))
         .map(yamlGitConfigDTO

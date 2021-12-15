@@ -1,8 +1,10 @@
 package io.harness.beans.environment;
 
 import io.harness.beans.executionargs.CIExecutionArgs;
+import io.harness.yaml.core.variables.NGVariable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
@@ -21,6 +23,7 @@ public class VmBuildJobInfo implements BuildJobEnvInfo {
   @NotEmpty private String workDir;
   private CIExecutionArgs ciExecutionArgs;
   private ArrayList<String> connectorRefIdentifierList;
+  private List<NGVariable> stageVars;
 
   @Override
   public Type getType() {

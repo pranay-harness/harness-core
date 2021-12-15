@@ -43,10 +43,14 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
       }
 
       Repository repository = scmParsedWebhookResponse.getPush().getRepo();
+      String repoUrl = repository.getLink();
+      if (yamlGitConfigService.getByAccountAndRepo(webhookDTO.getAccountId(), repoUrl).isEmpty()) {
+        repoUrl = convertSshUrl(repository.getCloneSsh());
+      }
 
-      if (Boolean.TRUE.equals(yamlGitConfigService.isRepoExists(repository.getLink()))) {
+      if (Boolean.TRUE.equals(yamlGitConfigService.isRepoExists(repoUrl))) {
         String branchName = getBranchName(scmParsedWebhookResponse);
-        GitBranch gitBranch = gitBranchService.get(webhookDTO.getAccountId(), repository.getLink(), branchName);
+        GitBranch gitBranch = gitBranchService.get(webhookDTO.getAccountId(), repoUrl, branchName);
         if (gitBranch == null) {
           log.info("{} : Branch {} doesn't exist adding it and ignoring push event : {} ", GIT_PUSH_EVENT, branchName,
               webhookDTO);
@@ -54,7 +58,7 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
                                        .accountIdentifier(webhookDTO.getAccountId())
                                        .branchSyncStatus(BranchSyncStatus.UNSYNCED)
                                        .branchName(branchName)
-                                       .repoURL(repository.getLink())
+                                       .repoURL(repoUrl)
                                        .build();
           gitBranchService.save(branch);
           return;
@@ -77,7 +81,7 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
         }
 
         // create queue event and pass it to the git queue
-        YamlChangeSetDTO yamlChangeSetDTO = yamlChangeSetService.save(prepareQueueEvent(webhookDTO));
+        YamlChangeSetDTO yamlChangeSetDTO = yamlChangeSetService.save(prepareQueueEvent(webhookDTO, repoUrl));
         log.info("{} : Yaml change set queue event id {} created for webhook event id : {}", GIT_PUSH_EVENT,
             yamlChangeSetDTO.getChangesetId(), webhookDTO.getEventId());
       } else {
@@ -89,19 +93,25 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
   }
 
   // ------------------------- PRIVATE METHODS --------------------------
+  private String convertSshUrl(String sshUrl) {
+    if (sshUrl.endsWith(".git")) {
+      sshUrl = sshUrl.replaceAll("\\.git$", "");
+    }
+    return sshUrl;
+  }
 
-  private YamlChangeSetSaveDTO prepareQueueEvent(WebhookDTO webhookDTO) {
-    Repository repository = webhookDTO.getParsedResponse().getPush().getRepo();
+  private YamlChangeSetSaveDTO prepareQueueEvent(WebhookDTO webhookDTO, String repoUrl) {
     String commitId = webhookDTO.getParsedResponse().getPush().getCommit().getSha();
     final String branchName = getBranchName(webhookDTO.getParsedResponse());
+
     return YamlChangeSetSaveDTO.builder()
         .accountId(webhookDTO.getAccountId())
         .branch(branchName)
-        .repoUrl(repository.getLink())
+        .repoUrl(repoUrl)
         .eventType(YamlChangeSetEventType.BRANCH_PUSH)
         .gitWebhookRequestAttributes(GitWebhookRequestAttributes.builder()
                                          .branchName(branchName)
-                                         .repo(repository.getLink())
+                                         .repo(repoUrl)
                                          .webhookBody(webhookDTO.getJsonPayload())
                                          .webhookHeaders(webhookDTO.getHeadersList().toString())
                                          .headCommitId(commitId)

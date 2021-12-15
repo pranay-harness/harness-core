@@ -85,7 +85,8 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
   @Override
   public GitToHarnessProcessMsvcStepResponse processBranchSyncEvent(YamlGitConfigDTO yamlGitConfig, String branchName,
       String accountIdentifier, String filePathToBeExcluded, String changeSetId, String gitToHarnessProgressRecordId) {
-    List<YamlGitConfigDTO> yamlGitConfigDTOS = yamlGitConfigService.getByRepo(yamlGitConfig.getRepo());
+    List<YamlGitConfigDTO> yamlGitConfigDTOS =
+        yamlGitConfigService.getByAccountAndRepo(accountIdentifier, yamlGitConfig.getRepo());
     Set<String> foldersList = YamlGitConfigHelper.getRootFolderList(yamlGitConfigDTOS);
     List<GitFileChangeDTO> harnessFilesOfBranch =
         getFilesToBeProcessed(yamlGitConfigDTOS, accountIdentifier, foldersList, branchName);

@@ -12,15 +12,16 @@ import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
-import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -33,6 +34,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -51,15 +53,15 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   private final YamlSchemaGenerator yamlSchemaGenerator;
 
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
-  private final Map<Class<?>, Set<Class<?>>> newCdYamlSchemaSubtypesToBeAdded;
+  private final List<YamlSchemaRootClass> yamlSchemaRootClasses;
   @Inject
   public CdYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
       @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
-      @Named("new-yaml-schema-subtypes-cd") Map<Class<?>, Set<Class<?>>> newCdYamlSchemaSubtypesToBeAdded) {
+      List<YamlSchemaRootClass> yamlSchemaRootClasses) {
     this.yamlSchemaProvider = yamlSchemaProvider;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
-    this.newCdYamlSchemaSubtypesToBeAdded = newCdYamlSchemaSubtypesToBeAdded;
+    this.yamlSchemaRootClasses = yamlSchemaRootClasses;
   }
 
   @Override
@@ -68,8 +70,8 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STAGE, orgIdentifier, projectIdentifier, scope);
 
     // Including steps into oneOf field of ExecutionWrapperConfig.properties.spec that are moved to new schema.
-    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
-        deploymentStageSchema.get(DEFINITIONS_NODE), newCdYamlSchemaSubtypesToBeAdded, CD_NAMESPACE);
+    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(deploymentStageSchema.get(DEFINITIONS_NODE),
+        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), CD_NAMESPACE);
     JsonNode deploymentStepsSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STEPS, orgIdentifier, projectIdentifier, scope);
 
@@ -78,7 +80,7 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
 
     JsonNodeUtils.merge(definitions, deploymentStepDefinitions);
     yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier, scope, (ObjectNode) definitions,
-        YamlSchemaTransientHelper.cdStepV2EntityTypes);
+        YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()));
     JsonNode jsonNode = definitions.get(ParallelStepElementConfig.class.getSimpleName());
     if (jsonNode.isObject()) {
       flattenParallelStepElementConfig((ObjectNode) jsonNode);

@@ -22,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Api("upgrader/delegate")
-@Path("upgrader/delegate")
+@Api("/upgrader/delegate")
+@Path("/upgrader/delegate")
 @Produces("application/json")
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
@@ -37,12 +37,25 @@ public class DelegateUpgraderResource {
 
   @DelegateAuth
   @GET
+  @Path("/upgrade-check/delegate")
   @Timed
   @ExceptionMetered
   public RestResponse<Pair<Boolean, String> > getDelegateImageTag(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("currentDelegateImageTag") @NotEmpty String currentDelegateImageTag) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateUpgraderService.getDelegateImageTag(accountId, currentDelegateImageTag));
+    }
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("/upgrade-check/upgrader")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Pair<Boolean, String> > getUpgraderImageTag(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("currentUpgraderImageTag") @NotEmpty String currentUpgraderImageTag) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateUpgraderService.getUpgraderImageTag(accountId, currentUpgraderImageTag));
     }
   }
 }

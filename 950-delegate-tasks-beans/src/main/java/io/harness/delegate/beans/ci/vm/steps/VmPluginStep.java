@@ -1,7 +1,10 @@
 package io.harness.delegate.beans.ci.vm.steps;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
+import io.harness.expression.Expression;
 
 import java.util.Map;
 import lombok.Builder;
@@ -18,7 +21,7 @@ public class VmPluginStep implements VmStepInfo {
   private boolean privileged;
   private String runAsUser;
 
-  private Map<String, String> envVariables;
+  @Expression(ALLOW_SECRETS) private Map<String, String> envVariables;
   private VmUnitTestReport unitTestReport;
   private long timeoutSecs;
 

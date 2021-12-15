@@ -11,6 +11,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DHRUV;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -113,11 +114,13 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.approval.ApprovalStateParams;
+import software.wings.beans.approval.ApprovalStateParams.ApprovalStateParamsKeys;
 import software.wings.beans.approval.ConditionalOperator;
 import software.wings.beans.approval.Criteria;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.approval.ShellScriptApprovalParams;
+import software.wings.beans.approval.ShellScriptApprovalParams.ShellScriptApprovalParamsKeys;
 import software.wings.beans.approval.SlackApprovalParams;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -156,14 +159,17 @@ import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -1905,5 +1911,109 @@ public class ApprovalStateTest extends WingsBaseTest {
         ApprovalStateExecutionDataKeys.variables, "test", ApprovalStateExecutionDataKeys.ticketType,
         ApprovalStateExecutionDataKeys.ticketUrl, ApprovalStateExecutionDataKeys.approvalFromSlack,
         ApprovalStateExecutionDataKeys.timeoutMillis, ApprovalStateExecutionDataKeys.approvalStateType);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void mapDelegateSelectorsCustomShellScriptApproval() throws Exception {
+    // build linked hash map
+    Map<String, Object> map = Maps.newLinkedHashMap();
+    Map<String, Object> approvalStateParams = Maps.newLinkedHashMap();
+    Map<String, Object> shellScriptParams = Maps.newLinkedHashMap();
+
+    shellScriptParams.put("scriptString", "echo 451");
+    shellScriptParams.put("retryInterval", 30000);
+    shellScriptParams.put("delegateSelectors", Arrays.asList("delegate1234"));
+
+    approvalStateParams.put("shellScriptApprovalParams", shellScriptParams);
+
+    map.put("templateUuid", null);
+    map.put("approvalStateType", "SHELL_SCRIPT");
+    map.put("approvalStateParams", approvalStateParams);
+    map.put("templateVersion", null);
+    map.put("timeoutMillis", 86400);
+    map.put("parentId", "PARENT_ID");
+    map.put("templateVariables", null);
+
+    ApprovalState approvalState = new ApprovalState("approvalState");
+
+    approvalState.mapApprovalObject(map, approvalState);
+    assertThat(approvalState.getApprovalStateType()).isEqualTo(ApprovalStateType.SHELL_SCRIPT);
+    assertThat(approvalState.approvalStateParams.getShellScriptApprovalParams().fetchDelegateSelectors())
+        .contains("delegate1234");
+    LinkedHashMap<String, Object> shellScriptApprovalParams =
+        (LinkedHashMap<String, Object>) ((LinkedHashMap<String, Object>) map.get(ApprovalStateKeys.approvalStateParams))
+            .get(ApprovalStateParamsKeys.shellScriptApprovalParams);
+    // repopulated delegate selector in map
+    assertThat(shellScriptApprovalParams.containsKey(ShellScriptApprovalParamsKeys.delegateSelectors));
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void mapWithoutDelegateSelectorsCustomShellScriptApproval() throws Exception {
+    // build linked hash map
+    Map<String, Object> map = Maps.newLinkedHashMap();
+    Map<String, Object> approvalStateParams = Maps.newLinkedHashMap();
+    Map<String, Object> shellScriptParams = Maps.newLinkedHashMap();
+
+    shellScriptParams.put("scriptString", "echo 451");
+    shellScriptParams.put("retryInterval", 30000);
+
+    approvalStateParams.put("shellScriptApprovalParams", shellScriptParams);
+
+    map.put("approvalStateType", "SHELL_SCRIPT");
+    map.put("approvalStateParams", approvalStateParams);
+    map.put("timeoutMillis", 86400);
+    map.put("parentId", "PARENT_ID");
+
+    ApprovalState approvalState = new ApprovalState("approvalState");
+
+    approvalState.mapApprovalObject(map, approvalState);
+    assertThat(approvalState.approvalStateParams.getShellScriptApprovalParams().fetchDelegateSelectors()).isNull();
+    assertThat(approvalState.getApprovalStateType()).isEqualTo(ApprovalStateType.SHELL_SCRIPT);
+    LinkedHashMap<String, Object> shellScriptApprovalParams =
+        (LinkedHashMap<String, Object>) ((LinkedHashMap<String, Object>) map.get(ApprovalStateKeys.approvalStateParams))
+            .get(ApprovalStateParamsKeys.shellScriptApprovalParams);
+    // no delegate selector in map
+    assertThat(!shellScriptApprovalParams.containsKey(ShellScriptApprovalParamsKeys.delegateSelectors));
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void mapPropertiesServiceNowApproval() throws Exception {
+    // build linked hash map
+    Map<String, Object> map = Maps.newLinkedHashMap();
+    Map<String, Object> approvalStateParams = Maps.newLinkedHashMap();
+    Map<String, Object> serviceNowApprovalParams = Maps.newLinkedHashMap();
+
+    serviceNowApprovalParams.put("issueNumber", "issueNumber");
+    serviceNowApprovalParams.put("changeWindowEndField", "end");
+    serviceNowApprovalParams.put("changeWindowStartField", "start");
+    serviceNowApprovalParams.put("changeWindowPresent", "true");
+
+    Map<String, Object> approvalCriteria = Maps.newLinkedHashMap();
+    approvalCriteria.put("operator", "AND");
+    approvalCriteria.put("conditions",
+        ImmutableMap.of(SERVICENOW_STATE, asList("Closed", "Cancelled"), "approval", asList("Approved", "Requested")));
+
+    serviceNowApprovalParams.put("approval", approvalCriteria);
+    approvalStateParams.put("serviceNowApprovalParams", serviceNowApprovalParams);
+
+    map.put("approvalStateType", "SERVICENOW");
+    map.put("approvalStateParams", approvalStateParams);
+    map.put("timeoutMillis", 86400);
+    map.put("parentId", "PARENT_ID");
+
+    ApprovalState approvalState = new ApprovalState("approvalState");
+
+    approvalState.mapApprovalObject(map, approvalState);
+    assertThat(approvalState.approvalStateParams.getServiceNowApprovalParams().getChangeWindowEndField())
+        .contains("end");
+    assertThat(approvalState.approvalStateParams.getServiceNowApprovalParams().getApproval().fetchConditions())
+        .containsKeys("approval", "state");
+    assertThat(approvalState.getApprovalStateType()).isEqualTo(ApprovalStateType.SERVICENOW);
   }
 }

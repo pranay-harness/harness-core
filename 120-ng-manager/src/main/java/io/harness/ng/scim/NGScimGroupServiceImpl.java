@@ -1,9 +1,9 @@
 package io.harness.ng.scim;
 
-import software.wings.scim.PatchRequest;
-import software.wings.scim.ScimGroup;
-import software.wings.scim.ScimGroupService;
-import software.wings.scim.ScimListResponse;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimGroup;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.service.ScimGroupService;
 
 import javax.ws.rs.core.Response;
 
