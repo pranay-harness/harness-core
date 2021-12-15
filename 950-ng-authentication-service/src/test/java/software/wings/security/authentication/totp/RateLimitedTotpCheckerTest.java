@@ -171,7 +171,7 @@ public class RateLimitedTotpCheckerTest {
         .hasMessage(errorMessage(USER1_REQUEST));
   }
 
-  @Test(timeout = 100)
+  @Test
   @Owner(developers = BOGDAN)
   @Category(UnitTests.class)
   public void shouldAllowRateLimitedUserToAttemptAfterWindowPasses() {

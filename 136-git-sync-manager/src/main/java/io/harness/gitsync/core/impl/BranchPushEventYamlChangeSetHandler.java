@@ -3,7 +3,6 @@ package io.harness.gitsync.core.impl;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
-import io.harness.beans.Scope;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.UnexpectedException;
 import io.harness.ff.FeatureFlagService;
@@ -42,7 +41,6 @@ import io.harness.utils.FilePathUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,7 +174,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     } catch (Exception ex) {
       log.error("Error occurred while perform step : {}" + GitToHarnessProcessingStepType.GET_FILES, ex);
       String errorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
-      recordErrors(yamlGitConfigDTOList, yamlChangeSetDTO, errorMessage);
+      recordErrors(yamlChangeSetDTO, errorMessage);
       // Mark step status error
       gitToHarnessProgressService.updateStepStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
@@ -198,16 +196,10 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         .build();
   }
 
-  private void recordErrors(
-      List<YamlGitConfigDTO> yamlGitConfigDTOList, YamlChangeSetDTO yamlChangeSetDTO, String errorMessage) {
+  private void recordErrors(YamlChangeSetDTO yamlChangeSetDTO, String errorMessage) {
     if (featureFlagService.isEnabled(FeatureName.NG_GIT_ERROR_EXPERIENCE, yamlChangeSetDTO.getAccountId())) {
-      yamlGitConfigDTOList.forEach(yamlGitConfigDTO -> {
-        Scope scope = Scope.of(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
-            yamlGitConfigDTO.getProjectIdentifier());
-        gitSyncErrorService.recordConnectivityError(yamlGitConfigDTO.getAccountIdentifier(),
-            Collections.singletonList(scope), yamlChangeSetDTO.getRepoUrl(), yamlChangeSetDTO.getBranch(),
-            errorMessage);
-      });
+      gitSyncErrorService.recordConnectivityError(
+          yamlChangeSetDTO.getAccountId(), yamlChangeSetDTO.getRepoUrl(), errorMessage);
     }
   }
 
