@@ -1813,7 +1813,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
 
     taskReceivedTime = currentTimeMillis();
-    log.info("DelegateTaskEvent received - {}", delegateTaskEvent);
+    log.info("DelegateTaskEvent received - {} at: {}", delegateTaskEvent, taskReceivedTime);
 
     String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
     if (delegateTaskId == null) {
@@ -2268,11 +2268,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       Response<ResponseBody> response = null;
       try {
+        final long currentTime = currentTimeMillis();
+        log.info("Task completed at agent in time : {} at: {}", currentTime - taskReceivedTime, currentTime);
         response = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(30), () -> {
           Response<ResponseBody> resp = null;
           int retries = 5;
           for (int attempt = 0; attempt < retries; attempt++) {
-            log.info("Task completed at agent in time : {} ",  currentTimeMillis() - taskReceivedTime);
             resp = delegateAgentManagerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
             if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
               log.info("Task {} response sent to manager", taskId);
