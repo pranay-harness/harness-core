@@ -92,23 +92,25 @@ public class HttpServiceImpl implements HttpService {
 
     if (httpInternalConfig.isUseProxy()) {
       if (Http.shouldUseNonProxy(httpInternalConfig.getUrl())) {
-        throw new InvalidRequestException(
-            "Delegate is configured not to use proxy for the given url: " + httpInternalConfig.getUrl(),
-            WingsException.USER);
-      }
-
-      HttpHost proxyHost = Http.getHttpProxyHost();
-      if (proxyHost != null) {
-        if (isNotEmpty(Http.getProxyUserName())) {
-          httpClientBuilder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
-          BasicCredentialsProvider credsProvider = new BasicCredentialsProvider();
-          credsProvider.setCredentials(new AuthScope(proxyHost),
-              new UsernamePasswordCredentials(Http.getProxyUserName(), Http.getProxyPassword()));
-          httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
+        if (httpInternalConfig.isThrowErrorIfNoProxySetWithDelegateProxy()) {
+          throw new InvalidRequestException(
+              "Delegate is configured not to use proxy for the given url: " + httpInternalConfig.getUrl(),
+              WingsException.USER);
         }
-        httpClientBuilder.setProxy(proxyHost);
       } else {
-        log.warn("Task setup to use DelegateProxy but delegate setup without any proxy");
+        HttpHost proxyHost = Http.getHttpProxyHost();
+        if (proxyHost != null) {
+          if (isNotEmpty(Http.getProxyUserName())) {
+            httpClientBuilder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
+            BasicCredentialsProvider credsProvider = new BasicCredentialsProvider();
+            credsProvider.setCredentials(new AuthScope(proxyHost),
+                new UsernamePasswordCredentials(Http.getProxyUserName(), Http.getProxyPassword()));
+            httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
+          }
+          httpClientBuilder.setProxy(proxyHost);
+        } else {
+          log.warn("Task setup to use DelegateProxy but delegate setup without any proxy");
+        }
       }
     }
 
