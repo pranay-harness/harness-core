@@ -8,6 +8,7 @@ import static io.harness.delegate.configuration.InstallUtils.installChartMuseum;
 import static io.harness.delegate.configuration.InstallUtils.installGoTemplateTool;
 import static io.harness.delegate.configuration.InstallUtils.installHarnessPywinrm;
 import static io.harness.delegate.configuration.InstallUtils.installHelm;
+import static java.lang.System.currentTimeMillis;
 import static io.harness.delegate.configuration.InstallUtils.installKubectl;
 import static io.harness.delegate.configuration.InstallUtils.installKustomize;
 import static io.harness.delegate.configuration.InstallUtils.installOc;
@@ -388,6 +389,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private String upgradeVersion;
   private String migrateTo;
   private long startTime;
+  private long taskReceivedTime;
   private long upgradeStartedAt;
   private long stoppedAcquiringAt;
   private String accountId;
@@ -1810,6 +1812,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       return;
     }
 
+    taskReceivedTime = currentTimeMillis();
     log.info("DelegateTaskEvent received - {}", delegateTaskEvent);
 
     String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
@@ -2269,6 +2272,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           Response<ResponseBody> resp = null;
           int retries = 5;
           for (int attempt = 0; attempt < retries; attempt++) {
+            log.info("Task completed at agent in time : {} ",  currentTimeMillis() - taskReceivedTime);
             resp = delegateAgentManagerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
             if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
               log.info("Task {} response sent to manager", taskId);

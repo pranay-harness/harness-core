@@ -8,13 +8,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-
 import static software.wings.beans.delegation.ShellScriptParameters.CommandUnit;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -188,10 +188,13 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     return super.getTimeoutMillis();
   }
 
+  private long startTime;
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
     try {
+      startTime = currentTimeMillis();
+      log.info("Execution of phase started at: {}", startTime);
       return executeInternal(context, activityId);
     } catch (WingsException e) {
       throw e;
@@ -207,6 +210,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    log.info("Phase response received at: {} took {} time to execute", currentTimeMillis(), currentTimeMillis() - startTime);
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     String activityId = response.keySet().iterator().next();
     DelegateResponseData data = (DelegateResponseData) response.values().iterator().next();
