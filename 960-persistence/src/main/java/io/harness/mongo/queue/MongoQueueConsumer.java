@@ -132,6 +132,7 @@ public class MongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> 
 
   @Override
   public void ack(final T message) {
+    log.debug("Queue event consumer msg: [{}]", message);
     Objects.requireNonNull(message);
     persistence.delete(klass, message.getId());
   }

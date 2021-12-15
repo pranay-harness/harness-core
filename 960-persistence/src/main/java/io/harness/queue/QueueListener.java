@@ -16,6 +16,7 @@ import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.DelayLogContext;
 import io.harness.mongo.MessageLogContext;
 import io.harness.mongo.ProcessTimeLogContext;
+import io.harness.queue.QueueConsumer.Filter;
 
 import com.google.inject.Inject;
 import java.time.Duration;
@@ -62,6 +63,8 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
   }
 
   public boolean execute() {
+    log.debug("Total event in running: [{}] and not running:[{}] - Class info [{}]",
+        queueConsumer.count(Filter.RUNNING), queueConsumer.count(Filter.NOT_RUNNING), this);
     T message = null;
     try {
       log.trace("Waiting for message");
@@ -75,6 +78,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
     }
 
     if (message != null) {
+      log.debug("Consuming message [{}]", message);
       processMessage(message);
     }
     return true;

@@ -5,7 +5,7 @@ exports_files([
 filegroup(
     name = "container_common_files",
     srcs = glob([
-        "AppServerAgent-20.8.0.30686.zip",
+        "AppServerAgent-1.8-21.11.1.33280.zip",
         "protocol.info",
     ]),
     visibility = ["//visibility:public"],

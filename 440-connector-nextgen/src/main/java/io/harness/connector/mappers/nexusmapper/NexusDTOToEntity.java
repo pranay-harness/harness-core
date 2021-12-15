@@ -12,6 +12,7 @@ import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordA
 import io.harness.encryption.SecretRefHelper;
 
 import com.google.inject.Singleton;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @OwnedBy(HarnessTeam.CDC)
@@ -20,7 +21,7 @@ public class NexusDTOToEntity implements ConnectorDTOToEntityMapper<NexusConnect
   public NexusConnector toConnectorEntity(NexusConnectorDTO configDTO) {
     NexusAuthType nexusAuthType = configDTO.getAuth().getAuthType();
     NexusConnectorBuilder nexusConnectorBuilder = NexusConnector.builder()
-                                                      .url(configDTO.getNexusServerUrl())
+                                                      .url(StringUtils.trim(configDTO.getNexusServerUrl()))
                                                       .nexusVersion(configDTO.getVersion())
                                                       .authType(nexusAuthType);
     if (nexusAuthType == NexusAuthType.USER_PASSWORD) {

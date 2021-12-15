@@ -15,6 +15,7 @@ import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.VmInfraSpec;
 import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.VmPoolYaml;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.vm.CIVmInitializeTaskParams;
 import io.harness.exception.ngexception.CIStageExecutionException;
@@ -26,13 +27,19 @@ import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.tiserviceclient.TIServiceUtils;
+import io.harness.util.CIVmSecretEvaluator;
+import io.harness.yaml.utils.NGVariablesUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -87,7 +94,13 @@ public class VmInitializeTaskUtils {
     Map<String, String> envVars = new HashMap<>();
     envVars.putAll(codebaseEnvVars);
     envVars.putAll(gitEnvVars);
-    // TODO (shubham): Handle stage variables.
+
+    Map<String, String> stageVars = getEnvironmentVariables(
+        NGVariablesUtils.getMapOfVariables(vmBuildJobInfo.getStageVars(), ambiance.getExpressionFunctorToken()));
+    CIVmSecretEvaluator ciVmSecretEvaluator = CIVmSecretEvaluator.builder().build();
+    Set<String> secrets = ciVmSecretEvaluator.resolve(stageVars, ngAccess, ambiance.getExpressionFunctorToken());
+    envVars.putAll(stageVars);
+
     return CIVmInitializeTaskParams.builder()
         .poolID(poolId)
         .workingDir(vmBuildJobInfo.getWorkDir())
@@ -104,7 +117,30 @@ public class VmInitializeTaskUtils {
         .logSvcToken(getLogSvcToken(accountID))
         .tiUrl(tiServiceUtils.getTiServiceConfig().getBaseUrl())
         .tiSvcToken(getTISvcToken(accountID))
+        .secrets(new ArrayList<>(secrets))
         .build();
+  }
+
+  public Map<String, String> getEnvironmentVariables(Map<String, Object> inputVariables) {
+    if (EmptyPredicate.isEmpty(inputVariables)) {
+      return new HashMap<>();
+    }
+    Map<String, String> res = new LinkedHashMap<>();
+    inputVariables.forEach((key, value) -> {
+      if (value instanceof ParameterField) {
+        ParameterField<?> parameterFieldValue = (ParameterField<?>) value;
+        if (parameterFieldValue.getValue() == null) {
+          throw new CIStageExecutionException(String.format("Env. variable [%s] value found to be null", key));
+        }
+        res.put(key, parameterFieldValue.getValue().toString());
+      } else if (value instanceof String) {
+        res.put(key, (String) value);
+      } else {
+        log.error(String.format(
+            "Value other than String or ParameterField found for env. variable [%s]. value: [%s]", key, value));
+      }
+    });
+    return res;
   }
 
   private String getLogSvcToken(String accountID) {

@@ -30,6 +30,7 @@ import io.harness.ng.core.dashboard.ExecutionStatusInfo;
 import io.harness.ng.core.dashboard.GitInfo;
 import io.harness.ng.core.dashboard.ServiceDeploymentInfo;
 import io.harness.ng.core.environment.beans.EnvironmentType;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ng.overview.dto.ActiveServiceInstanceSummary;
@@ -667,6 +668,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
               ServiceDetailsDTOBuilder serviceDetailsDTOBuilder = ServiceDetailsDTO.builder();
               serviceDetailsDTOBuilder.serviceName(service.getName());
+              serviceDetailsDTOBuilder.description(service.getDescription());
+              serviceDetailsDTOBuilder.tags(TagMapper.convertToMap(service.getTags()));
               serviceDetailsDTOBuilder.serviceIdentifier(serviceId);
               serviceDetailsDTOBuilder.deploymentTypeList(serviceIdToDeploymentTypeMap.getOrDefault(serviceId, null));
               serviceDetailsDTOBuilder.instanceCountDetails(

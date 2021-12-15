@@ -117,3 +117,7 @@ basePathPrefix: ${BASE_PATH_PREFIX:-""}
 
 enforcementClientConfiguration:
   enforcementCheckEnabled: ${ENFORCEMENT_CHECK_ENABLED:-false}
+
+pmsGrpcClientConfig:
+  target: localhost:12011
+  authority: localhost

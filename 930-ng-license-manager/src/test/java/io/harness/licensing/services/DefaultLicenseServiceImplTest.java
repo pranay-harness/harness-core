@@ -95,7 +95,7 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
   @Before
   public void setUp() {
     initMocks(this);
-    startTrialRequestDTO = StartTrialDTO.builder().moduleType(DEFAULT_MODULE_TYPE).build();
+    startTrialRequestDTO = StartTrialDTO.builder().moduleType(DEFAULT_MODULE_TYPE).edition(Edition.ENTERPRISE).build();
     when(licenseObjectConverter.toDTO(DEFAULT_CI_MODULE_LICENSE)).thenReturn(DEFAULT_CI_MODULE_LICENSE_DTO);
     when(licenseObjectConverter.toEntity(DEFAULT_CI_MODULE_LICENSE_DTO)).thenReturn(DEFAULT_CI_MODULE_LICENSE);
 
@@ -263,6 +263,7 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
     when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), eq(DEFAULT_MODULE_TYPE)))
         .thenReturn(DEFAULT_CI_MODULE_LICENSE_DTO);
     when(accountService.getAccount(ACCOUNT_IDENTIFIER)).thenReturn(AccountDTO.builder().build());
+
     ModuleLicenseDTO result = licenseService.startTrialLicense(ACCOUNT_IDENTIFIER, startTrialRequestDTO);
     verify(accountService, times(1)).updateDefaultExperienceIfApplicable(ACCOUNT_IDENTIFIER, DefaultExperience.NG);
     verify(telemetryReporter, times(1)).sendGroupEvent(eq(ACCOUNT_IDENTIFIER), any(), any());
@@ -291,7 +292,7 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
                                                 .moduleType(CE)
                                                 .build();
 
-    StartTrialDTO startTrialDTO = StartTrialDTO.builder().moduleType(CE).build();
+    StartTrialDTO startTrialDTO = StartTrialDTO.builder().moduleType(CE).edition(Edition.ENTERPRISE).build();
     when(licenseObjectConverter.toEntity(ceModuleLicenseDTO)).thenReturn(ceModuleLicense);
     when(moduleLicenseRepository.save(ceModuleLicense)).thenReturn(ceModuleLicense);
     when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), eq(ModuleType.CE)))
