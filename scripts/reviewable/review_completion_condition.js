@@ -1,3 +1,5 @@
+// dependencies: lodash3
+
 // The number of approvals required to merge.
 let numApprovalsRequired = 1;
 
@@ -17,14 +19,12 @@ const discussionBlockers = _(review.discussions)
   .where({resolved: false})
   .pluck('participants')
   .flatten()
+  .reject(participant => participant.username === review.pullRequest.author.username)
   .where({resolved: false})
   .map(user => _.pick(user, 'username'))
   .value();
 
-let pendingReviewers = _(discussionBlockers)
-  .map(user => _.pick(user, 'username'))
-  .value();
-
+let pendingReviewers = [];
 let required = _.pluck(review.pullRequest.assignees, 'username');
 
 _.pull(required, review.pullRequest.author.username);
@@ -70,10 +70,11 @@ _.forEach(review.files, function(file) {
 
 const completed =
       !tooOld &&
-      numUnreviewedFiles == 0 &&
-      pendingReviewers.length == 0 &&
+      numUnreviewedFiles === 0 &&
+      pendingReviewers.length === 0 &&
       numApprovals >= numApprovalsRequired &&
-      Object.keys(requestedTeams).length == 0;
+      discussionBlockers.length === 0 &&
+      Object.keys(requestedTeams).length === 0;
 
 const description = (completed ? "✓" :
   (tooOld ? `Some of the checks are too old. ` : '') +
@@ -86,5 +87,5 @@ const description = (completed ? "✓" :
 const shortDescription = (completed ? "✓" : "✗");
 
 return {
-  completed: completed, description, shortDescription, pendingReviewers
+  completed, description, shortDescription, pendingReviewers
 };
