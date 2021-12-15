@@ -4,6 +4,7 @@ import io.harness.EntityType;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.sdk.GitSyncApiConstants;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
@@ -27,7 +28,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GitEntityBranchSummaryFilterDTO {
-  ModuleType moduleType;
-  List<EntityType> entityTypes;
-  String searchTerm;
+  @Schema(description = "Module Type") ModuleType moduleType;
+  @Schema(description = "List of Entity Types") List<EntityType> entityTypes;
+  @Schema(description = GitSyncApiConstants.SEARCH_TERM_PARAM_MESSAGE) String searchTerm;
 }

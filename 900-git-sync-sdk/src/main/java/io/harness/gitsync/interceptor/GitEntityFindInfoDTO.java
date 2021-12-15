@@ -17,7 +17,8 @@ import lombok.experimental.FieldNameConstants;
 @Getter
 @Builder
 @FieldNameConstants(innerTypeName = "GitEntityFindInfoKeys")
-@Schema(name = "GitEntityFindInfo", description = "Details to find Git Entity including: Git Config Id and Branch name")
+@Schema(name = "GitEntityFindInfo",
+    description = "Details to find Git Entity including: Git Sync Config Id and Branch Name")
 @OwnedBy(DX)
 @NoArgsConstructor
 @AllArgsConstructor
