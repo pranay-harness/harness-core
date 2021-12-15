@@ -46,8 +46,6 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(DX)
 @TargetModule(HarnessModule._955_CG_YAML)
 public class YamlHelper {
-  public static final String ENCRYPTED_VALUE_STR = "<KMS URL>";
-
   public static void addResponseMessage(RestResponse rr, ErrorCode errorCode, Level level, String message) {
     ResponseMessage rm = ResponseMessage.builder().code(errorCode).level(level).message(message).build();
 

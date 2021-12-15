@@ -43,8 +43,16 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ng.core.models.Secret;
 
 import software.wings.beans.AwsConfig;
+import software.wings.beans.GitConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitCommitAndPushResult;
+import software.wings.beans.yaml.GitCommitRequest;
+import software.wings.beans.yaml.GitDiffRequest;
+import software.wings.beans.yaml.GitDiffResult;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.Set;
 
@@ -61,6 +69,8 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ExecutionCapabilityDemander.class);
     set.add(ExecutionCapability.class);
     set.add(Secret.class);
+    set.add(SettingAttribute.class);
+    set.add(YamlGitConfig.class);
   }
 
   @Override
@@ -100,5 +110,11 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse", EcsServiceDeployResponse.class);
     w.put("helpers.ext.helm.response.HelmInstallCommandResponse", HelmInstallCommandResponse.class);
     w.put("beans.AwsConfig", AwsConfig.class);
+    w.put("beans.GitConfig", GitConfig.class);
+    w.put("beans.yaml.GitCommandExecutionResponse", GitCommandExecutionResponse.class);
+    w.put("beans.yaml.GitCommitAndPushResult", GitCommitAndPushResult.class);
+    w.put("beans.yaml.GitCommitRequest", GitCommitRequest.class);
+    w.put("beans.yaml.GitDiffRequest", GitDiffRequest.class);
+    w.put("beans.yaml.GitDiffResult", GitDiffResult.class);
   }
 }
