@@ -7,15 +7,24 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.delegate.beans.ci.vm.steps.VmStepInfo;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.util.CIVmSecretEvaluator;
 import io.harness.yaml.core.timeout.Timeout;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Set;
 
 @Singleton
 public class VmStepSerializer {
   @Inject VmPluginCompatibleStepSerializer vmPluginCompatibleStepSerializer;
+
+  public Set<String> getStepSecrets(VmStepInfo vmStepInfo, Ambiance ambiance) {
+    CIVmSecretEvaluator ciVmSecretEvaluator = CIVmSecretEvaluator.builder().build();
+    return ciVmSecretEvaluator.resolve(
+        vmStepInfo, AmbianceUtils.getNgAccess(ambiance), ambiance.getExpressionFunctorToken());
+  }
 
   public VmStepInfo serialize(
       Ambiance ambiance, CIStepInfo stepInfo, String identifier, ParameterField<Timeout> parameterFieldTimeout) {

@@ -85,6 +85,9 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
   private SetupVmRequest convert(CIVmInitializeTaskParams params) {
     Map<String, String> env = new HashMap<>();
     List<String> secrets = new ArrayList<>();
+    if (isNotEmpty(params.getSecrets())) {
+      secrets.addAll(params.getSecrets());
+    }
     if (isNotEmpty(params.getEnvironment())) {
       env = params.getEnvironment();
     }
