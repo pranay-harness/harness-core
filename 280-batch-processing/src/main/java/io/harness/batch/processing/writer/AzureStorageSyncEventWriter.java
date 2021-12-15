@@ -12,7 +12,6 @@ import io.harness.batch.processing.BatchProcessingException;
 import io.harness.batch.processing.ccm.AzureStorageSyncRecord;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.service.impl.AzureStorageSyncServiceImpl;
-import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;

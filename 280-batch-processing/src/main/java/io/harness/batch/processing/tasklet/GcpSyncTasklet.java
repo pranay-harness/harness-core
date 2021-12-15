@@ -13,7 +13,6 @@ import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
 import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpServiceAccount;
-import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;

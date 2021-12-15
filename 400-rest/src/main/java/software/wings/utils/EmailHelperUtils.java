@@ -20,6 +20,9 @@ public class EmailHelperUtils {
   static final String NG_SMTP_SETTINGS_PREFIX = "ngSmtpConfig-";
 
   public SmtpConfig getSmtpConfig(String accountId) {
+    if (accountId == null) {
+      return null;
+    }
     List<SettingAttribute> smtpAttribute =
         settingsService.getGlobalSettingAttributesByType(accountId, SettingVariableTypes.SMTP.name());
     Account account = accountService.get(accountId);
