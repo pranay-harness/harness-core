@@ -12,6 +12,7 @@ import static io.harness.pcf.model.PcfConstants.RANDOM_ROUTE_MANIFEST_YML_ELEMEN
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.TIMEOUT_MANIFEST_YML_ELEMENT;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.IVAN;
 
@@ -28,14 +29,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.pcf.CfAppRenameInfo;
 import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
 import io.harness.delegate.beans.pcf.CfInternalInstanceElement;
 import io.harness.delegate.beans.pcf.CfServiceData;
+import io.harness.delegate.cf.apprenaming.AppNamingStrategy;
 import io.harness.delegate.task.pcf.exception.InvalidPcfStateException;
 import io.harness.delegate.task.pcf.request.CfCommandDeployRequest;
 import io.harness.delegate.task.pcf.request.CfCommandRollbackRequest;
@@ -51,6 +55,7 @@ import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
 import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
+import io.harness.pcf.model.PcfConstants;
 import io.harness.rule.Owner;
 
 import java.io.BufferedReader;
@@ -58,9 +63,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +85,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.mockito.stubbing.Answer;
 
 @OwnedBy(HarnessTeam.CDP)
 public class PcfCommandTaskBaseHelperTest extends CategoryTest {
@@ -991,6 +999,125 @@ public class PcfCommandTaskBaseHelperTest extends CategoryTest {
         cfRequestConfig, applicationDetail, pcfInstanceElements);
 
     assertThat(pcfInstanceElements.size()).isEqualTo(previousCount);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testVersionToVersionAppRenamingBlueGreen() throws PivotalClientApiException {
+    final String releaseName = "PaymentApp";
+    final String inActiveAppCurrentName = releaseName + "__2";
+    final String activeAppCurrentName = releaseName + "__3";
+
+    List<ApplicationSummary> previousReleases =
+        getPreviousReleasesBeforeDeploymentStart(activeAppCurrentName, inActiveAppCurrentName);
+
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
+    Deque<CfAppRenameInfo> renames = new ArrayDeque<>();
+
+    Optional<String> inActiveAppOldName = pcfCommandTaskHelper.renameInActiveAppDuringBGDeployment(previousReleases,
+        cfRequestConfig, releaseName, executionLogCallback, AppNamingStrategy.VERSIONING.name(), renames);
+    assertThat(inActiveAppOldName.isPresent()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testVersionToNonVersionAppRenamingBlueGreen() throws PivotalClientApiException {
+    final String releaseName = "PaymentApp";
+    final String inActiveAppCurrentName = releaseName + "__2";
+    final String activeAppCurrentName = releaseName + "__3";
+
+    List<ApplicationSummary> previousReleases =
+        getPreviousReleasesBeforeDeploymentStart(activeAppCurrentName, inActiveAppCurrentName);
+
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
+    Deque<CfAppRenameInfo> renames = new ArrayDeque<>();
+
+    Optional<String> inActiveAppOldName = pcfCommandTaskHelper.renameInActiveAppDuringBGDeployment(previousReleases,
+        cfRequestConfig, releaseName, executionLogCallback, AppNamingStrategy.VERSIONING.name(), renames);
+    assertThat(inActiveAppOldName.isPresent()).isFalse();
+
+    previousReleases.remove(0);
+    previousReleases.remove(0);
+    inActiveAppOldName = pcfCommandTaskHelper.renameInActiveAppDuringBGDeployment(previousReleases, cfRequestConfig,
+        releaseName, executionLogCallback, AppNamingStrategy.VERSIONING.name(), renames);
+    assertThat(inActiveAppOldName.isPresent()).isFalse();
+
+    previousReleases = Collections.emptyList(); // no apps, i.e. first deployment in non-version mode
+    inActiveAppOldName = pcfCommandTaskHelper.renameInActiveAppDuringBGDeployment(previousReleases, cfRequestConfig,
+        releaseName, executionLogCallback, AppNamingStrategy.VERSIONING.name(), renames);
+    assertThat(inActiveAppOldName.isPresent()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testNonVersionToNonVersionAppRenamingBlueGreen() throws PivotalClientApiException {
+    final String releaseName = "PaymentApp";
+    final String inActiveAppCurrentName = releaseName + PcfConstants.INACTIVE_APP_NAME_SUFFIX;
+    final String activeAppCurrentName = releaseName;
+
+    List<ApplicationSummary> previousReleases =
+        getPreviousReleasesBeforeDeploymentStart(activeAppCurrentName, inActiveAppCurrentName);
+
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
+    Deque<CfAppRenameInfo> renames = new ArrayDeque<>();
+
+    when(pcfDeploymentManager.isActiveApplication(any(), any())).thenAnswer((Answer<Boolean>) invocationOnMock -> {
+      Object[] arguments = invocationOnMock.getArguments();
+      CfRequestConfig requestConfig = (CfRequestConfig) arguments[0];
+      return requestConfig.getApplicationName().equals(activeAppCurrentName);
+    });
+
+    when(pcfDeploymentManager.isInActiveApplication(any())).thenAnswer((Answer<Boolean>) invocationOnMock -> {
+      Object[] arguments = invocationOnMock.getArguments();
+      CfRequestConfig requestConfig = (CfRequestConfig) arguments[0];
+      return requestConfig.getApplicationName().equals(inActiveAppCurrentName);
+    });
+
+    Optional<String> inActiveAppOldName = pcfCommandTaskHelper.renameInActiveAppDuringBGDeployment(previousReleases,
+        cfRequestConfig, releaseName, executionLogCallback, AppNamingStrategy.APP_NAME_WITH_VERSIONING.name(), renames);
+    assertThat(inActiveAppOldName.get()).isEqualTo(inActiveAppCurrentName);
+
+    ArgumentCaptor<CfRenameRequest> renamingAppCaptor = ArgumentCaptor.forClass(CfRenameRequest.class);
+    ApplicationSummary inActiveAppSummary = previousReleases.get(1);
+    verify(pcfDeploymentManager, times(1)).renameApplication(renamingAppCaptor.capture(), any());
+    CfRenameRequest renamingRequest = renamingAppCaptor.getValue();
+    assertThat(renamingRequest.getGuid()).isEqualTo(inActiveAppSummary.getId());
+    assertThat(renamingRequest.getNewName()).isEqualTo(releaseName + PcfConstants.DELIMITER + "2");
+  }
+
+  private List<ApplicationSummary> getPreviousReleasesBeforeDeploymentStart(String activeApp, String inActiveApp) {
+    List<ApplicationSummary> previousReleases = new ArrayList<>();
+    previousReleases.add(ApplicationSummary.builder()
+                             .name("PaymentApp__1")
+                             .diskQuota(1)
+                             .requestedState("STOPPED")
+                             .id("c9e34660-bf25-43dd-9f75-2b0ef5445354")
+                             .instances(0)
+                             .memoryLimit(1)
+                             .runningInstances(0)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name(inActiveApp)
+                             .diskQuota(1)
+                             .requestedState("RUNNING")
+                             .id("ca289f74-fdb6-486e-8679-2f91d8ce566e")
+                             .instances(0)
+                             .memoryLimit(1)
+                             .runningInstances(2)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name(activeApp)
+                             .diskQuota(1)
+                             .requestedState("RUNNING")
+                             .id("806c5057-10d4-44c1-ba1b-9e56bd5a997f")
+                             .instances(1)
+                             .memoryLimit(1)
+                             .runningInstances(2)
+                             .build());
+    return previousReleases;
   }
 
   private ApplicationDetail getApplicationDetail(List<InstanceDetail> instances) {
