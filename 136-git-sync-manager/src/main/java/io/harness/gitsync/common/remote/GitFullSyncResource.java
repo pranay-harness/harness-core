@@ -28,6 +28,7 @@ import io.harness.gitsync.fullsync.dtos.GitFullSyncConfigDTO;
 import io.harness.gitsync.fullsync.dtos.GitFullSyncConfigRequestDTO;
 import io.harness.gitsync.fullsync.dtos.GitFullSyncEntityInfoDTO;
 import io.harness.gitsync.fullsync.dtos.GitFullSyncEntityInfoFilterDTO;
+import io.harness.gitsync.sdk.GitSyncApiConstants;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.OrgIdentifier;
@@ -218,7 +219,8 @@ public class GitFullSyncResource {
           NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier @OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
       harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Search Term") @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @Parameter(description = GitSyncApiConstants.SEARCH_TERM_PARAM_MESSAGE) @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @RequestBody(description = "Filters like entityType and syncStatus")
       @BeanParam GitFullSyncEntityInfoFilterDTO gitFullSyncEntityInfoFilterDTO) {
     return ResponseDTO.newResponse(gitFullSyncEntityService.list(

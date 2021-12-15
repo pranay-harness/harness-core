@@ -25,6 +25,7 @@ import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorCountDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
+import io.harness.gitsync.sdk.GitSyncApiConstants;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.OrgIdentifier;
@@ -108,10 +109,11 @@ public class GitSyncErrorResource {
           NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier @OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
       harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Search Term") @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @RequestBody(description = "Details to find Git Entity including: Git Config Id and Branch name")
+      @Parameter(description = GitSyncApiConstants.SEARCH_TERM_PARAM_MESSAGE) @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @RequestBody(description = "Details to find Git Entity including: Git Sync Config Id and Branch Name")
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
-      @Parameter(description = "This is the count of errors to be displayed in the summary") @QueryParam(
+      @Parameter(description = "Number of errors that will be displayed in the summary") @QueryParam(
           "numberOfErrorsInSummary") @DefaultValue("5") @Max(5) Integer numberOfErrorsInSummary) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
@@ -143,7 +145,7 @@ public class GitSyncErrorResource {
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
       harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier,
-      @RequestBody(description = "Details to find Git Entity including: Git Config Id and Branch name")
+      @RequestBody(description = "Details to find Git Entity including: Git Sync Config Id and Branch Name")
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @Parameter(description = "Commit Id", required = true) @PathParam("commitId") String commitId) {
     if (isEmpty(pageRequest.getSortOrders())) {
@@ -175,8 +177,9 @@ public class GitSyncErrorResource {
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
       harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Search Term") @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @RequestBody(description = "Details to find Git Entity including: Git Config Id and Branch name")
+      @Parameter(description = GitSyncApiConstants.SEARCH_TERM_PARAM_MESSAGE) @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @RequestBody(description = "Details to find Git Entity including: Git Sync Config Id and Branch Name")
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @Parameter(
           description =
@@ -216,8 +219,9 @@ public class GitSyncErrorResource {
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
       harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Search Term") @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @RequestBody(description = "Details to find Git Entity including: Git Config Id and Branch name")
+      @Parameter(description = GitSyncApiConstants.SEARCH_TERM_PARAM_MESSAGE) @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @RequestBody(description = "Details to find Git Entity including: Git Sync Config Id and Branch Name")
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     return ResponseDTO.newResponse(gitSyncErrorService.getErrorCount(accountIdentifier, orgIdentifier,
         projectIdentifier, searchTerm, gitEntityBasicInfo.getYamlGitConfigId(), gitEntityBasicInfo.getBranch()));
