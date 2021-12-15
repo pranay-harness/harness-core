@@ -49,5 +49,6 @@ public enum SnippetTag implements YamlSnippetTags {
   sumologic,
   dynatrace,
   pagerduty,
-  customhealth
+  customhealth,
+  servicenow
 }
