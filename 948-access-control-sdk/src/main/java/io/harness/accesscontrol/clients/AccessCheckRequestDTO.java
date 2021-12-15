@@ -24,6 +24,12 @@ import lombok.experimental.FieldDefaults;
 @Schema(name = "AccessCheckRequest")
 @OwnedBy(HarnessTeam.PL)
 public class AccessCheckRequestDTO {
-  @Size(max = 1000) @Valid List<PermissionCheckDTO> permissions;
-  @Valid @Nullable Principal principal;
+  @Schema(description = "List of permission checks to perform", required = true)
+  @Size(max = 1000)
+  @Valid
+  List<PermissionCheckDTO> permissions;
+  @Schema(description = "Principal (user/service account) to check the access for", required = true)
+  @Valid
+  @Nullable
+  Principal principal;
 }
