@@ -2,6 +2,7 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.commons.constants.Constants.CLUSTER_ID_IDENTIFIER;
 import static io.harness.ccm.commons.constants.Constants.UID;
+import static io.harness.perpetualtask.k8s.utils.ResourceVersionMatch.MOST_RECENT;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
 
 import static java.util.Optional.ofNullable;
@@ -76,7 +77,7 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
                 -> {
               try {
                 return coreV1Api.listNodeCall(null, null, null, null, null, null, callGeneratorParams.resourceVersion,
-                    callGeneratorParams.timeoutSeconds, callGeneratorParams.watch, null);
+                    MOST_RECENT, callGeneratorParams.timeoutSeconds, callGeneratorParams.watch, null);
               } catch (ApiException e) {
                 log.error("Unknown exception occurred", e);
                 throw e;
