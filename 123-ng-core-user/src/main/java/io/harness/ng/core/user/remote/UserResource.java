@@ -150,7 +150,10 @@ public class UserResource {
             responseCode = "default", description = "Returns current logged in user's two factor authentication info")
       })
   public ResponseDTO<TwoFactorAuthSettingsInfo>
-  getTwoFactorAuthSettingsInfo(@PathParam("authMechanism") TwoFactorAuthMechanismInfo authMechanism) {
+  getTwoFactorAuthSettingsInfo(@Parameter(
+      description =
+          "This is the authentication mechanism for the logged-in User. Two-Factor Authentication settings will be fetched for this mechanism.")
+      @PathParam("authMechanism") TwoFactorAuthMechanismInfo authMechanism) {
     return ResponseDTO.newResponse(userInfoService.getTwoFactorAuthSettingsInfo(authMechanism));
   }
 
@@ -159,9 +162,22 @@ public class UserResource {
   @Path("usermembership")
   @ApiOperation(value = "Check if user part of scope", nickname = "checkUserMembership", hidden = true)
   @InternalApi
-  public ResponseDTO<Boolean> checkUserMembership(@QueryParam(NGCommonEntityConstants.USER_ID) String userId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+  public ResponseDTO<Boolean> checkUserMembership(
+      @Parameter(
+          description =
+              "This is the User Identifier. The membership details of the user corresponding to this identifier will be checked.",
+          required = true) @QueryParam(NGCommonEntityConstants.USER_ID) String userId,
+      @Parameter(
+          description =
+              "This is the Account Identifier. The membership details within the scope of this Account will be checked.",
+          required = true) @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(
+          description =
+              "This is the Organization Identifier. The membership details within the scope of this Organization will be checked.")
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(
+          description =
+              "This is the Project Identifier. The membership details within the scope of this Project will be checked.")
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USER, null), VIEW_USER_PERMISSION);
@@ -176,16 +192,22 @@ public class UserResource {
   @GET
   @Path("currentgen")
   @ApiOperation(value = "Get users from current gen for an account", nickname = "getCurrentGenUsers")
-  @Operation(operationId = "getCurrentGenUsers", summary = "List of current gen users with the given account Id",
+  @Operation(operationId = "getCurrentGenUsers",
+      summary = "List of current gen users with the given Account Identifier",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "default", description = "Return list of current gen users with the given account Id")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "This retrieves a list of Current Generation Users corresponding to the specified Account Identifier.")
       })
   public ResponseDTO<PageResponse<UserMetadataDTO>>
-  getCurrentGenUsers(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
-                         "accountIdentifier") @NotNull String accountIdentifier,
-      @Parameter(description = "Search term") @QueryParam("searchString") @DefaultValue("") String searchString,
+  getCurrentGenUsers(
+      @Parameter(description = "This is the Account Identifier. Users corresponding to this Account will be retrieved.")
+      @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
+      @Parameter(
+          description =
+              "This string will be used to filter the search results. Details of all the users having this string in their name or email address will be filtered.")
+      @QueryParam("searchString") @DefaultValue("") String searchString,
       @BeanParam PageRequest pageRequest) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, null, null), Resource.of(USER, null), VIEW_USER_PERMISSION);
@@ -198,15 +220,18 @@ public class UserResource {
   @Path("projects")
   @ApiOperation(value = "get user project information", nickname = "getUserProjectInfo")
   @Operation(operationId = "getUserProjectInfo",
-      summary = "List of project(s) of current user in the passed account Id in form of page response",
+      summary = "Retrieves the list of projects of the current user corresponding to the specified Account Identifier.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
-            description =
-                "Returns the list of project(s) of current user in the passed account Id in form of page response")
+            description = "List of projects of the current user corresponding to the specified Account Identifier")
       })
   public ResponseDTO<PageResponse<ProjectDTO>>
-  getUserProjectInfo(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") String accountId,
+  getUserProjectInfo(
+      @Parameter(
+          description =
+              "This is the Account Identifier. Details of all the Projects within the scope of this Account will be fetched.")
+      @QueryParam("accountId") String accountId,
       @BeanParam PageRequest pageRequest) {
     Optional<String> userId = getUserIdentifierFromSecurityContext();
     if (!userId.isPresent()) {
@@ -227,7 +252,7 @@ public class UserResource {
       })
   public ResponseDTO<List<ProjectDTO>>
   getUserAllProjectsInfo(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") String accountId,
-      @Parameter(description = "user Identifier") @QueryParam("userId") String userId) {
+      @Parameter(description = "User Identifier") @QueryParam("userId") String userId) {
     return ResponseDTO.newResponse(projectService.listProjectsForUser(userId, accountId));
   }
 
@@ -265,7 +290,7 @@ public class UserResource {
       })
   public ResponseDTO<Boolean>
   checkIfLastAdmin(
-      @Parameter(description = "user Identifier") @QueryParam(NGCommonEntityConstants.USER_ID) String userId,
+      @Parameter(description = "User identifier") @QueryParam(NGCommonEntityConstants.USER_ID) String userId,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,

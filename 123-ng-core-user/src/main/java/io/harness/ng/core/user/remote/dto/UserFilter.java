@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -23,8 +24,11 @@ import lombok.experimental.FieldDefaults;
 @ApiModel(value = "UserFilter")
 @OwnedBy(PL)
 public class UserFilter {
+  @Schema(
+      description =
+          "This string will be used to filter the results. Details of all the users having this string in their name or email address will be filtered.")
   private String searchTerm;
-  private Set<String> identifiers;
+  @Schema(description = "Filter by User Identifiers") private Set<String> identifiers;
   @Builder.Default private ParentFilter parentFilter = ParentFilter.NO_PARENT_SCOPES;
 
   public ParentFilter getParentFilter() {
