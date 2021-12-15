@@ -66,7 +66,7 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
     }
   }
 
-  private void readEventsFrameworkMessages() throws InterruptedException {
+  protected void readEventsFrameworkMessages() throws InterruptedException {
     try {
       pollAndProcessMessages();
     } catch (EventsFrameworkDownException e) {

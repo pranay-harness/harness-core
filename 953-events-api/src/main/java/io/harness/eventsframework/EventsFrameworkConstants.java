@@ -108,7 +108,7 @@ public final class EventsFrameworkConstants {
   public static final Duration DEFAULT_MAX_PROCESSING_TIME = Duration.ofSeconds(10);
   public static final Duration ENTITY_CRUD_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration NG_ACCOUNT_SETUP_MAX_PROCESSING_TIME = Duration.ofSeconds(10);
-  public static final Duration WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
+  public static final Duration WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(150);
   public static final Duration POLLING_EVENTS_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration GIT_PUSH_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration GIT_PR_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
@@ -133,7 +133,7 @@ public final class EventsFrameworkConstants {
   public static final int HARNESS_TO_GIT_PUSH_READ_BATCH_SIZE = 50;
   public static final int GIT_CONFIG_STREAM_READ_BATCH_SIZE = 50;
   public static final int FULL_SYNC_STREAM_READ_BATCH_SIZE = 20;
-  public static final int WEBHOOK_EVENTS_STREAM_BATCH_SIZE = 50;
+  public static final int WEBHOOK_EVENTS_STREAM_BATCH_SIZE = 20;
   public static final int POLLING_EVENTS_STREAM_BATCH_SIZE = 50;
   public static final int GIT_PUSH_EVENT_STREAM_BATCH_SIZE = 50;
   public static final int GIT_PR_EVENT_STREAM_BATCH_SIZE = 50;
