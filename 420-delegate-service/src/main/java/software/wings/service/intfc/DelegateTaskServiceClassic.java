@@ -36,10 +36,11 @@ public interface DelegateTaskServiceClassic extends OwnedByAccount {
 
   byte[] getParkedTaskResults(String accountId, String taskId, String driverId);
 
-  DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId);
+  DelegateTaskPackage acquireDelegateTask(
+      String accountId, String delegateId, String taskId, String delegateInstanceId);
 
-  DelegateTaskPackage reportConnectionResults(
-      String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results);
+  DelegateTaskPackage reportConnectionResults(String accountId, String delegateId, String taskId,
+      String delegateInstanceId, List<DelegateConnectionResult> results);
 
   void failIfAllDelegatesFailed(String accountId, String delegateId, String taskId, boolean areClientToolsInstalled);
 

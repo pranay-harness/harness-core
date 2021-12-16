@@ -3,6 +3,7 @@ package io.harness.delegate.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateTimeBasedUuid;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.app.DelegateApplication.getProcessId;
 import static io.harness.delegate.configuration.InstallUtils.installChartMuseum;
 import static io.harness.delegate.configuration.InstallUtils.installGoTemplateTool;
@@ -313,6 +314,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   public static final String JAVA_VERSION = "java.version";
 
   private static volatile String delegateId;
+  private static volatile String delegateInstanceId = generateUuid();
 
   @Inject
   @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting }))
@@ -1893,8 +1895,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         log.debug("Try to acquire DelegateTask - accountId: {}", accountId);
       }
 
-      DelegateTaskPackage delegateTaskPackage =
-          executeRestCall(delegateAgentManagerClient.acquireTask(delegateId, delegateTaskId, accountId));
+      DelegateTaskPackage delegateTaskPackage = executeRestCall(
+          delegateAgentManagerClient.acquireTask(delegateId, delegateTaskId, accountId, delegateInstanceId));
       if (delegateTaskPackage == null || delegateTaskPackage.getData() == null) {
         if (log.isDebugEnabled()) {
           log.debug("Delegate task data not available - accountId: {}", delegateTaskEvent.getAccountId());
@@ -1987,9 +1989,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         boolean validated = results.stream().allMatch(DelegateConnectionResult::isValidated);
         log.info("Validation {} for task", validated ? "succeeded" : "failed");
         try {
-          DelegateTaskPackage delegateTaskPackage =
-              execute(delegateAgentManagerClient.reportConnectionResults(delegateId,
-                  delegateTaskEvent.getDelegateTaskId(), accountId, getDelegateConnectionResultDetails(results)));
+          DelegateTaskPackage delegateTaskPackage = execute(
+              delegateAgentManagerClient.reportConnectionResults(delegateId, delegateTaskEvent.getDelegateTaskId(),
+                  accountId, delegateInstanceId, getDelegateConnectionResultDetails(results)));
 
           if (delegateTaskPackage != null && delegateTaskPackage.getData() != null
               && delegateId.equals(delegateTaskPackage.getDelegateId())) {
