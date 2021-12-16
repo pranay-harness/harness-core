@@ -84,8 +84,6 @@ public class SLODashboardServiceImpl implements SLODashboardService {
     SLODashboardWidget.SLOGraphData sloGraphData = sliRecordService.getGraphData(serviceLevelIndicator.getUuid(),
         timePeriod.getStartTime(serviceLevelObjective.getZoneOffset()), currentTimeMinute, totalErrorBudgetMinutes,
         serviceLevelIndicator.getSliMissingDataType(), serviceLevelIndicator.getVersion());
-    int remainingDays = timePeriod.getRemainingDays(currentLocalDate).getDays();
-    double dailyBurnRate = sloGraphData.errorBudgetSpentPercentage() / (timePeriod.getTotalDays() - remainingDays);
     return SLODashboardWidget.withGraphData(sloGraphData)
         .sloIdentifier(slo.getIdentifier())
         .title(slo.getName())
@@ -100,9 +98,8 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .healthSourceName(getHealthSourceName(monitoredService, slo.getHealthSourceRef()))
         .tags(slo.getTags())
         .type(slo.getServiceLevelIndicators().get(0).getType())
-        .burnRate(SLODashboardWidget.BurnRate.builder().currentRatePercentage(dailyBurnRate).build())
         .totalErrorBudget(totalErrorBudgetMinutes)
-        .timeRemainingDays(remainingDays)
+        .timeRemainingDays(timePeriod.getRemainingDays(currentLocalDate).getDays())
         .build();
   }
 

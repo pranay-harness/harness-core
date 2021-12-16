@@ -1,7 +1,11 @@
 package io.harness.cvng.servicelevelobjective.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.cvng.core.utils.Thresholds;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -54,6 +58,7 @@ public class SLODashboardWidget {
         .errorBudgetRemaining(sloGraphData.getErrorBudgetRemaining())
         .errorBudgetRemainingPercentage(sloGraphData.getErrorBudgetRemainingPercentage())
         .errorBudgetBurndown(sloGraphData.getErrorBudgetBurndown())
+        .burnRate(BurnRate.builder().currentRatePercentage(sloGraphData.dailyBurnRate()).build())
         .sloPerformanceTrend(sloGraphData.getSloPerformanceTrend());
   }
   @Value
@@ -66,6 +71,21 @@ public class SLODashboardWidget {
     boolean isRecalculatingSLI;
     public double errorBudgetSpentPercentage() {
       return 100 - errorBudgetRemainingPercentage;
+    }
+
+    public double dailyBurnRate() {
+      if (isEmpty(sloPerformanceTrend)) {
+        return 0;
+      } else {
+        Instant startTime = Instant.ofEpochMilli(sloPerformanceTrend.get(0).getTimestamp());
+        Instant endTime = Instant.ofEpochMilli(sloPerformanceTrend.get(sloPerformanceTrend.size() - 1).getTimestamp());
+        Duration duration = Duration.between(startTime, endTime);
+        if (duration.isZero()) {
+          return errorBudgetSpentPercentage();
+        }
+        // calculating in hours to avoid boundary condition with days.
+        return (errorBudgetSpentPercentage() * 24.0) / duration.toHours();
+      }
     }
   }
   public enum ErrorBudgetRisk {
