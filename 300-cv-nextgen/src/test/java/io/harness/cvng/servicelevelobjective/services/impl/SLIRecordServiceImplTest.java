@@ -126,39 +126,39 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
     List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
     createData(startTime, sliStates);
 
-    assertThat(
-        sliRecordService
-            .getGraphData(sliId, startTime, startTime.plus(Duration.ofMinutes(11)), 10, SLIMissingDataType.GOOD, 0)
-            .getSloPerformanceTrend())
-        .hasSize(5);
+    assertThat(sliRecordService
+                   .getGraphData(sliId, startTime.minus(Duration.ofHours(1)), startTime.plus(Duration.ofMinutes(11)),
+                       10, SLIMissingDataType.GOOD, 0)
+                   .getSloPerformanceTrend())
+        .hasSize(6);
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetGraphData_9TotalPointsWith5AsMaxValue() {
-    Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(9));
-    List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD);
+    Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(10));
+    List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
     createData(startTime, sliStates);
 
-    assertThat(
-        sliRecordService
-            .getGraphData(sliId, startTime, startTime.plus(Duration.ofMinutes(10)), 10, SLIMissingDataType.GOOD, 0)
-            .getSloPerformanceTrend())
-        .hasSize(5);
+    assertThat(sliRecordService
+                   .getGraphData(sliId, startTime.minus(Duration.ofHours(10)), startTime.plus(Duration.ofMinutes(1000)),
+                       10, SLIMissingDataType.GOOD, 0)
+                   .getSloPerformanceTrend())
+        .hasSize(6);
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetGraphData_recalculation() {
-    Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(9));
-    List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD);
+    Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(10));
+    List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
     createData(startTime, sliStates);
 
     assertThat(
         sliRecordService
-            .getGraphData(sliId, startTime, startTime.plus(Duration.ofMinutes(10)), 10, SLIMissingDataType.GOOD, 1)
+            .getGraphData(sliId, startTime, startTime.plus(Duration.ofMinutes(20)), 10, SLIMissingDataType.GOOD, 1)
             .isRecalculatingSLI())
         .isTrue();
   }
