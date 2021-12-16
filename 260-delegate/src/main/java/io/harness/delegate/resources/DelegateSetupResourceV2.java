@@ -17,6 +17,7 @@ import io.harness.beans.PageRequest;
 import io.harness.delegate.beans.DelegateGroupDetails;
 import io.harness.delegate.beans.DelegateGroupListing;
 import io.harness.delegate.filter.DelegateFilterPropertiesDTO;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -24,6 +25,8 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.DelegateSetupService;
 
+import software.wings.beans.User;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -47,6 +50,7 @@ import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
+import software.wings.service.intfc.HarnessUserGroupService;
 
 @Api("/setup/delegates/ng/v2")
 @Path("/setup/delegates/ng/v2")
@@ -70,11 +74,14 @@ import retrofit2.http.Body;
 public class DelegateSetupResourceV2 {
   private final DelegateSetupService delegateSetupService;
   private final AccessControlClient accessControlClient;
+  private final HarnessUserGroupService harnessUserGroupService;
 
   @Inject
-  public DelegateSetupResourceV2(DelegateSetupService delegateSetupService, AccessControlClient accessControlClient) {
+  public DelegateSetupResourceV2(DelegateSetupService delegateSetupService, AccessControlClient accessControlClient
+  , HarnessUserGroupService harnessUserGroupService) {
     this.delegateSetupService = delegateSetupService;
     this.accessControlClient = accessControlClient;
+    this.harnessUserGroupService = harnessUserGroupService;
   }
 
   @GET
@@ -120,9 +127,16 @@ public class DelegateSetupResourceV2 {
       @Body @RequestBody(description = "Details of the Delegate filter properties to be applied")
       DelegateFilterPropertiesDTO delegateFilterPropertiesDTO,
       @BeanParam PageRequest<DelegateGroupDetails> pageRequest) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
-        Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
+    User user = UserThreadLocal.get();
 
+    if(user == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+
+    if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())) {
+      accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+              Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
+    }
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateSetupService.listDelegateGroupDetailsV2(
           accountId, orgId, projectId, filterIdentifier, searchTerm, delegateFilterPropertiesDTO));
