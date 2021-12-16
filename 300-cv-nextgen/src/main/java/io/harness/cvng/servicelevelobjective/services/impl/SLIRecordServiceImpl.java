@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -138,6 +139,14 @@ public class SLIRecordServiceImpl implements SLIRecordService {
   }
 
   private List<SLIRecord> sliRecords(String sliId, Instant startTime, Instant endTime) {
+    SLIRecord firstRecordInRange = getFirstSLIRecord(sliId, startTime);
+    SLIRecord lastRecordInRange = getLastSLIRecord(sliId, endTime);
+    if (firstRecordInRange == null || lastRecordInRange == null) {
+      return Collections.emptyList();
+    } else {
+      startTime = firstRecordInRange.getTimestamp();
+      endTime = lastRecordInRange.getTimestamp().plus(Duration.ofMinutes(1));
+    }
     List<Instant> minutes = new ArrayList<>();
     long totalMinutes = Duration.between(startTime, endTime).toMinutes();
     long diff = totalMinutes / MAX_NUMBER_OF_POINTS;
@@ -177,6 +186,14 @@ public class SLIRecordServiceImpl implements SLIRecordService {
         .field(SLIRecordKeys.timestamp)
         .lessThan(startTimeStamp)
         .order(Sort.descending(SLIRecordKeys.timestamp))
+        .get();
+  }
+  private SLIRecord getFirstSLIRecord(String sliId, Instant timestampInclusive) {
+    return hPersistence.createQuery(SLIRecord.class, excludeAuthority)
+        .filter(SLIRecordKeys.sliId, sliId)
+        .field(SLIRecordKeys.timestamp)
+        .greaterThanOrEq(timestampInclusive)
+        .order(Sort.ascending(SLIRecordKeys.timestamp))
         .get();
   }
 
