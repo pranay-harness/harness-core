@@ -838,9 +838,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         return null;
       }
     } finally {
-      if (log.isDebugEnabled()) {
-        log.debug("Done with acquire delegate task method");
-      }
+        log.info("Done with acquire delegate task method id: {}", taskId);
     }
   }
 
