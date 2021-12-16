@@ -520,8 +520,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             DELEGATE_TYPE, DELEGATE_GROUP_NAME, supportedTasks);
       }
 
-      log.info("Delegate configs: type: [{}], use_cdn: [{}]",
-          isNotBlank(DELEGATE_TYPE) ? DELEGATE_TYPE : "UNKNOWN TYPE", delegateConfiguration.isUseCdn());
+      log.info("Delegate configs: type: [{}], use_cdn: [{}], USE_CDN: [{}]",
+          isNotBlank(DELEGATE_TYPE) ? DELEGATE_TYPE : "UNKNOWN TYPE", delegateConfiguration.isUseCdn(),
+          System.getenv().get("USE_CDN"));
 
       if (isNotEmpty(delegateTokenName)) {
         log.info("Registering Delegate with Token: {}", delegateTokenName);
@@ -1505,6 +1506,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
       if (switchStorage.get() && !switchStorageMsgSent) {
         statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
+        log.info("Switch storage message sent");
         switchStorageMsgSent = true;
       }
       if (sendJreInformationToWatcher) {
@@ -1735,6 +1737,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private void setSwitchStorage(boolean useCdn) {
     boolean usingCdn = delegateConfiguration.isUseCdn();
     if (usingCdn != useCdn) {
+      log.info("Switch storage - usingCdn: [{}], useCdn: [{}]", usingCdn, useCdn);
       switchStorage.set(true);
     }
   }
