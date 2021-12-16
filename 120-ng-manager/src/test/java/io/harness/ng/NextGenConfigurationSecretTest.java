@@ -1,4 +1,4 @@
-package software.wings.app;
+package io.harness.ng;
 
 import static io.harness.rule.OwnerRule.BOGDAN;
 
@@ -23,11 +23,11 @@ import org.junit.experimental.categories.Category;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
-public class MainConfigurationConfigSecretTest {
-  private static final Class<MainConfiguration> ROOT_CONFIG_CLASS = MainConfiguration.class;
+public class NextGenConfigurationSecretTest {
+  private static final Class<NextGenConfiguration> ROOT_CONFIG_CLASS = NextGenConfiguration.class;
 
   /**
-   * Similar to {@link io.harness.ng.NextGenConfigurationSecretTest}
+   * Similar to {@link software.wings.app.MainConfigurationConfigSecretTest}
    */
   @Test
   @Owner(developers = BOGDAN)

@@ -29,6 +29,6 @@ public class RedisConfig {
   private int nettyThreads;
   private boolean useScriptCache;
   @ConfigSecret private String password;
-  private String userName;
+  @ConfigSecret private String userName;
   @ConfigSecret private RedisSSLConfig sslConfig;
 }
