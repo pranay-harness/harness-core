@@ -294,5 +294,13 @@ public class HarnessResourceGroupResource {
     if (resourceGroupDTO.isFullScopeSelected()) {
       throw new InvalidRequestException("Full scope selected cannot be provided for custom resource groups.");
     }
+    if (isNotEmpty(resourceGroupDTO.getResourceSelectors())) {
+      resourceGroupDTO.getResourceSelectors().forEach(resourceSelector -> {
+        if (resourceSelector instanceof ResourceSelectorByScope) {
+          throw new InvalidRequestException(
+              "Resource Selector by scope cannot be provided for custom resource groups.");
+        }
+      });
+    }
   }
 }
