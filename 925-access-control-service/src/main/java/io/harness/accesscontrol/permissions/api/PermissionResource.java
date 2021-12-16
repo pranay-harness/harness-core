@@ -24,6 +24,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -76,7 +77,11 @@ public class PermissionResource {
       summary = "Get all permissions in a scope or all permissions in the system.",
       responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "List of all permissions") })
   public ResponseDTO<List<PermissionResponseDTO>>
-  get(@BeanParam HarnessScopeParams scopeParams, @QueryParam("scopeFilterDisabled") boolean scopeFilterDisabled) {
+  get(@BeanParam HarnessScopeParams scopeParams,
+      @Parameter(
+          description =
+              "This is to enable or disable filtering by scope. The default value is false. If the value is true, all the permissions in the system are fetched.")
+      @QueryParam("scopeFilterDisabled") boolean scopeFilterDisabled) {
     List<Permission> permissions = getPermissions(scopeParams, scopeFilterDisabled);
     return ResponseDTO.newResponse(
         permissions.stream()
@@ -94,8 +99,11 @@ public class PermissionResource {
       summary = "Get all resource types for permissions in a scope or in the system.",
       responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "List of resource types") })
   public ResponseDTO<Set<String>>
-  getResourceTypes(
-      @BeanParam HarnessScopeParams scopeParams, @QueryParam("scopeFilterDisabled") boolean scopeFilterDisabled) {
+  getResourceTypes(@BeanParam HarnessScopeParams scopeParams,
+      @Parameter(
+          description =
+              "This is to enable or disable filtering by scope. The default value is false. If the value is true, all the permissions in the system are fetched.")
+      @QueryParam("scopeFilterDisabled") boolean scopeFilterDisabled) {
     List<Permission> permissions = getPermissions(scopeParams, scopeFilterDisabled);
     return ResponseDTO.newResponse(permissions.stream()
                                        .map(permissionService::getResourceTypeFromPermission)

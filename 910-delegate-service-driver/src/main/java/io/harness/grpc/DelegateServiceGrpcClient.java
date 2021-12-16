@@ -208,6 +208,7 @@ public class DelegateServiceGrpcClient {
         TaskDetails.newBuilder()
             .setParked(taskRequest.isParked())
             .setMode(taskMode)
+            .setExpressionFunctorToken(taskRequest.getExpressionFunctorToken())
             .setType(TaskType.newBuilder().setType(taskRequest.getTaskType()).build())
             .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters)))
             .setExecutionTimeout(Durations.fromSeconds(taskRequest.getExecutionTimeout().getSeconds()))

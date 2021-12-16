@@ -25,14 +25,17 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ValidResourceGroupFilter
 public class ResourceGroupFilterDTO {
-  @ApiModelProperty(required = true) String accountIdentifier;
-  String orgIdentifier;
-  String projectIdentifier;
-  String searchTerm;
-  Set<String> identifierFilter;
+  @Schema(description = "Filter by account identifier", required = true)
+  @ApiModelProperty(required = true)
+  String accountIdentifier;
+  @Schema(description = "Filter by organization identifier") String orgIdentifier;
+  @Schema(description = "Filter by project identifier") String projectIdentifier;
+  @Schema(description = "Filter resource group matching by identifier/name") String searchTerm;
+  @Schema(description = "Filter by resource group identifiers") Set<String> identifierFilter;
   @JsonIgnore Set<String> scopeLevelFilter;
+  @Schema(description = "Filter based on whether it has a particular resource")
   Set<ResourceSelectorFilter> resourceSelectorFilterList;
-  ManagedFilter managedFilter;
+  @Schema(description = "Filter based on whether the resource group is Harness managed") ManagedFilter managedFilter;
 
   @Builder
   public ResourceGroupFilterDTO(String accountIdentifier, String orgIdentifier, String projectIdentifier,

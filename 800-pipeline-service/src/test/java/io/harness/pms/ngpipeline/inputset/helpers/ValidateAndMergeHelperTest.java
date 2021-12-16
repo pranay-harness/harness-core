@@ -5,6 +5,7 @@ import static io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType
 import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.VED;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
@@ -256,7 +257,8 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
     doReturn(Optional.empty()).when(pmsPipelineService).get(accountId, orgId, projectId, pipelineId, false);
     assertThatThrownBy(() -> validateAndMergeHelper.getPipelineTemplate(accountId, orgId, projectId, pipelineId, null))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Could not find pipeline");
+        .hasMessage(format("Pipeline [%s] under Project[%s], Organization [%s] doesn't exist or has been deleted.",
+            pipelineId, projectId, orgId));
   }
 
   @Test
@@ -297,7 +299,7 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
   @Owner(developers = VED)
   @Category(UnitTests.class)
   public void testForLengthCheckOnInputSetIdentifiers() {
-    String yaml1 = getInputSetYamlWithLongIdentifier(true);
+    String yaml1 = getInputSetYamlWithLongIdentifier();
     String yaml2 = addOrgIdentifier(yaml1);
     String yaml3 = addProjectIdentifier(yaml2);
     String yaml4 = addPipelineIdentifier(yaml3);
@@ -310,7 +312,7 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
   @Owner(developers = VED)
   @Category(UnitTests.class)
   public void testForLengthCheckOnOverlayInputSetIdentifiers() {
-    String yaml1 = getOverlayInputSetYamlWithLongIdentifier(false, true);
+    String yaml1 = getOverlayInputSetYamlWithLongIdentifier();
     String yaml2 = addOrgIdentifier(yaml1);
     String yaml3 = addProjectIdentifier(yaml2);
     String yaml4 = addPipelineIdentifier(yaml3);
@@ -319,34 +321,24 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
         .hasMessage("Overlay Input Set identifier length cannot be more that 63 characters.");
   }
 
-  private String getInputSetYamlWithLongIdentifier(boolean hasPipelineComponent) {
-    return getInputSetYamlWithLongIdentifier(hasPipelineComponent, false);
-  }
-
-  private String getInputSetYamlWithLongIdentifier(boolean hasPipelineComponent, boolean hasTags) {
+  private String getInputSetYamlWithLongIdentifier() {
     String base = "inputSet:\n"
         + "  name: n1\n"
         + "  identifier: abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n";
-    String tags = "  tags:\n"
-        + "    a : b\n";
     String pipelineComponent = "  pipeline:\n"
         + "    name: n2\n"
         + "    identifier: n2\n";
-    return base + (hasTags ? tags : "") + (hasPipelineComponent ? pipelineComponent : "");
+    return base + pipelineComponent;
   }
 
-  private String getOverlayInputSetYamlWithLongIdentifier(boolean hasTags, boolean hasReferences) {
+  private String getOverlayInputSetYamlWithLongIdentifier() {
     String base = "overlayInputSet:\n"
         + "  name: n1\n"
         + "  identifier: abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n";
-    String noReferences = "  inputSetReferences: []\n";
     String references = "  inputSetReferences:\n"
         + "    - s1\n"
         + "    - s2\n";
-    String tags = "  tags:\n"
-        + "    a : b\n";
-
-    return base + (hasTags ? tags : "") + (hasReferences ? references : noReferences);
+    return base + references;
   }
 
   private String addOrgIdentifier(String yaml) {

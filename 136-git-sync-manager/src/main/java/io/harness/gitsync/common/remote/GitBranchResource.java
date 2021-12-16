@@ -82,18 +82,18 @@ public class GitBranchResource {
 
   @GET
   @Path("listBranchesWithStatus")
-  @ApiOperation(value = "Gets list of branches with their status by Git Sync Config Identifier",
-      nickname = "getListOfBranchesWithStatus")
+  @ApiOperation(
+      value = "Gets list of branches with their status by Git Sync Config Id", nickname = "getListOfBranchesWithStatus")
   @Operation(operationId = "getListOfBranchesWithStatus",
-      summary = "Lists branches with their status(Synced, Unsynced) by Git Sync Config Identifier for the given scope",
+      summary = "Lists branches with their status(Synced, Unsynced) by Git Sync Config Id for the given scope",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(description = "Paginated list of branches with status for the given scope")
+        ApiResponse(description = "Returns a list of branches along with their status within the given scope")
       })
   public ResponseDTO<GitBranchListDTO>
-  listBranchesWithStatusForRepo(@Parameter(description = "Git Sync Config Id", required = true) @NotEmpty @QueryParam(
-                                    YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigIdentifier,
+  listBranchesWithStatusForRepo(@Parameter(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE, required = true)
+                                @NotEmpty @QueryParam(YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigIdentifier,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
@@ -103,8 +103,8 @@ public class GitBranchResource {
       @Parameter(description = PAGE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue(
           "0") int pageNum,
       @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE) @Max(100) int pageSize,
-      @Parameter(description = "Search Term") @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue(
-          "") String searchTerm,
+      @Parameter(description = GitSyncApiConstants.SEARCH_TERM_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm,
       @Parameter(description = "Used to filter out Synced and Unsynced branches") @QueryParam(
           "branchSyncStatus") BranchSyncStatus branchSyncStatus) {
     return ResponseDTO.newResponse(gitBranchService.listBranchesWithStatus(accountIdentifier, orgIdentifier,
@@ -116,22 +116,24 @@ public class GitBranchResource {
   @Path("sync")
   @ApiOperation(value = "Sync the new branch into harness", nickname = "syncGitBranch")
   @Operation(operationId = "syncGitBranch",
-      summary = "Sync the content of new Git Branch into harness with Git Sync Config Identifier",
+      summary = "Sync the content of new Git Branch into harness with Git Sync Config Id",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(description = "True if successfully synced new Git Branch into harness")
+        ApiResponse(description = "Returns True if the new Git Branch is successfully synced into Harness")
       })
   public ResponseDTO<Boolean>
-  listBranchesWithStatusForRepo(@Parameter(description = "Git Sync Config Id", required = true) @NotEmpty @QueryParam(
-                                    GitSyncApiConstants.REPO_IDENTIFIER_KEY) String yamlGitConfigIdentifier,
+  listBranchesWithStatusForRepo(
+      @Parameter(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE, required = true) @NotEmpty @QueryParam(
+          GitSyncApiConstants.REPO_IDENTIFIER_KEY) String yamlGitConfigIdentifier,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Branch Name") @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branchName) {
+      @Parameter(description = GitSyncApiConstants.BRANCH_PARAM_MESSAGE) @QueryParam(
+          GitSyncApiConstants.BRANCH_KEY) String branchName) {
     return ResponseDTO.newResponse(gitBranchService.syncNewBranch(
         accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier, branchName));
   }

@@ -13,7 +13,8 @@ import static io.harness.pcf.CfCommandUnitConstants.PcfSetup;
 import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
 import static io.harness.pcf.PcfUtils.encodeColor;
 import static io.harness.pcf.PcfUtils.getRevisionFromServiceName;
-import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__IDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__INACTIVE__IDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.INACTIVE_APP_NAME_SUFFIX;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
 import static software.wings.beans.LogColor.White;
@@ -51,6 +52,7 @@ import io.harness.pcf.model.CfCreateApplicationRequestData;
 import io.harness.pcf.model.CfManifestFileData;
 import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
+import io.harness.pcf.model.PcfConstants;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
@@ -70,6 +72,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -155,7 +158,13 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       boolean versioningChanged =
           isVersioningChanged(nonVersioning, previousReleases, cfCommandSetupRequest.getReleaseNamePrefix());
       int activeAppRevision = -1;
-      if (versioningChanged && !cfCommandSetupRequest.isBlueGreen()) {
+      String inActiveAppOldName = "";
+      if (cfCommandSetupRequest.isBlueGreen()) {
+        Optional<String> inActiveAppBeforeBGDeployment =
+            pcfCommandTaskBaseHelper.renameInActiveAppDuringBGDeployment(previousReleases, cfRequestConfig,
+                cfCommandSetupRequest.getReleaseNamePrefix(), executionLogCallback, existingAppNamingStrategy, renames);
+        inActiveAppOldName = inActiveAppBeforeBGDeployment.orElse("");
+      } else if (versioningChanged && !cfCommandSetupRequest.isBlueGreen()) {
         executionLogCallback.saveExecutionLog(getVersionChangeMessage(nonVersioning));
         activeAppRevision = executeVersioningChange(
             previousReleases, cfRequestConfig, cfCommandSetupRequest, nonVersioning, renames, executionLogCallback);
@@ -171,8 +180,9 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       ApplicationSummary activeApplication = pcfCommandTaskBaseHelper.findActiveApplication(
           executionLogCallback, cfCommandSetupRequest.isBlueGreen(), cfRequestConfig, previousReleases);
 
-      CfAppSetupTimeDetails mostRecentInactiveAppVersionDetails = getInActiveApplicationDetails(executionLogCallback,
-          cfCommandSetupRequest.isBlueGreen(), activeApplication, previousReleases, cfRequestConfig);
+      CfAppSetupTimeDetails mostRecentInactiveAppVersionDetails =
+          getInActiveApplicationDetails(executionLogCallback, cfCommandSetupRequest.isBlueGreen(), activeApplication,
+              previousReleases, cfRequestConfig, inActiveAppOldName);
       if (cfCommandSetupRequest.isBlueGreen()) {
         executionLogCallback.saveExecutionLog(getInActiveAppMessage(mostRecentInactiveAppVersionDetails));
       }
@@ -248,6 +258,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
               .newApplicationDetails(CfAppSetupTimeDetails.builder()
                                          .applicationGuid(newApplication.getId())
                                          .applicationName(newApplication.getName())
+                                         .oldName(newApplication.getName())
                                          .urls(new ArrayList<>(newApplication.getUrls()))
                                          .initialInstanceCount(0)
                                          .build())
@@ -398,7 +409,9 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
   }
 
   private boolean isNonVersionReleaseExist(List<ApplicationSummary> releases, String releaseNamePrefix) {
-    return releases.stream().anyMatch(app -> app.getName().equalsIgnoreCase(releaseNamePrefix));
+    String inActiveAppName = releaseNamePrefix + INACTIVE_APP_NAME_SUFFIX;
+    return releases.stream().anyMatch(
+        app -> app.getName().equalsIgnoreCase(releaseNamePrefix) || app.getName().equalsIgnoreCase(inActiveAppName));
   }
 
   /**
@@ -448,7 +461,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
         foundInactive = true;
         continue;
       }
-      if (foundInactive && !application.equals(activeApplication)) {
+      if ((foundInactive && !application.equals(activeApplication))
+          || PcfConstants.isInterimApp(application.getName())) {
         executionLogCallback.saveExecutionLog(
             "# Unused application being deleted: " + encodeColor(application.getName()));
         deleteApplication(application, cfRequestConfig, appsDeleted, executionLogCallback);
@@ -459,8 +473,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
   }
 
   private CfAppSetupTimeDetails getInActiveApplicationDetails(LogCallback executionLogCallback, boolean blueGreen,
-      ApplicationSummary activeApplication, List<ApplicationSummary> previousReleases, CfRequestConfig cfRequestConfig)
-      throws PivotalClientApiException {
+      ApplicationSummary activeApplication, List<ApplicationSummary> previousReleases, CfRequestConfig cfRequestConfig,
+      String inActiveAppOldName) throws PivotalClientApiException {
     ApplicationSummary mostRecentInactiveApplication = pcfCommandTaskBaseHelper.getMostRecentInactiveApplication(
         executionLogCallback, blueGreen, activeApplication, previousReleases, cfRequestConfig);
     if (mostRecentInactiveApplication == null) {
@@ -469,6 +483,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     return CfAppSetupTimeDetails.builder()
         .applicationGuid(mostRecentInactiveApplication.getId())
         .applicationName(mostRecentInactiveApplication.getName())
+        .oldName(inActiveAppOldName)
         .initialInstanceCount(mostRecentInactiveApplication.getRunningInstances())
         .urls(new ArrayList<>(mostRecentInactiveApplication.getUrls()))
         .build();
@@ -592,7 +607,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     boolean nonVersioning = cfCommandSetupRequest.isNonVersioning();
 
     if (cfCommandSetupRequest.isBlueGreen() && (nonVersioning || versioningChanged)) {
-      return HARNESS__STAGE__IDENTIFIER;
+      return HARNESS__INACTIVE__IDENTIFIER;
     }
 
     String revision = StringUtils.EMPTY;
@@ -675,6 +690,11 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
         ApplicationSummary applicationSummary = previousReleases.get(index);
         if (activeApplication != null && applicationSummary.getName().equals(activeApplication.getName())) {
           continue;
+        } else if (PcfConstants.isInterimApp(applicationSummary.getName())) {
+          executionLogCallback.saveExecutionLog(
+              "# Deleting previous deployment interim app: " + encodeColor(applicationSummary.getName()));
+          deleteApplication(applicationSummary, cfRequestConfig, appsDeleted, executionLogCallback);
+          appsDeleted.add(applicationSummary.getName());
         } else if (olderValidAppsFound < olderVersionCountToKeep
             || (inactiveAppVersionDetails != null && isNotEmpty(inactiveAppVersionDetails.getApplicationName())
                 && applicationSummary.getName().equals(inactiveAppVersionDetails.getApplicationName()))) {
@@ -691,12 +711,9 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     }
 
     if (isNotEmpty(appsDeleted)) {
-      executionLogCallback.saveExecutionLog(new StringBuilder(128)
-                                                .append("# Done Deleting older applications. ")
-                                                .append("Deleted Total ")
-                                                .append(appsDeleted.size())
-                                                .append(" applications")
-                                                .toString());
+      executionLogCallback.saveExecutionLog("# Done Deleting older applications. "
+          + "Deleted Total " + appsDeleted.size() + " applications");
+      executionLogCallback.saveExecutionLog(String.format("Apps deleted - [%s]", String.join(",", appsDeleted)));
     } else {
       executionLogCallback.saveExecutionLog("# No older applications were eligible for deletion\n");
     }
@@ -737,25 +754,41 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     cfRequestConfig.setApplicationName(applicationSummary.getName());
     cfRequestConfig.setDesiredCount(0);
     try {
-      ApplicationDetail applicationDetail = pcfDeploymentManager.resizeApplication(cfRequestConfig);
-
+      ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(cfRequestConfig);
       // Unmap routes from application having 0 instances
       if (isNotEmpty(applicationDetail.getUrls())) {
         pcfDeploymentManager.unmapRouteMapForApplication(
             cfRequestConfig, applicationDetail.getUrls(), executionLogCallback);
       }
+    } catch (PivotalClientApiException exception) {
+      executionLogCallback.saveExecutionLog(
+          String.format("Failed to un map routes from application - [%s]. Please manually unmap it",
+              cfRequestConfig.getApplicationName()),
+          LogLevel.ERROR);
+      log.warn(exception.getMessage());
+    }
 
-      // Remove Env Variable "HARNESS__STATUS__INDENTIFIER"
+    try {
+      // Remove Env Variable "HARNESS__STATUS__IDENTIFIER"
       if (cfCommandSetupRequest.isBlueGreen()) {
         pcfDeploymentManager.unsetEnvironmentVariableForAppStatus(cfRequestConfig, executionLogCallback);
       }
-    } catch (PivotalClientApiException e) {
-      executionLogCallback.saveExecutionLog(new StringBuilder(128)
-                                                .append("Failed while Downsizing application: ")
-                                                .append(encodeColor(applicationSummary.getName()))
-                                                .append(", Continuing for next one")
-                                                .toString(),
+    } catch (PivotalClientApiException exception) {
+      executionLogCallback.saveExecutionLog(
+          String.format(
+              "Failed to un set env variable for application - [%s]. Please manually un set it to avoid any future issue ",
+              cfRequestConfig.getApplicationName()),
           LogLevel.ERROR);
+      log.warn(exception.getMessage());
+    }
+
+    try {
+      pcfDeploymentManager.resizeApplication(cfRequestConfig);
+    } catch (PivotalClientApiException e) {
+      executionLogCallback.saveExecutionLog("Failed while Downsizing application: "
+              + encodeColor(applicationSummary.getName()) + ", Continuing for next one",
+          LogLevel.ERROR);
+      log.warn(e.getMessage());
     }
   }
 }

@@ -1,5 +1,7 @@
 package io.harness.ng.core;
 
+import io.harness.secret.ConfigSecret;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -9,12 +11,12 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NextGenConfig {
-  String managerServiceSecret;
-  String userVerificationSecret;
-  String ngManagerServiceSecret;
-  String pipelineServiceSecret;
-  String jwtAuthSecret;
-  String jwtIdentityServiceSecret;
-  String ciManagerSecret;
-  String ceNextGenServiceSecret;
+  @ConfigSecret String managerServiceSecret;
+  @ConfigSecret String userVerificationSecret;
+  @ConfigSecret String ngManagerServiceSecret;
+  @ConfigSecret String pipelineServiceSecret;
+  @ConfigSecret String jwtAuthSecret;
+  @ConfigSecret String jwtIdentityServiceSecret;
+  @ConfigSecret String ciManagerSecret;
+  @ConfigSecret String ceNextGenServiceSecret;
 }

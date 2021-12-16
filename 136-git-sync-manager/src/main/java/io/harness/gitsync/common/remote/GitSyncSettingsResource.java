@@ -115,11 +115,12 @@ public class GitSyncSettingsResource {
   @PUT
   @ApiOperation(value = "Update a Git Sync Setting", nickname = "updateGitSyncSetting")
   @Operation(operationId = "updateGitSyncSetting",
-      summary = "Update existing Git Sync Setting by scope. Only changing execution on delegate is allowed",
+      summary =
+          "This updates the existing Git Sync settings within the scope. Only changing Connectivity Mode is allowed",
       responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Updated Git Sync Setting") })
   public ResponseDTO<GitSyncSettingsDTO>
-  update(@RequestBody(required = true, description = "Git Sync Setting details, including: scope, executionOnDelegate")
-      @NotNull @Valid GitSyncSettingsDTO gitSyncSettings) {
+  update(@RequestBody(required = true,
+      description = "This contains details of Git Sync Settings") @NotNull @Valid GitSyncSettingsDTO gitSyncSettings) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(gitSyncSettings.getAccountIdentifier(), gitSyncSettings.getOrganizationIdentifier(),
             gitSyncSettings.getProjectIdentifier()),

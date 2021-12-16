@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.connector.servicenow;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.DelegateSelectable;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.SecretRefData;
@@ -23,7 +24,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
@@ -34,9 +34,9 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("ServiceNowConnector")
 @OneOfField(fields = {"username", "usernameRef"})
-public class ServiceNowConnectorDTO extends ConnectorConfigDTO {
+public class ServiceNowConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity, DelegateSelectable {
   @NotNull String serviceNowUrl;
-  @NotBlank String username;
+  String username;
   @ApiModelProperty(dataType = "string") @SecretReference SecretRefData usernameRef;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
   Set<String> delegateSelectors;

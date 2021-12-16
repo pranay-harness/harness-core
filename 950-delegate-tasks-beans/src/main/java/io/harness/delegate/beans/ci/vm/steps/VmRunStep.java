@@ -1,6 +1,9 @@
 package io.harness.delegate.beans.ci.vm.steps;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.expression.Expression;
 
 import java.util.List;
 import java.util.Map;
@@ -17,9 +20,9 @@ public class VmRunStep implements VmStepInfo {
   private boolean privileged;
 
   private List<String> entrypoint;
-  private String command;
+  @Expression(ALLOW_SECRETS) private String command;
   private List<String> outputVariables;
-  private Map<String, String> envVariables;
+  @Expression(ALLOW_SECRETS) private Map<String, String> envVariables;
   private VmUnitTestReport unitTestReport;
   private long timeoutSecs;
 

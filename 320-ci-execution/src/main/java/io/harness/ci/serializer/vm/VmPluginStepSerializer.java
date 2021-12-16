@@ -1,6 +1,7 @@
 package io.harness.ci.serializer.vm;
 
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveJsonNodeMapParameter;
+import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
 import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -8,6 +9,7 @@ import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.yaml.extended.reports.JUnitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReportType;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.serializer.SerializerUtils;
 import io.harness.delegate.beans.ci.vm.steps.VmJunitTestReport;
 import io.harness.delegate.beans.ci.vm.steps.VmPluginStep;
@@ -17,13 +19,15 @@ import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.timeout.Timeout;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.experimental.UtilityClass;
 
-@UtilityClass
+@Singleton
 public class VmPluginStepSerializer {
+  @Inject CIExecutionServiceConfig ciExecutionServiceConfig;
   public VmPluginStep serialize(PluginStepInfo pluginStepInfo, String identifier,
       ParameterField<Timeout> parameterFieldTimeout, String stepName) {
     Map<String, JsonNode> settings =
@@ -41,6 +45,9 @@ public class VmPluginStepSerializer {
 
     String image =
         RunTimeInputHandler.resolveStringParameter("Image", stepName, identifier, pluginStepInfo.getImage(), false);
+    if (identifier.equals(GIT_CLONE_STEP_ID) && pluginStepInfo.isHarnessManagedImage()) {
+      image = ciExecutionServiceConfig.getStepConfig().getVmImageConfig().getGitClone();
+    }
     long timeout = TimeoutUtils.getTimeoutInSeconds(parameterFieldTimeout, pluginStepInfo.getDefaultTimeout());
 
     VmPluginStepBuilder pluginStepBuilder =

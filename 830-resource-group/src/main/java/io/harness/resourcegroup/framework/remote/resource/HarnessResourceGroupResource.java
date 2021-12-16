@@ -104,17 +104,17 @@ public class HarnessResourceGroupResource {
 
   @GET
   @Path("{identifier}")
-  @ApiOperation(value = "Get a resource group by identifier", nickname = "getResourceGroup")
+  @ApiOperation(value = "Get a resource group by Identifier", nickname = "getResourceGroup")
   @Operation(operationId = "getResourceGroup", summary = "Get a resource group by identifier",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "This returns a Resource Group specific to the ID")
+        ApiResponse(responseCode = "default", description = "This returns a Resource Group specific to the Identifier")
       })
   public ResponseDTO<ResourceGroupResponse>
-  get(@Parameter(description = "This is the ID of the Entity") @NotNull @PathParam(
+  get(@Parameter(description = "This is the Identifier of the Entity", required = true) @NotNull @PathParam(
           NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
@@ -130,16 +130,16 @@ public class HarnessResourceGroupResource {
   @Path("internal/{identifier}")
   @ApiOperation(
       value = "Get a resource group by identifier internal", nickname = "getResourceGroupInternal", hidden = true)
-  @Operation(operationId = "getResourceGroupInternal", summary = "Get a resource group by identifier internal",
+  @Operation(operationId = "getResourceGroupInternal", summary = "Get a resource group by Identifier internal",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Internal API to return Resource Group by identifier")
+        ApiResponse(responseCode = "default", description = "Internal API to return Resource Group by Identifier")
       },
       hidden = true)
   @InternalApi
   public ResponseDTO<ResourceGroupResponse>
-  getInternal(@Parameter(description = "This is the ID of the Entity") @NotNull @PathParam(
+  getInternal(@Parameter(description = "This is the Identifier of the Entity") @NotNull @PathParam(
                   NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
@@ -161,12 +161,15 @@ public class HarnessResourceGroupResource {
         ApiResponse(responseCode = "default", description = "This contains a list of Resource Groups")
       })
   public ResponseDTO<PageResponse<ResourceGroupResponse>>
-  list(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+  list(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
            NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Parameter(description = "Search Term") @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @Parameter(
+          description =
+              "Details of all the resource groups having this string in their name or identifier will be returned.")
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @BeanParam PageRequest pageRequest) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, null), VIEW_RESOURCEGROUP_PERMISSION);
@@ -181,11 +184,11 @@ public class HarnessResourceGroupResource {
       description = "This fetches a filtered list of Resource Groups",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "This fetches a filtered list of Resource Groups")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "This fetches the list of Resource Groups filtered by multiple fields.")
       })
   public ResponseDTO<PageResponse<ResourceGroupResponse>>
-  list(@Parameter(description = "Filter Resource Group Entity based on multiple parameters")
+  list(@RequestBody(description = "Filter Resource Groups based on multiple parameters", required = true)
        @NotNull ResourceGroupFilterDTO resourceGroupFilterDTO, @BeanParam PageRequest pageRequest) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(resourceGroupFilterDTO.getAccountIdentifier(), resourceGroupFilterDTO.getOrgIdentifier(),
@@ -209,8 +212,8 @@ public class HarnessResourceGroupResource {
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @RequestBody(description = "This contains the details required to create a Resource Group")
-      @Valid ResourceGroupRequest resourceGroupRequest) {
+      @RequestBody(description = "This contains the details required to create a Resource Group",
+          required = true) @Valid ResourceGroupRequest resourceGroupRequest) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, null), EDIT_RESOURCEGROUP_PERMISSION);
     resourceGroupRequest.getResourceGroup().setAllowedScopeLevels(
@@ -237,8 +240,8 @@ public class HarnessResourceGroupResource {
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @RequestBody(description = "This contains the details required to create a Resource Group")
-      @Valid ResourceGroupRequest resourceGroupRequest) {
+      @RequestBody(description = "This contains the details required to create a Resource Group",
+          required = true) @Valid ResourceGroupRequest resourceGroupRequest) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, identifier), EDIT_RESOURCEGROUP_PERMISSION);
     resourceGroupRequest.getResourceGroup().setAllowedScopeLevels(

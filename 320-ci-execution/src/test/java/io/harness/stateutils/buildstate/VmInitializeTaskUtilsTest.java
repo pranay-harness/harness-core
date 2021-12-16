@@ -58,8 +58,7 @@ public class VmInitializeTaskUtilsTest extends CIExecutionTestBase {
   @Category(UnitTests.class)
   public void getInitializeTaskParams() {
     String poolId = "test";
-    VmPoolYaml vmPoolYaml =
-        VmPoolYaml.builder().spec(VmPoolYamlSpec.builder().identifier(poolId).build()).build();
+    VmPoolYaml vmPoolYaml = VmPoolYaml.builder().spec(VmPoolYamlSpec.builder().identifier(poolId).build()).build();
 
     String stageRuntimeId = "test";
     InitializeStepInfo initializeStepInfo = InitializeStepInfo.builder()

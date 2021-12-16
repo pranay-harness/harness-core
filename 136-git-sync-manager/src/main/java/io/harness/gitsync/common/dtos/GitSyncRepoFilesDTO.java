@@ -17,7 +17,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @ApiModel("GitSyncRepoFiles")
 @FieldNameConstants(innerTypeName = "GitSyncConfigFilesDTOKeys")
-@Schema(name = "GitSyncRepoFiles", description = "This contains a list of Entities with specific Git Sync Config Id")
+@Schema(name = "GitSyncRepoFiles", description = "This contains a list of Entities with a specific Git Sync Config Id")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GitSyncRepoFilesDTO {
   String gitSyncConfigIdentifier;
