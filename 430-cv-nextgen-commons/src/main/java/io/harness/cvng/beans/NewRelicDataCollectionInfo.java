@@ -1,7 +1,5 @@
 package io.harness.cvng.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.cvng.newrelic.NewRelicUtils;
 
@@ -34,9 +32,11 @@ public class NewRelicDataCollectionInfo extends TimeSeriesDataCollectionInfo<New
   private List<NewRelicMetricInfoDTO> metricInfoList;
   private MetricPackDTO metricPack;
 
+  boolean customQuery;
+
   @Override
   public Map<String, Object> getDslEnvVariables(NewRelicConnectorDTO newRelicConnectorDTO) {
-    if (applicationId != 0 && isNotEmpty(applicationName)) {
+    if (customQuery) {
       return getEnvVariablesForAppIdBasedConfig();
     } else {
       return getEnvVariablesForCustomConfig();
@@ -74,6 +74,9 @@ public class NewRelicDataCollectionInfo extends TimeSeriesDataCollectionInfo<New
 
   private Map<String, Object> getEnvVariablesForCustomConfig() {
     Map<String, Object> dslEnvVariables = new HashMap<>();
+    dslEnvVariables.put("appName", getApplicationName());
+    dslEnvVariables.put("appId", getApplicationId());
+    dslEnvVariables.put("collectHostData", Boolean.toString(this.isCollectHostData()));
     dslEnvVariables.put("groupName", groupName);
     List<String> listOfQueries =
         metricInfoList.stream().map(NewRelicMetricInfoDTO::getNrql).collect(Collectors.toList());

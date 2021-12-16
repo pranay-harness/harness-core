@@ -39,25 +39,6 @@ public class YamlSchemaTransientHelper {
     }
   };
 
-  // write unit test to match this with PipelineServiceModule.commonStepsMovedToNewSchema
-  public static final List<EntityType> pipelineStepV2EntityTypes = new ArrayList<EntityType>() {
-    {
-      add(EntityType.HTTP_STEP);
-      add(EntityType.JIRA_CREATE_STEP);
-      add(EntityType.SHELL_SCRIPT_STEP);
-      add(EntityType.TEMPLATE);
-    }
-  };
-
-  // Add cd steps here that are moved to new schema.
-  public static final List<EntityType> cdStepV2EntityTypes = new ArrayList<EntityType>() {
-    { add(EntityType.K8S_CANARY_DEPLOY_STEP); }
-  };
-  // Add cv steps here that are moved to new schema.
-  public static final List<EntityType> cvStepV2EntityTypes = new ArrayList<>();
-  // Add ci steps here that are moved to new schema.
-  public static final List<EntityType> ciStepV2EntityTypes = new ArrayList<>();
-
   public void deleteSpecNodeInStageElementConfig(JsonNode stageElementConfig) {
     JsonNodeUtils.deletePropertiesInJsonNode((ObjectNode) stageElementConfig.get(PROPERTIES_NODE), "spec");
   }

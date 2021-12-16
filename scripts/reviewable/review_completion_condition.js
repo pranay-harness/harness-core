@@ -1,7 +1,9 @@
+// dependencies: lodash3
+
 // The number of approvals required to merge.
 let numApprovalsRequired = 1;
 
-let re = /(feat|fix|techdebt).*(:).*(\[CDP|\[CV|\[PIE)/g;
+let re = /(feat|fix|techdebt).*(:).*(\[CDP|\[PIE|\[PL)/g;
 
 if (review.pullRequest.title.match(re)) {
   numApprovalsRequired = 2;
@@ -17,14 +19,12 @@ const discussionBlockers = _(review.discussions)
   .where({resolved: false})
   .pluck('participants')
   .flatten()
+  .reject(participant => participant.username === review.pullRequest.author.username)
   .where({resolved: false})
   .map(user => _.pick(user, 'username'))
   .value();
 
-let pendingReviewers = _(discussionBlockers)
-  .map(user => _.pick(user, 'username'))
-  .value();
-
+let pendingReviewers = [];
 let required = _.pluck(review.pullRequest.assignees, 'username');
 
 _.pull(required, review.pullRequest.author.username);
@@ -52,6 +52,10 @@ let numUnreviewedFiles = 0;
 let fileBlockers = [];
 _.forEach(review.files, function(file) {
   const lastRev = _(file.revisions).reject('obsolete').last();
+  if (!lastRev) {
+    // When there are reverted files it seems that all revisions on it are obsolete, so break early. 
+    return;
+  }
   const reviewers = _(lastRev.reviewers)
     .pluck('username')
     .without(review.pullRequest.author.username)
@@ -70,10 +74,11 @@ _.forEach(review.files, function(file) {
 
 const completed =
       !tooOld &&
-      numUnreviewedFiles == 0 &&
-      pendingReviewers.length == 0 &&
+      numUnreviewedFiles === 0 &&
+      pendingReviewers.length === 0 &&
       numApprovals >= numApprovalsRequired &&
-      Object.keys(requestedTeams).length == 0;
+      discussionBlockers.length === 0 &&
+      Object.keys(requestedTeams).length === 0;
 
 const description = (completed ? "✓" :
   (tooOld ? `Some of the checks are too old. ` : '') +
@@ -86,5 +91,5 @@ const description = (completed ? "✓" :
 const shortDescription = (completed ? "✓" : "✗");
 
 return {
-  completed: completed, description, shortDescription, pendingReviewers
+  completed, description, shortDescription, pendingReviewers
 };

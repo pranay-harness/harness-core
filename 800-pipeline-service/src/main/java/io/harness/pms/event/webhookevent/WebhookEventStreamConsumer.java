@@ -7,8 +7,6 @@ import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
-import io.harness.eventsframework.api.EventsFrameworkDownException;
-import io.harness.eventsframework.consumer.Message;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.pms.events.base.PmsAbstractRedisConsumer;
 import io.harness.queue.QueueController;
@@ -18,28 +16,26 @@ import io.harness.security.dto.ServicePrincipal;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
 @OwnedBy(PIPELINE)
 public class WebhookEventStreamConsumer extends PmsAbstractRedisConsumer<WebhookEventStreamListener> {
-  private static final int WAIT_TIME_IN_SECONDS = 10;
-  private final Consumer redisConsumer;
   private final List<MessageListener> messageListenersList;
   private final QueueController queueController;
   private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
   @Inject
   public WebhookEventStreamConsumer(@Named(WEBHOOK_EVENTS_STREAM) Consumer redisConsumer,
-      WebhookEventStreamListener webhookEventListener, QueueController queueController) {
-    super(redisConsumer, webhookEventListener, null, queueController);
-    this.redisConsumer = redisConsumer;
+      WebhookEventStreamListener webhookEventListener, @Named("pmsEventsCache") Cache<String, Integer> eventsCache,
+      QueueController queueController) {
+    super(redisConsumer, webhookEventListener, eventsCache, queueController);
     messageListenersList = new ArrayList<>();
     messageListenersList.add(webhookEventListener);
     this.queueController = queueController;
@@ -47,8 +43,6 @@ public class WebhookEventStreamConsumer extends PmsAbstractRedisConsumer<Webhook
 
   @Override
   public void run() {
-    log.info("Started the consumer for Webhook event stream");
-
     log.info("Started the consumer for Webhook event stream {}", this.getClass().getSimpleName());
     String threadName = this.getClass().getSimpleName() + "-handler-" + generateUuid();
     log.debug("Setting thread name to {}", threadName);
@@ -73,50 +67,6 @@ public class WebhookEventStreamConsumer extends PmsAbstractRedisConsumer<Webhook
     } finally {
       SecurityContextBuilder.unsetCompleteContext();
     }
-  }
-
-  private void readEventsFrameworkMessages() throws InterruptedException {
-    try {
-      pollAndProcessMessages();
-    } catch (EventsFrameworkDownException e) {
-      log.error("Events framework is down for Webhook event stream consumer. Retrying again...", e);
-      TimeUnit.SECONDS.sleep(WAIT_TIME_IN_SECONDS);
-    }
-  }
-
-  private void pollAndProcessMessages() {
-    List<Message> messages;
-    String messageId;
-    boolean messageProcessed;
-    messages = redisConsumer.read(Duration.ofSeconds(WAIT_TIME_IN_SECONDS));
-    for (Message message : messages) {
-      messageId = message.getId();
-      messageProcessed = handleMessage(message);
-      if (messageProcessed) {
-        redisConsumer.acknowledge(messageId);
-      }
-    }
-  }
-
-  private boolean handleMessage(Message message) {
-    try {
-      return processMessage(message);
-    } catch (Exception ex) {
-      // This is not evicted from events framework so that it can be processed
-      // by other consumer if the error is a runtime error
-      log.error(String.format("Error occurred in processing message with id %s", message.getId()), ex);
-      return false;
-    }
-  }
-
-  private boolean processMessage(Message message) {
-    AtomicBoolean success = new AtomicBoolean(true);
-    messageListenersList.forEach(messageListener -> {
-      if (!messageListener.handleMessage(message)) {
-        success.set(false);
-      }
-    });
-    return success.get();
   }
 
   public void shutDown() {

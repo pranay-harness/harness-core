@@ -38,6 +38,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
+import io.harness.delegate.cf.CfTestConstants;
 import io.harness.delegate.cf.PcfCommandTaskBaseHelper;
 import io.harness.delegate.cf.apprenaming.AppNamingStrategy;
 import io.harness.delegate.task.pcf.CfCommandRequest;
@@ -52,6 +53,7 @@ import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
 import io.harness.pcf.model.CfManifestFileData;
 import io.harness.pcf.model.CfRequestConfig;
+import io.harness.pcf.model.PcfConstants;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
@@ -70,10 +72,13 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
+import org.cloudfoundry.operations.applications.InstanceDetail;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -177,19 +182,19 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
     doReturn("PASSWORD".toCharArray()).when(pcfCommandTaskHelper).getPassword(any());
     doReturn(CfInternalConfig.builder().build()).when(secretDecryptionService).decrypt(any(), any(), anyBoolean());
     doNothing().when(pcfDeploymentManager).deleteApplication(any());
-    doReturn(ApplicationDetail.builder()
-                 .id("10")
-                 .diskQuota(1)
-                 .instances(0)
-                 .memoryLimit(1)
-                 .name("a_s_e__4")
-                 .requestedState(STOPPED)
-                 .stack("")
-                 .runningInstances(0)
-                 .urls(Arrays.asList("1.com", "2.com"))
-                 .build())
-        .when(pcfDeploymentManager)
-        .resizeApplication(any());
+    ApplicationDetail appDetails = ApplicationDetail.builder()
+                                       .id("10")
+                                       .diskQuota(1)
+                                       .instances(0)
+                                       .memoryLimit(1)
+                                       .name("a_s_e__4")
+                                       .requestedState(STOPPED)
+                                       .stack("")
+                                       .runningInstances(0)
+                                       .urls(Arrays.asList("1.com", "2.com"))
+                                       .build();
+    doReturn(appDetails).when(pcfDeploymentManager).getApplicationByName(any());
+    doReturn(appDetails).when(pcfDeploymentManager).resizeApplication(any());
     File f1 = new File("./test1");
     File f2 = new File("./test2");
     doReturn(f1).when(pcfCommandTaskHelper).downloadArtifactFromManager(any(), any(), any());
@@ -231,6 +236,36 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
                                                       .map(CfAppSetupTimeDetails::getApplicationName)
                                                       .collect(toList()));
     assertThat(appsToBeDownsized.contains("a_s_e__4")).isTrue();
+  }
+
+  @NotNull
+  private ApplicationDetail getApplicationByName() {
+    return ApplicationDetail.builder()
+        .id("10")
+        .diskQuota(1)
+        .instances(1)
+        .memoryLimit(1)
+        .name("app1")
+        .requestedState("STOPPED")
+        .stack("")
+        .runningInstances(1)
+        .instanceDetails(Collections.singletonList(InstanceDetail.builder()
+                                                       .cpu(1.0)
+                                                       .diskQuota((long) 1.23)
+                                                       .diskUsage((long) 1.23)
+                                                       .index("2")
+                                                       .memoryQuota((long) 1)
+                                                       .memoryUsage((long) 1)
+                                                       .build()))
+        .diskQuota(1)
+        .instances(1)
+        .memoryLimit(1)
+        .name("app1")
+        .requestedState(CfTestConstants.RUNNING)
+        .stack("")
+        .urls("prodRoute.com")
+        .runningInstances(1)
+        .build();
   }
 
   @Test
@@ -305,6 +340,7 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
                                               .stack("")
                                               .runningInstances(0)
                                               .build();
+    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(any());
     doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(any());
 
     CfCommandSetupRequest cfCommandSetupRequest = CfCommandSetupRequest.builder().useAppAutoscalar(true).build();
@@ -660,7 +696,8 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
-  public void testAppRenamingBlueGreen() throws ExecutionException, PivotalClientApiException, IOException {
+  public void testVersionToVersionAppRenamingBlueGreen()
+      throws ExecutionException, PivotalClientApiException, IOException {
     final String releaseName = "PaymentApp";
     final String inActiveAppCurrentName = releaseName + "__2";
     final String activeAppCurrentName = releaseName + "__3";
@@ -670,6 +707,84 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
 
     mockSetupBehaviour(releaseName, previousReleases);
     doReturn(previousReleases).when(pcfDeploymentManager).getPreviousReleases(any(), anyString());
+    doReturn(Optional.of(""))
+        .when(pcfCommandTaskBaseHelper)
+        .renameInActiveAppDuringBGDeployment(
+            eq(previousReleases), any(), eq(releaseName), eq(executionLogCallback), any(), any());
+
+    final ApplicationSummary activeApplication = previousReleases.get(2);
+    final ApplicationSummary inActiveApplication = previousReleases.get(1);
+
+    doReturn(activeApplication)
+        .when(pcfCommandTaskBaseHelper)
+        .findActiveApplication(
+            eq(executionLogCallback), anyBoolean(), any(CfRequestConfig.class), eq(previousReleases));
+
+    doReturn(inActiveApplication)
+        .when(pcfCommandTaskBaseHelper)
+        .getMostRecentInactiveApplication(eq(executionLogCallback), anyBoolean(), eq(activeApplication),
+            eq(previousReleases), any(CfRequestConfig.class));
+
+    CfCommandSetupRequest setupRequest = getSetupRequest(releaseName, false, true, true);
+    CfCommandExecutionResponse cfCommandExecutionResponse =
+        pcfSetupCommandTaskHandler.executeTaskInternal(setupRequest, null, logStreamingTaskClient, false);
+
+    // since its blue green resetState() should not be called
+    verify(pcfCommandTaskBaseHelper, times(0))
+        .resetState(eq(previousReleases), any(ApplicationSummary.class), any(ApplicationSummary.class), anyString(),
+            any(CfRequestConfig.class), anyBoolean(), any(Deque.class), anyInt(), any(LogCallback.class));
+
+    verify(pcfCommandTaskBaseHelper, times(1))
+        .renameInActiveAppDuringBGDeployment(eq(previousReleases), any(CfRequestConfig.class), eq(releaseName),
+            eq(executionLogCallback), eq(AppNamingStrategy.VERSIONING.name()), any());
+
+    assertThat(cfCommandExecutionResponse).isNotNull();
+    assertThat(cfCommandExecutionResponse.getPcfCommandResponse()).isNotNull();
+    assertThat(cfCommandExecutionResponse.getPcfCommandResponse()).isInstanceOf(CfSetupCommandResponse.class);
+    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    CfSetupCommandResponse pcfCommandResponse =
+        (CfSetupCommandResponse) cfCommandExecutionResponse.getPcfCommandResponse();
+
+    CfAppSetupTimeDetails mostRecentInactiveAppVersion = pcfCommandResponse.getMostRecentInactiveAppVersion();
+    assertThat(pcfCommandResponse.getExistingAppNamingStrategy()).isEqualTo(AppNamingStrategy.VERSIONING.name());
+    assertThat(pcfCommandResponse.isNonVersioning()).isFalse();
+    assertThat(pcfCommandResponse.isVersioningChanged()).isFalse();
+    assertThat(mostRecentInactiveAppVersion.getApplicationName()).isEqualTo(inActiveApplication.getName());
+    assertThat(mostRecentInactiveAppVersion.getApplicationGuid()).isEqualTo(inActiveApplication.getId());
+    assertThat(pcfCommandResponse.getActiveAppRevision()).isEqualTo(-1);
+    assertThat(mostRecentInactiveAppVersion.getOldName()).isEqualTo("");
+
+    List<CfAppSetupTimeDetails> activeAppDetails = pcfCommandResponse.getDownsizeDetails();
+    assertThat(activeAppDetails.size()).isEqualTo(1);
+    assertThat(activeAppDetails.get(0).getApplicationName()).isEqualTo(activeApplication.getName());
+    assertThat(activeAppDetails.get(0).getApplicationGuid()).isEqualTo(activeApplication.getId());
+
+    ArgumentCaptor<CfCreateApplicationRequestData> requestDataCaptor =
+        ArgumentCaptor.forClass(CfCreateApplicationRequestData.class);
+    verify(pcfDeploymentManager, times(1)).createApplication(requestDataCaptor.capture(), eq(executionLogCallback));
+    CfCreateApplicationRequestData requestData = requestDataCaptor.getValue();
+    assertThat(requestData).isNotNull();
+    assertThat(requestData.getNewReleaseName()).isEqualTo(releaseName + PcfConstants.DELIMITER + "4");
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testVersionToNonVersionAppRenamingBlueGreen()
+      throws ExecutionException, PivotalClientApiException, IOException {
+    final String releaseName = "PaymentApp";
+    final String inActiveAppCurrentName = releaseName + "__2";
+    final String activeAppCurrentName = releaseName + "__3";
+
+    List<ApplicationSummary> previousReleases =
+        getPreviousReleasesBeforeDeploymentStart(activeAppCurrentName, inActiveAppCurrentName);
+
+    mockSetupBehaviour(releaseName, previousReleases);
+    doReturn(previousReleases).when(pcfDeploymentManager).getPreviousReleases(any(), anyString());
+    doReturn(Optional.of(""))
+        .when(pcfCommandTaskBaseHelper)
+        .renameInActiveAppDuringBGDeployment(
+            eq(previousReleases), any(), eq(releaseName), eq(executionLogCallback), any(), any());
 
     final ApplicationSummary activeApplication = previousReleases.get(2);
     final ApplicationSummary inActiveApplication = previousReleases.get(1);
@@ -693,13 +808,14 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
         .resetState(eq(previousReleases), any(ApplicationSummary.class), any(ApplicationSummary.class), anyString(),
             any(CfRequestConfig.class), anyBoolean(), any(Deque.class), anyInt(), any(LogCallback.class));
 
-    // since its blue green, renameApp() should not be called
-    verify(pcfCommandTaskBaseHelper, times(0))
-        .renameApp(any(ApplicationSummary.class), any(CfRequestConfig.class), eq(executionLogCallback), anyString());
+    verify(pcfCommandTaskBaseHelper, times(1))
+        .renameInActiveAppDuringBGDeployment(eq(previousReleases), any(CfRequestConfig.class), eq(releaseName),
+            eq(executionLogCallback), eq(AppNamingStrategy.VERSIONING.name()), any());
 
     assertThat(cfCommandExecutionResponse).isNotNull();
     assertThat(cfCommandExecutionResponse.getPcfCommandResponse()).isNotNull();
     assertThat(cfCommandExecutionResponse.getPcfCommandResponse()).isInstanceOf(CfSetupCommandResponse.class);
+    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     CfSetupCommandResponse pcfCommandResponse =
         (CfSetupCommandResponse) cfCommandExecutionResponse.getPcfCommandResponse();
 
@@ -708,15 +824,172 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
     assertThat(pcfCommandResponse.isNonVersioning()).isTrue();
     assertThat(pcfCommandResponse.isVersioningChanged()).isTrue();
     assertThat(mostRecentInactiveAppVersion.getApplicationName()).isEqualTo(inActiveApplication.getName());
+    assertThat(mostRecentInactiveAppVersion.getOldName()).isEqualTo("");
+    assertThat(mostRecentInactiveAppVersion.getApplicationGuid()).isEqualTo(inActiveApplication.getId());
     assertThat(pcfCommandResponse.getActiveAppRevision()).isEqualTo(-1);
 
+    List<CfAppSetupTimeDetails> activeAppDetails = pcfCommandResponse.getDownsizeDetails();
+    assertThat(activeAppDetails.size()).isEqualTo(1);
+    assertThat(activeAppDetails.get(0).getApplicationName()).isEqualTo(activeApplication.getName());
+    assertThat(activeAppDetails.get(0).getOldName()).isEqualTo(activeApplication.getName());
+    assertThat(activeAppDetails.get(0).getApplicationGuid()).isEqualTo(activeApplication.getId());
+
+    ArgumentCaptor<CfCreateApplicationRequestData> requestDataCaptor =
+        ArgumentCaptor.forClass(CfCreateApplicationRequestData.class);
+    verify(pcfDeploymentManager, times(1)).createApplication(requestDataCaptor.capture(), eq(executionLogCallback));
+    CfCreateApplicationRequestData requestData = requestDataCaptor.getValue();
+    assertThat(requestData).isNotNull();
+    assertThat(requestData.getNewReleaseName()).isEqualTo(releaseName + PcfConstants.INACTIVE_APP_NAME_SUFFIX);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testNonVersionToNonVersionAppRenamingBlueGreen()
+      throws ExecutionException, PivotalClientApiException, IOException {
+    final String releaseName = "PaymentApp";
+    final String inActiveAppCurrentName = releaseName + PcfConstants.INACTIVE_APP_NAME_SUFFIX;
+    final String activeAppCurrentName = releaseName;
+
+    List<ApplicationSummary> previousReleases =
+        getPreviousReleasesBeforeDeploymentStart(activeAppCurrentName, inActiveAppCurrentName);
+
+    mockSetupBehaviour(releaseName, previousReleases);
+    doReturn(previousReleases).when(pcfDeploymentManager).getPreviousReleases(any(), anyString());
+    doReturn(Optional.of(inActiveAppCurrentName))
+        .when(pcfCommandTaskBaseHelper)
+        .renameInActiveAppDuringBGDeployment(
+            eq(previousReleases), any(), eq(releaseName), eq(executionLogCallback), any(), any());
+
+    final ApplicationSummary activeApplication = previousReleases.get(2);
+    final ApplicationSummary inActiveApplication = previousReleases.get(1);
+
+    doReturn(activeApplication)
+        .when(pcfCommandTaskBaseHelper)
+        .findActiveApplication(
+            eq(executionLogCallback), anyBoolean(), any(CfRequestConfig.class), eq(previousReleases));
+
+    doReturn(inActiveApplication)
+        .when(pcfCommandTaskBaseHelper)
+        .getMostRecentInactiveApplication(eq(executionLogCallback), anyBoolean(), eq(activeApplication),
+            eq(previousReleases), any(CfRequestConfig.class));
+
+    CfCommandSetupRequest setupRequest = getSetupRequest(releaseName, true, true, true);
+    CfCommandExecutionResponse cfCommandExecutionResponse =
+        pcfSetupCommandTaskHandler.executeTaskInternal(setupRequest, null, logStreamingTaskClient, false);
+
+    // since its blue green resetState() should not be called
+    verify(pcfCommandTaskBaseHelper, times(0))
+        .resetState(eq(previousReleases), any(ApplicationSummary.class), any(ApplicationSummary.class), anyString(),
+            any(CfRequestConfig.class), anyBoolean(), any(Deque.class), anyInt(), any(LogCallback.class));
+
+    verify(pcfCommandTaskBaseHelper, times(1))
+        .renameInActiveAppDuringBGDeployment(eq(previousReleases), any(CfRequestConfig.class), eq(releaseName),
+            eq(executionLogCallback), eq(AppNamingStrategy.APP_NAME_WITH_VERSIONING.name()), any());
+
+    assertThat(cfCommandExecutionResponse).isNotNull();
+    assertThat(cfCommandExecutionResponse.getPcfCommandResponse()).isNotNull();
+    assertThat(cfCommandExecutionResponse.getPcfCommandResponse()).isInstanceOf(CfSetupCommandResponse.class);
+    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    CfSetupCommandResponse pcfCommandResponse =
+        (CfSetupCommandResponse) cfCommandExecutionResponse.getPcfCommandResponse();
+
+    CfAppSetupTimeDetails mostRecentInactiveAppVersion = pcfCommandResponse.getMostRecentInactiveAppVersion();
+    assertThat(pcfCommandResponse.getExistingAppNamingStrategy())
+        .isEqualTo(AppNamingStrategy.APP_NAME_WITH_VERSIONING.name());
+    assertThat(pcfCommandResponse.isNonVersioning()).isTrue();
+    assertThat(pcfCommandResponse.isVersioningChanged()).isFalse();
     assertThat(mostRecentInactiveAppVersion.getApplicationName()).isEqualTo(inActiveApplication.getName());
     assertThat(mostRecentInactiveAppVersion.getApplicationGuid()).isEqualTo(inActiveApplication.getId());
+    assertThat(pcfCommandResponse.getActiveAppRevision()).isEqualTo(-1);
+    assertThat(mostRecentInactiveAppVersion.getOldName()).isEqualTo(inActiveAppCurrentName);
 
     List<CfAppSetupTimeDetails> activeAppDetails = pcfCommandResponse.getDownsizeDetails();
     assertThat(activeAppDetails.size()).isEqualTo(1);
     assertThat(activeAppDetails.get(0).getApplicationName()).isEqualTo(activeApplication.getName());
     assertThat(activeAppDetails.get(0).getApplicationGuid()).isEqualTo(activeApplication.getId());
+
+    ArgumentCaptor<CfCreateApplicationRequestData> requestDataCaptor =
+        ArgumentCaptor.forClass(CfCreateApplicationRequestData.class);
+    verify(pcfDeploymentManager, times(1)).createApplication(requestDataCaptor.capture(), eq(executionLogCallback));
+    CfCreateApplicationRequestData requestData = requestDataCaptor.getValue();
+    assertThat(requestData).isNotNull();
+    assertThat(requestData.getNewReleaseName()).isEqualTo(releaseName + PcfConstants.INACTIVE_APP_NAME_SUFFIX);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testNonVersionToVersionAppRenamingBlueGreen()
+      throws ExecutionException, PivotalClientApiException, IOException {
+    final String releaseName = "PaymentApp";
+    final String inActiveAppCurrentName = releaseName + PcfConstants.INACTIVE_APP_NAME_SUFFIX;
+    final String activeAppCurrentName = releaseName;
+
+    List<ApplicationSummary> previousReleases =
+        getPreviousReleasesBeforeDeploymentStart(activeAppCurrentName, inActiveAppCurrentName);
+
+    mockSetupBehaviour(releaseName, previousReleases);
+    doReturn(previousReleases).when(pcfDeploymentManager).getPreviousReleases(any(), anyString());
+    doReturn(Optional.of(inActiveAppCurrentName))
+        .when(pcfCommandTaskBaseHelper)
+        .renameInActiveAppDuringBGDeployment(
+            eq(previousReleases), any(), eq(releaseName), eq(executionLogCallback), any(), any());
+
+    final ApplicationSummary activeApplication = previousReleases.get(2);
+    final ApplicationSummary inActiveApplication = previousReleases.get(1);
+
+    doReturn(activeApplication)
+        .when(pcfCommandTaskBaseHelper)
+        .findActiveApplication(
+            eq(executionLogCallback), anyBoolean(), any(CfRequestConfig.class), eq(previousReleases));
+
+    doReturn(inActiveApplication)
+        .when(pcfCommandTaskBaseHelper)
+        .getMostRecentInactiveApplication(eq(executionLogCallback), anyBoolean(), eq(activeApplication),
+            eq(previousReleases), any(CfRequestConfig.class));
+
+    CfCommandSetupRequest setupRequest = getSetupRequest(releaseName, false, true, true);
+    CfCommandExecutionResponse cfCommandExecutionResponse =
+        pcfSetupCommandTaskHandler.executeTaskInternal(setupRequest, null, logStreamingTaskClient, false);
+
+    // since its blue green resetState() should not be called
+    verify(pcfCommandTaskBaseHelper, times(0))
+        .resetState(eq(previousReleases), any(ApplicationSummary.class), any(ApplicationSummary.class), anyString(),
+            any(CfRequestConfig.class), anyBoolean(), any(Deque.class), anyInt(), any(LogCallback.class));
+
+    verify(pcfCommandTaskBaseHelper, times(1))
+        .renameInActiveAppDuringBGDeployment(eq(previousReleases), any(CfRequestConfig.class), eq(releaseName),
+            eq(executionLogCallback), eq(AppNamingStrategy.APP_NAME_WITH_VERSIONING.name()), any());
+
+    assertThat(cfCommandExecutionResponse).isNotNull();
+    assertThat(cfCommandExecutionResponse.getPcfCommandResponse()).isNotNull();
+    assertThat(cfCommandExecutionResponse.getPcfCommandResponse()).isInstanceOf(CfSetupCommandResponse.class);
+    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    CfSetupCommandResponse pcfCommandResponse =
+        (CfSetupCommandResponse) cfCommandExecutionResponse.getPcfCommandResponse();
+
+    CfAppSetupTimeDetails mostRecentInactiveAppVersion = pcfCommandResponse.getMostRecentInactiveAppVersion();
+    assertThat(pcfCommandResponse.getExistingAppNamingStrategy())
+        .isEqualTo(AppNamingStrategy.APP_NAME_WITH_VERSIONING.name());
+    assertThat(pcfCommandResponse.isNonVersioning()).isFalse();
+    assertThat(pcfCommandResponse.isVersioningChanged()).isTrue();
+    assertThat(mostRecentInactiveAppVersion.getApplicationName()).isEqualTo(inActiveApplication.getName());
+    assertThat(mostRecentInactiveAppVersion.getApplicationGuid()).isEqualTo(inActiveApplication.getId());
+    assertThat(pcfCommandResponse.getActiveAppRevision()).isEqualTo(-1);
+    assertThat(mostRecentInactiveAppVersion.getOldName()).isEqualTo(inActiveAppCurrentName);
+
+    List<CfAppSetupTimeDetails> activeAppDetails = pcfCommandResponse.getDownsizeDetails();
+    assertThat(activeAppDetails.size()).isEqualTo(1);
+    assertThat(activeAppDetails.get(0).getApplicationName()).isEqualTo(activeApplication.getName());
+    assertThat(activeAppDetails.get(0).getApplicationGuid()).isEqualTo(activeApplication.getId());
+
+    ArgumentCaptor<CfCreateApplicationRequestData> requestDataCaptor =
+        ArgumentCaptor.forClass(CfCreateApplicationRequestData.class);
+    verify(pcfDeploymentManager, times(1)).createApplication(requestDataCaptor.capture(), eq(executionLogCallback));
+    CfCreateApplicationRequestData requestData = requestDataCaptor.getValue();
+    assertThat(requestData).isNotNull();
+    assertThat(requestData.getNewReleaseName()).isEqualTo(releaseName + PcfConstants.INACTIVE_APP_NAME_SUFFIX);
   }
 
   @Test
@@ -747,13 +1020,14 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
                                               .stack("")
                                               .runningInstances(0)
                                               .build();
+    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(any());
     doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(eq(cfRequestConfig));
     ArgumentCaptor<String> appDeletedMsgCaptor = ArgumentCaptor.forClass(String.class);
 
     pcfSetupCommandTaskHandler.deleteOlderApplications(previousReleases, cfRequestConfig, setupRequest,
         cfAppAutoscalarRequestData, activeApplication, inActiveApplicationDetails, executionLogCallback);
     verify(pcfDeploymentManager, times(2)).deleteApplication(eq(cfRequestConfig));
-    verify(executionLogCallback, times(6)).saveExecutionLog(appDeletedMsgCaptor.capture());
+    verify(executionLogCallback, times(7)).saveExecutionLog(appDeletedMsgCaptor.capture());
     List<String> appDeletedMsgCaptorAllValues = appDeletedMsgCaptor.getAllValues();
     assertThat(appDeletedMsgCaptorAllValues.get(3))
         .isEqualTo("# Older application being deleted: \u001B[0;96m\u001B[40mPaymentApp__2#==#");
@@ -764,12 +1038,13 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
 
     reset(pcfDeploymentManager);
     reset(executionLogCallback);
+    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(any());
     ArgumentCaptor<String> appDeletedMsgCaptor1 = ArgumentCaptor.forClass(String.class);
     doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(eq(cfRequestConfig));
     pcfSetupCommandTaskHandler.deleteOlderApplications(previousReleases, cfRequestConfig, setupRequest,
         cfAppAutoscalarRequestData, activeApplication, null, executionLogCallback);
     verify(pcfDeploymentManager, times(2)).deleteApplication(eq(cfRequestConfig));
-    verify(executionLogCallback, times(6)).saveExecutionLog(appDeletedMsgCaptor1.capture());
+    verify(executionLogCallback, times(7)).saveExecutionLog(appDeletedMsgCaptor1.capture());
     appDeletedMsgCaptorAllValues = appDeletedMsgCaptor1.getAllValues();
     assertThat(appDeletedMsgCaptorAllValues.get(3))
         .isEqualTo("# Older application being deleted: \u001B[0;96m\u001B[40mPaymentApp__2#==#");
@@ -780,6 +1055,7 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
 
     reset(pcfDeploymentManager);
     reset(executionLogCallback);
+    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(any());
     previousReleases.remove(0);
     previousReleases.remove(1);
     ArgumentCaptor<String> appDeletedMsgCaptor2 = ArgumentCaptor.forClass(String.class);
@@ -793,6 +1069,7 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
 
     reset(pcfDeploymentManager);
     reset(executionLogCallback);
+    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(any());
     previousReleases.remove(2);
     ArgumentCaptor<String> appDeletedMsgCaptor3 = ArgumentCaptor.forClass(String.class);
     doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(eq(cfRequestConfig));
@@ -866,19 +1143,20 @@ public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
     doReturn(new File("manifest.yml")).when(pcfCommandTaskBaseHelper).createManifestYamlFileLocally(any());
     doNothing().when(pcfCommandTaskBaseHelper).deleteCreatedFile(anyListOf(File.class));
     doReturn(previousReleases).when(pcfDeploymentManager).getDeployedServicesWithNonZeroInstances(any(), anyString());
-    doReturn(ApplicationDetail.builder()
-                 .id("10")
-                 .diskQuota(1)
-                 .instances(0)
-                 .memoryLimit(1)
-                 .name("PaymentApp__1")
-                 .requestedState(STOPPED)
-                 .stack("")
-                 .runningInstances(0)
-                 .urls(Arrays.asList("harness-prod1-pcf", "harness-prod2-pcf.com"))
-                 .build())
-        .when(pcfDeploymentManager)
-        .resizeApplication(any());
+
+    ApplicationDetail applicationDetails = ApplicationDetail.builder()
+                                               .id("10")
+                                               .diskQuota(1)
+                                               .instances(0)
+                                               .memoryLimit(1)
+                                               .name("PaymentApp__1")
+                                               .requestedState(STOPPED)
+                                               .stack("")
+                                               .runningInstances(0)
+                                               .urls(Arrays.asList("harness-prod1-pcf", "harness-prod2-pcf.com"))
+                                               .build();
+    doReturn(applicationDetails).when(pcfDeploymentManager).getApplicationByName(any());
+    doReturn(applicationDetails).when(pcfDeploymentManager).resizeApplication(any());
     doReturn(ApplicationDetail.builder()
                  .id("10")
                  .diskQuota(1)

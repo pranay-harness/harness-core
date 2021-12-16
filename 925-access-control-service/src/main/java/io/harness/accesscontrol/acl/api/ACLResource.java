@@ -36,6 +36,7 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Iterator;
 import java.util.List;
@@ -106,7 +107,8 @@ public class ACLResource {
       responses =
       { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Result of the access check request") })
   public ResponseDTO<AccessCheckResponseDTO>
-  get(@Valid @NotNull AccessCheckRequestDTO dto) {
+  get(@RequestBody(description = "These are the checks to perform for Access Control.",
+      required = true) @Valid @NotNull AccessCheckRequestDTO dto) {
     io.harness.security.dto.Principal contextPrincipal = SecurityContextBuilder.getPrincipal();
     List<PermissionCheckDTO> permissionChecksDTOs = dto.getPermissions();
     Principal principalToCheckPermissionsFor = dto.getPrincipal();

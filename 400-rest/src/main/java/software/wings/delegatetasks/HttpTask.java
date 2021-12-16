@@ -48,6 +48,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
                                    .url(httpTaskParameters.getUrl())
                                    .useProxy(httpTaskParameters.isUseProxy())
                                    .isCertValidationRequired(httpTaskParameters.isCertValidationRequired())
+                                   .throwErrorIfNoProxySetWithDelegateProxy(true)
                                    .build());
     return HttpStateExecutionResponse.builder()
         .executionStatus(

@@ -51,6 +51,7 @@ public class HttpTaskNG extends AbstractDelegateRunnableTask {
                                    .url(httpTaskParametersNg.getUrl())
                                    .useProxy(true)
                                    .isCertValidationRequired(false)
+                                   .throwErrorIfNoProxySetWithDelegateProxy(false)
                                    .build());
     return HttpStepResponse.builder()
         .commandExecutionStatus(httpInternalResponse.getCommandExecutionStatus())

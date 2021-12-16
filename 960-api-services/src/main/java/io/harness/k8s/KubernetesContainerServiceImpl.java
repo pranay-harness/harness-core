@@ -1936,7 +1936,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                    .map(entry -> format(K8S_SELECTOR_FORMAT, entry.getKey(), entry.getValue()))
                                    .collect(Collectors.joining(K8S_SELECTOR_DELIMITER));
         V1PodList podList = new CoreV1Api(apiClient).listNamespacedPod(
-            namespace, null, null, null, null, labelSelector, null, null, null, null);
+            namespace, null, null, null, null, labelSelector, null, null, null, null, false);
         return podList.getItems()
             .stream()
             .filter(pod

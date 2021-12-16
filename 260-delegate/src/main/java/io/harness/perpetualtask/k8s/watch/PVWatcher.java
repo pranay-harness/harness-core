@@ -2,6 +2,7 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.commons.constants.Constants.CLUSTER_ID_IDENTIFIER;
 import static io.harness.ccm.commons.constants.Constants.UID;
+import static io.harness.perpetualtask.k8s.utils.ResourceVersionMatch.MOST_RECENT;
 import static io.harness.perpetualtask.k8s.watch.PVEvent.EventType.EVENT_TYPE_EXPANSION;
 import static io.harness.perpetualtask.k8s.watch.PVEvent.EventType.EVENT_TYPE_STOP;
 
@@ -9,6 +10,8 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Optional.ofNullable;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
@@ -38,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
@@ -90,8 +94,8 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
     sharedInformerFactory
         .sharedIndexInformerFor((CallGeneratorParams callGeneratorParams)
                                     -> coreV1Api.listPersistentVolumeCall(null, null, null, null, null, null,
-                                        callGeneratorParams.resourceVersion, callGeneratorParams.timeoutSeconds,
-                                        callGeneratorParams.watch, null),
+                                        callGeneratorParams.resourceVersion, MOST_RECENT,
+                                        callGeneratorParams.timeoutSeconds, callGeneratorParams.watch, null),
             V1PersistentVolume.class, V1PersistentVolumeList.class)
         .addEventHandler(this);
   }

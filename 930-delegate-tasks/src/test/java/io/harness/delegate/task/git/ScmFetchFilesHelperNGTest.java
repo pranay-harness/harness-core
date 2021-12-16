@@ -128,6 +128,46 @@ public class ScmFetchFilesHelperNGTest extends CategoryTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
+  public void testShouldDownloadFilesUsingScmByFolderRootPath() {
+    ScmFetchFilesHelperNG spyScmFetchFilesHelperNG = spy(scmFetchFilesHelperNG);
+    LogCallback logCallback = mock(NGDelegateLogCallback.class);
+    GitStoreDelegateConfig gitStoreDelegateConfig = GitStoreDelegateConfig.builder()
+                                                        .paths(Arrays.asList(".", "/"))
+                                                        .fetchType(FetchType.BRANCH)
+                                                        .branch("branch")
+                                                        .build();
+
+    when(scmDelegateClient.processScmRequest(any()))
+        .thenReturn(FileContentBatchResponse.builder()
+                        .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                                      .addFileContents(FileContent.newBuilder()
+                                                                           .setStatus(200)
+                                                                           .setContent("content")
+                                                                           .setPath("test2/path.txt")
+                                                                           .build())
+                                                      .build())
+                        .build(),
+            FileContentBatchResponse.builder()
+                .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                              .addFileContents(FileContent.newBuilder()
+                                                                   .setStatus(200)
+                                                                   .setContent("content")
+                                                                   .setPath("test3/path.txt")
+                                                                   .build())
+                                              .build())
+                .build());
+
+    spyScmFetchFilesHelperNG.downloadFilesUsingScm("manifests", gitStoreDelegateConfig, logCallback);
+
+    File file = new File("manifests/test2/path.txt");
+    File file2 = new File("manifests/test3/path.txt");
+    assertThat(file.exists()).isTrue();
+    assertThat(file2.exists()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
   public void testShouldDownloadFilesUsingScmByFolderMultipleFolders() {
     ScmFetchFilesHelperNG spyScmFetchFilesHelperNG = spy(scmFetchFilesHelperNG);
     LogCallback logCallback = mock(NGDelegateLogCallback.class);

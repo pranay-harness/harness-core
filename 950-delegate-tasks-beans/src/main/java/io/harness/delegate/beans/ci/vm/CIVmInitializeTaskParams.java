@@ -1,11 +1,14 @@
 package io.harness.delegate.beans.ci.vm;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.delegate.beans.ci.CIInitializeTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.ConnectorTaskParams;
 import io.harness.delegate.beans.executioncapability.CIVmConnectionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -39,7 +42,8 @@ public class CIVmInitializeTaskParams
   @NotNull private String stageID;
   @NotNull private String buildID;
 
-  Map<String, String> environment;
+  @Expression(ALLOW_SECRETS) Map<String, String> environment;
+  @Expression(ALLOW_SECRETS) private List<String> secrets;
   private ConnectorDetails gitConnector;
 
   private String stageRuntimeId;

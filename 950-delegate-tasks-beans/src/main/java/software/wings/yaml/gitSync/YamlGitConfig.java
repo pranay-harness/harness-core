@@ -8,15 +8,23 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
 
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingVariableTypes;
 
@@ -34,6 +42,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(HarnessTeam.DX)
@@ -45,7 +54,8 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "yamlGitConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "YamlGitConfigKeys")
-public class YamlGitConfig extends Base implements EncryptableSetting {
+public class YamlGitConfig implements EncryptableSetting, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                      UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -65,6 +75,13 @@ public class YamlGitConfig extends Base implements EncryptableSetting {
   public static final String BRANCH_NAME_KEY = "branchName";
   public static final String REPOSITORY_NAME_KEY = "repositoryName";
   public static final String SYNC_MODE_KEY = "syncMode";
+
+  @Id private String uuid;
+  @FdIndex private long createdAt;
+  private EmbeddedUser createdBy;
+  private long lastUpdatedAt;
+  private EmbeddedUser lastUpdatedBy;
+  @FdIndex private String appId;
 
   private String url;
   @NotEmpty private String branchName;

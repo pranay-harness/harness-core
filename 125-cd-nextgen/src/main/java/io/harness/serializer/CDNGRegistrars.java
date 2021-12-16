@@ -9,6 +9,7 @@ import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.k8s.K8sCanaryStepNode;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.serializer.kryo.NGKryoRegistrar;
 import io.harness.serializer.morphia.NGMorphiaRegistrar;
 import io.harness.yaml.schema.beans.YamlGroup;
@@ -82,7 +83,7 @@ public class CDNGRegistrars {
                    .clazz(K8sCanaryStepNode.class)
                    .yamlSchemaMetadata(YamlSchemaMetadata.builder()
                                            .modulesSupported(Collections.singletonList(ModuleType.CD))
-                                           .yamlGroup(YamlGroup.builder().group("step").build())
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
                                            .build())
                    .build())
           .build();
