@@ -81,7 +81,7 @@ public class DelegateDisconnectedDetector implements Runnable {
   @VisibleForTesting
   public void disconnectedDetected(boolean polllingModeEnabled, DelegateConnection delegateConnection) {
     try (DelegateLogContext ignore = new DelegateLogContext(
-             delegateConnection.getAccountId(), delegateConnection.getDelegateId(), OVERRIDE_ERROR)) {
+             delegateConnection.getAccountId(), delegateConnection.getDelegateId(), null, OVERRIDE_ERROR)) {
       log.info("Delegate was detected as disconnected");
       if (!polllingModeEnabled) {
         log.error("Non-polling delegate was detected as disconnected");
