@@ -9,7 +9,7 @@ package io.harness.resourcegroup.resourceclient.audit;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
-import static io.harness.resourcegroup.beans.ValidatorType.NESTED_DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_SCOPE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
@@ -44,8 +44,8 @@ public class AuditResourceImpl implements Resource {
 
   @Override
   public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
-    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(NESTED_DYNAMIC), ScopeLevel.ORGANIZATION,
-        EnumSet.of(NESTED_DYNAMIC), ScopeLevel.PROJECT, EnumSet.of(DYNAMIC));
+    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(BY_SCOPE), ScopeLevel.ORGANIZATION,
+        EnumSet.of(BY_SCOPE), ScopeLevel.PROJECT, EnumSet.of(DYNAMIC));
   }
 
   @Override

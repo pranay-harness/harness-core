@@ -8,7 +8,7 @@
 package io.harness.resourcegroup.resourceclient.template;
 
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
-import static io.harness.resourcegroup.beans.ValidatorType.NESTED_DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_SCOPE;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 import static io.harness.rule.OwnerRule.PRABU;
 
@@ -86,7 +86,7 @@ public class TemplateResourceImplTest {
         .isEqualTo(EventsFrameworkMetadataConstants.TEMPLATE_ENTITY);
     assertThat(templateResource.getType()).isEqualTo("TEMPLATE");
     assertThat(templateResource.getSelectorKind().get(ScopeLevel.ACCOUNT))
-        .containsExactlyInAnyOrder(STATIC, DYNAMIC, NESTED_DYNAMIC);
+        .containsExactlyInAnyOrder(STATIC, DYNAMIC, BY_SCOPE);
     assertThat(templateResource.getValidScopeLevels())
         .containsExactlyInAnyOrder(ScopeLevel.ACCOUNT, ScopeLevel.ORGANIZATION, ScopeLevel.PROJECT);
   }

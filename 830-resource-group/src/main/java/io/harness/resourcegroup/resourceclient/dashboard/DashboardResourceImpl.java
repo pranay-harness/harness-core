@@ -9,7 +9,7 @@ package io.harness.resourcegroup.resourceclient.dashboard;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
-import static io.harness.resourcegroup.beans.ValidatorType.NESTED_DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_SCOPE;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -47,7 +47,7 @@ public class DashboardResourceImpl implements Resource {
 
   @Override
   public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
-    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(STATIC, DYNAMIC, NESTED_DYNAMIC), ScopeLevel.ORGANIZATION,
+    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(STATIC, DYNAMIC, BY_SCOPE), ScopeLevel.ORGANIZATION,
         EnumSet.of(STATIC, DYNAMIC));
   }
 

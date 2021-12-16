@@ -10,7 +10,7 @@ package io.harness.resourcegroup.resourceclient.connector;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
-import static io.harness.resourcegroup.beans.ValidatorType.NESTED_DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_SCOPE;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static java.util.stream.Collectors.toList;
@@ -71,8 +71,8 @@ public class ConnectorResourceImpl implements Resource {
 
   @Override
   public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
-    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(STATIC, DYNAMIC, NESTED_DYNAMIC), ScopeLevel.ORGANIZATION,
-        EnumSet.of(STATIC, DYNAMIC, NESTED_DYNAMIC), ScopeLevel.PROJECT, EnumSet.of(STATIC, DYNAMIC));
+    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(STATIC, DYNAMIC, BY_SCOPE), ScopeLevel.ORGANIZATION,
+        EnumSet.of(STATIC, DYNAMIC, BY_SCOPE), ScopeLevel.PROJECT, EnumSet.of(STATIC, DYNAMIC));
   }
 
   @Override

@@ -10,7 +10,7 @@ package io.harness.resourcegroup.resourceclient.delegate;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
-import static io.harness.resourcegroup.beans.ValidatorType.NESTED_DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_SCOPE;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static org.apache.commons.lang3.StringUtils.stripToNull;
@@ -70,8 +70,8 @@ public class DelegateResourceImpl implements Resource {
 
   @Override
   public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
-    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(STATIC, DYNAMIC, NESTED_DYNAMIC), ScopeLevel.ORGANIZATION,
-        EnumSet.of(STATIC, DYNAMIC, NESTED_DYNAMIC), ScopeLevel.PROJECT, EnumSet.of(STATIC, DYNAMIC));
+    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(STATIC, DYNAMIC, BY_SCOPE), ScopeLevel.ORGANIZATION,
+        EnumSet.of(STATIC, DYNAMIC, BY_SCOPE), ScopeLevel.PROJECT, EnumSet.of(STATIC, DYNAMIC));
   }
 
   @Override

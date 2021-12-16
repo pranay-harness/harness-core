@@ -10,7 +10,7 @@ package io.harness.resourcegroup.resourceclient.pipeline;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
-import static io.harness.resourcegroup.beans.ValidatorType.NESTED_DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_SCOPE;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static org.apache.commons.lang3.StringUtils.stripToNull;
@@ -105,7 +105,7 @@ public class PipelineResourceImpl implements Resource {
 
   @Override
   public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
-    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(NESTED_DYNAMIC), ScopeLevel.ORGANIZATION,
-        EnumSet.of(NESTED_DYNAMIC), ScopeLevel.PROJECT, EnumSet.of(STATIC, DYNAMIC));
+    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(BY_SCOPE), ScopeLevel.ORGANIZATION,
+        EnumSet.of(BY_SCOPE), ScopeLevel.PROJECT, EnumSet.of(STATIC, DYNAMIC));
   }
 }
