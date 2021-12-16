@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.OPTIMIZED_GIT_FETCH_FILES;
 import static io.harness.beans.FeatureName.OVERRIDE_VALUES_YAML_FROM_HELM_CHART;
 import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
+import static io.harness.beans.FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -690,6 +691,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
       boolean valuesInCustomSource = false;
       boolean kustomizeSource = false;
       boolean remoteParams = false;
+      boolean remotePatches = false;
       boolean customSourceParams = false;
       boolean ocTemplateSource = false;
 
@@ -700,6 +702,10 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
         appManifestMap = applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.OC_PARAMS);
         remoteParams = isValuesInGit(appManifestMap);
         customSourceParams = isValuesInCustomSource(appManifestMap);
+      }else if (applicationManifestUtils.isKustomizeSource(context) && isUseVarSupportForKustomize(context.getAccountId())) {
+        kustomizeSource = true;
+        appManifestMap = applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.KUSTOMIZE_PATCHES);
+        remotePatches = isValuesInGit(appManifestMap);
       } else {
         appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
 
@@ -718,7 +724,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
       if (valuesInHelmChartRepo) {
         return executeHelmValuesFetchTask(
             context, activity.getUuid(), k8sStateExecutor.commandName(), timeoutInMillis, appManifestMap);
-      } else if (valuesInGit || remoteParams) {
+      } else if (valuesInGit || remoteParams|| remotePatches) {
         return executeGitTask(context, appManifestMap, activity.getUuid(), k8sStateExecutor.commandName());
       } else if (isCustomManifestFeatureEnabled && (valuesInCustomSource || customSourceParams)) {
         return executeCustomFetchValuesTask(context, appManifestMap, activity.getUuid(), k8sStateExecutor);
@@ -1173,7 +1179,12 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
   public Map<K8sValuesLocation, ApplicationManifest> fetchApplicationManifests(ExecutionContext context) {
     boolean isOpenShiftManifestConfig = openShiftManagerService.isOpenShiftManifestConfig(context);
-    AppManifestKind appManifestKind = isOpenShiftManifestConfig ? AppManifestKind.OC_PARAMS : AppManifestKind.VALUES;
+    AppManifestKind appManifestKind;
+    if (applicationManifestUtils.isKustomizeSource(context) && isUseVarSupportForKustomize(context.getAccountId())) {
+       appManifestKind = AppManifestKind.KUSTOMIZE_PATCHES;
+    } else {
+       appManifestKind = isOpenShiftManifestConfig ? AppManifestKind.OC_PARAMS : AppManifestKind.VALUES;
+    }
     return applicationManifestUtils.getApplicationManifests(context, appManifestKind);
   }
 
@@ -1251,5 +1262,9 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   @Override
   public void handleDelegateTask(ExecutionContext context, DelegateTask delegateTask) {
     appendDelegateTaskDetails(context, delegateTask);
+  }
+
+  public boolean isUseVarSupportForKustomize(String accountId) {
+    return featureFlagService.isEnabled(VARIABLE_SUPPORT_FOR_KUSTOMIZE, accountId);
   }
 }
