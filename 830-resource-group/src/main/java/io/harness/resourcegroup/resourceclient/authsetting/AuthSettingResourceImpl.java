@@ -8,7 +8,7 @@
 package io.harness.resourcegroup.resourceclient.authsetting;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_TYPE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
@@ -43,7 +43,7 @@ public class AuthSettingResourceImpl implements Resource {
 
   @Override
   public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
-    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(DYNAMIC));
+    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(RESOURCE_TYPE));
   }
 
   @Override

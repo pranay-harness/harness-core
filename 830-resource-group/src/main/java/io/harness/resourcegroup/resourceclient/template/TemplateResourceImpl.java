@@ -9,9 +9,9 @@ package io.harness.resourcegroup.resourceclient.template;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
-import static io.harness.resourcegroup.beans.ValidatorType.BY_SCOPE;
-import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
+import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_IDENTIFIER;
+import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_TYPE;
+import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_TYPE_INCLUDING_CHILD_SCOPES;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
@@ -73,8 +73,10 @@ public class TemplateResourceImpl implements Resource {
 
   @Override
   public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
-    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(STATIC, DYNAMIC, BY_SCOPE), ScopeLevel.ORGANIZATION,
-        EnumSet.of(STATIC, DYNAMIC, BY_SCOPE), ScopeLevel.PROJECT, EnumSet.of(STATIC, DYNAMIC));
+    return ImmutableMap.of(ScopeLevel.ACCOUNT,
+        EnumSet.of(RESOURCE_IDENTIFIER, RESOURCE_TYPE, RESOURCE_TYPE_INCLUDING_CHILD_SCOPES), ScopeLevel.ORGANIZATION,
+        EnumSet.of(RESOURCE_IDENTIFIER, RESOURCE_TYPE, RESOURCE_TYPE_INCLUDING_CHILD_SCOPES), ScopeLevel.PROJECT,
+        EnumSet.of(RESOURCE_IDENTIFIER, RESOURCE_TYPE));
   }
 
   @Override

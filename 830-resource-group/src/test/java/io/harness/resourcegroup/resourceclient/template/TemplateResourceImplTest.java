@@ -7,9 +7,9 @@
 
 package io.harness.resourcegroup.resourceclient.template;
 
-import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
-import static io.harness.resourcegroup.beans.ValidatorType.BY_SCOPE;
-import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
+import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_IDENTIFIER;
+import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_TYPE;
+import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_TYPE_INCLUDING_CHILD_SCOPES;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,7 +86,7 @@ public class TemplateResourceImplTest {
         .isEqualTo(EventsFrameworkMetadataConstants.TEMPLATE_ENTITY);
     assertThat(templateResource.getType()).isEqualTo("TEMPLATE");
     assertThat(templateResource.getSelectorKind().get(ScopeLevel.ACCOUNT))
-        .containsExactlyInAnyOrder(STATIC, DYNAMIC, BY_SCOPE);
+        .containsExactlyInAnyOrder(RESOURCE_IDENTIFIER, RESOURCE_TYPE, RESOURCE_TYPE_INCLUDING_CHILD_SCOPES);
     assertThat(templateResource.getValidScopeLevels())
         .containsExactlyInAnyOrder(ScopeLevel.ACCOUNT, ScopeLevel.ORGANIZATION, ScopeLevel.PROJECT);
   }
