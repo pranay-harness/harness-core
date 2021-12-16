@@ -149,7 +149,7 @@ public class K8sBlueGreenDeploy extends AbstractK8sState {
             .skipVersioningForAllK8sObjects(
                 appManifestMap.get(K8sValuesLocation.Service).getSkipVersioningForAllK8sObjects())
             .isPruningEnabled(featureFlagService.isEnabled(PRUNE_KUBERNETES_RESOURCES, context.getAccountId()))
-            .useLatestKustomizeVersion(
+            .useVarSupportForKustomize(
                 featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
             .useNewKubectlVersion(featureFlagService.isEnabled(NEW_KUBECTL_VERSION, infraMapping.getAccountId()))
             .build();

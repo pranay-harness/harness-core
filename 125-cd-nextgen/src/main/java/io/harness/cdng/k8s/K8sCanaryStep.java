@@ -116,7 +116,7 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
             .skipResourceVersioning(k8sStepHelper.getSkipResourceVersioning(k8sManifestOutcome))
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .commandUnitsProgress(UnitProgressDataMapper.toCommandUnitsProgress(unitProgressData))
-            .useLatestKustomizeVersion(k8sStepHelper.isUseLatestKustomizeVersion(accountId))
+            .useVarSupportForKustomize(k8sStepHelper.isUseVarSupportForKustomize(accountId))
             .useNewKubectlVersion(k8sStepHelper.isUseNewKubectlVersion(accountId))
             .build();
 

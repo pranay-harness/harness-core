@@ -44,7 +44,7 @@ public class K8sTaskParameters implements TaskParameters, ActivityAccess, Execut
   private HelmVersion helmVersion;
   private Set<String> delegateSelectors;
   private boolean useLatestChartMuseumVersion;
-  private boolean useLatestKustomizeVersion;
+  private boolean useVarSupportForKustomize;
   private boolean useNewKubectlVersion;
 
   @Override

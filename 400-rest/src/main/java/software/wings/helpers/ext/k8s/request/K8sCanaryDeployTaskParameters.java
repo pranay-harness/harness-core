@@ -48,10 +48,10 @@ public class K8sCanaryDeployTaskParameters extends K8sTaskParameters implements 
       Integer instances, InstanceUnitType instanceUnitType, Integer maxInstances, boolean skipDryRun,
       HelmVersion helmVersion, Boolean skipVersioningForAllK8sObjects, Set<String> delegateSelectors,
       boolean exportManifests, boolean inheritManifests, List<KubernetesResource> kubernetesResources,
-      boolean useLatestChartMuseumVersion, boolean useLatestKustomizeVersion, boolean useNewKubectlVersion) {
+      boolean useLatestChartMuseumVersion, boolean useVarSupportForKustomize, boolean useNewKubectlVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion,
-        useLatestKustomizeVersion, useNewKubectlVersion);
+            useVarSupportForKustomize, useNewKubectlVersion);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
     this.instances = instances;
