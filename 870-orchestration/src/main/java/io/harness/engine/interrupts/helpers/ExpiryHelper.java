@@ -24,6 +24,7 @@ import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 
 import com.google.inject.Inject;
+import java.util.HashSet;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,7 +46,7 @@ public class ExpiryHelper {
       }
 
       List<UnitProgress> unitProgressList = InterruptHelper.evaluateUnitProgresses(nodeExecution, EXPIRED);
-      nodeExecutionService.update(nodeExecution.getUuid(),
+      nodeExecutionService.updateWithoutReturn(nodeExecution.getUuid(),
           ops
           -> ops.addToSet(NodeExecutionKeys.interruptHistories,
               InterruptEffect.builder()

@@ -67,6 +67,6 @@ public class AddExecutableResponseRequestProcessorTest extends CategoryTest {
             .setAddExecutableResponseRequest(request)
             .setSdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
             .build());
-    verify(nodeExecutionService).update(eq(nodeExecutionId), any());
+    verify(nodeExecutionService).updateWithoutReturn(eq(nodeExecutionId), any());
   }
 }

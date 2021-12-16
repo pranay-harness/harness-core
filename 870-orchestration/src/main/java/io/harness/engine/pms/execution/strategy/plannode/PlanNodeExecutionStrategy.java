@@ -42,6 +42,7 @@ import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
+import io.harness.pms.execution.utils.NodeExecutionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
@@ -57,6 +58,7 @@ import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -143,7 +145,7 @@ public class PlanNodeExecutionStrategy
   @Override
   public void processFacilitationResponse(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
     String nodeExecutionId = Objects.requireNonNull(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    nodeExecutionService.update(
+    nodeExecutionService.updateWithoutReturn(
         nodeExecutionId, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode()));
     ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
         ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
@@ -185,7 +187,8 @@ public class PlanNodeExecutionStrategy
   @Override
   public void concludeExecution(Ambiance ambiance, Status status, EnumSet<Status> overrideStatusSet) {
     String nodeExecutionId = Objects.requireNonNull(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution =
+        nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeExecutionUtils.withStatusAndNode);
     PlanNode node = nodeExecution.getNode();
     if (isEmpty(node.getAdviserObtainments())) {
       NodeExecution updatedNodeExecution =
@@ -223,9 +226,7 @@ public class PlanNodeExecutionStrategy
   @Override
   public void processAdviserResponse(Ambiance ambiance, AdviserResponse adviserResponse) {
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
-    NodeExecution nodeExecution = Preconditions.checkNotNull(
-        nodeExecutionService.get(nodeExecutionId), "NodeExecution not found for id: " + nodeExecutionId);
-    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(nodeExecution.getAmbiance())) {
+    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       if (adviserResponse.getType() == AdviseType.UNKNOWN) {
         log.warn("Got null advise for node execution with id {}", nodeExecutionId);
         endNodeExecution(ambiance);

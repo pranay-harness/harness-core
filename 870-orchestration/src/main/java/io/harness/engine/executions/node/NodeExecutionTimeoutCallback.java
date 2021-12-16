@@ -45,7 +45,7 @@ public class NodeExecutionTimeoutCallback implements TimeoutCallback {
       return;
     }
 
-    nodeExecutionService.update(
+    nodeExecutionService.updateWithoutReturn(
         nodeExecutionId, ops -> ops.set(NodeExecutionKeys.timeoutDetails, new TimeoutDetails(timeoutInstance)));
 
     if (ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {

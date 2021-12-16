@@ -38,6 +38,8 @@ public interface NodeExecutionService {
 
   NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops);
 
+  void updateWithoutReturn(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops);
+
   NodeExecution updateStatusWithOps(@NonNull String nodeExecutionId, @NonNull Status targetStatus, Consumer<Update> ops,
       EnumSet<Status> overrideStatusSet);
 

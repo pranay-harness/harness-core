@@ -10,6 +10,7 @@ import io.harness.pms.execution.utils.SdkResponseEventUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.HashSet;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -21,7 +22,7 @@ public class AddExecutableResponseRequestProcessor implements SdkResponseProcess
   @Override
   public void handleEvent(SdkResponseEventProto event) {
     AddExecutableResponseRequest request = event.getAddExecutableResponseRequest();
-    nodeExecutionService.update(SdkResponseEventUtils.getNodeExecutionId(event),
+    nodeExecutionService.updateWithoutReturn(SdkResponseEventUtils.getNodeExecutionId(event),
         ops -> ops.addToSet(NodeExecutionKeys.executableResponses, request.getExecutableResponse()));
   }
 }

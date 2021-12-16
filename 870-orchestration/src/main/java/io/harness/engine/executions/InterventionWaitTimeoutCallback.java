@@ -26,6 +26,7 @@ import io.harness.timeout.TimeoutInstance;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.util.HashSet;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -51,7 +52,7 @@ public class InterventionWaitTimeoutCallback implements TimeoutCallback {
       return;
     }
     InterventionWaitAdvise interventionWaitAdvise = nodeExecution.getAdviserResponse().getInterventionWaitAdvise();
-    nodeExecutionService.update(
+    nodeExecutionService.updateWithoutReturn(
         nodeExecutionId, ops -> ops.set(NodeExecutionKeys.adviserTimeoutDetails, new TimeoutDetails(timeoutInstance)));
     interruptManager.register(getInterruptPackage(interventionWaitAdvise, timeoutInstance.getUuid()));
   }

@@ -43,6 +43,7 @@ import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.NodeExecutionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -192,9 +193,27 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       throw new NodeExecutionUpdateFailedException(
           "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
     }
+
     nodeUpdateObserverSubject.fireInform(
         NodeUpdateObxxxxxxxx:onNodeUpdate, NodeUpdateInfo.builder().nodeExecution(updated).build());
     return updated;
+  }
+
+  @Override
+  public void updateWithoutReturn(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops) {
+    Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    for (String field : NodeExecutionUtils.fieldsForNodeUpdateObserver) {
+      query.fields().include(field);
+    }
+    Update updateOps = new Update().set(NodeExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
+    ops.accept(updateOps);
+    NodeExecution updated = mongoTemplate.findAndModify(query, updateOps, returnNewOptions, NodeExecution.class);
+    if (updated == null) {
+      throw new NodeExecutionUpdateFailedException(
+          "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
+    }
+    nodeUpdateObserverSubject.fireInform(
+        NodeUpdateObxxxxxxxx:onNodeUpdate, NodeUpdateInfo.builder().nodeExecution(updated).build());
   }
 
   @Override

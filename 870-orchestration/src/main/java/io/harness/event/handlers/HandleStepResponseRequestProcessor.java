@@ -11,6 +11,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.HashSet;
 
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -22,7 +23,7 @@ public class HandleStepResponseRequestProcessor implements SdkResponseProcessor 
   public void handleEvent(SdkResponseEventProto event) {
     HandleStepResponseRequest request = event.getHandleStepResponseRequest();
     if (request.hasExecutableResponse()) {
-      nodeExecutionService.update(AmbianceUtils.obtainCurrentRuntimeId(event.getAmbiance()),
+      nodeExecutionService.updateWithoutReturn(AmbianceUtils.obtainCurrentRuntimeId(event.getAmbiance()),
           ops -> ops.addToSet(NodeExecutionKeys.executableResponses, request.getExecutableResponse()));
     }
     engine.processStepResponse(event.getAmbiance(), request.getStepResponse());

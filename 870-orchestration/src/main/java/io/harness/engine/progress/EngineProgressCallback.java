@@ -16,6 +16,7 @@ import io.harness.tasks.ProgressData;
 import io.harness.waiter.ProgressCallback;
 
 import com.google.inject.Inject;
+import java.util.HashSet;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +47,7 @@ public class EngineProgressCallback implements ProgressCallback {
       // This code is only to maintain backward compatibility
       ProgressData data = (ProgressData) kryoSerializer.asInflatedObject(((BinaryResponseData) progressData).getData());
       if (data instanceof UnitProgressData) {
-        nodeExecutionService.update(getNodeExecutionId(),
+        nodeExecutionService.updateWithoutReturn(getNodeExecutionId(),
             ops -> ops.set(NodeExecutionKeys.unitProgresses, ((UnitProgressData) data).getUnitProgresses()));
       }
       log.info("Node Execution updated for progress data");
