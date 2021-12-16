@@ -23,6 +23,7 @@ import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetTemplateRespons
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PipelineCRUDErrorResponse;
 import io.harness.pms.plan.execution.StagesExecutionHelper;
 import io.harness.pms.stages.StagesExpressionExtractor;
 
@@ -76,7 +77,8 @@ public class ValidateAndMergeHelper {
       if (pipelineEntity.isPresent()) {
         pipelineYaml = pipelineEntity.get().getYaml();
       } else {
-        throw new InvalidRequestException("Pipeline does not exist");
+        throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+            orgIdentifier, projectIdentifier, pipelineIdentifier));
       }
     }
     return pipelineYaml;
@@ -154,7 +156,8 @@ public class ValidateAndMergeHelper {
           .modules(optionalPipelineEntity.get().getFilters().keySet())
           .build();
     } else {
-      throw new InvalidRequestException("Could not find pipeline");
+      throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+          orgIdentifier, projectIdentifier, pipelineIdentifier));
     }
   }
 
@@ -171,7 +174,8 @@ public class ValidateAndMergeHelper {
       }
 
     } else {
-      throw new InvalidRequestException("Could not find pipeline");
+      throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+          orgIdentifier, projectIdentifier, pipelineIdentifier));
     }
   }
 
