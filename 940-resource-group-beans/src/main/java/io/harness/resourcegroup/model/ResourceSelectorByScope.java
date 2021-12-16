@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 
+import javax.validation.Valid;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
@@ -14,5 +15,5 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("ResourceSelectorByScope")
 public class ResourceSelectorByScope implements ResourceSelector {
   boolean includeChildScopes;
-  Scope scope;
+  @Valid Scope scope;
 }
