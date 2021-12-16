@@ -95,23 +95,23 @@ public class SshSessionFactory {
    */
   public static Session fetchSSHSession(SshSessionConfig config, LogCallback logCallback) throws JSchException {
     JSch jsch = new JSch();
-
+    log.info("[SshSessionFactory]: SSHSessionConfig is : {}", config);
     Session session;
     if (config.getAuthenticationScheme() != null && config.getAuthenticationScheme() == KERBEROS) {
       logCallback.saveExecutionLog("SSH using Kerberos Auth");
-      log.info("SSH using Kerberos Auth");
+      log.info("[SshSessionFactory]: SSH using Kerberos Auth");
       generateTGTUsingSshConfig(config, logCallback);
 
       session = jsch.getSession(config.getKerberosConfig().getPrincipal(), config.getHost(), config.getPort());
       session.setConfig("PreferredAuthentications", "gssapi-with-mic");
     } else if (config.getAccessType() != null && config.getAccessType() == USER_PASSWORD) {
-      log.info("SSH using Username Password");
+      log.info("[SshSessionFactory]: SSH using Username Password");
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
       byte[] password = EncryptionUtils.toBytes(config.getSshPassword(), Charsets.UTF_8);
       session.setPassword(password);
       session.setUserInfo(new SshUserInfo(new String(password, Charsets.UTF_8)));
     } else if (config.isKeyLess()) {
-      log.info("SSH using KeyPath");
+      log.info("[SshSessionFactory]: SSH using KeyPath");
       String keyPath = getKeyPath(config);
       if (!new File(keyPath).isFile()) {
         throw new JSchException("File at " + keyPath + " does not exist", new FileNotFoundException());
@@ -123,7 +123,8 @@ public class SshSessionFactory {
       }
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else if (config.isVaultSSH()) {
-      log.info("SSH using Vault SSH secret engine");
+      log.info("[SshSessionFactory]: SSH using Vault SSH secret engine with SignedPublicKey: {} ",
+          config.getSignedPublicKey());
 
       final char[] copyOfKey = getCopyOfKey(config);
       if (isEmpty(config.getKeyPassphrase())) {
@@ -135,6 +136,8 @@ public class SshSessionFactory {
             EncryptionUtils.toBytes(config.getKeyPassphrase(), Charsets.UTF_8));
       }
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
+      log.info("[VaultSSH]: SSH using Vault SSH secret engine with SignedPublicKey is completed: {} ",
+          config.getSignedPublicKey());
     } else {
       if (config.getKey() != null && config.getKey().length > 0) {
         // Copy Key because EncryptionUtils has a side effect of modifying the original array
