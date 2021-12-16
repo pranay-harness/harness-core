@@ -23,6 +23,7 @@ public class QLUpdateAwsCloudProviderInput {
   private RequestField<QLAwsCredentialsType> credentialsType;
   private RequestField<QLUpdateEc2IamCredentials> ec2IamCredentials;
   private RequestField<QLUpdateAwsManualCredentials> manualCredentials;
+  private RequestField<QLUpdateIrsaCredentials> irsaCredentials;
 
   private RequestField<QLUpdateAwsCrossAccountAttributes> crossAccountAttributes;
   private RequestField<String> defaultRegion;
