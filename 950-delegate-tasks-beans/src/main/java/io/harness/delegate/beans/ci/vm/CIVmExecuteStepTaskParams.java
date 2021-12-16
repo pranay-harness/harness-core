@@ -1,21 +1,22 @@
 package io.harness.delegate.beans.ci.vm;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.vm.steps.VmStepInfo;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import javax.validation.constraints.NotNull;
-
 import io.harness.delegate.beans.executioncapability.CIVmConnectionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Collections;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
-
-import java.util.Collections;
-import java.util.List;
 
 @Data
 @SuperBuilder
@@ -26,7 +27,8 @@ public class CIVmExecuteStepTaskParams implements CIExecuteStepTaskParams, Execu
   @NotNull private String stageRuntimeId;
   @NotNull private String stepRuntimeId;
   @NotNull private String stepId;
-  @NotNull private VmStepInfo stepInfo;
+  @Expression(ALLOW_SECRETS) @NotNull private VmStepInfo stepInfo;
+  @Expression(ALLOW_SECRETS) private List<String> secrets;
   @NotNull private String logKey;
   @NotNull private String workingDir;
 

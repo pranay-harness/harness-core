@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.Trimmed;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -25,8 +24,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Schema(name = "GitSyncFolderConfig", description = "This contains details of Root Folder")
 @OwnedBy(DX)
 public class GitSyncFolderConfigDTO {
-  @Trimmed @NotEmpty private String rootFolder;
-  private Boolean isDefault;
-  @NotEmpty @EntityIdentifier private String identifier;
-  private Boolean enabled;
+  @Schema(description = "Root Folder Name") @Trimmed @NotEmpty private String rootFolder;
+  @Schema(description = "This checks if the folder is the default folder") private Boolean isDefault;
 }

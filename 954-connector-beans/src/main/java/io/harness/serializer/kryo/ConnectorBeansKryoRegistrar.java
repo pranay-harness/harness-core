@@ -142,6 +142,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
+import io.harness.delegate.beans.connector.servicenow.ServiceNowConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.connector.sumologic.SumoLogicConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
@@ -303,5 +304,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(PagerDutyConnectorDTO.class, 19675);
     kryo.register(CustomHealthConnectorDTO.class, 19676);
     kryo.register(CustomHealthMethod.class, 19677);
+    kryo.register(ServiceNowConnectorDTO.class, 19678);
   }
 }

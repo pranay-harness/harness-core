@@ -1,7 +1,5 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import io.harness.cvng.beans.NewRelicDataCollectionInfo;
 import io.harness.cvng.beans.NewRelicDataCollectionInfo.NewRelicMetricInfoDTO;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
@@ -20,8 +18,10 @@ public class NewRelicDataCollectionInfoMapper
                                                                 .metricPack(cvConfig.getMetricPack().toDTO())
                                                                 .build();
     newRelicDataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
-    if (isNotEmpty(cvConfig.getMetricInfos())) {
+
+    if (cvConfig.isCustomQuery()) {
       newRelicDataCollectionInfo.setGroupName(cvConfig.getGroupName());
+      newRelicDataCollectionInfo.setCustomQuery(true);
       List<NewRelicMetricInfoDTO> metricInfoDTOS = new ArrayList<>();
       cvConfig.getMetricInfos().forEach(newRelicMetricInfo -> {
         NewRelicMetricInfoDTO dto = NewRelicMetricInfoDTO.builder()

@@ -171,8 +171,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
             pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(),
             pipelineEntity.getIdentifier(), true);
     if (!optionalOriginalEntity.isPresent()) {
-      throw new InvalidRequestException(format("Pipeline [%s] under Project[%s], Organization [%s] doesn't exist.",
-          pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
+      throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+          pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier()));
     }
     PipelineEntity entityToUpdate = optionalOriginalEntity.get();
     PipelineEntity tempEntity = entityToUpdate.withYaml(pipelineEntity.getYaml())
@@ -273,8 +273,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     Optional<PipelineEntity> optionalPipelineEntity =
         get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!optionalPipelineEntity.isPresent()) {
-      throw new InvalidRequestException(format("Pipeline [%s] under Project[%s], Organization [%s] does not exist.",
-          pipelineIdentifier, projectIdentifier, orgIdentifier));
+      throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+          orgIdentifier, projectIdentifier, pipelineIdentifier));
     }
 
     PipelineEntity existingEntity = optionalPipelineEntity.get();
@@ -463,8 +463,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     Optional<PipelineEntity> pipelineEntityOptional =
         get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntityOptional.isPresent()) {
-      throw new InvalidRequestException(format("Pipeline [%s] under Project[%s], Organization [%s] doesn't exist.",
-          pipelineIdentifier, projectIdentifier, orgIdentifier));
+      throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+          orgIdentifier, projectIdentifier, pipelineIdentifier));
     }
 
     ExpansionRequestMetadata expansionRequestMetadata = getRequestMetadata(accountId, orgIdentifier, projectIdentifier);

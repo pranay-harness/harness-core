@@ -1737,7 +1737,8 @@ public class K8sTaskHelperBase {
 
   public String convertJsonToYaml(JSONObject jsonObject) {
     String prettyJSONString = jsonObject.toString();
-    Yaml yaml = new Yaml(new io.kubernetes.client.util.Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+    Yaml yaml =
+        new Yaml(new io.kubernetes.client.util.Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
     Map<String, Object> map = yaml.load(prettyJSONString);
     return yaml.dump(map);
   }
@@ -1775,7 +1776,8 @@ public class K8sTaskHelperBase {
     for (int i = 0; i < patchesFiles.size(); i++) {
       validateValuesFileContents(patchesFiles.get(i));
       String patchesFileName = format(patchYaml, i);
-      FileIo.writeUtf8StringToFile(Paths.get(outputTemporaryDir.toString(), patchesFileName).toString(), patchesFiles.get(i));
+      FileIo.writeUtf8StringToFile(
+          Paths.get(outputTemporaryDir.toString(), patchesFileName).toString(), patchesFiles.get(i));
       patchesFilesOptionsBuilder.append(" -f ").append(patchesFileName);
       patchList.put(Paths.get(kustomizePatchesDir, patchesFileName));
     }

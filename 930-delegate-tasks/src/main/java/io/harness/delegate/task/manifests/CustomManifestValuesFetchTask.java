@@ -86,8 +86,9 @@ public class CustomManifestValuesFetchTask extends AbstractDelegateRunnableTask 
 
     String defaultSourceWorkingDirectory = null;
     for (CustomManifestFetchConfig fetchFileConfig : orderedFetchConfig) {
+      String workingDirectory = null;
+      boolean shouldCleanUpWorkingDir = false;
       try {
-        String workingDirectory;
         CustomManifestSource customManifestSource = fetchFileConfig.getCustomManifestSource();
         String activityId = fetchParams.getActivityId();
         if (fetchFileConfig.isDefaultSource()) {
@@ -97,6 +98,7 @@ public class CustomManifestValuesFetchTask extends AbstractDelegateRunnableTask 
           workingDirectory = defaultSourceWorkingDirectory;
           logCallback.saveExecutionLog("Reusing execution output from service manifest.");
         } else {
+          shouldCleanUpWorkingDir = true;
           workingDirectory = customManifestService.getWorkingDirectory();
         }
 
@@ -129,8 +131,14 @@ public class CustomManifestValuesFetchTask extends AbstractDelegateRunnableTask 
         return CustomManifestValuesFetchResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .build();
+      } finally {
+        if (shouldCleanUpWorkingDir) {
+          customManifestService.cleanup(workingDirectory);
+        }
       }
     }
+
+    customManifestService.cleanup(defaultSourceWorkingDirectory);
 
     return CustomManifestValuesFetchResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)

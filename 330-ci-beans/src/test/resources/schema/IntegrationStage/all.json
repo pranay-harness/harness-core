@@ -4768,6 +4768,12 @@
             "ciExecutionArgs": {
               "$ref": "#/definitions/CIExecutionArgs"
             },
+            "stageVars": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/NGVariable"
+              }
+            },
             "workDir": {
               "type": "string"
             }

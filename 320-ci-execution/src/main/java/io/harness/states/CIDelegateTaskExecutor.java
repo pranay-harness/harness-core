@@ -45,6 +45,7 @@ public class CIDelegateTaskExecutor {
                                                         .taskParameters(extractTaskParameters(taskData))
                                                         .executionTimeout(Duration.ofHours(12))
                                                         .taskSetupAbstractions(setupAbstractions)
+                                                        .expressionFunctorToken(taskData.getExpressionFunctorToken())
                                                         .build();
     RetryPolicy<Object> retryPolicy =
         getRetryPolicy(format("[Retrying failed call to submit delegate task attempt: {}"),

@@ -7,7 +7,6 @@ import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
-import io.harness.beans.Scope;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.ff.FeatureFlagService;
 import io.harness.gitsync.common.beans.BranchSyncMetadata;
@@ -31,7 +30,6 @@ import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -106,7 +104,7 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
     } catch (Exception ex) {
       log.error("Error encountered while syncing the branch [{}]", branch, ex);
       String errorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
-      recordErrors(accountIdentifier, branchSyncMetadata, repoURL, branch, errorMessage);
+      recordErrors(accountIdentifier, repoURL, errorMessage);
       gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);
       // TODO adding it here for safer side as of now. Ideally should be part of step service to mark it
       gitToHarnessProgressService.updateStepStatus(
@@ -118,13 +116,9 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
     }
   }
 
-  private void recordErrors(
-      String accountId, BranchSyncMetadata branchSyncMetadata, String repo, String branch, String errorMessage) {
+  private void recordErrors(String accountId, String repo, String errorMessage) {
     if (featureFlagService.isEnabled(FeatureName.NG_GIT_ERROR_EXPERIENCE, accountId)) {
-      Scope scope =
-          Scope.of(accountId, branchSyncMetadata.getOrgIdentifier(), branchSyncMetadata.getProjectIdentifier());
-      gitSyncErrorService.recordConnectivityError(
-          accountId, Collections.singletonList(scope), repo, branch, errorMessage);
+      gitSyncErrorService.recordConnectivityError(accountId, repo, errorMessage);
     }
   }
 }

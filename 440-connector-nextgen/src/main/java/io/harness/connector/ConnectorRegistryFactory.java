@@ -1,4 +1,5 @@
 package io.harness.connector;
+
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -19,6 +20,7 @@ import io.harness.connector.heartbeat.K8sConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.NexusValidationParamsProvider;
 import io.harness.connector.heartbeat.NoOpConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.ScmConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.ServiceNowValidationParamsProvider;
 import io.harness.connector.heartbeat.VaultConnectorValidationParamsProvider;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
@@ -91,7 +93,6 @@ import io.harness.connector.mappers.sumologicmapper.SumoLogicEntityToDTO;
 import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.connector.task.NotSupportedValidationHandler;
 import io.harness.connector.task.git.GitValidationHandler;
-import io.harness.connector.validator.AlwaysTrueConnectorValidator;
 import io.harness.connector.validator.ArtifactoryConnectionValidator;
 import io.harness.connector.validator.AwsConnectorValidator;
 import io.harness.connector.validator.CEAwsConnectorValidator;
@@ -107,6 +108,7 @@ import io.harness.connector.validator.JiraConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.NexusConnectorValidator;
 import io.harness.connector.validator.SecretManagerConnectorValidator;
+import io.harness.connector.validator.ServiceNowConnectorValidator;
 import io.harness.connector.validator.scmValidators.AwsCodeCommitValidator;
 import io.harness.connector.validator.scmValidators.BitbucketConnectorValidator;
 import io.harness.connector.validator.scmValidators.GitConnectorValidator;
@@ -251,8 +253,8 @@ public class ConnectorRegistryFactory {
             CVConnectorParamsProvider.class, CustomHealthDTOToEntity.class, CustomHealthEntityToDTO.class,
             NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.SERVICENOW,
-        new ConnectorRegistrar(ConnectorCategory.TICKETING, AlwaysTrueConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, ServiceNowDTOtoEntity.class, ServiceNowEntityToDTO.class,
+        new ConnectorRegistrar(ConnectorCategory.TICKETING, ServiceNowConnectorValidator.class,
+            ServiceNowValidationParamsProvider.class, ServiceNowDTOtoEntity.class, ServiceNowEntityToDTO.class,
             NotSupportedValidationHandler.class));
   }
 

@@ -26,6 +26,7 @@ import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
 import io.harness.gitsync.common.helper.GitEnabledHelper;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.gitsync.sdk.GitSyncApiConstants;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 
@@ -128,7 +129,8 @@ public class YamlGitConfigResource {
   updateDefault(@Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam("projectId") String projectId,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam("organizationId") String organizationId,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Git Sync Config Id") @PathParam("identifier") @NotEmpty String identifier,
+      @Parameter(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE) @PathParam(
+          "identifier") @NotEmpty String identifier,
       @Parameter(description = "Folder Id") @PathParam("folderIdentifier") @NotEmpty String folderIdentifier) {
     YamlGitConfigDTO yamlGitConfigDTO =
         yamlGitConfigService.updateDefault(projectId, organizationId, accountId, identifier, folderIdentifier);

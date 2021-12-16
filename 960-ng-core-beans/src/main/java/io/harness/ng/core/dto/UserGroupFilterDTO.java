@@ -14,11 +14,11 @@ import lombok.Value;
 @Builder
 @Schema(name = "UserGroupFilter", description = "This is the view of the UserGroupFilter entity defined in Harness")
 public class UserGroupFilterDTO {
-  Set<String> databaseIdFilter;
-  Set<String> identifierFilter;
-  Set<String> userIdentifierFilter;
-  String accountIdentifier;
-  String orgIdentifier;
-  String projectIdentifier;
-  String searchTerm;
+  @Schema(description = "Filter by the internal database ids of user group") Set<String> databaseIdFilter;
+  @Schema(description = "Filter by the user group identifier") Set<String> identifierFilter;
+  @Schema(description = "Filter by the users present in the user group") Set<String> userIdentifierFilter;
+  @Schema(description = "Filter by account using account identifier", required = true) String accountIdentifier;
+  @Schema(description = "Filter by organization using account identifier") String orgIdentifier;
+  @Schema(description = "Filter by project using account identifier") String projectIdentifier;
+  @Schema(description = "Filter by search term matching entities by name/identifier") String searchTerm;
 }

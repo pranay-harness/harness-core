@@ -1,5 +1,9 @@
 package io.harness.perpetualtask.datacollection.k8s;
 
+import static io.harness.perpetualtask.k8s.utils.ResourceVersionMatch.MOST_RECENT;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
 
 import com.google.inject.Injector;
@@ -20,6 +24,7 @@ import io.kubernetes.client.openapi.models.V1StatefulSetList;
 import io.kubernetes.client.util.CallGeneratorParams;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CV)
 @Slf4j
 public class ChangeIntelSharedInformerFactory {
   public SharedInformerFactory createInformerFactoryWithHandlers(
@@ -46,7 +51,7 @@ public class ChangeIntelSharedInformerFactory {
     factory
         .sharedIndexInformerFor((CallGeneratorParams params)
                                     -> appsV1Api.listReplicaSetForAllNamespacesCall(null, null, null, null, null, null,
-                                        params.resourceVersion, params.timeoutSeconds, params.watch, null),
+                                        params.resourceVersion, MOST_RECENT, params.timeoutSeconds, params.watch, null),
             V1ReplicaSet.class, V1ReplicaSetList.class)
         .addEventHandler(handler);
   }
@@ -60,7 +65,7 @@ public class ChangeIntelSharedInformerFactory {
     factory
         .sharedIndexInformerFor((CallGeneratorParams params)
                                     -> appsV1Api.listDeploymentForAllNamespacesCall(null, null, null, null, null, null,
-                                        params.resourceVersion, params.timeoutSeconds, params.watch, null),
+                                        params.resourceVersion, MOST_RECENT, params.timeoutSeconds, params.watch, null),
             V1Deployment.class, V1DeploymentList.class)
         .addEventHandler(handler);
   }
@@ -74,7 +79,7 @@ public class ChangeIntelSharedInformerFactory {
     factory
         .sharedIndexInformerFor((CallGeneratorParams params)
                                     -> coreV1Api.listConfigMapForAllNamespacesCall(null, null, null, null, null, null,
-                                        params.resourceVersion, params.timeoutSeconds, params.watch, null),
+                                        params.resourceVersion, MOST_RECENT, params.timeoutSeconds, params.watch, null),
             V1ConfigMap.class, V1ConfigMapList.class)
         .addEventHandler(handler);
   }
@@ -88,7 +93,7 @@ public class ChangeIntelSharedInformerFactory {
     factory
         .sharedIndexInformerFor((CallGeneratorParams params)
                                     -> coreV1Api.listPodForAllNamespacesCall(null, null, null, null, null, null,
-                                        params.resourceVersion, params.timeoutSeconds, params.watch, null),
+                                        params.resourceVersion, MOST_RECENT, params.timeoutSeconds, params.watch, null),
             V1Pod.class, V1PodList.class)
         .addEventHandler(handler);
   }
@@ -102,7 +107,7 @@ public class ChangeIntelSharedInformerFactory {
     factory
         .sharedIndexInformerFor((CallGeneratorParams params)
                                     -> appsV1Api.listStatefulSetForAllNamespacesCall(null, null, null, null, null, null,
-                                        params.resourceVersion, params.timeoutSeconds, params.watch, null),
+                                        params.resourceVersion, MOST_RECENT, params.timeoutSeconds, params.watch, null),
             V1StatefulSet.class, V1StatefulSetList.class)
         .addEventHandler(handler);
   }
