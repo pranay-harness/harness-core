@@ -16,6 +16,12 @@ items:
   kind: Service
   metadata:
     name: my-service-2
+    labels:
+      environment: production
+      app: nginx
+    annotations:
+      harness.io/skip-versioning: "true"
+      harness.io/direct-apply: "true"
   spec:
     selector:
       app: MyApp2
