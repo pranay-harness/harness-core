@@ -64,7 +64,6 @@ public class NewRelicHealthSourceSpecTransformer
                                 .riskProfile(riskProfile)
                                 .build())
                   .groupName(cv.getGroupName())
-                  .queryType(cv.getQueryType())
                   .build();
             }))
             .collect(Collectors.toList());
