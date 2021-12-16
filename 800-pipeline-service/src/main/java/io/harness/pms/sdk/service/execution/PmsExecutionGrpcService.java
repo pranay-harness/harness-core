@@ -37,14 +37,13 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
   @Override
   public void updateExecutionSummary(
       ExecutionSummaryUpdateRequest request, StreamObserver<ExecutionSummaryResponse> responseObserver) {
-    NodeExecution nodeExecution = nodeExecutionService.get(request.getNodeExecutionId());
-    updatePipelineInfoJson(request, nodeExecution);
-    updateStageModuleInfo(request, nodeExecution);
+    updatePipelineInfoJson(request);
+    updateStageModuleInfo(request);
     responseObserver.onNext(ExecutionSummaryResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 
-  private void updatePipelineInfoJson(ExecutionSummaryUpdateRequest request, NodeExecution nodeExecution) {
+  private void updatePipelineInfoJson(ExecutionSummaryUpdateRequest request) {
     String moduleName = request.getModuleName();
     String planExecutionId = request.getPlanExecutionId();
     Map<String, Object> pipelineInfoDoc = RecastOrchestrationUtils.fromJson(request.getPipelineModuleInfoJson());
@@ -70,11 +69,10 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
     pmsExecutionSummaryRepository.update(query, update);
   }
 
-  private void updateStageModuleInfo(ExecutionSummaryUpdateRequest request, NodeExecution nodeExecution) {
+  private void updateStageModuleInfo(ExecutionSummaryUpdateRequest request) {
     String stageUuid = request.getNodeUuid();
     String moduleName = request.getModuleName();
     String stageInfo = request.getNodeModuleInfoJson();
-    ExecutionStatus status = ExecutionStatus.getExecutionStatus(nodeExecution.getStatus());
     String planExecutionId = request.getPlanExecutionId();
     if (EmptyPredicate.isEmpty(stageUuid)) {
       return;

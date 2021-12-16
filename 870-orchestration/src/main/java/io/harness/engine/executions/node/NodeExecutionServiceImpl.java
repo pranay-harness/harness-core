@@ -51,9 +51,11 @@ import com.mongodb.client.result.UpdateResult;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.Getter;
@@ -78,9 +80,31 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Getter private final Subject<NodeExecutionStartObserver> nodeExecutionStartSubject = new Subject<>();
   @Getter private final Subject<NodeUpdateObserver> nodeUpdateObserverSubject = new Subject<>();
 
+  /**
+   * This is deprecated, use function
+   * @param nodeExecutionId
+   * @return
+   */
   @Override
+  @Deprecated
   public NodeExecution get(String nodeExecutionId) {
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    NodeExecution nodeExecution = mongoTemplate.findOne(query, NodeExecution.class);
+    if (nodeExecution == null) {
+      throw new InvalidRequestException("Node Execution is null for id: " + nodeExecutionId);
+    }
+    return nodeExecution;
+  }
+
+  @Override
+  public NodeExecution getWithFieldsIncluded(String nodeExecutionId, Set<String> fieldsToInclude) {
+    Set<String> defaultFields = new HashSet<>();
+    defaultFields.add(NodeExecutionKeys.oldRetry);
+    fieldsToInclude.addAll(defaultFields);
+    Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    for (String field : fieldsToInclude) {
+      query.fields().include(field);
+    }
     NodeExecution nodeExecution = mongoTemplate.findOne(query, NodeExecution.class);
     if (nodeExecution == null) {
       throw new InvalidRequestException("Node Execution is null for id: " + nodeExecutionId);

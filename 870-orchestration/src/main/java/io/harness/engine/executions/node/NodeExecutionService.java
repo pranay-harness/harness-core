@@ -13,6 +13,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import lombok.NonNull;
 import org.springframework.data.mongodb.core.query.Update;
@@ -20,6 +21,8 @@ import org.springframework.data.mongodb.core.query.Update;
 @OwnedBy(PIPELINE)
 public interface NodeExecutionService {
   NodeExecution get(String nodeExecutionId);
+
+  NodeExecution getWithFieldsIncluded(String nodeExecutionId, Set<String> fieldsToInclude);
 
   NodeExecution getByPlanNodeUuid(String planNodeUuid, String planExecutionId);
 

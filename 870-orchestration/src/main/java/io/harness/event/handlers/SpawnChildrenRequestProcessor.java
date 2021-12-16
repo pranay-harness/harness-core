@@ -22,6 +22,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.NodeExecutionUtils;
 import io.harness.pms.execution.utils.SdkResponseEventUtils;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -47,7 +48,8 @@ public class SpawnChildrenRequestProcessor implements SdkResponseProcessor {
   @Override
   public void handleEvent(SdkResponseEventProto event) {
     SpawnChildrenRequest request = event.getSpawnChildrenRequest();
-    NodeExecution nodeExecution = nodeExecutionService.get(SdkResponseEventUtils.getNodeExecutionId(event));
+    NodeExecution nodeExecution = nodeExecutionService.getWithFieldsIncluded(
+        SdkResponseEventUtils.getNodeExecutionId(event), NodeExecutionUtils.withAmbiance);
     Ambiance ambiance = nodeExecution.getAmbiance();
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       List<String> callbackIds = new ArrayList<>();

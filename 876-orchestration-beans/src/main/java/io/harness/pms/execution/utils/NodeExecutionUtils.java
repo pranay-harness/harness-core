@@ -1,0 +1,22 @@
+package io.harness.pms.execution.utils;
+
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
+
+import com.google.common.collect.Sets;
+import java.util.List;
+import java.util.Set;
+import jersey.repackaged.com.google.common.collect.Lists;
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
+public class NodeExecutionUtils {
+  public static final Set<String> fieldsForRetryInterruptHandler = Sets.newHashSet(
+      NodeExecutionKeys.ambiance, NodeExecutionKeys.status, NodeExecutionKeys.oldRetry, NodeExecutionKeys.mode);
+  public static final Set<String> withAmbianceAndStatus =
+      Sets.newHashSet(NodeExecutionKeys.ambiance, NodeExecutionKeys.status);
+  public static final Set<String> withAmbiance = Sets.newHashSet(NodeExecutionKeys.ambiance);
+  public static final Set<String> withStatus = Sets.newHashSet(NodeExecutionKeys.status);
+  public static final Set<String> withStatusAndMode = Sets.newHashSet(NodeExecutionKeys.status, NodeExecutionKeys.mode);
+  public static final Set<String> withStatusAndAdviserResponse =
+      Sets.newHashSet(NodeExecutionKeys.status, NodeExecutionKeys.adviserResponse);
+}
