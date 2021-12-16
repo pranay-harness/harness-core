@@ -35,6 +35,7 @@ import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
+import io.harness.beans.sweepingoutputs.StageInfraDetails.Type;
 import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
 import io.harness.exception.InvalidArgumentsException;
@@ -75,17 +76,18 @@ public class PluginSettingUtils {
   public static final String PLUGIN_OVERRIDE = "PLUGIN_OVERRIDE";
   public static final String PLUGIN_ARCHIVE_FORMAT = "PLUGIN_ARCHIVE_FORMAT";
   public static final String PLUGIN_ARTIFACT_FILE = "PLUGIN_ARTIFACT_FILE";
+  public static final String PLUGIN_DAEMON_OFF = "PLUGIN_DAEMON_OFF";
   public static final String ECR_REGISTRY_PATTERN = "%s.dkr.ecr.%s.amazonaws.com";
 
   public static Map<String, String> getPluginCompatibleEnvVariables(
-      PluginCompatibleStep stepInfo, String identifier, long timeout) {
+      PluginCompatibleStep stepInfo, String identifier, long timeout, Type infraType) {
     switch (stepInfo.getNonYamlInfo().getStepInfoType()) {
       case ECR:
-        return getECRStepInfoEnvVariables((ECRStepInfo) stepInfo, identifier);
+        return getECRStepInfoEnvVariables((ECRStepInfo) stepInfo, identifier, infraType);
       case GCR:
-        return getGCRStepInfoEnvVariables((GCRStepInfo) stepInfo, identifier);
+        return getGCRStepInfoEnvVariables((GCRStepInfo) stepInfo, identifier, infraType);
       case DOCKER:
-        return getDockerStepInfoEnvVariables((DockerStepInfo) stepInfo, identifier);
+        return getDockerStepInfoEnvVariables((DockerStepInfo) stepInfo, identifier, infraType);
       case UPLOAD_ARTIFACTORY:
         return getUploadToArtifactoryStepInfoEnvVariables((UploadToArtifactoryStepInfo) stepInfo, identifier);
       case UPLOAD_GCS:
@@ -142,7 +144,8 @@ public class PluginSettingUtils {
     }
   }
 
-  private static Map<String, String> getGCRStepInfoEnvVariables(GCRStepInfo stepInfo, String identifier) {
+  private static Map<String, String> getGCRStepInfoEnvVariables(
+      GCRStepInfo stepInfo, String identifier, Type infraType) {
     Map<String, String> map = new HashMap<>();
 
     String host = resolveStringParameter("host", "BuildAndPushGCR", identifier, stepInfo.getHost(), true);
@@ -188,24 +191,29 @@ public class PluginSettingUtils {
       setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(labels));
     }
 
-    boolean optimize = resolveBooleanParameter(stepInfo.getOptimize(), true);
-    if (optimize) {
-      setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
-    }
+    if (infraType == Type.K8) {
+      boolean optimize = resolveBooleanParameter(stepInfo.getOptimize(), true);
+      if (optimize) {
+        setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
+      }
 
-    String remoteCacheImage = resolveStringParameter(
-        "remoteCacheImage", "BuildAndPushGCR", identifier, stepInfo.getRemoteCacheImage(), false);
-    if (remoteCacheImage != null && !remoteCacheImage.equals(UNRESOLVED_PARAMETER)) {
-      setOptionalEnvironmentVariable(map, PLUGIN_ENABLE_CACHE, "true");
-      setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheImage);
-    }
+      String remoteCacheImage = resolveStringParameter(
+          "remoteCacheImage", "BuildAndPushGCR", identifier, stepInfo.getRemoteCacheImage(), false);
+      if (remoteCacheImage != null && !remoteCacheImage.equals(UNRESOLVED_PARAMETER)) {
+        setOptionalEnvironmentVariable(map, PLUGIN_ENABLE_CACHE, "true");
+        setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheImage);
+      }
 
-    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
+      setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
+    } else if (infraType == Type.VM) {
+      setMandatoryEnvironmentVariable(map, PLUGIN_DAEMON_OFF, "true");
+    }
 
     return map;
   }
 
-  private static Map<String, String> getECRStepInfoEnvVariables(ECRStepInfo stepInfo, String identifier) {
+  private static Map<String, String> getECRStepInfoEnvVariables(
+      ECRStepInfo stepInfo, String identifier, Type infraType) {
     Map<String, String> map = new HashMap<>();
     String account = resolveStringParameter("account", "BuildAndPushECR", identifier, stepInfo.getAccount(), true);
     String region = resolveStringParameter("region", "BuildAndPushECR", identifier, stepInfo.getRegion(), true);
@@ -249,23 +257,29 @@ public class PluginSettingUtils {
       setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(labels));
     }
 
-    boolean optimize = resolveBooleanParameter(stepInfo.getOptimize(), true);
-    if (optimize) {
-      setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
+    if (infraType == Type.K8) {
+      boolean optimize = resolveBooleanParameter(stepInfo.getOptimize(), true);
+      if (optimize) {
+        setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
+      }
+
+      String remoteCacheImage = resolveStringParameter(
+          "remoteCacheImage", "BuildAndPushECR", identifier, stepInfo.getRemoteCacheImage(), false);
+      if (remoteCacheImage != null && !remoteCacheImage.equals(UNRESOLVED_PARAMETER)) {
+        setOptionalEnvironmentVariable(map, PLUGIN_ENABLE_CACHE, "true");
+        setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheImage);
+      }
+
+      setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
+    } else if (infraType == Type.VM) {
+      setMandatoryEnvironmentVariable(map, PLUGIN_DAEMON_OFF, "true");
     }
 
-    String remoteCacheImage = resolveStringParameter(
-        "remoteCacheImage", "BuildAndPushECR", identifier, stepInfo.getRemoteCacheImage(), false);
-    if (remoteCacheImage != null && !remoteCacheImage.equals(UNRESOLVED_PARAMETER)) {
-      setOptionalEnvironmentVariable(map, PLUGIN_ENABLE_CACHE, "true");
-      setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheImage);
-    }
-
-    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
     return map;
   }
 
-  private static Map<String, String> getDockerStepInfoEnvVariables(DockerStepInfo stepInfo, String identifier) {
+  private static Map<String, String> getDockerStepInfoEnvVariables(
+      DockerStepInfo stepInfo, String identifier, Type infraType) {
     Map<String, String> map = new HashMap<>();
 
     setMandatoryEnvironmentVariable(map, PLUGIN_REPO,
@@ -304,17 +318,20 @@ public class PluginSettingUtils {
       setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(labels));
     }
 
-    boolean optimize = resolveBooleanParameter(stepInfo.getOptimize(), true);
-    if (optimize) {
-      setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
-    }
-    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
-
-    String remoteCacheRepo = resolveStringParameter(
-        "remoteCacheRepo", "BuildAndPushDockerRegistry", identifier, stepInfo.getRemoteCacheRepo(), false);
-    if (remoteCacheRepo != null && !remoteCacheRepo.equals(UNRESOLVED_PARAMETER)) {
-      setOptionalEnvironmentVariable(map, PLUGIN_ENABLE_CACHE, "true");
-      setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheRepo);
+    if (infraType == Type.K8) {
+      boolean optimize = resolveBooleanParameter(stepInfo.getOptimize(), true);
+      if (optimize) {
+        setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
+      }
+      setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
+      String remoteCacheRepo = resolveStringParameter(
+          "remoteCacheRepo", "BuildAndPushDockerRegistry", identifier, stepInfo.getRemoteCacheRepo(), false);
+      if (remoteCacheRepo != null && !remoteCacheRepo.equals(UNRESOLVED_PARAMETER)) {
+        setOptionalEnvironmentVariable(map, PLUGIN_ENABLE_CACHE, "true");
+        setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheRepo);
+      }
+    } else if (infraType == Type.VM) {
+      setMandatoryEnvironmentVariable(map, PLUGIN_DAEMON_OFF, "true");
     }
 
     return map;
