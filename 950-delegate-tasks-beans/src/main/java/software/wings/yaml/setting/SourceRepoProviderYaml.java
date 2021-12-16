@@ -1,6 +1,6 @@
 package software.wings.yaml.setting;
 
-import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
+import static software.wings.beans.CGConstants.ENCRYPTED_VALUE_STR;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;

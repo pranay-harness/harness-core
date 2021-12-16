@@ -11,6 +11,7 @@ import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
 import static io.harness.ng.core.invites.mapper.RoleBindingMapper.validateRoleBindings;
 import static io.harness.utils.PageUtils.getPageRequest;
 
+import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -441,7 +442,12 @@ public class UserResource {
       })
   public ResponseDTO<UserInfo>
   updateUserInfo(@Body UserInfo userInfo) {
-    return ResponseDTO.newResponse(userInfoService.update(userInfo));
+    if (isUserExternallyManaged(userInfo.getUuid())) {
+      log.info("User is externally managed, cannot update user - userId: {}", userInfo.getUuid());
+      throw new InvalidRequestException("Cannot update user as it is externally managed.");
+    } else {
+      return ResponseDTO.newResponse(userInfoService.update(userInfo));
+    }
   }
 
   @PUT
@@ -532,8 +538,13 @@ public class UserResource {
                       .orgIdentifier(orgIdentifier)
                       .projectIdentifier(projectIdentifier)
                       .build();
-    return ResponseDTO.newResponse(TRUE.equals(
-        ngUserService.removeUserFromScope(userId, scope, UserMembershipUpdateSource.USER, removeUserFilter)));
+    if (isUserExternallyManaged(userId)) {
+      log.info("User is externally managed, cannot delete user - userId: {}", userId);
+      return ResponseDTO.newResponse(FALSE);
+    } else {
+      return ResponseDTO.newResponse(TRUE.equals(
+          ngUserService.removeUserFromScope(userId, scope, UserMembershipUpdateSource.USER, removeUserFilter)));
+    }
   }
 
   public Optional<String> getUserIdentifierFromSecurityContext() {
@@ -566,5 +577,10 @@ public class UserResource {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USER, userId), MANAGE_USER_PERMISSION);
     return ResponseDTO.newResponse(userInfoService.unlockUser(userId, accountIdentifier));
+  }
+
+  private boolean isUserExternallyManaged(String userId) {
+    Optional<UserInfo> optionalUserInfo = ngUserService.getUserById(userId);
+    return optionalUserInfo.map(UserInfo::isExternallyManaged).orElse(false);
   }
 }
