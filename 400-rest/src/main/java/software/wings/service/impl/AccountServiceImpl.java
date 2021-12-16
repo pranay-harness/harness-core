@@ -94,6 +94,7 @@ import io.harness.persistence.HIterator;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
+import io.harness.service.intfc.DelegateNgTokenService;
 import io.harness.validation.SuppressValidation;
 import io.harness.version.VersionInfoManager;
 
@@ -283,6 +284,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private DelegateService delegateService;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
   @Inject private RemoteObserverInformer remoteObserverInformer;
+  @Inject private DelegateNgTokenService delegateNgTokenService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -470,6 +472,8 @@ public class AccountServiceImpl implements AccountService {
         sampleDataProviderService.createK8sV2SampleApp(account);
       }
     }
+
+    delegateNgTokenService.upsertDefaultToken(account.getUuid(), null, false);
   }
 
   private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
@@ -1144,6 +1148,7 @@ public class AccountServiceImpl implements AccountService {
     updateMigratedToClusterUrl(account, migratedToClusterUrl);
     // Also need to prevent all existing users in the migration account from logging in after completion of migration.
     setUserStatusInAccount(accountId, false);
+    delegateNgTokenService.revokeDelegateToken(accountId, null, delegateNgTokenService.DEFAULT_TOKEN_NAME);
     return setAccountStatusInternal(account, AccountStatus.INACTIVE);
   }
 
@@ -1151,6 +1156,7 @@ public class AccountServiceImpl implements AccountService {
   public boolean enableAccount(String accountId) {
     Account account = get(accountId);
     setUserStatusInAccount(accountId, true);
+    delegateNgTokenService.upsertDefaultToken(accountId, null, true);
     return setAccountStatusInternal(account, AccountStatus.ACTIVE);
   }
 
