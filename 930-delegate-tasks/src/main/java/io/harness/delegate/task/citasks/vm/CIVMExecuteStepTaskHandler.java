@@ -48,6 +48,10 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   @Inject private SecretSpecBuilder secretSpecBuilder;
   @NotNull private Type type = Type.VM;
 
+  private static final String DOCKER_REGISTRY_V2 = "https://index.docker.io/v2/";
+  private static final String DOCKER_REGISTRY_V1 = "https://index.docker.io/v1/";
+  private static final String DOCKER_REGISTRY_ENV = "PLUGIN_REGISTRY";
+
   @Override
   public Type getType() {
     return type;
@@ -142,6 +146,12 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
       Map<String, SecretParams> secretVars = secretSpecBuilder.decryptConnectorSecret(pluginStep.getConnector());
       for (Map.Entry<String, SecretParams> entry : secretVars.entrySet()) {
         String secret = new String(decodeBase64(entry.getValue().getValue()));
+        String key = entry.getKey();
+
+        // Drone docker plugin does not work with v2 registry
+        if (key.equals(DOCKER_REGISTRY_ENV) && secret.equals(DOCKER_REGISTRY_V2)) {
+          secret = DOCKER_REGISTRY_V1;
+        }
         env.put(entry.getKey(), secret);
         secrets.add(secret);
       }
