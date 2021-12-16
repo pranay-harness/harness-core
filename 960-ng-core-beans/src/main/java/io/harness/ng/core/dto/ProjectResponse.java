@@ -2,6 +2,7 @@ package io.harness.ng.core.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.ProjectConstants;
 import io.harness.annotations.dev.OwnedBy;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,11 +14,11 @@ import lombok.NoArgsConstructor;
 @OwnedBy(PL)
 @Data
 @NoArgsConstructor
-@Schema(description = "Project resource along with metadata. Generally, Used to power UI.")
+@Schema(description = "This has Project details along with its metadata as defined in Harness .")
 public class ProjectResponse {
   @NotNull private ProjectDTO project;
-  private Long createdAt;
-  private Long lastModifiedAt;
+  @Schema(description = ProjectConstants.CREATED_AT) private Long createdAt;
+  @Schema(description = ProjectConstants.LAST_MODIFIED_AT) private Long lastModifiedAt;
 
   @Builder
   public ProjectResponse(ProjectDTO project, Long createdAt, Long lastModifiedAt) {
