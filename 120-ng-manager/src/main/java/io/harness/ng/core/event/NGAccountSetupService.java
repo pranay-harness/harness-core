@@ -92,6 +92,9 @@ public class NGAccountSetupService {
 
     Organization defaultOrg = createDefaultOrg(accountIdentifier);
     setupRBAC(defaultOrg.getAccountIdentifier(), defaultOrg.getIdentifier());
+    log.info("[NGAccountSetupService]: Creating global SM for account{}", accountIdentifier);
+    harnessSMManager.createGlobalSecretManager();
+    log.info("[NGAccountSetupService]: Global SM Created Successfully for account{}", accountIdentifier);
     harnessSMManager.createHarnessSecretManager(accountIdentifier, null, null);
     ciDefaultEntityManager.createCIDefaultEntities(accountIdentifier, null, null);
   }
