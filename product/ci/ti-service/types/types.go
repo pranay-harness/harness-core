@@ -171,6 +171,11 @@ type File struct {
 	Status FileStatus `json:"status"`
 }
 
+type DownloadLink struct {
+	URL     string `json:"url"`
+	RelPath string `json:"rel_path"` // this is the relative path to the artifact from the base URL
+}
+
 // This is a yaml file which may or may not exist in the root of the source code
 // as .ticonfig. The contents of the file get deserialized into this object.
 // Sample YAML:
