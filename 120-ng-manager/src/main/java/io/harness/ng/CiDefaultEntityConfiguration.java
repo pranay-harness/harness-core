@@ -1,5 +1,7 @@
 package io.harness.ng;
 
+import io.harness.secret.ConfigSecret;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -9,6 +11,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CiDefaultEntityConfiguration {
-  String harnessImageUseName;
-  String harnessImagePassword;
+  @ConfigSecret String harnessImageUseName;
+  @ConfigSecret String harnessImagePassword;
 }

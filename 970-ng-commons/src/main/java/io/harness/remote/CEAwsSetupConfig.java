@@ -1,5 +1,7 @@
 package io.harness.remote;
 
+import io.harness.secret.ConfigSecret;
+
 import com.google.inject.Singleton;
 import lombok.Builder;
 import lombok.Data;
@@ -8,8 +10,8 @@ import lombok.Data;
 @Builder
 @Singleton
 public class CEAwsSetupConfig {
-  String accessKey;
-  String secretKey;
+  @ConfigSecret String accessKey;
+  @ConfigSecret String secretKey;
   String destinationBucket;
   String templateURL;
 }
