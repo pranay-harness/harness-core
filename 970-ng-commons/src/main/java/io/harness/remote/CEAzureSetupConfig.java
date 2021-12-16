@@ -1,4 +1,6 @@
 package io.harness.remote;
+import io.harness.secret.ConfigSecret;
+
 import com.google.inject.Singleton;
 import lombok.Builder;
 import lombok.Data;
@@ -8,5 +10,5 @@ import lombok.Data;
 @Singleton
 public class CEAzureSetupConfig {
   private String azureAppClientId;
-  private String azureAppClientSecret;
+  @ConfigSecret private String azureAppClientSecret;
 }
