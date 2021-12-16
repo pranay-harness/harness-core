@@ -33,9 +33,13 @@ public class AddRingsToAccountMigration implements Migration {
 
         updated++;
         if (updated != 0 && idsToUpdate.size() % 500 == 0) {
-          persistence.update(persistence.createQuery(Account.class).field(AccountKeys.uuid).in(idsToUpdate),
-              persistence.createUpdateOperations(Account.class)
-                  .set(AccountKeys.ringName, DelegateRingConstants.DEFAULT_RING_NAME));
+          try {
+            persistence.update(persistence.createQuery(Account.class).field(AccountKeys.uuid).in(idsToUpdate),
+                persistence.createUpdateOperations(Account.class)
+                    .set(AccountKeys.ringName, DelegateRingConstants.DEFAULT_RING_NAME));
+          } catch (Exception e) {
+            log.error("Exception occurred during add ringName to account migration.", e);
+          }
           log.info("updated: " + updated);
           idsToUpdate.clear();
         }
