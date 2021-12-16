@@ -4,27 +4,34 @@ version: 3
 resourceGroups:
   - identifier: _all_resources
     name: All Resources
-    fullScopeSelected: false
-    nestedScopesSelected: true
     description: All the resources in this scope are included in this resource group.
+    resourceSelectors:
+      - type: ResourceSelectorByScope
+        includeChildScopes: true
     allowedScopeLevels:
       - account
       - organization
   - identifier: _all_account_level_resources
     name: All Account Level Resources
-    fullScopeSelected: true
     description: All the resources at this account scope are included in this resource group.
+    resourceSelectors:
+      - type: ResourceSelectorByScope
+        includeChildScopes: false
     allowedScopeLevels:
       - account
   - identifier: _all_organization_level_resources
     name: All Organization Level Resources
-    fullScopeSelected: true
     description: All the resources at this organization scope are included in this resource group.
+    resourceSelectors:
+      - type: ResourceSelectorByScope
+        includeChildScopes: false
     allowedScopeLevels:
       - organization
   - identifier: _all_project_level_resources
     name: All Project Level Resources
-    fullScopeSelected: true
     description: All the resources at this project scope are included in this resource group.
+    resourceSelectors:
+      - type: ResourceSelectorByScope
+        includeChildScopes: false
     allowedScopeLevels:
       - project
