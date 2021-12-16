@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class PipelineTelemetryRecordsJob {
-  public static final int METRICS_RECORD_PERIOD_HOURS = 24;
+  public static final int METRICS_RECORD_PERIOD_HOURS = 1;
 
   @Inject private Injector injector;
   @Inject @Named("telemetryPublisherExecutor") protected ScheduledExecutorService executorService;
