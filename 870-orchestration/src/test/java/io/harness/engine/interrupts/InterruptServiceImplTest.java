@@ -33,6 +33,7 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.execution.utils.NodeExecutionUtils;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -153,7 +154,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
                                       .mode(ExecutionMode.CHILD)
                                       .version(1L)
                                       .build();
-    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeExecutionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
     ExecutionCheck executionCheck =
         interruptService.checkInterruptsPreInvocation(planExecutionId, nodeExecution.getUuid());
     assertThat(executionCheck).isNotNull();
@@ -176,7 +178,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
                                       .mode(ExecutionMode.TASK)
                                       .version(1L)
                                       .build();
-    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeExecutionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
     when(abortInterruptHandler.handleInterruptForNodeExecution(any(), eq(nodeExecution.getUuid())))
         .thenReturn(abortAllInterrupt);
     ExecutionCheck executionCheck =
@@ -205,7 +208,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
                                       .mode(ExecutionMode.TASK)
                                       .version(1L)
                                       .build();
-    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeExecutionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
     when(markExpiredInterruptHandler.handleInterruptForNodeExecution(any(), eq(nodeExecution.getUuid())))
         .thenReturn(expireAllInterrupt);
     ExecutionCheck executionCheck =
@@ -232,7 +236,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
                                       .version(1L)
                                       .build();
 
-    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeExecutionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
 
     ExecutionCheck executionCheck =
         interruptService.checkInterruptsPreInvocation(planExecutionId, nodeExecution.getUuid());
@@ -240,7 +245,7 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
     assertThat(executionCheck.isProceed()).isTrue();
     assertThat(executionCheck.getReason()).isEqualTo("[InterruptCheck] No Interrupts Found");
 
-    verify(nodeExecutionService).get(nodeExecution.getUuid());
+    verify(nodeExecutionService).getWithFieldsIncluded(nodeExecution.getUuid(), NodeExecutionUtils.withStatusAndMode);
   }
 
   @Test
@@ -261,7 +266,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
                                       .version(1L)
                                       .build();
 
-    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeExecutionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
     when(pauseAllInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecution.getUuid()))
         .thenReturn(interrupt);
 
@@ -271,7 +277,7 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
     assertThat(executionCheck.isProceed()).isFalse();
     assertThat(executionCheck.getReason()).isEqualTo("[InterruptCheck] PAUSE_ALL interrupt found");
 
-    verify(nodeExecutionService).get(nodeExecution.getUuid());
+    verify(nodeExecutionService).getWithFieldsIncluded(nodeExecution.getUuid(), NodeExecutionUtils.withStatusAndMode);
     verify(pauseAllInterruptHandler).handleInterruptForNodeExecution(any(), eq(nodeExecution.getUuid()));
   }
 
@@ -297,7 +303,11 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
                                       .version(1L)
                                       .build();
 
-    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeExecutionUtils.withAmbianceAndStatus))
+        .thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeExecutionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
+
     when(planExecutionService.calculateStatusExcluding(any(), any())).thenReturn(Status.PAUSING);
 
     ExecutionCheck executionCheck =
@@ -306,7 +316,10 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
     assertThat(executionCheck.isProceed()).isTrue();
     assertThat(executionCheck.getReason()).isEqualTo("[InterruptCheck] No Interrupts Found");
 
-    verify(nodeExecutionService, times(2)).get(nodeExecution.getUuid());
+    verify(nodeExecutionService)
+        .getWithFieldsIncluded(nodeExecution.getUuid(), NodeExecutionUtils.withAmbianceAndStatus);
+    verify(nodeExecutionService).getWithFieldsIncluded(nodeExecution.getUuid(), NodeExecutionUtils.withStatusAndMode);
+
     verify(planExecutionService).calculateStatusExcluding(any(), any());
   }
 
