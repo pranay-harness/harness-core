@@ -1,5 +1,6 @@
 package io.harness.metrics;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -35,33 +36,40 @@ public class PipelineTelemetryPublisher {
 
     String accountId = getAccountId();
 
-    Criteria criteria =
-        Criteria.where(PipelineEntityKeys.createdAt).gt(System.currentTimeMillis() - MILLISECONDS_IN_A_DAY);
-    pipelinesCreatedInADay = pmsPipelineService.countAllPipelines(criteria);
+    if (EmptyPredicate.isNotEmpty(accountId)) {
+      Criteria criteria =
+              Criteria.where(PipelineEntityKeys.createdAt).gt(System.currentTimeMillis() - MILLISECONDS_IN_A_DAY);
+      pipelinesCreatedInADay = pmsPipelineService.countAllPipelines(criteria);
 
-    Criteria noCriteria = new Criteria();
-    totalNumberOfPipelines = pmsPipelineService.countAllPipelines(noCriteria);
+      Criteria noCriteria = new Criteria();
+      totalNumberOfPipelines = pmsPipelineService.countAllPipelines(noCriteria);
 
-    Criteria criteriaExecutions =
-        Criteria.where(PlanExecutionSummaryKeys.createdAt).gt(System.currentTimeMillis() - MILLISECONDS_IN_A_DAY);
-    pipelinesExecutedInADay = pmsExecutionService.getCountOfExecutions(criteriaExecutions);
+      Criteria criteriaExecutions =
+              Criteria.where(PlanExecutionSummaryKeys.createdAt).gt(System.currentTimeMillis() - MILLISECONDS_IN_A_DAY);
+      pipelinesExecutedInADay = pmsExecutionService.getCountOfExecutions(criteriaExecutions);
 
-    Criteria noCriteriaExecutions = new Criteria();
-    totalPipelinesExecuted = pmsExecutionService.getCountOfExecutions(noCriteriaExecutions);
+      Criteria noCriteriaExecutions = new Criteria();
+      totalPipelinesExecuted = pmsExecutionService.getCountOfExecutions(noCriteriaExecutions);
 
-    HashMap<String, Object> map = new HashMap<>();
-    map.put(PIPELINES_CREATED_IN_A_DAY, pipelinesCreatedInADay);
-    map.put(TOTAL_NUMBER_OF_PIPELINES, totalNumberOfPipelines);
-    map.put(EXECUTIONS_IN_A_DAY, pipelinesExecutedInADay);
-    map.put(TOTAL_EXECUTIONS, totalPipelinesExecuted);
-    telemetryReporter.sendGroupEvent(
-        accountId, null, map, null, TelemetryOption.builder().sendForCommunity(true).build());
+      HashMap<String, Object> map = new HashMap<>();
+      map.put(PIPELINES_CREATED_IN_A_DAY, pipelinesCreatedInADay);
+      map.put(TOTAL_NUMBER_OF_PIPELINES, totalNumberOfPipelines);
+      map.put(EXECUTIONS_IN_A_DAY, pipelinesExecutedInADay);
+      map.put(TOTAL_EXECUTIONS, totalPipelinesExecuted);
+      telemetryReporter.sendGroupEvent(
+              accountId, null, map, null, TelemetryOption.builder().sendForCommunity(true).build());
+      log.info("Scheduled PipelineTelemetryPublisher event sent!");
+    } else {
+      log.info("There is no Account found!. Can not send scheduled PipelineTelemetryPublisher event.");
+    }
   }
 
   private String getAccountId() {
     Criteria filterCriteria = new Criteria();
     PipelineEntity pipelineEntity = pmsPipelineService.findFirstPipeline(filterCriteria);
-
-    return pipelineEntity.getAccountId();
+    if (pipelineEntity != null) {
+      return pipelineEntity.getAccountId();
+    }
+    return null;
   }
 }

@@ -52,6 +52,9 @@ public class NGTelemetryPublisher {
       map.put(TOTAL_NUMBER_OF_SERVICE_INSTANCES_IN_A_MONTH, totalNumberOfServiceInstancesInAMonth);
       telemetryReporter.sendGroupEvent(
               accountId, null, map, null, TelemetryOption.builder().sendForCommunity(true).build());
+      log.info("Scheduled NGTelemetryPublisher event sent!");
+    } else {
+      log.info("There is no Account found!. Can not send scheduled NGTelemetryPublisher event.");
     }
   }
 
