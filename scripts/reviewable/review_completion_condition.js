@@ -52,6 +52,10 @@ let numUnreviewedFiles = 0;
 let fileBlockers = [];
 _.forEach(review.files, function(file) {
   const lastRev = _(file.revisions).reject('obsolete').last();
+  if (!lastRev) {
+    // When there are reverted files it seems that all revisions on it are obsolete, so break early. 
+    return;
+  }
   const reviewers = _(lastRev.reviewers)
     .pluck('username')
     .without(review.pullRequest.author.username)
