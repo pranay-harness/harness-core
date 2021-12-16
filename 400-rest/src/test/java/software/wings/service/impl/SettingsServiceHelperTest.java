@@ -31,6 +31,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.BugsnagConfig;
+import software.wings.beans.CGConstants;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
@@ -53,7 +54,6 @@ import software.wings.security.UsageRestrictions;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.yaml.YamlHelper;
 
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
@@ -434,7 +434,7 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
         .withAccountId(ACCOUNT_ID)
         .withValue(DockerConfig.builder()
                        .dockerRegistryUrl(DOCKER_REGISTRY_URL)
-                       .encryptedPassword(YamlHelper.ENCRYPTED_VALUE_STR)
+                       .encryptedPassword(CGConstants.ENCRYPTED_VALUE_STR)
                        .build())
         .build();
   }

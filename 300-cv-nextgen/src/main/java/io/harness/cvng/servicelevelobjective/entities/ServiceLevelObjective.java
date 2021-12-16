@@ -121,7 +121,7 @@ public class ServiceLevelObjective
     }
 
     public Period getRemainingDays(LocalDateTime currentDateTime) {
-      return Period.between(currentDateTime.toLocalDate(), endTime.toLocalDate()).minusDays(1);
+      return Period.between(currentDateTime.toLocalDate(), endTime.toLocalDate());
     }
     public int getTotalDays() {
       return (int) DAYS.between(getStartTime(), getEndTime());

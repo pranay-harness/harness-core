@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
-import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
+import static software.wings.beans.CGConstants.ENCRYPTED_VALUE_STR;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

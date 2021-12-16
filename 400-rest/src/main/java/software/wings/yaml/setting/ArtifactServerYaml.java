@@ -1,6 +1,6 @@
 package software.wings.yaml.setting;
 
-import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
+import static software.wings.beans.CGConstants.ENCRYPTED_VALUE_STR;
 
 import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;

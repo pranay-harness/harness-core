@@ -1,5 +1,6 @@
 package io.harness.delegate.cf;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.cf.PcfCommandTaskBaseHelper.constructActiveAppName;
 import static io.harness.delegate.cf.PcfCommandTaskBaseHelper.constructInActiveAppName;
@@ -8,6 +9,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.logging.LogLevel.WARN;
 import static io.harness.pcf.CfCommandUnitConstants.Downsize;
 import static io.harness.pcf.CfCommandUnitConstants.Upsize;
 import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
@@ -129,7 +131,8 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
 
       executionLogCallback = logStreamingTaskClient.obtainLogCallback(Downsize);
       pcfCommandTaskBaseHelper.downSizeListOfInstances(executionLogCallback, cfServiceDataUpdated, cfRequestConfig,
-          downSizeList, commandRollbackRequest, autoscalarRequestData);
+          updateNewAppName(cfRequestConfig, commandRollbackRequest, downSizeList), commandRollbackRequest,
+          autoscalarRequestData);
       unmapRoutesFromNewAppAfterDownsize(executionLogCallback, commandRollbackRequest, cfRequestConfig);
 
       cfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
@@ -202,11 +205,40 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
   private void deleteNewApp(CfRequestConfig cfRequestConfig, CfCommandRollbackRequest commandRollbackRequest,
       LogCallback logCallback) throws PivotalClientApiException {
     // app downsized - to be deleted
+    String cfAppNamePrefix = commandRollbackRequest.getCfAppNamePrefix();
     CfAppSetupTimeDetails newApp = commandRollbackRequest.getNewApplicationDetails();
+    String newAppGuid = newApp.getApplicationGuid();
+    String newAppName = newApp.getApplicationName();
+    List<String> newApps = pcfCommandTaskBaseHelper.getAppNameBasedOnGuid(cfRequestConfig, cfAppNamePrefix, newAppGuid);
 
-    cfRequestConfig.setApplicationName(newApp.getApplicationName());
-    logCallback.saveExecutionLog("Deleting application " + encodeColor(newApp.getApplicationName()));
-    pcfDeploymentManager.deleteApplication(cfRequestConfig);
+    if (newApps.isEmpty()) {
+      logCallback.saveExecutionLog(
+          String.format("No new app found to delete with id - [%s] and name - [%s]", newAppGuid, newAppName));
+    } else if (newApps.size() == 1) {
+      String newAppToDelete = newApps.get(0);
+      cfRequestConfig.setApplicationName(newAppToDelete);
+      logCallback.saveExecutionLog("Deleting application " + encodeColor(newAppToDelete));
+      pcfDeploymentManager.deleteApplication(cfRequestConfig);
+    } else {
+      String newAppToDelete = newApps.get(0);
+      String message = String.format(
+          "Found [%d] applications with with id - [%s] and name - [%s]. Skipping new app deletion. Kindly delete the invalid app manually",
+          newApps.size(), newAppGuid, newAppToDelete);
+      logCallback.saveExecutionLog(message, WARN);
+    }
+  }
+
+  private List<CfServiceData> updateNewAppName(CfRequestConfig cfRequestConfig,
+      CfCommandRollbackRequest commandRollbackRequest, List<CfServiceData> downSizeList)
+      throws PivotalClientApiException {
+    String cfAppNamePrefix = commandRollbackRequest.getCfAppNamePrefix();
+
+    for (CfServiceData data : downSizeList) {
+      List<String> apps =
+          pcfCommandTaskBaseHelper.getAppNameBasedOnGuid(cfRequestConfig, cfAppNamePrefix, data.getId());
+      data.setName(isEmpty(apps) ? data.getName() : apps.get(0));
+    }
+    return downSizeList;
   }
 
   private boolean isRollbackCompleted(CfCommandRollbackRequest commandRollbackRequest, CfRequestConfig cfRequestConfig)
