@@ -10,6 +10,7 @@ package io.harness.ng.core.invites.mapper;
 import static io.harness.NGConstants.DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.NGConstants.DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.NGConstants.DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -90,6 +91,13 @@ public class RoleBindingMapper {
 
   public static String getDefaultResourceGroupIdentifier(Scope scope) {
     return getDefaultResourceGroupIdentifier(scope.getOrgIdentifier(), scope.getProjectIdentifier());
+  }
+
+  public static String getDefaultResourceGroupIdentifierForAdmins(Scope scope) {
+    if (isNotEmpty(scope.getProjectIdentifier())) {
+      return DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+    }
+    return DEFAULT_RESOURCE_GROUP_IDENTIFIER;
   }
 
   public String getDefaultResourceGroupName(String orgIdentifier, String projectIdentifier) {

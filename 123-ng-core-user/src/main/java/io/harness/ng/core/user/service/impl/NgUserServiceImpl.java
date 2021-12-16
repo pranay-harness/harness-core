@@ -113,7 +113,6 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -491,15 +490,17 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public void addServiceAccountToScope(
-      String serviceAccountId, Scope scope, String roleIdentifier, UserMembershipUpdateSource source) {
+      String serviceAccountId, Scope scope, RoleBinding roleBinding, UserMembershipUpdateSource source) {
     List<RoleAssignmentDTO> roleAssignmentDTOs = new ArrayList<>(1);
-    if (!StringUtils.isBlank(roleIdentifier)) {
+    if (roleBinding != null) {
       RoleAssignmentDTO roleAssignmentDTO =
           RoleAssignmentDTO.builder()
-              .roleIdentifier(roleIdentifier)
+              .roleIdentifier(roleBinding.getRoleIdentifier())
               .disabled(false)
               .principal(PrincipalDTO.builder().type(SERVICE_ACCOUNT).identifier(serviceAccountId).build())
-              .resourceGroupIdentifier(getDefaultResourceGroupIdentifier(scope))
+              .resourceGroupIdentifier(isNotEmpty(roleBinding.getResourceGroupIdentifier())
+                      ? roleBinding.getResourceGroupIdentifier()
+                      : getDefaultResourceGroupIdentifier(scope))
               .build();
       roleAssignmentDTOs.add(roleAssignmentDTO);
     }

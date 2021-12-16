@@ -8,7 +8,7 @@
 package io.harness.ng.accesscontrol.migrations.services;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ng.core.invites.mapper.RoleBindingMapper.getDefaultResourceGroupIdentifier;
+import static io.harness.ng.core.invites.mapper.RoleBindingMapper.getDefaultResourceGroupIdentifierForAdmins;
 
 import static java.util.Collections.emptyList;
 
@@ -242,7 +242,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
 
     log.info("Created {} NON-MANAGED role assignments from UserMembership for scope: {}",
         createRoleAssignments(scope, false,
-            buildRoleAssignments(users, getManagedAdminRole(scope), getDefaultResourceGroupIdentifier(scope))),
+            buildRoleAssignments(users, getManagedAdminRole(scope), getDefaultResourceGroupIdentifierForAdmins(scope))),
         scope);
   }
 
@@ -259,7 +259,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     log.info("Created {} NON-MANAGED role assignments from CG Users for scope: {}",
         createRoleAssignments(scope, false,
             buildRoleAssignments(
-                currentGenUsers, getManagedAdminRole(scope), getDefaultResourceGroupIdentifier(scope))),
+                currentGenUsers, getManagedAdminRole(scope), getDefaultResourceGroupIdentifierForAdmins(scope))),
         scope);
   }
 

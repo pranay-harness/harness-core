@@ -9,6 +9,7 @@ package io.harness.ng.core.impl;
 
 import static io.harness.NGCommonEntityConstants.MONGODB_ID;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -219,7 +220,11 @@ public class ProjectServiceImpl implements ProjectService {
                 .orgIdentifier(scope.getOrgIdentifier())
                 .projectIdentifier(scope.getProjectIdentifier())
                 .build(),
-            singletonList(RoleBinding.builder().roleIdentifier(PROJECT_ADMIN_ROLE).build()), emptyList(), SYSTEM);
+            singletonList(RoleBinding.builder()
+                              .roleIdentifier(PROJECT_ADMIN_ROLE)
+                              .resourceGroupIdentifier(DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER)
+                              .build()),
+            emptyList(), SYSTEM);
         break;
       case SERVICE_ACCOUNT:
         ngUserService.addServiceAccountToScope(principalId,
@@ -228,7 +233,11 @@ public class ProjectServiceImpl implements ProjectService {
                 .orgIdentifier(scope.getOrgIdentifier())
                 .projectIdentifier(scope.getProjectIdentifier())
                 .build(),
-            PROJECT_ADMIN_ROLE, SYSTEM);
+            RoleBinding.builder()
+                .roleIdentifier(PROJECT_ADMIN_ROLE)
+                .resourceGroupIdentifier(DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER)
+                .build(),
+            SYSTEM);
         break;
       case API_KEY:
       case SERVICE: {
