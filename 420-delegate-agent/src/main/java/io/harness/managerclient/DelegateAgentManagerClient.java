@@ -140,8 +140,8 @@ public interface DelegateAgentManagerClient {
 
   @KryoResponse
   @PUT("agent/delegates/{delegateId}/tasks/{taskId}/acquire")
-  Call<DelegateTaskPackage> acquireTask(
-      @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
+  Call<DelegateTaskPackage> acquireTask(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
+      @Query("accountId") String accountId, @Query("delegateInstanceId") String delegateInstanceId);
 
   @POST("agent/delegates/heartbeat-with-polling")
   Call<RestResponse<DelegateHeartbeatResponse>> delegateHeartbeat(
@@ -154,5 +154,6 @@ public interface DelegateAgentManagerClient {
   @KryoResponse
   @POST("agent/delegates/{delegateId}/tasks/{taskId}/report")
   Call<DelegateTaskPackage> reportConnectionResults(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
-      @Query("accountId") String accountId, @Body List<DelegateConnectionResultDetail> results);
+      @Query("accountId") String accountId, @Query("delegateInstanceId") String delegateInstanceId,
+      @Body List<DelegateConnectionResultDetail> results);
 }

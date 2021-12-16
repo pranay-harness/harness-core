@@ -140,6 +140,7 @@ public class DelegateTask
   private Set<String> validationCompleteDelegateIds;
 
   private String delegateId;
+  private String delegateInstanceId;
   private String preAssignedDelegateId;
   private Set<String> alreadyTriedDelegates;
 
