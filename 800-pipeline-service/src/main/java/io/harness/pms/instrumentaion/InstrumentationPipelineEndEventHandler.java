@@ -21,8 +21,6 @@ import io.harness.telemetry.Category;
 import io.harness.telemetry.TelemetryOption;
 import io.harness.telemetry.TelemetryReporter;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.HashMap;
