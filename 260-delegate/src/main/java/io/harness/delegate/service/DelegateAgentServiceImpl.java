@@ -124,6 +124,7 @@ import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
+import io.harness.event.client.impl.tailer.ChronicleEventTailer;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
@@ -353,6 +354,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject DelegateTaskFactory delegateTaskFactory;
   @Inject(optional = true) @Nullable private DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   @Inject private KryoSerializer kryoSerializer;
+  @Nullable @Inject(optional = true) private ChronicleEventTailer chronicleEventTailer;
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
 
@@ -596,6 +598,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         startKeepAlivePacket(builder, socket);
       }
 
+      startChroniqleQueueMonitor();
       startTaskPolling();
       startHeartbeatWhenPollingEnabled(builder);
       startKeepAliveRequestWhenPollingEnabled(builder);
@@ -1344,6 +1347,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
     if (perpetualTaskWorker != null) {
       perpetualTaskWorker.start();
+    }
+  }
+
+  private void startChroniqleQueueMonitor() {
+    if (chronicleEventTailer != null) {
+      chronicleEventTailer.startAsync().awaitRunning();
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> chronicleEventTailer.stopAsync().awaitTerminated()));
     }
   }
 
