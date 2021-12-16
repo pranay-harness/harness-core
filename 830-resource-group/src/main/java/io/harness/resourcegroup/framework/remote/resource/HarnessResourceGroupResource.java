@@ -36,6 +36,7 @@ import io.harness.beans.Scope;
 import io.harness.beans.ScopeLevel;
 import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
 import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -43,6 +44,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.remote.dto.ManagedFilter;
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupFilterDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
@@ -225,6 +227,7 @@ public class HarnessResourceGroupResource {
         Resource.of(RESOURCE_GROUP, null), EDIT_RESOURCEGROUP_PERMISSION);
     resourceGroupRequest.getResourceGroup().setAllowedScopeLevels(
         Sets.newHashSet(ScopeLevel.of(accountIdentifier, orgIdentifier, projectIdentifier).toString().toLowerCase()));
+    verifySupportedResourceSelectorsAreUsed(resourceGroupRequest);
     ResourceGroupResponse resourceGroupResponse =
         resourceGroupService.create(resourceGroupRequest.getResourceGroup(), false);
     return ResponseDTO.newResponse(resourceGroupResponse);
@@ -253,6 +256,7 @@ public class HarnessResourceGroupResource {
         Resource.of(RESOURCE_GROUP, identifier), EDIT_RESOURCEGROUP_PERMISSION);
     resourceGroupRequest.getResourceGroup().setAllowedScopeLevels(
         Sets.newHashSet(ScopeLevel.of(accountIdentifier, orgIdentifier, projectIdentifier).toString().toLowerCase()));
+    verifySupportedResourceSelectorsAreUsed(resourceGroupRequest);
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
         resourceGroupService.update(resourceGroupRequest.getResourceGroup(), true, false);
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
@@ -280,5 +284,15 @@ public class HarnessResourceGroupResource {
         Resource.of(RESOURCE_GROUP, identifier), DELETE_RESOURCEGROUP_PERMISSION);
     return ResponseDTO.newResponse(
         resourceGroupService.delete(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier));
+  }
+
+  private void verifySupportedResourceSelectorsAreUsed(ResourceGroupRequest resourceGroupRequest) {
+    if (resourceGroupRequest == null || resourceGroupRequest.getResourceGroup() == null) {
+      return;
+    }
+    ResourceGroupDTO resourceGroupDTO = resourceGroupRequest.getResourceGroup();
+    if (resourceGroupDTO.isFullScopeSelected()) {
+      throw new InvalidRequestException("Full scope selected cannot be provided for custom resource groups.");
+    }
   }
 }
