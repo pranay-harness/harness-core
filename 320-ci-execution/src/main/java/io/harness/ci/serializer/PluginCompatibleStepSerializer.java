@@ -6,6 +6,7 @@ import static io.harness.common.CIExecutionConstants.PLUGIN_ARTIFACT_FILE_VALUE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoUtils;
+import io.harness.beans.sweepingoutputs.StageInfraDetails.Type;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.exception.ngexception.CIStageExecutionException;
@@ -41,13 +42,13 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
 
     StepContext stepContext = StepContext.newBuilder().setExecutionTimeoutSecs(timeout).build();
     Map<String, String> envVarMap =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(pluginCompatibleStep, identifier, timeout);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(pluginCompatibleStep, identifier, timeout, Type.K8);
     PluginStep pluginStep =
         PluginStep.newBuilder()
             .setContainerPort(port)
-            .setImage(CIStepInfoUtils.getPluginCustomStepImage(pluginCompatibleStep, ciExecutionServiceConfig))
+            .setImage(CIStepInfoUtils.getPluginCustomStepImage(pluginCompatibleStep, ciExecutionServiceConfig, Type.K8))
             .addAllEntrypoint(
-                CIStepInfoUtils.getPluginCustomStepEntrypoint(pluginCompatibleStep, ciExecutionServiceConfig))
+                CIStepInfoUtils.getK8PluginCustomStepEntrypoint(pluginCompatibleStep, ciExecutionServiceConfig))
             .setContext(stepContext)
             .putAllEnvironment(envVarMap)
             .setArtifactFilePath(PLUGIN_ARTIFACT_FILE_VALUE)

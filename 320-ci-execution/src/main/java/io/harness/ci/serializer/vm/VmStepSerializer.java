@@ -19,6 +19,7 @@ import java.util.Set;
 @Singleton
 public class VmStepSerializer {
   @Inject VmPluginCompatibleStepSerializer vmPluginCompatibleStepSerializer;
+  @Inject VmPluginStepSerializer vmPluginStepSerializer;
 
   public Set<String> getStepSecrets(VmStepInfo vmStepInfo, Ambiance ambiance) {
     CIVmSecretEvaluator ciVmSecretEvaluator = CIVmSecretEvaluator.builder().build();
@@ -36,7 +37,7 @@ public class VmStepSerializer {
         return VmRunTestStepSerializer.serialize(
             (RunTestsStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName);
       case PLUGIN:
-        return VmPluginStepSerializer.serialize((PluginStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName);
+        return vmPluginStepSerializer.serialize((PluginStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName);
       case GCR:
       case DOCKER:
       case ECR:

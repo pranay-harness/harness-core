@@ -110,6 +110,7 @@ ciExecutionServiceConfig:
   liteEngineImage: harness/ci-lite-engine:release-30
   isLocal: false
   stepConfig:
+    # The below config is for K8 steps
     gitCloneConfig:
       image: harness/drone-git:v1.0.4
       entrypoint:
@@ -146,6 +147,17 @@ ciExecutionServiceConfig:
       image: plugins/cache:1.3.0
       entrypoint:
         - /bin/drone-cache
+
+    vmImageConfig:
+      gitClone: harness/drone-git:latest
+      buildAndPushDockerRegistry: plugins/docker:latest
+      buildAndPushECR: plugins/ecr:latest
+      buildAndPushGCR: plugins/gcr:latest
+      gcsUpload: plugins/gcs:1.1.1-linux-amd64
+      s3Upload: plugins/s3:1.0.0-linux-amd64
+      artifactoryUpload: plugins/artifactory:1.0.2
+      cacheGCS: plugins/cache:1.3.0
+      cacheS3: plugins/cache:1.3.0
 
 pmsSdkExecutionPoolConfig:
   corePoolSize: ${PMS_SDK_EXECUTION_POOL_CORE_SIZE:-50}
