@@ -2,6 +2,7 @@ package io.harness.connector;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.ConnectorConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.gitsync.sdk.EntityValidityDetails;
@@ -24,14 +25,14 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @ApiModel("ConnectorResponse")
 @OwnedBy(DX)
-@Schema(name = "ConnectorResponse", description = "Connetor Resource along with metadata")
+@Schema(name = "ConnectorResponse", description = "This has the Connector details along with its metadata.")
 public class ConnectorResponseDTO {
   ConnectorInfoDTO connector;
-  Long createdAt;
-  Long lastModifiedAt;
+  @Schema(description = ConnectorConstants.CREATED_AT) Long createdAt;
+  @Schema(description = ConnectorConstants.LAST_MODIFIED_AT) Long lastModifiedAt;
   ConnectorConnectivityDetails status;
   ConnectorActivityDetails activityDetails;
-  boolean harnessManaged;
+  @Schema(description = ConnectorConstants.HARNESS_MANAGED) boolean harnessManaged;
   EntityGitDetails gitDetails;
   EntityValidityDetails entityValidityDetails;
 }
