@@ -3,6 +3,7 @@ package software.wings.sm.states.k8s;
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.OPTIMIZED_GIT_FETCH_FILES;
+import static io.harness.beans.FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -1445,6 +1446,32 @@ public class AbstractK8SStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testExecuteWrapperWithManifestKustomize() {
+    K8sStateExecutor k8sStateExecutor = mock(K8sStateExecutor.class);
+    K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    k8sStateExecutionData.setValuesFiles(new HashMap<>());
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    appManifestMap.put(K8sValuesLocation.Service,
+            ApplicationManifest.builder().storeType(Remote).kind(AppManifestKind.K8S_MANIFEST).build());
+    when(applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.KUSTOMIZE_PATCHES))
+            .thenReturn(appManifestMap);
+    when(openShiftManagerService.isOpenShiftManifestConfig(context)).thenReturn(false);
+    when(applicationManifestUtils.isValuesInHelmChartRepo(context)).thenReturn(false);
+    when(applicationManifestUtils.isKustomizeSource(context)).thenReturn(true);
+    when(featureFlagService.isEnabled(VARIABLE_SUPPORT_FOR_KUSTOMIZE,context.getAccountId())).thenReturn(true);
+    when(activityService.save(any(Activity.class))).thenReturn(Activity.builder().uuid(ACTIVITY_ID).build());
+    when(applicationManifestUtils.createGitFetchFilesTaskParams(context, application, appManifestMap))
+            .thenReturn(GitFetchFilesTaskParams.builder().build());
+    ExecutionResponse executionResponse =
+            abstractK8SState.executeWrapperWithManifest(k8sStateExecutor, context, 10 * 60 * 1000L);
+    assertThat(((K8sStateExecutionData) executionResponse.getStateExecutionData()).getCurrentTaskType())
+            .isEqualTo(TaskType.GIT_COMMAND);
+  }
+
+    @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecuteWrapperWithManifest() {

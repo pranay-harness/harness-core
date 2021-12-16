@@ -14,6 +14,7 @@ import static software.wings.beans.yaml.YamlConstants.AZURE_CONN_STRINGS_OVERRID
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.HELM_CHART_OVERRIDE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX;
+import static software.wings.beans.yaml.YamlConstants.KUSTOMIZE_PATCHES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -237,6 +238,8 @@ public class YamlHelper {
       prefixExpression = YamlType.APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE.getPrefixExpression();
     } else if (yamlFilePath.contains(OC_PARAMS_FOLDER)) {
       prefixExpression = YamlType.APPLICATION_MANIFEST_OC_PARAMS_ENV_SERVICE_OVERRIDE.getPrefixExpression();
+    }else if (yamlFilePath.contains(KUSTOMIZE_PATCHES_FOLDER)) {
+      prefixExpression = YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_SERVICE_OVERRIDE.getPrefixExpression();
     } else if (yamlFilePath.contains(AZURE_APP_SETTINGS_OVERRIDES_FOLDER)) {
       prefixExpression = YamlType.APPLICATION_MANIFEST_APP_SETTINGS_ENV_SERVICE_OVERRIDE.getPrefixExpression();
     } else if (yamlFilePath.contains(AZURE_CONN_STRINGS_OVERRIDES_FOLDER)) {
@@ -270,6 +273,14 @@ public class YamlHelper {
         YamlType.APPLICATION_MANIFEST_OC_PARAMS_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
     if (isNotBlank(kind) || isNotBlank(kind2)) {
       return AppManifestKind.OC_PARAMS;
+    }
+
+    kind = extractParentEntityName(
+            YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    kind2 = extractParentEntityName(
+            YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    if (isNotBlank(kind) || isNotBlank(kind2)) {
+      return AppManifestKind.KUSTOMIZE_PATCHES;
     }
 
     kind = extractParentEntityName(
