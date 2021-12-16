@@ -3,9 +3,7 @@ package io.harness.pms.execution.utils;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 
 import com.google.common.collect.Sets;
-import java.util.List;
 import java.util.Set;
-import jersey.repackaged.com.google.common.collect.Lists;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
