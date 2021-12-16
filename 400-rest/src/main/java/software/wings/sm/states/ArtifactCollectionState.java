@@ -35,10 +35,14 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.AutoLogContext.OverrideBehavior;
 import io.harness.tasks.ResponseData;
 
+import software.wings.api.AppManifestCollectionExecutionData;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.beans.BuildExecutionSummary;
+import software.wings.beans.CollectionEntityType;
 import software.wings.beans.EntityType;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
@@ -47,10 +51,12 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.ArtifactStreamHelper;
 import software.wings.service.impl.WorkflowExecutionLogContext;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -79,6 +85,8 @@ public class ArtifactCollectionState extends State {
   @Attributes(title = "Artifact Variable Name") @Getter @Setter private String artifactVariableName;
 
   @Attributes(title = "Artifact Source") @Getter @Setter private String artifactStreamId;
+  @Attributes(title = "Source Type") @Getter @Setter private CollectionEntityType sourceType;
+  @Attributes(title = "Application Manifest") @Getter @Setter private String appManifestId;
 
   @Attributes(title = "Regex") @Getter @Setter private boolean regex;
   @Attributes(title = "Build / Tag") @Getter @Setter private String buildNo;
@@ -86,7 +94,9 @@ public class ArtifactCollectionState extends State {
   @SchemaIgnore private Map<String, Object> runtimeValues;
 
   @Inject private transient ArtifactStreamService artifactStreamService;
+  @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient ArtifactService artifactService;
+  @Inject private transient HelmChartService helmChartService;
   @Inject private transient WorkflowExecutionService workflowExecutionService;
   @Inject private transient DelayEventHelper delayEventHelper;
   @Inject private transient FeatureFlagService featureFlagService;
@@ -115,7 +125,7 @@ public class ArtifactCollectionState extends State {
     }
   }
 
-  private ExecutionResponse executeInternal(ExecutionContext context) {
+  private ExecutionResponse executeArtifact(ExecutionContext context) {
     if (isNotEmpty(getTemplateExpressions())) {
       resolveArtifactStreamId(context);
     }
@@ -224,6 +234,75 @@ public class ArtifactCollectionState extends State {
         .build();
   }
 
+  private ExecutionResponse executeManifest(ExecutionContext context) {
+    if (isNotEmpty(getTemplateExpressions())) {
+      resolveAppManifestId(context);
+    }
+    String appId = context.getAppId();
+    ApplicationManifest applicationManifest = applicationManifestService.getById(appId, appManifestId);
+    if (applicationManifest == null) {
+      log.info("Application manifest {} might have been deleted", appManifestId);
+      return ExecutionResponse.builder()
+          .executionStatus(ExecutionStatus.FAILED)
+          .errorMessage(
+              "Application Manifest might have been deleted. Please update with the right application manifest source.")
+          .build();
+    }
+    String evaluatedBuildNo;
+    HelmChart lastCollectedHelmChart;
+    evaluatedBuildNo = getEvaluatedBuildNo(context);
+    lastCollectedHelmChart = fetchCollectedAppManifest(applicationManifest, evaluatedBuildNo);
+
+    if (lastCollectedHelmChart != null) {
+      AppManifestCollectionExecutionData appManifestCollectionData =
+          AppManifestCollectionExecutionData.builder().appManifestId(appManifestId).build();
+      if (getTimeoutMillis() != null) {
+        appManifestCollectionData.setTimeout(valueOf(getTimeoutMillis()));
+      }
+      appManifestCollectionData.setVersion(lastCollectedHelmChart.getVersion());
+      appManifestCollectionData.setBuildNo(lastCollectedHelmChart.getVersion());
+      appManifestCollectionData.setMetadata(lastCollectedHelmChart.getMetadata());
+      appManifestCollectionData.setChartId(lastCollectedHelmChart.getUuid());
+      appManifestCollectionData.setAppManifestName(applicationManifest.getName());
+      if (applicationManifest.getHelmChartConfig() != null) {
+        appManifestCollectionData.setChartName(applicationManifest.getHelmChartConfig().getChartName());
+      }
+
+      addBuildExecutionSummary(context, appManifestCollectionData, applicationManifest);
+      return ExecutionResponse.builder()
+          .executionStatus(ExecutionStatus.SUCCESS)
+          .stateExecutionData(appManifestCollectionData)
+          .errorMessage("Collected artifact [" + lastCollectedHelmChart.getVersion() + "] for manifest source ["
+              + applicationManifest.getName() + "]")
+          .build();
+    }
+
+    AppManifestCollectionExecutionData appManifestCollectionData =
+        AppManifestCollectionExecutionData.builder()
+            .timeout(getTimeoutMillis() != null ? valueOf(getTimeoutMillis()) : null)
+            .appManifestId(appManifestId)
+            .buildNo(evaluatedBuildNo)
+            .message(String.format("Waiting for [%s] to be collected from [%s] application manifest",
+                evaluatedBuildNo == null ? "latest manifest" : evaluatedBuildNo, applicationManifest.getName()))
+            .build();
+
+    String resumeId = delayEventHelper.delay(60, Collections.emptyMap());
+
+    return ExecutionResponse.builder()
+        .async(true)
+        .correlationIds(singletonList(resumeId))
+        .stateExecutionData(appManifestCollectionData)
+        .build();
+  }
+
+  private ExecutionResponse executeInternal(ExecutionContext context) {
+    if (CollectionEntityType.MANIFEST.equals(sourceType)) {
+      return executeManifest(context);
+    } else {
+      return executeArtifact(context);
+    }
+  }
+
   private void resolveArtifactStreamId(ExecutionContext context) {
     TemplateExpression artifactStreamExp = templateExpressionProcessor.getTemplateExpression(
         getTemplateExpressions(), ArtifactCollectionStateKeys.artifactStreamId);
@@ -232,8 +311,15 @@ public class ArtifactCollectionState extends State {
     }
   }
 
-  @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  private void resolveAppManifestId(ExecutionContext context) {
+    TemplateExpression templateExpression = templateExpressionProcessor.getTemplateExpression(
+        getTemplateExpressions(), ArtifactCollectionStateKeys.appManifestId);
+    if (templateExpression != null) {
+      appManifestId = templateExpressionProcessor.resolveTemplateExpression(context, templateExpression);
+    }
+  }
+
+  private ExecutionResponse handleAsyncResponseArtifact(ExecutionContext context, Map<String, ResponseData> response) {
     if (isNotEmpty(getTemplateExpressions())) {
       resolveArtifactStreamId(context);
     }
@@ -279,6 +365,64 @@ public class ArtifactCollectionState extends State {
         .build();
   }
 
+  private ExecutionResponse handleAsyncResponseManifest(ExecutionContext context, Map<String, ResponseData> response) {
+    if (isNotEmpty(getTemplateExpressions())) {
+      resolveAppManifestId(context);
+    }
+    ApplicationManifest applicationManifest = applicationManifestService.getById(context.getAppId(), appManifestId);
+    notNullCheck("Application manifest was deleted", applicationManifest);
+
+    String evaluatedBuildNo = getEvaluatedBuildNo(context);
+
+    HelmChart lastCollectedChart = fetchCollectedAppManifest(applicationManifest, evaluatedBuildNo);
+
+    AppManifestCollectionExecutionData manifestCollectionExecutionData =
+        AppManifestCollectionExecutionData.builder().appManifestId(appManifestId).build();
+
+    if (getTimeoutMillis() != null) {
+      manifestCollectionExecutionData.setTimeout(valueOf(getTimeoutMillis()));
+    }
+    manifestCollectionExecutionData.setAppManifestName(applicationManifest.getName());
+    if (applicationManifest.getHelmChartConfig() != null) {
+      manifestCollectionExecutionData.setChartName(applicationManifest.getHelmChartConfig().getChartName());
+    }
+
+    manifestCollectionExecutionData.setBuildNo(evaluatedBuildNo);
+    manifestCollectionExecutionData.setAppManifestName(applicationManifest.getName());
+
+    if (lastCollectedChart == null) {
+      manifestCollectionExecutionData.setMessage(String.format("Waiting for [%s] to be collected from [%s]",
+          evaluatedBuildNo == null ? "latest chart" : evaluatedBuildNo, applicationManifest.getName()));
+
+      String resumeId = delayEventHelper.delay(DELAY_TIME_IN_SEC, Collections.emptyMap());
+
+      return ExecutionResponse.builder()
+          .async(true)
+          .correlationIds(asList(resumeId))
+          .stateExecutionData(manifestCollectionExecutionData)
+          .build();
+    }
+    manifestCollectionExecutionData.setVersion(lastCollectedChart.getVersion());
+    manifestCollectionExecutionData.setChartId(lastCollectedChart.getUuid());
+    manifestCollectionExecutionData.setBuildNo(lastCollectedChart.getVersion());
+    manifestCollectionExecutionData.setMetadata(lastCollectedChart.getMetadata());
+
+    addBuildExecutionSummary(context, manifestCollectionExecutionData, applicationManifest);
+    return ExecutionResponse.builder()
+        .stateExecutionData(manifestCollectionExecutionData)
+        .executionStatus(SUCCESS)
+        .build();
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    if (CollectionEntityType.MANIFEST.equals(sourceType)) {
+      return handleAsyncResponseManifest(context, response);
+    } else {
+      return handleAsyncResponseArtifact(context, response);
+    }
+  }
+
   private String getEvaluatedBuildNo(ExecutionContext context) {
     String evaluatedBuildNo;
     if (isBlank(buildNo)) {
@@ -316,6 +460,35 @@ public class ArtifactCollectionState extends State {
     workflowExecutionService.refreshBuildExecutionSummary(context.getWorkflowExecutionId(), buildExecutionSummary);
   }
 
+  private void addBuildExecutionSummary(ExecutionContext context,
+      AppManifestCollectionExecutionData appManifestCollectionExecutionData, ApplicationManifest applicationManifest) {
+    Map<String, String> metadata = new HashMap<>();
+    if (isNotEmpty(appManifestCollectionExecutionData.getMetadata())) {
+      metadata.putAll(appManifestCollectionExecutionData.getMetadata());
+    }
+    String buildUrl = metadata.get(ArtifactMetadataKeys.url);
+    // Rove the the following as no need to store in build execution summary
+    metadata.remove(ArtifactMetadataKeys.buildNo);
+    metadata.remove(ArtifactMetadataKeys.url);
+    String chartName = null;
+    if (applicationManifest.getHelmChartConfig() != null) {
+      chartName = applicationManifest.getHelmChartConfig().getChartName();
+    }
+    BuildExecutionSummary buildExecutionSummary =
+        BuildExecutionSummary.builder()
+            .revision(appManifestCollectionExecutionData.getVersion() == null
+                    ? "N/A"
+                    : appManifestCollectionExecutionData.getVersion())
+            .buildUrl(buildUrl)
+            .sourceType(CollectionEntityType.MANIFEST.equals(sourceType) ? CollectionEntityType.MANIFEST.name()
+                                                                         : CollectionEntityType.ARTIFACT.name())
+            .appManifestId(appManifestId)
+            .appManifestSource(applicationManifest.getName())
+            .buildName(chartName)
+            .build();
+    workflowExecutionService.refreshBuildExecutionSummary(context.getWorkflowExecutionId(), buildExecutionSummary);
+  }
+
   @Override
   public void handleAbortEvent(ExecutionContext context) {
     if (context == null || context.getStateExecutionData() == null) {
@@ -332,18 +505,21 @@ public class ArtifactCollectionState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (isBlank(artifactStreamId) && artifactStreamNotTemplatized()) {
-      invalidFields.put("artifactSource", "Artifact Source should not be empty");
+    if (CollectionEntityType.MANIFEST.equals(sourceType)) {
+      if (isBlank(appManifestId) && fieldTemplatized(ArtifactCollectionStateKeys.appManifestId)) {
+        invalidFields.put("appManifest", "Application manifest should not be empty");
+      }
+    } else {
+      if (isBlank(artifactStreamId) && fieldTemplatized(ArtifactCollectionStateKeys.artifactStreamId)) {
+        invalidFields.put("artifactSource", "Artifact Source should not be empty");
+      }
     }
     return invalidFields;
   }
 
-  private boolean artifactStreamNotTemplatized() {
+  private boolean fieldTemplatized(String field) {
     return isEmpty(getTemplateExpressions())
-        || getTemplateExpressions()
-               .stream()
-               .map(TemplateExpression::getFieldName)
-               .noneMatch(ArtifactCollectionStateKeys.artifactStreamId::equals);
+        || getTemplateExpressions().stream().map(TemplateExpression::getFieldName).noneMatch(field::equals);
   }
 
   @Attributes(title = "Timeout (ms)")
@@ -363,6 +539,20 @@ public class ArtifactCollectionState extends State {
       artifactCollectionExecutionData.setEntityId(fetchEntityId());
       artifactCollectionExecutionData.setServiceId(fetchServiceId());
       artifactCollectionExecutionData.setArtifactVariableName(fetchArtifactVariableName());
+    }
+  }
+
+  private HelmChart fetchCollectedAppManifest(ApplicationManifest applicationManifest, String buildNo) {
+    String accountId = applicationManifest.getAccountId();
+    String applicationManifestUuid = applicationManifest.getUuid();
+    if (isBlank(buildNo)) {
+      return helmChartService.getLastCollectedManifest(accountId, applicationManifestUuid);
+    } else {
+      if (isRegex()) {
+        return helmChartService.getLastCollectedManifestMatchingRegex(accountId, applicationManifestUuid, buildNo);
+      } else {
+        return helmChartService.getManifestByVersionNumber(accountId, applicationManifestUuid, buildNo);
+      }
     }
   }
 

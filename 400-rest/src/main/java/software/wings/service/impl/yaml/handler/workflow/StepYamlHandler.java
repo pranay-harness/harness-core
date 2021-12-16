@@ -29,12 +29,14 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 
+import software.wings.beans.CollectionEntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.template.Template;
@@ -50,6 +52,7 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -100,6 +103,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private StepYamlBuilderFactory stepYamlBuilderFactory;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   private static final String GCB_OPTIONS = "gcbOptions";
   private static final String GCP_CONFIG_ID = "gcpConfigId";
@@ -166,7 +170,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
 
     generateKnownProperties(outputProperties, changeContext);
 
-    validateArtifactCollectionStep(stepYaml, outputProperties);
+    validateArtifactCollectionStep(appId, stepYaml, outputProperties);
 
     validateOutputEnvironmentVariables(stepYaml, outputProperties);
 
@@ -250,31 +254,61 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     }
   }
 
-  private void validateArtifactCollectionStep(StepYaml stepYaml, Map<String, Object> outputProperties) {
+  private void validateArtifactCollectionStep(String appId, StepYaml stepYaml, Map<String, Object> outputProperties) {
     if (StateType.ARTIFACT_COLLECTION.name().equals(stepYaml.getType()) && isNotEmpty(outputProperties)) {
-      String artifactStreamId = (String) outputProperties.get("artifactStreamId");
-      if (artifactStreamId != null) {
-        ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
-        notNullCheck("Artifact stream is null for the given id:" + artifactStreamId, artifactStream, USER);
-        validateMandatoryFieldsWithParameterizedArtifactStream(outputProperties, artifactStreamId, artifactStream);
+      String sourceType = (String) outputProperties.get("sourceType");
+      if (CollectionEntityType.MANIFEST.name().equals(sourceType)) {
+        validateAppManifest(appId, outputProperties);
       } else {
-        List<Map<String, Object>> templateExpressions =
-            (List<Map<String, Object>>) outputProperties.get("templateExpressions");
-        if (isEmpty(templateExpressions)
-            || templateExpressions.stream().noneMatch(templateExpression
-                -> ArtifactCollectionStateKeys.artifactStreamId.equals(templateExpression.get("fieldName")))) {
-          throw new InvalidRequestException("Artifact source must either have a value or be templatized");
-        }
-        templateExpressions.stream()
-            .filter(templateExpression
-                -> !ManagerExpressionEvaluator.matchesVariablePattern((String) templateExpression.get("expression")))
-            .findAny()
-            .ifPresent(templateExpression -> {
-              throw new InvalidRequestException("Template variable:[" + templateExpression.get("expression")
-                  + "] is not valid, should start with ${ and end with }, can have a-z,A-Z,0-9,-_");
-            });
+        validateArtifactSource(outputProperties);
       }
     }
+  }
+
+  private void validateArtifactSource(Map<String, Object> outputProperties) {
+    String artifactStreamId = (String) outputProperties.get("artifactStreamId");
+    if (artifactStreamId != null) {
+      ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+      notNullCheck("Artifact stream is null for the given id:" + artifactStreamId, artifactStream, USER);
+      validateMandatoryFieldsWithParameterizedArtifactStream(outputProperties, artifactStreamId, artifactStream);
+    } else {
+      List<Map<String, Object>> templateExpressions =
+          (List<Map<String, Object>>) outputProperties.get("templateExpressions");
+      if (isEmpty(templateExpressions)
+          || templateExpressions.stream().noneMatch(templateExpression
+              -> ArtifactCollectionStateKeys.artifactStreamId.equals(templateExpression.get("fieldName")))) {
+        throw new InvalidRequestException("Artifact source must either have a value or be templatized");
+      }
+      validateTemplateExpressions(templateExpressions);
+    }
+  }
+
+  private void validateAppManifest(String appId, Map<String, Object> outputProperties) {
+    String appManifestId = (String) outputProperties.get("appManifestId");
+    if (appManifestId != null) {
+      ApplicationManifest applicationManifest = applicationManifestService.getById(appId, appManifestId);
+      notNullCheck("Application Manifest is null for the given id:" + appManifestId, applicationManifest, USER);
+    } else {
+      List<Map<String, Object>> templateExpressions =
+          (List<Map<String, Object>>) outputProperties.get("templateExpressions");
+      if (isEmpty(templateExpressions)
+          || templateExpressions.stream().noneMatch(templateExpression
+              -> ArtifactCollectionStateKeys.appManifestId.equals(templateExpression.get("fieldName")))) {
+        throw new InvalidRequestException("Application Manifest must either have a value or be templatized");
+      }
+      validateTemplateExpressions(templateExpressions);
+    }
+  }
+
+  private void validateTemplateExpressions(List<Map<String, Object>> templateExpressions) {
+    templateExpressions.stream()
+        .filter(templateExpression
+            -> !ManagerExpressionEvaluator.matchesVariablePattern((String) templateExpression.get("expression")))
+        .findAny()
+        .ifPresent(templateExpression -> {
+          throw new InvalidRequestException("Template variable:[" + templateExpression.get("expression")
+              + "] is not valid, should start with ${ and end with }, can have a-z,A-Z,0-9,-_");
+        });
   }
 
   private void validateMandatoryFieldsWithParameterizedArtifactStream(
@@ -492,7 +526,8 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     if (isEmpty(name)) {
       return;
     }
-
+    Object serviceNameObj;
+    String sourceType;
     switch (name) {
       case "computeProviderName":
         String computeProviderName = (String) objectValue;
@@ -513,8 +548,12 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         properties.put("infraMappingId", infraMapping.getUuid());
         return;
       case "artifactStreamName":
+        sourceType = inputProperties.get("sourceType") == null ? null : inputProperties.get("sourceType").toString();
+        if (CollectionEntityType.MANIFEST.name().equals(sourceType)) {
+          return;
+        }
         String artifactStreamName = (String) objectValue;
-        Object serviceNameObj = inputProperties.get("serviceName");
+        serviceNameObj = inputProperties.get("serviceName");
         notNullCheck("Service null in the properties", serviceNameObj, USER);
         serviceName = (String) serviceNameObj;
         service = serviceResourceService.getServiceByName(appId, serviceName);
@@ -523,6 +562,22 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
             artifactStreamService.getArtifactStreamByName(appId, service.getUuid(), artifactStreamName);
         notNullCheck("Artifact stream is null for the given name:" + artifactStreamName, artifactStream, USER);
         properties.put("artifactStreamId", artifactStream.getUuid());
+        return;
+      case "appManifestName":
+        sourceType = inputProperties.get("sourceType") == null ? null : inputProperties.get("sourceType").toString();
+        if (!CollectionEntityType.MANIFEST.name().equals(sourceType)) {
+          return;
+        }
+        String appManifestName = (String) objectValue;
+        serviceNameObj = inputProperties.get("serviceName");
+        notNullCheck("Service null in the properties", serviceNameObj, USER);
+        serviceName = (String) serviceNameObj;
+        service = serviceResourceService.getServiceByName(appId, serviceName);
+        notNullCheck("Service is null for the given name:" + serviceName, service, USER);
+        ApplicationManifest applicationManifest =
+            applicationManifestService.getAppManifestByName(appId, null, service.getUuid(), appManifestName);
+        notNullCheck("Application Manifest is null for the given name:" + appManifestName, applicationManifest, USER);
+        properties.put("appManifestId", applicationManifest.getUuid());
         return;
       case "provisionerName":
         String provisionerName = (String) objectValue;

@@ -51,6 +51,8 @@ import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
 import software.wings.api.artifact.ServiceArtifactVariableElements;
+import software.wings.api.helm.ServiceHelmElement;
+import software.wings.api.helm.ServiceHelmElements;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.DeploymentExecutionContext;
@@ -61,12 +63,14 @@ import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -87,6 +91,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -139,6 +144,7 @@ public class EnvState extends State implements WorkflowState {
   @Transient @Inject private WorkflowExecutionService executionService;
   @Transient @Inject private ArtifactService artifactService;
   @Transient @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Transient @Inject private ApplicationManifestService applicationManifestService;
   @Transient @Inject private SweepingOutputService sweepingOutputService;
   @Transient @Inject private FeatureFlagService featureFlagService;
   @Transient @Inject private NotificationMessageResolver notificationMessageResolver;
@@ -409,13 +415,18 @@ public class EnvState extends State implements WorkflowState {
     EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) context.getStateExecutionData();
     if (stateExecutionData.getOrchestrationWorkflowType() == OrchestrationWorkflowType.BUILD) {
       if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, context.getAccountId())) {
-        saveArtifactElements(context, stateExecutionData);
+        saveArtifactAndManifestElements(context, stateExecutionData);
       } else {
         saveArtifactVariableElements(context, stateExecutionData);
       }
     }
 
     return executionResponseBuilder.build();
+  }
+
+  private void saveArtifactAndManifestElements(ExecutionContext context, EnvStateExecutionData stateExecutionData) {
+    saveArtifactElements(context, stateExecutionData);
+    saveHelmChartElements(context, stateExecutionData);
   }
 
   private void saveArtifactElements(ExecutionContext context, EnvStateExecutionData stateExecutionData) {
@@ -438,6 +449,35 @@ public class EnvState extends State implements WorkflowState {
         context.prepareSweepingOutputBuilder(Scope.PIPELINE)
             .name(ServiceArtifactElements.SWEEPING_OUTPUT_NAME + context.getStateExecutionInstanceId())
             .value(ServiceArtifactElements.builder().artifactElements(artifactElements).build())
+            .build());
+  }
+
+  private void saveHelmChartElements(ExecutionContext context, EnvStateExecutionData stateExecutionData) {
+    List<HelmChart> charts =
+        executionService.getManifestsCollected(context.getAppId(), stateExecutionData.getWorkflowExecutionId());
+    if (isEmpty(charts)) {
+      return;
+    }
+
+    List<ServiceHelmElement> helmElements = new ArrayList<>();
+    charts.forEach(chart -> {
+      ApplicationManifest manifest =
+          applicationManifestService.getById(context.getAppId(), chart.getApplicationManifestId());
+      String serviceId = null;
+      if (manifest != null) {
+        serviceId = manifest.getServiceId();
+      }
+      helmElements.add(ServiceHelmElement.builder()
+                           .uuid(chart.getUuid())
+                           .name(chart.getDisplayName())
+                           .serviceIds(Collections.singletonList(serviceId))
+                           .build());
+    });
+
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(Scope.PIPELINE)
+            .name(ServiceHelmElements.SWEEPING_OUTPUT_NAME + context.getStateExecutionInstanceId())
+            .value(ServiceHelmElements.builder().helmElements(helmElements).build())
             .build());
   }
 

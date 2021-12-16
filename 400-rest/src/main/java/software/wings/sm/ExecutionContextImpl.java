@@ -81,6 +81,8 @@ import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
 import software.wings.api.artifact.ServiceArtifactVariableElements;
 import software.wings.api.helm.HelmReleaseInfoElement;
+import software.wings.api.helm.ServiceHelmElement;
+import software.wings.api.helm.ServiceHelmElements;
 import software.wings.api.instancedetails.InstanceApiResponse;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
@@ -495,6 +497,12 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
   }
 
+  private List<ServiceHelmElement> getHelmChartElements() {
+    List<ServiceHelmElement> helmElements = getHelmChartElementsFromSweepingOutput();
+    helmElements.addAll(getHelmChartsElementsContext());
+    return helmElements;
+  }
+
   private List<ServiceArtifactElement> getArtifactElements() {
     List<ServiceArtifactElement> artifactElements = getArtifactElementsFromSweepingOutput();
     artifactElements.addAll(getArtifactElementsFromContext());
@@ -510,6 +518,26 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return artifactElementsList.stream()
         .filter(element -> element.getServiceIds() != null && element.getServiceIds().contains(serviceId))
         .findFirst();
+  }
+
+  private List<ServiceHelmElement> getHelmChartElementsFromSweepingOutput() {
+    SweepingOutputInquiry sweepingOutputInquiry =
+        prepareSweepingOutputInquiryBuilder().name(ServiceHelmElements.SWEEPING_OUTPUT_NAME).build();
+    if (sweepingOutputInquiry.getPipelineExecutionId() == null) {
+      return new ArrayList<>();
+    }
+
+    List<ServiceHelmElements> helmElements =
+        sweepingOutputService.findSweepingOutputsWithNamePrefix(sweepingOutputInquiry, Scope.PIPELINE);
+    if (helmElements == null) {
+      return new ArrayList<>();
+    }
+
+    return helmElements.stream()
+        .flatMap(serviceArtifactElements
+            -> serviceArtifactElements.getHelmElements() == null ? Stream.empty()
+                                                                 : serviceArtifactElements.getHelmElements().stream())
+        .collect(toList());
   }
 
   private List<ServiceArtifactElement> getArtifactElementsFromSweepingOutput() {
@@ -531,6 +559,15 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
                 ? Stream.empty()
                 : serviceArtifactElements.getArtifactElements().stream())
         .collect(toList());
+  }
+
+  private List<ServiceHelmElement> getHelmChartsElementsContext() {
+    List<ContextElement> contextElementList = getContextElementList(ContextElementType.HELM_CHART);
+    if (contextElementList == null) {
+      return new ArrayList<>();
+    }
+
+    return contextElementList.stream().map(element -> (ServiceHelmElement) element).collect(toList());
   }
 
   private List<ServiceArtifactElement> getArtifactElementsFromContext() {
@@ -654,7 +691,16 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Override
   public List<HelmChart> getHelmCharts() {
     WorkflowStandardParams workflowStandardParams = fetchWorkflowStandardParamsFromContext();
-    return workflowStandardParams.getHelmCharts();
+
+    List<ServiceHelmElement> helmElements = getHelmChartElements();
+    if (isEmpty(helmElements)) {
+      return workflowStandardParams.getHelmCharts();
+    }
+    List<HelmChart> list = new ArrayList<>();
+    for (ServiceHelmElement helmElement : helmElements) {
+      list.add(helmChartService.get(getAppId(), helmElement.getUuid()));
+    }
+    return list;
   }
 
   @Override

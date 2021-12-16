@@ -122,6 +122,8 @@ import software.wings.api.customdeployment.InstanceFetchStateExecutionData;
 import software.wings.api.ecs.EcsListenerUpdateExecutionSummary;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
+import software.wings.api.helm.ServiceHelmElement;
+import software.wings.api.helm.ServiceHelmElements;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.k8s.K8sApplicationManifestSourceInfo;
@@ -1054,6 +1056,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.AmiServiceTrafficShiftAlbSetupElement", AmiServiceTrafficShiftAlbSetupElement.class);
     w.put("api.AmiStepExecutionSummary", AmiStepExecutionSummary.class);
     w.put("api.ApprovalStateExecutionData", ApprovalStateExecutionData.class);
+    w.put("api.helm.ServiceHelmElement", ServiceHelmElement.class);
+    w.put("api.helm.ServiceHelmElements", ServiceHelmElements.class);
     w.put("api.artifact.ServiceArtifactElement", ServiceArtifactElement.class);
     w.put("api.artifact.ServiceArtifactElements", ServiceArtifactElements.class);
     w.put("api.artifact.ServiceArtifactVariableElement", ServiceArtifactVariableElement.class);

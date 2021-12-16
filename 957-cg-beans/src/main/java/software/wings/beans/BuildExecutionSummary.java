@@ -26,4 +26,8 @@ public class BuildExecutionSummary {
   String buildUrl;
   String buildName;
   String metadata;
+  String version;
+  String appManifestId;
+  String appManifestSource;
+  String sourceType;
 }

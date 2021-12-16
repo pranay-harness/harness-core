@@ -28,6 +28,7 @@ import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
 import software.wings.api.AmiStepExecutionSummary;
+import software.wings.api.AppManifestCollectionExecutionData;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.AwsAmiDeployStateExecutionData;
@@ -120,6 +121,8 @@ import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRunTaskStateExecutionData;
 import software.wings.api.helm.HelmReleaseInfoElement;
+import software.wings.api.helm.ServiceHelmElement;
+import software.wings.api.helm.ServiceHelmElements;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.jira.JiraExecutionData.JiraIssueData;
@@ -1700,5 +1703,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(Type.class, 400131);
     kryo.register(OSType.class, 400132);
     kryo.register(HelmChartCollectionParams.HelmChartCollectionType.class, 400134);
+    kryo.register(ServiceHelmElement.class, 400135);
+    kryo.register(ServiceHelmElements.class, 400136);
+    kryo.register(AppManifestCollectionExecutionData.class, 400137);
   }
 }

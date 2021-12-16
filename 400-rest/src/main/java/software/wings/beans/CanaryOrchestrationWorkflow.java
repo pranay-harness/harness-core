@@ -19,6 +19,7 @@ import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrati
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
 import static software.wings.beans.EntityType.APPDYNAMICS_TIERID;
+import static software.wings.beans.EntityType.APPLICATION_MANIFEST;
 import static software.wings.beans.EntityType.ARTIFACT_STREAM;
 import static software.wings.beans.EntityType.CF_AWS_CONFIG_ID;
 import static software.wings.beans.EntityType.ELK_CONFIGID;
@@ -597,9 +598,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         // Add elk variables
         addElkUserVariables(reorderVariables, entityVariables);
 
-        List<EntityType> entityTypeOrder =
-            Arrays.asList(SUMOLOGIC_CONFIGID, SPLUNK_CONFIGID, SS_SSH_CONNECTION_ATTRIBUTE,
-                SS_WINRM_CONNECTION_ATTRIBUTE, USER_GROUP, GCP_CONFIG, GIT_CONFIG, JENKINS_SERVER, ARTIFACT_STREAM);
+        List<EntityType> entityTypeOrder = Arrays.asList(SUMOLOGIC_CONFIGID, SPLUNK_CONFIGID,
+            SS_SSH_CONNECTION_ATTRIBUTE, SS_WINRM_CONNECTION_ATTRIBUTE, USER_GROUP, GCP_CONFIG, GIT_CONFIG,
+            JENKINS_SERVER, ARTIFACT_STREAM, APPLICATION_MANIFEST);
 
         entityTypeOrder.forEach(entityType -> addVariablesOfType(reorderVariables, entityVariables, entityType));
         if (nonEntityVariables != null) {
