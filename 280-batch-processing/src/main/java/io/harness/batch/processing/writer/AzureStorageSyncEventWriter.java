@@ -12,7 +12,6 @@ import io.harness.batch.processing.BatchProcessingException;
 import io.harness.batch.processing.ccm.AzureStorageSyncRecord;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.service.impl.AzureStorageSyncServiceImpl;
-import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
@@ -106,7 +105,6 @@ public class AzureStorageSyncEventWriter extends EventWriter implements ItemWrit
         ConnectorFilterPropertiesDTO.builder()
             .types(Arrays.asList(ConnectorType.CE_AZURE))
             .ccmConnectorFilter(CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
-            .connectivityStatuses(Arrays.asList(ConnectivityStatus.SUCCESS))
             .build();
     connectorFilterPropertiesDTO.setFilterType(FilterType.CONNECTOR);
     int page = 0;
