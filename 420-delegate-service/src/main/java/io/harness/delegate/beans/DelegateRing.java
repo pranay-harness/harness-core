@@ -15,12 +15,17 @@ import org.mongodb.morphia.annotations.Id;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-@Builder
 @FieldNameConstants(innerTypeName = "DelegateRingKeys")
 @Entity(value = "delegateRing", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateRing implements PersistentEntity {
+  public DelegateRing(String ringName, String delegateImageTag, String upgraderImageTag) {
+    this.ringName = ringName;
+    this.delegateImageTag = delegateImageTag;
+    this.upgraderImageTag = upgraderImageTag;
+  }
+
   @Id @NotEmpty private String ringName;
   @NotEmpty private String delegateImageTag;
   @NotEmpty private String upgraderImageTag;

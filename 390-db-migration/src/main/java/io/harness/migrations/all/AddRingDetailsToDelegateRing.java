@@ -32,10 +32,6 @@ public class AddRingDetailsToDelegateRing implements Migration {
   }
 
   private DelegateRing delegateRing(String ringName) {
-    return DelegateRing.builder()
-        .ringName(ringName)
-        .delegateImageTag(DELEGATE_IMAGE_TAG)
-        .upgraderImageTag(UPGRADER_IMAGE_TAG)
-        .build();
+    return new DelegateRing(ringName, DELEGATE_IMAGE_TAG, UPGRADER_IMAGE_TAG);
   }
 }

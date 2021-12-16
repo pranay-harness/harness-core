@@ -304,7 +304,7 @@ public class AccountServiceImpl implements AccountService {
     account.setCompanyName(account.getCompanyName().trim());
     account.setAccountName(account.getAccountName().trim());
 
-    if (!isEmpty(account.getRingName())) {
+    if (isEmpty(account.getRingName())) {
       account.setRingName(DelegateRingConstants.DEFAULT_RING_NAME);
     }
 
