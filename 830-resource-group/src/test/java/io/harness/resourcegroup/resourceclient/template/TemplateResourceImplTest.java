@@ -7,9 +7,9 @@
 
 package io.harness.resourcegroup.resourceclient.template;
 
-import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_IDENTIFIER;
-import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_TYPE;
-import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_TYPE_INCLUDING_CHILD_SCOPES;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_IDENTIFIER;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_TYPE;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,7 +86,7 @@ public class TemplateResourceImplTest {
         .isEqualTo(EventsFrameworkMetadataConstants.TEMPLATE_ENTITY);
     assertThat(templateResource.getType()).isEqualTo("TEMPLATE");
     assertThat(templateResource.getSelectorKind().get(ScopeLevel.ACCOUNT))
-        .containsExactlyInAnyOrder(RESOURCE_IDENTIFIER, RESOURCE_TYPE, RESOURCE_TYPE_INCLUDING_CHILD_SCOPES);
+        .containsExactlyInAnyOrder(BY_RESOURCE_IDENTIFIER, BY_RESOURCE_TYPE, BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES);
     assertThat(templateResource.getValidScopeLevels())
         .containsExactlyInAnyOrder(ScopeLevel.ACCOUNT, ScopeLevel.ORGANIZATION, ScopeLevel.PROJECT);
   }

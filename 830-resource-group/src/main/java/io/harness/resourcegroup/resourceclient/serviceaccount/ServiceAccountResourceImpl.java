@@ -9,8 +9,8 @@ package io.harness.resourcegroup.resourceclient.serviceaccount;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.remote.client.NGRestUtils.getResponse;
-import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_IDENTIFIER;
-import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_TYPE;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_IDENTIFIER;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_TYPE;
 
 import static java.util.stream.Collectors.toList;
 
@@ -63,7 +63,7 @@ public class ServiceAccountResourceImpl implements Resource {
 
   @Override
   public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
-    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(RESOURCE_IDENTIFIER, RESOURCE_TYPE));
+    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(BY_RESOURCE_IDENTIFIER, BY_RESOURCE_TYPE));
   }
 
   @Override

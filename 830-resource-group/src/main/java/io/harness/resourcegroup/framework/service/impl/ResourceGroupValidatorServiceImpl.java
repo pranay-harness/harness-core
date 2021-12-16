@@ -8,8 +8,8 @@
 package io.harness.resourcegroup.framework.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_IDENTIFIER;
-import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_TYPE;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_IDENTIFIER;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_TYPE;
 
 import io.harness.beans.Scope;
 import io.harness.beans.ScopeLevel;
@@ -88,7 +88,7 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
     return resourceMap.containsKey(resourceType)
         && resourceMap.get(resourceType).getValidScopeLevels().contains(scopeLevel)
         && resourceMap.get(resourceType).getSelectorKind().containsKey(scopeLevel)
-        && resourceMap.get(resourceType).getSelectorKind().get(scopeLevel).contains(RESOURCE_TYPE);
+        && resourceMap.get(resourceType).getSelectorKind().get(scopeLevel).contains(BY_RESOURCE_TYPE);
   }
 
   private boolean sanitizeStaticResourceSelector(Scope scope, StaticResourceSelector resourceSelector) {
@@ -99,7 +99,7 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
     Resource resource = resourceMap.get(resourceType);
     if (resource == null || !resource.getValidScopeLevels().contains(scopeLevel)
         || !resource.getSelectorKind().containsKey(scopeLevel)
-        || !resource.getSelectorKind().get(scopeLevel).contains(RESOURCE_IDENTIFIER)) {
+        || !resource.getSelectorKind().get(scopeLevel).contains(BY_RESOURCE_IDENTIFIER)) {
       resourceSelector.getIdentifiers().clear();
       return true;
     }

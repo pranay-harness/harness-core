@@ -8,9 +8,9 @@
 package io.harness.resourcegroup.resourceclient.dashboard;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_IDENTIFIER;
-import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_TYPE;
-import static io.harness.resourcegroup.beans.ValidatorType.RESOURCE_TYPE_INCLUDING_CHILD_SCOPES;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_IDENTIFIER;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_TYPE;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
@@ -48,8 +48,8 @@ public class DashboardResourceImpl implements Resource {
   @Override
   public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
     return ImmutableMap.of(ScopeLevel.ACCOUNT,
-        EnumSet.of(RESOURCE_IDENTIFIER, RESOURCE_TYPE, RESOURCE_TYPE_INCLUDING_CHILD_SCOPES), ScopeLevel.ORGANIZATION,
-        EnumSet.of(RESOURCE_IDENTIFIER, RESOURCE_TYPE));
+        EnumSet.of(BY_RESOURCE_IDENTIFIER, BY_RESOURCE_TYPE, BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES),
+        ScopeLevel.ORGANIZATION, EnumSet.of(BY_RESOURCE_IDENTIFIER, BY_RESOURCE_TYPE));
   }
 
   @Override
