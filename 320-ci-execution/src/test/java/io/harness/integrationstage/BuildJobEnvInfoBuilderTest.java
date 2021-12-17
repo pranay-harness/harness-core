@@ -18,6 +18,8 @@ import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.ArrayList;
+
 public class BuildJobEnvInfoBuilderTest extends CIExecutionTestBase {
   @Inject BuildJobEnvInfoBuilder buildJobEnvInfoBuilder;
   @Inject VmBuildJobTestHelper vmBuildJobTestHelper;
@@ -45,8 +47,8 @@ public class BuildJobEnvInfoBuilderTest extends CIExecutionTestBase {
   public void getVmBuildJobEnvInfo() {
     StageElementConfig stageElementConfig = vmBuildJobTestHelper.getVmStage("test");
 
-    BuildJobEnvInfo expected = VmBuildJobInfo.builder().workDir(STEP_WORK_DIR).build();
-    BuildJobEnvInfo actual = buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(stageElementConfig, null, null, null);
+    BuildJobEnvInfo expected = VmBuildJobInfo.builder().workDir(STEP_WORK_DIR).connectorRefs(new ArrayList<>()).build();
+    BuildJobEnvInfo actual = buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(stageElementConfig, null, new ArrayList<>(), null);
     assertThat(actual).isEqualTo(expected);
   }
 }
