@@ -3217,9 +3217,7 @@
         {
           "type": "object",
           "required": [
-            "command",
-            "connectorRef",
-            "image"
+            "command"
           ],
           "properties": {
             "command": {
@@ -3308,8 +3306,6 @@
           "required": [
             "args",
             "buildTool",
-            "connectorRef",
-            "image",
             "language"
           ],
           "properties": {
@@ -4767,6 +4763,12 @@
           "properties": {
             "ciExecutionArgs": {
               "$ref": "#/definitions/CIExecutionArgs"
+            },
+            "connectorRefs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "stageVars": {
               "type": "array",
