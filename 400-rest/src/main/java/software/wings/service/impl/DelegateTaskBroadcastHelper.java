@@ -66,7 +66,7 @@ public class DelegateTaskBroadcastHelper {
     Broadcaster broadcaster = broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true);
     long startTime = currentTimeMillis();
     broadcaster.broadcast(delegateTaskBroadcast);
-    log.info("broadcasting task id: {} took: {} ", delegateTask.getDelegateId(), currentTimeMillis() - startTime);
+    log.info("broadcasting task id: {} took: {} ", delegateTaskBroadcast.getTaskId(), currentTimeMillis() - startTime);
   }
 
   public long findNextBroadcastTimeForTask(DelegateTask delegateTask) {
