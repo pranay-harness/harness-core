@@ -259,7 +259,6 @@ import javax.validation.ConstraintViolation;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.MediaType;
 import lombok.Getter;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request.Builder;
 import okhttp3.Response;
@@ -302,7 +301,8 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String NG_CLUSTER_ADMIN_YAML = "-ng-cluster-admin.yaml.ftl";
   private static final String NG_CLUSTER_VIEWER_YAML = "-ng-cluster-viewer.yaml.ftl";
   private static final String NG_NAMESPACE_ADMIN_YAML = "-ng-namespace-admin.yaml.ftl";
-  private static final String IMMUTABLE = "-immutable";
+  private static final String IMMUTABLE_DELEGATE_YAML = "harness-delegate-ng-immutable.yaml.ftl";
+  private static final String IMMUTABLE_CG_DELEGATE_YAML = "harness-delegate-immutable.yaml.ftl";
 
   public static final String HARNESS_DELEGATE_VALUES_YAML = HARNESS_DELEGATE + "-values";
   private static final String YAML = ".yaml";
@@ -618,14 +618,22 @@ public class DelegateServiceImpl implements DelegateService {
         accountId, delegateSetupDetails, managerHost, verificationServiceUrl, fileFormat, false);
   }
 
-  private String getCgK8SDelegateTemplate(final boolean isCeEnabled) {
+  private String getCgK8SDelegateTemplate(final String accountId, final boolean isCeEnabled) {
+    if (featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, accountId)) {
+      return IMMUTABLE_CG_DELEGATE_YAML;
+    }
+
     if (isCeEnabled) {
       return HARNESS_DELEGATE + "-ce.yaml.ftl";
     }
     return HARNESS_DELEGATE + ".yaml.ftl";
   }
 
-  private String obtainK8sTemplateNameFromConfig(final K8sConfigDetails k8sConfigDetails) {
+  private String obtainK8sTemplateNameFromConfig(final K8sConfigDetails k8sConfigDetails, final String accountId) {
+    if (featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, accountId)) {
+      return IMMUTABLE_DELEGATE_YAML;
+    }
+
     if (k8sConfigDetails == null || k8sConfigDetails.getK8sPermissionType() == null) {
       return HARNESS_DELEGATE + NG_CLUSTER_ADMIN_YAML;
     }
@@ -1064,7 +1072,7 @@ public class DelegateServiceImpl implements DelegateService {
     String delegateXmx = "-Xmx" + (DELEGATE_RAM_PER_REPLICA - WATCHER_RAM_IN_MB - POD_BASE_RAM_IN_MB) + "m";
 
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
-        ScriptRuntimeParamMapInquiry.builder()
+        TemplateParameters.builder()
             .accountId(accountId)
             .version(version)
             .managerHost(managerHost)
@@ -1108,7 +1116,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
-        ScriptRuntimeParamMapInquiry.builder()
+        TemplateParameters.builder()
             .accountId(accountId)
             .version(version)
             .managerHost(managerHost)
@@ -1164,48 +1172,19 @@ public class DelegateServiceImpl implements DelegateService {
     return null;
   }
 
-  @Value
-  @lombok.Builder
-  public static class ScriptRuntimeParamMapInquiry {
-    private String delegateXmx;
-    private String accountId;
-    private String version;
-    private String managerHost;
-    private String verificationHost;
-    private String delegateName;
-    private String delegateProfile;
-    private String delegateGroupId;
-    private String delegateType;
-    private boolean ceEnabled;
-    private boolean ciEnabled;
-    private String logStreamingServiceBaseUrl;
-    private String delegateOrgIdentifier;
-    private String delegateProjectIdentifier;
-    private String delegateDescription;
-    private String delegateSize;
-    private int delegateTaskLimit;
-    private int delegateReplicas;
-    private int delegateRam;
-    private double delegateCpu;
-    private int delegateRequestsRam;
-    private double delegateRequestsCpu;
-    private String delegateNamespace;
-    private String delegateTokenName;
-    private String delegateTags;
-  }
-
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
-      final ScriptRuntimeParamMapInquiry inquiry, final boolean isNgDelegate) {
+      final TemplateParameters inquiry, final boolean isNgDelegate) {
     return getJarAndScriptRunTimeParamMap(inquiry, false, isNgDelegate);
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
-      final ScriptRuntimeParamMapInquiry inquiry, final boolean useNgToken, final boolean isNgDelegate) {
+      final TemplateParameters templateParameters, final boolean useNgToken, final boolean isNgDelegate) {
     final CdnConfig cdnConfig = mainConfiguration.getCdnConfig();
+
     final boolean useCDN = mainConfiguration.useCdnForDelegateStorage() && cdnConfig != null;
 
     final String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(
-        inquiry.getAccountId(), inquiry.getManagerHost(), mainConfiguration.getDeployMode().name());
+        templateParameters.getAccountId(), templateParameters.getManagerHost(), mainConfiguration.getDeployMode().name());
     final String delegateStorageUrl = getDelegateStorageUrl(cdnConfig, useCDN, delegateMetadataUrl);
     final String delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
 
@@ -1214,11 +1193,11 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         log.info("Multi-Version is enabled");
-        latestVersion = inquiry.getVersion();
-        final String fullVersion = Optional.ofNullable(getDelegateBuildVersion(inquiry.getVersion())).orElse(null);
-        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(fullVersion, inquiry.getAccountId());
+        latestVersion = templateParameters.getVersion();
+        final String fullVersion = Optional.ofNullable(getDelegateBuildVersion(templateParameters.getVersion())).orElse(null);
+        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(fullVersion, templateParameters.getAccountId());
       } else {
-        final String delegateMatadata = delegateVersionCache.get(inquiry.getAccountId());
+        final String delegateMatadata = delegateVersionCache.get(templateParameters.getAccountId());
         log.info("Delegate metadata: [{}]", delegateMatadata);
         latestVersion = substringBefore(delegateMatadata, " ").trim();
         final String jarRelativePath = substringAfter(delegateMatadata, " ").trim();
@@ -1226,7 +1205,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
     } catch (ExecutionException e) {
       log.warn("Unable to fetch delegate version information", e);
-      log.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", inquiry.getVersion(),
+      log.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", templateParameters.getVersion(),
           latestVersion, delegateJarDownloadUrl);
     }
 
@@ -1237,24 +1216,25 @@ public class DelegateServiceImpl implements DelegateService {
         watcherMetadataUrl = infraDownloadService.getCdnWatcherMetaDataFileUrl();
       } else {
         watcherMetadataUrl = subdomainUrlHelper.getWatcherMetadataUrl(
-            inquiry.getAccountId(), inquiry.getManagerHost(), mainConfiguration.getDeployMode().name());
+            templateParameters.getAccountId(), templateParameters.getManagerHost(), mainConfiguration.getDeployMode().name());
       }
       final String watcherStorageUrl = watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/'));
       final String watcherCheckLocation = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
       final String hexkey =
-          format("%040x", new BigInteger(1, inquiry.getAccountId().substring(0, 6).getBytes(StandardCharsets.UTF_8)))
+          format("%040x", new BigInteger(1, templateParameters.getAccountId().substring(0, 6).getBytes(StandardCharsets.UTF_8)))
               .replaceFirst("^0+(?!$)", "");
 
-      final boolean isCiEnabled = isCiEnabled(inquiry);
+      final boolean isCiEnabled = isCiEnabled(templateParameters);
       ImmutableMap.Builder<String, String> params =
           ImmutableMap.<String, String>builder()
               .put("delegateDockerImage", getDelegateDockerImage())
-              .put("accountId", inquiry.getAccountId())
-              .put("accountSecret", getAccountSecret(inquiry, useNgToken))
+              .put("upgraderDockerImage", getUpgraderDockerImage())
+              .put("accountId", templateParameters.getAccountId())
+              .put("accountSecret", getAccountSecret(templateParameters, useNgToken))
               .put("hexkey", hexkey)
               .put(UPGRADE_VERSION, latestVersion)
-              .put("managerHostAndPort", inquiry.getManagerHost())
-              .put("verificationHostAndPort", inquiry.getVerificationHost())
+              .put("managerHostAndPort", templateParameters.getManagerHost())
+              .put("verificationHostAndPort", templateParameters.getVerificationHost())
               .put("watcherStorageUrl", watcherStorageUrl)
               .put("watcherCheckLocation", watcherCheckLocation)
               .put("remoteWatcherUrlCdn", infraDownloadService.getCdnWatcherBaseUrl())
@@ -1265,31 +1245,31 @@ public class DelegateServiceImpl implements DelegateService {
               .put("kubectlVersion", mainConfiguration.getKubectlVersion())
               .put("scmVersion", mainConfiguration.getScmVersion())
               .put("delegateGrpcServicePort", String.valueOf(delegateGrpcConfig.getPort()))
-              .put("kubernetesAccountLabel", getAccountIdentifier(inquiry.getAccountId()));
+              .put("kubernetesAccountLabel", getAccountIdentifier(templateParameters.getAccountId()));
 
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES_ONPREM) {
         params.put("managerTarget", mainConfiguration.getGrpcOnpremDelegateClientConfig().getTarget());
         params.put("managerAuthority", mainConfiguration.getGrpcOnpremDelegateClientConfig().getAuthority());
       }
 
-      if (isNotBlank(inquiry.getDelegateName())) {
-        params.put("delegateName", inquiry.getDelegateName());
+      if (isNotBlank(templateParameters.getDelegateName())) {
+        params.put("delegateName", templateParameters.getDelegateName());
       }
 
       if (isNotBlank(mainConfiguration.getOcVersion())) {
         params.put("ocVersion", mainConfiguration.getOcVersion());
       }
 
-      if (inquiry.getDelegateProfile() != null) {
-        params.put("delegateProfile", inquiry.getDelegateProfile());
+      if (templateParameters.getDelegateProfile() != null) {
+        params.put("delegateProfile", templateParameters.getDelegateProfile());
       }
 
-      if (inquiry.getDelegateType() != null) {
-        params.put("delegateType", inquiry.getDelegateType());
+      if (templateParameters.getDelegateType() != null) {
+        params.put("delegateType", templateParameters.getDelegateType());
       }
 
-      if (inquiry.getLogStreamingServiceBaseUrl() != null) {
-        params.put("logStreamingServiceBaseUrl", inquiry.getLogStreamingServiceBaseUrl());
+      if (templateParameters.getLogStreamingServiceBaseUrl() != null) {
+        params.put("logStreamingServiceBaseUrl", templateParameters.getLogStreamingServiceBaseUrl());
       }
 
       params.put("grpcServiceEnabled", String.valueOf(isCiEnabled));
@@ -1302,13 +1282,13 @@ public class DelegateServiceImpl implements DelegateService {
       params.put("useCdn", String.valueOf(useCDN));
       params.put("cdnUrl", cdnConfig.getUrl());
 
-      if (isNotBlank(inquiry.getDelegateXmx())) {
-        params.put("delegateXmx", inquiry.getDelegateXmx());
+      if (isNotBlank(templateParameters.getDelegateXmx())) {
+        params.put("delegateXmx", templateParameters.getDelegateXmx());
       } else {
         params.put("delegateXmx", "-Xmx4096m");
       }
 
-      JreConfig jreConfig = getJreConfig(inquiry.getAccountId());
+      JreConfig jreConfig = getJreConfig(templateParameters.getAccountId());
 
       Preconditions.checkNotNull(jreConfig, "jreConfig cannot be null");
 
@@ -1317,77 +1297,81 @@ public class DelegateServiceImpl implements DelegateService {
       params.put(JRE_MAC_DIRECTORY, jreConfig.getJreMacDirectory());
       params.put(JRE_TAR_PATH, jreConfig.getJreTarPath());
       params.put(ALPN_JAR_PATH, jreConfig.getAlpnJarPath());
-      params.put("enableCE", String.valueOf(inquiry.isCeEnabled()));
+      params.put("enableCE", String.valueOf(templateParameters.isCeEnabled()));
 
-      if (isNotBlank(inquiry.getDelegateOrgIdentifier())) {
-        params.put("delegateOrgIdentifier", inquiry.getDelegateOrgIdentifier());
+      if (isNotBlank(templateParameters.getDelegateOrgIdentifier())) {
+        params.put("delegateOrgIdentifier", templateParameters.getDelegateOrgIdentifier());
       } else {
         params.put("delegateOrgIdentifier", EMPTY);
       }
 
-      if (isNotBlank(inquiry.getDelegateTags())) {
-        params.put("delegateTags", inquiry.getDelegateTags());
+      if (isNotBlank(templateParameters.getDelegateTags())) {
+        params.put("delegateTags", templateParameters.getDelegateTags());
       } else {
         params.put("delegateTags", EMPTY);
       }
 
-      if (isNotBlank(inquiry.getDelegateProjectIdentifier())) {
-        params.put("delegateProjectIdentifier", inquiry.getDelegateProjectIdentifier());
+      if (isNotBlank(templateParameters.getDelegateProjectIdentifier())) {
+        params.put("delegateProjectIdentifier", templateParameters.getDelegateProjectIdentifier());
       } else {
         params.put("delegateProjectIdentifier", EMPTY);
       }
 
-      if (isNotBlank(inquiry.getDelegateDescription())) {
-        params.put("delegateDescription", inquiry.getDelegateDescription());
+      if (isNotBlank(templateParameters.getDelegateDescription())) {
+        params.put("delegateDescription", templateParameters.getDelegateDescription());
       } else {
         params.put("delegateDescription", EMPTY);
       }
 
-      if (isNotBlank(inquiry.getDelegateSize())) {
-        params.put("delegateSize", inquiry.getDelegateSize());
+      if (isNotBlank(templateParameters.getDelegateSize())) {
+        params.put("delegateSize", templateParameters.getDelegateSize());
       }
 
-      if (inquiry.getDelegateTaskLimit() != 0) {
-        params.put("delegateTaskLimit", String.valueOf(inquiry.getDelegateTaskLimit()));
+      if (templateParameters.getDelegateTaskLimit() != 0) {
+        params.put("delegateTaskLimit", String.valueOf(templateParameters.getDelegateTaskLimit()));
       }
 
-      if (inquiry.getDelegateReplicas() != 0) {
-        params.put("delegateReplicas", String.valueOf(inquiry.getDelegateReplicas()));
+      if (templateParameters.getDelegateReplicas() != 0) {
+        params.put("delegateReplicas", String.valueOf(templateParameters.getDelegateReplicas()));
       }
 
-      if (inquiry.getDelegateRam() != 0) {
-        params.put("delegateRam", String.valueOf(inquiry.getDelegateRam()));
+      if (templateParameters.getDelegateRam() != 0) {
+        params.put("delegateRam", String.valueOf(templateParameters.getDelegateRam()));
       }
 
-      if (inquiry.getDelegateCpu() != 0) {
-        params.put("delegateCpu", String.valueOf(inquiry.getDelegateCpu()));
+      if (templateParameters.getDelegateCpu() != 0) {
+        params.put("delegateCpu", String.valueOf(templateParameters.getDelegateCpu()));
       }
 
-      if (inquiry.getDelegateRequestsRam() != 0) {
-        params.put("delegateRequestsRam", String.valueOf(inquiry.getDelegateRequestsRam()));
+      if (templateParameters.getDelegateRequestsRam() != 0) {
+        params.put("delegateRequestsRam", String.valueOf(templateParameters.getDelegateRequestsRam()));
       }
 
-      if (inquiry.getDelegateRequestsCpu() != 0) {
-        params.put("delegateRequestsCpu", String.valueOf(inquiry.getDelegateRequestsCpu()));
+      if (templateParameters.getDelegateRequestsCpu() != 0) {
+        params.put("delegateRequestsCpu", String.valueOf(templateParameters.getDelegateRequestsCpu()));
       }
 
-      if (isNotBlank(inquiry.getDelegateGroupId())) {
-        params.put("delegateGroupId", inquiry.getDelegateGroupId());
+      if (isNotBlank(templateParameters.getDelegateGroupId())) {
+        params.put("delegateGroupId", templateParameters.getDelegateGroupId());
       } else {
         params.put("delegateGroupId", "");
       }
 
-      params.put("delegateNamespace", getDelegateNamespace(inquiry.getDelegateNamespace(), isNgDelegate));
+      params.put("delegateNamespace", getDelegateNamespace(templateParameters.getDelegateNamespace(), isNgDelegate));
 
-      boolean versionCheckEnabled = hasVersionCheckDisabled(inquiry.accountId);
+      if (templateParameters.getK8sPermissionsType() != null) {
+        params.put("k8sPermissionsType", templateParameters.getK8sPermissionsType().name());
+      }
+
+      boolean versionCheckEnabled = hasVersionCheckDisabled(templateParameters.getAccountId());
       params.put("versionCheckDisabled", String.valueOf(versionCheckEnabled));
 
-      if (isNotBlank(inquiry.getDelegateTokenName())) {
-        params.put("delegateTokenName", inquiry.getDelegateTokenName());
+      if (isNotBlank(templateParameters.getDelegateTokenName())) {
+        params.put("delegateTokenName", templateParameters.getDelegateTokenName());
       }
 
       params.put(
-          "isImmutable", String.valueOf(featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, inquiry.getAccountId())));
+          "isImmutable", String.valueOf(featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, templateParameters.getAccountId())));
 
       return params.build();
     }
@@ -1402,7 +1386,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private boolean isCiEnabled(final ScriptRuntimeParamMapInquiry inquiry) {
+  private boolean isCiEnabled(final TemplateParameters inquiry) {
     return inquiry.isCiEnabled() && isNotEmpty(mainConfiguration.getPortal().getJwtNextGenManagerSecret())
         && nonNull(delegateGrpcConfig.getPort());
   }
@@ -1441,7 +1425,14 @@ public class DelegateServiceImpl implements DelegateService {
     return "harness/delegate:latest";
   }
 
-  private String getAccountSecret(final ScriptRuntimeParamMapInquiry inquiry, final boolean useNgToken) {
+  private String getUpgraderDockerImage() {
+    if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES_ONPREM) {
+      return mainConfiguration.getPortal().getUpgraderDockerImage();
+    }
+    return "harness/upgrader:latest";
+  }
+
+  private String getAccountSecret(final TemplateParameters inquiry, final boolean useNgToken) {
     final Account account = accountService.get(inquiry.getAccountId());
     if (isNotBlank(inquiry.getDelegateTokenName())) {
       if (useNgToken) {
@@ -1537,7 +1528,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
-          ScriptRuntimeParamMapInquiry.builder()
+          TemplateParameters.builder()
               .accountId(accountId)
               .version(version)
               .managerHost(managerHost)
@@ -1675,7 +1666,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
-          ScriptRuntimeParamMapInquiry.builder()
+          TemplateParameters.builder()
               .accountId(accountId)
               .version(version)
               .managerHost(managerHost)
@@ -1753,22 +1744,25 @@ public class DelegateServiceImpl implements DelegateService {
       }
       boolean isCiEnabled = accountService.isNextGenEnabled(accountId);
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
-          ScriptRuntimeParamMapInquiry.builder()
+          TemplateParameters.builder()
               .accountId(accountId)
               .version(version)
               .managerHost(managerHost)
               .verificationHost(verificationUrl)
               .delegateName(delegateName)
+              .delegateNamespace(HARNESS_DELEGATE)
               .delegateProfile(delegateProfile == null ? "" : delegateProfile)
               .delegateType(KUBERNETES)
               .ciEnabled(isCiEnabled)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
+              .delegateCpu(1)
+              .delegateRam(8)
               .build(),
           false);
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
-      saveProcessedTemplate(scriptParams, yaml, getCgK8SDelegateTemplate(false));
+      saveProcessedTemplate(scriptParams, yaml, getCgK8SDelegateTemplate(accountId, false));
       yaml = new File(yaml.getAbsolutePath());
       TarArchiveEntry yamlTarArchiveEntry =
           new TarArchiveEntry(yaml, KUBERNETES_DELEGATE + "/" + HARNESS_DELEGATE + YAML);
@@ -1805,22 +1799,26 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
-        ScriptRuntimeParamMapInquiry.builder()
+        TemplateParameters.builder()
             .accountId(accountId)
             .version(version)
             .managerHost(managerHost)
             .verificationHost(verificationUrl)
             .delegateName(delegateName)
+            .delegateNamespace(HARNESS_DELEGATE)
             .delegateProfile(delegateProfile == null ? "" : delegateProfile)
             .delegateType(CE_KUBERNETES)
             .ceEnabled(true)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(tokenName)
+            .ciEnabled(false)
+            .delegateCpu(1)
+            .delegateRam(4)
             .build(),
         false);
 
     File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
-    saveProcessedTemplate(scriptParams, yaml, getCgK8SDelegateTemplate(true));
+    saveProcessedTemplate(scriptParams, yaml, getCgK8SDelegateTemplate(accountId, true));
 
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("NG", false);
@@ -1855,7 +1853,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     ImmutableMap<String, String> params = getJarAndScriptRunTimeParamMap(
-        ScriptRuntimeParamMapInquiry.builder()
+        TemplateParameters.builder()
             .accountId(accountId)
             .version(version)
             .managerHost(managerHost)
@@ -1897,7 +1895,7 @@ public class DelegateServiceImpl implements DelegateService {
       DelegateGroup delegateGroup = upsertDelegateGroup(delegateGroupName, accountId, null);
 
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
-          ScriptRuntimeParamMapInquiry.builder()
+          TemplateParameters.builder()
               .accountId(accountId)
               .version(version)
               .managerHost(managerHost)
@@ -3871,7 +3869,7 @@ public class DelegateServiceImpl implements DelegateService {
       upsertDelegateGroup(delegateSetupDetails.getName(), accountId, delegateSetupDetails);
 
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
-          ScriptRuntimeParamMapInquiry.builder()
+          TemplateParameters.builder()
               .accountId(accountId)
               .version(version)
               .managerHost(managerHost)
@@ -3892,13 +3890,14 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateTags(
                   isNotEmpty(delegateSetupDetails.getTags()) ? String.join(",", delegateSetupDetails.getTags()) : "")
               .delegateNamespace(delegateSetupDetails.getK8sConfigDetails().getNamespace())
+              .k8sPermissionsType(delegateSetupDetails.getK8sConfigDetails().getK8sPermissionType())
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(delegateSetupDetails.getTokenName())
               .build(),
           useNgToken, true);
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
-      String templateName = obtainK8sTemplateNameFromConfig(delegateSetupDetails.getK8sConfigDetails());
+      String templateName = obtainK8sTemplateNameFromConfig(delegateSetupDetails.getK8sConfigDetails(), accountId);
       saveProcessedTemplate(scriptParams, yaml, templateName);
       yaml = new File(yaml.getAbsolutePath());
 
@@ -3940,8 +3939,8 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     DelegateSizeDetails sizeDetails = getDelegateSizeDetails(delegateSetupDetails);
-    ScriptRuntimeParamMapInquiry scriptRuntimeParamMapInquiry =
-        ScriptRuntimeParamMapInquiry.builder()
+    TemplateParameters templateParameters =
+        TemplateParameters.builder()
             .delegateTags(delegateSetupDetails != null && isNotEmpty(delegateSetupDetails.getTags())
                     ? String.join(",", delegateSetupDetails.getTags())
                     : "")
@@ -3965,7 +3964,7 @@ public class DelegateServiceImpl implements DelegateService {
             .build();
 
     ImmutableMap<String, String> paramMap =
-        getJarAndScriptRunTimeParamMap(scriptRuntimeParamMapInquiry, useNgToken, true);
+        getJarAndScriptRunTimeParamMap(templateParameters, useNgToken, true);
 
     if (isEmpty(paramMap)) {
       throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));

@@ -88,25 +88,11 @@ spec:
         env:
 <@delegateEnvironment.common />
 <@delegateEnvironment.ngSpecific />
-<#if isImmutable == "true">
-    <@delegateEnvironment.immutable />
-<#else>
-    <@delegateEnvironment.mutable />
-</#if>
+<@delegateEnvironment.mutable />
       restartPolicy: Always
 
 <#if ciEnabled == "true">
 ---
 
-apiVersion: v1
-kind: Service
-metadata:
-  name: delegate-service
-  namespace: harness-delegate-ng
-spec:
-  type: ClusterIP
-  selector:
-    harness.io/name: ${delegateName}
-  ports:
-    - port: ${delegateGrpcServicePort}
+    <@delegateService.ng />
 </#if>
