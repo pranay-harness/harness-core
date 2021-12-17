@@ -1484,7 +1484,6 @@
           "type": "string",
           "enum": [
             "Fetch",
-            "Version",
             "Template",
             "Pull",
             "Install",
@@ -1493,7 +1492,8 @@
             "History",
             "Delete",
             "Uninstall",
-            "List"
+            "List",
+            "Version"
           ]
         },
         "flag": {
