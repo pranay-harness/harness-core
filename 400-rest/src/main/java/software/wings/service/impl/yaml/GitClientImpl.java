@@ -42,6 +42,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.filesystem.FileIo;
+import io.harness.git.ExceptionSanitizer;
 import io.harness.git.UsernamePasswordCredentialsProviderWithSkipSslVerify;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitFile;
@@ -172,7 +173,7 @@ public class GitClientImpl implements GitClient {
                        .call()) {
       return GitCloneResult.builder().build();
     } catch (GitAPIException ex) {
-      log.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in cloning repo", USER);
     }
@@ -255,7 +256,7 @@ public class GitClientImpl implements GitClient {
       }
 
     } catch (IOException | GitAPIException ex) {
-      log.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in getting commit diff", ADMIN_SRE);
     }
@@ -852,7 +853,8 @@ public class GitClientImpl implements GitClient {
       checkoutCommand.call();
       log.info("Successfully Checked out commitId: " + commitId);
     } catch (Exception ex) {
-      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType())
+          + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + commitId, USER);
     }
@@ -868,7 +870,7 @@ public class GitClientImpl implements GitClient {
       checkoutCommand.call();
       log.info("Successfully Checked out commitId: " + commitId);
     } catch (Exception ex) {
-      log.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + commitId, USER);
     }
@@ -909,7 +911,7 @@ public class GitClientImpl implements GitClient {
       return latestCommitSha;
 
     } catch (Exception ex) {
-      log.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out Branch " + branch, USER);
     }
@@ -930,7 +932,8 @@ public class GitClientImpl implements GitClient {
       resetCommand.call();
       log.info("Resetting repo completed successfully");
     } catch (Exception ex) {
-      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType())
+          + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in resetting repo", USER);
     }
@@ -1010,7 +1013,8 @@ public class GitClientImpl implements GitClient {
         } else {
           log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
               gitConfig.getBranch());
-          log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+          log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType())
+              + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
           gitClientHelper.checkIfGitConnectivityIssue(ex);
         }
       } finally {
@@ -1058,7 +1062,8 @@ public class GitClientImpl implements GitClient {
           if (ex instanceof GitAPIException) {
             log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
                 gitConfig.getBranch());
-            log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+            log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType())
+                + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
             gitClientHelper.checkIfGitConnectivityIssue(ex);
           }
         }

@@ -48,7 +48,7 @@ import org.mongodb.morphia.annotations.Transient;
 
 @JsonTypeName("GIT")
 @Data
-@ToString(exclude = {"password", "sshSettingAttribute"})
+@ToString(exclude = {"password", "sshSettingAttribute", "encryptedPassword"})
 @EqualsAndHashCode(callSuper = false, exclude = {"sshSettingAttribute"})
 @Slf4j
 @OwnedBy(HarnessTeam.CDP)
