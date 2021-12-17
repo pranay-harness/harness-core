@@ -63,6 +63,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
         .skipVersioningForAllK8sObjects(applicationManifest.getSkipVersioningForAllK8sObjects())
         .helmCommandFlag(applicationManifest.getHelmCommandFlag())
         .helmValuesYamlFilePaths(applicationManifest.getHelmValuesYamlFilePaths())
+        .enableCollection(applicationManifest.getEnableCollection())
         .build();
   }
 
@@ -135,6 +136,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
                                        .skipVersioningForAllK8sObjects(yaml.getSkipVersioningForAllK8sObjects())
                                        .helmCommandFlag(yaml.getHelmCommandFlag())
                                        .helmValuesYamlFilePaths(yaml.getHelmValuesYamlFilePaths())
+                                       .enableCollection(yaml.getEnableCollection())
                                        .build();
 
     manifest.setAppId(appId);
