@@ -16,7 +16,9 @@ import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.execution.utils.InterruptEventUtils;
 
 import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class RedisInterruptEventPublisher implements InterruptEventPublisher {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PmsEventSender eventSender;
@@ -37,6 +39,7 @@ public class RedisInterruptEventPublisher implements InterruptEventPublisher {
 
     eventSender.sendEvent(
         nodeExecution.getAmbiance(), event.toByteString(), PmsEventCategory.INTERRUPT_EVENT, serviceName, false);
+    log.info("Interrupt Event ");
     return event.getNotifyId();
   }
 

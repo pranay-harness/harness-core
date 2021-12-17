@@ -16,8 +16,11 @@ import lombok.Value;
 @ApiModel(value = "RoleAssignmentValidationRequest")
 @Schema(name = "RoleAssignmentValidationRequest")
 public class RoleAssignmentValidationRequestDTO {
-  @NotNull @Valid RoleAssignmentDTO roleAssignment;
-  boolean validatePrincipal;
-  boolean validateRole;
-  boolean validateResourceGroup;
+  @Schema(description = "Role Assignment to validate", required = true)
+  @NotNull
+  @Valid
+  RoleAssignmentDTO roleAssignment;
+  @Schema(description = "Set it to true if the principal needs to be validated") boolean validatePrincipal;
+  @Schema(description = "Set it to true if the role needs to be validated") boolean validateRole;
+  @Schema(description = "Set it to true if the resource group needs to be validated") boolean validateResourceGroup;
 }

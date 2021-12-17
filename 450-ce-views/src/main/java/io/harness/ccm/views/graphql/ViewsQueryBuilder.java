@@ -16,7 +16,6 @@ import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_MEMORY_LIMIT
 import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_MEMORY_REQUEST;
 import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_MEMORY_UTILIZATION_VALUE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_APPLICATION;
-import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_CLOUD_PROVIDER;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_LAUNCH_TYPE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_SERVICE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_TASK;
@@ -105,7 +104,7 @@ public class ViewsQueryBuilder {
   private static final ImmutableSet<String> clusterFilterImmutableSet =
       ImmutableSet.of("product", "region", "PROVIDERS");
   private static final ImmutableList<String> applicationGroupBys =
-      ImmutableList.of(GROUP_BY_APPLICATION, GROUP_BY_SERVICE, GROUP_BY_ENVIRONMENT, GROUP_BY_CLOUD_PROVIDER);
+      ImmutableList.of(GROUP_BY_APPLICATION, GROUP_BY_SERVICE, GROUP_BY_ENVIRONMENT);
   private static final String CLOUD_PROVIDERS_CUSTOM_GROUPING = "PROVIDERS";
   private static final String CLOUD_PROVIDERS_CUSTOM_GROUPING_QUERY =
       "CASE WHEN cloudProvider = 'CLUSTER' THEN 'CLUSTER' ELSE 'CLOUD' END";

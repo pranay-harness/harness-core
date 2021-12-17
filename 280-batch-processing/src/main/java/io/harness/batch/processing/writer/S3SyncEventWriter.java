@@ -12,7 +12,6 @@ import io.harness.batch.processing.ccm.S3SyncRecord;
 import io.harness.batch.processing.service.impl.AwsS3SyncServiceImpl;
 import io.harness.ccm.commons.dao.AWSConnectorToBucketMappingDao;
 import io.harness.ccm.commons.entities.AWSConnectorToBucketMapping;
-import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
@@ -123,7 +122,6 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
         ConnectorFilterPropertiesDTO.builder()
             .types(Arrays.asList(ConnectorType.CE_AWS))
             .ccmConnectorFilter(CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
-            .connectivityStatuses(Arrays.asList(ConnectivityStatus.SUCCESS))
             .build();
     connectorFilterPropertiesDTO.setFilterType(FilterType.CONNECTOR);
     int page = 0;

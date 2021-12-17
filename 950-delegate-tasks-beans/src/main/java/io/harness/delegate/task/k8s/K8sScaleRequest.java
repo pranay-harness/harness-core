@@ -30,7 +30,7 @@ public class K8sScaleRequest implements K8sDeployRequest {
   Optional<Integer> maxInstances;
   boolean skipSteadyStateCheck;
   CommandUnitsProgress commandUnitsProgress;
-  boolean useLatestKustomizeVersion;
+  boolean useVarSupportForKustomize;
   boolean useNewKubectlVersion;
 
   @Override

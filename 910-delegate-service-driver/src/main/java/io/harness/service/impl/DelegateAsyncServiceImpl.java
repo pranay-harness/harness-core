@@ -90,7 +90,15 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
         ResponseData responseData = disableDeserialization
             ? BinaryResponseData.builder().data(lockedAsyncTaskResponse.getResponseData()).build()
             : (DelegateResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData());
+        long doneWithStartTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(), responseData);
+        long doneWithEndTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+
+        if (log.isDebugEnabled()) {
+          log.debug("DB update processing time {} for doneWith operation, loop processing time {} ",
+              doneWithEndTime - doneWithStartTime,
+              Math.max(loopProcessingTime - (doneWithEndTime - doneWithStartTime), 0l));
+        }
 
         if (lockedAsyncTaskResponse.getHoldUntil() == null
             || lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {

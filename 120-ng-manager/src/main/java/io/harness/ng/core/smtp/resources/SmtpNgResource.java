@@ -29,7 +29,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -81,7 +80,7 @@ public class SmtpNgResource {
   @Timed
   @ExceptionMetered
   public ResponseDTO<NgSmtpDTO>
-  save(@Valid @NotNull NgSmtpDTO variable) throws IOException {
+  save(NgSmtpDTO variable) throws IOException {
     NgSmtpDTO response = smtpNgService.saveSmtpSettings(variable);
     return ResponseDTO.newResponse(response);
   }
@@ -116,7 +115,7 @@ public class SmtpNgResource {
   @Timed
   @ExceptionMetered
   public ResponseDTO<NgSmtpDTO>
-  update(@Valid @NotNull NgSmtpDTO variable) throws IOException {
+  update(NgSmtpDTO variable) throws IOException {
     NgSmtpDTO response = smtpNgService.updateSmtpSettings(variable);
     return ResponseDTO.newResponse(response);
   }

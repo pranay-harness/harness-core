@@ -183,7 +183,8 @@ public class NGTemplateServiceImpl implements NGTemplateService {
                                             .withOrgIdentifier(templateEntity.getOrgIdentifier())
                                             .withProjectIdentifier(templateEntity.getProjectIdentifier())
                                             .withFullyQualifiedIdentifier(templateEntity.getFullyQualifiedIdentifier())
-                                            .withLastUpdatedTemplate(updateLastUpdatedTemplateFlag);
+                                            .withLastUpdatedTemplate(updateLastUpdatedTemplateFlag)
+                                            .withIsEntityInvalid(false);
 
       // Updating the stable template version.
       if (setStableTemplate && !templateToUpdate.isStableTemplate()) {

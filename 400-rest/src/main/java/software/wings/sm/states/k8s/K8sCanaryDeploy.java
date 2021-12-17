@@ -178,7 +178,7 @@ public class K8sCanaryDeploy extends AbstractK8sState {
             .skipDryRun(skipDryRun)
             .skipVersioningForAllK8sObjects(
                 appManifestMap.get(K8sValuesLocation.Service).getSkipVersioningForAllK8sObjects())
-            .useLatestKustomizeVersion(
+            .useVarSupportForKustomize(
                 featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
             .useNewKubectlVersion(featureFlagService.isEnabled(NEW_KUBECTL_VERSION, infraMapping.getAccountId()))
             .build();

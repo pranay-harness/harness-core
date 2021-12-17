@@ -1737,7 +1737,8 @@ public class K8sTaskHelperBase {
 
   public String convertJsonToYaml(JSONObject jsonObject) {
     String prettyJSONString = jsonObject.toString();
-    Yaml yaml = new Yaml(new io.kubernetes.client.util.Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+    Yaml yaml =
+        new Yaml(new io.kubernetes.client.util.Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
     Map<String, Object> map = yaml.load(prettyJSONString);
     return yaml.dump(map);
   }
@@ -1753,13 +1754,17 @@ public class K8sTaskHelperBase {
     return patchList;
   }
 
-  public void updateKustomizationYaml(String kustomizePath, JSONArray patchList) throws IOException {
+  public void updateKustomizationYaml(String kustomizePath, JSONArray patchList,LogCallback executionLogCallback) throws IOException {
     String kustomizationYamlPath = kustomizePath + '/' + kustomizeFileName;
 
     JSONObject kustomizationJson = readAndConvertYamlToJson(kustomizationYamlPath);
 
     JSONArray updatedPatchList = updatePatchList(kustomizationJson, patchList);
     kustomizationJson.put(patchFieldName, updatedPatchList);
+    JSONObject patchesStrategicMerge = new JSONObject();
+    patchesStrategicMerge.put(patchFieldName, updatedPatchList);
+    executionLogCallback.saveExecutionLog(color("PatchesStrategicMerge Field in Kustomization Yaml after update :\n", White, Bold));
+    executionLogCallback.saveExecutionLog(convertJsonToYaml(patchesStrategicMerge));
 
     String newKustomize = convertJsonToYaml(kustomizationJson);
     FileIo.deleteFileIfExists(kustomizationYamlPath);
@@ -1775,7 +1780,8 @@ public class K8sTaskHelperBase {
     for (int i = 0; i < patchesFiles.size(); i++) {
       validateValuesFileContents(patchesFiles.get(i));
       String patchesFileName = format(patchYaml, i);
-      FileIo.writeUtf8StringToFile(Paths.get(outputTemporaryDir.toString(), patchesFileName).toString(), patchesFiles.get(i));
+      FileIo.writeUtf8StringToFile(
+          Paths.get(outputTemporaryDir.toString(), patchesFileName).toString(), patchesFiles.get(i));
       patchesFilesOptionsBuilder.append(" -f ").append(patchesFileName);
       patchList.put(Paths.get(kustomizePatchesDir, patchesFileName));
     }
@@ -1786,14 +1792,17 @@ public class K8sTaskHelperBase {
 
   public void savingPatchesToDirectory(
       String kustomizePath, List<String> patchesFiles, LogCallback executionLogCallback) {
+
+    executionLogCallback.saveExecutionLog("\nUpdating patchesStrategicMerge in Kustomization Yaml :\n");
+
     if (isEmpty(patchesFiles)) {
-      executionLogCallback.saveExecutionLog("No Patches files found. Skipping kustomization.yaml updation");
+      executionLogCallback.saveExecutionLog("\nNo Patches files found. Skipping kustomization.yaml updation\n");
       return;
     }
 
     try {
       JSONArray patchList = writePatchesToDirectory(kustomizePath, patchesFiles);
-      updateKustomizationYaml(kustomizePath, patchList);
+      updateKustomizationYaml(kustomizePath, patchList, executionLogCallback);
     } catch (IOException ioException) {
       log.error("Error in Updating kustomization.yaml " + ioException);
     }
@@ -2253,7 +2262,7 @@ public class K8sTaskHelperBase {
       case KUSTOMIZE:
         KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
 
-        if (k8sDelegateTaskParams.isUseLatestKustomizeVersion()) {
+        if (k8sDelegateTaskParams.isUseVarSupportForKustomize()) {
           String kustomizePath = manifestFilesDirectory + '/' + kustomizeManifest.getKustomizeDirPath();
           savingPatchesToDirectory(kustomizePath, manifestOverrideFiles, executionLogCallback);
         }
@@ -2298,7 +2307,7 @@ public class K8sTaskHelperBase {
         KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
         return kustomizeTaskHelper.buildForApply(k8sDelegateTaskParams.getKustomizeBinaryPath(),
             kustomizeManifest.getPluginPath(), manifestFilesDirectory, filesList,
-            k8sDelegateTaskParams.isUseLatestKustomizeVersion(), manifestOverrideFiles, executionLogCallback);
+            k8sDelegateTaskParams.isUseVarSupportForKustomize(), manifestOverrideFiles, executionLogCallback);
 
       default:
         throw new UnsupportedOperationException(

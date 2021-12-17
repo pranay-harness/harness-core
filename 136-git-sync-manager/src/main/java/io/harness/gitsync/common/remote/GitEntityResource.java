@@ -22,6 +22,7 @@ import io.harness.gitsync.common.dtos.GitEntitySummaryFilterDTO;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncRepoFilesListDTO;
 import io.harness.gitsync.common.service.GitEntityService;
+import io.harness.gitsync.sdk.GitSyncApiConstants;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -89,8 +90,10 @@ public class GitEntityResource {
           NGCommonEntityConstants.ORG_KEY) String organizationIdentifier,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
-      @Parameter(description = "Git Sync Config Id") @QueryParam(YamlConstants.GITSYNC_CONFIG_ID)
-      String gitSyncConfigId, @Parameter(description = "Branch Name") @QueryParam(YamlConstants.BRANCH) String branch,
+      @Parameter(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE) @QueryParam(
+          YamlConstants.GITSYNC_CONFIG_ID) String gitSyncConfigId,
+      @Parameter(description = GitSyncApiConstants.BRANCH_PARAM_MESSAGE) @QueryParam(
+          YamlConstants.BRANCH) String branch,
       @Parameter(description = "Entity Type") @PathParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType,
       @Parameter(description = PAGE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0")
       int page, @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE) int size,
@@ -147,10 +150,11 @@ public class GitEntityResource {
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
       @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE) int size,
-      @Parameter(description = "Git Sync Config Id") @QueryParam(
+      @Parameter(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE) @QueryParam(
           YamlConstants.GITSYNC_CONFIG_ID) String gitSyncConfigId,
-      @Parameter(description = "Branch Name") @PathParam(YamlConstants.BRANCH) @NotEmpty String branch,
-      @RequestBody(required = true, description = "Filter Git Sync Entity based on multiple parameters")
+      @Parameter(description = GitSyncApiConstants.BRANCH_PARAM_MESSAGE) @PathParam(
+          YamlConstants.BRANCH) @NotEmpty String branch,
+      @RequestBody(required = true, description = "This filters the Git Sync Entity based on multiple parameters")
       @Body GitEntityBranchSummaryFilterDTO gitEntityFilter) {
     return ResponseDTO.newResponse(gitEntityService.listSummaryByRepoAndBranch(projectIdentifier,
         organizationIdentifier, accountIdentifier, gitEntityFilter.getModuleType(), gitEntityFilter.getSearchTerm(),

@@ -64,6 +64,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.CGConstants;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.UsageRestrictions;
@@ -73,7 +74,6 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.YamlHelper;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -324,7 +324,7 @@ public class SettingServiceHelper {
     if (hasReferencedSecrets(settingAttribute)) {
       List<String> secretIds = emptyIfNull(settingAttribute.fetchRelevantSecretIds());
       return secretIds.stream()
-          .filter(secretId -> isNotEmpty(secretId) && !YamlHelper.ENCRYPTED_VALUE_STR.equals(secretId))
+          .filter(secretId -> isNotEmpty(secretId) && !CGConstants.ENCRYPTED_VALUE_STR.equals(secretId))
           .collect(Collectors.toSet());
     }
 

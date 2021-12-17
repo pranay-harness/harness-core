@@ -31,6 +31,11 @@ public class WebhookEventStreamListener extends PmsAbstractMessageListener<Facil
   }
 
   @Override
+  public boolean isProcessable(Message message) {
+    return true;
+  }
+
+  @Override
   public boolean handleMessage(Message message) {
     if (message != null && message.hasMessage()) {
       try {

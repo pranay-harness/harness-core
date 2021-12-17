@@ -7,7 +7,6 @@ import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.NgSmtpDTO;
 import io.harness.ng.core.dto.ValidationResultDTO;
 import io.harness.ng.core.mapper.NgSmtpDTOMapper;
@@ -53,11 +52,6 @@ public class SmtpNgServiceImpl implements SmtpNgService {
 
   @Override
   public NgSmtpDTO updateSmtpSettings(NgSmtpDTO variable) throws IOException {
-    if (variable.getUuid().equals("")) {
-      throw new InvalidRequestException(
-          "A valid UUID is required to update the SMTP configuration. To get the UUID of the existing configuration,"
-          + " please use GET API call whose response includes the UUID of the existing configuration.");
-    }
     SettingAttribute settingAttribute = NgSmtpDTOMapper.getSettingAttributeFromNgSmtpDTO(variable);
     SettingAttribute response =
         getResponse(ngSMTPSettingsHttpClient.updateSmtpSettings(variable.getUuid(), GLOBAL_APP_ID, settingAttribute));

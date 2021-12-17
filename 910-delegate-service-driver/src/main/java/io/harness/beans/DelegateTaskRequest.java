@@ -23,4 +23,5 @@ public class DelegateTaskRequest {
   String taskDescription;
   LinkedHashMap<String, String> logStreamingAbstractions;
   boolean forceExecute;
+  int expressionFunctorToken;
 }

@@ -19,6 +19,7 @@ import io.harness.engine.interrupts.helpers.AbortHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -82,24 +83,32 @@ public class AbortAllInterruptHandler extends InterruptPropagatorHandler impleme
    */
   @Override
   public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
-    return handleChildNodes(interrupt, nodeExecutionId);
+    try (AutoLogContext ignore = interrupt.autoLogContext()) {
+      log.info("Stating to handle interrupt for Node Execution");
+      return handleChildNodes(interrupt, nodeExecutionId);
+    }
   }
 
   @Override
   public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
-    return handleAllNodes(interrupt);
+    try (AutoLogContext ignore = interrupt.autoLogContext()) {
+      log.info("Stating to handle interrupt for Plan Execution");
+      return handleAllNodes(interrupt);
+    }
   }
 
   protected Interrupt processDiscontinuedInstances(
       Interrupt updatedInterrupt, List<NodeExecution> discontinuingNodeExecutions) {
     List<String> notifyIds = new ArrayList<>();
-    try {
+    try (AutoLogContext ignore = updatedInterrupt.autoLogContext()) {
       for (NodeExecution discontinuingNodeExecution : discontinuingNodeExecutions) {
+        log.info("Trying to abort discontinuing instance {}", discontinuingNodeExecution.getUuid());
         handleMarkedInstance(discontinuingNodeExecution, updatedInterrupt);
         notifyIds.add(discontinuingNodeExecution.getUuid() + "|" + updatedInterrupt.getUuid());
       }
 
     } catch (Exception ex) {
+      log.info("Exception occurred while aborting instance marking interrupt as PROCESSED_UNSUCCESSFULLY");
       interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
       throw ex;
     }

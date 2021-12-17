@@ -51,6 +51,10 @@ type Config struct {
 		EnableReflection bool   `envconfig:"TI_SERVICE_MONGODB_ENABLE_REFLECTION"`
 	}
 
+	Agent struct {
+		BaseUrl string `envconfig:"TI_SERVICE_AGENT_BASE_URL"`
+	}
+
 	// Variables required to talk to redis as part of the events framework
 	EventsFramework struct {
 		RedisUrl      string `envconfig:"EVENTS_FRAMEWORK_REDIS_URL"`

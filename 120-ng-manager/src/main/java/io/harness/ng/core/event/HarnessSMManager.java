@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS_KMS;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP_KMS;
 import static io.harness.delegate.beans.connector.ConnectorType.LOCAL;
+import static io.harness.helpers.GlobalSecretManagerUtils.GLOBAL_ACCOUNT_ID;
 import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -25,6 +26,7 @@ import io.harness.ng.core.DefaultOrganization;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.api.NGSecretManagerService;
+import io.harness.ng.core.migration.NGSecretManagerMigration;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
@@ -42,14 +44,20 @@ public class HarnessSMManager {
   private final NGSecretManagerService ngSecretManagerService;
   private final ConnectorService secretManagerConnectorService;
   private final AccountOrgProjectValidator accountOrgProjectValidator;
+  private final NGSecretManagerMigration ngSecretManagerMigration;
 
   @Inject
   public HarnessSMManager(NGSecretManagerService ngSecretManagerService,
       @Named(CONNECTOR_DECORATOR_SERVICE) ConnectorService secretManagerConnectorService,
-      AccountOrgProjectValidator accountOrgProjectValidator) {
+      NGSecretManagerMigration ngSecretManagerMigration, AccountOrgProjectValidator accountOrgProjectValidator) {
     this.ngSecretManagerService = ngSecretManagerService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.accountOrgProjectValidator = accountOrgProjectValidator;
+    this.ngSecretManagerMigration = ngSecretManagerMigration;
+  }
+
+  public void createGlobalSecretManager() {
+    ngSecretManagerMigration.createGlobal(GLOBAL_ACCOUNT_ID, null, null, true);
   }
 
   @DefaultOrganization
