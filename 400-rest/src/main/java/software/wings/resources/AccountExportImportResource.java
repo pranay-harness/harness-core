@@ -743,7 +743,7 @@ public class AccountExportImportResource {
         SettingVariableTypes settingVariableType = SettingVariableTypes.valueOf(type.getAsString());
         log.info("[AccountExportImportResource]: Settings variable type for encryptedDataRecord {} is {}",
             encryptedDataRecord, settingVariableType);
-        if (encryptionType == EncryptionType.KMS && settingVariableType == SettingVariableTypes.CONFIG_FILE) {
+        if (settingVariableType == SettingVariableTypes.CONFIG_FILE) {
           String fileId = encryptedDataElement.getAsJsonObject().get("encryptedValue").getAsString();
           ObjectId objectId = getObjectIdFromFileId(fileId);
           log.info("[AccountExportImportResource]: FileId is {} and objectId is {}", fileId, objectId);
