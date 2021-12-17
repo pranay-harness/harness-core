@@ -16,8 +16,9 @@ import lombok.Data;
 @ApiModel("FilterProperties")
 @JsonTypeInfo(use = Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "filterType")
 @OwnedBy(DX)
-@Schema(name = "FilterProperties", description = "This is the view of the Filter Properties entity defined in Harness")
+@Schema(name = "FilterProperties", description = "Properties of the Filter entity defined in Harness")
 public abstract class FilterPropertiesDTO {
-  Map<String, String> tags;
+  @Schema(description = "Tags of the Filter in key-value pair.") Map<String, String> tags;
+  @Schema(description = "This indicates the filter is of which Entity. Example Connector, Pipeline etc.")
   FilterType filterType;
 }
