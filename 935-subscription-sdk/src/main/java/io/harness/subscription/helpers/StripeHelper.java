@@ -1,24 +1,24 @@
 package io.harness.subscription.helpers;
 
-import io.harness.subscription.dto.CustomerDetail;
-import io.harness.subscription.dto.InvoiceDetail;
+import io.harness.subscription.dto.CustomerDetailDTO;
+import io.harness.subscription.dto.InvoiceDetailDTO;
 import io.harness.subscription.dto.PriceCollectionDTO;
-import io.harness.subscription.dto.SubscriptionDetail;
+import io.harness.subscription.dto.SubscriptionDetailDTO;
 import io.harness.subscription.params.CustomerParams;
 import io.harness.subscription.params.SubscriptionParams;
 
 import java.util.List;
 
 public interface StripeHelper {
-  CustomerDetail createCustomer(CustomerParams customerParams);
+  CustomerDetailDTO createCustomer(CustomerParams customerParams);
 
-  CustomerDetail updateCustomer(CustomerParams customerParams);
+  CustomerDetailDTO updateCustomer(CustomerParams customerParams);
 
-  CustomerDetail getCustomer(String customerId);
+  CustomerDetailDTO getCustomer(String customerId);
 
   PriceCollectionDTO listPrices(List<String> lookupKeys);
-  SubscriptionDetail createSubscription(SubscriptionParams subscriptionParams);
-  SubscriptionDetail updateSubscriptionQuantity(SubscriptionParams subscriptionParams);
-  SubscriptionDetail updateSubscriptionPeriod(SubscriptionParams subscriptionParams);
-  InvoiceDetail previewInvoice(SubscriptionParams subscriptionParams);
+  SubscriptionDetailDTO createSubscription(SubscriptionParams subscriptionParams);
+  SubscriptionDetailDTO updateSubscriptionQuantity(SubscriptionParams subscriptionParams);
+  SubscriptionDetailDTO updateSubscriptionPeriod(SubscriptionParams subscriptionParams);
+  InvoiceDetailDTO previewInvoice(SubscriptionParams subscriptionParams);
 }

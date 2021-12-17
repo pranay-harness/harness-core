@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SubscriptionConfig {
-  private String StripeApiKey;
+  private String stripeApiKey;
   private int maxNetworkReties = 3;
   private int connectTimeout = 30000;
   private int readTimeout = 80000;

@@ -37,6 +37,7 @@ import io.harness.resourcegroupclient.remote.ResourceGroupClientConfig;
 import io.harness.secret.ConfigSecret;
 import io.harness.secret.SecretsConfiguration;
 import io.harness.signup.SignupNotificationConfiguration;
+import io.harness.subscription.SubscriptionConfig;
 import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ThreadPoolConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -75,6 +76,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String MOCKSERVER_PACKAGE = "io.harness.ng.core.acl.mockserver";
   public static final String ACCOUNT_PACKAGE = "io.harness.account.resource";
   public static final String LICENSE_PACKAGE = "io.harness.licensing.api.resource";
+  public static final String SUBSCRIPTION_PACKAGE = "io.harness.subscription.resource";
   public static final String POLLING_PACKAGE = "io.harness.polling.resource";
   public static final String ENFORCEMENT_PACKAGE = "io.harness.enforcement.resource";
   public static final String ENFORCEMENT_CLIENT_PACKAGE = "io.harness.enforcement.client.resources";
@@ -157,6 +159,7 @@ public class NextGenConfiguration extends Configuration {
   private AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
   @JsonProperty("outboxPollConfig") private OutboxPollConfiguration outboxPollConfig;
   @JsonProperty("segmentConfiguration") @ConfigSecret private SegmentConfiguration segmentConfiguration;
+  @JsonProperty("subscriptionConfig") @ConfigSecret private SubscriptionConfig subscriptionConfig;
   @JsonProperty("gitSdkConfiguration") private GitSdkConfiguration gitSdkConfiguration;
   @JsonProperty("fileServiceConfiguration") private FileServiceConfiguration fileServiceConfiguration;
   @JsonProperty("baseUrls") private BaseUrls baseUrls;
@@ -201,7 +204,7 @@ public class NextGenConfiguration extends Configuration {
             -> StringUtils.startsWithAny(klazz.getPackage().getName(), CORE_PACKAGE, CONNECTOR_PACKAGE,
                 GITOPS_PROVIDER_RESOURCE_PACKAGE, GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE,
                 OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE, SIGNUP_PACKAGE, MOCKSERVER_PACKAGE,
-                ACCOUNT_PACKAGE, LICENSE_PACKAGE, POLLING_PACKAGE, ENFORCEMENT_PACKAGE, ENFORCEMENT_CLIENT_PACKAGE,
+                ACCOUNT_PACKAGE, LICENSE_PACKAGE, SUBSCRIPTION_PACKAGE, POLLING_PACKAGE, ENFORCEMENT_PACKAGE, ENFORCEMENT_CLIENT_PACKAGE,
                 ARTIFACTS_PACKAGE, AUTHENTICATION_SETTINGS_PACKAGE, CD_OVERVIEW_PACKAGE, ACTIVITY_HISTORY_PACKAGE,
                 SERVICE_PACKAGE, SERVICE_ACCOUNTS_PACKAGE, BUCKETS_PACKAGE, CLUSTER_GCP_PACKAGE, WEBHOOK_PACKAGE,
                 ENVIRONMENT_PACKAGE, USERPROFILE_PACKAGE, JIRA_PACKAGE, EXECUTION_PACKAGE, ENTITYSETUP_PACKAGE,

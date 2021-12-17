@@ -1,11 +1,12 @@
 package io.harness.subscription.helpers.impl;
 
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.subscription.dto.CustomerDetail;
-import io.harness.subscription.dto.InvoiceDetail;
+import io.harness.subscription.dto.CustomerDetailDTO;
+import io.harness.subscription.dto.InvoiceDetailDTO;
+import io.harness.subscription.dto.ItemDTO;
 import io.harness.subscription.dto.PriceCollectionDTO;
 import io.harness.subscription.dto.PriceDTO;
-import io.harness.subscription.dto.SubscriptionDetail;
+import io.harness.subscription.dto.SubscriptionDetailDTO;
 import io.harness.subscription.dto.TierMode;
 import io.harness.subscription.dto.TiersDTO;
 import io.harness.subscription.helpers.StripeHelper;
@@ -15,9 +16,11 @@ import io.harness.subscription.params.SubscriptionParams;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 import com.stripe.model.Customer;
 import com.stripe.model.Invoice;
+import com.stripe.model.InvoiceLineItem;
 import com.stripe.model.Price;
 import com.stripe.model.PriceCollection;
 import com.stripe.model.Subscription;
@@ -28,6 +31,7 @@ import com.stripe.param.InvoiceUpcomingParams;
 import com.stripe.param.PriceListParams;
 import com.stripe.param.SubscriptionCreateParams;
 import com.stripe.param.SubscriptionUpdateParams;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +48,7 @@ public class StripeHelperImpl implements StripeHelper {
   }
 
   @Override
-  public CustomerDetail createCustomer(CustomerParams customerParams) {
+  public CustomerDetailDTO createCustomer(CustomerParams customerParams) {
     CustomerCreateParams params = CustomerCreateParams.builder()
                                       .setEmail(customerParams.getBillingContactEmail())
                                       .setName(customerParams.getName())
@@ -55,7 +59,7 @@ public class StripeHelperImpl implements StripeHelper {
   }
 
   @Override
-  public CustomerDetail updateCustomer(CustomerParams customerParams) {
+  public CustomerDetailDTO updateCustomer(CustomerParams customerParams) {
     if (Strings.isNullOrEmpty(customerParams.getCustomerId())) {
       throw new InvalidArgumentsException("Customer id is missing");
     }
@@ -74,19 +78,23 @@ public class StripeHelperImpl implements StripeHelper {
   }
 
   @Override
-  public CustomerDetail getCustomer(String customerId) {
+  public CustomerDetailDTO getCustomer(String customerId) {
     return toCustomerDetail(stripeHandler.retrieveCustomer(customerId));
   }
 
   @Override
   public PriceCollectionDTO listPrices(List<String> lookupKeys) {
-    PriceListParams params = PriceListParams.builder().setActive(true).addAllLookupKeys(lookupKeys).build();
+    PriceListParams params = PriceListParams.builder()
+                                 .setActive(true)
+                                 .addAllLookupKeys(lookupKeys)
+                                 .addAllExpand(Lists.newArrayList("data.tiers"))
+                                 .build();
     PriceCollection priceCollection = stripeHandler.listPrices(params);
     return toPriceCollectionDTO(priceCollection);
   }
 
   @Override
-  public SubscriptionDetail createSubscription(SubscriptionParams subscriptionParams) {
+  public SubscriptionDetailDTO createSubscription(SubscriptionParams subscriptionParams) {
     SubscriptionCreateParams.Builder creationParamsBuilder = SubscriptionCreateParams.builder();
     creationParamsBuilder.setCustomer(subscriptionParams.getCustomerId())
         .setPaymentBehavior(SubscriptionCreateParams.PaymentBehavior.DEFAULT_INCOMPLETE)
@@ -103,7 +111,7 @@ public class StripeHelperImpl implements StripeHelper {
   }
 
   @Override
-  public SubscriptionDetail updateSubscriptionQuantity(SubscriptionParams subscriptionParams) {
+  public SubscriptionDetailDTO updateSubscriptionQuantity(SubscriptionParams subscriptionParams) {
     Subscription subscription = stripeHandler.retrieveSubscription(subscriptionParams.getSubscriptionId());
 
     // Collect item information in new subscription
@@ -131,23 +139,51 @@ public class StripeHelperImpl implements StripeHelper {
   }
 
   @Override
-  public SubscriptionDetail updateSubscriptionPeriod(SubscriptionParams subscriptionParams) {
-    return null;
+  public SubscriptionDetailDTO updateSubscriptionPeriod(SubscriptionParams subscriptionParams) {
+    Subscription subscription = stripeHandler.retrieveSubscription(subscriptionParams.getSubscriptionId());
+
+    // Collect item information in new subscription
+    Map<String, ItemParams> newItems = new HashMap<>();
+    subscriptionParams.getItems().forEach(item -> newItems.put(item.getPriceId(), item));
+
+    // Go through current subscription and update.
+    SubscriptionUpdateParams.Builder updateParamBuilder = SubscriptionUpdateParams.builder();
+    updateParamBuilder.setCancelAtPeriodEnd(false).setProrationBehavior(
+        SubscriptionUpdateParams.ProrationBehavior.CREATE_PRORATIONS);
+    if (!newItems.isEmpty()) {
+      List<SubscriptionItem> data = subscription.getItems().getData();
+      for (SubscriptionItem item : data) {
+        if (newItems.containsKey(item.getPrice().getId())) {
+          updateParamBuilder.addItem(SubscriptionUpdateParams.Item.builder()
+                                         .setId(item.getId())
+                                         .setPrice(newItems.get(item.getPrice().getId()).getPriceId())
+                                         .setQuantity(newItems.get(item.getPrice().getId()).getQuantity())
+                                         .build());
+        }
+      }
+    }
+    return toSubscriptionDetail(
+        stripeHandler.updateSubscription(subscriptionParams.getSubscriptionId(), updateParamBuilder.build()));
   }
 
   @Override
-  public InvoiceDetail previewInvoice(SubscriptionParams subscriptionParams) {
+  public InvoiceDetailDTO previewInvoice(SubscriptionParams subscriptionParams) {
     InvoiceUpcomingParams.Builder upcomingParamBuilder = InvoiceUpcomingParams.builder();
-    upcomingParamBuilder.setCustomer(subscriptionParams.getCustomerId())
-        .setSubscription(subscriptionParams.getSubscriptionId());
 
-    Subscription subscription = stripeHandler.retrieveSubscription(subscriptionParams.getSubscriptionId());
+    if (!Strings.isNullOrEmpty(subscriptionParams.getCustomerId())) {
+      upcomingParamBuilder.setCustomer(subscriptionParams.getCustomerId());
+    }
 
-    // Delete existed items in subscription
-    List<SubscriptionItem> data = subscription.getItems().getData();
-    data.forEach(oldItem
-        -> upcomingParamBuilder.addSubscriptionItem(
-            InvoiceUpcomingParams.SubscriptionItem.builder().setId(oldItem.getId()).setDeleted(true).build()));
+    if (!Strings.isNullOrEmpty(subscriptionParams.getSubscriptionId())) {
+      Subscription subscription = stripeHandler.retrieveSubscription(subscriptionParams.getSubscriptionId());
+
+      // Delete existed items in subscription
+      List<SubscriptionItem> data = subscription.getItems().getData();
+      data.forEach(oldItem
+          -> upcomingParamBuilder.addSubscriptionItem(
+              InvoiceUpcomingParams.SubscriptionItem.builder().setId(oldItem.getId()).setDeleted(true).build()));
+      upcomingParamBuilder.setSubscription(subscriptionParams.getSubscriptionId());
+    }
 
     // Add new items
     subscriptionParams.getItems().forEach(newItem
@@ -160,38 +196,65 @@ public class StripeHelperImpl implements StripeHelper {
         subscriptionParams.getCustomerId(), subscriptionParams.getSubscriptionId(), upcomingParamBuilder.build()));
   }
 
-  private InvoiceDetail toInvoiceDetail(Invoice invoice) {
-    return InvoiceDetail.builder().build();
+  private InvoiceDetailDTO toInvoiceDetail(Invoice invoice) {
+    InvoiceDetailDTO dto = InvoiceDetailDTO.builder()
+                               .subscriptionId(invoice.getSubscription())
+                               .totalAmount(invoice.getTotal())
+                               .amountDue(invoice.getAmountDue())
+                               .periodEnd(invoice.getPeriodEnd())
+                               .periodStart(invoice.getPeriodStart())
+                               .nextPaymentAttempt(invoice.getNextPaymentAttempt())
+                               .items(new ArrayList<>())
+                               .build();
+    for (InvoiceLineItem item : invoice.getLines().getData()) {
+      ItemDTO itemDTO = ItemDTO.builder()
+                            .amount(item.getAmount())
+                            .quantity(item.getQuantity())
+                            .description(item.getDescription())
+                            .build();
+      dto.getItems().add(itemDTO);
+    }
+
+    return dto;
   }
 
-  private CustomerDetail toCustomerDetail(Customer customer) {
-    return CustomerDetail.builder().build();
+  private CustomerDetailDTO toCustomerDetail(Customer customer) {
+    return CustomerDetailDTO.builder().build();
   }
 
   private PriceCollectionDTO toPriceCollectionDTO(PriceCollection priceCollection) {
-    PriceCollectionDTO priceCollectionDTO = PriceCollectionDTO.builder().build();
+    PriceCollectionDTO priceCollectionDTO = PriceCollectionDTO.builder().prices(new ArrayList<>()).build();
 
     List<Price> data = priceCollection.getData();
     for (Price price : data) {
-      PriceDTO priceDTO =
-          PriceDTO.builder().isActive(price.getActive()).currency(price.getCurrency()).priceId(price.getId()).build();
-
-      if (Strings.isNullOrEmpty(price.getTiersMode())) {
-        priceDTO.setUnitAmount(price.getUnitAmount());
-      } else {
-        priceDTO.setTierMode(TierMode.valueOf(price.getTiersMode()));
-        priceDTO.setTiersDTO(price.getTiers()
-                                 .stream()
-                                 .map(t -> TiersDTO.builder().unitAmount(t.getUnitAmount()).upTo(t.getUpTo()).build())
-                                 .collect(Collectors.toList()));
-      }
-      priceCollectionDTO.getPrices().add(priceDTO);
+      priceCollectionDTO.getPrices().add(toPriceDTO(price));
     }
     return priceCollectionDTO;
   }
 
-  private SubscriptionDetail toSubscriptionDetail(Subscription subscription) {
-    return SubscriptionDetail.builder()
+  private PriceDTO toPriceDTO(Price price) {
+    PriceDTO priceDTO = PriceDTO.builder()
+                            .productId(price.getProduct())
+                            .lookupKey(price.getLookupKey())
+                            .isActive(price.getActive())
+                            .currency(price.getCurrency())
+                            .priceId(price.getId())
+                            .build();
+
+    if (Strings.isNullOrEmpty(price.getTiersMode())) {
+      priceDTO.setUnitAmount(price.getUnitAmount());
+    } else {
+      priceDTO.setTierMode(TierMode.fromString(price.getTiersMode()));
+      priceDTO.setTiersDTO(price.getTiers()
+                               .stream()
+                               .map(t -> TiersDTO.builder().unitAmount(t.getUnitAmount()).upTo(t.getUpTo()).build())
+                               .collect(Collectors.toList()));
+    }
+    return priceDTO;
+  }
+
+  private SubscriptionDetailDTO toSubscriptionDetail(Subscription subscription) {
+    return SubscriptionDetailDTO.builder()
         .subscriptionId(subscription.getId())
         .clientSecret(subscription.getLatestInvoiceObject().getPaymentIntentObject().getClientSecret())
         .build();

@@ -9,4 +9,9 @@ import lombok.Data;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class InvoiceDetail {}
+public class ItemDTO {
+  PriceDTO price;
+  String description;
+  long quantity;
+  long amount;
+}
