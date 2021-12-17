@@ -46,6 +46,8 @@ import io.harness.migrations.all.AddHarnessOwnedToResourceConstraint;
 import io.harness.migrations.all.AddInfraMappingNameToInstanceData;
 import io.harness.migrations.all.AddIsDefaultFlagToUserGroup;
 import io.harness.migrations.all.AddOrchestrationToWorkflows;
+import io.harness.migrations.all.AddRingDetailsToDelegateRing;
+import io.harness.migrations.all.AddRingsToAccountMigration;
 import io.harness.migrations.all.AddStateMachineToWorkflowExecutions;
 import io.harness.migrations.all.AddValidUntilToSecretUsageLogs;
 import io.harness.migrations.all.AddValidUntilToWorkflowExecution;
@@ -354,6 +356,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(208, MigrationSMCredentialsFromLocalToGlobalKMS.class))
         .add(Pair.of(209, NullAppFilterPermissionMigration.class))
         .add(Pair.of(210, DefaultDelegateNgTokenMigration.class))
+        .add(Pair.of(211, AddRingsToAccountMigration.class))
+        .add(Pair.of(212, AddRingDetailsToDelegateRing.class))
         .build();
   }
 }
