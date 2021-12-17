@@ -441,11 +441,7 @@ public class K8sStepHelperTest extends CategoryTest {
     List<HelmManifestCommandFlag> commandFlags = asList(HelmManifestCommandFlag.builder()
                                                             .commandType(HelmCommandFlagType.Fetch)
                                                             .flag(ParameterField.createValueField("--test"))
-                                                            .build(),
-        HelmManifestCommandFlag.builder()
-            .commandType(HelmCommandFlagType.Version)
-            .flag(ParameterField.createValueField("--test2"))
-            .build());
+                                                            .build());
     HelmChartManifestOutcome manifestOutcome =
         HelmChartManifestOutcome.builder()
             .store(GitStore.builder()
