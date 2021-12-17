@@ -11,6 +11,7 @@ import static io.harness.pcf.model.PcfConstants.HARNESS__INACTIVE__IDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__IDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__IDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.INTERIM_APP_NAME_SUFFIX;
 import static io.harness.pcf.model.PcfConstants.PCF_CONNECTIVITY_SUCCESS;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
 import static io.harness.pcf.model.PcfConstants.THREAD_SLEEP_INTERVAL_FOR_STEADY_STATE_CHECK;
@@ -34,6 +35,7 @@ import io.harness.pcf.model.CfCreateApplicationRequestData;
 import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.pcf.model.CfRunPluginScriptRequestData;
+import io.harness.pcf.model.PcfConstants;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -359,7 +361,9 @@ public class CfDeploymentManagerImpl implements CfDeploymentManager {
 
   boolean isValidRevisionSuffix(String suffix) {
     boolean result = suffix.length() == 0 || suffix.equalsIgnoreCase(DELIMITER + HARNESS__INACTIVE__IDENTIFIER)
-        || suffix.equalsIgnoreCase(DELIMITER + HARNESS__STAGE__IDENTIFIER);
+        || suffix.equalsIgnoreCase(DELIMITER + HARNESS__STAGE__IDENTIFIER)
+        || suffix.equalsIgnoreCase(INTERIM_APP_NAME_SUFFIX);
+
     if (!result && suffix.startsWith(DELIMITER)) {
       suffix = suffix.substring(DELIMITER.length());
       result = getIntegerSafe(suffix) != -1;
@@ -497,6 +501,9 @@ public class CfDeploymentManagerImpl implements CfDeploymentManager {
   public boolean isActiveApplication(CfRequestConfig cfRequestConfig, LogCallback executionLogCallback)
       throws PivotalClientApiException {
     // If we want to enable it, its expected to be disabled and vice versa
+    if (PcfConstants.isInterimApp(cfRequestConfig.getApplicationName())) {
+      return false;
+    }
     ApplicationEnvironments applicationEnvironments = cfSdkClient.getApplicationEnvironmentsByName(cfRequestConfig);
     if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())) {
       for (String statusKey : STATUS_ENV_VARIABLES) {
@@ -511,6 +518,9 @@ public class CfDeploymentManagerImpl implements CfDeploymentManager {
 
   @Override
   public boolean isInActiveApplication(CfRequestConfig cfRequestConfig) throws PivotalClientApiException {
+    if (PcfConstants.isInterimApp(cfRequestConfig.getApplicationName())) {
+      return false;
+    }
     ApplicationEnvironments applicationEnvironments = cfSdkClient.getApplicationEnvironmentsByName(cfRequestConfig);
     if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())) {
       for (String statusKey : STATUS_ENV_VARIABLES) {

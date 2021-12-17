@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
+import static software.wings.beans.CGConstants.ENCRYPTED_VALUE_STR;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;

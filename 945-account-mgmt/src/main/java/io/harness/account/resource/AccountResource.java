@@ -4,6 +4,7 @@ import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
 import static io.harness.account.accesscontrol.AccountAccessControlPermissions.EDIT_ACCOUNT_PERMISSION;
 import static io.harness.account.accesscontrol.AccountAccessControlPermissions.VIEW_ACCOUNT_PERMISSION;
 
+import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import io.harness.accesscontrol.AccountIdentifier;
@@ -13,6 +14,8 @@ import io.harness.account.AccountConfig;
 import io.harness.account.accesscontrol.ResourceTypes;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.configuration.DeployVariant;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -68,6 +71,7 @@ import javax.ws.rs.core.MediaType;
 public class AccountResource {
   private final AccountClient accountClient;
   private final AccountConfig accountConfig;
+  private static String deployVersion = System.getenv().get(DEPLOY_VERSION);
 
   @Inject
   public AccountResource(AccountClient accountClient, AccountConfig accountConfig) {
@@ -130,6 +134,9 @@ public class AccountResource {
                               "accountIdentifier") @AccountIdentifier String accountIdentifier,
       @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
           description = "This is details of the Account. DefaultExperience is mandatory") AccountDTO dto) {
+    if(DeployVariant.isCommunity(deployVersion)) {
+      throw new InvalidRequestException("Operation is not supported");
+    }
     AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.updateDefaultExperience(accountIdentifier, dto));
 
     return ResponseDTO.newResponse(accountDTO);

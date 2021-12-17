@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: resourceTypeConfiguration
-version: 2
+version: 3
 resourceTypes:
   - identifier: ACCOUNT
     permissionKey: account
@@ -48,3 +48,7 @@ resourceTypes:
     permissionKey: dashboards
   - identifier: TEMPLATE
     permissionKey: template
+  - identifier: MONITOREDSERVICE
+    permissionKey: monitoredservice
+  - identifier: SLO
+    permissionKey: slo

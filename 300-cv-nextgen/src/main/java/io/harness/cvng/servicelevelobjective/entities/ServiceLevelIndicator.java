@@ -1,10 +1,14 @@
 package io.harness.cvng.servicelevelobjective.entities;
 
+import static io.harness.cvng.CVConstants.DATA_COLLECTION_TIME_RANGE_FOR_SLI;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.services.api.UpdatableEntity;
+import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
@@ -22,6 +26,8 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -126,5 +132,14 @@ public abstract class ServiceLevelIndicator
       return createNextTaskIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  public TimeRange getFirstTimeDataCollectionTimeRange() {
+    Instant startTime = Instant.ofEpochMilli(getCreatedAt());
+    Instant endTime = DateTimeUtils.roundDownTo5MinBoundary(startTime);
+    return TimeRange.builder()
+        .startTime(endTime.minus(DATA_COLLECTION_TIME_RANGE_FOR_SLI, ChronoUnit.MINUTES))
+        .endTime(endTime)
+        .build();
   }
 }

@@ -63,6 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ScmFetchFilesHelper {
   @Inject private ScmDelegateClient scmDelegateClient;
   @Inject private ScmServiceClient scmServiceClient;
+  private static final List<String> ROOT_DIRECTORY_PATHS = Arrays.asList(".", "/");
 
   public GitFetchFilesResult fetchFilesFromRepoWithScm(
       GitFileConfig gitFileConfig, GitConfig gitConfig, List<String> filePathList) {
@@ -121,7 +122,7 @@ public class ScmFetchFilesHelper {
     FileContentBatchResponse fileBatchContentResponse =
         getFileContentBatchResponseByFolder(gitFileConfig, scmConnector);
 
-    boolean relativize = true;
+    boolean relativize = !ROOT_DIRECTORY_PATHS.contains(gitFileConfig.getFilePath());
     if (isEmpty(fileBatchContentResponse.getFileBatchContentResponse().getFileContentsList())) {
       fileBatchContentResponse = getFileContentBatchResponseByFilePath(gitFileConfig, scmConnector);
       relativize = false;

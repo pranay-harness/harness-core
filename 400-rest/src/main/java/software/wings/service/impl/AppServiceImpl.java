@@ -96,6 +96,7 @@ import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.yaml.gitSync.YamlGitConfig;
+import software.wings.yaml.gitSync.YamlGitConfig.YamlGitConfigKeys;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -281,14 +282,13 @@ public class AppServiceImpl implements AppService {
     String[] appIdArray = appIdList.toArray(new String[0]);
     if (isNotEmpty(applicationList)) {
       accountId = applicationList.get(0).getAccountId();
-      PageRequest<YamlGitConfig> yamlPageRequest = PageRequestBuilder.aPageRequest()
-                                                       .addFilter("accountId", Operator.EQ, accountId)
-                                                       .addFilter("entityId", Operator.IN, appIdArray)
-                                                       .addFilter("entityType", Operator.EQ, EntityType.APPLICATION)
-                                                       .build();
 
-      List<YamlGitConfig> yamlGitConfigList =
-          wingsPersistence.getAllEntities(yamlPageRequest, () -> yamlGitService.list(yamlPageRequest));
+      List<YamlGitConfig> yamlGitConfigList = wingsPersistence.createQuery(YamlGitConfig.class)
+                                                  .filter(YamlGitConfigKeys.accountId, accountId)
+                                                  .field(YamlGitConfigKeys.entityId)
+                                                  .in(appIdList)
+                                                  .filter(YamlGitConfigKeys.entityType, EntityType.APPLICATION)
+                                                  .asList();
       Map<String, YamlGitConfig> yamlGitConfigMap =
           yamlGitConfigList.stream().collect(Collectors.toMap(YamlGitConfig::getEntityId, identity()));
 

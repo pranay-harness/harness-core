@@ -9,8 +9,6 @@ import io.harness.migration.beans.MigrationType;
 import io.harness.ng.core.migration.DeleteCVSetupUsageEventsMigration;
 import io.harness.ng.core.migration.NGDefaultOrgNameMigration;
 import io.harness.ng.core.migration.NGDefaultSMNameMigration;
-import io.harness.ng.core.migration.NGSecretManagerMigration;
-import io.harness.ng.core.migration.NGSecretMigrationFromManager;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -32,8 +30,8 @@ public class NGCoreMigrationDetails implements MigrationDetails {
   public List<Pair<Integer, Class<? extends NGMigration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends NGMigration>>>()
         .add(Pair.of(1, NoopNGCoreMigration.class))
-        .add(Pair.of(2, NGSecretManagerMigration.class))
-        .add(Pair.of(3, NGSecretMigrationFromManager.class))
+        .add(Pair.of(2, NoopNGCoreMigration.class))
+        .add(Pair.of(3, NoopNGCoreMigration.class))
         .add(Pair.of(4, DeleteCVSetupUsageEventsMigration.class))
         .add(Pair.of(5, NGDefaultSMNameMigration.class))
         .add(Pair.of(6, NGDefaultOrgNameMigration.class))

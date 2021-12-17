@@ -1,5 +1,8 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGE_USERGROUP_PERMISSION;
@@ -44,6 +47,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -78,6 +87,19 @@ import retrofit2.http.Body;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error"),
           @ApiResponse(code = 403, response = AccessDeniedErrorDTO.class, message = "Unauthorized")
     })
+@Tag(name = "User Group", description = "This contains APIs related to User Group as defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @NextGenManagerAuth
 public class UserGroupResource {
   private final UserGroupService userGroupService;
@@ -85,11 +107,20 @@ public class UserGroupResource {
 
   @POST
   @ApiOperation(value = "Create a User Group", nickname = "postUserGroup")
-  public ResponseDTO<UserGroupDTO> create(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @Valid UserGroupDTO userGroupDTO) {
+  @Operation(operationId = "postUserGroup", summary = "Create a User Group in an account/org/project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the successfully created User Group")
+      })
+  public ResponseDTO<UserGroupDTO>
+  create(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @RequestBody(
+          description = "User Group entity to be created", required = true) @NotNull @Valid UserGroupDTO userGroupDTO) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, null), MANAGE_USERGROUP_PERMISSION);
     validateScopes(accountIdentifier, orgIdentifier, projectIdentifier, userGroupDTO);
@@ -102,11 +133,20 @@ public class UserGroupResource {
 
   @PUT
   @ApiOperation(value = "Update a User Group", nickname = "putUserGroup")
-  public ResponseDTO<UserGroupDTO> update(
-      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @Valid UserGroupDTO userGroupDTO) {
+  @Operation(operationId = "putUserGroup", summary = "Update a User Group in an account/org/project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the successfully updated User Group")
+      })
+  public ResponseDTO<UserGroupDTO>
+  update(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotEmpty @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @RequestBody(description = "User Group entity with the updates",
+          required = true) @NotNull @Valid UserGroupDTO userGroupDTO) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, userGroupDTO.getIdentifier()), MANAGE_USERGROUP_PERMISSION);
     validateScopes(accountIdentifier, orgIdentifier, projectIdentifier, userGroupDTO);
@@ -120,11 +160,20 @@ public class UserGroupResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get a User Group", nickname = "getUserGroup")
-  public ResponseDTO<UserGroupDTO> get(
-      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotEmpty @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
+  @Operation(operationId = "getUserGroup", summary = "Get a User Group in an account/org/project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the successfully fetched User Group")
+      })
+  public ResponseDTO<UserGroupDTO>
+  get(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotEmpty @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "Identifier of the user group", required = true) @NotEmpty @PathParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, identifier), VIEW_USERGROUP_PERMISSION);
     Optional<UserGroup> userGroupOptional =
@@ -137,11 +186,20 @@ public class UserGroupResource {
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete a User Group", nickname = "deleteUserGroup")
-  public ResponseDTO<UserGroupDTO> delete(
-      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotEmpty @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
+  @Operation(operationId = "deleteUserGroup", summary = "Delete a User Group in an account/org/project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the successfully deleted User Group")
+      })
+  public ResponseDTO<UserGroupDTO>
+  delete(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotEmpty @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "Identifier of the user group", required = true) @NotEmpty @PathParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, identifier), MANAGE_USERGROUP_PERMISSION);
     Scope scope = Scope.builder()
@@ -155,10 +213,19 @@ public class UserGroupResource {
 
   @GET
   @ApiOperation(value = "Get User Group List", nickname = "getUserGroupList")
-  public ResponseDTO<PageResponse<UserGroupDTO>> list(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+  @Operation(operationId = "getUserGroupList", summary = "List the User Groups in an account/org/project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the paginated list of the User Groups.")
+      })
+  public ResponseDTO<PageResponse<UserGroupDTO>>
+  list(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "Search filter which matches by user group name/identifier")
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, null), VIEW_USERGROUP_PERMISSION);
@@ -176,12 +243,22 @@ public class UserGroupResource {
   @POST
   @Path("{identifier}/users")
   @ApiOperation(value = "List users in a user group", nickname = "getUsersInUserGroup")
-  public ResponseDTO<PageResponse<UserMetadataDTO>> getUsersInUserGroup(
-      @NotNull @PathParam("identifier") String userGroupIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Valid @BeanParam PageRequest pageRequest, UserFilter userFilter) {
+  @Operation(operationId = "getUserListInUserGroup",
+      summary = "List the users in a User Group in an account/org/project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the paginated list of the users in a User Group.")
+      })
+  public ResponseDTO<PageResponse<UserMetadataDTO>>
+  getUsersInUserGroup(@Parameter(description = "Identifier of the user group", required = true) @NotNull @PathParam(
+                          "identifier") String userGroupIdentifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY)
+      String projectIdentifier, @Valid @BeanParam PageRequest pageRequest,
+      @RequestBody(description = "Filter users based on multiple parameters") UserFilter userFilter) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, userGroupIdentifier), VIEW_USERGROUP_PERMISSION);
     Scope scope = Scope.builder()
@@ -196,7 +273,16 @@ public class UserGroupResource {
   @POST
   @Path("batch")
   @ApiOperation(value = "Get Batch User Group List", nickname = "getBatchUserGroupList")
-  public ResponseDTO<List<UserGroupDTO>> list(@Body @NotNull UserGroupFilterDTO userGroupFilterDTO) {
+  @Operation(operationId = "getBatchUsersGroupList",
+      summary = "List the User Groups selected by a filter in an account/org/project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the list of the user groups selected by a filter in a User Group.")
+      })
+  public ResponseDTO<List<UserGroupDTO>>
+  list(@RequestBody(
+      description = "User Group Filter", required = true) @Body @NotNull UserGroupFilterDTO userGroupFilterDTO) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(userGroupFilterDTO.getAccountIdentifier(), userGroupFilterDTO.getOrgIdentifier(),
             userGroupFilterDTO.getProjectIdentifier()),
@@ -209,12 +295,23 @@ public class UserGroupResource {
   @GET
   @Path("{identifier}/member/{userIdentifier}")
   @ApiOperation(value = "Check if the user is part of the user group", nickname = "checkMember")
-  public ResponseDTO<Boolean> checkMember(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @PathParam("userIdentifier") String userIdentifier) {
+  @Operation(operationId = "getMember",
+      summary = "Check if the user is part of the user group in an account/org/project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Return true/false based on whether the user is part of the user group")
+      })
+  public ResponseDTO<Boolean>
+  checkMember(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+                  NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "Identifier of the user group", required = true) @PathParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @Parameter(description = "Identifier of the user", required = true) @PathParam(
+          "userIdentifier") String userIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, identifier), VIEW_USERGROUP_PERMISSION);
     boolean isMember =
@@ -225,12 +322,22 @@ public class UserGroupResource {
   @PUT
   @Path("{identifier}/member/{userIdentifier}")
   @ApiOperation(value = "Add a user to the user group", nickname = "addMember")
-  public ResponseDTO<UserGroupDTO> addMember(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @PathParam("userIdentifier") String userIdentifier) {
+  @Operation(operationId = "putMember", summary = "Add a user to the user group in an account/org/project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the updated user group after user addition")
+      })
+  public ResponseDTO<UserGroupDTO>
+  addMember(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+                NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "Identifier of the user group", required = true) @PathParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @Parameter(description = "Identifier of the user", required = true) @PathParam(
+          "userIdentifier") String userIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, identifier), MANAGE_USERGROUP_PERMISSION);
     UserGroup userGroup =
@@ -241,12 +348,22 @@ public class UserGroupResource {
   @DELETE
   @Path("{identifier}/member/{userIdentifier}")
   @ApiOperation(value = "Remove a user from the user group", nickname = "removeMember")
-  public ResponseDTO<UserGroupDTO> removeMember(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @PathParam("userIdentifier") String userIdentifier) {
+  @Operation(operationId = "deleteMember", summary = "Remove a user from the user group in an account/org/project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the updated user group after user removal")
+      })
+  public ResponseDTO<UserGroupDTO>
+  removeMember(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+                   NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "Identifier of the user group", required = true) @PathParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @Parameter(description = "Identifier of the user", required = true) @PathParam(
+          "userIdentifier") String userIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, identifier), MANAGE_USERGROUP_PERMISSION);
     Scope scope = Scope.builder()
@@ -269,11 +386,23 @@ public class UserGroupResource {
   @PUT
   @Path("{userGroupId}/unlink")
   @ApiOperation(value = "API to unlink the harness user group from SSO group", nickname = "unlinkSsoGroup")
-  public RestResponse<UserGroup> unlinkSsoGroup(@PathParam("userGroupId") String userGroupId,
-      @QueryParam("retainMembers") boolean retainMembers,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+  @Operation(operationId = "unlinkUserGroupfromSSO",
+      summary = "Unlink SSO Group from the User Group in an account/org/project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the updated User Group after unlinking SSO Group")
+      })
+  public RestResponse<UserGroup>
+  unlinkSsoGroup(@Parameter(description = "Identifier of the user group", required = true) @PathParam(
+                     "userGroupId") String userGroupId,
+      @Parameter(description = "Retain currently synced members of the user group") @QueryParam(
+          "retainMembers") boolean retainMembers,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, userGroupId), MANAGE_USERGROUP_PERMISSION);
     return new RestResponse<>(userGroupService.unlinkSsoGroup(
@@ -283,11 +412,24 @@ public class UserGroupResource {
   @PUT
   @Path("{userGroupId}/link/saml/{samlId}")
   @ApiOperation(value = "Link to SAML group", nickname = "linkToSamlGroup")
-  public RestResponse<UserGroup> linkToSamlGroup(@PathParam("userGroupId") String userGroupId,
-      @PathParam("samlId") String samlId, @NotNull @Valid SamlLinkGroupRequest groupRequest,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+  @Operation(operationId = "linkUserGroupToSAML",
+      summary = "Link SAML Group to the User Group in an account/org/project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns the updated User Group after linking SAML Group")
+      })
+  public RestResponse<UserGroup>
+  linkToSamlGroup(@Parameter(description = "Identifier of the user group", required = true) @PathParam(
+                      "userGroupId") String userGroupId,
+      @Parameter(description = "Saml Group entity identifier", required = true) @PathParam("samlId") String samlId,
+      @RequestBody(
+          description = "Saml Link Group Request", required = true) @NotNull @Valid SamlLinkGroupRequest groupRequest,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, userGroupId), MANAGE_USERGROUP_PERMISSION);
     return new RestResponse<>(userGroupService.linkToSsoGroup(accountIdentifier, orgIdentifier, projectIdentifier,

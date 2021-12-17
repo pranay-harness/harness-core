@@ -41,7 +41,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
-import io.harness.migration.NGMigration;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.api.NGEncryptedDataService;
@@ -86,7 +85,7 @@ import org.springframework.data.util.CloseableIterator;
 
 @Slf4j
 @OwnedBy(PL)
-public class NGSecretManagerMigration implements NGMigration {
+public class NGSecretManagerMigration {
   public static final String CONNECTOR_STRING = "_";
   public static final int BATCH_SIZE = 1000;
   public final String UUID;
@@ -116,7 +115,6 @@ public class NGSecretManagerMigration implements NGMigration {
     this.ngEncryptedDataService = ngEncryptedDataService;
   }
 
-  @Override
   public void migrate() {
     log.info("[NGSecretManagerMigration] Starting NGSecretManageMigration migration");
 
@@ -226,7 +224,7 @@ public class NGSecretManagerMigration implements NGMigration {
     return connectorDTO;
   }
 
-  private ConnectorDTO createGlobal(
+  public ConnectorDTO createGlobal(
       String accountIdentifier, String orgIdentifier, String projIdentifier, boolean isAccountDefault) {
     Optional<ConnectorResponseDTO> connectorResponseDTO =
         connectorService.get(accountIdentifier, orgIdentifier, projIdentifier, HARNESS_SECRET_MANAGER_IDENTIFIER);

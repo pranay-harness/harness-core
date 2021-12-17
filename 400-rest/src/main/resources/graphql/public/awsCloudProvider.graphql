@@ -4,6 +4,7 @@ input AwsCloudProviderInput {
   credentialsType: AwsCredentialsType
   ec2IamCredentials: Ec2IamCredentials
   manualCredentials: AwsManualCredentials
+  irsaCredentials: IrsaCredentials
 
   crossAccountAttributes: AwsCrossAccountAttributes
   defaultRegion: String
@@ -12,6 +13,7 @@ input AwsCloudProviderInput {
 enum AwsCredentialsType {
   EC2_IAM
   MANUAL
+  IRSA
 }
 
 input Ec2IamCredentials {
@@ -23,6 +25,11 @@ input AwsManualCredentials {
   accessKey: String
   accessKeySecretId: String
   secretKeySecretId: String!
+}
+
+input IrsaCredentials {
+  delegateSelector: String!
+  usageScope: UsageScopeInput
 }
 
 input AwsCrossAccountAttributes {
@@ -37,6 +44,7 @@ input UpdateAwsCloudProviderInput {
   credentialsType: AwsCredentialsType
   ec2IamCredentials: UpdateEc2IamCredentials
   manualCredentials: UpdateAwsManualCredentials
+  irsaCredentials: UpdateIrsaCredentials
 
   crossAccountAttributes: UpdateAwsCrossAccountAttributes
   defaultRegion: String
@@ -51,6 +59,11 @@ input UpdateAwsManualCredentials {
   accessKey: String
   accessKeySecretId: String
   secretKeySecretId: String
+}
+
+input UpdateIrsaCredentials {
+  delegateSelector: String
+  usageScope: UsageScopeInput
 }
 
 input UpdateAwsCrossAccountAttributes {

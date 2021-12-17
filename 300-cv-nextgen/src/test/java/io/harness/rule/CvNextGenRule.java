@@ -1,9 +1,12 @@
 package io.harness.rule;
 
+import static io.harness.AuthorizationServiceHeader.CV_NEXT_GEN;
 import static io.harness.CvNextGenTestBase.getResourceFilePath;
 import static io.harness.cache.CacheBackend.CAFFEINE;
 import static io.harness.cache.CacheBackend.NOOP;
 
+import io.harness.AccessControlClientConfiguration;
+import io.harness.AccessControlClientModule;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
@@ -163,6 +166,17 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     }
     CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
     modules.add(cacheModule);
+    AccessControlClientConfiguration accessControlClientConfiguration =
+        AccessControlClientConfiguration.builder()
+            .enableAccessControl(false)
+            .accessControlServiceSecret("token")
+            .accessControlServiceConfig(ServiceHttpClientConfig.builder()
+                                            .baseUrl("http://localhost:9006/api/")
+                                            .readTimeOutSeconds(15)
+                                            .connectTimeOutSeconds(15)
+                                            .build())
+            .build();
+    modules.add(AccessControlClientModule.getInstance(accessControlClientConfiguration, CV_NEXT_GEN.getServiceId()));
 
     modules.add(new AbstractCfModule() {
       @Override

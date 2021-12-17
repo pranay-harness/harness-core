@@ -112,3 +112,11 @@ cacheConfig:
   cacheBackend: NOOP
   cacheNamespace: ""
   disabledCaches: [ ]
+
+accessControlClientConfig:
+  enableAccessControl: false
+  accessControlServiceSecret: "token"
+  accessControlServiceConfig:
+    baseUrl: "http://localhost:9006/api/"
+    readTimeOutSeconds: 15
+    connectTimeOutSeconds: 15

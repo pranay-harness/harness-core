@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 12
+version: 13
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -69,6 +69,13 @@ roles:
         - core_template_delete
         - core_template_edit
         - core_template_view
+        - chi_monitoredservice_view
+        - chi_monitoredservice_edit
+        - chi_monitoredservice_delete
+        - chi_monitoredservice_toggle
+        - chi_slo_view
+        - chi_slo_edit
+        - chi_slo_delete
       allowedScopeLevels:
         - project
       managed: true
@@ -91,6 +98,8 @@ roles:
         - core_resourcegroup_view
         - core_serviceaccount_view
         - core_template_view
+        - chi_monitoredservice_view
+        - chi_slo_view
       allowedScopeLevels:
         - project
       managed: true

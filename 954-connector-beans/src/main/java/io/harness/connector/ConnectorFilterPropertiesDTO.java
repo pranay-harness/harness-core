@@ -3,6 +3,7 @@ package io.harness.connector;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.filter.FilterConstants.CONNECTOR_FILTER;
 
+import io.harness.ConnectorConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.CcmConnectorFilter;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -12,6 +13,7 @@ import io.harness.filter.dto.FilterPropertiesDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AccessLevel;
@@ -32,17 +34,16 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(DX)
-@Schema(name = "ConnectorFilterProperties",
-    description = "This is the Connector Filter Properties entity as defined in harness")
+@Schema(name = "ConnectorFilterProperties", description = "Properties of the Connector Filter defined in Harness")
 public class ConnectorFilterPropertiesDTO extends FilterPropertiesDTO {
-  List<String> connectorNames;
-  List<String> connectorIdentifiers;
-  String description;
-  List<ConnectorType> types;
-  List<ConnectorCategory> categories;
-  List<ConnectivityStatus> connectivityStatuses;
-  Boolean inheritingCredentialsFromDelegate;
-  CcmConnectorFilter ccmConnectorFilter;
+  @Schema(description = ConnectorConstants.CONNECTOR_NAME_LIST) List<String> connectorNames;
+  @Schema(description = ConnectorConstants.CONNECTOR_IDENTIFIER_LIST) List<String> connectorIdentifiers;
+  @Schema(description = ConnectorConstants.FILTER_DESCRIPTION) String description;
+  @Schema(description = ConnectorConstants.CONNECTOR_TYPE_LIST) List<ConnectorType> types;
+  @Schema(description = ConnectorConstants.CONNECTOR_CATEGORY_LIST) List<ConnectorCategory> categories;
+  @Schema(description = ConnectorConstants.CONNECTOR_STATUS_LIST) List<ConnectivityStatus> connectivityStatuses;
+  @Schema(description = ConnectorConstants.INHERIT_FROM_DELEGATE) Boolean inheritingCredentialsFromDelegate;
+  @Hidden CcmConnectorFilter ccmConnectorFilter;
 
   @Override
   public FilterType getFilterType() {

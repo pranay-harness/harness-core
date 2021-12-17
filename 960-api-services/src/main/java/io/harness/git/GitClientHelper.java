@@ -331,7 +331,8 @@ public class GitClientHelper {
     if ((ex instanceof GitAPIException && ex.getCause() instanceof TransportException)
         || ex instanceof JGitInternalException || ex instanceof MissingObjectException
         || ex instanceof RefNotFoundException) {
-      throw new GitConnectionDelegateException(GIT_CONNECTION_ERROR, ex.getCause(), ex.getMessage(), USER_ADMIN);
+      throw new GitConnectionDelegateException(
+          GIT_CONNECTION_ERROR, ex.getCause(), ExceptionSanitizer.sanitizeTheMessage(ex.getMessage()), USER_ADMIN);
     }
   }
 

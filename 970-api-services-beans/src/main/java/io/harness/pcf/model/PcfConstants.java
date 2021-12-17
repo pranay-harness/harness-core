@@ -1,13 +1,14 @@
 package io.harness.pcf.model;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CDP)
 public interface PcfConstants {
   char PATH_DELIMITER = '/';
-
+  String DELIMITER = "__";
   String REPOSITORY_DIR_PATH = "./repository";
   String PCF_ARTIFACT_DOWNLOAD_DIR_PATH = "./repository/pcfartifacts";
   String PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX = "PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX: ";
@@ -101,4 +102,15 @@ public interface PcfConstants {
   String HARNESS__INACTIVE__IDENTIFIER = "INACTIVE";
 
   String PCF_CONNECTIVITY_SUCCESS = "SUCCESS";
+  String INTERIM = "interim";
+  String INTERIM_APP_NAME_SUFFIX = DELIMITER + INTERIM;
+  String INACTIVE_APP_NAME_SUFFIX = DELIMITER + HARNESS__INACTIVE__IDENTIFIER;
+
+  static boolean isInterimApp(String applicationName) {
+    return isNotEmpty(applicationName) && applicationName.endsWith(INTERIM_APP_NAME_SUFFIX);
+  }
+
+  static String generateInterimAppName(String appNamePrefix) {
+    return appNamePrefix + INTERIM_APP_NAME_SUFFIX;
+  }
 }

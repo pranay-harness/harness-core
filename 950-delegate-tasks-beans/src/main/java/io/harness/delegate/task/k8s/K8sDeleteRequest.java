@@ -31,7 +31,7 @@ public class K8sDeleteRequest implements K8sDeployRequest {
   DeleteResourcesType deleteResourcesType;
   @Builder.Default boolean shouldOpenFetchFilesLogStream = true;
   CommandUnitsProgress commandUnitsProgress;
-  boolean useLatestKustomizeVersion;
+  boolean useVarSupportForKustomize;
   boolean useNewKubectlVersion;
 
   @Override

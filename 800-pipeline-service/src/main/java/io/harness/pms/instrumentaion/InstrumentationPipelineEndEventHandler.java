@@ -43,6 +43,7 @@ import io.harness.execution.PlanExecution;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.notification.bean.NotificationRules;
 import io.harness.notification.bean.PipelineEvent;
+import io.harness.observer.AsyncInformObserver;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -58,11 +59,13 @@ import io.harness.telemetry.TelemetryReporter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -70,12 +73,13 @@ import org.bson.Document;
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
-public class InstrumentationPipelineEndEventHandler implements OrchestrationEndObserver {
+public class InstrumentationPipelineEndEventHandler implements OrchestrationEndObserver, AsyncInformObserver {
   @Inject TelemetryReporter telemetryReporter;
   @Inject PMSExecutionService pmsExecutionService;
   @Inject NotificationInstrumentationHelper notificationInstrumentationHelper;
   @Inject PlanExecutionService planExecutionService;
   @Inject AccountService accountService;
+  @Inject @Named("PipelineExecutorService") ExecutorService executorService;
 
   @Override
   public void onEnd(Ambiance ambiance) {
@@ -216,5 +220,10 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
 
   private Long getExecutionTimeInSeconds(PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity) {
     return (pipelineExecutionSummaryEntity.getEndTs() - pipelineExecutionSummaryEntity.getStartTs()) / 1000;
+  }
+
+  @Override
+  public ExecutorService getInformExecutorService() {
+    return executorService;
   }
 }

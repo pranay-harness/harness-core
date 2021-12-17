@@ -23,6 +23,7 @@ import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -50,6 +51,7 @@ import net.jodah.failsafe.RetryPolicy;
 public class VmInitializeTaskUtils {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject CILogServiceUtils logServiceUtils;
+  @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject TIServiceUtils tiServiceUtils;
   @Inject CodebaseUtils codebaseUtils;
 
@@ -72,8 +74,7 @@ public class VmInitializeTaskUtils {
 
     VmPoolYaml vmPoolYaml = (VmPoolYaml) vmInfraYaml.getSpec();
     String poolId = vmPoolYaml.getSpec().getIdentifier();
-    executionSweepingOutputResolver.consume(ambiance, STAGE_INFRA_DETAILS,
-        VmStageInfraDetails.builder().poolId(poolId).build(), StepOutcomeGroup.STAGE.name());
+    consumeSweepingOutput(ambiance, VmStageInfraDetails.builder().poolId(poolId).build(), STAGE_INFRA_DETAILS);
 
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputResolver.resolveOptional(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails));
@@ -169,5 +170,13 @@ public class VmInitializeTaskUtils {
         .withMaxAttempts(MAX_ATTEMPTS)
         .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
         .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
+  }
+
+  private <T extends ExecutionSweepingOutput> void consumeSweepingOutput(Ambiance ambiance, T value, String key) {
+    OptionalSweepingOutput optionalSweepingOutput =
+        executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getSweepingOutputRefObject(key));
+    if (!optionalSweepingOutput.isFound()) {
+      executionSweepingOutputResolver.consume(ambiance, key, value, StepOutcomeGroup.STAGE.name());
+    }
   }
 }

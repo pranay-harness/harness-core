@@ -21,6 +21,7 @@ import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.ListKind;
+import io.harness.yaml.BooleanPatchedRepresenter;
 
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
@@ -83,16 +84,10 @@ public class ManifestHelper {
   }
 
   private List<KubernetesResource> getKubernetesResources(Map map, ListKind listKind) {
-    List<KubernetesResource> resources = getItems(map)
-                                             .stream()
-                                             .map(item -> {
-                                               try {
-                                                 return getKubernetesResource(ObjectYamlUtils.toYaml(item), item);
-                                               } catch (YamlException e) {
-                                                 throw new KubernetesYamlException(e.getMessage(), e.getCause());
-                                               }
-                                             })
-                                             .collect(Collectors.toList());
+    org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(
+        new io.kubernetes.client.util.Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
+    List<KubernetesResource> resources =
+        getItems(map).stream().map(item -> getKubernetesResource(yaml.dump(item), item)).collect(Collectors.toList());
 
     resources.forEach(resource -> {
       if (listKind.getItemKind() != null

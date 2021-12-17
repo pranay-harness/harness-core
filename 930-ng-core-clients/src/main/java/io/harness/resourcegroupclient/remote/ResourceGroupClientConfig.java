@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.secret.ConfigSecret;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
@@ -17,5 +18,5 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(PL)
 public class ResourceGroupClientConfig {
   @JsonProperty("serviceConfig") ServiceHttpClientConfig serviceConfig;
-  @JsonProperty("secret") String secret;
+  @JsonProperty("secret") @ConfigSecret String secret;
 }

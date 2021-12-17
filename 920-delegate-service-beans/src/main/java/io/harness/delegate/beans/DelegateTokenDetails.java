@@ -19,4 +19,5 @@ public class DelegateTokenDetails {
   private DelegateTokenStatus status;
   private String value;
   private String identifier;
+  private String ownerIdentifier;
 }
