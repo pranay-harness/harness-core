@@ -6,12 +6,10 @@ import static io.harness.utils.PageUtils.getPageRequest;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
-import io.harness.beans.Scope.ScopeKeys;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserGroup;
-import io.harness.ng.core.user.entities.UserGroup.UserGroupKeys;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
@@ -42,7 +40,7 @@ public class NGSamlUserGroupSync {
         SamlUserAuthorization.builder().email(email).userGroups(userGroups).build();
 
     // audting and handling notification service for that user to send an email is left
-    List<UserGroup> userGroupsToSync = userGroupService.getUserGroupsBySsoId(ssoId);
+    List<UserGroup> userGroupsToSync = userGroupService.getUserGroupsBySsoId(accountIdentifier, ssoId);
     log.info("[NGSamlUserGroupSync] Syncing saml user groups for user: {}  userGroups: {}",
         samlUserAuthorization.getEmail(), userGroupsToSync);
     updateUserGroups(userGroupsToSync, samlUserAuthorization, accountIdentifier);
@@ -93,94 +91,73 @@ public class NGSamlUserGroupSync {
       }
     });
     userGroupService.addUserToUserGroups(accountIdentifier, user.getUuid(), userAddedToGroups);
-    removeUsersFromScopesPostSync(user.getUuid());
+    removeUsersFromScopesPostSync(userGroupsToSync, user.getUuid());
   }
 
   @VisibleForTesting
-  void removeUsersFromScopesPostSync(String userId) {
+  void removeUsersFromScopesPostSync(List<UserGroup> userGroupsToSync, String userId) {
     log.info("[NGSamlUserGroupSync] Checking removal of user: {} from all diff scopes post sync", userId);
-    int countOfProjectLevelUserGroups =
-        userGroupService
-            .list(Criteria.where(UserGroupKeys.projectIdentifier).exists(true).and(UserGroupKeys.users).in(userId))
-            .size();
 
-    if (countOfProjectLevelUserGroups == 0) {
-      Criteria criteria = Criteria.where(UserMembershipKeys.userId).is(userId);
-      criteria.and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier).exists(true);
+    userGroupsToSync.forEach(userGroup -> {
+      Criteria criteria = Criteria.where(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+              .is(userGroup.getAccountIdentifier())
+              .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+              .is(userGroup.getOrgIdentifier())
+              .and(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+              .is(userGroup.getProjectIdentifier());
+      if (!checkUserIsAGroupMember(criteria, userId)) {
+        // remove user from project
+        criteria = Criteria.where(UserMembershipKeys.userId)
+                .is(userId)
+                .and(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                .is(userGroup.getAccountIdentifier())
+                .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                .is(userGroup.getOrgIdentifier())
+                .and(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+                .is(userGroup.getProjectIdentifier());
 
-      log.info(
-              "[NGSamlUserGroupSync] Removing user: {} from all project scopes as it is not part of any project scope post sync",
-              userId);
-      ngUserService.removeUserWithCriteria(userId, UserMembershipUpdateSource.SYSTEM, criteria);
-    }
-
-    this.removeUsersFromGroupPostSyncOrgLevel(userId);
-  }
-
-  @VisibleForTesting
-  void removeUsersFromGroupPostSyncOrgLevel(final String userId) {
-    int countOfOrgLevelUserGroups = userGroupService
-            .list(Criteria.where(UserGroupKeys.orgIdentifier)
-                    .exists(true)
-                    .and(UserGroupKeys.projectIdentifier)
-                    .exists(false)
-                    .and(UserGroupKeys.users)
-                    .in(userId))
-            .size();
-
-    if (countOfOrgLevelUserGroups == 0) {
-      Criteria orgCriteria = Criteria.where(UserMembershipKeys.userId).is(userId);
-      orgCriteria.and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier).exists(false);
-      orgCriteria.and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier).exists(true);
-
-      log.info(
-              "[NGSamlUserGroupSync] Removing user: {} from all org scopes as it is not part of any org scope post sync",
-              userId);
-      ngUserService.removeUserWithCriteria(userId, UserMembershipUpdateSource.SYSTEM, orgCriteria);
-    }
-
-    this.removeUsersFromGroupPostSyncAccountLevel(userId);
-  }
-
-  @VisibleForTesting
-  void removeUsersFromGroupPostSyncAccountLevel(final String userId) {
-    int countOfAccountLevelUserGroups = userGroupService
-            .list(Criteria.where(UserGroupKeys.orgIdentifier)
-                    .exists(false)
-                    .and(UserGroupKeys.accountIdentifier)
-                    .exists(true)
-                    .and(UserGroupKeys.projectIdentifier)
-                    .exists(false)
-                    .and(UserGroupKeys.users)
-                    .in(userId))
-            .size();
-
-    if (countOfAccountLevelUserGroups == 0) {
-      Criteria accountCriteria = Criteria.where(UserMembershipKeys.userId).is(userId);
-      accountCriteria.and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier).exists(false);
-      accountCriteria.and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier).exists(false);
-      accountCriteria.and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier).exists(true);
-      log.info(
-              "[NGSamlUserGroupSync] Removing user: {} from all account scopes as it is not part of any account scope post sync",
-              userId);
-
-      ngUserService.removeUserWithCriteria(userId, UserMembershipUpdateSource.SYSTEM, accountCriteria);
-    }
-  }
-
-  @VisibleForTesting
-  public boolean checkUserIsOtherGroupMember(Scope scope, String userId) {
-    List<UserGroup> userGroupsAtScope =
-        getUserGroupsAtScope(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
-    if (isNotEmpty(userGroupsAtScope)) {
-      for (UserGroup userGroup : userGroupsAtScope) {
-        if (userGroup.getUsers().contains(userId)) {
-          return true;
-        }
+        log.info(
+                "[NGSamlUserGroupSync] Removing user: {} from project scope {} as it is not part of project scope post sync",
+                userId, userGroup.getProjectIdentifier());
+        ngUserService.removeUserWithCriteria(userId, UserMembershipUpdateSource.SYSTEM, criteria);
       }
-      return false;
-    }
-    return false;
+
+      criteria = Criteria.where(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+              .is(userGroup.getAccountIdentifier())
+              .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+              .is(userGroup.getOrgIdentifier());
+
+      if (!checkUserIsAGroupMember(criteria, userId)) {
+        // remove user from org
+        criteria = Criteria.where(UserMembershipKeys.userId)
+                .is(userId)
+                .and(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                .is(userGroup.getAccountIdentifier())
+                .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                .is(userGroup.getOrgIdentifier());
+
+        log.info(
+                "[NGSamlUserGroupSync] Removing user: {} from org scope {} as it is not part of org scope post sync",
+                userId, userGroup.getOrgIdentifier());
+        ngUserService.removeUserWithCriteria(userId, UserMembershipUpdateSource.SYSTEM, criteria);
+      }
+
+      criteria = Criteria.where(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+              .is(userGroup.getAccountIdentifier());
+
+      if (!checkUserIsAGroupMember(criteria, userId)) {
+        // remove user from account
+        criteria = Criteria.where(UserMembershipKeys.userId)
+                .is(userId)
+                .and(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                .is(userGroup.getAccountIdentifier());
+
+        log.info(
+                "[NGSamlUserGroupSync] Removing user: {} from account scope {} as it is not part of account scope post sync",
+                userId, userGroup.getAccountIdentifier());
+        ngUserService.removeUserWithCriteria(userId, UserMembershipUpdateSource.SYSTEM, criteria);
+      }
+    });
   }
 
   @VisibleForTesting
@@ -199,5 +176,22 @@ public class NGSamlUserGroupSync {
       }
     } while (pagedUserGroups != null && pagedUserGroups.hasNext());
     return userGroups;
+  }
+
+  @VisibleForTesting
+  public boolean checkUserIsAGroupMember(Criteria criteria, String userId) {
+    List<UserGroup> userGroupsForCriteria = this.getUserGroupsForCriteria(criteria);
+    if (isNotEmpty(userGroupsForCriteria)) {
+      for (UserGroup userGroup : userGroupsForCriteria) {
+        if (userGroup.getUsers().contains(userId)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  public List<UserGroup> getUserGroupsForCriteria(Criteria criteria) {
+    return userGroupService.list(criteria);
   }
 }

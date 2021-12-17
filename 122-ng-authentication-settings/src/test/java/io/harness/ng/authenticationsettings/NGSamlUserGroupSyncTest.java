@@ -71,8 +71,8 @@ public class NGSamlUserGroupSyncTest extends AuthenticationSettingTestBase {
     List<UserGroup> userGroupList = new ArrayList<>();
 
     when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
-    ngSamlUserGroupSync.removeUsersFromScopesPostSync(userId);
-    verify(ngUserService, atLeast(1)).removeUserWithCriteria(anyString(), any(), any());
+    ngSamlUserGroupSync.removeUsersFromScopesPostSync(new ArrayList<>(), userId);
+    verify(ngUserService, atLeast(0)).removeUserWithCriteria(anyString(), any(), any());
   }
 
   @Test
@@ -91,11 +91,24 @@ public class NGSamlUserGroupSyncTest extends AuthenticationSettingTestBase {
             .projectIdentifier(projectId)
             .identifier("userGroup")
             .build();
+
+    List<String> usersInGroup = new ArrayList<String>() {{ add(userId); }};
+    userGroup.setUsers(usersInGroup);
     List<UserGroup> userGroupList = new ArrayList<>();
     userGroupList.add(userGroup);
 
+    UserGroup userGroupToSync = UserGroup.builder()
+            .name("name")
+            .accountIdentifier(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projectId)
+            .identifier("userGroup")
+            .build();
+    List<UserGroup> userGroupListForSync = new ArrayList<>();
+    userGroupListForSync.add(userGroupToSync);
+
     when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
-    ngSamlUserGroupSync.removeUsersFromScopesPostSync(userId);
+    ngSamlUserGroupSync.removeUsersFromScopesPostSync(userGroupListForSync, userId);
     verify(ngUserService, times(0)).removeUserWithCriteria(anyString(), any(), any());
   }
 
@@ -103,85 +116,66 @@ public class NGSamlUserGroupSyncTest extends AuthenticationSettingTestBase {
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testUserRemovalPostSync3() {
+    String accountId = "accountId1";
+    String orgId = "orgId1";
+    String projectId = "projectId1";
     String userId = "userId";
 
+    UserGroup userGroup = UserGroup.builder()
+            .name("name")
+            .accountIdentifier(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projectId)
+            .identifier("userGroup")
+            .build();
+
+    List<String> usersInGroup = new ArrayList<String>() {{ add(userId); }};
+    userGroup.setUsers(usersInGroup);
     List<UserGroup> userGroupList = new ArrayList<>();
+    userGroupList.add(userGroup);
 
     when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
-    ngSamlUserGroupSync.removeUsersFromScopesPostSync(userId);
+    ngSamlUserGroupSync.removeUsersFromScopesPostSync(new ArrayList<>(), userId);
+    verify(ngUserService, times(0)).removeUserWithCriteria(anyString(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = PRATEEK)
+  @Category(UnitTests.class)
+  public void testUserRemovalPostSync4() {
+    String accountId = "accountId1";
+    String orgId = "orgId1";
+    String projectId = "projectId1";
+    String userId = "userId";
+
+    String differentUserId = "userId2";
+
+    UserGroup userGroup = UserGroup.builder()
+            .name("name")
+            .accountIdentifier(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projectId)
+            .identifier("userGroup")
+            .build();
+
+    List<String> usersInGroup = new ArrayList<String>() {{ add(differentUserId); }};
+    userGroup.setUsers(usersInGroup);
+    List<UserGroup> userGroupList = new ArrayList<>();
+    userGroupList.add(userGroup);
+
+    UserGroup userGroupToSync = UserGroup.builder()
+            .name("name")
+            .accountIdentifier(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projectId)
+            .identifier("userGroup")
+            .build();
+    List<UserGroup> userGroupListForSync = new ArrayList<>();
+    userGroupListForSync.add(userGroupToSync);
+
+    when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
+    ngSamlUserGroupSync.removeUsersFromScopesPostSync(userGroupListForSync, userId);
     verify(ngUserService, times(3)).removeUserWithCriteria(anyString(), any(), any());
-  }
-
-  @Test
-  @Owner(developers = PRATEEK)
-  @Category(UnitTests.class)
-  public void testUserRemovalPostSyncOrgLevel() {
-    String accountId = "accountId1";
-    String orgId = "orgId1";
-    String projectId = "projectId1";
-    String userId = "userId";
-
-    UserGroup userGroup = UserGroup.builder()
-            .name("name")
-            .accountIdentifier(accountId)
-            .orgIdentifier(orgId)
-            .projectIdentifier(projectId)
-            .identifier("userGroup")
-            .build();
-    List<UserGroup> userGroupList = new ArrayList<>();
-    userGroupList.add(userGroup);
-
-    when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
-    ngSamlUserGroupSync.removeUsersFromGroupPostSyncOrgLevel(userId);
-    verify(ngUserService, times(0)).removeUserWithCriteria(anyString(), any(), any());
-  }
-
-  @Test
-  @Owner(developers = PRATEEK)
-  @Category(UnitTests.class)
-  public void testUserRemovalPostSyncOrgLevel2() {
-    String userId = "userId";
-    List<UserGroup> userGroupList = new ArrayList<>();
-
-    when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
-    ngSamlUserGroupSync.removeUsersFromGroupPostSyncOrgLevel(userId);
-    verify(ngUserService, times(2)).removeUserWithCriteria(anyString(), any(), any());
-  }
-
-  @Test
-  @Owner(developers = PRATEEK)
-  @Category(UnitTests.class)
-  public void testUserRemovalPostSyncAccountLevel() {
-    String accountId = "accountId1";
-    String orgId = "orgId1";
-    String projectId = "projectId1";
-    String userId = "userId";
-
-    UserGroup userGroup = UserGroup.builder()
-            .name("name")
-            .accountIdentifier(accountId)
-            .orgIdentifier(orgId)
-            .projectIdentifier(projectId)
-            .identifier("userGroup")
-            .build();
-    List<UserGroup> userGroupList = new ArrayList<>();
-    userGroupList.add(userGroup);
-
-    when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
-    ngSamlUserGroupSync.removeUsersFromGroupPostSyncAccountLevel(userId);
-    verify(ngUserService, times(0)).removeUserWithCriteria(anyString(), any(), any());
-  }
-
-  @Test
-  @Owner(developers = PRATEEK)
-  @Category(UnitTests.class)
-  public void testUserRemovalPostSyncAccountLevel2() {
-    String userId = "userId";
-    List<UserGroup> userGroupList = new ArrayList<>();
-
-    when(userGroupService.list(any(Criteria.class))).thenReturn(userGroupList);
-    ngSamlUserGroupSync.removeUsersFromGroupPostSyncAccountLevel(userId);
-    verify(ngUserService, times(1)).removeUserWithCriteria(anyString(), any(), any());
   }
 
   @Test
