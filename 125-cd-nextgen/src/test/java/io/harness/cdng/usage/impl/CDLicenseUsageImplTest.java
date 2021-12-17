@@ -157,7 +157,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
 
     assertThat(serviceTypeLicenseUsage.getActiveServices().getCount()).isZero();
     assertThat(serviceTypeLicenseUsage.getActiveServiceInstances().getCount()).isZero();
-    assertThat(serviceTypeLicenseUsage.getServiceLicenses().getCount()).isZero();
+    assertThat(serviceTypeLicenseUsage.getServiceLicenses()).isNull();
   }
 
   private void prepareTestData() {
