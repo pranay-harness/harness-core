@@ -199,7 +199,7 @@ deployVariant: SAAS
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: 99697771
+scmVersion: 0e23b6f1
 
 portal:
   url: https://localhost:8000
