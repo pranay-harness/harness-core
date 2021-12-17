@@ -22,7 +22,8 @@ public enum HelmCommandFlagType {
   History(HelmSubCommandType.HISTORY, ImmutableSet.of(ServiceSpecType.NATIVE_HELM), ManifestStoreType.HelmNGRepo),
   Delete(HelmSubCommandType.DELETE, ImmutableSet.of(ServiceSpecType.NATIVE_HELM), ManifestStoreType.HelmNGRepo),
   Uninstall(HelmSubCommandType.UNINSTALL, ImmutableSet.of(ServiceSpecType.NATIVE_HELM), ManifestStoreType.HelmNGRepo),
-  List(HelmSubCommandType.LIST, ImmutableSet.of(ServiceSpecType.NATIVE_HELM), ManifestStoreType.HelmNGRepo);
+  List(HelmSubCommandType.LIST, ImmutableSet.of(ServiceSpecType.NATIVE_HELM), ManifestStoreType.HelmNGRepo),
+  Version(HelmSubCommandType.VERSION, ImmutableSet.of(ServiceSpecType.NATIVE_HELM), ImmutableSet.of());
 
   private final HelmSubCommandType subCommandType;
   private final Set<String> serviceSpecTypes;
