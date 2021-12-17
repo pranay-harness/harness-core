@@ -40,7 +40,7 @@ public class NGSamlUserGroupSync {
         SamlUserAuthorization.builder().email(email).userGroups(userGroups).build();
 
     // audting and handling notification service for that user to send an email is left
-    List<UserGroup> userGroupsToSync = userGroupService.getUserGroupsBySsoId(accountIdentifier, ssoId);
+    List<UserGroup> userGroupsToSync = userGroupService.getUserGroupsBySsoId(ssoId);
     log.info("[NGSamlUserGroupSync] Syncing saml user groups for user: {}  userGroups: {}",
         samlUserAuthorization.getEmail(), userGroupsToSync);
     updateUserGroups(userGroupsToSync, samlUserAuthorization, accountIdentifier);
