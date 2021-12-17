@@ -94,11 +94,9 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
         waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(), responseData);
         long doneWithEndTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
 
-        if (log.isDebugEnabled()) {
-          log.debug("DB update processing time {} for doneWith operation, loop processing time {} ",
-              doneWithEndTime - doneWithStartTime,
-              Math.max(loopProcessingTime - (doneWithEndTime - doneWithStartTime), 0l));
-        }
+        log.info("DB update processing time {} for doneWith operation, loop processing time {} ",
+            doneWithEndTime - doneWithStartTime,
+            Math.max(loopProcessingTime - (doneWithEndTime - doneWithStartTime), 0l));
 
         if (lockedAsyncTaskResponse.getHoldUntil() == null
             || lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {

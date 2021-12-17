@@ -29,6 +29,7 @@ import io.harness.waiter.WaitInstance;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import io.harness.waiter.WaitInstanceTimeoutCallback;
 
+import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.mongodb.client.result.DeleteResult;
 import java.time.Duration;
@@ -36,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -121,9 +123,16 @@ public class SpringPersistenceWrapper implements PersistenceWrapper {
 
   @Override
   public WaitInstance modifyAndFetchWaitInstance(String waitingOnCorrelationId) {
+    final Stopwatch stopwatch = Stopwatch.createStarted();
+    long startTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
     Query query = query(where(WaitInstanceKeys.waitingOnCorrelationIds).in(waitingOnCorrelationId));
     Update update = new Update().pull(WaitInstanceKeys.waitingOnCorrelationIds, waitingOnCorrelationId);
-    return mongoTemplate.findAndModify(query, update, SpringDataMongoUtils.returnNewOptions, WaitInstance.class);
+    WaitInstance waitInstance =
+        mongoTemplate.findAndModify(query, update, SpringDataMongoUtils.returnNewOptions, WaitInstance.class);
+
+    stopwatch.elapsed(TimeUnit.MILLISECONDS);
+    log.info("WaitInstance modification time {} ", stopwatch.elapsed(TimeUnit.MILLISECONDS) - startTime);
+    return waitInstance;
   }
 
   @Override
