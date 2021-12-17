@@ -22,6 +22,7 @@ import lombok.Singular;
 @Builder
 public class PlanCreationResponse implements AsyncCreatorResponse {
   @Singular Map<String, PlanNode> nodes;
+  PlanNode planNode;
   Dependencies dependencies;
   YamlUpdates yamlUpdates;
   @Singular("contextMap") Map<String, PlanCreationContextValue> contextMap;
@@ -31,8 +32,22 @@ public class PlanCreationResponse implements AsyncCreatorResponse {
   @Singular List<String> errorMessages;
 
   public void merge(PlanCreationResponse other) {
+    // adding PlanNode to map of nodes
+    addNode(other.getPlanNode());
+
     addNodes(other.getNodes());
     addDependencies(other.getDependencies());
+    mergeStartingNodeId(other.getStartingNodeId());
+    mergeContext(other.getContextMap());
+    mergeLayoutNodeInfo(other.getGraphLayoutResponse());
+    addYamlUpdates(other.getYamlUpdates());
+  }
+
+  public void mergeWithoutDependencies(PlanCreationResponse other) {
+    // adding PlanNode to map of nodes
+    addNode(other.getPlanNode());
+
+    addNodes(other.getNodes());
     mergeStartingNodeId(other.getStartingNodeId());
     mergeContext(other.getContextMap());
     mergeLayoutNodeInfo(other.getGraphLayoutResponse());
@@ -82,6 +97,9 @@ public class PlanCreationResponse implements AsyncCreatorResponse {
       nodes = new HashMap<>(nodes);
     }
 
+    if (newNode == null) {
+      return;
+    }
     nodes.put(newNode.getUuid(), newNode);
     if (dependencies != null) {
       dependencies = dependencies.toBuilder().removeDependencies(newNode.getUuid()).build();
