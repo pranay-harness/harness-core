@@ -60,6 +60,7 @@ import io.harness.datahandler.models.AccountDetails;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.dataretention.AccountDataRetentionService;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.utils.DelegateRingConstants;
 import io.harness.eraro.Level;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
@@ -304,7 +305,9 @@ public class AccountServiceImpl implements AccountService {
 
     account.setCompanyName(account.getCompanyName().trim());
     account.setAccountName(account.getAccountName().trim());
-
+    if (isEmpty(account.getRingName())) {
+      account.setRingName(DelegateRingConstants.DEFAULT_RING_NAME);
+    }
     if (isEmpty(account.getUuid())) {
       log.info("Creating a new account '{}'.", account.getAccountName());
       account.setUuid(UUIDGenerator.generateUuid());
