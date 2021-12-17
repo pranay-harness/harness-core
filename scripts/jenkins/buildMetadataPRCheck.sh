@@ -1,6 +1,5 @@
 set -x
-export ghprbTargetBranch=<+pipeline.variables.CITargetBranch>
-export ghprbSourceBranch=<+pipeline.variables.CISourceBranch>
+
 export BRANCH_PREFIX=`echo ${ghprbTargetBranch} | sed 's/\(........\).*/\1/g'`
 export VERSION_FILE=build.properties
 
