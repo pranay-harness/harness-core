@@ -45,7 +45,7 @@ pmsSdkOrchestrationEventPoolConfig:
 
 nextGen:
   managerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-  userVerificationSecret: dyBvaWVmbGRrYyB6aHpjeHZvaWxzamt6ZGN6c2RhZmh5dBrebhmnjryRe54rX43W3565ytgbsDvnjws5
+  userVerificationSecret: ""
   ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   pipelineServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
@@ -232,7 +232,7 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
-shouldConfigureWithPMS: false
+shouldConfigureWithPMS: ${SHOULD_CONFIGURE_WITH_PMS:-false}
 
 ceAwsSetupConfig:
   accessKey: ce_aws_accessKey_placeholder
@@ -352,7 +352,9 @@ cfClientConfig:
   eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
   analyticsEnabled: true
   connectionTimeout: 10000
-  readTimeout: 30000
+  readTimeout: 45000
+  retries: 6
+  sleepInterval: 5000
 
 featureFlagConfig:
   featureFlagSystem: LOCAL
@@ -398,3 +400,13 @@ enforcementClientConfiguration:
 opaServerConfig:
   baseUrl: http://localhost:3000
   secret: secret
+
+secretsConfiguration:
+  secretResolutionEnabled: false
+  gcpSecretManagerProject: harness-playground
+
+pmsPlanCreatorServicePoolConfig:
+  corePoolSize: ${PLAN_CREATOR_SERVICE_EXECUTOR_POOL_CORE_SIZE:-2}
+  maxPoolSize: ${PLAN_CREATOR_SERVICE_EXECUTOR_POOL_MAX_SIZE:-3}
+  idleTime: ${PLAN_CREATOR_SERVICE_EXECUTOR_POOL_IDLE_TIME:-30}
+  timeUnit: ${PLAN_CREATOR_SERVICE_EXECUTOR_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
