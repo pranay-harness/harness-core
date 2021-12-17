@@ -48,6 +48,9 @@ public class IstioApiNetworkingUtils {
       throw new IllegalArgumentException(
           format("Custom Resource Definition %s is not found in cluster %s", crdName, client.getMasterUrl()));
     }
+    if (customResourceDefinition.getSpec() != null) {
+      customResourceDefinition.getSpec().setVersion(resource.getApiVersion());
+    }
     return customResourceDefinition;
   }
 
