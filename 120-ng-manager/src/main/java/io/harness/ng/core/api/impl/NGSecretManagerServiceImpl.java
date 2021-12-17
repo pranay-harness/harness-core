@@ -29,6 +29,11 @@ import software.wings.beans.VaultConfig;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.RetryRegistry;
+import java.util.function.Supplier;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +48,14 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   private final KmsEncryptorsRegistry kmsEncryptorsRegistry;
   private final VaultEncryptorsRegistry vaultEncryptorsRegistry;
   private final NGVaultService ngVaultService;
+  private final RetryConfig config = RetryConfig.custom()
+                                         .maxAttempts(5)
+                                         .retryExceptions(Exception.class)
+                                         .intervalFunction(IntervalFunction.ofExponentialBackoff(1000, 2))
+                                         .build();
+  ;
+  private final RetryRegistry registry = RetryRegistry.of(config);
+  private final Retry retry = registry.retry("cgManagerSecretService", config);
 
   @Override
   public SecretManagerConfigDTO createSecretManager(@NotNull SecretManagerConfigDTO secretManagerConfig) {
@@ -109,7 +122,18 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
     } catch (Exception e) {
       log.error("Global Secret manager Not found in NG. Calling CG.");
     }
-    return getResponse(secretManagerClient.getGlobalSecretManager(accountIdentifier));
+    return getGlobalSecretManagerFromCGWithRetry(accountIdentifier);
+  }
+
+  private SecretManagerConfigDTO getGlobalSecretManagerFromCGWithRetry(String accountIdentifier) {
+    log.info("[GetGlobalSecretManagerFromCGWithRetry]: Getting global secret manager from CG for account:{}",
+        accountIdentifier);
+    Supplier<SecretManagerConfigDTO> retryingSecretManagerConfigDTOSupplier =
+        Retry.decorateSupplier(retry, () -> getResponse(secretManagerClient.getGlobalSecretManager(accountIdentifier)));
+    SecretManagerConfigDTO globalSecretManagerFromCG = retryingSecretManagerConfigDTOSupplier.get();
+    log.info("[GetGlobalSecretManagerFromCGWithRetry]: Got back global secret manager from CG {} for account: {}",
+        globalSecretManagerFromCG, accountIdentifier);
+    return globalSecretManagerFromCG;
   }
 
   @Override

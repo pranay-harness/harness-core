@@ -758,8 +758,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   }
 
   @Override
-  public DelegateTaskPackage reportConnectionResults(
-      String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
+  public DelegateTaskPackage reportConnectionResults(String accountId, String delegateId, String taskId,
+      String delegateInstanceId, List<DelegateConnectionResult> results) {
     assignDelegateService.saveConnectionResults(results);
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
     if (delegateTask == null) {
@@ -792,7 +792,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       // If all delegate task capabilities were evaluated and they were ok, we can assign the task
       if (requiredDelegateCapabilities == size(results)
           && results.stream().allMatch(DelegateConnectionResult::isValidated)) {
-        return assignTask(delegateId, taskId, delegateTask);
+        return assignTask(delegateId, taskId, delegateTask, delegateInstanceId);
       }
     }
 
@@ -800,7 +800,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   }
 
   @Override
-  public DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId) {
+  public DelegateTaskPackage acquireDelegateTask(
+      String accountId, String delegateId, String taskId, String delegateInstanceId) {
     try {
       Delegate delegate = delegateCache.get(accountId, delegateId, false);
       if (delegate == null || DelegateInstanceStatus.ENABLED != delegate.getStatus()) {
@@ -831,7 +832,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
           setValidationStarted(delegateId, delegateTask);
           return resolvePreAssignmentExpressions(delegateTask, SecretManagerMode.APPLY);
         } else if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
-          return assignTask(delegateId, taskId, delegateTask);
+          return assignTask(delegateId, taskId, delegateTask, delegateInstanceId);
         }
 
         log.info("Delegate is blacklisted for task");
@@ -1185,7 +1186,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   }
 
   @VisibleForTesting
-  DelegateTaskPackage assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
+  DelegateTaskPackage assignTask(
+      String delegateId, String taskId, DelegateTask delegateTask, String delegateInstanceId) {
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
 
@@ -1196,12 +1198,18 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                                     .filter(DelegateTaskKeys.status, QUEUED)
                                     .field(DelegateTaskKeys.delegateId)
                                     .doesNotExist()
+                                    .field(DelegateTaskKeys.delegateInstanceId)
+                                    .doesNotExist()
                                     .project(DelegateTaskKeys.data_parameters, false);
     UpdateOperations<DelegateTask> updateOperations =
         persistence.createUpdateOperations(DelegateTask.class)
             .set(DelegateTaskKeys.delegateId, delegateId)
             .set(DelegateTaskKeys.status, STARTED)
             .set(DelegateTaskKeys.expiry, currentTimeMillis() + delegateTask.getData().getTimeout());
+    // TODO: remove if check once this new field becomes operational
+    if (isNotEmpty(delegateInstanceId)) {
+      updateOperations.set(DelegateTaskKeys.delegateInstanceId, delegateInstanceId);
+    }
     DelegateTask task = persistence.findAndModifySystemData(query, updateOperations, HPersistence.returnNewOptions);
     // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in
     // case client is retrying the request
@@ -1226,6 +1234,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                .filter(DelegateTaskKeys.uuid, taskId)
                .filter(DelegateTaskKeys.status, STARTED)
                .filter(DelegateTaskKeys.delegateId, delegateId)
+               .filter(DelegateTaskKeys.delegateInstanceId, delegateInstanceId)
                .project(DelegateTaskKeys.data_parameters, false)
                .get();
     if (task == null) {

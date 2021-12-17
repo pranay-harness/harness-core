@@ -129,6 +129,11 @@ public interface YamlConstants {
   String OC_PARAMS_FOLDER = "OC Params";
   String OC_PARAMS_FILE = "params";
 
+  // KUSTOMIZE PATCHES
+  String KUSTOMIZE_PATCHES_ENTITY = "KUSTOMIZE_PATCHES";
+  String KUSTOMIZE_PATCHES_FOLDER = "Kustomize Patches";
+  String KUSTOMIZE_PATCHES_FILE = "patches.yaml";
+
   // AZURE APP SERVICES
   String APP_SETTINGS_ENTITY = "APP_SETTINGS";
   String AZURE_APP_SETTINGS_OVERRIDES_FOLDER = "App Settings Overrides";

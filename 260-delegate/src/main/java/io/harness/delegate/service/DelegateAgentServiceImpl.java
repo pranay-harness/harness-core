@@ -3,6 +3,7 @@ package io.harness.delegate.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateTimeBasedUuid;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.app.DelegateApplication.getProcessId;
 import static io.harness.delegate.configuration.InstallUtils.installChartMuseum;
 import static io.harness.delegate.configuration.InstallUtils.installGoTemplateTool;
@@ -124,6 +125,7 @@ import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
+import io.harness.event.client.impl.tailer.ChronicleEventTailer;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
@@ -312,6 +314,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   public static final String JAVA_VERSION = "java.version";
 
   private static volatile String delegateId;
+  private static volatile String delegateInstanceId = generateUuid();
 
   @Inject
   @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting }))
@@ -353,6 +356,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject DelegateTaskFactory delegateTaskFactory;
   @Inject(optional = true) @Nullable private DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   @Inject private KryoSerializer kryoSerializer;
+  @Nullable @Inject(optional = true) private ChronicleEventTailer chronicleEventTailer;
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
 
@@ -518,6 +522,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             DELEGATE_TYPE, DELEGATE_GROUP_NAME, supportedTasks);
       }
 
+      log.info("Delegate configs: type: [{}], use_cdn: [{}], USE_CDN: [{}]",
+          isNotBlank(DELEGATE_TYPE) ? DELEGATE_TYPE : "UNKNOWN TYPE", delegateConfiguration.isUseCdn(),
+          System.getenv().get("USE_CDN"));
+
       if (isNotEmpty(delegateTokenName)) {
         log.info("Registering Delegate with Token: {}", delegateTokenName);
       }
@@ -596,6 +604,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         startKeepAlivePacket(builder, socket);
       }
 
+      startChroniqleQueueMonitor();
       startTaskPolling();
       startHeartbeatWhenPollingEnabled(builder);
       startKeepAliveRequestWhenPollingEnabled(builder);
@@ -1347,6 +1356,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
+  private void startChroniqleQueueMonitor() {
+    if (chronicleEventTailer != null) {
+      chronicleEventTailer.startAsync().awaitRunning();
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> chronicleEventTailer.stopAsync().awaitTerminated()));
+    }
+  }
+
   private void pollForTask() {
     if (pollingForTasks.get() && shouldContactManager()) {
       try {
@@ -1492,6 +1508,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
       if (switchStorage.get() && !switchStorageMsgSent) {
         statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
+        log.info("Switch storage message sent");
         switchStorageMsgSent = true;
       }
       if (sendJreInformationToWatcher) {
@@ -1722,6 +1739,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private void setSwitchStorage(boolean useCdn) {
     boolean usingCdn = delegateConfiguration.isUseCdn();
     if (usingCdn != useCdn) {
+      log.info("Switch storage - usingCdn: [{}], useCdn: [{}]", usingCdn, useCdn);
       switchStorage.set(true);
     }
   }
@@ -1877,8 +1895,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         log.debug("Try to acquire DelegateTask - accountId: {}", accountId);
       }
 
-      DelegateTaskPackage delegateTaskPackage =
-          executeRestCall(delegateAgentManagerClient.acquireTask(delegateId, delegateTaskId, accountId));
+      DelegateTaskPackage delegateTaskPackage = executeRestCall(
+          delegateAgentManagerClient.acquireTask(delegateId, delegateTaskId, accountId, delegateInstanceId));
       if (delegateTaskPackage == null || delegateTaskPackage.getData() == null) {
         if (log.isDebugEnabled()) {
           log.debug("Delegate task data not available - accountId: {}", delegateTaskEvent.getAccountId());
@@ -1971,9 +1989,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         boolean validated = results.stream().allMatch(DelegateConnectionResult::isValidated);
         log.info("Validation {} for task", validated ? "succeeded" : "failed");
         try {
-          DelegateTaskPackage delegateTaskPackage =
-              execute(delegateAgentManagerClient.reportConnectionResults(delegateId,
-                  delegateTaskEvent.getDelegateTaskId(), accountId, getDelegateConnectionResultDetails(results)));
+          DelegateTaskPackage delegateTaskPackage = execute(
+              delegateAgentManagerClient.reportConnectionResults(delegateId, delegateTaskEvent.getDelegateTaskId(),
+                  accountId, delegateInstanceId, getDelegateConnectionResultDetails(results)));
 
           if (delegateTaskPackage != null && delegateTaskPackage.getData() != null
               && delegateId.equals(delegateTaskPackage.getDelegateId())) {
