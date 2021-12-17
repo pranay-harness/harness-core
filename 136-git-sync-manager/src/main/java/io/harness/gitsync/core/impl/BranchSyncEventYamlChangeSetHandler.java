@@ -103,8 +103,10 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
       }
     } catch (Exception ex) {
       log.error("Error encountered while syncing the branch [{}]", branch, ex);
-      String errorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
-      recordErrors(accountIdentifier, repoURL, errorMessage);
+      String gitConnectivityErrorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
+      if (!gitConnectivityErrorMessage.isEmpty()) {
+        recordErrors(accountIdentifier, repoURL, gitConnectivityErrorMessage);
+      }
       gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);
       // TODO adding it here for safer side as of now. Ideally should be part of step service to mark it
       gitToHarnessProgressService.updateStepStatus(
