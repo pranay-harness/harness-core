@@ -1,21 +1,25 @@
 package io.harness.cf;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
-import io.harness.cf.client.api.CfClient;
-import io.harness.cf.client.api.Config;
-import io.harness.cf.client.dto.Target;
-import io.harness.cf.openapi.ApiClient;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.concurrent.TimeUnit;
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.RetryRegistry;
+import io.harness.cf.client.api.CfClient;
+import io.harness.cf.client.api.Config;
+import io.harness.cf.openapi.ApiClient;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.function.Supplier;
+
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 @Slf4j
 public class CfClientModule extends AbstractModule {
+
   private static volatile CfClientModule instance;
 
   public static CfClientModule getInstance() {
@@ -30,13 +34,14 @@ public class CfClientModule extends AbstractModule {
   @Provides
   @Singleton
   CfClient provideCfClient(CfClientConfig cfClientConfig) {
+
     log.info("Using CF API key {}", cfClientConfig.getApiKey());
     String apiKey = cfClientConfig.getApiKey();
     if (isEmpty(apiKey)) {
       apiKey = "fake";
     }
 
-    Config config = Config.builder()
+    final Config config = Config.builder()
                         .analyticsEnabled(cfClientConfig.isAnalyticsEnabled())
                         .configUrl(cfClientConfig.getConfigUrl())
                         .eventUrl(cfClientConfig.getEventUrl())
@@ -44,8 +49,38 @@ public class CfClientModule extends AbstractModule {
                         .connectionTimeout(cfClientConfig.getConnectionTimeout())
                         .build();
 
-    CfClient client = new CfClient(apiKey, config);
-    waitForInitialization(client, cfClientConfig.getRetries(), cfClientConfig.getSleepInterval());
+    final CfClient client = new CfClient(apiKey, config);
+
+    final IntervalFunction function = IntervalFunction.ofExponentialBackoff(
+
+            cfClientConfig.getSleepInterval(),
+            2
+    );
+
+    final RetryConfig retryConfig = RetryConfig.custom()
+            .maxAttempts(cfClientConfig.getRetries())
+            .intervalFunction(function)
+            .retryOnResult(
+
+                    r -> !((Boolean) r)
+            )
+            .build();
+
+    final RetryRegistry registry = RetryRegistry.of(retryConfig);
+    final Retry retry = registry.retry("cfClientInit", retryConfig);
+
+    final Supplier<Boolean> retrySupplier = Retry.decorateSupplier(
+
+            retry,
+            client::isInitialized
+    );
+
+    if (retrySupplier.get()) {
+      log.info("CF client has been initialized");
+    } else {
+      log.error("CF client has not been initialized");
+    }
+
     return client;
   }
 
@@ -58,21 +93,5 @@ public class CfClientModule extends AbstractModule {
     apiClient.setConnectTimeout(migrationConfig.getConnectionTimeout());
     apiClient.setBasePath(migrationConfig.getAdminUrl());
     return new CFApi(apiClient);
-  }
-
-  private void waitForInitialization(CfClient client, Integer retry, Integer sleepInterval) {
-    while (retry > 0) {
-      try {
-        if (client.isInitialized() == true) {
-          log.info("CF Client successfully initialized");
-          return;
-        }
-        TimeUnit.MILLISECONDS.sleep(sleepInterval);
-        retry--;
-      } catch (InterruptedException e) {
-        log.error("interrupted while waiting for initialization {}", e.getMessage());
-      }
-    }
-    log.error("The CF Client failed to initialize");
   }
 }
