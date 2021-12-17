@@ -2,8 +2,8 @@ package io.harness.ng.core.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.filter.FilterConstants;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
@@ -18,7 +18,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Schema(name = "OrganizationFilter", description = "This has the details of Organization filter as defined in harness")
 public class OrganizationFilterDTO {
-  @Schema(description = FilterConstants.SEARCH_TERM) String searchTerm;
-  @Schema(description = FilterConstants.IDENTIFIER_LIST) List<String> identifiers;
-  @Schema(description = FilterConstants.IGNORE_CASE) boolean ignoreCase;
+  @Schema(description = NGResourceFilterConstants.SEARCH_TERM) String searchTerm;
+  @Schema(description = NGResourceFilterConstants.IDENTIFIER_LIST) List<String> identifiers;
+  @Schema(description = NGResourceFilterConstants.IGNORE_CASE) boolean ignoreCase;
 }
