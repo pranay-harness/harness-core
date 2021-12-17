@@ -4,7 +4,6 @@ import static io.harness.eventsframework.EventsFrameworkConstants.INSTANCE_STATS
 
 import static java.util.stream.Collectors.groupingBy;
 
-import com.google.protobuf.Descriptors;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -19,6 +18,7 @@ import io.harness.models.constants.TimescaleConstants;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.google.protobuf.Descriptors;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -76,7 +76,7 @@ public class UsageMetricsEventPublisherImpl implements UsageMetricsEventPublishe
       eventProducer.send(Message.newBuilder()
                              .putAllMetadata(ImmutableMap.of(
                                  "accountId", accountId, EventsFrameworkMetadataConstants.ENTITY_TYPE, INSTANCE_STATS))
-                             .setData(eventInfo.toByteString()).setAccountId(accountId)
+                             .setData(eventInfo.toByteString())
                              .build());
     } catch (Exception ex) {
       log.error(
