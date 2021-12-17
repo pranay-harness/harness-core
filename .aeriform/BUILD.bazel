@@ -304,6 +304,8 @@ aeriform("//932-connector-task:module")
 
 aeriform("//935-analyser-service:module")
 
+aeriform("//935-subscription-sdk:module")
+
 aeriform("//937-persistence-tracer:module")
 
 aeriform("//937-persistence-tracer:tests")
