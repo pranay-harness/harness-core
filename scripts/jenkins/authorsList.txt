@@ -21,6 +21,7 @@ Aman Singh aman.singh@harness.io
 aman-harness aman.singh@harness.io
 aman-iitj aman.singh@harness.io
 Amit Jambure amit.jambure@harness.io
+Andrew Hayes andrew.hayes@harness.io
 Anil Chowdhury anil.chowdhury@harness.io
 Anjan Balgovind anjan.balgovind@harness.io
 Ankit Singhal ankit.singhal@harness.io
