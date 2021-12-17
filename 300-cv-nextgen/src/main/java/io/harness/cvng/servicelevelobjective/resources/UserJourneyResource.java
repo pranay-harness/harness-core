@@ -1,5 +1,9 @@
 package io.harness.cvng.servicelevelobjective.resources;
 
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -36,6 +40,9 @@ import retrofit2.http.Body;
 public class UserJourneyResource {
   @Inject UserJourneyService userJourneyService;
 
+  public static final String SLO = "SLO";
+  public static final String VIEW_PERMISSION = "chi_slo_view";
+
   @POST
   @Timed
   @ExceptionMetered
@@ -58,10 +65,12 @@ public class UserJourneyResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get all user journeys", nickname = "getAllJourneys")
+  @NGAccessControlCheck(resourceType = SLO, permission = VIEW_PERMISSION)
   public ResponseDTO<PageResponse<UserJourneyResponse>> getAllJourneys(
-      @NotNull @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("offset") @NotNull Integer offset,
-      @QueryParam("pageSize") @NotNull Integer pageSize) {
+      @NotNull @QueryParam("accountId") @AccountIdentifier String accountId,
+      @QueryParam("orgIdentifier") @NotNull @OrgIdentifier String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull @ProjectIdentifier String projectIdentifier,
+      @QueryParam("offset") @NotNull Integer offset, @QueryParam("pageSize") @NotNull Integer pageSize) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
                                       .orgIdentifier(orgIdentifier)
