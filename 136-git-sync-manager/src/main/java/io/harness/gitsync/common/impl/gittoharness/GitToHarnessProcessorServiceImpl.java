@@ -112,7 +112,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       String gitToHarnessProgressRecordId, String changeSetId, String commitMessage) {
     boolean ngErrorExperienceEnabled = isNGErrorExperienceEnabled(accountId);
     if (ngErrorExperienceEnabled) {
-      gitSyncErrorService.resolveConnectivityErrors(accountId, repoUrl, branchName);
+      gitSyncErrorService.resolveConnectivityErrors(accountId, repoUrl);
     }
 
     final List<YamlGitConfigDTO> yamlGitConfigs = yamlGitConfigService.getByAccountAndRepo(accountId, repoUrl);
@@ -125,6 +125,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
             .commitId(commitId)
             .gitToHarnessProgressRecordId(gitToHarnessProgressRecordId)
             .commitMessage(commitMessage)
+            .yamlGitConfigs(yamlGitConfigs)
             .build();
     List<ChangeSetWithYamlStatusDTO> changeSetsWithYamlStatus =
         gitChangeSetMapper.toChangeSetList(fileContentsList, accountId, yamlGitConfigs, changeSetId, branchName);
@@ -294,9 +295,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
         log.error("Exception in file processing for the microservice {}", entry.getKey(), ex);
         if (ngErrorExperienceEnabled) {
           gitSyncErrorService.recordConnectivityError(gitToHarnessProcessingInfo.getAccountId(),
-              getScopes(gitToHarnessProcessingInfo.getRepoUrl(), gitToHarnessProcessingInfo.getAccountId()),
-              gitToHarnessProcessingInfo.getRepoUrl(), gitToHarnessProcessingInfo.getBranchName(),
-              GitConnectivityExceptionHelper.ERROR_MSG_MSVC_DOWN);
+              gitToHarnessProcessingInfo.getRepoUrl(), GitConnectivityExceptionHelper.ERROR_MSG_MSVC_DOWN);
         }
         gitToHarnessProcessingResponseDTO = GitToHarnessProcessingResponseDTO.builder()
                                                 .msvcProcessingFailureStage(MsvcProcessingFailureStage.RECEIVE_STAGE)
@@ -472,7 +471,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
 
   private List<GitSyncErrorDTO> getErrorsForInvalidChangeSets(GitToHarnessProcessingInfo gitToHarnessProcessingInfo,
       List<ChangeSetWithYamlStatusDTO> invalidChangeSetWithYamlStatusDTO) {
-    List<Scope> scopes = getScopes(gitToHarnessProcessingInfo.getRepoUrl(), gitToHarnessProcessingInfo.getAccountId());
+    List<Scope> scopes = getScopes(gitToHarnessProcessingInfo.getYamlGitConfigs());
     List<GitSyncErrorDTO> gitToHarnessErrors = new ArrayList<>();
     invalidChangeSetWithYamlStatusDTO.forEach(changeSetWithYamlStatusDTO -> {
       String errorMessage = changeSetWithYamlStatusDTO.getYamlInputErrorType().getValue();
@@ -577,13 +576,11 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
         GitToHarnessProcessingResponse.builder().processingResponse(gitToHarnessProcessingResponseDTO).build());
   }
 
-  private List<Scope> getScopes(String repoUrl, String accountId) {
-    List<YamlGitConfigDTO> yamlGitConfigDTOS = yamlGitConfigService.getByAccountAndRepo(accountId, repoUrl);
-    return yamlGitConfigDTOS.stream()
-        .filter(yamlGitConfigDTO -> yamlGitConfigDTO.getAccountIdentifier().equals(accountId))
+  private List<Scope> getScopes(List<YamlGitConfigDTO> yamlGitConfigs) {
+    return yamlGitConfigs.stream()
         .map(yamlGitConfigDTO
-            -> Scope.of(
-                accountId, yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier()))
+            -> Scope.of(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+                yamlGitConfigDTO.getProjectIdentifier()))
         .collect(Collectors.toList());
   }
 }

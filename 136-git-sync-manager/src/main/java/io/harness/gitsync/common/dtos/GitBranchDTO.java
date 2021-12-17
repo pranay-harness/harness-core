@@ -18,7 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "SyncedBranchDTOKeys")
-@Schema(name = "GitBranch", description = "This contains details of the branch, like Branch name, Sync Status.")
+@Schema(name = "GitBranch", description = "This contains details of the branch")
 @OwnedBy(DX)
 public class GitBranchDTO {
   @Trimmed @NotEmpty private String branchName;

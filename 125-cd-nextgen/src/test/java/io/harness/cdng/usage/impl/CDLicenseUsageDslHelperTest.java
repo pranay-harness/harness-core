@@ -11,8 +11,11 @@ import io.harness.rule.OwnerRule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import org.jooq.Record3;
 import org.jooq.Row3;
+import org.jooq.Table;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -44,6 +47,26 @@ public class CDLicenseUsageDslHelperTest {
     assertThat(orgProjectServiceRows).hasSize(3);
     assertThat(Arrays.stream(orgProjectServiceRows).findFirst().get().eq("ORG_ID1", "PROJECT_ID1", "SERVICE1"))
         .isNotNull();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetOrgProjectServiceTableFromInstances() {
+    List<InstanceDTO> testInstanceDTOData = Collections.emptyList();
+    Table<Record3<String, String, String>> orgProjectServiceTableFromInstances =
+        cdLicenseUsageDslHelper.getOrgProjectServiceTableFromInstances(testInstanceDTOData);
+    assertThat(orgProjectServiceTableFromInstances).isNull();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetOrgProjectServiceTableFromInstancesEmptyTable() {
+    List<InstanceDTO> testInstanceDTOData = createTestInstanceDTOData(3);
+    Table<Record3<String, String, String>> orgProjectServiceTableFromInstances =
+        cdLicenseUsageDslHelper.getOrgProjectServiceTableFromInstances(testInstanceDTOData);
+    assertThat(orgProjectServiceTableFromInstances).isNotNull();
   }
 
   List<InstanceDTO> createTestInstanceDTOData(int dataSize) {

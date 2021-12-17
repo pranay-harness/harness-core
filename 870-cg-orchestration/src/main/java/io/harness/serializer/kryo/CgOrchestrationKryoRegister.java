@@ -12,10 +12,8 @@ import io.harness.beans.WorkflowType;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.api.ecs.EcsBGSetupData;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.TailFilePatternEntry;
-import software.wings.settings.validation.ConnectivityValidationAttributes;
 import software.wings.sm.BarrierStatusData;
 import software.wings.utils.FileType;
 
@@ -25,14 +23,11 @@ import com.esotericsoftware.kryo.Kryo;
 public class CgOrchestrationKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
-    kryo.register(SettingAttribute.class, 5008);
-    kryo.register(SettingAttribute.SettingCategory.class, 5069);
     kryo.register(OrchestrationWorkflowType.class, 5148);
     kryo.register(WorkflowType.class, 5025);
     kryo.register(DelegateTask.Status.class, 5004);
     kryo.register(DelegateTask.class, 5003);
     kryo.register(FileType.class, 5119);
-    kryo.register(ConnectivityValidationAttributes.class, 5567);
 
     kryo.register(ExecutionStatusResponseData.class, 3102);
     kryo.register(RepairActionCode.class, 2528);

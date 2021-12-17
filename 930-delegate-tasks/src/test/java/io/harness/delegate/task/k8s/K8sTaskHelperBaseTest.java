@@ -1755,14 +1755,14 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
       List<String> kustomizePatchesList = Arrays.asList("field: value", "field: value");
       spyK8sTaskHelperBase.savingPatchesToDirectory(temp.toString(), kustomizePatchesList, executionLogCallback);
       ArgumentCaptor<JSONArray> captor = ArgumentCaptor.forClass(JSONArray.class);
-      verify(spyK8sTaskHelperBase, times(1)).updateKustomizationYaml(any(), captor.capture());
+      verify(spyK8sTaskHelperBase, times(1)).updateKustomizationYaml(any(), captor.capture(),any());
       assertThat(captor.getValue()).isNotNull();
       assertThat(captor.getValue().get(0).toString()).endsWith("patches-0.yaml");
       assertThat(captor.getValue().get(1).toString()).endsWith("patches-1.yaml");
       // no patches case
       spyK8sTaskHelperBase.savingPatchesToDirectory(temp.toString(), emptyList(), executionLogCallback);
       verify(executionLogCallback, times(1))
-          .saveExecutionLog("No Patches files found. Skipping kustomization.yaml updation");
+          .saveExecutionLog("\nNo Patches files found. Skipping kustomization.yaml updation\n");
 
     } finally {
       deleteDirectoryAndItsContentIfExists(temp.toString());
@@ -1775,7 +1775,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
       List<String> kustomizePatchesList = Arrays.asList("field: value", "field: value");
       spyK8sTaskHelperBase.savingPatchesToDirectory(temp.toString(), kustomizePatchesList, executionLogCallback);
       ArgumentCaptor<JSONArray> captor = ArgumentCaptor.forClass(JSONArray.class);
-      verify(spyK8sTaskHelperBase, times(2)).updateKustomizationYaml(any(), captor.capture());
+      verify(spyK8sTaskHelperBase, times(2)).updateKustomizationYaml(any(), captor.capture(),any());
       assertThat(captor.getValue()).isNotNull();
       assertThat(captor.getValue().get(0).toString()).endsWith("patches-0.yaml");
       assertThat(captor.getValue().get(1).toString()).endsWith("patches-1.yaml");

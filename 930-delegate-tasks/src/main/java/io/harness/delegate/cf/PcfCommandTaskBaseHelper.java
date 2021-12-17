@@ -54,6 +54,7 @@ import io.harness.delegate.beans.pcf.CfAppRenameInfo;
 import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
 import io.harness.delegate.beans.pcf.CfInternalInstanceElement;
 import io.harness.delegate.beans.pcf.CfServiceData;
+import io.harness.delegate.cf.apprenaming.AppNamingStrategy;
 import io.harness.delegate.task.pcf.exception.InvalidPcfStateException;
 import io.harness.delegate.task.pcf.request.CfCommandDeployRequest;
 import io.harness.delegate.task.pcf.request.CfCommandRollbackRequest;
@@ -73,6 +74,7 @@ import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
 import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
+import io.harness.pcf.model.PcfConstants;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -465,16 +467,16 @@ public class PcfCommandTaskBaseHelper {
   /**
    * Returns Application that will be downsized in deployment process
    */
-  public List<CfAppSetupTimeDetails> generateDownsizeDetails(ApplicationSummary activeApplicationSumamry) {
+  public List<CfAppSetupTimeDetails> generateDownsizeDetails(ApplicationSummary activeApplicationSummamry) {
     List<CfAppSetupTimeDetails> downSizeUpdate = new ArrayList<>();
-    if (activeApplicationSumamry != null) {
-      List<String> urls = new ArrayList<>();
-      urls.addAll(activeApplicationSumamry.getUrls());
+    if (activeApplicationSummamry != null) {
+      List<String> urls = new ArrayList<>(activeApplicationSummamry.getUrls());
       downSizeUpdate.add(CfAppSetupTimeDetails.builder()
-                             .applicationGuid(activeApplicationSumamry.getId())
-                             .applicationName(activeApplicationSumamry.getName())
+                             .applicationGuid(activeApplicationSummamry.getId())
+                             .applicationName(activeApplicationSummamry.getName())
+                             .oldName(activeApplicationSummamry.getName())
                              .urls(urls)
-                             .initialInstanceCount(activeApplicationSumamry.getInstances())
+                             .initialInstanceCount(activeApplicationSummamry.getInstances())
                              .build());
     }
 
@@ -533,6 +535,12 @@ public class PcfCommandTaskBaseHelper {
         inActiveApplication = applicationSummary;
         inActiveVersions.add(applicationSummary);
       }
+    }
+    if (inActiveApplication == null) {
+      inActiveVersions = previousReleases.stream()
+                             .filter(app -> app.getName().endsWith(PcfConstants.INACTIVE_APP_NAME_SUFFIX))
+                             .collect(toList());
+      inActiveApplication = isEmpty(inActiveVersions) ? null : inActiveVersions.get(0);
     }
     if (isNotEmpty(inActiveVersions) && inActiveVersions.size() > 1) {
       StringBuilder msgBuilder =
@@ -668,7 +676,7 @@ public class PcfCommandTaskBaseHelper {
     }
 
     // All applications have 0 instances
-    if (currentActiveApplication == null) {
+    if (currentActiveApplication == null && !blueGreen) {
       currentActiveApplication = previousReleases.get(previousReleases.size() - 1);
     }
 
@@ -684,11 +692,8 @@ public class PcfCommandTaskBaseHelper {
 
     ApplicationSummary inActiveApplication = null;
     if (blueGreen) {
-      inActiveApplication = findCurrentInActiveApplication(
+      return findCurrentInActiveApplication(
           activeApplicationSummary, previousReleases, cfRequestConfig, executionLogCallback);
-      if (inActiveApplication != null) {
-        return inActiveApplication;
-      }
     }
 
     int activeAppIndex = -1;
@@ -741,6 +746,47 @@ public class PcfCommandTaskBaseHelper {
     }
   }
 
+  public Optional<String> renameInActiveAppDuringBGDeployment(List<ApplicationSummary> previousReleases,
+      CfRequestConfig cfRequestConfig, String releaseNamePrefix, LogCallback executionLogCallback,
+      String existingAppNamingStrategy, Deque<CfAppRenameInfo> renames) throws PivotalClientApiException {
+    if (isEmpty(previousReleases) || previousReleases.size() == 1) {
+      return Optional.empty();
+    }
+    if (AppNamingStrategy.VERSIONING.name().equalsIgnoreCase(existingAppNamingStrategy)) {
+      // there are 4 cases
+      // case 1 : for version to version deployment. In this scenario we don't need renaming
+      // case 2 : for version to non-version deployment. The in-active app renaming is not required
+      // as it will be already correctly named
+      return Optional.empty();
+    }
+    // case 3 : for non-version -> non-version, rename the inactive app to <name-prefix>__<max_version+1>
+    // case 4 : for non-version -> version, rename the inactive app to <name-prefix>__<max_version+1>
+    ApplicationSummary activeApplication =
+        findActiveApplication(executionLogCallback, true, cfRequestConfig, previousReleases);
+
+    ApplicationSummary inActiveApplication = getMostRecentInactiveApplication(
+        executionLogCallback, true, activeApplication, previousReleases, cfRequestConfig);
+
+    if (inActiveApplication == null) {
+      return Optional.empty();
+    }
+
+    Integer maxVersion = getMaxVersion(previousReleases, -1);
+    String newInActiveAppName = constructInActiveAppName(releaseNamePrefix, maxVersion, false);
+
+    if (!inActiveApplication.getName().equals(newInActiveAppName)) {
+      renameApp(inActiveApplication, cfRequestConfig, executionLogCallback, newInActiveAppName);
+      if (null != renames) {
+        renames.add(CfAppRenameInfo.builder()
+                        .guid(inActiveApplication.getId())
+                        .name(inActiveApplication.getName())
+                        .newName(newInActiveAppName)
+                        .build());
+      }
+    }
+    return Optional.of(inActiveApplication.getName());
+  }
+
   private static Integer getMaxVersion(List<ApplicationSummary> previousReleases, Integer activeAppRevision) {
     Integer maxVersion = getMaxVersion(previousReleases);
     if (null != activeAppRevision && maxVersion == -1 && activeAppRevision != -1) {
@@ -756,6 +802,12 @@ public class PcfCommandTaskBaseHelper {
                                        .max(Integer::compare);
 
     return maxVersion.orElse(-1);
+  }
+
+  public void renameApp(ApplicationSummary app, CfRequestConfig cfRequestConfig, LogCallback executionLogCallback,
+      @NotNull String newName, @NotNull String oldName) throws PivotalClientApiException {
+    pcfDeploymentManager.renameApplication(
+        new CfRenameRequest(cfRequestConfig, app.getId(), oldName, newName), executionLogCallback);
   }
 
   public void renameApp(ApplicationSummary app, CfRequestConfig cfRequestConfig, LogCallback executionLogCallback,
@@ -786,5 +838,15 @@ public class PcfCommandTaskBaseHelper {
     } else {
       return "# Changing apps from Non-versioned to Versioned";
     }
+  }
+
+  public List<String> getAppNameBasedOnGuid(CfRequestConfig cfRequestConfig, String cfAppNamePrefix, String appGuid)
+      throws PivotalClientApiException {
+    List<ApplicationSummary> previousReleases =
+        pcfDeploymentManager.getPreviousReleases(cfRequestConfig, cfAppNamePrefix);
+    return previousReleases.stream()
+        .filter(app -> app.getId().equalsIgnoreCase(appGuid))
+        .map(ApplicationSummary::getName)
+        .collect(toList());
   }
 }

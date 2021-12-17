@@ -1,5 +1,8 @@
 package io.harness.ng.beans;
 
+import static io.harness.NGCommonEntityConstants.PAGE_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.SIZE_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.SORT_PARAM_MESSAGE;
 import static io.harness.NGResourceFilterConstants.PAGE_KEY;
 import static io.harness.NGResourceFilterConstants.SIZE_KEY;
 import static io.harness.NGResourceFilterConstants.SORT_KEY;
@@ -7,6 +10,7 @@ import static io.harness.NGResourceFilterConstants.SORT_KEY;
 import io.harness.beans.SortOrder;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 import javax.validation.constraints.Max;
 import javax.ws.rs.DefaultValue;
@@ -25,7 +29,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PageRequest {
-  @QueryParam(PAGE_KEY) @DefaultValue("0") int pageIndex;
-  @QueryParam(SIZE_KEY) @DefaultValue("50") @Max(100) int pageSize;
-  @QueryParam(SORT_KEY) List<SortOrder> sortOrders;
+  @Parameter(description = PAGE_PARAM_MESSAGE) @QueryParam(PAGE_KEY) @DefaultValue("0") int pageIndex;
+  @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(SIZE_KEY) @DefaultValue("50") @Max(100) int pageSize;
+  @Parameter(description = SORT_PARAM_MESSAGE) @QueryParam(SORT_KEY) List<SortOrder> sortOrders;
 }

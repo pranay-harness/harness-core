@@ -465,4 +465,97 @@ public class InterruptMonitorTest extends OrchestrationTestBase {
     List<NodeExecution> discontinuingNodes = discontinuingNodeCaptor.getAllValues();
     assertThat(discontinuingNodes.get(0).getUuid()).isEqualTo(sg2.getUuid());
   }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestLeafDiscontinuing() {
+    String planExecutionId = generateUuid();
+    PlanExecution planExecution = PlanExecution.builder().uuid(planExecutionId).status(Status.RUNNING).build();
+    Interrupt interrupt = Interrupt.builder()
+                              .uuid(generateUuid())
+                              .planExecutionId(planExecutionId)
+                              .type(InterruptType.ABORT_ALL)
+                              .state(Interrupt.State.PROCESSING)
+                              .build();
+    NodeExecution pipeline = NodeExecution.builder()
+                                 .uuid(generateUuid() + "_pipeline")
+                                 .status(Status.RUNNING)
+                                 .mode(ExecutionMode.CHILD)
+                                 .build();
+    NodeExecution stages = NodeExecution.builder()
+                               .uuid(generateUuid() + "_stages")
+                               .status(Status.RUNNING)
+                               .mode(ExecutionMode.CHILD)
+                               .parentId(pipeline.getUuid())
+                               .build();
+    NodeExecution stage = NodeExecution.builder()
+                              .uuid(generateUuid() + "_stage")
+                              .status(Status.RUNNING)
+                              .mode(ExecutionMode.CHILD)
+                              .parentId(stages.getUuid())
+                              .build();
+    NodeExecution execution = NodeExecution.builder()
+                                  .uuid(generateUuid() + "_execution")
+                                  .status(Status.RUNNING)
+                                  .mode(ExecutionMode.CHILD)
+                                  .parentId(stage.getUuid())
+                                  .build();
+
+    NodeExecution fork = NodeExecution.builder()
+                             .uuid(generateUuid() + "_fork")
+                             .status(Status.RUNNING)
+                             .mode(ExecutionMode.CHILDREN)
+                             .parentId(execution.getUuid())
+                             .build();
+
+    NodeExecution sg1 = NodeExecution.builder()
+                            .uuid(generateUuid() + "_sg1")
+                            .status(Status.SUCCEEDED)
+                            .mode(ExecutionMode.CHILD)
+                            .parentId(fork.getUuid())
+                            .build();
+
+    NodeExecution stepSg1 = NodeExecution.builder()
+                                .uuid(generateUuid() + "_stepSg1")
+                                .status(Status.SUCCEEDED)
+                                .mode(ExecutionMode.SYNC)
+                                .parentId(sg1.getUuid())
+                                .build();
+
+    NodeExecution sg2 = NodeExecution.builder()
+                            .uuid(generateUuid() + "_sg2")
+                            .status(Status.RUNNING)
+                            .mode(ExecutionMode.CHILD)
+                            .parentId(fork.getUuid())
+                            .build();
+
+    NodeExecution stepSg2 = NodeExecution.builder()
+                                .uuid(generateUuid() + "_stepSg2")
+                                .status(Status.DISCONTINUING)
+                                .mode(ExecutionMode.SYNC)
+                                .parentId(sg2.getUuid())
+                                .build();
+
+    when(planExecutionService.get(eq(planExecutionId))).thenReturn(planExecution);
+    when(nodeExecutionService.findAllNodeExecutionsTrimmed(eq(planExecutionId)))
+        .thenReturn(Arrays.asList(pipeline, stages, stage, execution, fork, sg1, sg2, stepSg1, stepSg2));
+
+    when(nodeExecutionService.updateStatusWithOps(
+             eq(sg2.getUuid()), eq(Status.DISCONTINUING), any(), eq(EnumSet.noneOf(Status.class))))
+        .thenReturn(NodeExecution.builder()
+                        .uuid(sg2.getUuid())
+                        .status(Status.DISCONTINUING)
+                        .mode(ExecutionMode.CHILD)
+                        .parentId(stage.getUuid())
+                        .build());
+
+    interruptMonitor.handle(interrupt);
+    ArgumentCaptor<NodeExecution> discontinuingNodeCaptor = ArgumentCaptor.forClass(NodeExecution.class);
+    verify(abortHelper, times(1))
+        .abortDiscontinuingNode(
+            discontinuingNodeCaptor.capture(), eq(interrupt.getUuid()), eq(interrupt.getInterruptConfig()));
+    NodeExecution dne = discontinuingNodeCaptor.getValue();
+    assertThat(dne.getUuid()).isEqualTo(stepSg2.getUuid());
+  }
 }

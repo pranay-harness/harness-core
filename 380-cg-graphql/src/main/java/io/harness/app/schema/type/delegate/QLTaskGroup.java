@@ -82,7 +82,8 @@ public enum QLTaskGroup implements QLEnum {
   CUSTOM_MANIFEST_VALUES_FETCH_TASK,
   CUSTOM_MANIFEST_FETCH_TASK,
   TERRAFORM_NG,
-  CE;
+  CE,
+  SERVICENOW_NG;
 
   @Override
   public String getStringValue() {

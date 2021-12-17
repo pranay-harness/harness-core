@@ -142,8 +142,6 @@ public class YamlGitConfigServiceImplTest extends GitSyncTestBase {
     GitSyncFolderConfigDTO rootFolder = GitSyncFolderConfigDTO.builder()
                                             .isDefault(true)
                                             .rootFolder(ROOT_FOLDER)
-                                            .identifier(ROOT_FOLDER_ID)
-                                            .enabled(true)
                                             .build();
     GitSyncConfigDTO gitSyncConfigDTO =
         saveYamlGitConfig(Collections.singletonList(rootFolder), CONNECTOR_ID, REPO, BRANCH, IDENTIFIER);

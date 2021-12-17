@@ -81,12 +81,18 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
     additionalErrorDetailsDTO =
         GitToHarnessErrorDetailsDTO.builder().gitCommitId(commitId).commitMessage(commitMessage).build();
     yamlGitConfigDTO = YamlGitConfigDTO.builder()
+                           .accountIdentifier(accountId)
+                           .projectIdentifier(projectId)
+                           .organizationIdentifier(orgId)
                            .branch(branch)
                            .repo(repoUrl)
                            .identifier(repoId)
                            .gitConnectorType(ConnectorType.GIT)
                            .build();
     when(yamlGitConfigService.get(any(), any(), any(), any())).thenReturn(yamlGitConfigDTO);
+    doReturn(yamlGitConfigDTO).when(yamlGitConfigService).getByProjectIdAndRepo(any(), any(), any(), any());
+    when(yamlGitConfigService.getByAccountAndRepo(anyString(), anyString()))
+        .thenReturn(Collections.singletonList(yamlGitConfigDTO));
     FieldUtils.writeField(gitSyncErrorService, "yamlGitConfigService", yamlGitConfigService, true);
   }
 
@@ -107,7 +113,7 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
         build("filepath3", additionalErrorDetails, createdAt, Collections.singletonList(scope)));
 
     PageRequest pageRequest = PageRequest.builder().pageSize(10).pageIndex(0).build();
-    doReturn(yamlGitConfigDTO).when(yamlGitConfigService).getByProjectIdAndRepo(any(), any(), any(), any());
+
     List<GitSyncErrorAggregateByCommitDTO> dto =
         gitSyncErrorService
             .listGitToHarnessErrorsGroupedByCommits(pageRequest, accountId, orgId, projectId, null, null, null, 1)
@@ -137,7 +143,7 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
         SortOrder.Builder.aSortOrder().withField(GitSyncErrorKeys.createdAt, SortOrder.OrderType.DESC).build();
     PageRequest pageRequest =
         PageRequest.builder().pageSize(10).pageIndex(0).sortOrders(ImmutableList.of(order)).build();
-    doReturn(yamlGitConfigDTO).when(yamlGitConfigService).getByProjectIdAndRepo(any(), any(), any(), any());
+
     List<GitSyncErrorDTO> dto =
         gitSyncErrorService.listAllGitToHarnessErrors(pageRequest, accountId, orgId, projectId, null, repoId, branch)
             .getContent();
@@ -255,12 +261,10 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testRecordConnectivityIssue() {
-    gitSyncErrorService.recordConnectivityError(
-        accountId, Collections.singletonList(scope), repoUrl, branch, "Unable to connect to git provider");
-    when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
-        .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
+    gitSyncErrorService.recordConnectivityError(accountId, repoUrl, "Unable to connect to git provider");
+
     PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
-        accountId, orgId, projectId, repoId, branch, new PageRequest(0, 10, new ArrayList<>()));
+        accountId, orgId, projectId, repoId, new PageRequest(0, 10, new ArrayList<>()));
     assertThat(gitSyncErrorList.getContent()).isNotEmpty();
     assertThat(gitSyncErrorList.getContent()).hasSize(1);
   }
@@ -269,25 +273,20 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testListGitSyncErrors() {
-    gitSyncErrorService.recordConnectivityError(
-        accountId, Collections.singletonList(scope), repoUrl, branch, "Unable to connect to git provider");
+    gitSyncErrorService.recordConnectivityError(accountId, repoUrl, "Unable to connect to git provider");
+
+    gitSyncErrorService.recordConnectivityError(accountId, repoUrl, "Delegates are down");
 
     gitSyncErrorService.recordConnectivityError(
-        accountId, Collections.singletonList(scope), repoUrl, branch, "Unable to connect to git provider");
-
-    gitSyncErrorService.recordConnectivityError(accountId, Collections.singletonList(scope), "repoUrl1", branch,
-        "Something went wrong, Please contact Harness Support.");
-
-    when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
-        .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
+        accountId, "repoUrl1", "Something went wrong, Please contact Harness Support.");
 
     PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
-        accountId, orgId, projectId, repoId, branch, new PageRequest(0, 10, new ArrayList<>()));
+        accountId, orgId, projectId, repoId, new PageRequest(0, 10, new ArrayList<>()));
     assertThat(gitSyncErrorList.getContent()).isNotEmpty();
     assertThat(gitSyncErrorList.getContent()).hasSize(1);
 
     gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
-        accountId, orgId, projectId, null, null, new PageRequest(0, 10, new ArrayList<>()));
+        accountId, orgId, projectId, null, new PageRequest(0, 10, new ArrayList<>()));
     assertThat(gitSyncErrorList.getContent()).isNotEmpty();
     assertThat(gitSyncErrorList.getContent()).hasSize(2);
   }
@@ -311,12 +310,9 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testListConnectivityErrorsForDefaultBranchesOfAllRepos() {
-    gitSyncErrorService.recordConnectivityError(
-        accountId, Collections.singletonList(scope), repoUrl, branch, "Unable to connect to git provider");
-    when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
-        .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
+    gitSyncErrorService.recordConnectivityError(accountId, repoUrl, "Unable to connect to git provider");
     PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
-        accountId, orgId, projectId, null, null, new PageRequest(0, 10, new ArrayList<>()));
+        accountId, orgId, projectId, null, new PageRequest(0, 10, new ArrayList<>()));
     assertThat(gitSyncErrorList.getContent()).isNotEmpty();
     assertThat(gitSyncErrorList.getContent()).hasSize(1);
   }
@@ -325,16 +321,18 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = BHAVYA)
   @Category(UnitTests.class)
   public void test_resolveConnectivityErrors() {
-    gitSyncErrorService.recordConnectivityError(
-        accountId, Collections.singletonList(scope), repoUrl, branch, "Unable to connect to git provider");
-    gitSyncErrorService.recordConnectivityError(accountId,
-        Collections.singletonList(Scope.of(accountId, "org1", "proj1")), repoUrl, branch,
-        "Unable to connect to git provider");
-    when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
-        .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
-    gitSyncErrorService.resolveConnectivityErrors(accountId, repoUrl, branch);
+    gitSyncErrorService.recordConnectivityError(accountId, repoUrl, "Unable to connect to git provider");
+    YamlGitConfigDTO yamlGitConfigDTO1 = YamlGitConfigDTO.builder()
+                                             .accountIdentifier(accountId)
+                                             .organizationIdentifier("org1")
+                                             .projectIdentifier("proj1")
+                                             .repo(repoUrl)
+                                             .build();
+    when(yamlGitConfigService.getByAccountAndRepo(anyString(), anyString()))
+        .thenReturn(Arrays.asList(yamlGitConfigDTO, yamlGitConfigDTO1));
+    gitSyncErrorService.resolveConnectivityErrors(accountId, repoUrl);
     PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
-        accountId, orgId, projectId, null, null, new PageRequest(0, 10, new ArrayList<>()));
+        accountId, orgId, projectId, null, new PageRequest(0, 10, new ArrayList<>()));
     assertThat(gitSyncErrorList.getContent()).isEmpty();
   }
 }

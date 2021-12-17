@@ -1,9 +1,11 @@
 package io.harness.connector;
 
+import io.harness.ConnectorConstants;
 import io.harness.delegate.beans.connector.ConnectorType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -19,7 +21,8 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @ApiModel("ConnectorCatalogueItem")
+@Schema(description = "This has details of the Connector Catalogue in Harness.")
 public class ConnectorCatalogueItem {
-  ConnectorCategory category;
-  Set<ConnectorType> connectors;
+  @Schema(description = ConnectorConstants.CONNECTOR_CATEGORY) ConnectorCategory category;
+  @Schema(description = ConnectorConstants.CONNECTOR_TYPE_LIST_BY_CATEGORY) Set<ConnectorType> connectors;
 }

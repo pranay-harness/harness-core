@@ -545,7 +545,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
         .request()
         .post(entity(connectionResults, "application/x-kryo"), new GenericType<RestResponse<DelegateTaskPackage>>() {});
     verify(delegateTaskServiceClassic, atLeastOnce())
-        .reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, taskId, connectionResults);
+        .reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, taskId, null, connectionResults);
   }
 
   @Test
@@ -572,7 +572,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
         .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/acquire?accountId=" + ACCOUNT_ID)
         .request()
         .put(entity(taskResponse, "application/x-kryo"), Response.class);
-    verify(delegateTaskServiceClassic, atLeastOnce()).acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, taskId);
+    verify(delegateTaskServiceClassic, atLeastOnce()).acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, taskId, null);
   }
 
   @Test

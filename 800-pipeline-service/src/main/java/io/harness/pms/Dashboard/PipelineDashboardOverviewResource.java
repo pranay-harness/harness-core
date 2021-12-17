@@ -14,6 +14,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
+import io.harness.pms.pipeline.PipelineResourceConstants;
 import io.harness.pms.pipeline.service.PipelineDashboardService;
 
 import com.google.inject.Inject;
@@ -21,6 +22,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -42,6 +48,13 @@ import lombok.extern.slf4j.Slf4j;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@Tag(name = "pipelines-dashboard", description = "This contains APIs related to Pipeline Dashboard")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
 @PipelineServiceAuth
 @Slf4j
 public class PipelineDashboardOverviewResource {
@@ -49,15 +62,32 @@ public class PipelineDashboardOverviewResource {
   @GET
   @Path("/pipelineHealth")
   @ApiOperation(value = "Get pipeline health", nickname = "getPipelinedHealth")
+  @Operation(operationId = "getPipelinedHealth",
+      summary = "Fetches Pipeline Health data for a given Interval and will be presented in day wise format"
+          + "\n",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Fetches Pipeline Health data for a given Interval and will be presented in day wise format")
+      },
+      deprecated = true)
   @NGAccessControlCheck(resourceType = "PROJECT", permission = "core_project_view")
-  public ResponseDTO<DashboardPipelineHealthInfo> getPipelinedHealth(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @NotNull @QueryParam("moduleInfo") String moduleInfo,
-      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+  @Deprecated
+  public ResponseDTO<DashboardPipelineHealthInfo>
+  getPipelinedHealth(@Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true) @NotNull
+                     @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
+      @Parameter(description = PipelineResourceConstants.PIPELINE_ID_PARAM_MESSAGE,
+          required = true) @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @Parameter(description = PipelineResourceConstants.MODULE_TYPE_PARAM_MESSAGE,
+          required = true) @NotNull @QueryParam("moduleInfo") String moduleInfo,
+      @Parameter(description = PipelineResourceConstants.START_TIME_EPOCH_PARAM_MESSAGE,
+          required = true) @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @Parameter(description = PipelineResourceConstants.END_TIME_EPOCH_PARAM_MESSAGE,
+          required = true) @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("Getting pipeline health");
     long previousInterval = startInterval - (endInterval - startInterval + DAY_IN_MS);
 
@@ -69,15 +99,33 @@ public class PipelineDashboardOverviewResource {
   @GET
   @Path("/pipelineExecution")
   @ApiOperation(value = "Get pipeline execution", nickname = "getPipelineExecution")
+  @Operation(operationId = "getPipelineExecution",
+      summary = "Fetches Pipeline Executions details for a given Interval and will be presented in day wise format",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "Fetches Pipeline Executions details for a given Interval and will be presented in day wise format")
+      },
+      deprecated = true)
   @NGAccessControlCheck(resourceType = "PROJECT", permission = "core_project_view")
-  public ResponseDTO<DashboardPipelineExecutionInfo> getPipelineExecution(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @NotNull @QueryParam("moduleInfo") String moduleInfo,
-      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+  @Deprecated
+  public ResponseDTO<DashboardPipelineExecutionInfo>
+  getPipelineExecution(
+      @Parameter(description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = PipelineResourceConstants.ORG_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
+      @Parameter(description = PipelineResourceConstants.PIPELINE_ID_PARAM_MESSAGE,
+          required = true) @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @Parameter(description = PipelineResourceConstants.MODULE_TYPE_PARAM_MESSAGE,
+          required = true) @NotNull @QueryParam("moduleInfo") String moduleInfo,
+      @Parameter(description = PipelineResourceConstants.START_TIME_EPOCH_PARAM_MESSAGE,
+          required = true) @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @Parameter(description = PipelineResourceConstants.END_TIME_EPOCH_PARAM_MESSAGE,
+          required = true) @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("getting pipeline execution");
     return ResponseDTO.newResponse(pipelineDashboardService.getDashboardPipelineExecutionInfo(accountIdentifier,
         orgIdentifier, projectIdentifier, pipelineIdentifier, startInterval, endInterval, moduleInfo));

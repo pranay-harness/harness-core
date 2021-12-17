@@ -83,6 +83,7 @@ public class Interrupt implements PersistentRegularIterable, UuidAccess {
 
   private Map<String, String> logContextMap() {
     Map<String, String> logContext = new HashMap<>();
+    logContext.put("interruptId", uuid);
     logContext.put(InterruptKeys.planExecutionId, planExecutionId);
     logContext.put(InterruptKeys.type, type.name());
     logContext.put(InterruptKeys.nodeExecutionId, nodeExecutionId);

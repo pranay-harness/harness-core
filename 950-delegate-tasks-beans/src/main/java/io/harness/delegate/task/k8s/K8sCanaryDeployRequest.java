@@ -34,6 +34,6 @@ public class K8sCanaryDeployRequest implements K8sDeployRequest {
   boolean skipResourceVersioning;
   @Builder.Default boolean shouldOpenFetchFilesLogStream = true;
   CommandUnitsProgress commandUnitsProgress;
-  boolean useLatestKustomizeVersion;
+  boolean useVarSupportForKustomize;
   boolean useNewKubectlVersion;
 }

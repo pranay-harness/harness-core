@@ -55,6 +55,7 @@ import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.datahandler.models.AccountDetails;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.DelegateTokenStatus;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
@@ -63,6 +64,7 @@ import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.service.intfc.DelegateNgTokenService;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
@@ -169,6 +171,7 @@ public class AccountServiceTest extends WingsBaseTest {
   @Inject @Named(GovernanceFeature.FEATURE_NAME) private PremiumFeature governanceFeature;
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private DelegateNgTokenService delegateNgTokenService;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   private static final String HARNESS_NAME = "Harness";
@@ -432,8 +435,12 @@ public class AccountServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldDeleteAccount() {
     String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
+    delegateNgTokenService.upsertDefaultToken(accountId, null, false);
     accountService.delete(accountId);
     assertThat(wingsPersistence.get(Account.class, accountId)).isNull();
+    assertThat(
+        delegateNgTokenService.getDelegateToken(accountId, null, DelegateNgTokenService.DEFAULT_TOKEN_NAME).getStatus())
+        .isEqualTo(DelegateTokenStatus.REVOKED);
   }
 
   @Test
@@ -469,6 +476,7 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(user.getAccounts().contains(account2)).isTrue();
     assertThat(user.getRoles().contains(role2)).isTrue();
 
+    delegateNgTokenService.upsertDefaultToken(accountId, null, false);
     accountService.delete(account.getUuid());
     User updatedUser = wingsPersistence.get(User.class, userId);
 
@@ -476,6 +484,9 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(updatedUser.getRoles().contains(role1)).isFalse();
     assertThat(updatedUser.getAccounts().contains(account2)).isTrue();
     assertThat(updatedUser.getRoles().contains(role2)).isTrue();
+    assertThat(
+        delegateNgTokenService.getDelegateToken(accountId, null, DelegateNgTokenService.DEFAULT_TOKEN_NAME).getStatus())
+        .isEqualTo(DelegateTokenStatus.REVOKED);
   }
 
   @Test

@@ -14,6 +14,7 @@ import lombok.Data;
 public class CfAppSetupTimeDetails {
   private String applicationGuid;
   private String applicationName;
+  private String oldName;
   private Integer initialInstanceCount;
   private List<String> urls;
   private boolean activeApp;

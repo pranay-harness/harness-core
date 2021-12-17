@@ -3,7 +3,7 @@ package software.wings.helpers.ext.mail;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
-import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
+import static software.wings.beans.CGConstants.ENCRYPTED_VALUE_STR;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;

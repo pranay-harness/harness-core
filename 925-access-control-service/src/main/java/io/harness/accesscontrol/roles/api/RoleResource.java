@@ -1,6 +1,9 @@
 package io.harness.accesscontrol.roles.api;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.accesscontrol.AccessControlPermissions.DELETE_ROLE_PERMISSION;
 import static io.harness.accesscontrol.AccessControlPermissions.EDIT_ROLE_PERMISSION;
 import static io.harness.accesscontrol.AccessControlPermissions.VIEW_ROLE_PERMISSION;
@@ -51,8 +54,10 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -134,7 +139,8 @@ public class RoleResource {
       })
   public ResponseDTO<PageResponse<RoleResponseDTO>>
   get(@BeanParam PageRequest pageRequest, @BeanParam HarnessScopeParams harnessScopeParams,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+      @Parameter(description = "Search roles by name/identifier") @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
             harnessScopeParams.getProjectIdentifier()),
@@ -152,7 +158,8 @@ public class RoleResource {
   @Operation(operationId = "getRole", summary = "Get a Role by identifier",
       responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Queried Role") })
   public ResponseDTO<RoleResponseDTO>
-  get(@NotEmpty @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams) {
+  get(@Parameter(description = "Identifier of the Role") @NotEmpty @PathParam(IDENTIFIER_KEY) String identifier,
+      @BeanParam HarnessScopeParams harnessScopeParams) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
             harnessScopeParams.getProjectIdentifier()),
@@ -170,8 +177,9 @@ public class RoleResource {
   @Operation(operationId = "putRole", summary = "Update a Custom Role by identifier",
       responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Updated Role") })
   public ResponseDTO<RoleResponseDTO>
-  update(@NotNull @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams,
-      @Body RoleDTO roleDTO) {
+  update(@Parameter(description = "Identifier of the Role") @NotNull @PathParam(IDENTIFIER_KEY) String identifier,
+      @BeanParam HarnessScopeParams harnessScopeParams,
+      @RequestBody(description = "Updated Role entity", required = true) @Body RoleDTO roleDTO) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
             harnessScopeParams.getProjectIdentifier()),
@@ -195,9 +203,11 @@ public class RoleResource {
       responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Created Role") })
   @FeatureRestrictionCheck(FeatureRestrictionName.CUSTOM_ROLES)
   public ResponseDTO<RoleResponseDTO>
-  create(@NotEmpty @QueryParam(ACCOUNT_LEVEL_PARAM_NAME) @AccountIdentifier String accountIdentifier,
-      @QueryParam(ORG_LEVEL_PARAM_NAME) String orgIdentifier,
-      @QueryParam(PROJECT_LEVEL_PARAM_NAME) String projectIdentifier, @Body RoleDTO roleDTO) {
+  create(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotEmpty @QueryParam(
+             ACCOUNT_LEVEL_PARAM_NAME) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(ORG_LEVEL_PARAM_NAME) String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(PROJECT_LEVEL_PARAM_NAME) String projectIdentifier,
+      @RequestBody(description = "Role entity", required = true) @Body RoleDTO roleDTO) {
     HarnessScopeParams harnessScopeParams = HarnessScopeParams.builder()
                                                 .accountIdentifier(accountIdentifier)
                                                 .orgIdentifier(orgIdentifier)
@@ -225,7 +235,8 @@ public class RoleResource {
   @Operation(operationId = "deleteRole", summary = "Delete a Custom Role in a scope",
       responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Deleted Role") })
   public ResponseDTO<RoleResponseDTO>
-  delete(@NotNull @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams) {
+  delete(@Parameter(description = "Identifier of the Role") @NotNull @PathParam(IDENTIFIER_KEY) String identifier,
+      @BeanParam HarnessScopeParams harnessScopeParams) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
             harnessScopeParams.getProjectIdentifier()),

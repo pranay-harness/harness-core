@@ -5,6 +5,7 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateNgToken;
 import io.harness.delegate.beans.DelegateNgToken.DelegateNgTokenKeys;
@@ -28,6 +29,7 @@ import com.google.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +45,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class DelegateNgTokenServiceImpl implements DelegateNgTokenService {
   @Inject private HPersistence persistence;
   @Inject private OutboxService outboxService;
-
-  private static final String DEFAULT_TOKEN_NAME = "default";
 
   @Override
   public DelegateTokenDetails createToken(String accountId, DelegateEntityOwner owner, String name) {
@@ -106,6 +106,72 @@ public class DelegateNgTokenServiceImpl implements DelegateNgTokenService {
     return delegateTokenDetails != null ? delegateTokenDetails.getValue() : null;
   }
 
+  @Override
+  public DelegateTokenDetails upsertDefaultToken(
+      String accountIdentifier, DelegateEntityOwner owner, boolean skipIfExists) {
+    Query<DelegateNgToken> query = persistence.createQuery(DelegateNgToken.class)
+                                       .filter(DelegateNgTokenKeys.accountId, accountIdentifier)
+                                       .filter(DelegateNgTokenKeys.name, DEFAULT_TOKEN_NAME);
+
+    if (null != owner) {
+      query = query.filter(DelegateNgTokenKeys.owner, owner);
+    }
+
+    if (skipIfExists) {
+      Query<DelegateNgToken> queryExistsActive = query.filter(DelegateNgTokenKeys.status, DelegateTokenStatus.ACTIVE);
+      Optional<DelegateNgToken> token = queryExistsActive.asList().stream().findAny();
+      if (token.isPresent()) {
+        log.info("Active default Delegate NG Token already exists for account {}, organization {} and project {}",
+            accountIdentifier, extractOrganization(owner), extractProject(owner));
+        return getDelegateTokenDetails(token.get(), true);
+      }
+    }
+
+    UpdateOperations<DelegateNgToken> updateOperations =
+        persistence.createUpdateOperations(DelegateNgToken.class)
+            .setOnInsert(DelegateNgTokenKeys.uuid, UUIDGenerator.generateUuid())
+            .setOnInsert(DelegateNgTokenKeys.accountId, accountIdentifier)
+            .set(DelegateNgTokenKeys.name, DEFAULT_TOKEN_NAME)
+            .set(DelegateNgTokenKeys.status, DelegateTokenStatus.ACTIVE)
+            .set(DelegateNgTokenKeys.value, encodeBase64(Misc.generateSecretKey()));
+
+    DelegateNgToken delegateToken = persistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
+    log.info("Default Delegate NG Token inserted/updated for account {}, organization {} and project {}",
+        accountIdentifier, extractOrganization(owner), extractProject(owner));
+    return getDelegateTokenDetails(delegateToken, true);
+  }
+
+  @Override
+  public List<String> getOrgsWithActiveDefaultDelegateTokens(String accountId) {
+    List<DelegateNgToken> defaultTokens = getActiveDefaultTokensForAccount(accountId);
+    return defaultTokens.stream()
+        .filter(token -> DelegateEntityOwnerHelper.isOrganisation(token.getOwner()))
+        .map(token -> token.getOwner().getIdentifier())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<String> getProjectsWithActiveDefaultDelegateTokens(String accountId) {
+    List<DelegateNgToken> defaultTokens = getActiveDefaultTokensForAccount(accountId);
+    return defaultTokens.stream()
+        .filter(token -> DelegateEntityOwnerHelper.isProject(token.getOwner()))
+        .map(token -> token.getOwner().getIdentifier())
+        .collect(Collectors.toList());
+  }
+
+  private List<DelegateNgToken> getActiveDefaultTokensForAccount(String accountId) {
+    return persistence.createQuery(DelegateNgToken.class)
+        .field(DelegateNgTokenKeys.accountId)
+        .equal(accountId)
+        .field(DelegateNgTokenKeys.name)
+        .equal(DEFAULT_TOKEN_NAME)
+        .field(DelegateNgTokenKeys.status)
+        .equal(DelegateTokenStatus.ACTIVE)
+        .field(DelegateNgTokenKeys.owner)
+        .exists()
+        .asList();
+  }
+
   private Query<DelegateNgToken> nameStartsWithTokenQuery(
       String accountId, DelegateEntityOwner owner, String tokenName) {
     Query<DelegateNgToken> query =
@@ -141,6 +207,10 @@ public class DelegateNgTokenServiceImpl implements DelegateNgTokenService {
       delegateTokenDetailsBuilder.value(decodeBase64ToString(delegateToken.getValue()));
     }
 
+    if (delegateToken.getOwner() != null) {
+      delegateTokenDetailsBuilder.ownerIdentifier(delegateToken.getOwner().getIdentifier());
+    }
+
     return delegateTokenDetailsBuilder.build();
   }
 
@@ -173,5 +243,15 @@ public class DelegateNgTokenServiceImpl implements DelegateNgTokenService {
     if (DelegateTokenStatus.REVOKED.equals(delegateToken.getStatus())) {
       throw new InvalidRequestException("Specified token is already revoked.");
     }
+  }
+
+  private String extractOrganization(DelegateEntityOwner owner) {
+    return owner != null ? DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(owner.getIdentifier())
+                         : StringUtils.EMPTY;
+  }
+
+  private String extractProject(DelegateEntityOwner owner) {
+    return owner != null ? DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(owner.getIdentifier())
+                         : StringUtils.EMPTY;
   }
 }
