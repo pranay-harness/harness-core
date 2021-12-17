@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static org.joda.time.Minutes.minutes;
 
 import io.harness.OrchestrationStepConfig;
-import io.harness.OrchestrationStepTypes;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CFApi;
@@ -30,6 +29,7 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.security.JWTTokenServiceUtils;
+import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.StepUtils;
 import io.harness.steps.cf.AddRuleYaml.AddRuleYamlSpec;
 import io.harness.steps.cf.AddSegmentToVariationTargetMapYaml.AddSegmentToVariationTargetMapYamlSpec;
@@ -57,7 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FlagConfigurationStep implements SyncExecutable<StepElementParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder()
-                                               .setType(OrchestrationStepTypes.FLAG_CONFIGURATION)
+                                               .setType(StepSpecTypeConstants.FLAG_CONFIGURATION)
                                                .setStepCategory(StepCategory.STEP)
                                                .build();
   public static final String STEP_NAME = "Flag Configuration";
