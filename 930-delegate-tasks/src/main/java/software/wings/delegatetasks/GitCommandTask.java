@@ -20,7 +20,9 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitConnectionDelegateException;
 import io.harness.exception.WingsException;
+import io.harness.git.ExceptionSanitizer;
 import io.harness.git.model.GitRepositoryType;
+import io.harness.secret.SecretSanitizerThreadLocal;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GitConfig;
@@ -40,7 +42,11 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
 import com.google.inject.Inject;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -71,8 +77,10 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
     GitCommandType gitCommandType = (GitCommandType) parameters[0];
     GitConfig gitConfig = (GitConfig) parameters[1];
     gitConfig.setGitRepoType(GitRepositoryType.YAML); // TODO:: find better place. possibly manager can set this
+    Optional<Set<String>> secretValuesOptional = getSecretValues(gitConfig);
 
     try {
+      secretValuesOptional.ifPresent(SecretSanitizerThreadLocal::set);
       List<EncryptedDataDetail> encryptionDetails = (List<EncryptedDataDetail>) parameters[2];
 
       // Decrypt git config
@@ -157,13 +165,23 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
               .build();
       }
     } catch (Exception ex) {
-      log.error(GIT_YAML_LOG_PREFIX + "Exception in processing GitTask", ex);
-      GitCommandExecutionResponseBuilder builder = GitCommandExecutionResponse.builder()
-                                                       .gitCommandStatus(GitCommandStatus.FAILURE)
-                                                       .errorMessage(ex.getMessage())
-                                                       .errorCode(getErrorCode(ex));
+      log.error(GIT_YAML_LOG_PREFIX + "Exception in processing GitTask {}", ExceptionSanitizer.sanitizeForLogging(ex));
+      GitCommandExecutionResponseBuilder builder =
+          GitCommandExecutionResponse.builder()
+              .gitCommandStatus(GitCommandStatus.FAILURE)
+              .errorMessage(ExceptionSanitizer.sanitizeTheMessage(ex.getMessage()))
+              .errorCode(getErrorCode(ex));
       return builder.build();
+    } finally {
+      secretValuesOptional.ifPresent(secrets -> SecretSanitizerThreadLocal.unset());
     }
+  }
+
+  private Optional<Set<String>> getSecretValues(GitConfig gitConfig) {
+    if (gitConfig == null || gitConfig.getPassword() == null) {
+      return Optional.empty();
+    }
+    return Optional.of(new HashSet<>(Collections.singletonList(String.valueOf(gitConfig.getPassword()))));
   }
 
   private ErrorCode getErrorCode(Exception ex) {
