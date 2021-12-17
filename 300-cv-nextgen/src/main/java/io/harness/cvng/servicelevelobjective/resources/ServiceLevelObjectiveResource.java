@@ -1,5 +1,13 @@
 package io.harness.cvng.servicelevelobjective.resources;
 
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ProjectIdentifier;
+import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -41,6 +49,12 @@ import retrofit2.http.Body;
 @OwnedBy(HarnessTeam.CV)
 public class ServiceLevelObjectiveResource {
   @Inject ServiceLevelObjectiveService serviceLevelObjectiveService;
+  @Inject AccessControlClient accessControlClient;
+
+  public static final String SLO = "SLO";
+  public static final String EDIT_PERMISSION = "chi_slo_edit";
+  public static final String VIEW_PERMISSION = "chi_slo_view";
+  public static final String DELETE_PERMISSION = "chi_slo_delete";
 
   @POST
   @Timed
@@ -49,6 +63,9 @@ public class ServiceLevelObjectiveResource {
   public RestResponse<ServiceLevelObjectiveResponse> saveSLOData(
       @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
       @NotNull @Valid @Body ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, serviceLevelObjectiveDTO.getOrgIdentifier(),
+                                                  serviceLevelObjectiveDTO.getProjectIdentifier()),
+        Resource.of(SLO, null), EDIT_PERMISSION);
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
                                       .orgIdentifier(serviceLevelObjectiveDTO.getOrgIdentifier())
@@ -63,11 +80,12 @@ public class ServiceLevelObjectiveResource {
   @ExceptionMetered
   @Path("{identifier}")
   @ApiOperation(value = "update slo data", nickname = "updateSLOData")
+  @NGAccessControlCheck(resourceType = SLO, permission = EDIT_PERMISSION)
   public RestResponse<ServiceLevelObjectiveResponse> updateSLOData(
-      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
-      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @ApiParam(required = true) @NotNull @PathParam("identifier") String identifier,
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") @AccountIdentifier String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") @ProjectIdentifier String projectIdentifier,
+      @ApiParam(required = true) @NotNull @PathParam("identifier") @ResourceIdentifier String identifier,
       @NotNull @Valid @Body ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
@@ -82,11 +100,13 @@ public class ServiceLevelObjectiveResource {
   @ExceptionMetered
   @Path("{identifier}")
   @ApiOperation(value = "delete slo data", nickname = "deleteSLOData")
+  @NGAccessControlCheck(resourceType = SLO, permission = DELETE_PERMISSION)
   public RestResponse<Boolean> deleteSLOData(
-      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
-      @ApiParam(required = true) @NotNull @PathParam("identifier") String identifier,
-      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") @AccountIdentifier String accountId,
+      @ApiParam(required = true) @NotNull @PathParam("identifier") @ResourceIdentifier String identifier,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam(
+          "projectIdentifier") @ProjectIdentifier String projectIdentifier) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
                                       .orgIdentifier(orgIdentifier)
@@ -99,10 +119,13 @@ public class ServiceLevelObjectiveResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get all service level objectives ", nickname = "getServiceLevelObjectives")
+  @NGAccessControlCheck(resourceType = SLO, permission = VIEW_PERMISSION)
   public ResponseDTO<PageResponse<ServiceLevelObjectiveResponse>> getServiceLevelObjectives(
-      @NotNull @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("offset") @NotNull Integer offset,
-      @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("userJourneys") List<String> userJourneys) {
+      @NotNull @QueryParam("accountId") @AccountIdentifier String accountId,
+      @QueryParam("orgIdentifier") @NotNull @OrgIdentifier String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull @ProjectIdentifier String projectIdentifier,
+      @QueryParam("offset") @NotNull Integer offset, @QueryParam("pageSize") @NotNull Integer pageSize,
+      @QueryParam("userJourneys") List<String> userJourneys) {
     ServiceLevelObjectiveFilter serviceLevelObjectiveFilter = ServiceLevelObjectiveFilter.builder().build();
     if (CollectionUtils.isNotEmpty(userJourneys)) {
       serviceLevelObjectiveFilter.setUserJourneys(userJourneys);
@@ -121,11 +144,13 @@ public class ServiceLevelObjectiveResource {
   @ExceptionMetered
   @Path("{identifier}")
   @ApiOperation(value = "get service level objective data", nickname = "getServiceLevelObjective")
+  @NGAccessControlCheck(resourceType = SLO, permission = VIEW_PERMISSION)
   public RestResponse<ServiceLevelObjectiveResponse> getServiceLevelObjective(
-      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
-      @ApiParam(required = true) @NotNull @PathParam("identifier") String identifier,
-      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") @AccountIdentifier String accountId,
+      @ApiParam(required = true) @NotNull @PathParam("identifier") @ResourceIdentifier String identifier,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam(
+          "projectIdentifier") @ProjectIdentifier String projectIdentifier) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
                                       .orgIdentifier(orgIdentifier)
