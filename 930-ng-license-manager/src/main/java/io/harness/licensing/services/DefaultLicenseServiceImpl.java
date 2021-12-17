@@ -151,12 +151,29 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   @Override
   public ModuleLicenseDTO createModuleLicense(ModuleLicenseDTO moduleLicense) {
     ModuleLicense license = licenseObjectConverter.toEntity(moduleLicense);
+    ModuleLicense savedEntity = createModuleLicense(license);
+    return licenseObjectConverter.toDTO(savedEntity);
+  }
 
-    // Validate entity
+  @Override
+  public ModuleLicenseDTO updateModuleLicense(ModuleLicenseDTO moduleLicense) {
+    ModuleLicense license = licenseObjectConverter.toEntity(moduleLicense);
+    ModuleLicense updatedLicense = updateModuleLicense(license);
+    return licenseObjectConverter.toDTO(updatedLicense);
+  }
+
+  @Override
+  public ModuleLicense getCurrentLicense(String accountId, ModuleType moduleType) {
+    List<ModuleLicense> licenses = moduleLicenseRepository.findByAccountIdentifierAndModuleType(accountId, moduleType);
+    return ModuleLicenseHelper.getLatestLicense(licenses);
+  }
+
+  @Override
+  public ModuleLicense createModuleLicense(ModuleLicense moduleLicense) {
     ModuleLicense savedEntity;
     try {
-      license.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
-      savedEntity = saveLicense(license);
+      moduleLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
+      savedEntity = saveLicense(moduleLicense);
       // Send telemetry
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException("ModuleLicense already exists");
@@ -164,12 +181,11 @@ public class DefaultLicenseServiceImpl implements LicenseService {
 
     log.info("Created license for module [{}] in account [{}]", savedEntity.getModuleType(),
         savedEntity.getAccountIdentifier());
-    return licenseObjectConverter.toDTO(savedEntity);
+    return savedEntity;
   }
 
   @Override
-  public ModuleLicenseDTO updateModuleLicense(ModuleLicenseDTO moduleLicense) {
-    ModuleLicense license = licenseObjectConverter.toEntity(moduleLicense);
+  public ModuleLicense updateModuleLicense(ModuleLicense moduleLicense) {
     // validate the license
     Optional<ModuleLicense> existingEntityOptional = moduleLicenseRepository.findById(moduleLicense.getId());
     if (!existingEntityOptional.isPresent()) {
@@ -177,14 +193,14 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     }
 
     ModuleLicense existedLicense = existingEntityOptional.get();
-    ModuleLicense updateLicense = ModuleLicenseHelper.compareAndUpdate(existedLicense, license);
+    ModuleLicense updateLicense = ModuleLicenseHelper.compareAndUpdate(existedLicense, moduleLicense);
 
     updateLicense.setLastUpdatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
     ModuleLicense updatedLicense = saveLicense(updateLicense);
 
     log.info("Updated license for module [{}] in account [{}]", updatedLicense.getModuleType(),
         updatedLicense.getAccountIdentifier());
-    return licenseObjectConverter.toDTO(updatedLicense);
+    return updatedLicense;
   }
 
   @Override
@@ -477,18 +493,6 @@ public class DefaultLicenseServiceImpl implements LicenseService {
       email = ((UserPrincipal) principal).getEmail();
     }
     return email;
-  }
-
-  private boolean isNotEligibleToExtend(List<ModuleLicense> moduleLicenses) {
-    if (moduleLicenses.size() > 1) {
-      return true;
-    }
-
-    ModuleLicense moduleLicense = moduleLicenses.get(0);
-    boolean trialLicenseUnderExtendPeriod =
-        ModuleLicenseHelper.isTrialLicenseUnderExtendPeriod(moduleLicense.getExpiryTime());
-    return !trialLicenseUnderExtendPeriod || LicenseType.PAID.equals(moduleLicense.getLicenseType())
-        || Edition.FREE.equals(moduleLicense.getEdition());
   }
 
   private void startTrialInCGIfCE(ModuleLicense moduleLicense) {

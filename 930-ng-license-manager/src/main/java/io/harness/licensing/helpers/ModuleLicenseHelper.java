@@ -188,6 +188,14 @@ public class ModuleLicenseHelper {
       current.setLicenseType(update.getLicenseType());
     }
 
+    if (update.isPremiumSupport() != current.isPremiumSupport()) {
+      current.setPremiumSupport(update.isPremiumSupport());
+    }
+
+    if (update.isSelfService() != current.isSelfService()) {
+      current.setSelfService(update.isSelfService());
+    }
+
     switch (update.getModuleType()) {
       case CD:
         CDModuleLicense cdLicense = (CDModuleLicense) update;
