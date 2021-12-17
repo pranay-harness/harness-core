@@ -39,7 +39,7 @@ public class ExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElemen
   public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, ExecutionElementConfig config) {
     LinkedHashMap<String, PlanCreationResponse> responseMap = new LinkedHashMap<>();
-    List<YamlField> stepYamlFields = getStepYamlFields(ctx);
+    List<YamlField> stepYamlFields = ctx.getStepYamlFields();
     for (YamlField stepYamlField : stepYamlFields) {
       Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
       stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);

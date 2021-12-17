@@ -2,10 +2,8 @@ package io.harness.cdng.creator.plan.infrastructure;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.creator.plan.rollback.ExecutionStepsRollbackPMSPlanCreator;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.RollbackOptionalChildChainStepParametersBuilder;
@@ -16,10 +14,14 @@ import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 
+import java.util.HashMap;
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -27,10 +29,12 @@ import lombok.experimental.UtilityClass;
 public class InfraRollbackPMSPlanCreator {
   public static final String INFRA_ROLLBACK_NODE_ID_SUFFIX = "_infraRollback";
 
-  public static PlanCreationResponse createInfraRollbackPlan(YamlField infraField) {
+  public static PlanCreationResponse createInfraRollbackPlan(PlanCreationContext ctx, YamlField infraField) {
     if (!isDynamicallyProvisioned(infraField)) {
       return PlanCreationResponse.builder().build();
     }
+
+    Map<String, YamlField> dependencies = new HashMap();
 
     YamlField provisionerField = infraField.getNode()
                                      .getField(YamlTypes.INFRASTRUCTURE_DEF)
@@ -41,9 +45,12 @@ public class InfraRollbackPMSPlanCreator {
         RollbackOptionalChildChainStepParameters.builder();
 
     YamlField rollbackStepsField = provisionerField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
-    PlanCreationResponse executionRollbackPlan =
-        ExecutionStepsRollbackPMSPlanCreator.createExecutionStepsRollbackPlanNode(rollbackStepsField);
-    if (isNotEmpty(executionRollbackPlan.getNodes())) {
+
+    if (rollbackStepsField != null && rollbackStepsField.getNode() != null
+        && rollbackStepsField.getNode().asArray().size() > 0) {
+      // Adding dependencies
+      dependencies.put(rollbackStepsField.getNode().getUuid() + OrchestrationConstants.ROLLBACK_STEPS_NODE_ID_SUFFIX,
+          rollbackStepsField);
       stepParametersBuilder.childNode(
           RollbackNode.builder()
               .nodeId(rollbackStepsField.getNode().getUuid() + OrchestrationConstants.ROLLBACK_STEPS_NODE_ID_SUFFIX)
@@ -69,11 +76,10 @@ public class InfraRollbackPMSPlanCreator {
             .skipExpressionChain(false)
             .build();
 
-    PlanCreationResponse finalResponse =
-        PlanCreationResponse.builder().node(infraRollbackNode.getUuid(), infraRollbackNode).build();
-    finalResponse.merge(executionRollbackPlan);
-
-    return finalResponse;
+    return PlanCreationResponse.builder()
+        .node(infraRollbackNode.getUuid(), infraRollbackNode)
+        .dependencies(DependenciesUtils.toDependenciesProto(dependencies))
+        .build();
   }
 
   private static boolean isDynamicallyProvisioned(YamlField infraField) {
