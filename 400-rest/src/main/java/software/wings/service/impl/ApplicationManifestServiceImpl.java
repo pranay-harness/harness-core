@@ -591,8 +591,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         }
       }
     } else {
-      if (Boolean.TRUE.equals(oldPollForChanges)) {
-        helmChartService.deleteByAppManifest(oldAppManifest.getAppId(), oldAppManifest.getUuid());
+      // default behavior for null is now changed to true
+      if (Boolean.TRUE.equals(oldPollForChanges) && Boolean.FALSE.equals(curPollForChanges)) {
         deletePerpetualTask(oldAppManifest);
       }
     }
@@ -663,7 +663,16 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     if (service != null && Boolean.TRUE.equals(service.getArtifactFromManifest())
         && applicationManifest.getStoreType() == HelmChartRepo) {
-      applicationManifest.setPollForChanges(true);
+      // By default enable collection should be true and needs to be set by BE till UI starts sending default value as
+      // true
+      if (isCreate && !Boolean.FALSE.equals(applicationManifest.getEnableCollection())) {
+        applicationManifest.setEnableCollection(true);
+      }
+      applicationManifest.setPollForChanges(
+          applicationManifest.getEnableCollection() == null || applicationManifest.getEnableCollection());
+    } else if (Boolean.TRUE.equals(applicationManifest.getPollForChanges())) {
+      throw new InvalidRequestException(
+          "Collection can be enabled only for helm chart from helm repo manifest type", USER);
     }
 
     if (isCreate && exists(applicationManifest)) {
