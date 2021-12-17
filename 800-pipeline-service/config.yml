@@ -345,6 +345,11 @@ enforcementClientConfiguration:
 
 shouldUseInstanceCache: ${SHOULD_USE_INSTANCE_CACHE:-true}
 
+secretsConfiguration:
+  secretResolutionEnabled: false
+  gcpSecretManagerProject: harness-playground
+
+
 pmsPlanCreatorServicePoolConfig:
   corePoolSize: ${PLAN_CREATOR_SERVICE_EXECUTOR_POOL_CORE_SIZE:-2}
   maxPoolSize: ${PLAN_CREATOR_SERVICE_EXECUTOR_POOL_MAX_SIZE:-3}
