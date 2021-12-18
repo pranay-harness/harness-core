@@ -468,9 +468,8 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isNotNull();
     assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isInstanceOf(GitStoreDelegateConfig.class);
     assertThat(helmChartDelegateConfig.getHelmVersion()).isEqualTo(HelmVersion.V3);
-    assertThat(helmChartDelegateConfig.getHelmCommandFlag().getValueMap())
-        .containsKeys(HelmSubCommandType.FETCH, HelmSubCommandType.VERSION);
-    assertThat(helmChartDelegateConfig.getHelmCommandFlag().getValueMap()).containsValues("--test", "--test2");
+    assertThat(helmChartDelegateConfig.getHelmCommandFlag().getValueMap()).containsKeys(HelmSubCommandType.FETCH);
+    assertThat(helmChartDelegateConfig.getHelmCommandFlag().getValueMap()).containsValues("--test");
   }
 
   @Test

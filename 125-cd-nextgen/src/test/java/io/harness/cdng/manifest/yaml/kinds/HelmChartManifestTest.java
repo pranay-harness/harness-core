@@ -65,7 +65,7 @@ public class HelmChartManifestTest extends CategoryTest {
     assertThat(original.getCommandFlags().stream().map(HelmManifestCommandFlag::getCommandType))
         .containsExactlyInAnyOrder(Fetch);
     assertThat(original.getCommandFlags().stream().map(HelmManifestCommandFlag::getFlag).map(ParameterField::getValue))
-        .containsExactlyInAnyOrder("--version", "--debug");
+        .containsExactlyInAnyOrder("--debug");
 
     assertThat(override.getHelmVersion()).isEqualTo(HelmVersion.V2);
     assertThat(override.getSkipResourceVersioning().getValue()).isFalse();
