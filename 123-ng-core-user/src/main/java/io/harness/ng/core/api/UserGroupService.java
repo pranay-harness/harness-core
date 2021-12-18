@@ -2,6 +2,7 @@ package io.harness.ng.core.api;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.accesscontrol.scopes.ScopeDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.ng.beans.PageRequest;
@@ -26,6 +27,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public interface UserGroupService {
   UserGroup create(UserGroupDTO userGroup);
 
+  boolean copy(String accountIdentifier, String userGroupidentifier, List<ScopeDTO> scopes);
+
   Optional<UserGroup> get(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
   List<UserGroup> getUserGroupsBySsoId(String accountIdentifier, String ssoId);
@@ -33,6 +36,8 @@ public interface UserGroupService {
   List<UserGroup> getUserGroupsBySsoId(String ssoId);
 
   List<UserGroup> getExternallyManagedGroups(String accountIdentifier);
+
+  boolean isExternallyManaged(String accountIdentifier, String groupIdentifier);
 
   UserGroup update(UserGroupDTO userGroupDTO);
 
@@ -45,6 +50,8 @@ public interface UserGroupService {
 
   PageResponse<UserMetadataDTO> listUsersInUserGroup(
       Scope scope, String userGroupIdentifier, UserFilter userFilter, PageRequest pageRequest);
+
+  List<UserMetadataDTO> getUsersInUserGroup(Scope scope, String userGroupIdentifier);
 
   UserGroup delete(Scope scope, String identifier);
 
