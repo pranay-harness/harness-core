@@ -141,6 +141,22 @@
       "if" : {
         "properties" : {
           "type" : {
+            "const":"ServiceNowApproval"
+          }
+        }
+      },
+      "then":{
+        "properties":{
+          "spec":{
+            "$ref":"#/definitions/cvng/ServiceNowApprovalStepInfo"
+          }
+        }
+      }
+    },
+      {
+        "if":{
+          "properties":{
+            "type":{
             "const" : "ShellScript"
           }
         }
@@ -1361,6 +1377,54 @@
           },
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
+        "ServiceNowApprovalStepInfo":{
+          "allOf":[
+            {
+              "$ref":"#/definitions/cvng/StepSpecType"
+            },
+            {
+              "type":"object",
+              "required":[
+                "approvalCriteria",
+                "connectorRef",
+                "ticketNumber"
+              ],
+              "properties":{
+                "approvalCriteria":{
+                  "$ref":"#/definitions/cvng/CriteriaSpecWrapper"
+                },
+                "connectorRef":{
+                  "type":"string"
+                },
+                "delegateSelectors":{
+                  "oneOf":[
+                    {
+                      "type":"array",
+                      "items":{
+                        "type":"string"
+                      }
+                    },
+                    {
+                      "type":"string",
+                      "pattern":"^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                      "minLength":1
+                    }
+                  ]
+                },
+                "rejectionCriteria":{
+                  "$ref":"#/definitions/cvng/CriteriaSpecWrapper"
+                },
+                "ticketNumber":{
+                  "type":"string"
+                },
+                "ticketType":{
+                  "type":"string"
+                }
+              }
+            }
+          ],
+          "$schema":"http://json-schema.org/draft-07/schema#"
+        },
         "SetDefaultVariationsYaml" : {
           "allOf" : [ {
             "$ref" : "#/definitions/cvng/PatchInstruction"
@@ -1646,7 +1710,7 @@
             },
             "type" : {
               "type" : "string",
-              "enum" : [ "Barrier", "FlagConfiguration", "HarnessApproval", "Http", "JiraApproval", "JiraCreate", "JiraUpdate", "ShellScript", "Verify" ]
+              "enum" : [ "Barrier", "FlagConfiguration", "HarnessApproval", "Http", "JiraApproval", "JiraCreate", "JiraUpdate", "ServiceNowApproval", "ShellScript", "Verify" ]
             },
             "when" : {
               "$ref" : "#/definitions/cvng/StepWhenCondition"
@@ -1755,6 +1819,22 @@
               "properties" : {
                 "spec" : {
                   "$ref" : "#/definitions/cvng/JiraUpdateStepInfo"
+                }
+              }
+            }
+          },
+            {
+              "if":{
+                "properties":{
+                  "type":{
+                    "const":"ServiceNowApproval"
+                  }
+                }
+              },
+              "then":{
+                "properties":{
+                  "spec":{
+                    "$ref":"#/definitions/cvng/ServiceNowApprovalStepInfo"
                 }
               }
             }

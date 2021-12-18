@@ -51,7 +51,7 @@ public class K8sCanaryDeployTaskParameters extends K8sTaskParameters implements 
       boolean useLatestChartMuseumVersion, boolean useVarSupportForKustomize, boolean useNewKubectlVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion,
-            useVarSupportForKustomize, useNewKubectlVersion);
+        useVarSupportForKustomize, useNewKubectlVersion);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
     this.instances = instances;

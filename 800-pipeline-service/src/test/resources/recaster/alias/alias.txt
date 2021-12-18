@@ -77,3 +77,6 @@ io.harness.yaml.core.failurestrategy.rollback.StageRollbackFailureActionConfig
 io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary
 io.harness.advisers.rollback.RollbackTriggeredOutput
 io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo
+io.harness.steps.approval.step.servicenow.ServiceNowApprovalStepInfo
+io.harness.steps.approval.step.servicenow.ServiceNowApprovalSpecParameters
+io.harness.steps.servicenow.approval.ServiceNowApprovalStepNode

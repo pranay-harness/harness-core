@@ -1183,8 +1183,8 @@ public class DelegateServiceImpl implements DelegateService {
 
     final boolean useCDN = mainConfiguration.useCdnForDelegateStorage() && cdnConfig != null;
 
-    final String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(
-        templateParameters.getAccountId(), templateParameters.getManagerHost(), mainConfiguration.getDeployMode().name());
+    final String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(templateParameters.getAccountId(),
+        templateParameters.getManagerHost(), mainConfiguration.getDeployMode().name());
     final String delegateStorageUrl = getDelegateStorageUrl(cdnConfig, useCDN, delegateMetadataUrl);
     final String delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
 
@@ -1194,8 +1194,10 @@ public class DelegateServiceImpl implements DelegateService {
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         log.info("Multi-Version is enabled");
         latestVersion = templateParameters.getVersion();
-        final String fullVersion = Optional.ofNullable(getDelegateBuildVersion(templateParameters.getVersion())).orElse(null);
-        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(fullVersion, templateParameters.getAccountId());
+        final String fullVersion =
+            Optional.ofNullable(getDelegateBuildVersion(templateParameters.getVersion())).orElse(null);
+        delegateJarDownloadUrl =
+            infraDownloadService.getDownloadUrlForDelegate(fullVersion, templateParameters.getAccountId());
       } else {
         final String delegateMatadata = delegateVersionCache.get(templateParameters.getAccountId());
         log.info("Delegate metadata: [{}]", delegateMatadata);
@@ -1215,14 +1217,14 @@ public class DelegateServiceImpl implements DelegateService {
       if (useCDN) {
         watcherMetadataUrl = infraDownloadService.getCdnWatcherMetaDataFileUrl();
       } else {
-        watcherMetadataUrl = subdomainUrlHelper.getWatcherMetadataUrl(
-            templateParameters.getAccountId(), templateParameters.getManagerHost(), mainConfiguration.getDeployMode().name());
+        watcherMetadataUrl = subdomainUrlHelper.getWatcherMetadataUrl(templateParameters.getAccountId(),
+            templateParameters.getManagerHost(), mainConfiguration.getDeployMode().name());
       }
       final String watcherStorageUrl = watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/'));
       final String watcherCheckLocation = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
-      final String hexkey =
-          format("%040x", new BigInteger(1, templateParameters.getAccountId().substring(0, 6).getBytes(StandardCharsets.UTF_8)))
-              .replaceFirst("^0+(?!$)", "");
+      final String hexkey = format("%040x",
+          new BigInteger(1, templateParameters.getAccountId().substring(0, 6).getBytes(StandardCharsets.UTF_8)))
+                                .replaceFirst("^0+(?!$)", "");
 
       final boolean isCiEnabled = isCiEnabled(templateParameters);
       ImmutableMap.Builder<String, String> params =
@@ -1370,8 +1372,8 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateTokenName", templateParameters.getDelegateTokenName());
       }
 
-      params.put(
-          "isImmutable", String.valueOf(featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, templateParameters.getAccountId())));
+      params.put("isImmutable",
+          String.valueOf(featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, templateParameters.getAccountId())));
 
       return params.build();
     }
@@ -3963,8 +3965,7 @@ public class DelegateServiceImpl implements DelegateService {
             .ceEnabled(false)
             .build();
 
-    ImmutableMap<String, String> paramMap =
-        getJarAndScriptRunTimeParamMap(templateParameters, useNgToken, true);
+    ImmutableMap<String, String> paramMap = getJarAndScriptRunTimeParamMap(templateParameters, useNgToken, true);
 
     if (isEmpty(paramMap)) {
       throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));

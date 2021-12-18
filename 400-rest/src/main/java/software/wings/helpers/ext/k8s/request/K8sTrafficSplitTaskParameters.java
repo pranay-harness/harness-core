@@ -29,7 +29,7 @@ public class K8sTrafficSplitTaskParameters extends K8sTaskParameters {
       boolean useVarSupportForKustomize, boolean useNewKubectlVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion,
-            useVarSupportForKustomize, useNewKubectlVersion);
+        useVarSupportForKustomize, useNewKubectlVersion);
 
     this.virtualServiceName = virtualServiceName;
     this.istioDestinationWeights = istioDestinationWeights;

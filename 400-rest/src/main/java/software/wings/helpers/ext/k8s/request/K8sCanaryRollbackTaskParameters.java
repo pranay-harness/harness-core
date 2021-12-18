@@ -28,7 +28,7 @@ public class K8sCanaryRollbackTaskParameters extends K8sTaskParameters {
       boolean useNewKubectlVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion,
-            useVarSupportForKustomize, useNewKubectlVersion);
+        useVarSupportForKustomize, useNewKubectlVersion);
     this.releaseNumber = releaseNumber;
     this.targetReplicas = targetReplicas;
   }

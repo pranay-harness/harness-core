@@ -152,6 +152,22 @@
       "if": {
         "properties": {
           "type": {
+            "const": "ServiceNowApproval"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/ServiceNowApprovalStepInfo"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
             "const": "ShellScript"
           }
         }
@@ -1720,6 +1736,54 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ServiceNowApprovalStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "approvalCriteria",
+            "connectorRef",
+            "ticketNumber"
+          ],
+          "properties": {
+            "approvalCriteria": {
+              "$ref": "#/definitions/CriteriaSpecWrapper"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "rejectionCriteria": {
+              "$ref": "#/definitions/CriteriaSpecWrapper"
+            },
+            "ticketNumber": {
+              "type": "string"
+            },
+            "ticketType": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "SetDefaultVariationsYaml": {
       "allOf": [
         {
@@ -2208,6 +2272,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/JiraUpdateStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ServiceNowApproval"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ServiceNowApprovalStepInfo"
               }
             }
           }
