@@ -81,18 +81,17 @@ public class YamlHelperTest extends WingsBaseTest {
         .isEqualTo(PCF_OVERRIDE);
   }
 
-
   @Test
   @Owner(developers = NAMAN_TALAYCHA)
   @Category(UnitTests.class)
   public void testGetAppManifestKindFromPathKustomizePatches() {
     assertThat(
-            yamlHelper.getAppManifestKindFromPath("Setup/Applications/App1/Environments/env1/Kustomize Patches/Index.yaml"))
-            .isEqualTo(KUSTOMIZE_PATCHES);
+        yamlHelper.getAppManifestKindFromPath("Setup/Applications/App1/Environments/env1/Kustomize Patches/Index.yaml"))
+        .isEqualTo(KUSTOMIZE_PATCHES);
 
     assertThat(
-            yamlHelper.getAppManifestKindFromPath("Setup/Applications/App1/Environments/env1/Kustomize Patches/Services"))
-            .isEqualTo(KUSTOMIZE_PATCHES);
+        yamlHelper.getAppManifestKindFromPath("Setup/Applications/App1/Environments/env1/Kustomize Patches/Services"))
+        .isEqualTo(KUSTOMIZE_PATCHES);
   }
 
   @Before
@@ -183,12 +182,12 @@ public class YamlHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetAppManifestByKindForPatchesYaml() {
     when(serviceResourceService.getServiceByName("appId", "ser1"))
-            .thenReturn(Service.builder().uuid("serviceId").build());
+        .thenReturn(Service.builder().uuid("serviceId").build());
     when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, null)).thenReturn(true);
     when(applicationManifestService.getAppManifest("appId", null, "serviceId", KUSTOMIZE_PATCHES))
-            .thenReturn(ApplicationManifest.builder().storeType(StoreType.Remote).build());
-    ApplicationManifest applicationManifest =
-            yamlHelper.getApplicationManifest("appId", "Setup/Applications/App1/Services/ser1/Kustomize Patches/patches.yaml");
+        .thenReturn(ApplicationManifest.builder().storeType(StoreType.Remote).build());
+    ApplicationManifest applicationManifest = yamlHelper.getApplicationManifest(
+        "appId", "Setup/Applications/App1/Services/ser1/Kustomize Patches/patches.yaml");
     assertThat(applicationManifest).isNotNull();
     verify(applicationManifestService).getAppManifest("appId", null, "serviceId", KUSTOMIZE_PATCHES);
   }

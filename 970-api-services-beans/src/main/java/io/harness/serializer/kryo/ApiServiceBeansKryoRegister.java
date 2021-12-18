@@ -93,6 +93,11 @@ import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.servicenow.ServiceNowActionNG;
+import io.harness.servicenow.ServiceNowFieldAllowedValueNG;
+import io.harness.servicenow.ServiceNowFieldNG;
+import io.harness.servicenow.ServiceNowFieldSchemaNG;
+import io.harness.servicenow.ServiceNowFieldTypeNG;
 import io.harness.shell.AccessType;
 import io.harness.shell.AuthenticationScheme;
 import io.harness.shell.CommandExecutionData;
@@ -371,5 +376,10 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureDevopsProject.class, 7285);
     kryo.register(AzureArtifactsPackage.class, 7287);
     kryo.register(CustomSourceConfig.class, 97100);
+    kryo.register(ServiceNowActionNG.class, 97101);
+    kryo.register(ServiceNowFieldAllowedValueNG.class, 97102);
+    kryo.register(ServiceNowFieldNG.class, 97103);
+    kryo.register(ServiceNowFieldSchemaNG.class, 97104);
+    kryo.register(ServiceNowFieldTypeNG.class, 97105);
   }
 }

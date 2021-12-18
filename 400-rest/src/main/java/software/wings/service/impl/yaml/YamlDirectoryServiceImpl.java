@@ -1233,7 +1233,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private FolderNode generateKustomizePatchesFolder(String accountId, Service service, DirectoryPath servicePath) {
     ApplicationManifest appManifest =
-            applicationManifestService.getAppManifest(service.getAppId(), null, service.getUuid(), K8S_MANIFEST);
+        applicationManifestService.getAppManifest(service.getAppId(), null, service.getUuid(), K8S_MANIFEST);
     if (appManifest == null) {
       return null;
     }
@@ -1648,7 +1648,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         // ------------------- END HELM OVERRIDE SECTION -----------------------
 
         // ------------------- KUSTOMIZE PATCHES FILES SECTION -----------------------
-        FolderNode kustomizePatchesFolder = generateEnvValuesFolder(accountId, environment, envPath, AppManifestKind.KUSTOMIZE_PATCHES);
+        FolderNode kustomizePatchesFolder =
+            generateEnvValuesFolder(accountId, environment, envPath, AppManifestKind.KUSTOMIZE_PATCHES);
         if (kustomizePatchesFolder != null) {
           envFolder.addChild(kustomizePatchesFolder);
         }

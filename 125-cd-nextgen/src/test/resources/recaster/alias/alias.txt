@@ -166,6 +166,7 @@ io.harness.plancreator.steps.http.HttpStepInfo
 io.harness.plancreator.steps.http.HttpStepNode
 io.harness.steps.jira.create.JiraCreateStepNode
 io.harness.steps.shellscript.ShellScriptStepNode
+io.harness.steps.servicenow.approval.ServiceNowApprovalStepNode
 io.harness.cdng.k8s.K8sCanaryStepNode
 io.harness.steps.template.TemplateStepNode
 io.harness.cdng.manifest.yaml.GcsStoreConfig
@@ -221,3 +222,5 @@ io.harness.cdng.helm.beans.NativeHelmExecutionPassThroughData
 io.harness.cdng.helm.NativeHelmRollbackOutcome
 io.harness.cdng.helm.NativeHelmReleaseDetailsInfo
 io.harness.cdng.helm.HelmDeployStepInfo
+io.harness.steps.approval.step.servicenow.ServiceNowApprovalSpecParameters
+io.harness.steps.approval.step.servicenow.ServiceNowApprovalStepInfo

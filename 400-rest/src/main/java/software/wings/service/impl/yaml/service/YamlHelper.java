@@ -238,7 +238,7 @@ public class YamlHelper {
       prefixExpression = YamlType.APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE.getPrefixExpression();
     } else if (yamlFilePath.contains(OC_PARAMS_FOLDER)) {
       prefixExpression = YamlType.APPLICATION_MANIFEST_OC_PARAMS_ENV_SERVICE_OVERRIDE.getPrefixExpression();
-    }else if (yamlFilePath.contains(KUSTOMIZE_PATCHES_FOLDER)) {
+    } else if (yamlFilePath.contains(KUSTOMIZE_PATCHES_FOLDER)) {
       prefixExpression = YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_SERVICE_OVERRIDE.getPrefixExpression();
     } else if (yamlFilePath.contains(AZURE_APP_SETTINGS_OVERRIDES_FOLDER)) {
       prefixExpression = YamlType.APPLICATION_MANIFEST_APP_SETTINGS_ENV_SERVICE_OVERRIDE.getPrefixExpression();
@@ -275,10 +275,11 @@ public class YamlHelper {
       return AppManifestKind.OC_PARAMS;
     }
 
-    kind = extractParentEntityName(
-            YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
-    kind2 = extractParentEntityName(
-            YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    kind = extractParentEntityName(YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE.getPrefixExpression(),
+        yamlFilePath, PATH_DELIMITER);
+    kind2 =
+        extractParentEntityName(YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_SERVICE_OVERRIDE.getPrefixExpression(),
+            yamlFilePath, PATH_DELIMITER);
     if (isNotBlank(kind) || isNotBlank(kind2)) {
       return AppManifestKind.KUSTOMIZE_PATCHES;
     }

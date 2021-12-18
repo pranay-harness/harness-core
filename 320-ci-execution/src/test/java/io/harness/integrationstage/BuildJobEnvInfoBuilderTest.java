@@ -15,10 +15,9 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.ArrayList;
 
 public class BuildJobEnvInfoBuilderTest extends CIExecutionTestBase {
   @Inject BuildJobEnvInfoBuilder buildJobEnvInfoBuilder;
@@ -48,7 +47,8 @@ public class BuildJobEnvInfoBuilderTest extends CIExecutionTestBase {
     StageElementConfig stageElementConfig = vmBuildJobTestHelper.getVmStage("test");
 
     BuildJobEnvInfo expected = VmBuildJobInfo.builder().workDir(STEP_WORK_DIR).connectorRefs(new ArrayList<>()).build();
-    BuildJobEnvInfo actual = buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(stageElementConfig, null, new ArrayList<>(), null);
+    BuildJobEnvInfo actual =
+        buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(stageElementConfig, null, new ArrayList<>(), null);
     assertThat(actual).isEqualTo(expected);
   }
 }

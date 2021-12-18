@@ -14,5 +14,6 @@ public enum NGTaskType {
   K8S_COMMAND_TASK,
   JIRA_TASK_NG,
   HTTP_TASK_NG,
-  GCP_TASK
+  GCP_TASK,
+  SERVICENOW_TASK_NG
 }

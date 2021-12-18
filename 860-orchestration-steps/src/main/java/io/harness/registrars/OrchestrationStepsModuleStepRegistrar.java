@@ -8,6 +8,7 @@ import io.harness.pms.sdk.core.steps.Step;
 import io.harness.steps.approval.stage.ApprovalStageStep;
 import io.harness.steps.approval.step.harness.HarnessApprovalStep;
 import io.harness.steps.approval.step.jira.JiraApprovalStep;
+import io.harness.steps.approval.step.servicenow.ServiceNowApprovalStep;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.cf.FeatureFlagStageStep;
 import io.harness.steps.cf.FlagConfigurationStep;
@@ -40,6 +41,7 @@ public class OrchestrationStepsModuleStepRegistrar {
 
     engineSteps.put(HttpStep.STEP_TYPE, HttpStep.class);
     engineSteps.put(ShellScriptStep.STEP_TYPE, ShellScriptStep.class);
+    engineSteps.put(ServiceNowApprovalStep.STEP_TYPE, ServiceNowApprovalStep.class);
 
     // Feature Flag
     engineSteps.put(FlagConfigurationStep.STEP_TYPE, FlagConfigurationStep.class);
