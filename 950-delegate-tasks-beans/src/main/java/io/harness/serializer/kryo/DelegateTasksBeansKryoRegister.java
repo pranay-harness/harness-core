@@ -381,6 +381,7 @@ import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskParams;
 import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskResponse;
 import io.harness.delegate.task.scm.ScmPushTaskParams;
 import io.harness.delegate.task.scm.ScmPushTaskResponseData;
+import io.harness.delegate.task.servicenow.ServiceNowTaskNGParameters;
 import io.harness.delegate.task.servicenow.ServiceNowTaskNGResponse;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.task.shell.ShellScriptTaskParametersNG;
@@ -1047,5 +1048,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ServiceNowTestConnectionTaskNGResponse.class, 543456);
     kryo.register(ServiceNowValidationParams.class, 543457);
     kryo.register(ServiceNowTaskNGResponse.class, 543458);
+    kryo.register(ServiceNowTaskNGParameters.class, 543459);
   }
 }

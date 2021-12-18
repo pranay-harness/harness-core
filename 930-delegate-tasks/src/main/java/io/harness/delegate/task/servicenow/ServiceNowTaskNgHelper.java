@@ -1,25 +1,16 @@
 package io.harness.delegate.task.servicenow;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.network.Http.getOkHttpClientBuilder;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.servicenow.ServiceNowConnectorDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
 import io.harness.network.Http;
 import io.harness.security.encryption.SecretDecryptionService;
+import io.harness.servicenow.ServiceNowFieldNG;
 import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
-
-import software.wings.helpers.ext.servicenow.ServiceNowRestClient;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
@@ -30,6 +21,17 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import software.wings.helpers.ext.servicenow.ServiceNowRestClient;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.network.Http.getOkHttpClientBuilder;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -48,9 +50,46 @@ public class ServiceNowTaskNgHelper {
     switch (serviceNowTaskNGParameters.getAction()) {
       case VALIDATE_CREDENTIALS:
         return validateCredentials(serviceNowTaskNGParameters);
+      case GET_ISSUE_CREATE_METADATA:
+        return getIssueCreateMetaData(serviceNowTaskNGParameters);
       default:
         throw new InvalidRequestException(
             String.format("Invalid servicenow task action: %s", serviceNowTaskNGParameters.getAction()));
+    }
+  }
+
+  private ServiceNowTaskNGResponse getIssueCreateMetaData(ServiceNowTaskNGParameters serviceNowTaskNGParameters) {
+    ServiceNowConnectorDTO serviceNowConnectorDTO = serviceNowTaskNGParameters.getServiceNowConnectorDTO();
+    String userName = FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
+        serviceNowConnectorDTO.getUsername(), serviceNowConnectorDTO.getUsernameRef());
+    String password = new String(serviceNowConnectorDTO.getPasswordRef().getDecryptedValue());
+    ServiceNowRestClient serviceNowRestClient =
+        getServiceNowRestClient(serviceNowConnectorDTO.getServiceNowUrl(), userName, password);
+
+    final Call<JsonNode> request = serviceNowRestClient.getAdditionalFields(
+        Credentials.basic(userName, password), serviceNowTaskNGParameters.getIssueType());
+    Response<JsonNode> response = null;
+    try {
+      response = request.execute();
+      handleResponse(response, "Failed to validate ServiceNow credentials");
+      JsonNode responseObj = response.body().get("result");
+      if (responseObj.isArray()) {
+        List<ServiceNowFieldNG> fields = new ArrayList<>();
+        for (JsonNode fieldObj : responseObj) {
+          fields.add(ServiceNowFieldNG.builder()
+                         .name(fieldObj.get("label").textValue())
+                         .key(fieldObj.get("name").textValue())
+                         .build());
+        }
+        return ServiceNowTaskNGResponse.builder().serviceNowFieldNGList(fields).build();
+      } else {
+        throw new ServiceNowException("Failed to fetch additional fields for ticket type "
+                + serviceNowTaskNGParameters.getIssueType() + " response: " + response,
+            SERVICENOW_ERROR, USER);
+      }
+    } catch (Exception e) {
+      log.error("Failed to get serviceNow fields ");
+      throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
   }
 
@@ -60,12 +99,7 @@ public class ServiceNowTaskNgHelper {
     String userName = FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
         serviceNowConnectorDTO.getUsername(), serviceNowConnectorDTO.getUsernameRef());
     String password = new String(serviceNowConnectorDTO.getPasswordRef().getDecryptedValue());
-    Retrofit retrofit = new Retrofit.Builder()
-                            .client(getHttpClient(url, userName, password))
-                            .baseUrl(url)
-                            .addConverterFactory(JacksonConverterFactory.create())
-                            .build();
-    ServiceNowRestClient serviceNowRestClient = retrofit.create(ServiceNowRestClient.class);
+    ServiceNowRestClient serviceNowRestClient = getServiceNowRestClient(url, userName, password);
     final Call<JsonNode> request = serviceNowRestClient.validateConnection(Credentials.basic(userName, password));
     Response<JsonNode> response = null;
     try {
@@ -76,6 +110,15 @@ public class ServiceNowTaskNgHelper {
       log.error("Failed to authenticate to servicenow. ");
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
+  }
+
+  private ServiceNowRestClient getServiceNowRestClient(String url, String userName, String password) {
+    Retrofit retrofit = new Retrofit.Builder()
+                            .client(getHttpClient(url, userName, password))
+                            .baseUrl(url)
+                            .addConverterFactory(JacksonConverterFactory.create())
+                            .build();
+    return retrofit.create(ServiceNowRestClient.class);
   }
 
   @NotNull
