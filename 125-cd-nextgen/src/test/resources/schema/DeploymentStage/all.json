@@ -1492,8 +1492,7 @@
             "History",
             "Delete",
             "Uninstall",
-            "List",
-            "Version"
+            "List"
           ]
         },
         "flag": {
