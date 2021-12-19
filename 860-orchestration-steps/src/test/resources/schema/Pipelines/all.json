@@ -2114,7 +2114,8 @@
           "required": [
             "approvalCriteria",
             "connectorRef",
-            "ticketNumber"
+            "ticketNumber",
+            "ticketType"
           ],
           "properties": {
             "approvalCriteria": {

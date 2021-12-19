@@ -24,6 +24,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
+import io.harness.servicenow.ServiceNowUtils;
 
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.ServiceNowImportSetResponse;
@@ -125,8 +126,8 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
       JsonNode responseObj = response.body().get("result");
       String issueNumber = responseObj.get("number").get("display_value").asText();
       String issueId = responseObj.get("sys_id").get("display_value").asText();
-      String issueUrl = getBaseUrl(config) + "nav_to.do?uri=/" + parameters.getTicketType().toString().toLowerCase()
-          + ".do?sys_id=" + issueId;
+      String issueUrl = ServiceNowUtils.prepareTicketUrlFromTicketId(
+          getBaseUrl(parameters.getServiceNowConfig()), issueId, parameters.getTicketType().toString());
       String responseMsg = "Created ServiceNow ticket: " + issueNumber;
       return ServiceNowExecutionData.builder()
           .issueNumber(issueNumber)
@@ -223,8 +224,8 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
       JsonNode responseObj = response.body().get("result");
       String issueNumber = responseObj.get("number").get("display_value").asText();
       String issueId = responseObj.get("sys_id").get("display_value").asText();
-      String issueUrl = getBaseUrl(config) + "nav_to.do?uri=/" + parameters.getTicketType().toString().toLowerCase()
-          + ".do?sys_id=" + issueId;
+      String issueUrl = ServiceNowUtils.prepareTicketUrlFromTicketId(
+          getBaseUrl(parameters.getServiceNowConfig()), issueId, parameters.getTicketType().toString());
       String responseMsg = "Updated ServiceNow ticket: " + issueNumber;
       return ServiceNowExecutionData.builder()
           .issueNumber(issueNumber)
@@ -293,8 +294,8 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
         JsonNode responseObj = response.body().get("result");
         String issueNumber = responseObj.get("number").get("display_value").asText();
         String issueId = responseObj.get("sys_id").get("display_value").asText();
-        String issueUrl = getBaseUrl(config) + "nav_to.do?uri=/" + parameters.getTicketType().toString().toLowerCase()
-            + ".do?sys_id=" + issueId;
+        String issueUrl = ServiceNowUtils.prepareTicketUrlFromTicketId(
+            getBaseUrl(parameters.getServiceNowConfig()), issueId, parameters.getTicketType().toString());
 
         log.info("Successfully updated ticket : " + issueNumber);
         updateChangeTaskNumbers.add(issueNumber);

@@ -46,6 +46,7 @@ public class OrchestrationStepsModuleStepRegistrar {
     // Feature Flag
     engineSteps.put(FlagConfigurationStep.STEP_TYPE, FlagConfigurationStep.class);
     engineSteps.put(FeatureFlagStageStep.STEP_TYPE, FeatureFlagStageStep.class);
+    engineSteps.put(ServiceNowApprovalStep.STEP_TYPE, ServiceNowApprovalStep.class);
 
     engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
 

@@ -97,7 +97,10 @@ public enum EntityType {
       ModuleType.CORE, EntityTypeConstants.GIT_REPOSITORIES, IdentifierRef.class, EntityYamlRootNames.GIT_REPOSITORY),
   @JsonProperty(EntityTypeConstants.FEATURE_FLAGS)
   FEATURE_FLAGS(
-      ModuleType.CF, EntityTypeConstants.FEATURE_FLAGS, IdentifierRef.class, EntityYamlRootNames.FEATURE_FLAGS);
+      ModuleType.CF, EntityTypeConstants.FEATURE_FLAGS, IdentifierRef.class, EntityYamlRootNames.FEATURE_FLAGS),
+  @JsonProperty(EntityTypeConstants.SERVICENOW_APPROVAL)
+  SERVICENOW_APPROVAL_STEP(ModuleType.CD, EntityTypeConstants.SERVICENOW_APPROVAL, IdentifierRef.class,
+      EntityYamlRootNames.SERVICENOW_APPROVAL);
 
   private final ModuleType moduleType;
   String yamlName;
