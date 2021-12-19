@@ -98,6 +98,8 @@ import io.harness.servicenow.ServiceNowFieldAllowedValueNG;
 import io.harness.servicenow.ServiceNowFieldNG;
 import io.harness.servicenow.ServiceNowFieldSchemaNG;
 import io.harness.servicenow.ServiceNowFieldTypeNG;
+import io.harness.servicenow.ServiceNowFieldValueNG;
+import io.harness.servicenow.ServiceNowTicketNG;
 import io.harness.shell.AccessType;
 import io.harness.shell.AuthenticationScheme;
 import io.harness.shell.CommandExecutionData;
@@ -381,5 +383,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(ServiceNowFieldNG.class, 97103);
     kryo.register(ServiceNowFieldSchemaNG.class, 97104);
     kryo.register(ServiceNowFieldTypeNG.class, 97105);
+    kryo.register(ServiceNowTicketNG.class, 97106);
+    kryo.register(ServiceNowFieldValueNG.class, 97107);
   }
 }

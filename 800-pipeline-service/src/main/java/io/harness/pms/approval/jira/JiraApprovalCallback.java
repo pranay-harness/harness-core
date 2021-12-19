@@ -8,10 +8,10 @@ import static java.util.Objects.isNull;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.jira.JiraTaskNGResponse;
+import io.harness.exception.ApprovalStepNGException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.JiraStepException;
 import io.harness.jira.JiraIssueNG;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
@@ -107,7 +107,7 @@ public class JiraApprovalCallback implements PushThroughNotifyCallback {
     try {
       checkApprovalAndRejectionCriteria(jiraTaskNGResponse.getIssue(), instance, logCallback);
     } catch (Exception ex) {
-      if (ex instanceof JiraStepException && ((JiraStepException) ex).isFatal()) {
+      if (ex instanceof ApprovalStepNGException && ((ApprovalStepNGException) ex).isFatal()) {
         log.error("Error while evaluating approval/rejection criteria", ex);
         String errorMessage =
             String.format("Fatal error evaluating approval/rejection criteria: %s", ExceptionUtils.getMessage(ex));

@@ -7,7 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 @OwnedBy(CDC)
 public enum ServiceNowActionNG {
   VALIDATE_CREDENTIALS("Validate Credentials"),
-  GET_ISSUE_CREATE_METADATA("Get Issue Create Metadata");
+  GET_TICKET_CREATE_METADATA("Get Ticket Create Metadata"),
+  GET_TICKET("Get ticket");
 
   private final String displayName;
 
