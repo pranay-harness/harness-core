@@ -12,7 +12,6 @@ import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
-import io.harness.servicenow.ServiceNowTicketTypeNG;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.approval.ApprovalFacilitator;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
@@ -40,8 +39,8 @@ import org.springframework.data.annotation.TypeAlias;
 public class ServiceNowApprovalStepInfo implements PMSStepInfo, WithConnectorRef {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> ticketNumber;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> ticketType;
   @NotNull CriteriaSpecWrapper approvalCriteria;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<ServiceNowTicketTypeNG> ticketType;
   CriteriaSpecWrapper rejectionCriteria;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
@@ -63,7 +62,7 @@ public class ServiceNowApprovalStepInfo implements PMSStepInfo, WithConnectorRef
     return ServiceNowApprovalSpecParameters.builder()
         .connectorRef(connectorRef)
         .ticketNumber(ticketNumber)
-        .ticketType(ParameterField.createValueField(ticketType.getValue().name()))
+        .ticketType(ticketType)
         .approvalCriteria(approvalCriteria)
         .rejectionCriteria(rejectionCriteria)
         .delegateSelectors(delegateSelectors)

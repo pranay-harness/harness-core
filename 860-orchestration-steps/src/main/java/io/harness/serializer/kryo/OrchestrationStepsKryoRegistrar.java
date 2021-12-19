@@ -9,6 +9,7 @@ import io.harness.steps.approval.step.harness.HarnessApprovalOutcome;
 import io.harness.steps.approval.step.harness.HarnessApprovalResponseData;
 import io.harness.steps.approval.step.jira.JiraApprovalOutcome;
 import io.harness.steps.approval.step.jira.beans.JiraApprovalResponseData;
+import io.harness.steps.approval.step.servicenow.beans.ServiceNowApprovalResponseData;
 import io.harness.steps.barriers.BarrierSpecParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
@@ -58,6 +59,7 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraIssueOutcome.class, 3225);
     kryo.register(FlagConfigurationStepParameters.class, 3226);
     kryo.register(BarrierError.class, 3227);
+    kryo.register(ServiceNowApprovalResponseData.class, 3228);
 
     // made it same as which was in CD
     kryo.register(HttpStepInfo.class, 8048);

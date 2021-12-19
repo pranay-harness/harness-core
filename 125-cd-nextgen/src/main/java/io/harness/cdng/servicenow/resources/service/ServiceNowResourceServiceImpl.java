@@ -54,8 +54,9 @@ public class ServiceNowResourceServiceImpl implements ServiceNowResourceService 
   @Override
   public List<ServiceNowFieldNG> getIssueCreateMetadata(
       IdentifierRef serviceNowConnectorRef, String orgId, String projectId, String ticketType) {
-    ServiceNowTaskNGParametersBuilder parametersBuilder =
-        ServiceNowTaskNGParameters.builder().action(ServiceNowActionNG.GET_ISSUE_CREATE_METADATA).issueType(ticketType);
+    ServiceNowTaskNGParametersBuilder parametersBuilder = ServiceNowTaskNGParameters.builder()
+                                                              .action(ServiceNowActionNG.GET_TICKET_CREATE_METADATA)
+                                                              .issueType(ticketType);
     return obtainServiceNowTaskNGResponse(serviceNowConnectorRef, orgId, projectId, parametersBuilder)
         .getServiceNowFieldNGList();
   }

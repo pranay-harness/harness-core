@@ -1,8 +1,10 @@
 package io.harness.delegate.task.servicenow;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.network.Http.getOkHttpClientBuilder;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.servicenow.ServiceNowConnectorDTO;
 import io.harness.exception.InvalidRequestException;
@@ -10,7 +12,22 @@ import io.harness.exception.ServiceNowException;
 import io.harness.network.Http;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.servicenow.ServiceNowFieldNG;
+import io.harness.servicenow.ServiceNowFieldValueNG;
+import io.harness.servicenow.ServiceNowTicketNG;
+import io.harness.servicenow.ServiceNowUtils;
 import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
+
+import software.wings.helpers.ext.servicenow.ServiceNowRestClient;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
@@ -21,17 +38,6 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.helpers.ext.servicenow.ServiceNowRestClient;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.network.Http.getOkHttpClientBuilder;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -50,11 +56,59 @@ public class ServiceNowTaskNgHelper {
     switch (serviceNowTaskNGParameters.getAction()) {
       case VALIDATE_CREDENTIALS:
         return validateCredentials(serviceNowTaskNGParameters);
-      case GET_ISSUE_CREATE_METADATA:
+      case GET_TICKET_CREATE_METADATA:
         return getIssueCreateMetaData(serviceNowTaskNGParameters);
+      case GET_TICKET:
+        return getTicket(serviceNowTaskNGParameters);
       default:
         throw new InvalidRequestException(
             String.format("Invalid servicenow task action: %s", serviceNowTaskNGParameters.getAction()));
+    }
+  }
+
+  private ServiceNowTaskNGResponse getTicket(ServiceNowTaskNGParameters serviceNowTaskNGParameters) {
+    ServiceNowConnectorDTO serviceNowConnectorDTO = serviceNowTaskNGParameters.getServiceNowConnectorDTO();
+    String userName = FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
+        serviceNowConnectorDTO.getUsername(), serviceNowConnectorDTO.getUsernameRef());
+    String password = new String(serviceNowConnectorDTO.getPasswordRef().getDecryptedValue());
+    ServiceNowRestClient serviceNowRestClient =
+        getServiceNowRestClient(serviceNowConnectorDTO.getServiceNowUrl(), userName, password);
+
+    final Call<JsonNode> request = serviceNowRestClient.getIssue(Credentials.basic(userName, password),
+        serviceNowTaskNGParameters.getIssueType().toLowerCase(), "number=" + serviceNowTaskNGParameters.getIssueKey(),
+        "all");
+    Response<JsonNode> response = null;
+
+    try {
+      response = request.execute();
+      handleResponse(response, "Failed to get serviceNow ticket");
+      JsonNode responseObj = response.body().get("result");
+      if (responseObj.isArray()) {
+        Map<String, ServiceNowFieldValueNG> fieldValues = new HashMap<>();
+        for (JsonNode fieldsObj : responseObj) {
+          fieldsObj.fields().forEachRemaining(fieldObj
+              -> fieldValues.put(fieldObj.getKey(),
+                  ServiceNowFieldValueNG.builder()
+                      .value(fieldObj.getValue().get("value").textValue())
+                      .displayValue(fieldObj.getValue().get("display_value").textValue())
+                      .build()));
+        }
+        return ServiceNowTaskNGResponse.builder()
+            .ticket(ServiceNowTicketNG.builder()
+                        .number(serviceNowTaskNGParameters.getIssueKey())
+                        .fields(fieldValues)
+                        .url(ServiceNowUtils.prepareTicketUrlFromTicketNumber(serviceNowConnectorDTO.getServiceNowUrl(),
+                            serviceNowTaskNGParameters.getIssueKey(), serviceNowTaskNGParameters.getIssueType()))
+                        .build())
+            .build();
+      } else {
+        throw new ServiceNowException("Failed to fetch additional fields for ticket type "
+                + serviceNowTaskNGParameters.getIssueType() + " response: " + response,
+            SERVICENOW_ERROR, USER);
+      }
+    } catch (Exception e) {
+      log.error("Failed to get serviceNow ticket ");
+      throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
   }
 
@@ -67,11 +121,11 @@ public class ServiceNowTaskNgHelper {
         getServiceNowRestClient(serviceNowConnectorDTO.getServiceNowUrl(), userName, password);
 
     final Call<JsonNode> request = serviceNowRestClient.getAdditionalFields(
-        Credentials.basic(userName, password), serviceNowTaskNGParameters.getIssueType());
+        Credentials.basic(userName, password), serviceNowTaskNGParameters.getIssueType().toLowerCase());
     Response<JsonNode> response = null;
     try {
       response = request.execute();
-      handleResponse(response, "Failed to validate ServiceNow credentials");
+      handleResponse(response, "Failed to get serviceNow fields");
       JsonNode responseObj = response.body().get("result");
       if (responseObj.isArray()) {
         List<ServiceNowFieldNG> fields = new ArrayList<>();

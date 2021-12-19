@@ -222,5 +222,6 @@ io.harness.cdng.helm.beans.NativeHelmExecutionPassThroughData
 io.harness.cdng.helm.NativeHelmRollbackOutcome
 io.harness.cdng.helm.NativeHelmReleaseDetailsInfo
 io.harness.cdng.helm.HelmDeployStepInfo
+io.harness.steps.approval.step.servicenow.ServiceNowApprovalOutcome
 io.harness.steps.approval.step.servicenow.ServiceNowApprovalSpecParameters
 io.harness.steps.approval.step.servicenow.ServiceNowApprovalStepInfo
