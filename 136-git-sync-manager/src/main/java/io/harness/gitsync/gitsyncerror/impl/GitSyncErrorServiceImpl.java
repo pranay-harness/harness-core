@@ -210,14 +210,20 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   private Criteria getRepoBranchCriteria(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String repoIdentifier, String branch, GitSyncErrorType errorType) {
     Criteria criteria = new Criteria();
+    List<String> branches = new ArrayList<>();
     if (StringUtils.isNotEmpty(repoIdentifier)) {
       YamlGitConfigDTO yamlGitConfigDTO =
           yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoIdentifier);
       branch = StringUtils.isEmpty(branch) ? yamlGitConfigDTO.getBranch() : branch;
       criteria.and(GitSyncErrorKeys.repoUrl).is(yamlGitConfigDTO.getRepo());
-      if (errorType.equals(GitSyncErrorType.GIT_TO_HARNESS)) {
-        criteria.and(GitSyncErrorKeys.branchName).is(branch);
-      }
+      branches.add(branch);
+    } else if (errorType.equals(GitSyncErrorType.GIT_TO_HARNESS)) {
+      List<YamlGitConfigDTO> yamlGitConfigs =
+          yamlGitConfigService.list(projectIdentifier, orgIdentifier, accountIdentifier);
+      branches.addAll(yamlGitConfigs.stream().map(YamlGitConfigDTO::getBranch).collect(Collectors.toList()));
+    }
+    if (errorType.equals(GitSyncErrorType.GIT_TO_HARNESS)) {
+      criteria.and(GitSyncErrorKeys.branchName).in(branches);
     }
     return criteria;
   }
@@ -246,22 +252,40 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   }
 
   @Override
-  public GitSyncErrorDTO save(GitSyncErrorDTO gitSyncErrorDTO) {
+  public Optional<GitSyncErrorDTO> save(GitSyncErrorDTO gitSyncErrorDTO) {
     return save(GitSyncErrorMapper.toGitSyncError(gitSyncErrorDTO, gitSyncErrorDTO.getAccountIdentifier()));
   }
 
-  private GitSyncErrorDTO save(GitSyncError gitSyncError) {
+  private Optional<GitSyncErrorDTO> save(GitSyncError gitSyncError) {
     try {
       validate(gitSyncError);
       GitSyncError savedError = gitSyncErrorRepository.save(gitSyncError);
-      return GitSyncErrorMapper.toGitSyncErrorDTO(savedError);
+      return Optional.of(GitSyncErrorMapper.toGitSyncErrorDTO(savedError));
     } catch (DuplicateKeyException ex) {
       log.info("A git sync error for this commitId and File already exists.", ex);
-      GitToHarnessErrorDetails additionalErrorDetails =
-          (GitToHarnessErrorDetails) gitSyncError.getAdditionalErrorDetails();
-      return getGitToHarnessError(gitSyncError.getAccountIdentifier(), additionalErrorDetails.getGitCommitId(),
-          gitSyncError.getRepoUrl(), gitSyncError.getBranchName(), gitSyncError.getCompleteFilePath())
-          .get();
+      if (gitSyncError.getErrorType().equals(GitSyncErrorType.CONNECTIVITY_ISSUE)) {
+        return getConnectivityError(gitSyncError.getAccountIdentifier(), gitSyncError.getRepoUrl());
+      } else {
+        GitToHarnessErrorDetails additionalErrorDetails =
+            (GitToHarnessErrorDetails) gitSyncError.getAdditionalErrorDetails();
+        return getGitToHarnessError(gitSyncError.getAccountIdentifier(), additionalErrorDetails.getGitCommitId(),
+            gitSyncError.getRepoUrl(), gitSyncError.getBranchName(), gitSyncError.getCompleteFilePath());
+      }
+    }
+  }
+
+  private Optional<GitSyncErrorDTO> getConnectivityError(String accountId, String repoUrl) {
+    Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
+                            .is(accountId)
+                            .and(GitSyncErrorKeys.errorType)
+                            .is(GitSyncErrorType.CONNECTIVITY_ISSUE)
+                            .and(GitSyncErrorKeys.repoUrl)
+                            .is(repoUrl);
+    GitSyncError gitSyncError = gitSyncErrorRepository.find(criteria);
+    if (gitSyncError == null) {
+      return Optional.empty();
+    } else {
+      return Optional.of(GitSyncErrorMapper.toGitSyncErrorDTO(gitSyncError));
     }
   }
 
@@ -328,7 +352,11 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                             .and(GitSyncErrorKeys.completeFilePath)
                             .is(filePath);
     GitSyncError error = gitSyncErrorRepository.find(criteria);
-    return Optional.ofNullable(GitSyncErrorMapper.toGitSyncErrorDTO(error));
+    if (error == null) {
+      return Optional.empty();
+    } else {
+      return Optional.of(GitSyncErrorMapper.toGitSyncErrorDTO(error));
+    }
   }
 
   private void markExpiredErrors() {
@@ -346,14 +374,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   @Override
   public void recordConnectivityError(String accountIdentifier, String repoUrl, String errorMessage) {
     List<Scope> scopes = getScopes(accountIdentifier, repoUrl);
-    Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
-                            .is(accountIdentifier)
-                            .and(GitSyncErrorKeys.errorType)
-                            .is(GitSyncErrorType.CONNECTIVITY_ISSUE)
-                            .and(GitSyncErrorKeys.repoUrl)
-                            .is(repoUrl);
-    GitSyncError gitSyncError = gitSyncErrorRepository.find(criteria);
-    if (gitSyncError == null) {
+    Optional<GitSyncErrorDTO> gitSyncError = getConnectivityError(accountIdentifier, repoUrl);
+    if (!gitSyncError.isPresent()) {
       GitSyncError error = GitSyncError.builder()
                                .accountIdentifier(accountIdentifier)
                                .errorType(GitSyncErrorType.CONNECTIVITY_ISSUE)
@@ -365,6 +387,12 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                                .build();
       save(error);
     } else {
+      Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
+                              .is(accountIdentifier)
+                              .and(GitSyncErrorKeys.errorType)
+                              .is(GitSyncErrorType.CONNECTIVITY_ISSUE)
+                              .and(GitSyncErrorKeys.repoUrl)
+                              .is(repoUrl);
       Update update = update(GitSyncErrorKeys.failureReason, errorMessage)
                           .set(GitSyncErrorKeys.scopes, scopes)
                           .set(GitSyncErrorKeys.status, GitSyncErrorStatus.ACTIVE)

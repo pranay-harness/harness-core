@@ -16,9 +16,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.servicenow.ServiceNowConnectorDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.ServiceNowException;
-import io.harness.jira.ServiceNowActionNG;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.SecretDecryptionService;
+import io.harness.servicenow.ServiceNowActionNG;
 
 import software.wings.helpers.ext.servicenow.ServiceNowRestClient;
 

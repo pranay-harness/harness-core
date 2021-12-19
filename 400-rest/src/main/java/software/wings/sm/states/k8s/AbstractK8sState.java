@@ -702,9 +702,11 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
         appManifestMap = applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.OC_PARAMS);
         remoteParams = isValuesInGit(appManifestMap);
         customSourceParams = isValuesInCustomSource(appManifestMap);
-      }else if (applicationManifestUtils.isKustomizeSource(context) && isUseVarSupportForKustomize(context.getAccountId())) {
+      } else if (applicationManifestUtils.isKustomizeSource(context)
+          && isUseVarSupportForKustomize(context.getAccountId())) {
         kustomizeSource = true;
-        appManifestMap = applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.KUSTOMIZE_PATCHES);
+        appManifestMap =
+            applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.KUSTOMIZE_PATCHES);
         remotePatches = isValuesInGit(appManifestMap);
       } else {
         appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
@@ -724,7 +726,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
       if (valuesInHelmChartRepo) {
         return executeHelmValuesFetchTask(
             context, activity.getUuid(), k8sStateExecutor.commandName(), timeoutInMillis, appManifestMap);
-      } else if (valuesInGit || remoteParams|| remotePatches) {
+      } else if (valuesInGit || remoteParams || remotePatches) {
         return executeGitTask(context, appManifestMap, activity.getUuid(), k8sStateExecutor.commandName());
       } else if (isCustomManifestFeatureEnabled && (valuesInCustomSource || customSourceParams)) {
         return executeCustomFetchValuesTask(context, appManifestMap, activity.getUuid(), k8sStateExecutor);
@@ -1181,9 +1183,9 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     boolean isOpenShiftManifestConfig = openShiftManagerService.isOpenShiftManifestConfig(context);
     AppManifestKind appManifestKind;
     if (applicationManifestUtils.isKustomizeSource(context) && isUseVarSupportForKustomize(context.getAccountId())) {
-       appManifestKind = AppManifestKind.KUSTOMIZE_PATCHES;
+      appManifestKind = AppManifestKind.KUSTOMIZE_PATCHES;
     } else {
-       appManifestKind = isOpenShiftManifestConfig ? AppManifestKind.OC_PARAMS : AppManifestKind.VALUES;
+      appManifestKind = isOpenShiftManifestConfig ? AppManifestKind.OC_PARAMS : AppManifestKind.VALUES;
     }
     return applicationManifestUtils.getApplicationManifests(context, appManifestKind);
   }

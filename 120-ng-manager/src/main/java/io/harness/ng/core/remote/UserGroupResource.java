@@ -1,6 +1,7 @@
 package io.harness.ng.core.remote;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.GROUP_IDENTIFIER_KEY;
 import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -19,9 +20,11 @@ import io.harness.accesscontrol.AccessDeniedErrorDTO;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.accesscontrol.scopes.ScopeDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.beans.SortOrder;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.UserGroupService;
@@ -150,11 +153,29 @@ public class UserGroupResource {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, userGroupDTO.getIdentifier()), MANAGE_USERGROUP_PERMISSION);
     validateScopes(accountIdentifier, orgIdentifier, projectIdentifier, userGroupDTO);
+    checkExternallyManaged(accountIdentifier, userGroupDTO.getIdentifier());
     userGroupDTO.setAccountIdentifier(accountIdentifier);
     userGroupDTO.setOrgIdentifier(orgIdentifier);
     userGroupDTO.setProjectIdentifier(projectIdentifier);
     UserGroup userGroup = userGroupService.update(userGroupDTO);
     return ResponseDTO.newResponse(Long.toString(userGroup.getVersion()), toDTO(userGroup));
+  }
+
+  @PUT
+  @Path("/copy")
+  @ApiOperation(value = "Copy a User Group to several scopes", nickname = "copyUserGroup")
+  @Operation(operationId = "copyUserGroup", summary = "Get a User Group in an account/org/project",
+      responses =
+      { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Returns whether the copy was successful") })
+  public ResponseDTO<Boolean>
+  copy(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @NotEmpty @QueryParam(
+           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = GROUP_IDENTIFIER_KEY, required = true) @QueryParam(
+          NGCommonEntityConstants.GROUP_IDENTIFIER_KEY) String userGroupIdentifier,
+      @RequestBody(required = true) List<ScopeDTO> scopes) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, null, null),
+        Resource.of(USERGROUP, userGroupIdentifier), MANAGE_USERGROUP_PERMISSION);
+    return ResponseDTO.newResponse(userGroupService.copy(accountIdentifier, userGroupIdentifier, scopes));
   }
 
   @GET
@@ -207,6 +228,7 @@ public class UserGroupResource {
                       .orgIdentifier(orgIdentifier)
                       .projectIdentifier(projectIdentifier)
                       .build();
+    checkExternallyManaged(accountIdentifier, identifier);
     UserGroup userGroup = userGroupService.delete(scope, identifier);
     return ResponseDTO.newResponse(Long.toString(userGroup.getVersion()), toDTO(userGroup));
   }
@@ -340,6 +362,7 @@ public class UserGroupResource {
           "userIdentifier") String userIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, identifier), MANAGE_USERGROUP_PERMISSION);
+    checkExternallyManaged(accountIdentifier, identifier);
     UserGroup userGroup =
         userGroupService.addMember(accountIdentifier, orgIdentifier, projectIdentifier, identifier, userIdentifier);
     return ResponseDTO.newResponse(Long.toString(userGroup.getVersion()), toDTO(userGroup));
@@ -371,6 +394,7 @@ public class UserGroupResource {
                       .orgIdentifier(orgIdentifier)
                       .projectIdentifier(projectIdentifier)
                       .build();
+    checkExternallyManaged(accountIdentifier, identifier);
     UserGroup userGroup = userGroupService.removeMember(scope, identifier, userIdentifier);
     return ResponseDTO.newResponse(Long.toString(userGroup.getVersion()), toDTO(userGroup));
   }
@@ -405,6 +429,7 @@ public class UserGroupResource {
           NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, userGroupId), MANAGE_USERGROUP_PERMISSION);
+    checkExternallyManaged(accountIdentifier, userGroupId);
     return new RestResponse<>(userGroupService.unlinkSsoGroup(
         accountIdentifier, orgIdentifier, projectIdentifier, userGroupId, retainMembers));
   }
@@ -432,7 +457,14 @@ public class UserGroupResource {
           NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, userGroupId), MANAGE_USERGROUP_PERMISSION);
+    checkExternallyManaged(accountIdentifier, userGroupId);
     return new RestResponse<>(userGroupService.linkToSsoGroup(accountIdentifier, orgIdentifier, projectIdentifier,
         userGroupId, SSOType.SAML, samlId, groupRequest.getSamlGroupName(), groupRequest.getSamlGroupName()));
+  }
+
+  private void checkExternallyManaged(String accountIdentifier, String identifier) {
+    if (userGroupService.isExternallyManaged(accountIdentifier, identifier)) {
+      throw new InvalidRequestException("This API call is not supported for externally managed group" + identifier);
+    }
   }
 }

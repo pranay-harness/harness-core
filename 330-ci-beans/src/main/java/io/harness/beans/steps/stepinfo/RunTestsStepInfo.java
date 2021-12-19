@@ -76,8 +76,8 @@ public class RunTestsStepInfo implements CIStepInfo {
   @ApiModelProperty(dataType = BOOLEAN_CLASSPATH)
   private ParameterField<Boolean> runOnlySelectedTests;
 
-  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
-  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
   private List<OutputNGVariable> outputVariables;
   @YamlSchemaTypes(value = {string})

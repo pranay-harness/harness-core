@@ -171,16 +171,14 @@ public class NGScimUserServiceImpl implements ScimUserService {
 
   @Override
   public boolean changeScimUserDisabled(String accountId, String userId, boolean disabled) {
-    ngUserService.updateUserDisabled(accountId, userId, disabled);
-    Optional<UserMetadataDTO> userMetadataDTOOptional = ngUserService.getUserMetadata(userId);
-    if (userMetadataDTOOptional.isPresent()) {
-      UserMetadataDTO userMetadata = userMetadataDTOOptional.get();
-      userMetadata.setDisabled(disabled);
-      userMetadata.setExternallyManaged(true);
-      ngUserService.updateUserMetadata(userMetadata);
-    }
     if (disabled) {
-      removeUserFromAllNGScimGroups(accountId, userId);
+      // OKTA doesn't send an explicit delete user request but only makes active true/false.
+      // We need to remove the user completely if active=false as we do not have any first
+      // class support for a disabled user vs a deleted user
+      ngUserService.removeUser(userId, accountId);
+    } else {
+      // This is to keep CG implementation working as it is.
+      ngUserService.updateUserDisabled(accountId, userId, disabled);
     }
     return true;
   }
