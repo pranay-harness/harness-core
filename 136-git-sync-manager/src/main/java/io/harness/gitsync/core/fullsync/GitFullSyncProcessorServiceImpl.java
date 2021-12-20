@@ -23,8 +23,10 @@ import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@Slf4j
 @OwnedBy(DX)
 public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.fullsync.GitFullSyncProcessorService {
   Map<Microservice, FullSyncServiceGrpc.FullSyncServiceBlockingStub> fullSyncServiceBlockingStubMap;
@@ -92,8 +94,10 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
 
   @Override
   public void performFullSync(GitFullSyncJob fullSyncJob) {
+    log.info("Started full sync for the job {}", fullSyncJob.getMessageId());
     List<GitFullSyncEntityInfo> allEntitiesToBeSynced =
-        gitFullSyncEntityService.list(fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid());
+        gitFullSyncEntityService.list(fullSyncJob.getAccountIdentifier(), fullSyncJob.getMessageId());
+    log.info("Number of files is {}", emptyIfNull(allEntitiesToBeSynced).size());
     boolean processingFailed = false;
     for (GitFullSyncEntityInfo gitFullSyncEntityInfo : emptyIfNull(allEntitiesToBeSynced)) {
       if (gitFullSyncEntityInfo.getSyncStatus().equals(GitFullSyncEntityInfo.SyncStatus.PUSHED.name())) {
@@ -101,12 +105,15 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
       }
       final GitFullSyncEntityProcessingResponse gitFullSyncEntityProcessingResponse =
           processFile(gitFullSyncEntityInfo);
+      log.info("Processed the file with status {} {}", gitFullSyncEntityInfo.getFilePath(),
+          gitFullSyncEntityProcessingResponse.getSyncStatus());
       if (gitFullSyncEntityProcessingResponse.getSyncStatus() != GitFullSyncEntityInfo.SyncStatus.PUSHED) {
         processingFailed = true;
       }
     }
 
     updateTheStatusOfJob(processingFailed, fullSyncJob);
+    log.info("Completed full sync for the job {}", fullSyncJob.getMessageId());
   }
 
   private void updateTheStatusOfJob(boolean processingFailed, GitFullSyncJob fullSyncJob) {
