@@ -228,7 +228,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_PATH_STYLE", "false");
     expected.put("PLUGIN_ARCHIVE_FORMAT", "tar");
     expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
-    expected.put("PLUGIN_OVERRIDE", "true");
+    expected.put("PLUGIN_OVERRIDE", "false");
     Map<String, String> actual =
         PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
@@ -246,7 +246,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
             .sourcePaths(ParameterField.createValueField(asList("path1", "path2")))
             .endpoint(ParameterField.createValueField("endpoint"))
             .archiveFormat(ParameterField.createValueField(ArchiveFormat.GZIP))
-            .override(ParameterField.createValueField(false))
+            .override(ParameterField.createValueField(true))
             .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_BACKEND", "s3");
@@ -260,7 +260,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_PATH_STYLE", "false");
     expected.put("PLUGIN_ARCHIVE_FORMAT", "gzip");
     expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
-    expected.put("PLUGIN_OVERRIDE", "false");
+    expected.put("PLUGIN_OVERRIDE", "true");
     Map<String, String> actual =
         PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
@@ -331,7 +331,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_REBUILD", "true");
     expected.put("PLUGIN_EXIT_CODE", "true");
     expected.put("PLUGIN_ARCHIVE_FORMAT", "tar");
-    expected.put("PLUGIN_OVERRIDE", "true");
+    expected.put("PLUGIN_OVERRIDE", "false");
     expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
     Map<String, String> actual =
         PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheGCSStepInfo, "identifier", 100, Type.K8);
