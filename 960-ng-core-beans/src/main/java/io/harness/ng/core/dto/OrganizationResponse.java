@@ -2,6 +2,7 @@ package io.harness.ng.core.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.OrganizationConstants;
 import io.harness.annotations.dev.OwnedBy;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,12 +14,12 @@ import lombok.NoArgsConstructor;
 @OwnedBy(PL)
 @Data
 @NoArgsConstructor
-@Schema(description = "Organization resource along with metadata. Generally, Used to power UI.")
+@Schema(description = "This has details of the Organization along with its metadata in Harness.")
 public class OrganizationResponse {
   @NotNull private OrganizationDTO organization;
-  private Long createdAt;
-  private Long lastModifiedAt;
-  private boolean harnessManaged;
+  @Schema(description = OrganizationConstants.CREATED_AT) private Long createdAt;
+  @Schema(description = OrganizationConstants.LAST_MODIFIED_AT) private Long lastModifiedAt;
+  @Schema(description = OrganizationConstants.HARNESS_MANAGED) private boolean harnessManaged;
 
   @Builder
   public OrganizationResponse(

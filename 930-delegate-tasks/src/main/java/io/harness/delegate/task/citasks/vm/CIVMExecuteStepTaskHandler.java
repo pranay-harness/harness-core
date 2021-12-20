@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.RUNTEST_STEP_KIND;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.RUN_STEP_KIND;
-import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.WORKDIR_VOLUME_NAME;
 
 import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
 
@@ -93,15 +92,12 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   }
 
   private ExecuteStepRequest convert(CIVmExecuteStepTaskParams params) {
-    ExecuteStepRequest.VolumeMount workdirVol =
-        ExecuteStepRequest.VolumeMount.builder().name(WORKDIR_VOLUME_NAME).path(params.getWorkingDir()).build();
-
     ConfigBuilder configBuilder = ExecuteStepRequest.Config.builder()
                                       .id(getIdentifier(params.getStepRuntimeId()))
                                       .name(params.getStepId())
                                       .logKey(params.getLogKey())
                                       .workingDir(params.getWorkingDir())
-                                      .volumeMounts(Collections.singletonList(workdirVol));
+                                      .volumeMounts(getVolumeMounts(params.getVolToMountPath()));
     if (params.getStepInfo().getType() == VmStepInfo.Type.RUN) {
       VmRunStep runStep = (VmRunStep) params.getStepInfo();
       setRunConfig(runStep, configBuilder);
@@ -120,6 +116,18 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
         .ipAddress(params.getIpAddress())
         .config(configBuilder.build())
         .build();
+  }
+
+  private List<ExecuteStepRequest.VolumeMount> getVolumeMounts(Map<String, String> volToMountPath) {
+    List<ExecuteStepRequest.VolumeMount> volumeMounts = new ArrayList<>();
+    if (isEmpty(volToMountPath)) {
+      return volumeMounts;
+    }
+
+    for (Map.Entry<String, String> entry : volToMountPath.entrySet()) {
+      volumeMounts.add(ExecuteStepRequest.VolumeMount.builder().name(entry.getKey()).path(entry.getValue()).build());
+    }
+    return volumeMounts;
   }
 
   private void setRunConfig(VmRunStep runStep, ConfigBuilder configBuilder) {

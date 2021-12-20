@@ -1,8 +1,14 @@
 package io.harness.ci.integrationstage;
 
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
+import static io.harness.common.CIExecutionConstants.SHARED_VOLUME_PREFIX;
+import static io.harness.common.CIExecutionConstants.STEP_MOUNT_PATH;
+import static io.harness.common.CIExecutionConstants.STEP_VOLUME;
 import static io.harness.common.CIExecutionConstants.STEP_WORK_DIR;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -10,10 +16,12 @@ import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.VmBuildJobInfo;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
+import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
@@ -23,7 +31,9 @@ import io.harness.pms.yaml.ParameterField;
 
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -61,11 +71,15 @@ public class VmInitializeStepUtils {
         }
       }
     }
+    IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
+
+    Map<String, String> volumeToMountPath = getVolumeToMountPath(integrationStageConfig.getSharedPaths());
     return VmBuildJobInfo.builder()
         .ciExecutionArgs(ciExecutionArgs)
         .workDir(STEP_WORK_DIR)
         .connectorRefs(connectorIdentifiers)
         .stageVars(stageElementConfig.getVariables())
+        .volToMountPath(volumeToMountPath)
         .build();
   }
 
@@ -142,5 +156,33 @@ public class VmInitializeStepUtils {
       }
     }
     return null;
+  }
+
+  private Map<String, String> getVolumeToMountPath(ParameterField<List<String>> parameterSharedPaths) {
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(STEP_VOLUME, STEP_MOUNT_PATH);
+    if (parameterSharedPaths == null) {
+      return volumeToMountPath;
+    }
+
+    List<String> sharedPaths = (List<String>) parameterSharedPaths.fetchFinalValue();
+    if (isEmpty(sharedPaths)) {
+      return volumeToMountPath;
+    }
+
+    int index = 0;
+    for (String path : sharedPaths) {
+      if (isEmpty(path)) {
+        continue;
+      }
+
+      String volumeName = format("%s%d", SHARED_VOLUME_PREFIX, index);
+      if (path.equals(STEP_MOUNT_PATH)) {
+        throw new InvalidRequestException(format("Shared path: %s is a reserved keyword ", path));
+      }
+      volumeToMountPath.put(volumeName, path);
+      index++;
+    }
+    return volumeToMountPath;
   }
 }

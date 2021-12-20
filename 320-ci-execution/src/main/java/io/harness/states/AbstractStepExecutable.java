@@ -6,7 +6,6 @@ import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
 import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PORT;
-import static io.harness.common.CIExecutionConstants.STEP_WORK_DIR;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -209,13 +208,14 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     CIVmExecuteStepTaskParams params = CIVmExecuteStepTaskParams.builder()
                                            .ipAddress(vmDetailsOutcome.getIpAddress())
                                            .poolId(vmStageInfraDetails.getPoolId())
+                                           .volToMountPath(vmStageInfraDetails.getVolToMountPathMap())
                                            .stageRuntimeId(stageDetails.getStageRuntimeID())
                                            .stepRuntimeId(runtimeId)
                                            .stepId(stepIdentifier)
                                            .stepInfo(vmStepInfo)
-                                           .secrets(new ArrayList<String>(secrets))
+                                           .secrets(new ArrayList<>(secrets))
                                            .logKey(logKey)
-                                           .workingDir(STEP_WORK_DIR)
+                                           .workingDir(vmStageInfraDetails.getWorkDir())
                                            .build();
     String taskId = queueDelegateTask(ambiance, timeoutInMillis, accountId, ciDelegateTaskExecutor, params);
     return AsyncExecutableResponse.newBuilder()

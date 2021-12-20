@@ -6,7 +6,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.executionargs.CIExecutionArgs;
-import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure.Type;
@@ -31,9 +30,7 @@ public class BuildJobEnvInfoBuilder {
 
   public BuildJobEnvInfo getCIBuildJobEnvInfo(StageElementConfig stageElementConfig, Infrastructure infrastructure,
       CIExecutionArgs ciExecutionArgs, List<ExecutionWrapperConfig> steps, String accountId) {
-    // TODO Only kubernetes is supported currently
-    IntegrationStageConfig integrationStage = (IntegrationStageConfig) stageElementConfig.getStageType();
-    if (integrationStage.getInfrastructure() == null) {
+    if (infrastructure == null) {
       throw new CIStageExecutionException("Input infrastructure is not set");
     }
 
@@ -41,8 +38,7 @@ public class BuildJobEnvInfoBuilder {
         || infrastructure.getType() == Type.USE_FROM_STAGE) {
       return initializeStepInfoBuilder.getInitializeStepInfoBuilder(
           stageElementConfig, ciExecutionArgs, steps, accountId);
-    } // TODO (shubham): Handle Use from stage for AWS VM
-    else if (infrastructure.getType() == Type.VM) {
+    } else if (infrastructure.getType() == Type.VM) {
       return vmInitializeStepUtils.getInitializeStepInfoBuilder(stageElementConfig, ciExecutionArgs, steps, accountId);
     } else {
       throw new IllegalArgumentException("Input infrastructure type is not of type kubernetes or VM");
