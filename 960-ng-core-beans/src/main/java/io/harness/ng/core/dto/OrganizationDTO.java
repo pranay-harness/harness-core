@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import io.harness.OrganizationConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
@@ -29,12 +30,15 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 @ApiModel(value = "Organization")
-@Schema(name = "Organization", description = "View of Organization entity as defined in Harness.")
+@Schema(name = "Organization", description = "This has details of the Organization as defined in Harness.")
 public class OrganizationDTO {
-  @ApiModelProperty(required = true) @EntityIdentifier(allowBlank = false) String identifier;
-  @ApiModelProperty(required = true) @NGEntityName String name;
-  @Size(max = 1024) String description;
-  @Size(max = 128) Map<String, String> tags;
+  @ApiModelProperty(required = true)
+  @EntityIdentifier(allowBlank = false)
+  @Schema(description = OrganizationConstants.IDENTIFIER)
+  String identifier;
+  @ApiModelProperty(required = true) @NGEntityName @Schema(description = OrganizationConstants.NAME) String name;
+  @Size(max = 1024) @Schema(description = "Description of the Organization.") String description;
+  @Size(max = 128) @Schema(description = "Tags for the Organization.") Map<String, String> tags;
   @JsonIgnore Long version;
   @JsonIgnore boolean harnessManaged;
 
