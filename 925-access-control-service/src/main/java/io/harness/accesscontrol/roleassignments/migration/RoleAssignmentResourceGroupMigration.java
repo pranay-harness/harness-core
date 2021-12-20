@@ -13,6 +13,7 @@ import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeLevel;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migration.NGMigration;
+import io.harness.utils.CryptoUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -63,7 +64,7 @@ public class RoleAssignmentResourceGroupMigration implements NGMigration {
 
   private RoleAssignmentDBO buildRoleAssignmentDBO(ScopeLevel scopeLevel, RoleAssignmentDBO roleAssignmentDBO) {
     return RoleAssignmentDBO.builder()
-        .identifier(roleAssignmentDBO.getIdentifier())
+        .identifier("role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20)))
         .scopeIdentifier(roleAssignmentDBO.getScopeIdentifier())
         .scopeLevel(roleAssignmentDBO.getScopeLevel())
         .disabled(roleAssignmentDBO.isDisabled())
