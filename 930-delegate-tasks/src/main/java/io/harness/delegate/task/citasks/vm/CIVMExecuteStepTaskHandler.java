@@ -73,7 +73,10 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
       }
 
       if (isEmpty(response.body().getError())) {
-        return VmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+        return VmTaskExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .outputVars(response.body().getOutputs())
+            .build();
       } else {
         return VmTaskExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -84,7 +87,7 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
       log.error("Failed to execute step in runner", e);
       return VmTaskExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(e.getMessage())
+          .errorMessage(e.toString())
           .build();
     }
   }
