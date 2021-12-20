@@ -12,7 +12,9 @@ import io.harness.beans.event.cg.entities.InfraDefinitionEntity;
 import io.harness.beans.event.cg.entities.ServiceEntity;
 import io.harness.beans.event.cg.pipeline.ExecutionArgsEventData;
 import io.harness.beans.event.cg.pipeline.PipelineEventData;
+import io.harness.beans.event.cg.pipeline.PipelineExecData;
 import io.harness.beans.event.cg.workflow.WorkflowEventData;
+import io.harness.beans.event.cg.workflow.WorkflowExecData;
 
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -34,7 +36,8 @@ public abstract class CgWorkflowExecutionPayload extends EventPayloadData {
   private List<ServiceEntity> services;
   private List<EnvironmentEntity> environments;
   private List<InfraDefinitionEntity> infraDefinitions;
-  private String executionId;
+  private WorkflowExecData workflowExecution;
+  private PipelineExecData pipelineExecution;
 
   @Override
   public String getWorkflowId() {
