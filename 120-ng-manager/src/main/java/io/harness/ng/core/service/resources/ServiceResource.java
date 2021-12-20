@@ -170,11 +170,12 @@ public class ServiceResource {
   @ApiOperation(value = "Get Command flags based on Deployment Type", nickname = "helmCmdFlags")
   public ResponseDTO<Set<HelmCommandFlagType>> getHelmCommandFlags(
       @QueryParam("serviceSpecType") @NotNull String serviceSpecType,
-      @QueryParam("version") @NotNull HelmVersion version) {
+      @QueryParam("version") @NotNull HelmVersion version, @QueryParam("storeType") @NotNull String storeType) {
     Set<HelmCommandFlagType> helmCmdFlags = new HashSet<>();
     for (HelmCommandFlagType helmCommandFlagType : HelmCommandFlagType.values()) {
       if (helmCommandFlagType.getServiceSpecTypes().contains(serviceSpecType)
-          && helmCommandFlagType.getSubCommandType().getHelmVersions().contains(version)) {
+          && helmCommandFlagType.getSubCommandType().getHelmVersions().contains(version)
+          && helmCommandFlagType.getStoreTypes().contains(storeType)) {
         helmCmdFlags.add(helmCommandFlagType);
       }
     }

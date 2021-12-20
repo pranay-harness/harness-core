@@ -3,6 +3,9 @@ package io.harness.cdng.manifest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
+import com.google.common.collect.ImmutableSet;
+import java.util.Set;
+
 @OwnedBy(HarnessTeam.CDP)
 public interface ManifestStoreType {
   String GIT = "Git";
@@ -38,4 +41,7 @@ public interface ManifestStoreType {
         return false;
     }
   }
+
+  Set<String> HelmChartRepo = ImmutableSet.of(HTTP, GCS, S3);
+  Set<String> HelmAllRepo = ImmutableSet.of(HTTP, GCS, S3, GIT, GITHUB, GITLAB, BITBUCKET);
 }
