@@ -38,8 +38,10 @@ import io.harness.beans.event.cg.entities.InfraDefinitionEntity;
 import io.harness.beans.event.cg.entities.ServiceEntity;
 import io.harness.beans.event.cg.pipeline.ExecutionArgsEventData;
 import io.harness.beans.event.cg.pipeline.PipelineEventData;
+import io.harness.beans.event.cg.pipeline.PipelineExecData;
 import io.harness.beans.event.cg.pipeline.PipelineStageInfo;
 import io.harness.beans.event.cg.workflow.WorkflowEventData;
+import io.harness.beans.event.cg.workflow.WorkflowExecData;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
@@ -346,7 +348,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         .eventType(EventType.WORKFLOW_END.getEventValue())
         .data(CgWorkflowCompletePayload.builder()
                   .application(ApplicationEventData.builder().id(appId).name(application.getName()).build())
-                  .executionId(execution.getUuid())
                   .services(isEmpty(execution.getServiceIds()) ? Collections.emptyList()
                                                                : execution.getServiceIds()
                                                                      .stream()
@@ -375,6 +376,8 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                       ExecutionArgsEventData.builder()
                           .notes(execution.getExecutionArgs() == null ? null : execution.getExecutionArgs().getNotes())
                           .build())
+                  .pipelineExecution(PipelineExecData.builder().id(execution.getPipelineExecutionId()).build())
+                  .workflowExecution(WorkflowExecData.builder().id(execution.getUuid()).build())
                   .build())
         .build();
   }

@@ -127,7 +127,9 @@ import io.harness.beans.event.cg.entities.InfraDefinitionEntity;
 import io.harness.beans.event.cg.entities.ServiceEntity;
 import io.harness.beans.event.cg.pipeline.ExecutionArgsEventData;
 import io.harness.beans.event.cg.pipeline.PipelineEventData;
+import io.harness.beans.event.cg.pipeline.PipelineExecData;
 import io.harness.beans.event.cg.workflow.WorkflowEventData;
+import io.harness.beans.event.cg.workflow.WorkflowExecData;
 import io.harness.cache.MongoStore;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.CollectionUtils;
@@ -1802,7 +1804,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Application app, ExecutionArgs executionArgs, WorkflowExecution execution, PipelineSummary summary) {
     return CgWorkflowStartPayload.builder()
         .application(ApplicationEventData.builder().id(app.getAppId()).name(app.getName()).build())
-        .executionId(execution.getUuid())
         .services(isEmpty(execution.getServiceIds()) ? Collections.emptyList()
                                                      : execution.getServiceIds()
                                                            .stream()
@@ -1828,6 +1829,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .triggeredByType(execution.getCreatedByType())
         .triggeredBy(execution.getCreatedBy())
         .executionArgs(ExecutionArgsEventData.builder().notes(executionArgs.getNotes()).build())
+        .pipelineExecution(PipelineExecData.builder().id(execution.getPipelineExecutionId()).build())
+        .workflowExecution(WorkflowExecData.builder().id(execution.getUuid()).build())
         .build();
   }
 
