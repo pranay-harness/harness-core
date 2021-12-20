@@ -29,15 +29,14 @@ public class BuildJobEnvInfoBuilder {
   @Inject private InitializeStepInfoBuilder initializeStepInfoBuilder;
   @Inject private VmInitializeStepUtils vmInitializeStepUtils;
 
-  public BuildJobEnvInfo getCIBuildJobEnvInfo(StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs,
-      List<ExecutionWrapperConfig> steps, String accountId) {
+  public BuildJobEnvInfo getCIBuildJobEnvInfo(StageElementConfig stageElementConfig, Infrastructure infrastructure,
+      CIExecutionArgs ciExecutionArgs, List<ExecutionWrapperConfig> steps, String accountId) {
     // TODO Only kubernetes is supported currently
     IntegrationStageConfig integrationStage = (IntegrationStageConfig) stageElementConfig.getStageType();
     if (integrationStage.getInfrastructure() == null) {
       throw new CIStageExecutionException("Input infrastructure is not set");
     }
 
-    Infrastructure infrastructure = integrationStage.getInfrastructure();
     if (infrastructure.getType() == Infrastructure.Type.KUBERNETES_DIRECT
         || infrastructure.getType() == Type.USE_FROM_STAGE) {
       return initializeStepInfoBuilder.getInitializeStepInfoBuilder(
