@@ -23,6 +23,7 @@ import io.harness.redis.RedisConfig;
 import io.harness.reflection.HarnessReflections;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.secret.ConfigSecret;
+import io.harness.secret.SecretsConfiguration;
 import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ThreadPoolConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -107,18 +108,19 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
-  @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
+  @JsonProperty("segmentConfiguration") @ConfigSecret private SegmentConfiguration segmentConfiguration;
   @JsonProperty("pipelineEventConsumersConfig") PipelineServiceConsumersConfig pipelineServiceConsumersConfig;
   @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
   @JsonProperty("shouldUseInstanceCache") boolean shouldUseInstanceCache;
   @JsonProperty("pmsPlanCreatorServicePoolConfig") private ThreadPoolConfig pmsPlanCreatorServicePoolConfig;
   @JsonProperty("planCreatorMergeServicePoolConfig") private ThreadPoolConfig planCreatorMergeServicePoolConfig;
+  @JsonProperty("secretsConfiguration") private SecretsConfiguration secretsConfiguration;
 
-  private String managerServiceSecret;
+  @ConfigSecret private String managerServiceSecret;
   private String managerTarget;
   private String managerAuthority;
   private ServiceHttpClientConfig managerClientConfig;
-  private LogStreamingServiceConfiguration logStreamingServiceConfig;
+  @ConfigSecret private LogStreamingServiceConfiguration logStreamingServiceConfig;
   private TriggerConfiguration triggerConfig;
   @ConfigSecret private OpaServiceConfiguration opaServerConfig;
 
