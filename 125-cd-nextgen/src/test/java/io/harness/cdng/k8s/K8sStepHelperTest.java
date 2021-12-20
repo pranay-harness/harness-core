@@ -441,11 +441,7 @@ public class K8sStepHelperTest extends CategoryTest {
     List<HelmManifestCommandFlag> commandFlags = asList(HelmManifestCommandFlag.builder()
                                                             .commandType(HelmCommandFlagType.Fetch)
                                                             .flag(ParameterField.createValueField("--test"))
-                                                            .build(),
-        HelmManifestCommandFlag.builder()
-            .commandType(HelmCommandFlagType.Version)
-            .flag(ParameterField.createValueField("--test2"))
-            .build());
+                                                            .build());
     HelmChartManifestOutcome manifestOutcome =
         HelmChartManifestOutcome.builder()
             .store(GitStore.builder()
@@ -472,9 +468,8 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isNotNull();
     assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isInstanceOf(GitStoreDelegateConfig.class);
     assertThat(helmChartDelegateConfig.getHelmVersion()).isEqualTo(HelmVersion.V3);
-    assertThat(helmChartDelegateConfig.getHelmCommandFlag().getValueMap())
-        .containsKeys(HelmSubCommandType.FETCH, HelmSubCommandType.VERSION);
-    assertThat(helmChartDelegateConfig.getHelmCommandFlag().getValueMap()).containsValues("--test", "--test2");
+    assertThat(helmChartDelegateConfig.getHelmCommandFlag().getValueMap()).containsKeys(HelmSubCommandType.FETCH);
+    assertThat(helmChartDelegateConfig.getHelmCommandFlag().getValueMap()).containsValues("--test");
   }
 
   @Test
