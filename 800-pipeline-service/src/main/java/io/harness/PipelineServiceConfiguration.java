@@ -30,6 +30,7 @@ import io.harness.pms.sdk.core.PipelineSdkRedisEventsConfig;
 import io.harness.redis.RedisConfig;
 import io.harness.reflection.HarnessReflections;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.secret.ConfigSecret;
 import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ThreadPoolConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -57,6 +58,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+import javax.validation.groups.ConvertGroup;
 import javax.ws.rs.Path;
 import lombok.Builder;
 import lombok.Data;
@@ -88,22 +90,26 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
   @JsonProperty("pipelineServiceClientConfig") private ServiceHttpClientConfig pipelineServiceClientConfig;
   @JsonProperty("templateServiceClientConfig") private ServiceHttpClientConfig templateServiceClientConfig;
-  @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
-  @JsonProperty("pipelineServiceSecret") private String pipelineServiceSecret;
-  @JsonProperty("templateServiceSecret") private String templateServiceSecret;
-  @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
-  @JsonProperty("jwtIdentityServiceSecret") private String jwtIdentityServiceSecret;
+  @JsonProperty("ngManagerServiceSecret") @ConfigSecret private String ngManagerServiceSecret;
+  @JsonProperty("pipelineServiceSecret") @ConfigSecret private String pipelineServiceSecret;
+  @JsonProperty("templateServiceSecret") @ConfigSecret private String templateServiceSecret;
+  @JsonProperty("jwtAuthSecret") @ConfigSecret private String jwtAuthSecret;
+  @JsonProperty("jwtIdentityServiceSecret") @ConfigSecret private String jwtIdentityServiceSecret;
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
-  @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
-  @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("notificationClient")
+  @ConfigSecret
+  private NotificationClientConfiguration notificationClientConfiguration;
+  @JsonProperty("eventsFramework") @ConfigSecret private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("pipelineServiceBaseUrl") private String pipelineServiceBaseUrl;
   @JsonProperty("pmsApiBaseUrl") private String pmsApiBaseUrl;
   @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
-  @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
-  @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
-  @JsonProperty("orchestrationStepConfig") private OrchestrationStepConfig orchestrationStepConfig;
+  @JsonProperty("accessControlClient")
+  @ConfigSecret
+  private AccessControlClientConfiguration accessControlClientConfiguration;
+  @JsonProperty("timescaledb") @ConfigSecret private TimeScaleDBConfig timeScaleDBConfig;
+  @JsonProperty("orchestrationStepConfig") @ConfigSecret private OrchestrationStepConfig orchestrationStepConfig;
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
@@ -126,7 +132,7 @@ public class PipelineServiceConfiguration extends Configuration {
   private ServiceHttpClientConfig managerClientConfig;
   private LogStreamingServiceConfiguration logStreamingServiceConfig;
   private TriggerConfiguration triggerConfig;
-  private OpaServiceConfiguration opaServerConfig;
+  @ConfigSecret private OpaServiceConfiguration opaServerConfig;
 
   private PipelineServiceIteratorsConfig iteratorsConfig;
   private boolean shouldDeployWithGitSync;
