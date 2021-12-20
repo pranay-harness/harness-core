@@ -58,7 +58,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
-import javax.validation.groups.ConvertGroup;
 import javax.ws.rs.Path;
 import lombok.Builder;
 import lombok.Data;
