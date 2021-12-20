@@ -9,6 +9,10 @@ load("@rules_spring//springboot:springboot.bzl", "springboot")
 
 HarnessTeam = "DEL"
 
+shared_dependencies = [
+    "@k8s//:com_squareup_okhttp3_okhttp",
+]
+
 java_library(
     name = "module",
     srcs = glob(["src/main/java/**/*.java"]),
@@ -16,7 +20,7 @@ java_library(
         "//260-delegate/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
-    deps = [
+    deps = shared_dependencies + [
         "//:lombok",
         "//400-rest:module",
         "//420-delegate-agent:module",

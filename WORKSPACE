@@ -4569,10 +4569,11 @@ plain_artifacts = [
     "io.harness.cv:data-collection-dsl:0.30-RELEASE",
     "io.harness:ff-java-server-sdk:1.0.5",
     "io.jsonwebtoken:jjwt:0.9.1",
-    "io.kubernetes:client-java-api:12.0.2",
-    "io.kubernetes:client-java-extended:12.0.2",
-    "io.kubernetes:client-java-proto:12.0.2",
-    "io.kubernetes:client-java:12.0.2",
+    "io.kubernetes:client-java-api:13.0.1",
+    "io.kubernetes:client-java-extended:13.0.1",
+    "io.kubernetes:client-java-proto:13.0.1",
+    "io.kubernetes:client-java:13.0.1",
+    "io.kubernetes:client-java-api-fluent:13.0.1",
     "io.leangen.graphql:spqr:0.11.2",
     "io.netty:netty-all:4.1.51.Final",
     "io.netty:netty-buffer:4.1.52.Final",
@@ -5113,6 +5114,18 @@ maven_install(
     name = "batch",
     artifacts = [
         "com.fasterxml.jackson.core:jackson-databind:2.11.3",
+        "com.squareup.okhttp3:okhttp:4.9.0",
+    ],
+    repositories = [
+        "http://jfrogdev.dev.harness.io:80/artifactory/portal-maven",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+    ],
+    version_conflict_policy = "pinned",
+)
+
+maven_install(
+    name = "k8s",
+    artifacts = [
         "com.squareup.okhttp3:okhttp:4.9.0",
     ],
     repositories = [

@@ -162,7 +162,6 @@ shared_dependencies = [
     "@maven//:com_papertrail_profiler",
     "@maven//:com_smoketurner_dropwizard_swagger",
     "@maven//:com_squareup_okhttp3_logging_interceptor",
-    "@maven//:com_squareup_okhttp3_okhttp",
     "@maven//:com_squareup_okhttp3_okhttp_urlconnection",
     "@maven//:com_squareup_okio_okio",
     "@maven//:com_squareup_retrofit2_adapter_rxjava",
@@ -403,6 +402,7 @@ shared_dependencies = [
     "@maven//:org_zeroturnaround_zt_exec",
     "@maven//:ru_vyarus_guice_validator",
     "@maven//:software_amazon_ion_ion_java",
+    "@k8s//:com_squareup_okhttp3_okhttp",
 ]
 
 java_library(

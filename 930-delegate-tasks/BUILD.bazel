@@ -5,6 +5,10 @@ load("//:tools/bazel/aeriform.bzl", "breakDependencyOn")
 
 breakDependencyOn("//960-persistence:module")
 
+shared_dependencies = [
+    "@k8s//:com_squareup_okhttp3_okhttp",
+]
+
 java_library(
     name = "module",
     srcs = glob(["src/main/java/**/*.java"]),
@@ -14,7 +18,7 @@ java_library(
     resources = [
     ],
     visibility = ["//visibility:public"],
-    deps = [
+    deps = shared_dependencies + [
         "//:lombok",
         "//930-delegate-tasks/src/main/proto/io/harness:930_delegate_tasks_java_proto",
         "//932-connector-task:module",
@@ -137,7 +141,6 @@ java_library(
         "@maven//:com_google_http_client_google_http_client",
         "@maven//:com_google_inject_guice",
         "@maven//:com_hierynomus_sshj",
-        "@maven//:com_squareup_okhttp3_okhttp",
         "@maven//:com_squareup_retrofit2_retrofit",
         "@maven//:commons_io_commons_io",
         "@maven//:io_fabric8_fabric8_utils",

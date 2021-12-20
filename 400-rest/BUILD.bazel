@@ -295,7 +295,7 @@ java_library(
         "@maven//:com_smoketurner_dropwizard_swagger",
         "@maven//:com_splunk_splunk",
         "@maven//:com_squareup_okhttp3_logging_interceptor",
-        "@maven//:com_squareup_okhttp3_okhttp",
+        "@k8s//:com_squareup_okhttp3_okhttp",
         "@maven//:com_squareup_okhttp3_okhttp_urlconnection",
         "@maven//:com_squareup_okio_okio",
         "@maven//:com_squareup_retrofit2_adapter_rxjava",
