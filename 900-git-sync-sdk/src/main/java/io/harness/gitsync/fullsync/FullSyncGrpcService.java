@@ -32,6 +32,7 @@ public class FullSyncGrpcService extends FullSyncServiceImplBase {
 
   @Override
   public void getEntitiesForFullSync(ScopeDetails request, StreamObserver<FileChanges> responseObserver) {
+    log.info("Got the Grpc Request for Full Sync");
     try (MdcContextSetter ignore1 = new MdcContextSetter(request.getLogContextMap())) {
       SecurityContextBuilder.setContext(
           new ServicePrincipal(AuthorizationServiceHeader.GIT_SYNC_SERVICE.getServiceId()));

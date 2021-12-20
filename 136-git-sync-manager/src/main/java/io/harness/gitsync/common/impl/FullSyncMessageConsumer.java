@@ -36,12 +36,12 @@ public class FullSyncMessageConsumer implements Runnable {
 
   @Override
   public void run() {
-    log.info("Started the consumer for setup usage stream");
+    log.info("Started the consumer for full sync stream");
     try {
       SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
         if (queueController.isNotPrimary()) {
-          log.info("Setup usage consumer is not running on primary deployment, will try again after some time...");
+          log.info("Full sync consumer is not running on primary deployment, will try again after some time...");
           TimeUnit.SECONDS.sleep(30);
           continue;
         }
@@ -51,7 +51,7 @@ public class FullSyncMessageConsumer implements Runnable {
       SecurityContextBuilder.unsetCompleteContext();
       Thread.currentThread().interrupt();
     } catch (Exception ex) {
-      log.error("Setup Usage consumer unexpectedly stopped", ex);
+      log.error("Full sync consumer unexpectedly stopped", ex);
     } finally {
       SecurityContextBuilder.unsetCompleteContext();
     }

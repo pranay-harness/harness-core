@@ -55,11 +55,8 @@ public class GitFullSyncEntityServiceImpl implements GitFullSyncEntityService {
   }
 
   @Override
-  public List<GitFullSyncEntityInfo> list(String accountIdentifier, String fullSyncJobId) {
-    Criteria criteria = new Criteria();
-    criteria.and(GitFullSyncEntityInfoKeys.accountIdentifier).is(accountIdentifier);
-    criteria.and(GitFullSyncEntityInfoKeys.fullSyncJobId).is(fullSyncJobId);
-    return gitFullSyncEntityRepository.findByAccountIdentifierAndFullSyncJobId(accountIdentifier, fullSyncJobId);
+  public List<GitFullSyncEntityInfo> list(String accountIdentifier, String messageId) {
+    return gitFullSyncEntityRepository.findByAccountIdentifierAndMessageId(accountIdentifier, messageId);
   }
 
   private void markFailed(String uuid, String accountId, String errorMsg) {
