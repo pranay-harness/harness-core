@@ -238,4 +238,6 @@ public interface AccountService {
   boolean isAutoInviteAcceptanceEnabled(String accountId);
 
   Void setDefaultExperience(String accountId, DefaultExperience defaultExperience);
+
+  String getDelegateRingAssociatedWithAccount(String accountId);
 }

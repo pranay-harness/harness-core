@@ -1956,4 +1956,9 @@ public class AccountServiceImpl implements AccountService {
     dbCache.invalidate(Account.class, account.getUuid());
     return null;
   }
+
+  public String getDelegateRingAssociatedWithAccount(String accountId) {
+    Account account = getFromCache(accountId);
+    return account.getRingName();
+  }
 }
