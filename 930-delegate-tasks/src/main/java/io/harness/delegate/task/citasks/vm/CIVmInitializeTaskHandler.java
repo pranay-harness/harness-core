@@ -24,6 +24,7 @@ import io.harness.delegate.beans.ci.vm.runner.SetupVmResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.citasks.CIInitializeTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder;
+import io.harness.delegate.task.citasks.cik8handler.helper.ProxyVariableHelper;
 import io.harness.delegate.task.citasks.vm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
 
@@ -42,6 +43,7 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
   @NotNull private Type type = CIInitializeTaskHandler.Type.VM;
   @Inject private HttpHelper httpHelper;
   @Inject private SecretSpecBuilder secretSpecBuilder;
+  @Inject private ProxyVariableHelper proxyVariableHelper;
 
   @Override
   public Type getType() {
@@ -98,6 +100,14 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
         secrets.add(secret);
       }
     }
+    if (proxyVariableHelper != null && proxyVariableHelper.checkIfProxyIsConfigured()) {
+      Map<String, SecretParams> proxyConfiguration = proxyVariableHelper.getProxyConfiguration();
+      for (Map.Entry<String, SecretParams> entry : proxyConfiguration.entrySet()) {
+        String secret = new String(decodeBase64(entry.getValue().getValue()));
+        env.put(entry.getKey(), secret);
+        secrets.add(secret);
+      }
+    }
     SetupVmRequest.TIConfig tiConfig = SetupVmRequest.TIConfig.builder()
                                            .url(params.getTiUrl())
                                            .token(params.getTiSvcToken())
@@ -123,6 +133,7 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
                                                       .url(params.getLogStreamUrl())
                                                       .token(params.getLogSvcToken())
                                                       .accountID(params.getAccountID())
+                                                      .indirectUpload(params.isLogSvcIndirectUpload())
                                                       .build())
                                        .tiConfig(tiConfig)
                                        .volumes(getVolumes(params.getVolToMountPath()))
