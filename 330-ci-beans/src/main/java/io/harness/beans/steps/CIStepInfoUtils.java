@@ -57,7 +57,7 @@ public class CIStepInfoUtils {
       case GCR:
         return ciExecutionServiceConfig.getStepConfig().getVmImageConfig().getBuildAndPushGCR();
       case ECR:
-        return ciExecutionServiceConfig.getStepConfig().getVmImageConfig().getBuildAndPushGCR();
+        return ciExecutionServiceConfig.getStepConfig().getVmImageConfig().getBuildAndPushECR();
       case RESTORE_CACHE_S3:
       case SAVE_CACHE_S3:
         return ciExecutionServiceConfig.getStepConfig().getVmImageConfig().getCacheS3();
