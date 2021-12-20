@@ -15,6 +15,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.servicenow.ServiceNowUtils;
 
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.ServiceNowConfig;
@@ -370,8 +371,8 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       ServiceNowTaskParameters taskParameters, ServiceNowApprovalParams approvalParams) {
     JsonNode issueObj = getIssue(taskParameters);
     String issueId = issueObj.get("sys_id").get("display_value").asText();
-    String issueUrl = getBaseUrl(taskParameters.getServiceNowConfig()) + "nav_to.do?uri=/"
-        + taskParameters.getTicketType().toString().toLowerCase() + ".do?sys_id=" + issueId;
+    String issueUrl = ServiceNowUtils.prepareTicketUrlFromTicketId(
+        getBaseUrl(taskParameters.getServiceNowConfig()), issueId, taskParameters.getTicketType().toString());
 
     Set<String> serviceNowFields = approvalParams.getAllCriteriaFields();
 

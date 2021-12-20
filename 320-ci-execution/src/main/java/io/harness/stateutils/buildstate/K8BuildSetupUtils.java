@@ -79,6 +79,8 @@ import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -120,6 +122,7 @@ public class K8BuildSetupUtils {
   @Inject CILogServiceUtils logServiceUtils;
   @Inject TIServiceUtils tiServiceUtils;
   @Inject CodebaseUtils codebaseUtils;
+  @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
@@ -231,20 +234,22 @@ public class K8BuildSetupUtils {
     List<String> containerNames =
         containerParamsList.stream().map(CIK8ContainerParams::getName).collect(Collectors.toList());
     containerNames.add(setupAddOnContainerParams.getName());
-    executionSweepingOutputResolver.consume(ambiance, CLEANUP_DETAILS,
+
+    consumeSweepingOutput(ambiance,
         PodCleanupDetails.builder()
             .infrastructure(infrastructure)
             .podName(podSetupInfo.getName())
             .cleanUpContainerNames(containerNames)
             .build(),
-        StepOutcomeGroup.STAGE.name());
-    executionSweepingOutputResolver.consume(ambiance, STAGE_INFRA_DETAILS,
+        CLEANUP_DETAILS);
+
+    consumeSweepingOutput(ambiance,
         K8StageInfraDetails.builder()
             .infrastructure(infrastructure)
             .podName(podSetupInfo.getName())
             .containerNames(containerNames)
             .build(),
-        StepOutcomeGroup.STAGE.name());
+        STAGE_INFRA_DETAILS);
 
     Map<String, String> buildLabels = getBuildLabels(ambiance, k8PodDetails);
     if (isNotEmpty(labels)) {
@@ -263,6 +268,14 @@ public class K8BuildSetupUtils {
         .initContainerParamsList(singletonList(setupAddOnContainerParams))
         .runAsUser(stageRunAsUser)
         .build();
+  }
+
+  private <T extends ExecutionSweepingOutput> void consumeSweepingOutput(Ambiance ambiance, T value, String key) {
+    OptionalSweepingOutput optionalSweepingOutput =
+        executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getSweepingOutputRefObject(key));
+    if (!optionalSweepingOutput.isFound()) {
+      executionSweepingOutputResolver.consume(ambiance, key, value, StepOutcomeGroup.STAGE.name());
+    }
   }
 
   public List<CIK8ContainerParams> getContainerParamsList(K8PodDetails k8PodDetails, PodSetupInfo podSetupInfo,
@@ -311,9 +324,9 @@ public class K8BuildSetupUtils {
     if (initializeStepInfo.getCiCodebase() != null) {
       codeBaseConnectorRef = initializeStepInfo.getCiCodebase().getConnectorRef();
       if (isNotEmpty(codeBaseConnectorRef)) {
-        executionSweepingOutputResolver.consume(ambiance, CODE_BASE_CONNECTOR_REF,
+        consumeSweepingOutput(ambiance,
             CodeBaseConnectorRefSweepingOutput.builder().codeBaseConnectorRef(codeBaseConnectorRef).build(),
-            StepOutcomeGroup.STAGE.name());
+            CODE_BASE_CONNECTOR_REF);
       }
     }
     GithubApiTokenEvaluator githubApiTokenEvaluator =
@@ -353,9 +366,7 @@ public class K8BuildSetupUtils {
   private void consumePortDetails(Ambiance ambiance, List<ContainerDefinitionInfo> containerDefinitionInfos) {
     Map<String, List<Integer>> portDetails = containerDefinitionInfos.stream().collect(
         Collectors.toMap(ContainerDefinitionInfo::getStepIdentifier, ContainerDefinitionInfo::getPorts));
-
-    executionSweepingOutputResolver.consume(ambiance, PORT_DETAILS,
-        ContainerPortDetails.builder().portDetails(portDetails).build(), StepOutcomeGroup.STAGE.name());
+    consumeSweepingOutput(ambiance, ContainerPortDetails.builder().portDetails(portDetails).build(), PORT_DETAILS);
   }
 
   private CIK8ContainerParams createCIK8ContainerParams(NGAccess ngAccess,

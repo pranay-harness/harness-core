@@ -6,7 +6,7 @@ import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.servicenow.ServiceNowValidationParams;
 import io.harness.errorhandling.NGErrorHelper;
-import io.harness.jira.ServiceNowActionNG;
+import io.harness.servicenow.ServiceNowActionNG;
 
 import com.google.inject.Inject;
 import java.util.Collections;

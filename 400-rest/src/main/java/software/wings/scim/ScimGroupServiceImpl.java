@@ -1,9 +1,13 @@
 package software.wings.scim;
 
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.GROUP;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
@@ -39,9 +43,12 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
+@OwnedBy(PL)
+@TargetModule(_360_CG_MANAGER)
 public class ScimGroupServiceImpl implements ScimGroupService {
   @Inject private UserGroupService userGroupService;
   @Inject private WingsPersistence wingsPersistence;
+
   private static final String EXC_MSG_GROUP_DOESNT_EXIST = "Group does not exist";
   private static final String DISPLAY_NAME = "displayName";
   private static final Integer MAX_RESULT_COUNT = 20;
@@ -273,8 +280,8 @@ public class ScimGroupServiceImpl implements ScimGroupService {
       }
       log.error("SCIM: Operations received is null. Skipping remove operation processing for groupId: {}", groupId);
     } catch (Exception ex) {
-      log.error("SCIM: Failed to process the operation: {}, for accountId: {}, for GroupId {}",
-          patchOperation.toString(), accountId, groupId, ex);
+      log.error("SCIM: Failed to process the operation: {}, for accountId: {}, for GroupId {}", patchOperation,
+          accountId, groupId, ex);
     }
 
     return Collections.emptySet();

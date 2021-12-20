@@ -293,7 +293,16 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     }
 
     if (taskResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      return StepResponse.builder().status(Status.SUCCEEDED).build();
+      StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
+      if (isNotEmpty(taskResponse.getOutputVars())) {
+        StepResponse.StepOutcome stepOutcome =
+            StepResponse.StepOutcome.builder()
+                .outcome(CIStepOutcome.builder().outputVariables(taskResponse.getOutputVars()).build())
+                .name("output")
+                .build();
+        stepResponseBuilder.stepOutcome(stepOutcome);
+      }
+      return stepResponseBuilder.build();
     } else if (taskResponse.getCommandExecutionStatus() == CommandExecutionStatus.SKIPPED) {
       return StepResponse.builder().status(Status.SKIPPED).build();
     } else {

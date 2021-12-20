@@ -26,7 +26,7 @@ public class K8sInstanceSyncTaskParameters extends K8sTaskParameters {
       boolean useVarSupportForKustomize, boolean useNewKubectlVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, K8sTaskType.INSTANCE_SYNC, helmVersion, delegateSelectors, useLatestChartMuseumVersion,
-            useVarSupportForKustomize, useNewKubectlVersion);
+        useVarSupportForKustomize, useNewKubectlVersion);
     this.namespace = namespace;
   }
 }

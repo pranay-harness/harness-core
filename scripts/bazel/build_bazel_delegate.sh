@@ -11,6 +11,9 @@ fi
 BAZEL_DIRS=${HOME}/.bazel-dirs
 BAZEL_ARGUMENTS="--show_timestamps --announce_rc --experimental_convenience_symlinks=normal --remote_download_outputs=all --symlink_prefix=${BAZEL_DIRS}/"
 
-bazel ${bazelrc} build //260-delegate:module_deploy.jar ${BAZEL_ARGUMENTS}
+if [ $1 == "immutable" ]; then
+  BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --define is_immutable=true"
+fi
 
+bazel ${bazelrc} build //260-delegate:module_deploy.jar ${BAZEL_ARGUMENTS}
 cp ${BAZEL_DIRS}/bin/260-delegate/module_deploy.jar ./dockerization/delegate/delegate.jar

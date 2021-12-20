@@ -50,17 +50,19 @@ public class YamlTypeTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetCompiledPatternForYamlTypePathExpressionKustomizePatch() {
     String expectedPattern =
-            Pattern.compile(YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE.getPathExpression()).pattern();
+        Pattern.compile(YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE.getPathExpression()).pattern();
 
     assertThat(
-            YamlType.getCompiledPatternForYamlTypePathExpression(YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE)
-                    .pattern())
-            .isEqualTo(expectedPattern);
+        YamlType
+            .getCompiledPatternForYamlTypePathExpression(YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE)
+            .pattern())
+        .isEqualTo(expectedPattern);
 
     // after caching
     assertThat(
-            YamlType.getCompiledPatternForYamlTypePathExpression(YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE)
-                    .pattern())
-            .isEqualTo(expectedPattern);
+        YamlType
+            .getCompiledPatternForYamlTypePathExpression(YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE)
+            .pattern())
+        .isEqualTo(expectedPattern);
   }
 }

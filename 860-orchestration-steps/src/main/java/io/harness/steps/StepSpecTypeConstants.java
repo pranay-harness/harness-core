@@ -15,4 +15,5 @@ public interface StepSpecTypeConstants {
   String JIRA_UPDATE = "JiraUpdate";
   String RESOURCE_CONSTRAINT = "ResourceConstraint";
   String FLAG_CONFIGURATION = "FlagConfiguration";
+  String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }

@@ -46,7 +46,7 @@ public class K8sBlueGreenDeployTaskParameters extends K8sTaskParameters implemen
       boolean useVarSupportForKustomize, boolean useNewKubectlVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion,
-            useVarSupportForKustomize, useNewKubectlVersion);
+        useVarSupportForKustomize, useNewKubectlVersion);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
     this.skipDryRun = skipDryRun;

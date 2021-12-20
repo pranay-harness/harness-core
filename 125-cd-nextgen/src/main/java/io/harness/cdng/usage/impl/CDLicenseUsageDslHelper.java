@@ -1,5 +1,6 @@
 package io.harness.cdng.usage.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.timescaledb.Tables.NG_INSTANCE_STATS;
 import static io.harness.timescaledb.Tables.SERVICES;
 
@@ -73,6 +74,9 @@ public class CDLicenseUsageDslHelper {
 
   public Table<Record3<String, String, String>> getOrgProjectServiceTableFromInstances(
       List<InstanceDTO> instanceDTOList) {
+    if (isEmpty(instanceDTOList)) {
+      return null;
+    }
     Row3<String, String, String>[] orgProjectServiceRows = getOrgProjectServiceRows(instanceDTOList);
 
     return DSL.values(orgProjectServiceRows).as("t", "orgId", "projectId", "serviceId");

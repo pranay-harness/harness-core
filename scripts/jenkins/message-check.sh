@@ -19,6 +19,7 @@ then
     echo The PR title \"${ghprbPullTitle}\"
     echo "does not match the expectations"
     echo "Make sure that your commit message is in format -> ${COMMIT_CONTENT}: [${PROJECTS}-<number>]: <description>"
+    echo "Example -> \"feat: [BT-100]: Commit Message\""
     exit 1
 fi
 

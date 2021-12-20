@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.JiraStepException;
+import io.harness.exception.ApprovalStepNGException;
 import io.harness.jira.JiraIssueUtilsNG;
 import io.harness.steps.approval.step.jira.beans.Operator;
 
@@ -29,12 +29,12 @@ public class ConditionEvaluator {
   public boolean evaluate(Object input, String standard, Operator operator) {
     // Only string and option type fields are supported right now.
     if (operator == null) {
-      throw new JiraStepException("Operator is null", true);
+      throw new ApprovalStepNGException("Operator is null", true);
     }
 
     OperatorEvaluator operatorEvaluator = evaluatorMap.get(operator);
     if (operatorEvaluator == null) {
-      throw new JiraStepException(
+      throw new ApprovalStepNGException(
           String.format("Operator [%s] is not supported. Please use a valid one", operator), true);
     }
 
@@ -79,7 +79,7 @@ public class ConditionEvaluator {
 
   private static void checkInputType(Object input) {
     if (input != null && !(input instanceof String)) {
-      throw new JiraStepException("Only string and option type jira fields are supported", true);
+      throw new ApprovalStepNGException("Only string and option type jira fields are supported", true);
     }
   }
 }

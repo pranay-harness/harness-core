@@ -30,6 +30,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Version;
 
 @Data
 @Builder(buildMethodName = "unsafeBuild")
@@ -59,6 +60,7 @@ public class SLIRecord implements PersistentEntity, UuidAware, UpdatedAtAware, C
       return sliRecord;
     }
   }
+  @Version long version;
   @Id private String uuid;
   private String verificationTaskId;
   private String sliId;

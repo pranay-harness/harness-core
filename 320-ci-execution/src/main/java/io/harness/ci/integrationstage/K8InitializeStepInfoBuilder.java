@@ -342,6 +342,14 @@ public class K8InitializeStepInfoBuilder implements InitializeStepInfoBuilder {
   private ContainerDefinitionInfo createRunStepContainerDefinition(RunStepInfo runStepInfo,
       StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex,
       String identifier, String name, String accountId) {
+    if (runStepInfo.getImage() == null) {
+      throw new CIStageExecutionException("image can't be empty in k8s infrastructure");
+    }
+
+    if (runStepInfo.getConnectorRef() == null) {
+      throw new CIStageExecutionException("connector ref can't be empty in k8s infrastructure");
+    }
+
     Integer port = portFinder.getNextPort();
 
     String containerName = format("%s%d", STEP_PREFIX, stepIndex);
@@ -383,6 +391,14 @@ public class K8InitializeStepInfoBuilder implements InitializeStepInfoBuilder {
       StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex,
       String identifier, String accountId) {
     Integer port = portFinder.getNextPort();
+
+    if (runTestsStepInfo.getImage() == null) {
+      throw new CIStageExecutionException("image can't be empty in k8s infrastructure");
+    }
+
+    if (runTestsStepInfo.getConnectorRef() == null) {
+      throw new CIStageExecutionException("connector ref can't be empty in k8s infrastructure");
+    }
 
     String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> stepEnvVars = new HashMap<>();

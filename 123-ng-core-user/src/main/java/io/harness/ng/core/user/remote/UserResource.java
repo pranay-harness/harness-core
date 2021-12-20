@@ -515,8 +515,13 @@ public class UserResource {
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    return removeUserInternal(
-        userId, accountIdentifier, orgIdentifier, projectIdentifier, NGRemoveUserFilter.ACCOUNT_LAST_ADMIN_CHECK);
+    if (isUserExternallyManaged(userId)) {
+      log.info("User is externally managed, cannot delete user - userId: {}", userId);
+      return ResponseDTO.newResponse(FALSE);
+    } else {
+      return removeUserInternal(
+          userId, accountIdentifier, orgIdentifier, projectIdentifier, NGRemoveUserFilter.ACCOUNT_LAST_ADMIN_CHECK);
+    }
   }
 
   @DELETE
@@ -538,13 +543,8 @@ public class UserResource {
                       .orgIdentifier(orgIdentifier)
                       .projectIdentifier(projectIdentifier)
                       .build();
-    if (isUserExternallyManaged(userId)) {
-      log.info("User is externally managed, cannot delete user - userId: {}", userId);
-      return ResponseDTO.newResponse(FALSE);
-    } else {
-      return ResponseDTO.newResponse(TRUE.equals(
-          ngUserService.removeUserFromScope(userId, scope, UserMembershipUpdateSource.USER, removeUserFilter)));
-    }
+    return ResponseDTO.newResponse(TRUE.equals(
+        ngUserService.removeUserFromScope(userId, scope, UserMembershipUpdateSource.USER, removeUserFilter)));
   }
 
   public Optional<String> getUserIdentifierFromSecurityContext() {

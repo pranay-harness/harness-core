@@ -2,6 +2,7 @@ package io.harness.account;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureFlag;
 import io.harness.ng.core.account.DefaultExperience;
@@ -29,6 +30,10 @@ public interface AccountClient {
   String ACCOUNT_ADMIN_API = ACCOUNT_API + "/account-admins";
   String FEATURE_FLAG_LIST_API = "ng/user/feature-flags/{accountId}";
   String HARNESS_USER_GROUP_API = "harnessUserGroup";
+  String NG_DELEGATE_TOKEN_API = "v2/delegate-token-internal";
+  String UPSERT_DEFAULT = "/default";
+  String DEFAULT_ORG_TOKENS = "/default-for-orgs";
+  String DEFAULT_PROJECT_TOKENS = "/default-for-projects";
 
   @POST(ACCOUNT_API) Call<RestResponse<AccountDTO>> create(@Body AccountDTO dto);
 
@@ -72,4 +77,17 @@ public interface AccountClient {
 
   @GET(ACCOUNT_API + "/isAutoInviteAcceptanceEnabled")
   Call<RestResponse<Boolean>> checkAutoInviteAcceptanceEnabledForAccount(@Query("accountId") String accountId);
+
+  @PUT(NG_DELEGATE_TOKEN_API + UPSERT_DEFAULT)
+  Call<RestResponse<Void>> upsertDefaultToken(@Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectId, @Query("skipIfExists") Boolean skipIfExists);
+
+  @GET(NG_DELEGATE_TOKEN_API + DEFAULT_ORG_TOKENS)
+  Call<RestResponse<List<String>>> getOrgsWithActiveDefaultDelegateToken(
+      @Query("accountIdentifier") String accountIdentifier);
+
+  @GET(NG_DELEGATE_TOKEN_API + DEFAULT_PROJECT_TOKENS)
+  Call<RestResponse<List<String>>> getProjectsWithActiveDefaultDelegateToken(
+      @Query("accountIdentifier") String accountIdentifier);
 }

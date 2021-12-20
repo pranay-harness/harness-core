@@ -44,6 +44,8 @@ public class UserGroupDTO {
   private String ssoGroupId;
   private String ssoGroupName;
 
+  private boolean externallyManaged;
+
   @Size(max = 1024) String description;
   @Size(max = 128) Map<String, String> tags;
 }

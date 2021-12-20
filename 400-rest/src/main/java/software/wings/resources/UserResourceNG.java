@@ -168,7 +168,6 @@ public class UserResourceNG {
   }
 
   @DELETE
-  @Path("/")
   public RestResponse<Boolean> deleteUser(
       @QueryParam("accountId") String accountId, @QueryParam("userId") String userId) {
     userService.delete(accountId, userId);

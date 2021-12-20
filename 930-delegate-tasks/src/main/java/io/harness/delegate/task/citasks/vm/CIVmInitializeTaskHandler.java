@@ -73,7 +73,7 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
       }
     } catch (Exception e) {
       log.error("Failed to setup VM in runner", e);
-      errMessage = e.getMessage();
+      errMessage = e.toString();
     }
 
     return VmTaskExecutionResponse.builder()

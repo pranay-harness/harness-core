@@ -2,6 +2,7 @@ package io.harness.cvng;
 
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
@@ -54,6 +55,7 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+  @JsonProperty("accessControlClientConfig") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("distributedLockImplementation")
   private DistributedLockImplementation distributedLockImplementation = DistributedLockImplementation.MONGO;
 

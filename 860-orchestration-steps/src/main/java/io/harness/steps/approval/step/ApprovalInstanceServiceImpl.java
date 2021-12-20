@@ -20,6 +20,7 @@ import io.harness.steps.approval.step.harness.beans.HarnessApprovalAction;
 import io.harness.steps.approval.step.harness.beans.HarnessApprovalActivityRequestDTO;
 import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
 import io.harness.steps.approval.step.jira.beans.JiraApprovalResponseData;
+import io.harness.steps.approval.step.servicenow.beans.ServiceNowApprovalResponseData;
 import io.harness.utils.RetryUtils;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -128,8 +129,10 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
         update);
 
     if (status.isFinalStatus()) {
-      waitNotifyEngine.doneWith(
-          approvalInstanceId, JiraApprovalResponseData.builder().instanceId(approvalInstanceId).build());
+      waitNotifyEngine.doneWith(approvalInstanceId,
+          instance.getType() == ApprovalType.JIRA_APPROVAL
+              ? JiraApprovalResponseData.builder().instanceId(approvalInstanceId).build()
+              : ServiceNowApprovalResponseData.builder().instanceId(approvalInstanceId).build());
     }
     updatePlanStatus(instance);
   }
