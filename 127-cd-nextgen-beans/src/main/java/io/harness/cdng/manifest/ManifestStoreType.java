@@ -43,5 +43,5 @@ public interface ManifestStoreType {
   }
 
   Set<String> HelmChartRepo = ImmutableSet.of(HTTP, GCS, S3);
-  Set<String> HelmNGRepo = ImmutableSet.of(HTTP, GCS, S3, GIT);
+  Set<String> HelmAllRepo = ImmutableSet.of(HTTP, GCS, S3, GIT, GITHUB, GITLAB, BITBUCKET);
 }
