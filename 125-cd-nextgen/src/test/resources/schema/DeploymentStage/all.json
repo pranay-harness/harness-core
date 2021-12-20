@@ -1484,7 +1484,6 @@
           "type": "string",
           "enum": [
             "Fetch",
-            "Version",
             "Template",
             "Pull",
             "Install",
