@@ -1,15 +1,14 @@
 package io.harness.eventsframework.impl.redis;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACCOUNT_IDENTIFIER;
 import static io.harness.eventsframework.impl.redis.RedisUtils.REDIS_STREAM_INTERNAL_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
-import io.harness.eventsframework.impl.redis.dto.RedisEventDTO;
-import io.harness.eventsframework.impl.redis.publisher.RedisEventStatsPublisher;
+import io.harness.eventsframework.impl.redis.monitoring.dto.RedisEventMetricDTO;
+import io.harness.eventsframework.impl.redis.monitoring.dto.RedisEventMetricDTOMapper;
+import io.harness.eventsframework.impl.redis.monitoring.publisher.RedisEventMetricPublisher;
 import io.harness.eventsframework.producer.Message;
 import io.harness.redis.RedisConfig;
 
@@ -33,10 +32,11 @@ import org.redisson.api.StreamMessageId;
 @Slf4j
 public class RedisProducer extends AbstractProducer {
   private static final String PRODUCER = "producer";
-  private static final String REDIS_EVENT_ACCOUNT_COUNT = "redis_event_account_count";
+  private static final String REDIS_EVENT_METRIC_COUNT = "redis_event_metric_count";
   private RStream<String, String> stream;
   private RedissonClient redissonClient;
-  @Inject private RedisEventStatsPublisher redisEventStatsPublisher;
+  @Inject private RedisEventMetricPublisher redisEventMetricPublisher;
+  @Inject private RedisEventMetricDTOMapper redisEventMetricDTOMapper;
   // This is used when the consumer for the event are no longer accepting due to some failure and
   // the messages are continuously being accumulated in Redis. To come up with this number, it is
   // very important to understand the alerting on the consumers and the scale estimations of a
@@ -78,13 +78,9 @@ public class RedisProducer extends AbstractProducer {
     redisData.put(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(message.getData().toByteArray()));
     populateOtherProducerSpecificData(redisData);
 
-    if (isNotEmpty(message.getMetadataMap().get(ACCOUNT_IDENTIFIER))) {
-      redisEventStatsPublisher.sendMetricWithEventContext(
-          RedisEventDTO.builder().accountId(message.getMetadataMap().get(ACCOUNT_IDENTIFIER)).build(),
-          REDIS_EVENT_ACCOUNT_COUNT);
-    }
     StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
-
+    RedisEventMetricDTO redisEventMetricDTO = redisEventMetricDTOMapper.prepareRedisEventMetricDTO(message);
+    redisEventMetricPublisher.sendMetricWithEventContext(redisEventMetricDTO, REDIS_EVENT_METRIC_COUNT);
     redisData.remove(REDIS_STREAM_INTERNAL_KEY);
     log.info("Events framework message inserted - messageId: {}, metaData: {}", messageId, redisData);
     return messageId.toString();

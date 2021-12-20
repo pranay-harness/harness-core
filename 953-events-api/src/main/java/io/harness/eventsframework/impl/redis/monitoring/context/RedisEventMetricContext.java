@@ -1,10 +1,11 @@
-package io.harness.eventsframework.impl.redis.context;
+package io.harness.eventsframework.impl.redis.monitoring.context;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.metrics.MetricConstants.METRIC_LABEL_PREFIX;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eventsframework.impl.redis.dto.RedisEventDTO;
+import io.harness.eventsframework.impl.redis.monitoring.dto.RedisEventMetricDTO;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;
@@ -14,12 +15,11 @@ import org.apache.logging.log4j.ThreadContext;
 
 @Data
 @OwnedBy(HarnessTeam.PL)
-public class RedisEventContext implements AutoCloseable {
-  private String accountId;
-
-  public RedisEventContext(RedisEventDTO redisEventDTO) {
-    this.accountId = redisEventDTO.getAccountId();
-    ThreadContext.put(METRIC_LABEL_PREFIX + "accountId", accountId);
+public class RedisEventMetricContext implements AutoCloseable {
+  public RedisEventMetricContext(RedisEventMetricDTO redisEventMetricDTO) {
+    if (isNotEmpty(redisEventMetricDTO.getAccountId())) {
+      ThreadContext.put(METRIC_LABEL_PREFIX + "accountId", redisEventMetricDTO.getAccountId());
+    }
   }
 
   private void removeFromContext(Class clazz) {
@@ -33,6 +33,6 @@ public class RedisEventContext implements AutoCloseable {
 
   @Override
   public void close() {
-    removeFromContext(RedisEventContext.class);
+    removeFromContext(RedisEventMetricContext.class);
   }
 }

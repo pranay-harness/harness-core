@@ -2,7 +2,7 @@ name: Get stats of redis event
 identifier: redis_event_stats
 metricGroup: redis_event
 metrics:
-  - metricName: redis_event_account_count
-    metricDefinition: redis event account count
+  - metricName: redis_event_metric_count
+    metricDefinition: redis event metric count
     type: Count
     unit: "1"

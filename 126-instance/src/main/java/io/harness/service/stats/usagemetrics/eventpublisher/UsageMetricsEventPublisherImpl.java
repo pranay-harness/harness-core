@@ -18,7 +18,6 @@ import io.harness.models.constants.TimescaleConstants;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.google.protobuf.Descriptors;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
