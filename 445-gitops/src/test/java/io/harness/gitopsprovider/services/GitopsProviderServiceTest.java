@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.data.domain.Page;
@@ -103,6 +104,7 @@ public class GitopsProviderServiceTest extends GitOpsProviderTestBase {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
+  @Ignore("This test is no more required.")
   public void testListWithSearchTermOnTags() {
     final ImmutableMap<String, String> tagSet1 = ImmutableMap.of("k1", "", "k2", "");
     final ImmutableMap<String, String> tagSet2 = ImmutableMap.of("k2", "");

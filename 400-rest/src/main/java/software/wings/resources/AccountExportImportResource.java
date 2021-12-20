@@ -717,12 +717,13 @@ public class AccountExportImportResource {
 
   private void exportConfigFilesContent(ZipOutputStream zipOutputStream, FileOutputStream fileOutputStream,
       DBObject accountOrAppIdsFilter) throws IOException {
+    log.info("[AccountExportImportResource]: Inside exportConfigFilesContent");
     // 1. Export EncryptedData records
     String encryptedDataCollectionName = getCollectionName(EncryptedData.class);
     List<String> encryptedDataRecords =
         mongoExportImport.exportRecords(accountOrAppIdsFilter, encryptedDataCollectionName);
     exportToStreamWithoutBatching(zipOutputStream, fileOutputStream, encryptedDataRecords, encryptedDataCollectionName);
-
+    log.info("[AccountExportImportResource]: Exported encryptedDataRecords {}", encryptedDataRecords);
     // 2. Find out all file IDs referred by KMS/CONFIG_FILE encrypted records.
     List<ObjectId> configFileIds = new ArrayList<>();
     if (isNotEmpty(encryptedDataRecords)) {
@@ -731,31 +732,46 @@ public class AccountExportImportResource {
         // Only KMS type of encrypted records have file content saved in File serivce/GridFS, which need to be exported.
         EncryptionType encryptionType =
             EncryptionType.valueOf(encryptedDataElement.getAsJsonObject().get("encryptionType").getAsString());
-
+        log.info("[AccountExportImportResource]: Encryption type for encryptedDataRecord {} is {}", encryptedDataRecord,
+            encryptionType);
         JsonElement type = encryptedDataElement.getAsJsonObject().get("type");
         if (type == null || type.isJsonNull()) {
           continue;
         }
         SettingVariableTypes settingVariableType = SettingVariableTypes.valueOf(type.getAsString());
-        if (encryptionType == EncryptionType.KMS && settingVariableType == SettingVariableTypes.CONFIG_FILE) {
+        log.info("[AccountExportImportResource]: Settings variable type for encryptedDataRecord {} is {}",
+            encryptedDataRecord, settingVariableType);
+        if (settingVariableType == SettingVariableTypes.CONFIG_FILE) {
           String fileId = encryptedDataElement.getAsJsonObject().get("encryptedValue").getAsString();
           ObjectId objectId = getObjectIdFromFileId(fileId);
+          log.info("[AccountExportImportResource]: FileId is {} and objectId is {}", fileId, objectId);
           if (objectId != null) {
+            log.info("[AccountExportImportResource]: Adding fileId {} to configFileIds {}", fileId, configFileIds);
             configFileIds.add(new ObjectId(fileId));
           }
         }
       }
     }
-
+    log.info(
+        "[AccountExportImportResource]: Going to export all fileIds is configFileIds: {} from config.files collection ",
+        configFileIds);
     // 3. Export all 'configs.files' records in the configFileIds list.
     DBObject inIdsFilter = new BasicDBObject("_id", new BasicDBObject("$in", configFileIds));
     List<String> configFilesRecords = mongoExportImport.exportRecords(inIdsFilter, COLLECTION_CONFIG_FILES);
     exportToStreamWithoutBatching(zipOutputStream, fileOutputStream, configFilesRecords, COLLECTION_CONFIG_FILES);
-
+    log.info(
+        "[AccountExportImportResource]: Export completed for fileIds is configFileIds: {} from config.files collection ",
+        configFileIds);
     // 4. Export all 'configs.chunks' records in the configFileIds list.
+    log.info(
+        "[AccountExportImportResource]: Going to export all fileIds is configFileIds: {} from config.chunks collection ",
+        configFileIds);
     DBObject inFilesIdFilter = new BasicDBObject("files_id", new BasicDBObject("$in", configFileIds));
     List<String> configChunkRecords = mongoExportImport.exportRecords(inFilesIdFilter, COLLECTION_CONFIG_CHUNKS);
     exportToStreamWithoutBatching(zipOutputStream, fileOutputStream, configChunkRecords, COLLECTION_CONFIG_CHUNKS);
+    log.info(
+        "[AccountExportImportResource]: Export completed for fileIds is configFileIds: {} from config.chunks collection ",
+        configFileIds);
   }
 
   private void exportToStreamWithoutBatching(ZipOutputStream zipOutputStream, FileOutputStream fileOutputStream,

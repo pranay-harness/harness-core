@@ -25,7 +25,7 @@ public interface GitSyncErrorService {
   PageResponse<GitSyncErrorDTO> listGitToHarnessErrorsForCommit(PageRequest pageRequest, String commitId,
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoId, String branch);
 
-  GitSyncErrorDTO save(GitSyncErrorDTO gitSyncErrorDTO);
+  Optional<GitSyncErrorDTO> save(GitSyncErrorDTO gitSyncErrorDTO);
 
   List<GitSyncErrorDTO> saveAll(List<GitSyncErrorDTO> gitSyncErrorDTOList);
 

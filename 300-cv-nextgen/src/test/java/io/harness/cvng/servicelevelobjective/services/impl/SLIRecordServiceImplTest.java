@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
+import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
@@ -29,22 +30,26 @@ import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mongodb.morphia.query.Sort;
 
 public class SLIRecordServiceImplTest extends CvNextGenTestBase {
-  @Inject private SLIRecordServiceImpl sliRecordService;
+  @Spy @Inject private SLIRecordServiceImpl sliRecordService;
   @Inject private Clock clock;
   @Inject private HPersistence hPersistence;
   private String verificationTaskId;
   private String sliId;
   @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
     SLIRecordServiceImpl.MAX_NUMBER_OF_POINTS = 5;
     verificationTaskId = generateUuid();
     sliId = generateUuid();
@@ -69,7 +74,7 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = DEEPAK_CHHIKARA)
   @Category(UnitTests.class)
   public void testUpdate_completeOverlap() {
-    Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(10));
+    Instant startTime = Instant.parse("2020-07-27T10:50:00Z");
     List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
     List<SLIRecordParam> sliRecordParams = getSLIRecordParam(startTime, sliStates);
     sliRecordService.create(sliRecordParams, sliId, verificationTaskId, 0);
@@ -89,8 +94,8 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = DEEPAK_CHHIKARA)
   @Category(UnitTests.class)
-  public void testUpdate_partiallOverlap() {
-    Instant startTime = Instant.parse("2020-07-27T10:50:00Z").minus(Duration.ofMinutes(10));
+  public void testUpdate_partialOverlap() {
+    Instant startTime = Instant.parse("2020-07-27T10:50:00Z");
     List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
     List<SLIRecordParam> sliRecordParams = getSLIRecordParam(startTime, sliStates);
     sliRecordService.create(sliRecordParams, sliId, verificationTaskId, 0);
@@ -98,7 +103,7 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
     assertThat(lastRecord.getRunningBadCount()).isEqualTo(5);
     assertThat(lastRecord.getRunningGoodCount()).isEqualTo(4);
     assertThat(lastRecord.getSliVersion()).isEqualTo(0);
-    Instant updatedStartTime = Instant.parse("2020-07-27T10:55:00Z").minus(Duration.ofMinutes(10));
+    Instant updatedStartTime = Instant.parse("2020-07-27T10:55:00Z");
     List<SLIState> updatedSliStates = Arrays.asList(BAD, BAD, BAD, BAD, BAD);
     List<SLIRecordParam> updatedSliRecordParams = getSLIRecordParam(updatedStartTime, updatedSliStates);
     sliRecordService.create(updatedSliRecordParams, sliId, verificationTaskId, 1);
@@ -106,6 +111,85 @@ public class SLIRecordServiceImplTest extends CvNextGenTestBase {
     assertThat(updatedLastRecord.getRunningBadCount()).isEqualTo(6);
     assertThat(updatedLastRecord.getRunningGoodCount()).isEqualTo(3);
     assertThat(updatedLastRecord.getSliVersion()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testUpdate_MissingRecords() {
+    Instant startTime = Instant.parse("2020-07-27T10:00:00Z");
+    List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
+    List<SLIRecordParam> sliRecordParams = getSLIRecordParam(startTime, sliStates);
+    sliRecordService.create(sliRecordParams, sliId, verificationTaskId, 0);
+    SLIRecord lastRecord = getLastRecord(sliId);
+    assertThat(lastRecord.getRunningBadCount()).isEqualTo(5);
+    assertThat(lastRecord.getRunningGoodCount()).isEqualTo(4);
+    assertThat(lastRecord.getSliVersion()).isEqualTo(0);
+    Instant updatedStartTime = Instant.parse("2020-07-27T10:05:00Z");
+    List<SLIState> updatedSliStates =
+        Arrays.asList(BAD, BAD, BAD, BAD, BAD, NO_DATA, NO_DATA, NO_DATA, NO_DATA, NO_DATA);
+    List<SLIRecordParam> updatedSliRecordParams = getSLIRecordParam(updatedStartTime, updatedSliStates);
+    sliRecordService.create(updatedSliRecordParams, sliId, verificationTaskId, 1);
+    SLIRecord updatedLastRecord = getLastRecord(sliId);
+    assertThat(updatedLastRecord.getRunningBadCount()).isEqualTo(6);
+    assertThat(updatedLastRecord.getRunningGoodCount()).isEqualTo(3);
+    assertThat(updatedLastRecord.getSliVersion()).isEqualTo(1);
+    assertThat(updatedLastRecord.getTimestamp()).isEqualTo(Instant.parse("2020-07-27T10:14:00Z"));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testUpdate_NotSyncedRecords() {
+    Instant startTime = Instant.parse("2020-07-27T10:00:00Z");
+    List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
+    List<SLIRecordParam> sliRecordParams = getSLIRecordParam(startTime, sliStates);
+    sliRecordService.create(sliRecordParams, sliId, verificationTaskId, 0);
+    SLIRecord lastRecord = getLastRecord(sliId);
+    assertThat(lastRecord.getRunningBadCount()).isEqualTo(5);
+    assertThat(lastRecord.getRunningGoodCount()).isEqualTo(4);
+    assertThat(lastRecord.getSliVersion()).isEqualTo(0);
+    Instant updatedStartTime = Instant.parse("2020-07-27T10:05:00Z");
+    List<SLIState> updatedSliStates = Arrays.asList(BAD, BAD, BAD, BAD, BAD, GOOD, BAD, GOOD, BAD, GOOD);
+    List<SLIRecordParam> updatedSliRecordParams = getSLIRecordParam(updatedStartTime, updatedSliStates);
+    sliRecordService.create(updatedSliRecordParams, sliId, verificationTaskId, 1);
+    SLIRecord updatedLastRecord = getLastRecord(sliId);
+    assertThat(updatedLastRecord.getRunningBadCount()).isEqualTo(8);
+    assertThat(updatedLastRecord.getRunningGoodCount()).isEqualTo(6);
+    assertThat(updatedLastRecord.getSliVersion()).isEqualTo(1);
+    assertThat(updatedLastRecord.getTimestamp()).isEqualTo(Instant.parse("2020-07-27T10:14:00Z"));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testUpdate_retryConcurrency() {
+    Instant startTime = Instant.parse("2020-07-27T10:00:00Z");
+    List<SLIState> sliStates = Arrays.asList(BAD, GOOD, GOOD, NO_DATA, GOOD, GOOD, BAD, BAD, BAD, BAD);
+    List<SLIRecordParam> sliRecordParams = getSLIRecordParam(startTime, sliStates);
+    Instant endTime = sliRecordParams.get(sliRecordParams.size() - 1).getTimeStamp();
+    sliRecordService.create(sliRecordParams, sliId, verificationTaskId, 0);
+    SLIRecord lastRecord = getLastRecord(sliId);
+    assertThat(lastRecord.getRunningBadCount()).isEqualTo(5);
+    assertThat(lastRecord.getRunningGoodCount()).isEqualTo(4);
+    assertThat(lastRecord.getSliVersion()).isEqualTo(0);
+    List<SLIRecord> firstTimeResponse = sliRecordService.getSLIRecords(lastRecord.getSliId(), startTime, endTime);
+    for (SLIRecord sliRecord : firstTimeResponse) {
+      sliRecord.setVersion(-1);
+    }
+    List<SLIRecord> secondTimeResponse = sliRecordService.getSLIRecords(lastRecord.getSliId(), startTime, endTime);
+    Instant updatedStartTime = Instant.parse("2020-07-27T10:05:00Z");
+    List<SLIState> updatedSliStates = Arrays.asList(BAD, BAD, BAD, BAD, BAD, GOOD, BAD, GOOD, BAD, GOOD);
+    List<SLIRecordParam> updatedSliRecordParams = getSLIRecordParam(updatedStartTime, updatedSliStates);
+    when(sliRecordService.getSLIRecords(sliId, updatedStartTime,
+             updatedSliRecordParams.get(updatedSliRecordParams.size() - 1).getTimeStamp().plus(1, ChronoUnit.MINUTES)))
+        .thenReturn(firstTimeResponse, secondTimeResponse);
+    sliRecordService.create(updatedSliRecordParams, sliId, verificationTaskId, 1);
+    SLIRecord updatedLastRecord = getLastRecord(sliId);
+    assertThat(updatedLastRecord.getRunningBadCount()).isEqualTo(8);
+    assertThat(updatedLastRecord.getRunningGoodCount()).isEqualTo(6);
+    assertThat(updatedLastRecord.getSliVersion()).isEqualTo(1);
+    assertThat(updatedLastRecord.getTimestamp()).isEqualTo(Instant.parse("2020-07-27T10:14:00Z"));
   }
 
   @Test
