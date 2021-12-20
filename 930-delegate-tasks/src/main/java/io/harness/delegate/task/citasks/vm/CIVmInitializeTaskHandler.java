@@ -1,6 +1,7 @@
 package io.harness.delegate.task.citasks.vm;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_COMMIT_BRANCH;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_COMMIT_LINK;
@@ -9,8 +10,6 @@ import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_REM
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_SOURCE_BRANCH;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_TARGET_BRANCH;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.NETWORK_ID;
-import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.WORKDIR_VOLUME_ID;
-import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.WORKDIR_VOLUME_NAME;
 
 import static java.lang.String.format;
 
@@ -30,7 +29,6 @@ import io.harness.logging.CommandExecutionStatus;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,14 +115,6 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
                                            .commitLink(env.getOrDefault(DRONE_COMMIT_LINK, ""))
                                            .build();
 
-    SetupVmRequest.Volume workdirVol = SetupVmRequest.Volume.builder()
-                                           .hostVolume(SetupVmRequest.HostVolume.builder()
-                                                           .id(WORKDIR_VOLUME_ID)
-                                                           .name(WORKDIR_VOLUME_NAME)
-                                                           .path(params.getWorkingDir())
-                                                           .build())
-                                           .build();
-
     SetupVmRequest.Config config = SetupVmRequest.Config.builder()
                                        .envs(env)
                                        .secrets(secrets)
@@ -135,8 +125,26 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
                                                       .accountID(params.getAccountID())
                                                       .build())
                                        .tiConfig(tiConfig)
-                                       .volumes(Collections.singletonList(workdirVol))
+                                       .volumes(getVolumes(params.getVolToMountPath()))
                                        .build();
     return SetupVmRequest.builder().id(params.getStageRuntimeId()).poolID(params.getPoolID()).config(config).build();
+  }
+
+  private List<SetupVmRequest.Volume> getVolumes(Map<String, String> volToMountPath) {
+    List<SetupVmRequest.Volume> volumes = new ArrayList<>();
+    if (isEmpty(volToMountPath)) {
+      return volumes;
+    }
+
+    for (Map.Entry<String, String> entry : volToMountPath.entrySet()) {
+      volumes.add(SetupVmRequest.Volume.builder()
+                      .hostVolume(SetupVmRequest.HostVolume.builder()
+                                      .id(entry.getKey())
+                                      .name(entry.getKey())
+                                      .path(entry.getValue())
+                                      .build())
+                      .build());
+    }
+    return volumes;
   }
 }
