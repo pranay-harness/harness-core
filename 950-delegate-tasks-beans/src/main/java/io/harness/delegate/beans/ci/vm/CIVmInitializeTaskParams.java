@@ -45,6 +45,7 @@ public class CIVmInitializeTaskParams
   @Expression(ALLOW_SECRETS) Map<String, String> environment;
   @Expression(ALLOW_SECRETS) private List<String> secrets;
   private ConnectorDetails gitConnector;
+  private Map<String, String> volToMountPath;
 
   private String stageRuntimeId;
   @Builder.Default private static final Type type = Type.VM;
