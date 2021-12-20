@@ -34,7 +34,7 @@ data:
 ---
 
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   labels:
     harness.io/name: harness-delegate
@@ -42,11 +42,9 @@ metadata:
   namespace: harness-delegate-ng
 spec:
   replicas: 8
-  podManagementPolicy: Parallel
   selector:
     matchLabels:
       harness.io/name: harness-delegate
-  serviceName: ""
   template:
     metadata:
       labels:
@@ -66,17 +64,15 @@ spec:
         readinessProbe:
           exec:
             command:
-              - test
-              - -s
-              - delegate.log
+              - echo
+              - 'Its ready'
           initialDelaySeconds: 20
           periodSeconds: 10
         livenessProbe:
           exec:
             command:
-              - bash
-              - -c
-              - '[[ -e /opt/harness-delegate/msg/data/watcher-data && $(($(date +%s000) - $(grep heartbeat /opt/harness-delegate/msg/data/watcher-data | cut -d ":" -f 2 | cut -d "," -f 1))) -lt 300000 ]]'
+              - echo
+              - 'Its alive'
           initialDelaySeconds: 240
           periodSeconds: 10
           failureThreshold: 2
@@ -147,3 +143,63 @@ spec:
           value: "true"
       restartPolicy: Always
 
+
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: upgrader-cronjob
+  namespace: harness-delegate-ng
+rules:
+  - apiGroups: ["batch", "apps", "extensions"]
+    resources: ["cronjobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: harness-delegate-upgrader-cronjob
+  namespace: harness-delegate-ng
+subjects:
+  - kind: ServiceAccount
+    name: upgrader-cronjob-sa
+    namespace: harness-delegate-ng
+roleRef:
+  kind: Role
+  name: upgrader-cronjob
+  apiGroup: ""
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: upgrader-cronjob-sa
+  namespace: harness-delegate-ng
+
+---
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    harness.io/name: harness-delegate-upgrader-job
+  name: harness-delegate-upgrader-job
+  namespace: harness-delegate-ng
+spec:
+  schedule: "*/3 * * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 20
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: upgrader-cronjob-sa
+          containers:
+            - name: upgrader
+              image: harness/upgrader:latest
+              imagePullPolicy: Always
+          restartPolicy: Never

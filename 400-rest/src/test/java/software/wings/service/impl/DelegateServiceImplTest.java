@@ -354,7 +354,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     doReturn(getDelegateTaskPackage())
         .when(spydelegateTaskServiceClassic)
-        .assignTask(anyString(), anyString(), any(DelegateTask.class));
+        .assignTask(anyString(), anyString(), any(DelegateTask.class), anyString());
 
     when(assignDelegateService.canAssign(any(), anyString(), any())).thenReturn(true);
     when(assignDelegateService.isWhitelisted(any(), anyString())).thenReturn(true);
@@ -362,9 +362,10 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().build();
     when(delegateSelectionLogsService.createBatch(delegateTask)).thenReturn(batch);
 
-    spydelegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ");
+    spydelegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ", null);
 
-    verify(spydelegateTaskServiceClassic, times(1)).assignTask(anyString(), anyString(), any(DelegateTask.class));
+    verify(spydelegateTaskServiceClassic, times(1))
+        .assignTask(anyString(), anyString(), any(DelegateTask.class), anyString());
     verify(delegateSelectionLogsService).save(batch);
   }
 
@@ -375,7 +376,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     doReturn(delegate).when(delegateCache).get(ACCOUNT_ID, delegate.getUuid(), false);
     doReturn(null).when(spydelegateTaskServiceClassic).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", delegate.getUuid());
-    assertThat(spydelegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ")).isNull();
+    assertThat(spydelegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ", null)).isNull();
   }
 
   private DelegateTaskPackage getDelegateTaskPackage() {

@@ -5,6 +5,7 @@ import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.GROUP;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.utils.UserGroupMapper.toDTO;
 import static io.harness.ng.core.utils.UserGroupMapper.toEntity;
@@ -23,10 +24,12 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
+import io.harness.accesscontrol.scopes.ScopeDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
 import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -64,6 +67,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -74,6 +78,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -129,6 +134,37 @@ public class UserGroupServiceImpl implements UserGroupService {
           String.format("Try using different user group identifier, [%s] cannot be used", userGroupDTO.getIdentifier()),
           USER_SRE, ex);
     }
+  }
+
+  @Override
+  public boolean copy(String accountIdentifier, String userGroupIdentifier, List<ScopeDTO> scopePairs) {
+    Optional<UserGroup> userGroupOptional = get(accountIdentifier, null, null, userGroupIdentifier);
+    if (!userGroupOptional.isPresent()) {
+      throw new InvalidRequestException("The user group doesnt exist at account level for copying");
+    }
+
+    UserGroupDTO userGroupDTO = toDTO(userGroupOptional.get());
+    for (ScopeDTO scope : scopePairs) {
+      if (StringUtils.isEmpty(scope.getAccountIdentifier()) || StringUtils.isEmpty(scope.getOrgIdentifier())) {
+        throw new InvalidRequestException("Invalid scope provided for copying user group " + userGroupIdentifier);
+      }
+      log.info("Copying usergroup {} at scope {}", userGroupIdentifier, scope);
+      userGroupDTO.setOrgIdentifier(scope.getOrgIdentifier());
+      userGroupDTO.setProjectIdentifier(scope.getProjectIdentifier());
+      create(userGroupDTO);
+      log.info("Successfully copied usergroup {} at scope {}", userGroupIdentifier, scope);
+    }
+    return true;
+  }
+
+  @Override
+  public boolean isExternallyManaged(String accountIdentifier, String userGroupIdentifier) {
+    Optional<UserGroup> userGroupOptional = get(accountIdentifier, null, null, userGroupIdentifier);
+    if (!userGroupOptional.isPresent()) {
+      throw new InvalidRequestException(
+          "The user group does not exist: " + userGroupIdentifier, ErrorCode.USER_GROUP_ERROR, GROUP);
+    }
+    return userGroupOptional.get().getExternallyManaged();
   }
 
   @Override
@@ -191,6 +227,18 @@ public class UserGroupServiceImpl implements UserGroupService {
       userFilter.setIdentifiers(Sets.intersection(userFilter.getIdentifiers(), userGroupMemberIds));
     }
     return ngUserService.listUsers(scope, pageRequest, userFilter);
+  }
+
+  @Override
+  public List<UserMetadataDTO> getUsersInUserGroup(Scope scope, String userGroupIdentifier) {
+    Optional<UserGroup> userGroupOptional =
+        get(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroupIdentifier);
+    if (!userGroupOptional.isPresent()) {
+      return new ArrayList<>();
+    }
+    Set<String> userGroupMemberIds = new HashSet<>(userGroupOptional.get().getUsers());
+
+    return ngUserService.getUserMetadata(new ArrayList<>(userGroupMemberIds));
   }
 
   @Override

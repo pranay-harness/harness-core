@@ -24,6 +24,7 @@ import io.harness.exception.GitConnectionDelegateException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.filesystem.FileIo;
+import io.harness.git.ExceptionSanitizer;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitFile;
 import io.harness.git.model.GitRepositoryType;
@@ -220,7 +221,8 @@ public class GitClientHelper {
     if ((ex instanceof GitAPIException && ex.getCause() instanceof TransportException)
         || ex instanceof RefNotFoundException || ex instanceof JGitInternalException
         || ex instanceof MissingObjectException) {
-      throw new GitConnectionDelegateException(GIT_CONNECTION_ERROR, ex, ex.getMessage(), USER_ADMIN);
+      throw new GitConnectionDelegateException(
+          GIT_CONNECTION_ERROR, ex, ExceptionSanitizer.sanitizeTheMessage(ex.getMessage()), USER_ADMIN);
     }
   }
 

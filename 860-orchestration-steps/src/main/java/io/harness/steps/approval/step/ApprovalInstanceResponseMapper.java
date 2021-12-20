@@ -4,8 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
+import io.harness.delegate.beans.connector.servicenow.ServiceNowConnectorDTO;
 import io.harness.jira.JiraIssueKeyNG;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.servicenow.ServiceNowTicketKeyNG;
 import io.harness.steps.approval.step.beans.ApprovalInstanceDetailsDTO;
 import io.harness.steps.approval.step.beans.ApprovalInstanceResponseDTO;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
@@ -16,6 +18,9 @@ import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.approval.step.jira.beans.JiraApprovalInstanceDetailsDTO;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
+import io.harness.steps.approval.step.servicenow.ServiceNowApprovalHelperService;
+import io.harness.steps.approval.step.servicenow.beans.ServiceNowApprovalInstanceDetailsDTO;
+import io.harness.steps.approval.step.servicenow.entities.ServiceNowApprovalInstance;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,10 +31,13 @@ import java.util.stream.Collectors;
 @Singleton
 public class ApprovalInstanceResponseMapper {
   private final JiraApprovalHelperService jiraApprovalHelperService;
+  private final ServiceNowApprovalHelperService serviceNowApprovalHelperService;
 
   @Inject
-  public ApprovalInstanceResponseMapper(JiraApprovalHelperService jiraApprovalHelperService) {
+  public ApprovalInstanceResponseMapper(JiraApprovalHelperService jiraApprovalHelperService,
+      ServiceNowApprovalHelperService serviceNowApprovalHelperService) {
     this.jiraApprovalHelperService = jiraApprovalHelperService;
+    this.serviceNowApprovalHelperService = serviceNowApprovalHelperService;
   }
 
   public ApprovalInstanceResponseDTO toApprovalInstanceResponseDTO(ApprovalInstance instance) {
@@ -45,6 +53,7 @@ public class ApprovalInstanceResponseMapper {
         .details(toApprovalInstanceDetailsDTO(instance))
         .createdAt(instance.getCreatedAt())
         .lastModifiedAt(instance.getLastModifiedAt())
+        .errorMessage(instance.getErrorMessage())
         .build();
   }
 
@@ -54,6 +63,8 @@ public class ApprovalInstanceResponseMapper {
         return toHarnessApprovalInstanceDetailsDTO((HarnessApprovalInstance) instance);
       case JIRA_APPROVAL:
         return toJiraApprovalInstanceDetailsDTO((JiraApprovalInstance) instance);
+      case SERVICENOW_APPROVAL:
+        return toServiceNowApprovalInstanceDetailsDTO((ServiceNowApprovalInstance) instance);
       default:
         return null;
     }
@@ -85,6 +96,20 @@ public class ApprovalInstanceResponseMapper {
     return JiraApprovalInstanceDetailsDTO.builder()
         .connectorRef(instance.getConnectorRef())
         .issue(new JiraIssueKeyNG(connectorDTO.getJiraUrl(), instance.getIssueKey()))
+        .approvalCriteria(instance.getApprovalCriteria())
+        .rejectionCriteria(instance.getRejectionCriteria())
+        .build();
+  }
+
+  private ApprovalInstanceDetailsDTO toServiceNowApprovalInstanceDetailsDTO(ServiceNowApprovalInstance instance) {
+    ServiceNowConnectorDTO connectorDTO = serviceNowApprovalHelperService.getServiceNowConnector(
+        AmbianceUtils.getAccountId(instance.getAmbiance()), AmbianceUtils.getOrgIdentifier(instance.getAmbiance()),
+        AmbianceUtils.getProjectIdentifier(instance.getAmbiance()), instance.getConnectorRef());
+
+    return ServiceNowApprovalInstanceDetailsDTO.builder()
+        .connectorRef(instance.getConnectorRef())
+        .ticket(new ServiceNowTicketKeyNG(
+            connectorDTO.getServiceNowUrl(), instance.getTicketNumber(), instance.getTicketType()))
         .approvalCriteria(instance.getApprovalCriteria())
         .rejectionCriteria(instance.getRejectionCriteria())
         .build();

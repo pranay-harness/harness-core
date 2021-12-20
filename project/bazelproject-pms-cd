@@ -49,6 +49,7 @@ directories:
   930-delegate-tasks
   930-ng-core-clients
   930-ng-license-manager
+  935-subscription-sdk
   937-persistence-tracer
   940-cg-audit-service
   940-feature-flag

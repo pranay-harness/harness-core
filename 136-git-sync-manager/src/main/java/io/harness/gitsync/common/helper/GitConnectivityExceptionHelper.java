@@ -3,7 +3,6 @@ package io.harness.gitsync.common.helper;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ScmException;
@@ -24,10 +23,10 @@ public class GitConnectivityExceptionHelper {
       if (ExceptionUtils.cause(ScmException.class, ex) != null) {
         return CONNECTIVITY_ERROR + ExceptionUtils.getMessage(ex);
       } else {
-        return "error: " + ExceptionUtils.getMessage(ex);
+        return "Error: " + ExceptionUtils.getMessage(ex);
       }
     } else {
-      return NGErrorHelper.DEFAULT_ERROR_MESSAGE;
+      return null;
     }
   }
 }

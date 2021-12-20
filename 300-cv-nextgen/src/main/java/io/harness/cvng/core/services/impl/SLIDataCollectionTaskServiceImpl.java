@@ -59,7 +59,7 @@ public class SLIDataCollectionTaskServiceImpl implements DataCollectionTaskManag
   private void enqueueFirstTask(ServiceLevelIndicator serviceLevelIndicator) {
     List<CVConfig> cvConfigList = serviceLevelIndicatorService.fetchCVConfigForSLI(serviceLevelIndicator);
     cvConfigList.forEach(cvConfig -> dataCollectionTaskService.populateMetricPack(cvConfig));
-    TimeRange dataCollectionRange = cvConfigList.get(0).getFirstTimeDataCollectionTimeRange();
+    TimeRange dataCollectionRange = serviceLevelIndicator.getFirstTimeDataCollectionTimeRange();
     DataCollectionTask dataCollectionTask = getDataCollectionTaskForSLI(
         cvConfigList, serviceLevelIndicator, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime());
     dataCollectionTaskService.save(dataCollectionTask);

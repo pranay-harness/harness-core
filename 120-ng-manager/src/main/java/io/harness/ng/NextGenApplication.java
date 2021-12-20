@@ -97,6 +97,7 @@ import io.harness.ng.core.remote.licenserestriction.CloudCostK8sConnectorRestric
 import io.harness.ng.core.remote.licenserestriction.OrgRestrictionsUsageImpl;
 import io.harness.ng.core.remote.licenserestriction.ProjectRestrictionsUsageImpl;
 import io.harness.ng.core.user.exception.mapper.InvalidUserRemoveRequestExceptionMapper;
+import io.harness.ng.migration.DelegateMigrationProvider;
 import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.migration.SourceCodeManagerMigrationProvider;
 import io.harness.ng.migration.UserMembershipMigrationProvider;
@@ -437,6 +438,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(LicenseManagerMigrationProvider.class); }
           { add(SourceCodeManagerMigrationProvider.class); }
           { add(GitSyncMigrationProvider.class); }
+          { add(DelegateMigrationProvider.class); }
         })
         .build();
   }

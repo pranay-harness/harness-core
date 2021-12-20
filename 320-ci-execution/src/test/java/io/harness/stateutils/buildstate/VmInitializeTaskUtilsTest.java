@@ -38,6 +38,7 @@ import org.mockito.MockitoAnnotations;
 
 public class VmInitializeTaskUtilsTest extends CIExecutionTestBase {
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
+  @Mock ExecutionSweepingOutputService executionSweepingOutputService;
   @InjectMocks private VmInitializeTaskUtils vmInitializeTaskUtils;
   @Mock private CILogServiceUtils logServiceUtils;
   @Mock private TIServiceUtils tiServiceUtils;
@@ -65,6 +66,9 @@ public class VmInitializeTaskUtilsTest extends CIExecutionTestBase {
                                                 .infrastructure(VmInfraYaml.builder().spec(vmPoolYaml).build())
                                                 .buildJobEnvInfo(VmBuildJobInfo.builder().build())
                                                 .build();
+
+    when(executionSweepingOutputService.resolveOptional(any(), any()))
+        .thenReturn(OptionalSweepingOutput.builder().found(false).build());
     when(executionSweepingOutputResolver.consume(any(), any(), any(), any())).thenReturn("");
     when(executionSweepingOutputResolver.resolveOptional(
              ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails)))

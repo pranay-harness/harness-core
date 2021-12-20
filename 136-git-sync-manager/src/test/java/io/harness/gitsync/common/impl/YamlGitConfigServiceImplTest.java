@@ -139,10 +139,8 @@ public class YamlGitConfigServiceImplTest extends GitSyncTestBase {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testConnectorUpdate() {
-    GitSyncFolderConfigDTO rootFolder = GitSyncFolderConfigDTO.builder()
-                                            .isDefault(true)
-                                            .rootFolder(ROOT_FOLDER)
-                                            .build();
+    GitSyncFolderConfigDTO rootFolder =
+        GitSyncFolderConfigDTO.builder().isDefault(true).rootFolder(ROOT_FOLDER).build();
     GitSyncConfigDTO gitSyncConfigDTO =
         saveYamlGitConfig(Collections.singletonList(rootFolder), CONNECTOR_ID, REPO, BRANCH, IDENTIFIER);
     gitSyncConfigDTO.setGitConnectorRef(CONNECTOR_ID_1);

@@ -127,8 +127,10 @@ public class SLIDataCollectionTaskServiceTest extends CvNextGenTestBase {
                                        .get();
     assertThat(savedTask.getStatus()).isEqualTo(QUEUED);
     assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(PrometheusDataCollectionInfo.class);
-    assertThat(savedTask.getEndTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime());
-    assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
+    assertThat(savedTask.getEndTime())
+        .isEqualTo(serviceLevelIndicator.getFirstTimeDataCollectionTimeRange().getEndTime());
+    assertThat(savedTask.getStartTime())
+        .isEqualTo(serviceLevelIndicator.getFirstTimeDataCollectionTimeRange().getStartTime());
   }
 
   @Test
@@ -145,8 +147,10 @@ public class SLIDataCollectionTaskServiceTest extends CvNextGenTestBase {
                                        .get();
     assertThat(savedTask.getStatus()).isEqualTo(QUEUED);
     assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(PrometheusDataCollectionInfo.class);
-    assertThat(savedTask.getEndTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime());
-    assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
+    assertThat(savedTask.getEndTime())
+        .isEqualTo(serviceLevelIndicator.getFirstTimeDataCollectionTimeRange().getEndTime());
+    assertThat(savedTask.getStartTime())
+        .isEqualTo(serviceLevelIndicator.getFirstTimeDataCollectionTimeRange().getStartTime());
   }
 
   private ServiceLevelIndicator createSLI() {

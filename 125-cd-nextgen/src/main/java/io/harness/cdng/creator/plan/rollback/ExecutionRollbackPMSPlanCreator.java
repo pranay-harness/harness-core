@@ -13,10 +13,14 @@ import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @OwnedBy(HarnessTeam.CDC)
 public class ExecutionRollbackPMSPlanCreator {
@@ -24,6 +28,7 @@ public class ExecutionRollbackPMSPlanCreator {
     if (executionField == null) {
       return PlanCreationResponse.builder().build();
     }
+    Map<String, YamlField> dependencies = new HashMap<>();
     YamlField executionStepsField = executionField.getField(YAMLFieldNameConstants.STEPS);
 
     if (executionStepsField == null || executionStepsField.getNode().asArray().size() == 0) {
@@ -36,11 +41,13 @@ public class ExecutionRollbackPMSPlanCreator {
         YamlUtils.getQualifiedNameTillGivenField(executionField, YAMLFieldNameConstants.STAGES);
     YamlField executionRollbackSteps = executionField.getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
 
-    // Add rollbackSteps defined under rollback section of execution.
-    PlanCreationResponse executionRollbackPlanNode =
-        ExecutionStepsRollbackPMSPlanCreator.createExecutionStepsRollbackPlanNode(executionRollbackSteps);
     if (executionRollbackSteps != null && executionRollbackSteps.getNode() != null
-        && EmptyPredicate.isNotEmpty(executionRollbackPlanNode.getNodes())) {
+        && executionRollbackSteps.getNode().asArray().size() > 0) {
+      // Adding dependencies
+      dependencies.put(
+          executionRollbackSteps.getNode().getUuid() + OrchestrationConstants.ROLLBACK_STEPS_NODE_ID_SUFFIX,
+          executionRollbackSteps);
+
       stepParametersBuilder.childNode(
           RollbackNode.builder()
               .nodeId(executionRollbackSteps.getNode().getUuid() + OrchestrationConstants.ROLLBACK_STEPS_NODE_ID_SUFFIX)
@@ -66,10 +73,9 @@ public class ExecutionRollbackPMSPlanCreator {
             .skipExpressionChain(true)
             .build();
 
-    PlanCreationResponse finalResponse =
-        PlanCreationResponse.builder().node(deploymentStageRollbackNode.getUuid(), deploymentStageRollbackNode).build();
-    finalResponse.merge(executionRollbackPlanNode);
-
-    return finalResponse;
+    return PlanCreationResponse.builder()
+        .node(deploymentStageRollbackNode.getUuid(), deploymentStageRollbackNode)
+        .dependencies(DependenciesUtils.toDependenciesProto(dependencies))
+        .build();
   }
 }

@@ -9,8 +9,8 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
-import io.harness.jira.ServiceNowActionNG;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.servicenow.ServiceNowActionNG;
 
 import java.util.HashSet;
 import java.util.List;

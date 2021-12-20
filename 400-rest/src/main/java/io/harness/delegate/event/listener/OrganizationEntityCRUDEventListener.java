@@ -3,8 +3,10 @@ package io.harness.delegate.event.listener;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.RESTORE_ACTION;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateEntityOwner;
@@ -13,8 +15,7 @@ import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.event.MessageListener;
-
-import software.wings.service.impl.DelegateProfileServiceImpl;
+import io.harness.service.intfc.DelegateNgTokenService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -29,11 +30,11 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 @Singleton
 public class OrganizationEntityCRUDEventListener implements MessageListener {
-  private final DelegateProfileServiceImpl delegateProfileService;
+  private final DelegateNgTokenService delegateNgTokenService;
 
   @Inject
-  public OrganizationEntityCRUDEventListener(final DelegateProfileServiceImpl delegateProfileService) {
-    this.delegateProfileService = delegateProfileService;
+  public OrganizationEntityCRUDEventListener(final DelegateNgTokenService delegateNgTokenService) {
+    this.delegateNgTokenService = delegateNgTokenService;
   }
 
   @Override
@@ -63,6 +64,10 @@ public class OrganizationEntityCRUDEventListener implements MessageListener {
       final OrganizationEntityChangeDTO organizationEntityChangeDTO, final String action) {
     if (CREATE_ACTION.equals(action)) {
       return handleCreateEvent(organizationEntityChangeDTO);
+    } else if (DELETE_ACTION.equals(action)) {
+      return handleDeleteEvent(organizationEntityChangeDTO);
+    } else if (RESTORE_ACTION.equals(action)) {
+      return handleRestoreEvent(organizationEntityChangeDTO);
     }
     return true;
   }
@@ -71,10 +76,42 @@ public class OrganizationEntityCRUDEventListener implements MessageListener {
     try {
       final DelegateEntityOwner owner =
           DelegateEntityOwnerHelper.buildOwner(organizationEntityChangeDTO.getIdentifier(), StringUtils.EMPTY);
-      log.info("New organization created {}.", owner.getIdentifier());
+      delegateNgTokenService.upsertDefaultToken(organizationEntityChangeDTO.getAccountIdentifier(), owner, false);
+      log.info("Default Delegate Token created for organization {}/{}.",
+          organizationEntityChangeDTO.getAccountIdentifier(),
+          owner != null ? owner.getIdentifier() : StringUtils.EMPTY);
       return true;
     } catch (final Exception e) {
-      log.error("Failed to create primary delegate profile for organization {}/{}",
+      log.error("Failed to create default Delegate Token for organization {}/{}, caused by: {}",
+          organizationEntityChangeDTO.getAccountIdentifier(), organizationEntityChangeDTO.getIdentifier(), e);
+      return false;
+    }
+  }
+
+  private boolean handleDeleteEvent(final OrganizationEntityChangeDTO organizationEntityChangeDTO) {
+    try {
+      delegateNgTokenService.revokeDelegateToken(organizationEntityChangeDTO.getAccountIdentifier(),
+          DelegateEntityOwnerHelper.buildOwner(organizationEntityChangeDTO.getIdentifier(), StringUtils.EMPTY),
+          DelegateNgTokenService.DEFAULT_TOKEN_NAME);
+      log.info("Organization {}/{} deleted and default Delegate Token revoked.",
+          organizationEntityChangeDTO.getAccountIdentifier(), organizationEntityChangeDTO.getIdentifier());
+      return true;
+    } catch (final Exception e) {
+      log.error("Failed to revoke default Delegate Token for organization {}/{}, caused by: {}",
+          organizationEntityChangeDTO.getAccountIdentifier(), organizationEntityChangeDTO.getIdentifier(), e);
+      return false;
+    }
+  }
+
+  private boolean handleRestoreEvent(final OrganizationEntityChangeDTO organizationEntityChangeDTO) {
+    try {
+      delegateNgTokenService.upsertDefaultToken(organizationEntityChangeDTO.getAccountIdentifier(),
+          DelegateEntityOwnerHelper.buildOwner(organizationEntityChangeDTO.getIdentifier(), StringUtils.EMPTY), false);
+      log.info("Organization {}/{} restored and new default Delegate Token generated.",
+          organizationEntityChangeDTO.getAccountIdentifier(), organizationEntityChangeDTO.getIdentifier());
+      return true;
+    } catch (final Exception e) {
+      log.error("Failed to create default Delegate Token for organization {}/{}, caused by: {}",
           organizationEntityChangeDTO.getAccountIdentifier(), organizationEntityChangeDTO.getIdentifier(), e);
       return false;
     }

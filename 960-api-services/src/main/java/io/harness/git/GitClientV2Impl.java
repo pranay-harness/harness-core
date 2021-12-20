@@ -174,7 +174,8 @@ public class GitClientV2Impl implements GitClientV2 {
             log.info(
                 gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Hard reset failed for branch [{}]",
                 request.getBranch());
-            log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
+            log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING
+                + ExceptionSanitizer.sanitizeForLogging(ex));
             gitClientHelper.checkIfGitConnectivityIssue(ex);
           }
         }
@@ -224,7 +225,7 @@ public class GitClientV2Impl implements GitClientV2 {
                        .setNoCheckout(noCheckout)
                        .call()) {
     } catch (GitAPIException ex) {
-      log.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in cloning repo", USER);
     }
@@ -388,7 +389,7 @@ public class GitClientV2Impl implements GitClientV2 {
       }
 
     } catch (IOException | GitAPIException ex) {
-      log.error(GIT_YAML_LOG_PREFIX + EXCEPTION_STRING, ex);
+      log.error(GIT_YAML_LOG_PREFIX + EXCEPTION_STRING + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in getting commit diff", ADMIN_SRE);
     }
@@ -790,7 +791,8 @@ public class GitClientV2Impl implements GitClientV2 {
         throw new YamlException(errorMsg, ADMIN_SRE);
       }
     } catch (IOException | GitAPIException ex) {
-      log.error(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType()) + EXCEPTION_STRING, ex);
+      log.error(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType()) + EXCEPTION_STRING
+          + ExceptionSanitizer.sanitizeForLogging(ex));
       String errorMsg = getMessage(ex);
       if (ex instanceof InvalidRemoteException || ex.getCause() instanceof NoRemoteRepositoryException) {
         errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:"
@@ -821,7 +823,8 @@ public class GitClientV2Impl implements GitClientV2 {
       checkoutCommand.call();
       log.info("Successfully Checked out commitId: " + request.getNewCommitId());
     } catch (Exception ex) {
-      log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
+      log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING
+          + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfMissingCommitIdIssue(ex, request.getNewCommitId());
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + request.getNewCommitId(), USER);
@@ -1068,7 +1071,8 @@ public class GitClientV2Impl implements GitClientV2 {
       resetCommand.call();
       log.info("Resetting repo completed successfully");
     } catch (Exception ex) {
-      log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
+      log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING
+          + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in resetting repo", USER);
     }
@@ -1202,7 +1206,8 @@ public class GitClientV2Impl implements GitClientV2 {
         } else {
           log.info(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Hard reset failed for branch [{}]",
               request.getBranch());
-          log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
+          log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING
+              + ExceptionSanitizer.sanitizeForLogging(ex));
           gitClientHelper.checkIfGitConnectivityIssue(ex);
         }
       } finally {
