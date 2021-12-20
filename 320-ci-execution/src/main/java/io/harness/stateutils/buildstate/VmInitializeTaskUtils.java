@@ -71,10 +71,16 @@ public class VmInitializeTaskUtils {
       throw new CIStageExecutionException(
           format("Invalid VM infrastructure spec type: %s", vmInfraYaml.getSpec().getType()));
     }
-
+    VmBuildJobInfo vmBuildJobInfo = (VmBuildJobInfo) initializeStepInfo.getBuildJobEnvInfo();
     VmPoolYaml vmPoolYaml = (VmPoolYaml) vmInfraYaml.getSpec();
     String poolId = vmPoolYaml.getSpec().getIdentifier();
-    consumeSweepingOutput(ambiance, VmStageInfraDetails.builder().poolId(poolId).build(), STAGE_INFRA_DETAILS);
+    consumeSweepingOutput(ambiance,
+        VmStageInfraDetails.builder()
+            .poolId(poolId)
+            .workDir(vmBuildJobInfo.getWorkDir())
+            .volToMountPathMap(vmBuildJobInfo.getVolToMountPath())
+            .build(),
+        STAGE_INFRA_DETAILS);
 
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputResolver.resolveOptional(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails));
@@ -84,7 +90,6 @@ public class VmInitializeTaskUtils {
 
     StageDetails stageDetails = (StageDetails) optionalSweepingOutput.getOutput();
     String accountID = AmbianceUtils.getAccountId(ambiance);
-    VmBuildJobInfo vmBuildJobInfo = (VmBuildJobInfo) initializeStepInfo.getBuildJobEnvInfo();
     NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
 
     ConnectorDetails gitConnector = codebaseUtils.getGitConnector(
@@ -119,6 +124,7 @@ public class VmInitializeTaskUtils {
         .tiUrl(tiServiceUtils.getTiServiceConfig().getBaseUrl())
         .tiSvcToken(getTISvcToken(accountID))
         .secrets(new ArrayList<>(secrets))
+        .volToMountPath(vmBuildJobInfo.getVolToMountPath())
         .build();
   }
 
