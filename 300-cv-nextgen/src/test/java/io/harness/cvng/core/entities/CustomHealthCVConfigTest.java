@@ -9,6 +9,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.beans.HealthSourceMetricDefinition;
 import io.harness.cvng.core.beans.HealthSourceQueryType;
 import io.harness.cvng.core.beans.RiskProfile;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.MetricResponseMapping;
 import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthMethod;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -22,16 +23,21 @@ import org.junit.experimental.categories.Category;
 public class CustomHealthCVConfigTest extends CategoryTest {
   List<CustomHealthCVConfig.MetricDefinition> metricDefinitions;
   CustomHealthCVConfig customHealthCVConfig;
+  MetricResponseMapping responseMapping;
 
   @Before
   public void setup() {
     metricDefinitions = new ArrayList<>();
+    responseMapping = MetricResponseMapping.builder()
+                          .metricValueJsonPath("metricValuePath")
+                          .timestampJsonPath("timeStringPath")
+                          .build();
+
     CustomHealthCVConfig.MetricDefinition metricDefinition =
         CustomHealthCVConfig.MetricDefinition.builder()
             .method(CustomHealthMethod.GET)
             .queryType(HealthSourceQueryType.HOST_BASED)
-            .timestampFieldPathString("timeStringPath")
-            .metricValueFieldPathString("metricValuePath")
+            .metricResponseMapping(responseMapping)
             .metricName("metric_1")
             .analysis(HealthSourceMetricDefinition.AnalysisDTO.builder().build())
             .riskProfile(RiskProfile.builder().build())
@@ -85,8 +91,7 @@ public class CustomHealthCVConfigTest extends CategoryTest {
         CustomHealthCVConfig.MetricDefinition.builder()
             .method(CustomHealthMethod.GET)
             .queryType(HealthSourceQueryType.HOST_BASED)
-            .timestampFieldPathString("timeStringPath")
-            .metricValueFieldPathString("metricValuePath")
+            .metricResponseMapping(responseMapping)
             .metricName("metric_1")
             .analysis(
                 HealthSourceMetricDefinition.AnalysisDTO.builder()

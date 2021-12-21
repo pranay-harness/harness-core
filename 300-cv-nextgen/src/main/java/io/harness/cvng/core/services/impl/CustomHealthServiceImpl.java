@@ -13,13 +13,16 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class CustomHealthServiceImpl implements CustomHealthService {
   @Inject OnboardingService onboardingService;
 
   @Override
-  public Map<String, Object> fetchSampleData(String accountId, String connectorIdentifier, String orgIdentifier,
+  public Object fetchSampleData(String accountId, String connectorIdentifier, String orgIdentifier,
       String projectIdentifier, String tracingId, CustomHealthSampleDataRequest request) {
     CustomHealthFetchSampleDataRequest customHealthSampleDataRequest =
         CustomHealthFetchSampleDataRequest.builder()
@@ -27,7 +30,8 @@ public class CustomHealthServiceImpl implements CustomHealthService {
             .body(request.getBody())
             .method(request.getMethod())
             .urlPath(request.getUrlPath())
-            .requestTimestampPlaceholderAndValues(request.getRequestTimestampPlaceholderAndValues())
+            .startTime(request.getStartTime())
+            .endTime(request.getEndTime())
             .build();
 
     OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
@@ -41,7 +45,17 @@ public class CustomHealthServiceImpl implements CustomHealthService {
 
     OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
     final Gson gson = new Gson();
-    Type type = new TypeToken<Map<String, Object>>() {}.getType();
-    return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+
+    Object resultObj = response.getResult();
+    if (resultObj == null) {
+      return null;
+    }
+
+    if (response.getResult().getClass() == ArrayList.class) {
+      Type type = new TypeToken<ArrayList<Object>>() {}.getType();
+      return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+    }
+
+    return gson.fromJson(JsonUtils.asJson(response.getResult()), new TypeToken<Map<String, Object>>() {}.getType());
   }
 }
