@@ -15,6 +15,28 @@ replace_key_value () {
   fi
 }
 
+write_mongo_hosts_and_ports() {
+  IFS=',' read -ra HOST_AND_PORT <<< "$2"
+  for INDEX in "${!HOST_AND_PORT[@]}"; do
+    HOST=$(cut -d: -f 1 <<< "${HOST_AND_PORT[$INDEX]}")
+    PORT=$(cut -d: -f 2 -s <<< "${HOST_AND_PORT[$INDEX]}")
+
+    yq write -i $CONFIG_FILE $1.hosts[$INDEX].host "$HOST"
+    if [[ "" != "$PORT" ]]; then
+      yq write -i $CONFIG_FILE $1.hosts[$INDEX].port "$PORT"
+    fi
+  done
+}
+
+write_mongo_params() {
+  IFS='&' read -ra PARAMS <<< "$2"
+  for PARAM_PAIR in "${PARAMS[@]}"; do
+    NAME=$(cut -d= -f 1 <<< "$PARAM_PAIR")
+    VALUE=$(cut -d= -f 2 <<< "$PARAM_PAIR")
+    yq write -i $CONFIG_FILE $1.params.$NAME "$VALUE"
+  done
+}
+
 if [[ "" != "$SERVER_MAX_THREADS" ]]; then
   yq write -i $CONFIG_FILE server.maxThreads "$SERVER_MAX_THREADS"
 fi
@@ -39,6 +61,16 @@ fi
 
 if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
+fi
+
+if [[ "" != "$MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE mongo.uri
+  yq write -i $CONFIG_FILE mongo.username "$MONGO_USERNAME"
+  yq write -i $CONFIG_FILE mongo.password "$MONGO_PASSWORD"
+  yq write -i $CONFIG_FILE mongo.database "$MONGO_DATABASE"
+  yq write -i $CONFIG_FILE mongo.schema "$MONGO_SCHEMA"
+  write_mongo_hosts_and_ports mongo "$MONGO_HOSTS_AND_PORTS"
+  write_mongo_params mongo "$MONGO_PARAMS"
 fi
 
 if [[ "" != "$MONGO_TRACE_MODE" ]]; then
@@ -405,3 +437,5 @@ replace_key_value pipelineEventConsumersConfig.webhookEvent.threads "$PMS_WEBHOO
 
 replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"
 replace_key_value segmentConfiguration.url "$SEGMENT_URL"
+replace_key_value secretsConfiguration.gcpSecretManagerProject "$GCP_SECRET_MANAGER_PROJECT"
+replace_key_value secretsConfiguration.secretResolutionEnabled "$RESOLVE_SECRETS"
