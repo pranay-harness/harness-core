@@ -37,6 +37,7 @@ import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
 import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.utils.JsonPipelineUtils;
 import io.harness.yaml.utils.YamlSchemaUtils;
 import io.harness.yaml.validator.YamlSchemaValidator;
@@ -164,9 +165,22 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
     List<ModuleType> enabledModules = obtainEnabledModules(projectIdentifier, accountIdentifier, orgIdentifier);
 
+    List<YamlSchemaWithDetails> stepsSchemaWithDetails =
+        fetchSchemaWithDetailsFromModules(accountIdentifier, enabledModules);
     CompletableFutures<PartialSchemaDTO> completableFutures = new CompletableFutures<>(executor);
     for (ModuleType enabledModule : enabledModules) {
-      completableFutures.supplyAsync(() -> schemaFetcher.fetchSchema(accountIdentifier, enabledModule));
+      List<YamlSchemaWithDetails> moduleYamlSchemaDetails = new ArrayList<>();
+      for (YamlSchemaWithDetails yamlSchemaWithDetails : stepsSchemaWithDetails) {
+        if (yamlSchemaWithDetails.getYamlSchemaMetadata() != null
+            && yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported() != null
+            && yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported().contains(enabledModule)
+            // Don't send step to its owner module.
+            && yamlSchemaWithDetails.getModuleType() != enabledModule) {
+          moduleYamlSchemaDetails.add(yamlSchemaWithDetails);
+        }
+      }
+      completableFutures.supplyAsync(
+          () -> schemaFetcher.fetchSchema(accountIdentifier, enabledModule, moduleYamlSchemaDetails));
     }
 
     try {
@@ -298,5 +312,20 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
           projectIdentifier, accountIdentifier, orgIdentifier, e);
       return new ArrayList<>();
     }
+  }
+
+  public List<YamlSchemaWithDetails> fetchSchemaWithDetailsFromModules(
+      String accountIdentifier, List<ModuleType> moduleTypes) {
+    List<YamlSchemaWithDetails> yamlSchemaWithDetailsList = yamlSchemaProvider.getCrossFunctionalStepsSchemaDetails(
+        null, null, null, pmsYamlSchemaHelper.getNodeEntityTypesByYamlGroup(StepCategory.STEP.name()), ModuleType.PMS);
+    for (ModuleType moduleType : moduleTypes) {
+      try {
+        yamlSchemaWithDetailsList.addAll(
+            schemaFetcher.fetchSchemaDetail(accountIdentifier, moduleType).getYamlSchemaWithDetailsList());
+      } catch (Exception e) {
+        log.error(e.getMessage());
+      }
+    }
+    return yamlSchemaWithDetailsList;
   }
 }

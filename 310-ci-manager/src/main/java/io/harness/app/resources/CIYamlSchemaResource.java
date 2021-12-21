@@ -14,15 +14,20 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.yaml.schema.YamlSchemaResource;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
+import io.harness.yaml.schema.beans.YamlSchemaDetailsWrapper;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -77,5 +82,32 @@ public class CIYamlSchemaResource implements YamlSchemaResource {
   public ResponseDTO<CIPipelineModuleInfo>
   dummyApiForSwaggerSchemaCheckForCIPipelineModuleInfo() {
     return ResponseDTO.newResponse(CIPipelineModuleInfo.builder().build());
+  }
+
+  @GET
+  @Path("/details")
+  @ApiOperation(value = "Get Partial Yaml Schema with details", nickname = "getPartialYamlSchemaWithDetails")
+  public ResponseDTO<YamlSchemaDetailsWrapper> getYamlSchemaWithDetails(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
+    List<YamlSchemaWithDetails> schemaWithDetails =
+        ciYamlSchemaService.getIntegrationStageYamlSchemaWithDetails(orgIdentifier, projectIdentifier, scope);
+    return ResponseDTO.newResponse(
+        YamlSchemaDetailsWrapper.builder().yamlSchemaWithDetailsList(schemaWithDetails).build());
+  }
+
+  @POST
+  @Path("/merged")
+  @ApiOperation(value = "Get Merged Partial Yaml Schema", nickname = "getMergedPartialYamlSchema")
+  public ResponseDTO<PartialSchemaDTO> getMergedYamlSchema(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope,
+      @RequestBody(required = true,
+          description = "Step Schema with details") YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper) {
+    PartialSchemaDTO schema = ciYamlSchemaService.getMergedIntegrationStageYamlSchema(
+        projectIdentifier, orgIdentifier, scope, yamlSchemaDetailsWrapper.getYamlSchemaWithDetailsList());
+    return ResponseDTO.newResponse(schema);
   }
 }
