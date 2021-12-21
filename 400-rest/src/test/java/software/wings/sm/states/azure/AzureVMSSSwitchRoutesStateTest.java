@@ -192,7 +192,7 @@ public class AzureVMSSSwitchRoutesStateTest extends WingsBaseTest {
     ExecutionContextImpl mockContext = initializeMockSetup(switchRouteRollbackState, true, true);
     doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
     ExecutionResponse response = switchRouteRollbackState.execute(mockContext);
-    assertThat(switchRouteRollbackState.isDownsizeOldVMSSS()).isTrue();
+    assertThat(switchRouteRollbackState.isDownsizeOldVMSS()).isTrue();
     assertThat(switchRouteRollbackState.getTimeoutMillis()).isNull();
     verifyDelegateTaskCreationResult(response, true);
     verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
@@ -232,7 +232,7 @@ public class AzureVMSSSwitchRoutesStateTest extends WingsBaseTest {
   private ExecutionContextImpl initializeMockSetup(
       AzureVMSSSwitchRoutesState routeState, boolean isSuccess, boolean contextElement) {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    routeState.setDownsizeOldVMSSS(true);
+    routeState.setDownsizeOldVMSS(true);
 
     AzureVMSSStateData azureVMSSStateData = AzureVMSSStateData.builder()
                                                 .application(anApplication().uuid(APP_ID).build())
