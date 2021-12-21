@@ -80,6 +80,8 @@ public class RedisProducer extends AbstractProducer {
 
     StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
     RedisEventMetricDTO redisEventMetricDTO = redisEventMetricDTOMapper.prepareRedisEventMetricDTO(message);
+    log.info("redisEventMetricDTO :{}",redisEventMetricDTO);
+    log.info("message: {}",message);
     redisEventMetricPublisher.sendMetricWithEventContext(redisEventMetricDTO, REDIS_EVENT_METRIC_COUNT);
     redisData.remove(REDIS_STREAM_INTERNAL_KEY);
     log.info("Events framework message inserted - messageId: {}, metaData: {}", messageId, redisData);
