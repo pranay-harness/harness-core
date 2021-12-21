@@ -22,8 +22,21 @@ spec:
         spec:
           serviceAccountName: ${upgraderSaName}
           containers:
-            - name: upgrader
-              image: ${upgraderDockerImage}
-              imagePullPolicy: Always
+          - image: ${upgraderDockerImage}
+            name: upgrader
+            imagePullPolicy: Always
+            env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: ACCOUNT_ID
+              value: ${accountId}
+            - name: ACCOUNT_SECRET
+              value: ${accountSecret}
+            - name: MANAGER_HOST_AND_PORT
+              value: ${managerHostAndPort}
+            - name: DELEGATE_NAME
+              value: ${delegateName}
           restartPolicy: Never
 </#macro>

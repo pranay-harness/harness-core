@@ -4,6 +4,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.UpgradeCheckResult;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
@@ -19,11 +20,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Api("/upgrader/delegate")
-@Path("/upgrader/delegate")
+@Api("/upgrade-check")
+@Path("/upgrade-check")
 @Produces("application/json")
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
@@ -37,10 +37,10 @@ public class DelegateUpgraderResource {
 
   @DelegateAuth
   @GET
-  @Path("/upgrade-check/delegate")
+  @Path("/delegate")
   @Timed
   @ExceptionMetered
-  public RestResponse<Pair<Boolean, String> > getDelegateImageTag(@QueryParam("accountId") @NotEmpty String accountId,
+  public RestResponse<UpgradeCheckResult> getDelegateImageTag(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("currentDelegateImageTag") @NotEmpty String currentDelegateImageTag) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateUpgraderService.getDelegateImageTag(accountId, currentDelegateImageTag));
@@ -49,10 +49,10 @@ public class DelegateUpgraderResource {
 
   @DelegateAuth
   @GET
-  @Path("/upgrade-check/upgrader")
+  @Path("/upgrader")
   @Timed
   @ExceptionMetered
-  public RestResponse<Pair<Boolean, String> > getUpgraderImageTag(@QueryParam("accountId") @NotEmpty String accountId,
+  public RestResponse<UpgradeCheckResult> getUpgraderImageTag(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("currentUpgraderImageTag") @NotEmpty String currentUpgraderImageTag) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateUpgraderService.getUpgraderImageTag(accountId, currentUpgraderImageTag));

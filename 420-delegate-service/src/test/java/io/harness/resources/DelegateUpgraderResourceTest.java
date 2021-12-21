@@ -9,6 +9,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.UpgradeCheckResult;
 import io.harness.delegate.resources.DelegateUpgraderResource;
 import io.harness.rule.Owner;
 import io.harness.service.intfc.DelegateUpgraderService;
@@ -16,7 +17,6 @@ import io.harness.service.intfc.DelegateUpgraderService;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
@@ -57,10 +57,10 @@ public class DelegateUpgraderResourceTest extends JerseyTest {
   @Category(UnitTests.class)
   public void testDelegateImageTag() {
     when(upgraderService.getDelegateImageTag(ACCOUNT_ID, DELEGATE_IMAGE_TAG))
-        .thenReturn(Pair.of(false, DELEGATE_IMAGE_TAG));
+        .thenReturn(new UpgradeCheckResult(DELEGATE_IMAGE_TAG, false));
 
     final Response response = client()
-                                  .target("/upgrader/delegate/upgrade-check/delegate?accountId=" + ACCOUNT_ID
+                                  .target("/upgrade-check/delegate?accountId=" + ACCOUNT_ID
                                       + "&currentDelegateImageTag=" + DELEGATE_IMAGE_TAG)
                                   .request()
                                   .get();
@@ -74,10 +74,10 @@ public class DelegateUpgraderResourceTest extends JerseyTest {
   @Category(UnitTests.class)
   public void testUpgraderImageTag() {
     when(upgraderService.getUpgraderImageTag(ACCOUNT_ID, UPGRADER_IMAGE_TAG))
-        .thenReturn(Pair.of(false, UPGRADER_IMAGE_TAG));
+        .thenReturn(new UpgradeCheckResult(UPGRADER_IMAGE_TAG, false));
 
     final Response response = client()
-                                  .target("/upgrader/delegate/upgrade-check/upgrader?accountId=" + ACCOUNT_ID
+                                  .target("/upgrade-check/upgrader?accountId=" + ACCOUNT_ID
                                       + "&currentUpgraderImageTag=" + UPGRADER_IMAGE_TAG)
                                   .request()
                                   .get();
