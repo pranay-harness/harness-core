@@ -22,6 +22,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -37,12 +38,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 
-@Api("/v2/delegate-token")
+@Api(value = "/v2/delegate-token", hidden = false)
 @Path("/v2/delegate-token")
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
+@Hidden
 @Tag(name = "Delegate Token Resource", description = "Contains APIs related to Delegate NG Token management")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content =
@@ -69,6 +71,7 @@ public class DelegateNgTokenResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = MANAGE_DELEGATES)
+  @Hidden
   @Operation(operationId = "createToken", summary = "Creates Delegate NG Token.",
       responses =
       {
@@ -90,6 +93,7 @@ public class DelegateNgTokenResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = MANAGE_DELEGATES)
+  @Hidden
   @Operation(operationId = "revokeDelegateToken", summary = "Revokes Delegate Ng Token.",
       responses =
       {
@@ -112,6 +116,7 @@ public class DelegateNgTokenResource {
   @GET
   @Timed
   @ExceptionMetered
+  @Hidden
   @Operation(operationId = "getDelegateTokens",
       summary = "Retrieves Delegate Ng Tokens by Account, Organization, Project, status and name.",
       responses =
@@ -138,6 +143,7 @@ public class DelegateNgTokenResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = MANAGE_DELEGATES)
+  @Hidden
   @Operation(operationId = "upsertDefaultToken",
       summary = "Creates or a default Delegate Token for account, org and project. "
           + "If default token already exists its value will be re-generated.",
