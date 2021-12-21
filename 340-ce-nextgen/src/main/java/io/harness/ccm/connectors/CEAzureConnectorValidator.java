@@ -66,6 +66,14 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
       connectorIdentifier = connectorResponseDTO.getConnector().getIdentifier();
       tenantId = ceAzureConnectorDTO.getTenantId();
       billingExportSpec = ceAzureConnectorDTO.getBillingExportSpec();
+      if (billingExportSpec == null) {
+        log.error("No billing export spec found for this connector {}", connectorIdentifier);
+        return ConnectorValidationResult.builder()
+            .status(ConnectivityStatus.FAILURE)
+            .errorSummary("Invalid connector configuration")
+            .testedAt(Instant.now().toEpochMilli())
+            .build();
+      }
       storageAccountName = billingExportSpec.getStorageAccountName();
       containerName = billingExportSpec.getContainerName();
       directoryName = billingExportSpec.getDirectoryName();
@@ -123,6 +131,7 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
           .testedAt(Instant.now().toEpochMilli())
           .build();
     } catch (Exception ex) {
+      log.error("ex:", ex);
       if (ex.getCause() instanceof UnknownHostException) {
         return ConnectorValidationResult.builder()
             .status(ConnectivityStatus.FAILURE)
