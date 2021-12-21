@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.api.core.ApiFuture;
+import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.paging.Page;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
@@ -80,7 +81,7 @@ public class GcpSyncTasklet implements Tasklet {
   @Autowired protected CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private BatchJobScheduledDataDao batchJobScheduledDataDao;
   private JobParameters parameters;
-  private static final String GOOGLE_CREDENTIALS_PATH = "GOOGLE_CREDENTIALS_PATH";
+  private static final String GOOGLE_CREDENTIALS_PATH = "CE_GCP_CREDENTIALS_PATH";
 
   private Cache<CacheKey, Boolean> gcpSyncInfo = Caffeine.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build();
 
@@ -160,7 +161,7 @@ public class GcpSyncTasklet implements Tasklet {
           CacheKey cacheKey = new CacheKey(accountId, projectId, datasetId);
           gcpSyncInfo.get(cacheKey,
               key
-              -> publishMessage(billingDataPipelineConfig.getGcpProjectId(),
+              -> publishMessage(sourceCredentials, billingDataPipelineConfig.getGcpProjectId(),
                   billingDataPipelineConfig.getGcpSyncPubSubTopic(), dataset.getLocation(), serviceAccountEmail,
                   datasetId, projectId, accountId, connectorId, table.getTableId().getTable()));
         }
@@ -222,16 +223,17 @@ public class GcpSyncTasklet implements Tasklet {
     }
   }
 
-  public static boolean publishMessage(String harnessProjectId, String topicId, String location,
-      String serviceAccountEmail, String datasetId, String projectId, String accountId, String connectorId,
-      String tableName) {
+  public static boolean publishMessage(ServiceAccountCredentials sourceCredentials, String harnessProjectId,
+      String topicId, String location, String serviceAccountEmail, String datasetId, String projectId, String accountId,
+      String connectorId, String tableName) {
     TopicName topicName = TopicName.of(harnessProjectId, topicId);
     Publisher publisher = null;
 
     try {
       // Create a publisher instance with default settings bound to the topic
-      publisher = Publisher.newBuilder(topicName).build();
-
+      publisher = Publisher.newBuilder(topicName)
+                      .setCredentialsProvider(FixedCredentialsProvider.create(sourceCredentials))
+                      .build();
       ImmutableMap<String, String> customAttributes = ImmutableMap.<String, String>builder()
                                                           .put(SERVICE_ACCOUNT, serviceAccountEmail)
                                                           .put(SOURCE_DATA_SET_ID, datasetId)

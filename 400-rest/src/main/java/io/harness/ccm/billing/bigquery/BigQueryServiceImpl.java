@@ -2,7 +2,6 @@ package io.harness.ccm.billing.bigquery;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.CE_GCP_CREDENTIALS_PATH;
-import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials;
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getImpersonatedCredentials;
 
 import static java.lang.String.format;
@@ -58,5 +57,12 @@ public class BigQueryServiceImpl implements BigQueryService, io.harness.ccm.bigQ
       log.error("Unable to access BigQuery Dataset", be);
       return ValidationResult.builder().valid(false).errorMessage(be.getMessage()).build();
     }
+  }
+
+  @Override
+  public ServiceAccountCredentials getCredentials(String googleCredentialPathSystemEnv) {
+    // This method isnt used anywhere in 400-rest. CENG uses the one in 490.
+    // Null implementation is needed because of inheritance.
+    return null;
   }
 }
