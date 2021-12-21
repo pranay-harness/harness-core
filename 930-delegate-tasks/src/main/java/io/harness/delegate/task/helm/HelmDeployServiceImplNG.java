@@ -3,6 +3,7 @@ package io.harness.delegate.task.helm;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.HTTP_HELM;
+import static io.harness.delegate.task.helm.HelmCommandRequestNG.HelmCommandType.RELEASE_HISTORY;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
@@ -17,7 +18,6 @@ import static io.harness.helm.HelmConstants.ReleaseRecordConstants.REVISION;
 import static io.harness.helm.HelmConstants.ReleaseRecordConstants.STATUS;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
 import static io.harness.logging.LogLevel.ERROR;
-import static io.harness.logging.LogLevel.INFO;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.LogColor.Gray;
@@ -142,7 +142,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   public HelmCommandResponseNG deploy(HelmInstallCommandRequestNG commandRequest) throws IOException {
     LogCallback logCallback = commandRequest.getLogCallback();
     HelmChartInfo helmChartInfo = null;
-
+    int prevVersion = -1;
     try {
       HelmInstallCmdResponseNG commandResponse;
       logCallback.saveExecutionLog(
@@ -152,6 +152,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           helmClient.releaseHistory(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest));
       logCallback.saveExecutionLog(
           preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
+
+      prevVersion = getPrevReleaseVersion(helmCliResponse);
 
       kubernetesConfig =
           containerDeploymentDelegateBaseHelper.createKubernetesConfig(commandRequest.getK8sInfraDelegateConfig());
@@ -192,8 +194,10 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       logCallback.saveExecutionLog(commandResponse.getOutput());
 
       commandResponse.setHelmChartInfo(helmChartInfo);
+      commandResponse.setPrevReleaseVersion(prevVersion);
+      commandResponse.setReleaseName(commandRequest.getReleaseName());
 
-      boolean useSteadyStateCheck = useSteadyStateCheck(commandRequest.isSkipSteadyStateCheck(), logCallback);
+      boolean useSteadyStateCheck = useSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(), logCallback);
       List<KubernetesResourceId> workloads = Collections.emptyList();
 
       if (useSteadyStateCheck) {
@@ -220,6 +224,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       log.error(msg, e);
       logCallback.saveExecutionLog(TIMED_OUT_IN_STEADY_STATE, LogLevel.ERROR);
       return HelmInstallCmdResponseNG.builder()
+          .prevReleaseVersion(prevVersion)
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .output(new StringBuilder(256)
                       .append(TIMED_OUT_IN_STEADY_STATE)
@@ -230,13 +235,24 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           .helmChartInfo(helmChartInfo)
           .build();
     } catch (WingsException e) {
-      throw e;
+      String exceptionMessage = ExceptionUtils.getMessage(e);
+      String msg = "Wings Exception:" + exceptionMessage;
+      log.error(msg, e);
+      logCallback.saveExecutionLog(msg, LogLevel.ERROR);
+      return HelmInstallCmdResponseNG.builder()
+          .prevReleaseVersion(prevVersion)
+          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+          .output(msg)
+          .helmChartInfo(helmChartInfo)
+          .build();
+      // throw e;
     } catch (Exception e) {
       String exceptionMessage = ExceptionUtils.getMessage(e);
       String msg = "Exception in deploying helm chart:" + exceptionMessage;
       log.error(msg, e);
       logCallback.saveExecutionLog(msg, LogLevel.ERROR);
       return HelmInstallCmdResponseNG.builder()
+          .prevReleaseVersion(prevVersion)
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .output(msg)
           .helmChartInfo(helmChartInfo)
@@ -248,6 +264,12 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       }
       cleanUpWorkingDirectory(commandRequest.getWorkingDir());
     }
+  }
+
+  private int getPrevReleaseVersion(HelmCliResponse helmCliResponse) throws IOException {
+    List<ReleaseInfo> releaseInfoList = parseHelmReleaseCommandOutput(helmCliResponse.getOutput(), RELEASE_HISTORY);
+    return isEmpty(releaseInfoList) ? 0
+                                    : Integer.parseInt(releaseInfoList.get(releaseInfoList.size() - 1).getRevision());
   }
 
   private boolean checkNewHelmInstall(HelmListReleaseResponseNG helmListReleaseResponseNG) {
@@ -333,7 +355,6 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     }
     logCallback.saveExecutionLog(format("Currently running Containers: [%s]", containerInfoList.size()));
     if (success) {
-      logCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       return containerInfoList;
     } else {
       throw new InvalidRequestException("Steady state check failed", USER);
@@ -397,8 +418,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
         .collect(Collectors.toList());
   }
 
-  private boolean useSteadyStateCheck(boolean skipSteadyStateCheck, LogCallback logCallback) {
-    if (skipSteadyStateCheck) {
+  private boolean useSteadyStateCheck(boolean isK8sSteadyStateCheckEnabled, LogCallback logCallback) {
+    if (!isK8sSteadyStateCheckEnabled) {
       return false;
     }
     String versionAsString = kubernetesContainerService.getVersionAsString(kubernetesConfig);
@@ -431,7 +452,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       }
 
       List<KubernetesResourceId> rollbackWorkloads = new ArrayList<>();
-      boolean useSteadyStateCheck = useSteadyStateCheck(commandRequest.isSkipSteadyStateCheck(), logCallback);
+      boolean useSteadyStateCheck = useSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(), logCallback);
       if (useSteadyStateCheck) {
         rollbackWorkloads = readResourcesForRollback(commandRequest, commandRequest.getPrevReleaseVersion());
         ReleaseHistory releaseHistory = createNewRelease(commandRequest, rollbackWorkloads, null);
@@ -835,9 +856,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     return CSVParser.parse(listReleaseOutput, csvFormat)
         .getRecords()
         .stream()
-        .map(helmCommandType == HelmCommandRequestNG.HelmCommandType.RELEASE_HISTORY
-                ? this::releaseHistoryCsvRecordToReleaseInfo
-                : this::listReleaseCsvRecordToReleaseInfo)
+        .map(helmCommandType == RELEASE_HISTORY ? this::releaseHistoryCsvRecordToReleaseInfo
+                                                : this::listReleaseCsvRecordToReleaseInfo)
         .collect(Collectors.toList());
   }
 

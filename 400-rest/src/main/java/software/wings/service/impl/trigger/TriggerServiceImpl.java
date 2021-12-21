@@ -2097,10 +2097,6 @@ public class TriggerServiceImpl implements TriggerService {
     if (trigger.getCondition().getConditionType() == SCHEDULED) {
       trigger.recalculateNextIterations(TriggerKeys.nextIterations, true, 0);
       List<Long> nextIterations = trigger.getNextIterations();
-      // It automatically adds current timestamp when list is empty. This is not desired.
-      if (EmptyPredicate.isNotEmpty(nextIterations)) {
-        trigger.setNextIterations(nextIterations.subList(1, nextIterations.size()));
-      }
       if (!trigger.isDisabled() && EmptyPredicate.isEmpty(trigger.getNextIterations())) {
         throw new InvalidRequestException(
             "Given cron expression doesn't evaluate to a valid time. Please check the expression provided");
@@ -2108,7 +2104,7 @@ public class TriggerServiceImpl implements TriggerService {
       nextIterations = trigger.getNextIterations();
       if (nextIterations.size() > 1 && ((nextIterations.get(1) - nextIterations.get(0)) / 1000 < MIN_INTERVAL)) {
         throw new InvalidRequestException(
-            "Deployments can be triggered only at 5 minute intervals. Cron Expression should evaluate to time intervals of at least "
+            "Deployments must be triggered at intervals greater than or equal to 5 minutes. Cron Expression should evaluate to time intervals of at least "
             + MIN_INTERVAL + " seconds.");
       }
     }
@@ -2240,12 +2236,17 @@ public class TriggerServiceImpl implements TriggerService {
         : collectNewArtifactForBuildNumber(appId, artifactStream, buildNumber);
   }
 
-  private HelmChart getAlreadyCollectedHelmChartForVersionNumber(
+  private HelmChart getAlreadyCollectedHelmChartOrCollectNewForVersionNumber(
       String appId, String appManifestId, String versionNumber) {
     ApplicationManifest appManifest = applicationManifestService.getById(appId, appManifestId);
     notNullCheck("Application Manifest doesn't exist", appManifest, USER);
     HelmChart helmChart =
         helmChartService.getManifestByVersionNumber(appManifest.getAccountId(), appManifestId, versionNumber);
+
+    if (helmChart == null) {
+      helmChart = helmChartService.fetchByChartVersion(
+          appManifest.getAccountId(), appId, appManifest.getServiceId(), appManifest.getName(), versionNumber);
+    }
     notNullCheck("Helm chart with given version number doesn't exist", helmChart, USER);
     return helmChart;
   }
@@ -2331,7 +2332,7 @@ public class TriggerServiceImpl implements TriggerService {
           if (isBlank(versionNo)) {
             throw new InvalidRequestException("Version Number is Mandatory", USER);
           }
-          helmCharts.add(getAlreadyCollectedHelmChartForVersionNumber(
+          helmCharts.add(getAlreadyCollectedHelmChartOrCollectNewForVersionNumber(
               trigger.getAppId(), manifestSelection.getAppManifestId(), versionNo));
         });
   }

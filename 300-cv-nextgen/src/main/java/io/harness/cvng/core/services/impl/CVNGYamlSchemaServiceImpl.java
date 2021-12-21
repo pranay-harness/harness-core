@@ -8,14 +8,15 @@ import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.core.services.api.CVNGYamlSchemaService;
 import io.harness.encryption.Scope;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
-import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -28,6 +29,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -40,13 +42,15 @@ public class CVNGYamlSchemaServiceImpl implements CVNGYamlSchemaService {
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
-
+  private final List<YamlSchemaRootClass> yamlSchemaRootClasses;
   @Inject
   public CVNGYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
-      @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes) {
+      @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
+      List<YamlSchemaRootClass> yamlSchemaRootClasses) {
     this.yamlSchemaProvider = yamlSchemaProvider;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
+    this.yamlSchemaRootClasses = yamlSchemaRootClasses;
   }
 
   @Override
@@ -55,7 +59,7 @@ public class CVNGYamlSchemaServiceImpl implements CVNGYamlSchemaService {
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STEPS, orgIdentifier, projectIdentifier, scope);
     JsonNode definitions = deploymentSteps.get(DEFINITIONS_NODE);
     yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier, scope, (ObjectNode) definitions,
-        YamlSchemaTransientHelper.cvStepV2EntityTypes);
+        YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()));
 
     JsonNode stepElementConfigNode = definitions.get(StepElementConfig.class.getSimpleName());
     if (stepElementConfigNode != null && stepElementConfigNode.isObject()) {

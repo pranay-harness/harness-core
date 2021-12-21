@@ -30,6 +30,7 @@ import com.google.inject.Inject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,8 +45,8 @@ public class MetricPackServiceImpl implements MetricPackService {
       Lists.newArrayList("/appdynamics/metric-packs/peformance-pack.yml", "/appdynamics/metric-packs/quality-pack.yml",
           "/appdynamics/metric-packs/default-custom-pack.yml");
 
-  static final List<String> NEWRELIC_METRICPACK_FILES =
-      Lists.newArrayList("/newrelic/metric-packs/performance-pack.yml");
+  static final List<String> NEWRELIC_METRICPACK_FILES = Lists.newArrayList(
+      "/newrelic/metric-packs/performance-pack.yml", "/newrelic/metric-packs/default-custom-pack.yml");
 
   static final List<String> STACKDRIVER_METRICPACK_FILES =
       Lists.newArrayList("/stackdriver/metric-packs/default-performance-pack.yaml",
@@ -135,10 +136,14 @@ public class MetricPackServiceImpl implements MetricPackService {
         .stream()
         // hack to remove Custom metric pack from APPD in UI
         .filter(metricPack
-            -> !(metricPack.getDataSourceType().equals(DataSourceType.APP_DYNAMICS)
+            -> !(getDatasourcesToEliminateForCustom().contains(metricPack.getDataSourceType())
                 && metricPack.getIdentifier().equals(CUSTOM_PACK_IDENTIFIER)))
         .map(MetricPack::toDTO)
         .collect(Collectors.toList());
+  }
+
+  private List<DataSourceType> getDatasourcesToEliminateForCustom() {
+    return Arrays.asList(DataSourceType.APP_DYNAMICS, DataSourceType.NEW_RELIC);
   }
 
   @Override

@@ -68,6 +68,7 @@ public class NewRelicDataCollectionInfoMapperTest extends CvNextGenTestBase {
     NewRelicMetricInfoDTO metricInfoDTO = dataCollectionInfo.getMetricInfoList().get(0);
     NewRelicMetricInfo metricInfo = cvConfig.getMetricInfos().get(0);
     assertThat(metricInfoDTO.getMetricName()).isEqualTo(metricInfo.getMetricName());
+    assertThat(metricInfoDTO.getMetricIdentifier()).isEqualTo(metricInfo.getIdentifier());
     assertThat(metricInfoDTO.getNrql()).isEqualTo(metricInfo.getNrql());
     assertThat(metricInfoDTO.getResponseMapping()).isEqualTo(metricInfo.getResponseMapping().toDto());
   }
@@ -85,6 +86,7 @@ public class NewRelicDataCollectionInfoMapperTest extends CvNextGenTestBase {
     cvConfig.setMetricInfos(Arrays.asList(
         NewRelicCVConfig.NewRelicMetricInfo.builder()
             .metricName("metric1")
+            .identifier("metricIdentifier1")
             .nrql("Select * from transactions")
             .metricType(TimeSeriesMetricType.RESP_TIME)
             .responseMapping(MetricResponseMapping.builder()

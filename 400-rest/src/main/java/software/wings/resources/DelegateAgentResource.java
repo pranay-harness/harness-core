@@ -280,14 +280,15 @@ public class DelegateAgentResource {
   @Timed
   @ExceptionMetered
   public DelegateTaskPackage acquireDelegateTask(@PathParam("delegateId") String delegateId,
-      @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId) {
+      @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("delegateInstanceId") String delegateInstanceId) {
     try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
+         AutoLogContext ignore3 = new DelegateLogContext(accountId, delegateId, delegateInstanceId, OVERRIDE_ERROR)) {
       if (delegateRequestRateLimiter.isOverRateLimit(accountId, delegateId)) {
         return null;
       }
-      return delegateTaskServiceClassic.acquireDelegateTask(accountId, delegateId, taskId);
+      return delegateTaskServiceClassic.acquireDelegateTask(accountId, delegateId, taskId, delegateInstanceId);
     }
   }
 
@@ -299,12 +300,12 @@ public class DelegateAgentResource {
   @ExceptionMetered
   public DelegateTaskPackage reportConnectionResults(@PathParam("delegateId") String delegateId,
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId,
-      List<DelegateConnectionResultDetail> results) {
+      @QueryParam("delegateInstanceId") String delegateInstanceId, List<DelegateConnectionResultDetail> results) {
     try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
+         AutoLogContext ignore3 = new DelegateLogContext(accountId, delegateId, delegateInstanceId, OVERRIDE_ERROR)) {
       return delegateTaskServiceClassic.reportConnectionResults(
-          accountId, delegateId, taskId, getDelegateConnectionResults(results));
+          accountId, delegateId, taskId, delegateInstanceId, getDelegateConnectionResults(results));
     }
   }
 

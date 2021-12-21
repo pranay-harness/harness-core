@@ -53,7 +53,8 @@ public class PlanCreatorServiceHelper {
         continue;
       }
 
-      mergeCurrentResponseWithFinalResponse(response, finalResponse);
+      finalResponse.mergeWithoutDependencies(response);
+
       if (response.getDependencies() != null
           && EmptyPredicate.isNotEmpty(response.getDependencies().getDependenciesMap())) {
         newDependencies.putAll(response.getDependencies().getDependenciesMap());
@@ -75,6 +76,10 @@ public class PlanCreatorServiceHelper {
     String stageFqn = YamlUtils.getStageFqnPath(field.getNode());
     if (!EmptyPredicate.isEmpty(stageFqn)) {
       planForField.getNodes().forEach((k, v) -> v.setStageFqn(stageFqn));
+
+      if (planForField.getPlanNode() != null) {
+        planForField.getPlanNode().setStageFqn(stageFqn);
+      }
     }
   }
 
@@ -90,16 +95,5 @@ public class PlanCreatorServiceHelper {
 
   protected boolean isEmptyDependencies(Dependencies dependencies) {
     return dependencies == null || EmptyPredicate.isEmpty(dependencies.getDependenciesMap());
-  }
-
-  protected void mergeCurrentResponseWithFinalResponse(
-      PlanCreationResponse response, PlanCreationResponse finalResponse) {
-    finalResponse.addNodes(response.getNodes());
-    finalResponse.mergeContext(response.getContextMap());
-    finalResponse.mergeLayoutNodeInfo(response.getGraphLayoutResponse());
-    finalResponse.mergeStartingNodeId(response.getStartingNodeId());
-    if (response.getYamlUpdates() != null && EmptyPredicate.isNotEmpty(response.getYamlUpdates().getFqnToYamlMap())) {
-      finalResponse.addYamlUpdates(response.getYamlUpdates());
-    }
   }
 }

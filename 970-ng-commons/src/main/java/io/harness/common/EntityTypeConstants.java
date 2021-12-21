@@ -31,5 +31,8 @@ public interface EntityTypeConstants {
   String GIT_REPOSITORIES = "GitRepositories";
   String FEATURE_FLAGS = "FeatureFlags";
   String HTTP = "Http";
+  String JIRA_CREATE = "JiraCreate";
   String SHELL_SCRIPT = "ShellScript";
+  String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
+  String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }

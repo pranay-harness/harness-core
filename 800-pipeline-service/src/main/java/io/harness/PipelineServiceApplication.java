@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.PipelineServiceConfiguration.HARNESS_RESOURCE_CLASSES;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATION;
@@ -13,6 +14,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheModule;
+import io.harness.configuration.DeployVariant;
 import io.harness.consumers.GraphUpdateRedisConsumer;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
@@ -41,6 +43,7 @@ import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.persistance.NoOpGitSyncSdkServiceImpl;
 import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
+import io.harness.governance.DefaultConnectorRefExpansionHandler;
 import io.harness.graph.stepDetail.PmsGraphStepDetailsServiceImpl;
 import io.harness.graph.stepDetail.service.PmsGraphStepDetailsService;
 import io.harness.health.HealthMonitor;
@@ -48,6 +51,7 @@ import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.PipelineTelemetryRecordsJob;
 import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
@@ -56,6 +60,8 @@ import io.harness.ng.DbAliases;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
+import io.harness.ng.core.exceptionmappers.NotAllowedExceptionMapper;
+import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
@@ -73,7 +79,6 @@ import io.harness.pms.event.webhookevent.WebhookEventStreamConsumer;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
-import io.harness.pms.instrumentaion.InstrumentNodeStatusUpdateHandler;
 import io.harness.pms.instrumentaion.InstrumentationPipelineEndEventHandler;
 import io.harness.pms.migration.PipelineCoreMigrationProvider;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
@@ -97,10 +102,10 @@ import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
+import io.harness.pms.sdk.PmsSdkInstanceCacheMonitor;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
-import io.harness.pms.sdk.core.governance.NoOpExpansionHandler;
 import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
@@ -320,6 +325,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerObservers(injector);
     registerRequestContextFilter(environment);
     registerOasResource(appConfig, environment, injector);
+    intializeSdkInstanceCacheSync(injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     PipelineServiceIteratorsConfig iteratorsConfig = appConfig.getIteratorsConfig();
@@ -346,8 +352,19 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     initializeGrpcServer(injector);
     registerPmsSdk(appConfig, injector);
     registerMigrations(injector);
+    if (DeployVariant.isCommunity(System.getenv().get(DEPLOY_VERSION))) {
+      initializePipelineMonitoring(appConfig, injector);
+    }
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void intializeSdkInstanceCacheSync(Injector injector) {
+    injector.getInstance(PmsSdkInstanceCacheMonitor.class).scheduleCacheSync();
+  }
+
+  private void initializePipelineMonitoring(PipelineServiceConfiguration appConfig, Injector injector) {
+    injector.getInstance(PipelineTelemetryRecordsJob.class).scheduleTasks();
   }
 
   private void initializeGrpcServer(Injector injector) {
@@ -430,8 +447,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(ExecutionSummaryUpdateEventHandler.class)));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(TimeoutInstanceRemover.class)));
-    nodeExecutionService.getStepStatusUpdateSubject().register(
-        injector.getInstance(Key.get(InstrumentNodeStatusUpdateHandler.class)));
 
     // NodeUpdateObservers
     nodeExecutionService.getNodeUpdateObserverSubject().register(
@@ -492,10 +507,14 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
   private void registerAuthFilters(PipelineServiceConfiguration config, Environment environment, Injector injector) {
     Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
-        -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(PipelineServiceAuth.class) != null
-        || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(PipelineServiceAuth.class) != null
-        || resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
-        || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+        -> (resourceInfoAndRequest.getKey().getResourceMethod() != null
+               && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(PipelineServiceAuth.class) != null)
+        || (resourceInfoAndRequest.getKey().getResourceClass() != null
+            && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(PipelineServiceAuth.class) != null)
+        || (resourceInfoAndRequest.getKey().getResourceMethod() != null
+            && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null)
+        || (resourceInfoAndRequest.getKey().getResourceClass() != null
+            && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null);
     Map<String, String> serviceToSecretMapping = new HashMap<>();
     serviceToSecretMapping.put(AuthorizationServiceHeader.BEARER.getServiceId(), config.getJwtAuthSecret());
     serviceToSecretMapping.put(
@@ -539,6 +558,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .executionPoolConfig(config.getPmsSdkExecutionPoolConfig())
         .orchestrationEventPoolConfig(config.getPmsSdkOrchestrationEventPoolConfig())
+        .planCreatorServiceInternalConfig(config.getPmsPlanCreatorServicePoolConfig())
         .build();
   }
 
@@ -559,7 +579,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
   private Map<String, Class<? extends JsonExpansionHandler>> getJsonExpansionHandlers() {
     Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers = new HashMap<>();
-    jsonExpansionHandlers.put(YAMLFieldNameConstants.CONNECTOR_REF, NoOpExpansionHandler.class);
+    jsonExpansionHandlers.put(YAMLFieldNameConstants.CONNECTOR_REF, DefaultConnectorRefExpansionHandler.class);
     return jsonExpansionHandlers;
   }
 
@@ -706,6 +726,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
+    environment.jersey().register(NotFoundExceptionMapper.class);
+    environment.jersey().register(NotAllowedExceptionMapper.class);
 
     environment.jersey().register(MultiPartFeature.class);
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));

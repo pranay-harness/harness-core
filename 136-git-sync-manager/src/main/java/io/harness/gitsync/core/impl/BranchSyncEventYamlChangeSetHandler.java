@@ -7,7 +7,6 @@ import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
-import io.harness.beans.Scope;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.ff.FeatureFlagService;
 import io.harness.gitsync.common.beans.BranchSyncMetadata;
@@ -31,7 +30,6 @@ import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +53,7 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
     String repoURL = yamlChangeSetDTO.getRepoUrl();
     String branch = yamlChangeSetDTO.getBranch();
 
-    List<YamlGitConfigDTO> yamlGitConfigDTOList = yamlGitConfigService.getByRepo(repoURL);
+    List<YamlGitConfigDTO> yamlGitConfigDTOList = yamlGitConfigService.getByAccountAndRepo(accountIdentifier, repoURL);
     if (yamlGitConfigDTOList.isEmpty()) {
       log.info("Repo {} doesn't exist, ignoring the branch sync change set event : {}", repoURL, yamlChangeSetDTO);
       return YamlChangeSetStatus.SKIPPED;
@@ -105,8 +103,10 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
       }
     } catch (Exception ex) {
       log.error("Error encountered while syncing the branch [{}]", branch, ex);
-      String errorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
-      recordErrors(accountIdentifier, branchSyncMetadata, repoURL, branch, errorMessage);
+      String gitConnectivityErrorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
+      if (!gitConnectivityErrorMessage.isEmpty()) {
+        recordErrors(accountIdentifier, repoURL, gitConnectivityErrorMessage);
+      }
       gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);
       // TODO adding it here for safer side as of now. Ideally should be part of step service to mark it
       gitToHarnessProgressService.updateStepStatus(
@@ -118,13 +118,9 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
     }
   }
 
-  private void recordErrors(
-      String accountId, BranchSyncMetadata branchSyncMetadata, String repo, String branch, String errorMessage) {
+  private void recordErrors(String accountId, String repo, String errorMessage) {
     if (featureFlagService.isEnabled(FeatureName.NG_GIT_ERROR_EXPERIENCE, accountId)) {
-      Scope scope =
-          Scope.of(accountId, branchSyncMetadata.getOrgIdentifier(), branchSyncMetadata.getProjectIdentifier());
-      gitSyncErrorService.recordConnectivityError(
-          accountId, Collections.singletonList(scope), repo, branch, errorMessage);
+      gitSyncErrorService.recordConnectivityError(accountId, repo, errorMessage);
     }
   }
 }

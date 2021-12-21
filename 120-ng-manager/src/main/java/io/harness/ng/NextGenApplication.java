@@ -68,6 +68,7 @@ import io.harness.gitsync.migration.GitSyncMigrationProvider;
 import io.harness.gitsync.server.GitSyncGrpcModule;
 import io.harness.gitsync.server.GitSyncServiceConfiguration;
 import io.harness.govern.ProviderModule;
+import io.harness.governance.DefaultConnectorRefExpansionHandler;
 import io.harness.health.HealthService;
 import io.harness.licensing.migrations.LicenseManagerMigrationProvider;
 import io.harness.logstreaming.LogStreamingModule;
@@ -96,6 +97,7 @@ import io.harness.ng.core.remote.licenserestriction.CloudCostK8sConnectorRestric
 import io.harness.ng.core.remote.licenserestriction.OrgRestrictionsUsageImpl;
 import io.harness.ng.core.remote.licenserestriction.ProjectRestrictionsUsageImpl;
 import io.harness.ng.core.user.exception.mapper.InvalidUserRemoveRequestExceptionMapper;
+import io.harness.ng.migration.DelegateMigrationProvider;
 import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.migration.SourceCodeManagerMigrationProvider;
 import io.harness.ng.migration.UserMembershipMigrationProvider;
@@ -111,6 +113,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.expressions.functors.ImagePullSecretFunctor;
+import io.harness.pms.governance.EnvironmentRefExpansionHandler;
+import io.harness.pms.governance.ServiceRefExpansionHandler;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -119,7 +123,6 @@ import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
 import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
-import io.harness.pms.sdk.core.governance.NoOpExpansionHandler;
 import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
@@ -140,6 +143,7 @@ import io.harness.registrars.CDServiceAdviserRegistrar;
 import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
 import io.harness.runnable.InstanceAccountInfoRunnable;
+import io.harness.secret.ConfigSecretUtils;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
@@ -275,6 +279,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   @Override
   public void run(NextGenConfiguration appConfig, Environment environment) {
     log.info("Starting Next Gen Application ...");
+
+    ConfigSecretUtils.resolveSecrets(appConfig.getSecretsConfiguration(), appConfig);
+
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(appConfig.getCommonPoolConfig().getCorePoolSize(),
         appConfig.getCommonPoolConfig().getMaxPoolSize(), appConfig.getCommonPoolConfig().getIdleTime(),
         appConfig.getCommonPoolConfig().getTimeUnit(),
@@ -431,6 +438,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(LicenseManagerMigrationProvider.class); }
           { add(SourceCodeManagerMigrationProvider.class); }
           { add(GitSyncMigrationProvider.class); }
+          { add(DelegateMigrationProvider.class); }
         })
         .build();
   }
@@ -567,6 +575,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .engineEventHandlersMap(getOrchestrationEventHandlers())
         .executionPoolConfig(appConfig.getPmsSdkExecutionPoolConfig())
         .orchestrationEventPoolConfig(appConfig.getPmsSdkOrchestrationEventPoolConfig())
+        .planCreatorServiceInternalConfig(appConfig.getPmsPlanCreatorServicePoolConfig())
         .build();
   }
 
@@ -588,9 +597,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private Map<String, Class<? extends JsonExpansionHandler>> getJsonExpansionHandlers() {
     Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers = new HashMap<>();
-    jsonExpansionHandlers.put(YAMLFieldNameConstants.CONNECTOR_REF, NoOpExpansionHandler.class);
-    jsonExpansionHandlers.put(YamlTypes.SERVICE_REF, NoOpExpansionHandler.class);
-    jsonExpansionHandlers.put(YamlTypes.ENVIRONMENT_REF, NoOpExpansionHandler.class);
+    jsonExpansionHandlers.put(YAMLFieldNameConstants.CONNECTOR_REF, DefaultConnectorRefExpansionHandler.class);
+    jsonExpansionHandlers.put(YamlTypes.SERVICE_REF, ServiceRefExpansionHandler.class);
+    jsonExpansionHandlers.put(YamlTypes.ENVIRONMENT_REF, EnvironmentRefExpansionHandler.class);
     return jsonExpansionHandlers;
   }
 

@@ -1,4 +1,5 @@
 package io.harness.connector;
+
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -19,6 +20,7 @@ import io.harness.connector.heartbeat.K8sConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.NexusValidationParamsProvider;
 import io.harness.connector.heartbeat.NoOpConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.ScmConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.ServiceNowValidationParamsProvider;
 import io.harness.connector.heartbeat.VaultConnectorValidationParamsProvider;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
@@ -82,6 +84,8 @@ import io.harness.connector.mappers.secretmanagermapper.LocalDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.LocalEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.VaultDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.VaultEntityToDTO;
+import io.harness.connector.mappers.servicenow.ServiceNowDTOtoEntity;
+import io.harness.connector.mappers.servicenow.ServiceNowEntityToDTO;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.mappers.sumologicmapper.SumoLogicDTOToEntity;
@@ -104,6 +108,7 @@ import io.harness.connector.validator.JiraConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.NexusConnectorValidator;
 import io.harness.connector.validator.SecretManagerConnectorValidator;
+import io.harness.connector.validator.ServiceNowConnectorValidator;
 import io.harness.connector.validator.scmValidators.AwsCodeCommitValidator;
 import io.harness.connector.validator.scmValidators.BitbucketConnectorValidator;
 import io.harness.connector.validator.scmValidators.GitConnectorValidator;
@@ -246,6 +251,10 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.CUSTOM_HEALTH,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
             CVConnectorParamsProvider.class, CustomHealthDTOToEntity.class, CustomHealthEntityToDTO.class,
+            NotSupportedValidationHandler.class));
+    registrar.put(ConnectorType.SERVICENOW,
+        new ConnectorRegistrar(ConnectorCategory.TICKETING, ServiceNowConnectorValidator.class,
+            ServiceNowValidationParamsProvider.class, ServiceNowDTOtoEntity.class, ServiceNowEntityToDTO.class,
             NotSupportedValidationHandler.class));
   }
 

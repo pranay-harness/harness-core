@@ -4,7 +4,6 @@ import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.CONST_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ENUM_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.IF_NODE;
-import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.TYPE_NODE;
 
@@ -33,24 +32,13 @@ public class YamlSchemaTransientHelper {
   public static final List<EntityType> allStepV2EntityTypes = new ArrayList<EntityType>() {
     {
       add(EntityType.HTTP_STEP);
+      add(EntityType.JIRA_CREATE_STEP);
       add(EntityType.SHELL_SCRIPT_STEP);
+      add(EntityType.K8S_CANARY_DEPLOY_STEP);
+      add(EntityType.TEMPLATE);
+      add(EntityType.SERVICENOW_APPROVAL_STEP);
     }
   };
-
-  // write unit test to match this with PipelineServiceModule.commonStepsMovedToNewSchema
-  public static final List<EntityType> pipelineStepV2EntityTypes = new ArrayList<EntityType>() {
-    {
-      add(EntityType.HTTP_STEP);
-      add(EntityType.SHELL_SCRIPT_STEP);
-    }
-  };
-
-  // Add cd steps here that are moved to new schema.
-  public static final List<EntityType> cdStepV2EntityTypes = new ArrayList<>();
-  // Add cv steps here that are moved to new schema.
-  public static final List<EntityType> cvStepV2EntityTypes = new ArrayList<>();
-  // Add ci steps here that are moved to new schema.
-  public static final List<EntityType> ciStepV2EntityTypes = new ArrayList<>();
 
   public void deleteSpecNodeInStageElementConfig(JsonNode stageElementConfig) {
     JsonNodeUtils.deletePropertiesInJsonNode((ObjectNode) stageElementConfig.get(PROPERTIES_NODE), "spec");
@@ -68,22 +56,17 @@ public class YamlSchemaTransientHelper {
   }
 
   public void removeV2StepEnumsFromStepElementConfig(JsonNode stepElementConfigNode) {
-    for (JsonNode oneOfElement : stepElementConfigNode.get(ONE_OF_NODE)) {
-      if (oneOfElement.get(PROPERTIES_NODE).get(TYPE_NODE) == null) {
-        continue;
-      }
-      Set<String> v2StepTypes = allStepV2EntityTypes.stream().map(EntityType::getYamlName).collect(Collectors.toSet());
-      removeV2StepFromStepElementConfigAllOf((ArrayNode) oneOfElement.get(ALL_OF_NODE), v2StepTypes);
-      ArrayNode enumNode = (ArrayNode) oneOfElement.get(PROPERTIES_NODE).get(TYPE_NODE).get(ENUM_NODE);
-      if (enumNode == null) {
-        return;
-      }
-      ArrayNode enumArray = enumNode.deepCopy();
-      enumNode.removeAll();
-      for (JsonNode arrayElement : enumArray) {
-        if (!v2StepTypes.contains(arrayElement.asText())) {
-          enumNode.add(arrayElement);
-        }
+    Set<String> v2StepTypes = allStepV2EntityTypes.stream().map(EntityType::getYamlName).collect(Collectors.toSet());
+    removeV2StepFromStepElementConfigAllOf((ArrayNode) stepElementConfigNode.get(ALL_OF_NODE), v2StepTypes);
+    ArrayNode enumNode = (ArrayNode) stepElementConfigNode.get(PROPERTIES_NODE).get(TYPE_NODE).get(ENUM_NODE);
+    if (enumNode == null) {
+      return;
+    }
+    ArrayNode enumArray = enumNode.deepCopy();
+    enumNode.removeAll();
+    for (JsonNode arrayElement : enumArray) {
+      if (!v2StepTypes.contains(arrayElement.asText())) {
+        enumNode.add(arrayElement);
       }
     }
   }

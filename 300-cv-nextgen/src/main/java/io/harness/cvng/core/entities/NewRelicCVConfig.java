@@ -2,12 +2,14 @@ package io.harness.cvng.core.entities;
 
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.core.beans.HealthSourceQueryType;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.MetricResponseMapping;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.NewRelicHealthSourceSpec.NewRelicMetricDefinition;
 import io.harness.cvng.core.services.CVNextGenConstants;
@@ -18,8 +20,9 @@ import io.harness.cvng.core.utils.analysisinfo.SLIMetricTransformer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -41,6 +44,13 @@ public class NewRelicCVConfig extends MetricCVConfig {
   private long applicationId;
   private String groupName;
   private List<NewRelicMetricInfo> metricInfos;
+  private HealthSourceQueryType queryType;
+
+  boolean customQuery;
+
+  public boolean isCustomQuery() {
+    return isNotEmpty(metricInfos);
+  }
 
   @Override
   public DataSourceType getType() {
@@ -80,32 +90,44 @@ public class NewRelicCVConfig extends MetricCVConfig {
 
   public void populateFromMetricDefinitions(
       List<NewRelicMetricDefinition> metricDefinitions, CVMonitoringCategory category) {
-    this.metricInfos = metricDefinitions.stream()
-                           .filter(md -> md.getGroupName().equals(getGroupName()))
-                           .map(md
-                               -> NewRelicMetricInfo.builder()
-                                      .identifier(md.getIdentifier())
-                                      .metricName(md.getMetricName())
-                                      .nrql(md.getNrql())
-                                      .responseMapping(md.getResponseMapping())
-                                      .sli(SLIMetricTransformer.transformDTOtoEntity(md.getSli()))
-                                      .liveMonitoring(LiveMonitoringTransformer.transformDTOtoEntity(md.getAnalysis()))
-                                      .deploymentVerification(
-                                          DevelopmentVerificationTransformer.transformDTOtoEntity(md.getAnalysis()))
-                                      .metricType(md.getRiskProfile().getMetricType())
-                                      .build())
-                           .collect(Collectors.toList());
+    if (this.metricInfos == null) {
+      this.metricInfos = new ArrayList<>();
+    }
+    MetricPack metricPack = MetricPack.builder()
+                                .category(category)
+                                .accountId(getAccountId())
+                                .dataSourceType(DataSourceType.NEW_RELIC)
+                                .projectIdentifier(getProjectIdentifier())
+                                .orgIdentifier(getOrgIdentifier())
+                                .identifier(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER)
+                                .category(category)
+                                .build();
 
-    // set metric pack info
-    this.setMetricPack(MetricPack.builder()
-                           .category(category)
-                           .accountId(getAccountId())
-                           .dataSourceType(DataSourceType.NEW_RELIC)
-                           .projectIdentifier(getProjectIdentifier())
-                           .orgIdentifier(getOrgIdentifier())
-                           .identifier(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER)
-                           .category(category)
-                           .build());
+    metricDefinitions.stream().filter(md -> md.getGroupName().equals(getGroupName())).forEach(md -> {
+      NewRelicMetricInfo info =
+          NewRelicMetricInfo.builder()
+              .identifier(md.getIdentifier())
+              .metricName(md.getMetricName())
+              .nrql(md.getNrql())
+              .responseMapping(md.getResponseMapping())
+              .sli(SLIMetricTransformer.transformDTOtoEntity(md.getSli()))
+              .liveMonitoring(LiveMonitoringTransformer.transformDTOtoEntity(md.getAnalysis()))
+              .deploymentVerification(DevelopmentVerificationTransformer.transformDTOtoEntity(md.getAnalysis()))
+              .metricType(md.getRiskProfile().getMetricType())
+              .build();
+      this.metricInfos.add(info);
+      Set<TimeSeriesThreshold> thresholds = getThresholdsToCreateOnSaveForCustomProviders(
+          info.getMetricName(), info.getMetricType(), md.getRiskProfile().getThresholdTypes());
+
+      metricPack.addToMetrics(MetricPack.MetricDefinition.builder()
+                                  .thresholds(new ArrayList<>(thresholds))
+                                  .type(info.getMetricType())
+                                  .name(info.getMetricName())
+                                  .included(true)
+                                  .build());
+    });
+
+    this.setMetricPack(metricPack);
   }
 
   @Value

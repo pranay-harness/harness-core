@@ -1,6 +1,7 @@
 package software.wings.service.impl.servicenow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.delegate.task.servicenow.ServiceNowTaskNgHelper.handleResponse;
 import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -14,6 +15,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.servicenow.ServiceNowUtils;
 
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.ServiceNowConfig;
@@ -29,7 +31,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -370,8 +371,8 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       ServiceNowTaskParameters taskParameters, ServiceNowApprovalParams approvalParams) {
     JsonNode issueObj = getIssue(taskParameters);
     String issueId = issueObj.get("sys_id").get("display_value").asText();
-    String issueUrl = getBaseUrl(taskParameters.getServiceNowConfig()) + "nav_to.do?uri=/"
-        + taskParameters.getTicketType().toString().toLowerCase() + ".do?sys_id=" + issueId;
+    String issueUrl = ServiceNowUtils.prepareTicketUrlFromTicketId(
+        getBaseUrl(taskParameters.getServiceNowConfig()), issueId, taskParameters.getTicketType().toString());
 
     Set<String> serviceNowFields = approvalParams.getAllCriteriaFields();
 
@@ -414,22 +415,6 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
           .collect(Collectors.joining(",\n"));
     }
     return null;
-  }
-
-  public static void handleResponse(Response<?> response, String message) throws IOException {
-    if (response.isSuccessful()) {
-      return;
-    }
-    if (response.code() == 401) {
-      throw new ServiceNowException("Invalid ServiceNow credentials", SERVICENOW_ERROR, USER);
-    }
-    if (response.code() == 404) {
-      throw new ServiceNowException("404 Not found", SERVICENOW_ERROR, USER);
-    }
-    if (response.errorBody() == null) {
-      throw new ServiceNowException(message + " : " + response.message(), SERVICENOW_ERROR, USER);
-    }
-    throw new ServiceNowException(response.errorBody().string(), SERVICENOW_ERROR, USER);
   }
 
   public ServiceNowRestClient getRestClient(ServiceNowTaskParameters taskParameters) {

@@ -2,6 +2,7 @@ package io.harness.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.outcomes.LiteEnginePodDetailsOutcome.POD_DETAILS_OUTCOME;
+import static io.harness.beans.outcomes.VmDetailsOutcome.VM_DETAILS_OUTCOME;
 import static io.harness.beans.steps.stepinfo.InitializeStepInfo.LOG_KEYS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -13,11 +14,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.environment.VmBuildJobInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.outcomes.DependencyOutcome;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
+import io.harness.beans.outcomes.VmDetailsOutcome;
 import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
@@ -49,7 +52,9 @@ import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -87,7 +92,7 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
   @Inject private KryoSerializer kryoSerializer;
   @Inject private CIDelegateTaskExecutor ciDelegateTaskExecutor;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
-
+  @Inject ExecutionSweepingOutputService executionSweepingOutputService;
   private static final String DEPENDENCY_OUTCOME = "dependencies";
   public static final StepType STEP_TYPE = InitializeStepInfo.STEP_TYPE;
 
@@ -199,8 +204,23 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
       Ambiance ambiance, StepElementParameters stepElementParameters, CITaskExecutionResponse ciTaskExecutionResponse) {
     VmTaskExecutionResponse vmTaskExecutionResponse = (VmTaskExecutionResponse) ciTaskExecutionResponse;
     if (vmTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      return StepResponse.builder().status(Status.SUCCEEDED).build();
+      return StepResponse.builder()
+          .status(Status.SUCCEEDED)
+          .stepOutcome(
+              StepResponse.StepOutcome.builder()
+                  .name(VM_DETAILS_OUTCOME)
+                  .group(StepOutcomeGroup.STAGE.name())
+                  .outcome(VmDetailsOutcome.builder().ipAddress(vmTaskExecutionResponse.getIpAddress()).build())
+                  .build())
+          .build();
     } else {
+      log.error("VM initialize step execution finished with status [{}] and response [{}]",
+          vmTaskExecutionResponse.getCommandExecutionStatus(), vmTaskExecutionResponse);
+      StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(Status.FAILED);
+      if (vmTaskExecutionResponse.getErrorMessage() != null) {
+        stepResponseBuilder.failureInfo(
+            FailureInfo.newBuilder().setErrorMessage(vmTaskExecutionResponse.getErrorMessage()).build());
+      }
       return StepResponse.builder().status(Status.FAILED).build();
     }
   }
@@ -278,8 +298,14 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
 
     Map<String, List<String>> logKeys = new HashMap<>();
     logKeyByStepId.forEach((stepId, logKey) -> logKeys.put(stepId, Collections.singletonList(logKey)));
-    executionSweepingOutputResolver.consume(
-        ambiance, LOG_KEYS, StepLogKeyDetails.builder().logKeys(logKeys).build(), StepOutcomeGroup.STAGE.name());
+
+    OptionalSweepingOutput optionalSweepingOutput =
+        executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getSweepingOutputRefObject(LOG_KEYS));
+    if (!optionalSweepingOutput.isFound()) {
+      executionSweepingOutputResolver.consume(
+          ambiance, LOG_KEYS, StepLogKeyDetails.builder().logKeys(logKeys).build(), StepOutcomeGroup.STAGE.name());
+    }
+
     return logKeyByStepId;
   }
 
@@ -315,22 +341,7 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
     if (infrastructure == null) {
       throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
-    // TODO (shubham): Add entity details for aws vm
-    if (infrastructure.getType() == Infrastructure.Type.VM) {
-      return new ArrayList<>();
-    }
-
-    if (((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
-      throw new CIStageExecutionException("Input infrastructure can not be empty");
-    }
-
     List<EntityDetail> entityDetails = new ArrayList<>();
-
-    String infraConnectorRef = ((K8sDirectInfraYaml) infrastructure).getSpec().getConnectorRef();
-
-    // Add Infra connector
-    entityDetails.add(createEntityDetails(infraConnectorRef, accountIdentifier, projectIdentifier, orgIdentifier));
-
     // Add git clone connector
     if (!initializeStepInfo.isSkipGitClone()) {
       if (initializeStepInfo.getCiCodebase() == null) {
@@ -339,6 +350,27 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
       entityDetails.add(createEntityDetails(
           initializeStepInfo.getCiCodebase().getConnectorRef(), accountIdentifier, projectIdentifier, orgIdentifier));
     }
+
+    if (infrastructure.getType() == Infrastructure.Type.VM) {
+      ArrayList<String> connectorRefs = ((VmBuildJobInfo) initializeStepInfo.getBuildJobEnvInfo()).getConnectorRefs();
+      if (!isEmpty(connectorRefs)) {
+        entityDetails.addAll(
+            connectorRefs.stream()
+                .map(connectorIdentifier
+                    -> createEntityDetails(connectorIdentifier, accountIdentifier, projectIdentifier, orgIdentifier))
+                .collect(Collectors.toList()));
+      }
+      return entityDetails;
+    }
+
+    if (((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+      throw new CIStageExecutionException("Input infrastructure can not be empty");
+    }
+
+    String infraConnectorRef = ((K8sDirectInfraYaml) infrastructure).getSpec().getConnectorRef();
+
+    // Add Infra connector
+    entityDetails.add(createEntityDetails(infraConnectorRef, accountIdentifier, projectIdentifier, orgIdentifier));
 
     K8BuildJobEnvInfo.PodsSetupInfo podSetupInfo =
         ((K8BuildJobEnvInfo) initializeStepInfo.getBuildJobEnvInfo()).getPodsSetupInfo();

@@ -46,6 +46,7 @@ import io.harness.beans.steps.CIStepInfoUtils;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
+import io.harness.beans.sweepingoutputs.StageInfraDetails.Type;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.utils.QuantityUtils;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
@@ -314,7 +315,7 @@ public class K8InitializeStepInfoBuilder implements InitializeStepInfoBuilder {
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(getEnvVariables(integrationStage));
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
-    envVarMap.putAll(PluginSettingUtils.getPluginCompatibleEnvVariables(stepInfo, identifier, timeout));
+    envVarMap.putAll(PluginSettingUtils.getPluginCompatibleEnvVariables(stepInfo, identifier, timeout, Type.K8));
     Integer runAsUser = resolveIntegerParameter(stepInfo.getRunAsUser(), null);
 
     return ContainerDefinitionInfo.builder()
@@ -323,10 +324,11 @@ public class K8InitializeStepInfoBuilder implements InitializeStepInfoBuilder {
         .args(StepContainerUtils.getArguments(port))
         .envVars(envVarMap)
         .secretVariables(getSecretVariables(integrationStage))
-        .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(IntegrationStageUtils.getImageInfo(
-                                       CIStepInfoUtils.getPluginCustomStepImage(stepInfo, ciExecutionServiceConfig)))
-                                   .build())
+        .containerImageDetails(
+            ContainerImageDetails.builder()
+                .imageDetails(IntegrationStageUtils.getImageInfo(
+                    CIStepInfoUtils.getPluginCustomStepImage(stepInfo, ciExecutionServiceConfig, Type.K8)))
+                .build())
         .isHarnessManagedImage(true)
         .containerResourceParams(getStepContainerResource(stepInfo.getResources(), stepType, identifier, accountId))
         .ports(Collections.singletonList(port))
@@ -340,6 +342,14 @@ public class K8InitializeStepInfoBuilder implements InitializeStepInfoBuilder {
   private ContainerDefinitionInfo createRunStepContainerDefinition(RunStepInfo runStepInfo,
       StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex,
       String identifier, String name, String accountId) {
+    if (runStepInfo.getImage() == null) {
+      throw new CIStageExecutionException("image can't be empty in k8s infrastructure");
+    }
+
+    if (runStepInfo.getConnectorRef() == null) {
+      throw new CIStageExecutionException("connector ref can't be empty in k8s infrastructure");
+    }
+
     Integer port = portFinder.getNextPort();
 
     String containerName = format("%s%d", STEP_PREFIX, stepIndex);
@@ -381,6 +391,14 @@ public class K8InitializeStepInfoBuilder implements InitializeStepInfoBuilder {
       StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex,
       String identifier, String accountId) {
     Integer port = portFinder.getNextPort();
+
+    if (runTestsStepInfo.getImage() == null) {
+      throw new CIStageExecutionException("image can't be empty in k8s infrastructure");
+    }
+
+    if (runTestsStepInfo.getConnectorRef() == null) {
+      throw new CIStageExecutionException("connector ref can't be empty in k8s infrastructure");
+    }
 
     String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> stepEnvVars = new HashMap<>();
@@ -529,54 +547,13 @@ public class K8InitializeStepInfoBuilder implements InitializeStepInfoBuilder {
     Map<String, K8BuildJobEnvInfo.ConnectorConversionInfo> map = new HashMap<>();
     if (stepElement.getStepSpecType() instanceof PluginCompatibleStep) {
       PluginCompatibleStep step = (PluginCompatibleStep) stepElement.getStepSpecType();
-      switch (stepElement.getType()) {
-        case "BuildAndPushECR":
-        case "RestoreCacheS3":
-        case "SaveCacheS3":
-        case "S3Upload":
-          map.put(stepElement.getIdentifier(),
-              K8BuildJobEnvInfo.ConnectorConversionInfo.builder()
-                  .connectorRef(resolveStringParameter(
-                      "connectorRef", stepElement.getType(), stepElement.getIdentifier(), step.getConnectorRef(), true))
-                  .envToSecretEntry(EnvVariableEnum.AWS_ACCESS_KEY, PLUGIN_ACCESS_KEY)
-                  .envToSecretEntry(EnvVariableEnum.AWS_SECRET_KEY, PLUGIN_SECRET_KEY)
-                  .build());
-          break;
-        case "BuildAndPushGCR":
-        case "GCSUpload":
-        case "SaveCacheGCS":
-        case "RestoreCacheGCS":
-          map.put(stepElement.getIdentifier(),
-              K8BuildJobEnvInfo.ConnectorConversionInfo.builder()
-                  .connectorRef(resolveStringParameter(
-                      "connectorRef", stepElement.getType(), stepElement.getIdentifier(), step.getConnectorRef(), true))
-                  .envToSecretEntry(EnvVariableEnum.GCP_KEY, PLUGIN_JSON_KEY)
-                  .build());
-
-          break;
-        case "BuildAndPushDockerRegistry":
-          map.put(stepElement.getIdentifier(),
-              K8BuildJobEnvInfo.ConnectorConversionInfo.builder()
-                  .connectorRef(resolveStringParameter(
-                      "connectorRef", stepElement.getType(), stepElement.getIdentifier(), step.getConnectorRef(), true))
-                  .envToSecretEntry(EnvVariableEnum.DOCKER_USERNAME, PLUGIN_USERNAME)
-                  .envToSecretEntry(EnvVariableEnum.DOCKER_PASSWORD, PLUGIN_PASSW)
-                  .envToSecretEntry(EnvVariableEnum.DOCKER_REGISTRY, PLUGIN_REGISTRY)
-                  .build());
-          break;
-        case "ArtifactoryUpload":
-          map.put(stepElement.getIdentifier(),
-              K8BuildJobEnvInfo.ConnectorConversionInfo.builder()
-                  .connectorRef(resolveStringParameter(
-                      "connectorRef", stepElement.getType(), stepElement.getIdentifier(), step.getConnectorRef(), true))
-                  .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_ENDPOINT, PLUGIN_URL)
-                  .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_USERNAME, PLUGIN_USERNAME)
-                  .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_PASSWORD, PLUGIN_PASSW)
-                  .build());
-          break;
-        default:
-          throw new IllegalStateException("Unexpected value: " + stepElement.getType());
-      }
+      String connectorRef = PluginSettingUtils.getConnectorRef(step);
+      Map<EnvVariableEnum, String> envToSecretMap = PluginSettingUtils.getConnectorSecretEnvMap(step);
+      map.put(stepElement.getIdentifier(),
+          K8BuildJobEnvInfo.ConnectorConversionInfo.builder()
+              .connectorRef(connectorRef)
+              .envToSecretsMap(envToSecretMap)
+              .build());
     }
     return map;
   }

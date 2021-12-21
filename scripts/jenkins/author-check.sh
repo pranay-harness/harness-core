@@ -210,6 +210,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^markoharness <marko.lukic@harness.io>$" |\
     grep -iv "^bharat bandhu goel <bharat.goel@harness.io>$" |\
     grep -iv "^Bharat Goel <bharat.goel@harness.io>$" |\
+    grep -iv "^Milos Vasic <milos.vasic@harness.io>$" |\
     grep -iv "^Alexandru Ciofu <alexandru.ciofu@harness.io>$"` || :
 
 if [ ! -z "$UNKNOWN_USERS" ]

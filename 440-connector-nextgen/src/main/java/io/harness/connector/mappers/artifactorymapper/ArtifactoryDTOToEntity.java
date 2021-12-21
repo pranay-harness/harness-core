@@ -12,6 +12,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsern
 import io.harness.encryption.SecretRefHelper;
 
 import com.google.inject.Singleton;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @OwnedBy(HarnessTeam.CDC)
@@ -21,7 +22,9 @@ public class ArtifactoryDTOToEntity
   public ArtifactoryConnector toConnectorEntity(ArtifactoryConnectorDTO configDTO) {
     ArtifactoryAuthType artifactoryAuthType = configDTO.getAuth().getAuthType();
     ArtifactoryConnectorBuilder artifactoryConnectorBuilder =
-        ArtifactoryConnector.builder().url(configDTO.getArtifactoryServerUrl()).authType(artifactoryAuthType);
+        ArtifactoryConnector.builder()
+            .url(StringUtils.trim(configDTO.getArtifactoryServerUrl()))
+            .authType(artifactoryAuthType);
     if (artifactoryAuthType == ArtifactoryAuthType.USER_PASSWORD) {
       ArtifactoryUsernamePasswordAuthDTO artifactoryUsernamePasswordAuthDTO =
           (ArtifactoryUsernamePasswordAuthDTO) configDTO.getAuth().getCredentials();

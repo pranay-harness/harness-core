@@ -21,13 +21,5 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(CI)
 public class VmInfraYaml implements Infrastructure {
   @Builder.Default @NotNull private Type type = Type.VM;
-  @NotNull private VmInfraYamlSpec spec;
-
-  @Data
-  @Builder
-  @NoArgsConstructor
-  @AllArgsConstructor
-  public static class VmInfraYamlSpec {
-    @NotNull private String poolId;
-  }
+  @NotNull private VmInfraSpec spec;
 }

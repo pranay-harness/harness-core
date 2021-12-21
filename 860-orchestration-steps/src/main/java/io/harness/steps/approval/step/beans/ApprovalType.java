@@ -12,7 +12,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @OwnedBy(CDC)
 public enum ApprovalType implements EntitySubtype {
   @JsonProperty(StepSpecTypeConstants.HARNESS_APPROVAL) HARNESS_APPROVAL(StepSpecTypeConstants.HARNESS_APPROVAL),
-  @JsonProperty(StepSpecTypeConstants.JIRA_APPROVAL) JIRA_APPROVAL(StepSpecTypeConstants.JIRA_APPROVAL);
+  @JsonProperty(StepSpecTypeConstants.JIRA_APPROVAL) JIRA_APPROVAL(StepSpecTypeConstants.JIRA_APPROVAL),
+  @JsonProperty(StepSpecTypeConstants.SERVICENOW_APPROVAL)
+  SERVICENOW_APPROVAL(StepSpecTypeConstants.SERVICENOW_APPROVAL);
 
   private final String displayName;
 
@@ -36,6 +38,8 @@ public enum ApprovalType implements EntitySubtype {
         return HARNESS_APPROVAL;
       case StepSpecTypeConstants.JIRA_APPROVAL:
         return JIRA_APPROVAL;
+      case StepSpecTypeConstants.SERVICENOW_APPROVAL:
+        return SERVICENOW_APPROVAL;
       default:
         return null;
     }

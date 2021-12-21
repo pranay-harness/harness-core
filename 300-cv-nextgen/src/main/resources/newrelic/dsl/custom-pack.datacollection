@@ -5,27 +5,82 @@ Var lengthOfItems = Env:queries.length()
 Var requests = []
 Var returnList = []
 Var emptySpace = ""
-Var queryConcat = concat(" SINCE ", Env:startTimeMillis, " UNTIL ", Env:endTimeMillis, " TIMESERIES ")
+Var queryConcat = concat(" SINCE ", Env:startTimeMillis, " UNTIL ", Env:endTimeMillis, " ")
 while Var:index !=  Var:lengthOfItems {
     Var query = Env:queries[Var:index]
     Var metricValuePath = Env:metricJsonPaths[Var:index]
     Var timestampPath = Env:timestampJsonPaths[Var:index]
     Var metricName = Env:metricNames[Var:index]
 
-    Var fullQuery = concat(Env:baseUrl, "query?nrql=", Var:query, Var:queryConcat)
 
-    print Var:fullQuery
-    Request metricRequest = new Request(url=Var:fullQuery, header=Env:commonHeaders)
-    Var resp = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
-
-    Var metricVal = extract(Var:resp,Var:metricValuePath)
-    Var timestamp = extract(Var:resp,Var:timestampPath)
     Var nullVal = null
-    if Var:metricVal != Var:nullVal  {
-        if
-        Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp)
-        Var:returnList.append(Var:tsRecord)
+    Var innerIndex = 0
+
+    Var fullQuery = concat(Env:baseUrl, "query?nrql=", Var:query, Var:queryConcat)
+    print Var:fullQuery
+
+    if Env:collectHostData == "true"  {
+        Var hostQuery = concat("SELECT count(*) FROM Transaction,TransactionError WHERE appName = '",Env:appName,"' FACET host SINCE 120 minutes ago")
+        Var fullHostQuery = concat(Env:baseUrl, "query?nrql=", Var:hostQuery)
+        Var hostResp = sync-call(url=Var:fullHostQuery, header=Env:commonHeaders)
+        print Var:hostResp
+
+        Var path = "$.facets.[*].name"
+        Var hostList = extract(Var:hostResp, Var:path)
+
+
+        foreach host in Var:hostList {
+          Var hostMetricQuery = concat(Var:fullQuery, "")
+          Var hostCondition = concat("WHERE host = '", Var:host, "' AND ")
+          Var:hostMetricQuery.replaceAll("WHERE", Var:hostCondition)
+
+
+          print Var:hostMetricQuery
+          Var hostMetricResponse = sync-call(url=Var:hostMetricQuery, header=Env:commonHeaders)
+          print Var:hostMetricResponse
+
+          Var metricValArr = extract(Var:hostMetricResponse,Var:metricValuePath)
+          Var timestampArr = extract(Var:hostMetricResponse,Var:timestampPath)
+          Var lengthOfResults = Var:metricValArr.length()
+          print Var:lengthOfResults
+
+          while Var:innerIndex !=  Var:lengthOfResults {
+            Var metricVal = Var:metricValArr[Var:innerIndex]
+            Var timestamp = Var:timestampArr[Var:innerIndex]
+            if Var:metricVal != Var:nullVal  {
+                Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp, host=Var:host)
+                Var:returnList.append(Var:tsRecord)
+            }
+            innerIndex = Var:innerIndex + Var:one
+          }
+        }
+
     }
+
+    if Env:collectHostData != "true" {
+
+        Request metricRequest = new Request(url=Var:fullQuery, header=Env:commonHeaders)
+        Var resp = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
+
+        Var metricValArr = extract(Var:resp,Var:metricValuePath)
+        Var timestampArr = extract(Var:resp,Var:timestampPath)
+        Var lengthOfResults = Var:metricValArr.length()
+        print Var:lengthOfResults
+
+        while Var:innerIndex !=  Var:lengthOfResults {
+            Var metricVal = Var:metricValArr[Var:innerIndex]
+            Var timestamp = Var:timestampArr[Var:innerIndex]
+            if Var:metricVal != Var:nullVal  {
+                Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp)
+                Var:returnList.append(Var:tsRecord)
+            }
+            innerIndex = Var:innerIndex + Var:one
+        }
+    }
+
+
+
+
     index = Var:index + Var:one
 }
 return Var:returnList

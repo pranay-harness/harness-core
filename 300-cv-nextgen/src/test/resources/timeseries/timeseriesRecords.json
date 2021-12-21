@@ -3,6 +3,7 @@
 	"_id": "5f03ff0d285fa07a833541a0",
 	"cvConfigId": "Z6-wzYE-St6SMNjNtmKCrA",
 	"metricName": "Average Response Time (ms)",
+	  "metricIdentifier": "Average Response Time (ms)",
 	"accountId": "kmpySmUISimoRrJL6NL73w",
 	"metricType": "RESP_TIME",
 	"timeSeriesGroupValues": [

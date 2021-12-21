@@ -158,7 +158,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("ceSetUpConfig") @ConfigSecret private CESetUpConfig ceSetUpConfig;
   @JsonProperty("marketoConfig") @ConfigSecret private MarketoConfig marketoConfig;
   @JsonProperty("segmentConfig") @ConfigSecret private SegmentConfig segmentConfig;
-  @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
+  @JsonProperty("segmentConfiguration") @ConfigSecret private SegmentConfiguration segmentConfiguration;
   @JsonProperty("salesforceConfig")
   @ConfigSecret
   private SalesforceConfig salesforceConfig = SalesforceConfig.builder().build();
@@ -329,5 +329,10 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
      * @return the resource path to uri mappings
      */
     @JsonIgnore public abstract Map<String, String> getResourcePathToUriMappings();
+  }
+
+  @JsonIgnore
+  public boolean useCdnForDelegateStorage() {
+    return !DeployMode.isOnPrem(getDeployMode().name());
   }
 }

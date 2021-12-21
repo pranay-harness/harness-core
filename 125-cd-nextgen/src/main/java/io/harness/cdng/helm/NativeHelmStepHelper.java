@@ -53,7 +53,6 @@ import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome.KustomizeManifestO
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome.OpenshiftManifestOutcomeKeys;
-import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
@@ -75,7 +74,6 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
-import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
@@ -89,7 +87,6 @@ import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.helm.HelmCmdExecResponseNG;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmCommandRequestNG;
-import io.harness.delegate.task.helm.HelmReleaseHistoryCommandRequestNG;
 import io.harness.delegate.task.helm.HelmValuesFetchRequest;
 import io.harness.delegate.task.helm.HelmValuesFetchResponse;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
@@ -106,7 +103,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.helm.HelmSubCommandType;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.logging.UnitProgress;
@@ -745,11 +741,6 @@ public class NativeHelmStepHelper {
         .collect(Collectors.toCollection(LinkedList::new));
   }
 
-  private boolean isAnyOcParamRemoteStore(@NotEmpty List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
-    return openshiftParamManifests.stream().anyMatch(
-        openshiftParamManifest -> ManifestStoreType.isInGitSubset(openshiftParamManifest.getStore().getKind()));
-  }
-
   private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifestOutcome> aggregatedValuesManifests) {
     return aggregatedValuesManifests.stream().anyMatch(
         valuesManifest -> ManifestStoreType.isInGitSubset(valuesManifest.getStore().getKind()));
@@ -773,11 +764,6 @@ public class NativeHelmStepHelper {
       if (responseData instanceof HelmValuesFetchResponse) {
         unitProgressData = ((HelmValuesFetchResponse) responseData).getUnitProgressData();
         return handleHelmValuesFetchResponse(responseData, nativeHelmStepExecutor, ambiance, stepElementParameters,
-            helmStepPassThroughData, helmChartManifest);
-      }
-
-      if (responseData instanceof HelmCmdExecResponseNG) {
-        return handleReleaseHistoryResponse(responseData, nativeHelmStepExecutor, ambiance, stepElementParameters,
             helmStepPassThroughData, helmChartManifest);
       }
 
@@ -824,73 +810,6 @@ public class NativeHelmStepHelper {
     return UnitProgressData.builder().unitProgresses(finalUnitProgressList).build();
   }
 
-  private TaskChainResponse handleReleaseHistoryResponse(ResponseData responseData,
-      NativeHelmStepExecutor nativeHelmStepExecutor, Ambiance ambiance, StepElementParameters stepElementParameters,
-      NativeHelmStepPassThroughData nativeHelmStepPassThroughData, ManifestOutcome helmChartManifest) {
-    HelmCmdExecResponseNG helmCmdExecResponseNG = (HelmCmdExecResponseNG) responseData;
-    if (helmCmdExecResponseNG.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return TaskChainResponse.builder()
-          .chainEnd(true)
-          .passThroughData(StepExceptionPassThroughData.builder()
-                               .unitProgressData(helmCmdExecResponseNG.getCommandUnitsProgress())
-                               .errorMessage(helmCmdExecResponseNG.getErrorMessage())
-                               .build())
-          .build();
-    }
-
-    return nativeHelmStepExecutor.executeHelmTask(helmChartManifest, ambiance, stepElementParameters,
-        valuesFileContents,
-        NativeHelmExecutionPassThroughData.builder()
-            .infrastructure(nativeHelmStepPassThroughData.getInfrastructure())
-            .lastActiveUnitProgressData(helmCmdExecResponseNG.getCommandUnitsProgress())
-            .build(),
-        false, helmCmdExecResponseNG.getCommandUnitsProgress());
-  }
-
-  private TaskChainResponse excecuteReleaseHistoryTask(ManifestOutcome manifestOutcome, Ambiance ambiance,
-      StepElementParameters stepElementParameters, List<String> valuesFileContents,
-      NativeHelmStepPassThroughData nativeHelmStepPassThroughData, boolean shouldOpenFetchFilesLogStream,
-      UnitProgressData unitProgressData) {
-    InfrastructureOutcome infrastructure = nativeHelmStepPassThroughData.getInfrastructure();
-    String releaseName = getReleaseName(ambiance, infrastructure);
-    List<String> manifestFilesContents = renderValues(manifestOutcome, ambiance, valuesFileContents);
-    HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
-
-    HelmReleaseHistoryCommandRequestNG helmCommandRequest =
-        HelmReleaseHistoryCommandRequestNG.builder()
-            .accountId(AmbianceUtils.getAccountId(ambiance))
-            .commandName("Release History")
-            .valuesYamlList(manifestFilesContents)
-            .k8sInfraDelegateConfig(getK8sInfraDelegateConfig(infrastructure, ambiance))
-            .manifestDelegateConfig(getManifestDelegateConfig(manifestOutcome, ambiance))
-            .commandUnitsProgress(UnitProgressDataMapper.toCommandUnitsProgress(unitProgressData))
-            .releaseName(releaseName)
-            .helmVersion(helmChartManifestOutcome.getHelmVersion())
-            .namespace(getK8sInfraDelegateConfig(infrastructure, ambiance).getNamespace())
-            .shouldOpenFetchFilesLogStream(true)
-            .build();
-
-    TaskData taskData = TaskData.builder()
-                            .parameters(new Object[] {helmCommandRequest})
-                            .taskType(TaskType.HELM_COMMAND_TASK_NG.name())
-                            .timeout(getTimeoutInMillis(stepElementParameters))
-                            .async(true)
-                            .build();
-
-    String taskName = TaskType.HELM_COMMAND_TASK_NG.getDisplayName() + " : " + helmCommandRequest.getCommandName();
-    HelmSpecParameters helmSpecParameters = (HelmSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest = prepareCDTaskRequest(ambiance, taskData, kryoSerializer,
-        helmSpecParameters.getCommandUnits(), taskName,
-        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(helmSpecParameters.getDelegateSelectors()))),
-        stepHelper.getEnvironmentType(ambiance));
-
-    return TaskChainResponse.builder()
-        .taskRequest(taskRequest)
-        .chainEnd(false)
-        .passThroughData(nativeHelmStepPassThroughData)
-        .build();
-  }
-
   private TaskChainResponse handleGitFetchFilesResponse(ResponseData responseData,
       NativeHelmStepExecutor nativeHelmStepExecutor, Ambiance ambiance, StepElementParameters stepElementParameters,
       NativeHelmStepPassThroughData nativeHelmStepPassThroughData, ManifestOutcome helmChartManifest) {
@@ -915,8 +834,12 @@ public class NativeHelmStepHelper {
     }
 
     this.valuesFileContents = valuesFileContents;
-    return excecuteReleaseHistoryTask(helmChartManifest, ambiance, stepElementParameters, valuesFileContents,
-        nativeHelmStepPassThroughData, false, gitFetchResponse.getUnitProgressData());
+
+    return nativeHelmStepExecutor.executeHelmTask(helmChartManifest, ambiance, stepElementParameters, emptyList(),
+        NativeHelmExecutionPassThroughData.builder()
+            .infrastructure(nativeHelmStepPassThroughData.getInfrastructure())
+            .build(),
+        false, gitFetchResponse.getUnitProgressData());
   }
 
   private TaskChainResponse handleHelmValuesFetchResponse(ResponseData responseData,
@@ -942,8 +865,11 @@ public class NativeHelmStepHelper {
           (isNotEmpty(valuesFileContent)) ? ImmutableList.of(valuesFileContent) : emptyList();
       this.valuesFileContents = valuesFileContents;
 
-      return excecuteReleaseHistoryTask(helmChartManifest, ambiance, stepElementParameters, valuesFileContents,
-          nativeHelmStepPassThroughData, false, helmValuesFetchResponse.getUnitProgressData());
+      return nativeHelmStepExecutor.executeHelmTask(helmChartManifest, ambiance, stepElementParameters, emptyList(),
+          NativeHelmExecutionPassThroughData.builder()
+              .infrastructure(nativeHelmStepPassThroughData.getInfrastructure())
+              .build(),
+          false, helmValuesFetchResponse.getUnitProgressData());
     }
   }
 

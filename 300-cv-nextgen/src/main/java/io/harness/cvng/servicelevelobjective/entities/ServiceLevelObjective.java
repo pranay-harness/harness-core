@@ -1,10 +1,14 @@
 package io.harness.cvng.servicelevelobjective.entities;
 
+import static java.time.temporal.ChronoUnit.DAYS;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
+import io.harness.cvng.servicelevelobjective.beans.DayOfWeek;
+import io.harness.cvng.servicelevelobjective.beans.SLOCalenderType;
+import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -17,9 +21,15 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
+import java.time.ZoneOffset;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -32,6 +42,7 @@ import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -64,11 +75,15 @@ public class ServiceLevelObjective
   SLOTarget sloTarget;
   private long lastUpdatedAt;
   private long createdAt;
+  private Double sloTargetPercentage;
+  public ZoneOffset getZoneOffset() {
+    return ZoneOffset.UTC; // hardcoding it to UTC for now. We need to ask it from user.
+  }
 
-  public int getTotalErrorBudgetMinutes(LocalDate currentDate) {
-    int currentWindowMinutes = getCurrentTimeRange(currentDate).totalMinutes();
-    Double errorBudgetPercentage = sloTarget.getSloTargetPercentage();
-    return (int) ((100 - errorBudgetPercentage) * currentWindowMinutes);
+  public int getTotalErrorBudgetMinutes(LocalDateTime currentDateTime) {
+    int currentWindowMinutes = getCurrentTimeRange(currentDateTime).totalMinutes();
+    Double errorBudgetPercentage = getSloTargetPercentage();
+    return (int) Math.round(((100 - errorBudgetPercentage) * currentWindowMinutes) / 100);
   }
 
   public static List<MongoIndex> mongoIndexes() {
@@ -84,27 +99,134 @@ public class ServiceLevelObjective
         .build();
   }
 
-  public TimePeriod getCurrentTimeRange(LocalDate currentDate) {
-    return TimePeriod.builder()
-        .startDate(currentDate)
-        .endDate(currentDate.minus(Period.ofDays(7)))
-        .build(); // TODO: write this logic.
+  public TimePeriod getCurrentTimeRange(LocalDateTime currentDateTime) {
+    return sloTarget.getCurrentTimeRange(currentDateTime);
   }
 
   @Value
-  @Builder
   public static class TimePeriod {
-    LocalDate startDate;
-    LocalDate endDate;
-
-    public Period getRemainingDays(LocalDate currentDate) {
-      return Period.between(currentDate, endDate);
+    LocalDateTime startTime;
+    LocalDateTime endTime;
+    @Builder
+    public TimePeriod(LocalDate startDate, LocalDate endDate) {
+      this(startDate.atStartOfDay(), endDate.atStartOfDay());
     }
-    public Period getTotalDays() {
-      return Period.between(startDate, endDate);
+    public static TimePeriod createWithLocalTime(LocalDateTime startTime, LocalDateTime endTime) {
+      return new TimePeriod(startTime, endTime);
+    }
+
+    private TimePeriod(LocalDateTime startTime, LocalDateTime endTime) {
+      this.startTime = startTime;
+      this.endTime = endTime;
+    }
+
+    public Period getRemainingDays(LocalDateTime currentDateTime) {
+      return Period.between(currentDateTime.toLocalDate(), endTime.toLocalDate());
+    }
+    public int getTotalDays() {
+      return (int) DAYS.between(getStartTime(), getEndTime());
     }
     public int totalMinutes() {
-      return Period.between(startDate, endDate).getDays() * 24 * 60;
+      return (int) Duration.between(getStartTime(), getEndTime()).toMinutes();
+    }
+
+    /**
+     * Start time is inclusive.
+     */
+    public Instant getStartTime(ZoneOffset zoneId) {
+      return getStartTime().toInstant(zoneId);
+    }
+
+    /**
+     * End time is exclusive.
+     */
+    public Instant getEndTime(ZoneOffset zoneId) {
+      return getEndTime().toInstant(zoneId);
+    }
+  }
+
+  @Data
+  @SuperBuilder
+  public abstract static class SLOTarget {
+    public abstract TimePeriod getCurrentTimeRange(LocalDateTime currentDateTime);
+    public abstract SLOTargetType getType();
+  }
+  @Data
+  @SuperBuilder
+  public abstract static class CalenderSLOTarget extends SLOTarget {
+    private final SLOTargetType type = SLOTargetType.CALENDER;
+    public abstract SLOCalenderType getCalenderType();
+  }
+
+  @Value
+  @SuperBuilder
+  public static class WeeklyCalenderTarget extends CalenderSLOTarget {
+    private DayOfWeek dayOfWeek;
+    private final SLOCalenderType calenderType = SLOCalenderType.WEEKLY;
+
+    @Override
+    public TimePeriod getCurrentTimeRange(LocalDateTime currentDateTime) {
+      LocalDate nextDayOfWeek = dayOfWeek.getNextDayOfWeek(currentDateTime.toLocalDate());
+      return TimePeriod.builder().startDate(nextDayOfWeek.minusDays(6)).endDate(nextDayOfWeek.plusDays(1)).build();
+    }
+  }
+
+  @SuperBuilder
+  @Data
+  public static class MonthlyCalenderTarget extends CalenderSLOTarget {
+    int windowEndDayOfMonth;
+    private final SLOCalenderType calenderType = SLOCalenderType.MONTHLY;
+
+    @Override
+    public TimePeriod getCurrentTimeRange(LocalDateTime currentDateTime) {
+      LocalDate windowStart =
+          getWindowEnd(currentDateTime.toLocalDate().minusMonths(1), windowEndDayOfMonth).plusDays(1);
+      LocalDate windowEnd = getWindowEnd(currentDateTime.toLocalDate(), windowEndDayOfMonth).plusDays(1);
+      return TimePeriod.builder().startDate(windowStart).endDate(windowEnd).build();
+    }
+    private LocalDate getWindowEnd(LocalDate currentDateTime, int windowEndDayOfMonth) {
+      LocalDate windowEnd;
+      if (windowEndDayOfMonth > 28) {
+        windowEnd = currentDateTime.with(TemporalAdjusters.lastDayOfMonth());
+      } else if (currentDateTime.getDayOfMonth() <= windowEndDayOfMonth) {
+        windowEnd = getWindowEnd(currentDateTime);
+      } else {
+        windowEnd = getWindowEnd(currentDateTime.plusMonths(1));
+      }
+      return windowEnd;
+    }
+
+    private LocalDate getWindowEnd(LocalDate date) {
+      return date.plusDays(windowEndDayOfMonth - date.getDayOfMonth());
+    }
+  }
+
+  @SuperBuilder
+  @Data
+  public static class QuarterlyCalenderTarget extends CalenderSLOTarget {
+    private final SLOCalenderType calenderType = SLOCalenderType.QUARTERLY;
+
+    @Override
+    public TimePeriod getCurrentTimeRange(LocalDateTime currentDateTime) {
+      LocalDate firstDayOfQuarter = currentDateTime.toLocalDate()
+                                        .with(currentDateTime.toLocalDate().getMonth().firstMonthOfQuarter())
+                                        .with(TemporalAdjusters.firstDayOfMonth());
+
+      LocalDate lastDayOfQuarter = firstDayOfQuarter.plusMonths(2).with(TemporalAdjusters.lastDayOfMonth());
+      return TimePeriod.builder().startDate(firstDayOfQuarter).endDate(lastDayOfQuarter.plusDays(1)).build();
+    }
+  }
+
+  @SuperBuilder
+  @Data
+  public static class RollingSLOTarget extends SLOTarget {
+    int periodLengthDays;
+    private final SLOTargetType type = SLOTargetType.ROLLING;
+
+    @Override
+    public TimePeriod getCurrentTimeRange(LocalDateTime currentDateTime) {
+      return TimePeriod.createWithLocalTime(
+          currentDateTime.minusMinutes(TimeUnit.DAYS.toMinutes(periodLengthDays)), currentDateTime);
     }
   }
 }

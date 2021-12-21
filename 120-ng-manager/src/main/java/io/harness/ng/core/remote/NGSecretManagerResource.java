@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -80,7 +81,8 @@ public class NGSecretManagerResource {
   public ResponseDTO<SecretManagerMetadataDTO>
   getSecretEngines(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
                        NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Valid SecretManagerMetadataRequestDTO requestDTO) {
+      @RequestBody(required = true, description = "Details required for the creation of the Secret Manager") @NotNull
+      @Valid SecretManagerMetadataRequestDTO requestDTO) {
     return ResponseDTO.newResponse(ngSecretManagerService.getMetadata(accountIdentifier, requestDTO));
   }
 

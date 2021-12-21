@@ -3,7 +3,6 @@ package io.harness.cdng.creator.plan.stage;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
@@ -21,6 +20,7 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -30,13 +30,16 @@ import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @OwnedBy(CDC)
 public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private ServicePMSPlanCreator servicePMSPlanCreator;
 
   @Override
   public Set<String> getSupportedStageTypes() {
@@ -80,9 +83,9 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
     PipelineInfrastructure actualInfraConfig =
         InfrastructurePmsPlanCreator.getActualInfraConfig(pipelineInfrastructure, infraField);
 
-    PlanCreationResponse servicePlanCreationResponse = ServicePMSPlanCreator.createPlanForServiceNode(serviceField,
+    PlanCreationResponse servicePlanCreationResponse = servicePMSPlanCreator.createPlanForServiceNode(serviceField,
         ((DeploymentStageConfig) field.getStageType()).getServiceConfig(), kryoSerializer,
-        InfrastructurePmsPlanCreator.getInfraSectionStepParams(actualInfraConfig, ""));
+        InfrastructurePmsPlanCreator.getInfraSectionStepParams(actualInfraConfig, ""), ctx);
     planCreationResponseMap.put(servicePlanCreationResponse.getStartingNodeId(),
         PlanCreationResponse.builder().nodes(servicePlanCreationResponse.getNodes()).build());
 
@@ -120,8 +123,13 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
     if (executionField == null) {
       throw new InvalidRequestException("Execution section cannot be absent in a pipeline");
     }
-    PlanCreationResponse planForExecution = CDExecutionPMSPlanCreator.createPlanForExecution(executionField);
-    planCreationResponseMap.put(executionField.getNode().getUuid(), planForExecution);
+    Map<String, YamlField> executionYamlFieldMap = new HashMap<>();
+    executionYamlFieldMap.put(executionField.getNode().getUuid(), executionField);
+
+    planCreationResponseMap.put(executionField.getNode().getUuid(),
+        PlanCreationResponse.builder()
+            .dependencies(DependenciesUtils.toDependenciesProto(executionYamlFieldMap))
+            .build());
 
     return planCreationResponseMap;
   }

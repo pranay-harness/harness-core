@@ -1,12 +1,17 @@
 package io.harness.cvng;
 
+import static io.harness.AuthorizationServiceHeader.CV_NEXT_GEN;
 import static io.harness.cvng.beans.change.ChangeSourceType.HARNESS_CD;
 import static io.harness.cvng.cdng.services.impl.CVNGNotifyEventListener.CVNG_ORCHESTRATION;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.AccessControlClientModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.retry.MethodExecutionHelper;
+import io.harness.annotations.retry.RetryOnException;
+import io.harness.annotations.retry.RetryOnExceptionInterceptor;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.concurrent.HTimeLimiter;
 import io.harness.cvng.activity.entities.Activity.ActivityUpdatableEntity;
@@ -201,6 +206,7 @@ import io.harness.cvng.dashboard.services.impl.TimeSeriesDashboardServiceImpl;
 import io.harness.cvng.migration.impl.CVNGMigrationServiceImpl;
 import io.harness.cvng.migration.service.CVNGMigrationService;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
 import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator.RatioServiceLevelIndicatorUpdatableEntity;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorUpdatableEntity;
 import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator.ThresholdServiceLevelIndicatorUpdatableEntity;
@@ -219,7 +225,10 @@ import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelIndicator
 import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelObjectiveServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.ThresholdAnalyserServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.UserJourneyServiceImpl;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.CalenderSLOTargetTransformer;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.RatioServiceLevelIndicatorTransformer;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.RollingSLOTargetTransformer;
+import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.SLOTargetTransformer;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorEntityAndDTOTransformer;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorTransformer;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ThresholdServiceLevelIndicatorTransformer;
@@ -245,6 +254,7 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServiceImpl;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.govern.ProviderMethodInterceptor;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoPersistence;
 import io.harness.packages.HarnessPackages;
@@ -281,6 +291,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -329,6 +340,8 @@ public class CVServiceModule extends AbstractModule {
                 .setUncaughtExceptionHandler((t, e) -> log.error("error while processing task", e))
                 .build()));
     install(PrimaryVersionManagerModule.getInstance());
+    install(AccessControlClientModule.getInstance(
+        this.verificationConfiguration.getAccessControlClientConfiguration(), CV_NEXT_GEN.getServiceId()));
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(TimeSeriesRecordService.class).to(TimeSeriesRecordServiceImpl.class);
     bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
@@ -543,6 +556,11 @@ public class CVServiceModule extends AbstractModule {
     activityUpdateHandlerMapBinder.addBinding(ActivityType.KUBERNETES).to(KubernetesClusterActivityUpdateHandler.class);
     activityUpdateHandlerMapBinder.addBinding(ActivityType.DEPLOYMENT).to(DeploymentActivityUpdateHandler.class);
 
+    MapBinder<SLOTargetType, SLOTargetTransformer> sloTargetTypeSLOTargetTransformerMapBinder =
+        MapBinder.newMapBinder(binder(), SLOTargetType.class, SLOTargetTransformer.class);
+    sloTargetTypeSLOTargetTransformerMapBinder.addBinding(SLOTargetType.CALENDER)
+        .to(CalenderSLOTargetTransformer.class);
+    sloTargetTypeSLOTargetTransformerMapBinder.addBinding(SLOTargetType.ROLLING).to(RollingSLOTargetTransformer.class);
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);
 
@@ -580,6 +598,8 @@ public class CVServiceModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), SLIMetricType.class, SLIAnalyserService.class);
     sliAnalyserServiceMapBinder.addBinding(SLIMetricType.RATIO).to(RatioAnalyserServiceImpl.class);
     sliAnalyserServiceMapBinder.addBinding(SLIMetricType.THRESHOLD).to(ThresholdAnalyserServiceImpl.class);
+
+    bindRetryOnExceptionInterceptor();
   }
 
   private void bindChangeSourceUpdatedEntity() {
@@ -603,6 +623,13 @@ public class CVServiceModule extends AbstractModule {
         .to(KubernetesChangeSource.UpdatableKubernetesChangeSourceEntity.class);
     changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CD_CURRENT_GEN)
         .to(HarnessCDCurrentGenChangeSource.UpdatableHarnessCDCurrentGenChangeSourceEntity.class);*/
+  }
+
+  private void bindRetryOnExceptionInterceptor() {
+    bind(MethodExecutionHelper.class).asEagerSingleton();
+    ProviderMethodInterceptor retryOnExceptionInterceptor =
+        new ProviderMethodInterceptor(getProvider(RetryOnExceptionInterceptor.class));
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(RetryOnException.class), retryOnExceptionInterceptor);
   }
 
   private void bindAnalysisStateExecutor() {

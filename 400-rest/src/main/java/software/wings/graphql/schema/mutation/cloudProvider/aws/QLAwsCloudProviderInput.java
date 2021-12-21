@@ -23,6 +23,7 @@ public class QLAwsCloudProviderInput {
   private RequestField<QLAwsCredentialsType> credentialsType;
   private RequestField<QLEc2IamCredentials> ec2IamCredentials;
   private RequestField<QLAwsManualCredentials> manualCredentials;
+  private RequestField<QLIrsaCredentials> irsaCredentials;
 
   private RequestField<QLAwsCrossAccountAttributes> crossAccountAttributes;
   private RequestField<String> defaultRegion;

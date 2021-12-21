@@ -56,6 +56,8 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
   @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
   @JsonProperty("pmsSdkOrchestrationEventPoolConfig") private ThreadPoolConfig pmsSdkOrchestrationEventPoolConfig;
+  @JsonProperty("pmsPlanCreatorServicePoolConfig") private ThreadPoolConfig pmsPlanCreatorServicePoolConfig;
+
   @JsonProperty("pmsSdkExecutionPoolConfig") private ThreadPoolConfig pmsSdkExecutionPoolConfig;
   private String ngManagerServiceSecret;
   private LogServiceConfig logServiceConfig;

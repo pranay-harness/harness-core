@@ -316,3 +316,5 @@ replace_key_value resourceGroupServiceConfig.enableResourceGroup "${ENABLE_RESOU
 replace_key_value resourceGroupServiceConfig.resourceClients.template-service.baseUrl "$TEMPLATE_SERVICE_CLIENT_BASEURL"
 
 replace_key_value resourceGroupServiceConfig.resourceClients.template-service.secret "$TEMPLATE_SERVICE_SECRET"
+
+replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"

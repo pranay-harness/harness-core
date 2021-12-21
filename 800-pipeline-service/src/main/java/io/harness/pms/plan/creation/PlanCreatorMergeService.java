@@ -34,6 +34,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import io.grpc.StatusRuntimeException;
 import java.io.IOException;
 import java.time.Duration;
@@ -42,7 +43,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PlanCreatorMergeService {
   private static final int MAX_DEPTH = 10;
 
-  private final Executor executor = Executors.newFixedThreadPool(5);
+  private final Executor executor;
 
   private final PmsSdkHelper pmsSdkHelper;
   private final WaitNotifyEngine waitNotifyEngine;
@@ -62,11 +62,13 @@ public class PlanCreatorMergeService {
 
   @Inject
   public PlanCreatorMergeService(PmsSdkHelper pmsSdkHelper, PmsEventSender pmsEventSender,
-      WaitNotifyEngine waitNotifyEngine, PlanCreationValidator planCreationValidator) {
+      WaitNotifyEngine waitNotifyEngine, PlanCreationValidator planCreationValidator,
+      @Named("PlanCreatorMergeExecutorService") Executor executor) {
     this.pmsSdkHelper = pmsSdkHelper;
     this.pmsEventSender = pmsEventSender;
     this.waitNotifyEngine = waitNotifyEngine;
     this.planCreationValidator = planCreationValidator;
+    this.executor = executor;
   }
 
   public String getPublisher() {

@@ -38,11 +38,19 @@ public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo<
                                          .collect(Collectors.toList());
     dslEnvVariables.put("metricsToCollect", metricPaths);
     dslEnvVariables.put("collectHostData", Boolean.toString(this.isCollectHostData()));
+    dslEnvVariables.put("metricIdentifiers",
+        CollectionUtils.emptyIfNull(getMetricPack().getMetrics())
+            .stream()
+            .filter(metricDefinition -> metricDefinition.isIncluded())
+            .map(metricDefinition -> metricDefinition.getName())
+            .collect(Collectors.toList()));
 
     if (CollectionUtils.isNotEmpty(customMetrics)
         && metricPack.getIdentifier().equals(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER)) {
       dslEnvVariables.put(
           "metricNames", customMetrics.stream().map(AppMetricInfoDTO::getMetricName).collect(Collectors.toList()));
+      dslEnvVariables.put("metricIdentifiers",
+          customMetrics.stream().map(AppMetricInfoDTO::getMetricIdentifier).collect(Collectors.toList()));
       dslEnvVariables.put("groupName", groupName);
 
       if (this.isCollectHostData()) {
@@ -95,6 +103,7 @@ public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo<
     String metricName;
     String baseFolder;
     String metricPath;
+    String metricIdentifier;
     String serviceInstanceMetricPath;
   }
 }

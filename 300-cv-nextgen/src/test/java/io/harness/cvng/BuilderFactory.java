@@ -95,6 +95,11 @@ import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdSLIMet
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdSLIMetricSpec.ThresholdSLIMetricSpecBuilder;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
+import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator.RatioServiceLevelIndicatorBuilder;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.RollingSLOTarget;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.ServiceLevelObjectiveBuilder;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -102,6 +107,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Verifica
 import io.harness.eventsframework.schemas.deployment.ArtifactDetails;
 import io.harness.eventsframework.schemas.deployment.DeploymentEventDTO;
 import io.harness.eventsframework.schemas.deployment.ExecutionDetails;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO.EnvironmentResponseDTOBuilder;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
@@ -278,7 +284,8 @@ public class BuilderFactory {
         .envIdentifier(context.getEnvIdentifier())
         .identifier(generateUuid())
         .monitoringSourceName(generateUuid())
-        .metricPack(MetricPack.builder().identifier(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER).build())
+        .metricPack(
+            MetricPack.builder().identifier(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER).dataCollectionDsl("dsl").build())
         .applicationName(generateUuid())
         .tierName(generateUuid())
         .connectorIdentifier("AppDynamics Connector")
@@ -650,12 +657,28 @@ public class BuilderFactory {
         .target(SLOTarget.builder()
                     .type(SLOTargetType.ROLLING)
                     .sloTargetPercentage(80.0)
-                    .spec(RollingSLOTargetSpec.builder().periodLength("30D").build())
+                    .spec(RollingSLOTargetSpec.builder().periodLength("30d").build())
                     .build())
         .serviceLevelIndicators(Collections.singletonList(getServiceLevelIndicatorDTOBuilder()))
         .healthSourceRef("healthSourceIdentifier")
         .monitoredServiceRef(context.serviceIdentifier + "_" + context.getEnvIdentifier())
         .userJourneyRef("userJourney");
+  }
+
+  public ServiceLevelObjectiveBuilder getServiceLevelObjectiveBuilder() {
+    return ServiceLevelObjective.builder()
+        .projectIdentifier(context.getProjectIdentifier())
+        .orgIdentifier(context.getOrgIdentifier())
+        .identifier("sloIdentifier")
+        .name("sloName")
+        .tags(Collections.singletonList(NGTag.builder().key("key").value("value").build()))
+        .desc("slo description")
+        .sloTarget(RollingSLOTarget.builder().periodLengthDays(30).build())
+        .sloTargetPercentage(80.0)
+        .serviceLevelIndicators(Collections.singletonList("sloIdentifier"))
+        .healthSourceIdentifier("healthSourceIdentifier")
+        .monitoredServiceIdentifier(context.serviceIdentifier + "_" + context.getEnvIdentifier())
+        .userJourneyIdentifier("userJourney");
   }
 
   public UserJourneyDTO getUserJourneyDTOBuilder() {
@@ -677,6 +700,19 @@ public class BuilderFactory {
                             .build())
                   .build())
         .build();
+  }
+
+  public RatioServiceLevelIndicatorBuilder ratioServiceLevelIndicatorBuilder() {
+    return RatioServiceLevelIndicator.builder()
+        .type(ServiceLevelIndicatorType.LATENCY)
+        .sliMissingDataType(SLIMissingDataType.GOOD)
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .metric1("metric1")
+        .metric2("metric2")
+        .healthSourceIdentifier("healthSourceIdentifier")
+        .monitoredServiceIdentifier("monitoredServiceIdentifier");
   }
 
   public ServiceLevelIndicatorDTOBuilder getThresholdServiceLevelIndicatorDTOBuilder() {

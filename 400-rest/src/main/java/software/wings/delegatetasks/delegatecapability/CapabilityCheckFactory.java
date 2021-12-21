@@ -7,6 +7,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.task.executioncapability.AlwaysFalseValidationCapabilityCheck;
 import io.harness.delegate.task.executioncapability.AwsRegionCapabilityCheck;
+import io.harness.delegate.task.executioncapability.CIVmConnectionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.delegate.task.executioncapability.ChartMuseumCapabilityCheck;
 import io.harness.delegate.task.executioncapability.GitConnectionNGCapabilityChecker;
@@ -63,6 +64,7 @@ public class CapabilityCheckFactory {
   @Inject SmbConnectionCapabilityCheck smbConnectionCapabilityCheck;
   @Inject GitConnectionNGCapabilityChecker gitConnectionNGCapabilityCheck;
   @Inject NoOpCapabilityCheck noOpCapabilityCheck;
+  @Inject CIVmConnectionCapabilityCheck ciVmConnectionCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -112,8 +114,9 @@ public class CapabilityCheckFactory {
         return gitConnectionNGCapabilityCheck;
       case LITE_ENGINE:
         return liteEngineConnectionCapabilityCheck;
+      case CI_VM:
+        return ciVmConnectionCapabilityCheck;
       case SELECTORS:
-        return noOpCapabilityCheck;
       default:
         return null;
     }

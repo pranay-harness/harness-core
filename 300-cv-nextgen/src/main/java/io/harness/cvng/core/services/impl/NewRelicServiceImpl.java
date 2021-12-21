@@ -27,9 +27,11 @@ import com.google.inject.Inject;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JsonOrgJsonProvider;
 import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +41,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 @Slf4j
 public class NewRelicServiceImpl implements NewRelicService {
@@ -115,6 +119,14 @@ public class NewRelicServiceImpl implements NewRelicService {
   public LinkedHashMap fetchSampleData(
       ProjectParams projectParams, String connectorIdentifier, String query, String tracingId) {
     try {
+      Preconditions.checkNotNull(query);
+      query = query.trim();
+      Preconditions.checkState(!query.contains(" SINCE "),
+          "Query should not contain any time duration. Please remove SINCE or any time related keywords");
+      Preconditions.checkState(query.endsWith("TIMESERIES"), "Query should end with the TIMESERIES keyword");
+
+      Instant now = Instant.now();
+      query += " SINCE " + now.minus(Duration.ofMinutes(30)).toEpochMilli() + " UNTIL " + now.toEpochMilli();
       DataCollectionRequest request = NewRelicFetchSampleDataRequest.builder()
                                           .type(DataCollectionRequestType.NEWRELIC_SAMPLE_FETCH_REQUEST)
                                           .query(query)
@@ -154,11 +166,12 @@ public class NewRelicServiceImpl implements NewRelicService {
       for (int i = 0; i < lengthOfValues; i++) {
         Long timestamp = parseTimestamp(timestampArr.get(i), timestampFormat);
 
-        parsedResponseList.add(TimeSeriesSampleDTO.builder()
-                                   .metricValue(Double.valueOf(metricValueArr.get(i).toString()))
-                                   .timestamp(timestamp)
-                                   .txnName(groupName)
-                                   .build());
+        parsedResponseList.add(
+            TimeSeriesSampleDTO.builder()
+                .metricValue(metricValueArr.get(i) == null ? null : Double.valueOf(metricValueArr.get(i).toString()))
+                .timestamp(timestamp)
+                .txnName(groupName)
+                .build());
       }
 
       return parsedResponseList;
@@ -170,8 +183,12 @@ public class NewRelicServiceImpl implements NewRelicService {
   }
 
   public List compute(String jsonValue, String jsonPath) {
-    Configuration conf = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
-    return JsonPath.using(conf).parse(jsonValue).read(jsonPath);
+    JSONObject object = new JSONObject(jsonValue);
+    Configuration conf = Configuration.defaultConfiguration()
+                             .jsonProvider(new JsonOrgJsonProvider())
+                             .addOptions(Option.SUPPRESS_EXCEPTIONS);
+    JSONArray responseArray = JsonPath.using(conf).parse(object).read(jsonPath);
+    return responseArray.toList();
   }
 
   private long getTimestampInMillis(long timestamp) {
@@ -192,6 +209,9 @@ public class NewRelicServiceImpl implements NewRelicService {
       timestamp = getTimestampInMillis(timestamp);
     } else if (timestampObj instanceof Double) {
       timestamp = ((Double) timestampObj).longValue();
+      timestamp = getTimestampInMillis(timestamp);
+    } else if (timestampObj instanceof Integer) {
+      timestamp = ((Integer) timestampObj).longValue();
       timestamp = getTimestampInMillis(timestamp);
     } else {
       try {

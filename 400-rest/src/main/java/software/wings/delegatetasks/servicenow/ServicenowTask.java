@@ -1,12 +1,12 @@
 package software.wings.delegatetasks.servicenow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.delegate.task.servicenow.ServiceNowTaskNgHelper.handleResponse;
 import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl.getBaseUrl;
 import static software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl.getRetrofit;
-import static software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl.handleResponse;
 import static software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType.CHANGE_TASK;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -24,6 +24,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
+import io.harness.servicenow.ServiceNowUtils;
 
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.ServiceNowImportSetResponse;
@@ -118,14 +119,15 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
 
     Response<JsonNode> response = null;
     try {
+      log.info("Body of the request made to the ServiceNow xxxxxxxx {}", body);
       response = request.execute();
       log.info("Response received from serviceNow: {}", response);
       handleResponse(response, "Failed to create ServiceNow ticket");
       JsonNode responseObj = response.body().get("result");
       String issueNumber = responseObj.get("number").get("display_value").asText();
       String issueId = responseObj.get("sys_id").get("display_value").asText();
-      String issueUrl = getBaseUrl(config) + "nav_to.do?uri=/" + parameters.getTicketType().toString().toLowerCase()
-          + ".do?sys_id=" + issueId;
+      String issueUrl = ServiceNowUtils.prepareTicketUrlFromTicketId(
+          getBaseUrl(parameters.getServiceNowConfig()), issueId, parameters.getTicketType().toString());
       String responseMsg = "Created ServiceNow ticket: " + issueNumber;
       return ServiceNowExecutionData.builder()
           .issueNumber(issueNumber)
@@ -222,8 +224,8 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
       JsonNode responseObj = response.body().get("result");
       String issueNumber = responseObj.get("number").get("display_value").asText();
       String issueId = responseObj.get("sys_id").get("display_value").asText();
-      String issueUrl = getBaseUrl(config) + "nav_to.do?uri=/" + parameters.getTicketType().toString().toLowerCase()
-          + ".do?sys_id=" + issueId;
+      String issueUrl = ServiceNowUtils.prepareTicketUrlFromTicketId(
+          getBaseUrl(parameters.getServiceNowConfig()), issueId, parameters.getTicketType().toString());
       String responseMsg = "Updated ServiceNow ticket: " + issueNumber;
       return ServiceNowExecutionData.builder()
           .issueNumber(issueNumber)
@@ -292,8 +294,8 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
         JsonNode responseObj = response.body().get("result");
         String issueNumber = responseObj.get("number").get("display_value").asText();
         String issueId = responseObj.get("sys_id").get("display_value").asText();
-        String issueUrl = getBaseUrl(config) + "nav_to.do?uri=/" + parameters.getTicketType().toString().toLowerCase()
-            + ".do?sys_id=" + issueId;
+        String issueUrl = ServiceNowUtils.prepareTicketUrlFromTicketId(
+            getBaseUrl(parameters.getServiceNowConfig()), issueId, parameters.getTicketType().toString());
 
         log.info("Successfully updated ticket : " + issueNumber);
         updateChangeTaskNumbers.add(issueNumber);

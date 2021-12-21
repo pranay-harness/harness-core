@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.YamlException;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.Visitable;
@@ -82,6 +83,14 @@ public class YamlNode implements Visitable {
     }
     Collections.reverse(path);
     return String.join(PATH_SEP, path);
+  }
+
+  public static String getLastKeyInPath(String path) {
+    if (EmptyPredicate.isEmpty(path)) {
+      throw new InvalidRequestException("Path cannot be empty");
+    }
+    String[] keys = path.split(PATH_SEP);
+    return keys[keys.length - 1];
   }
 
   public YamlNode gotoPath(String path) {
@@ -170,6 +179,56 @@ public class YamlNode implements Visitable {
     } else {
       ObjectNode objectNode = (ObjectNode) curr;
       objectNode.set(lastName, newNode);
+    }
+  }
+
+  // todo(@NamanVerma): write test
+  public void removePath(String path) {
+    if (EmptyPredicate.isEmpty(path)) {
+      return;
+    }
+
+    List<String> pathList = Arrays.asList(path.split(PATH_SEP));
+    if (EmptyPredicate.isEmpty(pathList)) {
+      return;
+    }
+
+    JsonNode curr = this.currJsonNode;
+    for (int i = 0; i < pathList.size() - 1; i++) {
+      String currName = pathList.get(i);
+      if (curr == null) {
+        return;
+      }
+
+      if (currName.charAt(0) == '[') {
+        if (!curr.isArray()) {
+          throw new YamlException(String.format("Trying to use index path (%s) on non-array node", currName));
+        }
+        try {
+          int idx = Integer.parseInt(currName.substring(1, currName.length() - 1));
+          curr = curr.get(idx);
+        } catch (Exception ex) {
+          throw new YamlException(String.format("Incorrect index path (%s) on array node", currName));
+        }
+      } else {
+        curr = curr.get(currName);
+      }
+    }
+    String lastName = pathList.get(pathList.size() - 1);
+    if (lastName.charAt(0) == '[') {
+      if (!curr.isArray()) {
+        throw new YamlException(String.format("Trying to use index path (%s) on non-array node", lastName));
+      }
+      try {
+        int idx = Integer.parseInt(lastName.substring(1, lastName.length() - 1));
+        ArrayNode arrayNode = (ArrayNode) curr;
+        arrayNode.remove(idx);
+      } catch (Exception ex) {
+        throw new YamlException(String.format("Incorrect index path (%s) on array node", lastName));
+      }
+    } else {
+      ObjectNode objectNode = (ObjectNode) curr;
+      objectNode.remove(lastName);
     }
   }
 

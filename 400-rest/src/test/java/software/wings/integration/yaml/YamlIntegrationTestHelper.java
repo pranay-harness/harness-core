@@ -108,7 +108,8 @@ public class YamlIntegrationTestHelper {
       yamlGitConfig.setPassword(scmSecret.decryptToCharArray(new SecretName("yaml_integration_git_connector_pwd")));
     }
 
-    return wingsPersistence.saveAndGet(YamlGitConfig.class, yamlGitConfig);
+    String gitConfigId = wingsPersistence.save(yamlGitConfig);
+    return wingsPersistence.get(YamlGitConfig.class, gitConfigId);
   }
 
   public SettingAttribute createGitConnector(

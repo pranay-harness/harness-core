@@ -68,6 +68,7 @@ public class UserGroup implements PersistentEntity, NGAccountAccess {
   @EntityIdentifier String identifier;
 
   @Builder.Default Boolean isSsoLinked = FALSE;
+  @Builder.Default Boolean externallyManaged = FALSE; // Usergroup is imported from SCIM or not
   private SSOType linkedSsoType;
   private String linkedSsoId;
   private String linkedSsoDisplayName;
@@ -86,4 +87,8 @@ public class UserGroup implements PersistentEntity, NGAccountAccess {
   @LastModifiedDate long lastModifiedAt;
   @Version long version;
   boolean deleted;
+
+  public boolean getExternallyManaged() {
+    return Boolean.TRUE.equals(externallyManaged);
+  }
 }

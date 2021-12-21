@@ -1,7 +1,5 @@
 package io.harness.cvng.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.cvng.newrelic.NewRelicUtils;
 
@@ -21,6 +19,7 @@ import lombok.experimental.FieldDefaults;
 @EqualsAndHashCode(callSuper = true)
 public class NewRelicDataCollectionInfo extends TimeSeriesDataCollectionInfo<NewRelicConnectorDTO> {
   private static final String QUERIES_KEY = "queries";
+  private static final String METRIC_IDENTIFIERS_KEY = "metricIdentifiers";
   private static final String JSON_PATH_KEY = "jsonPaths";
   private static final String METRIC_JSON_PATH_KEY = "metricJsonPaths";
   private static final String TIMESTAMP_JSON_PATH_KEY = "timestampJsonPaths";
@@ -33,9 +32,11 @@ public class NewRelicDataCollectionInfo extends TimeSeriesDataCollectionInfo<New
   private List<NewRelicMetricInfoDTO> metricInfoList;
   private MetricPackDTO metricPack;
 
+  boolean customQuery;
+
   @Override
   public Map<String, Object> getDslEnvVariables(NewRelicConnectorDTO newRelicConnectorDTO) {
-    if (applicationId != 0 && isNotEmpty(applicationName)) {
+    if (customQuery) {
       return getEnvVariablesForAppIdBasedConfig();
     } else {
       return getEnvVariablesForCustomConfig();
@@ -65,6 +66,7 @@ public class NewRelicDataCollectionInfo extends TimeSeriesDataCollectionInfo<New
     dslEnvVariables.put(QUERIES_KEY, listOfQueries);
     dslEnvVariables.put(JSON_PATH_KEY, listOfJsonPaths);
     dslEnvVariables.put(METRIC_NAMES_KEY, listOfMetricNames);
+    dslEnvVariables.put(METRIC_IDENTIFIERS_KEY, listOfMetricNames);
 
     dslEnvVariables.put("collectHostData", Boolean.toString(this.isCollectHostData()));
     return dslEnvVariables;
@@ -72,6 +74,9 @@ public class NewRelicDataCollectionInfo extends TimeSeriesDataCollectionInfo<New
 
   private Map<String, Object> getEnvVariablesForCustomConfig() {
     Map<String, Object> dslEnvVariables = new HashMap<>();
+    dslEnvVariables.put("appName", getApplicationName());
+    dslEnvVariables.put("appId", getApplicationId());
+    dslEnvVariables.put("collectHostData", Boolean.toString(this.isCollectHostData()));
     dslEnvVariables.put("groupName", groupName);
     List<String> listOfQueries =
         metricInfoList.stream().map(NewRelicMetricInfoDTO::getNrql).collect(Collectors.toList());
@@ -88,7 +93,11 @@ public class NewRelicDataCollectionInfo extends TimeSeriesDataCollectionInfo<New
                                      .map(infoDto -> infoDto.getResponseMapping().getServiceInstanceJsonPath())
                                      .collect(Collectors.toList());
 
+    List<String> metricIdentifiers =
+        metricInfoList.stream().map(infoDto -> infoDto.getMetricIdentifier()).collect(Collectors.toList());
+
     dslEnvVariables.put(QUERIES_KEY, listOfQueries);
+    dslEnvVariables.put(METRIC_IDENTIFIERS_KEY, metricIdentifiers);
     dslEnvVariables.put(METRIC_JSON_PATH_KEY, metricValuePaths);
     dslEnvVariables.put(TIMESTAMP_JSON_PATH_KEY, timestampPaths);
     dslEnvVariables.put(METRIC_NAMES_KEY, metricNames);
@@ -118,6 +127,7 @@ public class NewRelicDataCollectionInfo extends TimeSeriesDataCollectionInfo<New
   public static class NewRelicMetricInfoDTO {
     String nrql;
     String metricName;
+    String metricIdentifier;
     MetricResponseMappingDTO responseMapping;
   }
 }

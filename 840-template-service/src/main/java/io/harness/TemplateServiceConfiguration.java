@@ -7,8 +7,10 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
+import io.harness.enforcement.client.EnforcementClientConfiguration;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
+import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 
@@ -61,6 +63,8 @@ public class TemplateServiceConfiguration extends Configuration {
   @JsonProperty("accessControlClientConfig") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
+  @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
+  @JsonProperty("pmsGrpcClientConfig") GrpcClientConfig pmsGrpcClientConfig;
 
   private boolean shouldDeployWithGitSync;
   private GitSdkConfiguration gitSdkConfiguration;

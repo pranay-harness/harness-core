@@ -282,6 +282,7 @@ public enum TaskType {
   HELM_REPO_CONFIG_VALIDATION(TaskGroup.HELM_REPO_CONFIG_VALIDATION),
   HELM_VALUES_FETCH(TaskGroup.HELM_VALUES_FETCH_TASK),
   HELM_VALUES_FETCH_NG(TaskGroup.HELM_VALUES_FETCH_TASK, "Helm Values Fetch Task"),
+  HELM_COLLECT_CHART(TaskGroup.HELM),
   SLACK(TaskGroup.SLACK),
   INITIALIZATION_PHASE(TaskGroup.CI),
   CI_LE_STATUS(TaskGroup.CI),
@@ -326,7 +327,9 @@ public enum TaskType {
   SCM_GIT_REF_TASK(TaskGroup.GIT, "SCM Git Ref Task"),
   SCM_GIT_FILE_TASK(TaskGroup.GIT, "SCM Git File Task"),
   SCM_PULL_REQUEST_TASK(TaskGroup.GIT, "SCM Git PR Task"),
-  SCM_GIT_WEBHOOK_TASK(TaskGroup.GIT, "SCM Git Webhook Task");
+  SCM_GIT_WEBHOOK_TASK(TaskGroup.GIT, "SCM Git Webhook Task"),
+  SERVICENOW_CONNECTIVITY_TASK_NG(TaskGroup.SERVICENOW_NG, "ServiceNow connectivity test Task"),
+  SERVICENOW_TASK_NG(TaskGroup.SERVICENOW_NG, "ServiceNow Task");
 
   private final TaskGroup taskGroup;
   private final String displayName;

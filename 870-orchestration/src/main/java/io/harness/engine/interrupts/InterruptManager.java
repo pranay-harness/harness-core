@@ -12,8 +12,10 @@ import io.harness.logging.AutoLogContext;
 
 import com.google.inject.Inject;
 import java.time.Duration;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PIPELINE)
+@Slf4j
 public class InterruptManager {
   private static final String LOCK_NAME_PREFIX = "PLAN_EXECUTION_INFO_";
   @Inject private InterruptHandlerFactory interruptHandlerFactory;
@@ -36,7 +38,9 @@ public class InterruptManager {
         throw new InvalidRequestException("Cannot register the interrupt. Please retry.");
       }
       InterruptHandler interruptHandler = interruptHandlerFactory.obtainHandler(interruptPackage.getInterruptType());
-      return interruptHandler.registerInterrupt(interrupt);
+      Interrupt registeredInterrupt = interruptHandler.registerInterrupt(interrupt);
+      log.info("Interrupt Registered uuid: {}, type: {}", registeredInterrupt.getUuid(), registeredInterrupt.getType());
+      return registeredInterrupt;
     }
   }
 }

@@ -46,6 +46,8 @@ import io.harness.migrations.all.AddHarnessOwnedToResourceConstraint;
 import io.harness.migrations.all.AddInfraMappingNameToInstanceData;
 import io.harness.migrations.all.AddIsDefaultFlagToUserGroup;
 import io.harness.migrations.all.AddOrchestrationToWorkflows;
+import io.harness.migrations.all.AddRingDetailsToDelegateRing;
+import io.harness.migrations.all.AddRingsToAccountMigration;
 import io.harness.migrations.all.AddStateMachineToWorkflowExecutions;
 import io.harness.migrations.all.AddValidUntilToSecretUsageLogs;
 import io.harness.migrations.all.AddValidUntilToWorkflowExecution;
@@ -60,6 +62,7 @@ import io.harness.migrations.all.CleanupSyncStatusForDeletedEntities;
 import io.harness.migrations.all.ConvertHttpHeadersStringTypeToList;
 import io.harness.migrations.all.CreateNgPrimaryProfileForExistingAccounts;
 import io.harness.migrations.all.CreatePrimiryProfileForAllAccounts;
+import io.harness.migrations.all.DefaultDelegateNgTokenMigration;
 import io.harness.migrations.all.DefaultExperienceMigration;
 import io.harness.migrations.all.DelegateGroupIdentifierMigration;
 import io.harness.migrations.all.DelegateNgDetailsToDelegateGroupMigration;
@@ -126,6 +129,7 @@ import io.harness.migrations.all.UpdateWorkflowExecutionDuration;
 import io.harness.migrations.all.WFEAddDeploymentMetaData;
 import io.harness.migrations.all.WorkflowExecutionAddCDPageCandidateMigration;
 import io.harness.migrations.apppermission.ManageApplicationTemplatePermissionMigration;
+import io.harness.migrations.apppermission.NullAppFilterPermissionMigration;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -350,6 +354,10 @@ public class MigrationBackgroundList {
         .add(Pair.of(206, CDPaidLicenseToNGMigration.class))
         .add(Pair.of(207, DeleteDelegateAlertsExceptDelegateDown.class))
         .add(Pair.of(208, MigrationSMCredentialsFromLocalToGlobalKMS.class))
+        .add(Pair.of(209, NullAppFilterPermissionMigration.class))
+        .add(Pair.of(210, DefaultDelegateNgTokenMigration.class))
+        .add(Pair.of(211, AddRingsToAccountMigration.class))
+        .add(Pair.of(212, AddRingDetailsToDelegateRing.class))
         .build();
   }
 }

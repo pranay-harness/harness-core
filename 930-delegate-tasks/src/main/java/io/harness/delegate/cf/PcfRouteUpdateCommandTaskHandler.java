@@ -115,9 +115,8 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
           downsizeOldAppDuringDeployAndRenameApps(executionLogCallback, cfCommandRouteUpdateRequest, cfRequestConfig,
               pcfRouteUpdateConfigData, workingDirectory.getAbsolutePath());
         } else {
-          executionLogCallback.saveExecutionLog(color("# No Route Update Required for Active app", White, Bold));
-          restoreInActiveAppForFailureBeforeSwapRouteStep(
-              executionLogCallback, cfCommandRouteUpdateRequest, cfRequestConfig, workingDirectory.getAbsolutePath());
+          handleFailureHappenedBeforeSwapRoute(
+              executionLogCallback, workingDirectory, cfCommandRouteUpdateRequest, cfRequestConfig);
         }
       } else {
         performRouteUpdateForSimulatedBlueGreen(cfCommandRouteUpdateRequest, cfRequestConfig, executionLogCallback);
@@ -148,15 +147,29 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
     return cfCommandExecutionResponse;
   }
 
+  private void handleFailureHappenedBeforeSwapRoute(LogCallback executionLogCallback, File workingDirectory,
+      CfCommandRouteUpdateRequest cfCommandRouteUpdateRequest, CfRequestConfig cfRequestConfig)
+      throws PivotalClientApiException {
+    performAppRenaming(ROLLBACK_OPERATOR, cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData(), cfRequestConfig,
+        executionLogCallback);
+    executionLogCallback.saveExecutionLog(color("# No Route Update Required for Active app", White, Bold));
+    restoreInActiveAppForFailureBeforeSwapRouteStep(
+        executionLogCallback, cfCommandRouteUpdateRequest, cfRequestConfig, workingDirectory.getAbsolutePath());
+  }
+
   private void restoreInActiveAppForFailureBeforeSwapRouteStep(LogCallback executionLogCallback,
       CfCommandRouteUpdateRequest cfCommandRouteUpdateRequest, CfRequestConfig cfRequestConfig, String configVarPath)
       throws PivotalClientApiException {
     CfRouteUpdateRequestConfigData routeUpdateConfigData = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData();
-    if (!routeUpdateConfigData.isUpSizeInActiveApp()) {
-      return;
+    if (routeUpdateConfigData.isUpSizeInActiveApp()) {
+      upSizeInActiveApp(cfCommandRouteUpdateRequest, cfRequestConfig, executionLogCallback, configVarPath);
+      updateRoutesForInActiveApplication(cfRequestConfig, executionLogCallback, routeUpdateConfigData);
     }
-    upSizeInActiveApp(cfCommandRouteUpdateRequest, cfRequestConfig, executionLogCallback, configVarPath);
-    updateRoutesForInActiveApplication(cfRequestConfig, executionLogCallback, routeUpdateConfigData);
+    CfRouteUpdateRequestConfigData routeConfigData = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData();
+    CfAppSetupTimeDetails newApplicationDetails = routeConfigData.getNewApplicationDetails();
+    List<String> newApps = pcfCommandTaskBaseHelper.getAppNameBasedOnGuid(
+        cfRequestConfig, routeConfigData.getCfAppNamePrefix(), newApplicationDetails.getApplicationGuid());
+    routeConfigData.setNewApplicationName(isEmpty(newApps) ? routeConfigData.getNewApplicationName() : newApps.get(0));
     clearRoutesAndEnvVariablesForNewApplication(cfRequestConfig, executionLogCallback,
         routeUpdateConfigData.getNewApplicationName(), routeUpdateConfigData.getTempRoutes());
   }
@@ -376,6 +389,11 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
       updateRoutesForNewApplication(cfRequestConfig, executionLogCallback, data);
       updateRoutesForExistingApplication(cfRequestConfig, executionLogCallback, data);
     } else {
+      CfAppSetupTimeDetails newApplicationDetails = data.getNewApplicationDetails();
+      List<String> newApps = pcfCommandTaskBaseHelper.getAppNameBasedOnGuid(
+          cfRequestConfig, data.getCfAppNamePrefix(), newApplicationDetails.getApplicationGuid());
+      data.setNewApplicationName(isEmpty(newApps) ? data.getNewApplicationName() : newApps.get(0));
+
       if (data.isUpSizeInActiveApp()) {
         updateRoutesForExistingApplication(cfRequestConfig, executionLogCallback, data);
         updateRoutesForInActiveApplication(cfRequestConfig, executionLogCallback, data);

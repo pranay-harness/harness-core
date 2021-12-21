@@ -17,6 +17,7 @@ import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
@@ -28,7 +29,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(HarnessTeam.CDC)
 public class RollbackPlanCreator {
-  public PlanCreationResponse createPlanForRollback(YamlField executionField) {
+  public PlanCreationResponse createPlanForRollback(PlanCreationContext ctx, YamlField executionField) {
     YamlField executionStepsField = executionField.getNode().getField(YAMLFieldNameConstants.STEPS);
 
     if (executionStepsField == null || executionStepsField.getNode().asArray().size() == 0) {
@@ -41,7 +42,7 @@ public class RollbackPlanCreator {
 
     // Infra rollback
     YamlField infraField = executionField.getNode().nextSiblingNodeFromParentObject(YamlTypes.PIPELINE_INFRASTRUCTURE);
-    PlanCreationResponse infraRollbackPlan = InfraRollbackPMSPlanCreator.createInfraRollbackPlan(infraField);
+    PlanCreationResponse infraRollbackPlan = InfraRollbackPMSPlanCreator.createInfraRollbackPlan(ctx, infraField);
     if (isNotEmpty(infraRollbackPlan.getNodes())) {
       String infraNodeFullIdentifier =
           YamlUtils.getQualifiedNameTillGivenField(infraField.getNode(), YAMLFieldNameConstants.STAGES);

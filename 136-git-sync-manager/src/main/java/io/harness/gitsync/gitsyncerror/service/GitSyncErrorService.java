@@ -3,7 +3,6 @@ package io.harness.gitsync.gitsyncerror.service;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.Scope;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorCountDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
@@ -26,7 +25,7 @@ public interface GitSyncErrorService {
   PageResponse<GitSyncErrorDTO> listGitToHarnessErrorsForCommit(PageRequest pageRequest, String commitId,
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoId, String branch);
 
-  GitSyncErrorDTO save(GitSyncErrorDTO gitSyncErrorDTO);
+  Optional<GitSyncErrorDTO> save(GitSyncErrorDTO gitSyncErrorDTO);
 
   List<GitSyncErrorDTO> saveAll(List<GitSyncErrorDTO> gitSyncErrorDTOList);
 
@@ -40,14 +39,13 @@ public interface GitSyncErrorService {
 
   boolean deleteGitSyncErrors(List<String> errorIds, String accountId);
 
-  void recordConnectivityError(
-      String accountIdentifier, List<Scope> scopes, String repoUrl, String branch, String errorMessage);
+  void recordConnectivityError(String accountIdentifier, String repoUrl, String errorMessage);
 
   PageResponse<GitSyncErrorDTO> listConnectivityErrors(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String repoIdentifier, String branch, PageRequest pageRequest);
+      String projectIdentifier, String repoIdentifier, PageRequest pageRequest);
 
   GitSyncErrorCountDTO getErrorCount(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String searchTerm, String repoId, String branch);
 
-  void resolveConnectivityErrors(String accountIdentifier, String repoUrl, String branchName);
+  void resolveConnectivityErrors(String accountIdentifier, String repoUrl);
 }

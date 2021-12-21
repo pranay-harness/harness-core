@@ -7,6 +7,7 @@ import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS
 import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PORT;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.states.InitializeTaskStep.LE_STATUS_TASK_TYPE;
 import static io.harness.steps.StepUtils.buildAbstractions;
@@ -16,8 +17,8 @@ import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
+import io.harness.beans.outcomes.VmDetailsOutcome;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
-import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.outcome.CIStepArtifactOutcome;
@@ -31,17 +32,20 @@ import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.sweepingoutputs.StageInfraDetails;
+import io.harness.beans.sweepingoutputs.VmStageInfraDetails;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.serializer.PluginCompatibleStepSerializer;
 import io.harness.ci.serializer.PluginStepProtobufSerializer;
 import io.harness.ci.serializer.RunStepProtobufSerializer;
 import io.harness.ci.serializer.RunTestsStepProtobufSerializer;
+import io.harness.ci.serializer.vm.VmStepSerializer;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.k8s.CIK8ExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.vm.CIVmExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
+import io.harness.delegate.beans.ci.vm.steps.VmStepInfo;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
@@ -52,7 +56,6 @@ import io.harness.delegate.task.stepstatus.artifact.ArtifactMetadata;
 import io.harness.encryption.Scope;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -61,6 +64,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -80,10 +84,12 @@ import io.harness.util.GithubApiTokenEvaluator;
 import io.harness.yaml.core.timeout.Timeout;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -97,12 +103,12 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
   @Inject private PluginStepProtobufSerializer pluginStepProtobufSerializer;
   @Inject private RunTestsStepProtobufSerializer runTestsStepProtobufSerializer;
   @Inject private PluginCompatibleStepSerializer pluginCompatibleStepSerializer;
-  @Inject CILogServiceUtils logServiceUtils;
 
   @Inject private OutcomeService outcomeService;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private CIDelegateTaskExecutor ciDelegateTaskExecutor;
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
+  @Inject private VmStepSerializer vmStepSerializer;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -144,7 +150,8 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
       return executeK8AsyncAfterRbac(ambiance, stepIdentifier, runtimeId, ciStepInfo, stepParametersName, accountId,
           logKey, timeoutInMillis, stringTimeout);
     } else if (stageInfraType == StageInfraDetails.Type.VM) {
-      return executeVmAsyncAfterRbac(ambiance, stepIdentifier, ciStepInfo, accountId, logKey, timeoutInMillis);
+      return executeVmAsyncAfterRbac(
+          ambiance, stepIdentifier, runtimeId, ciStepInfo, accountId, logKey, timeoutInMillis, stringTimeout);
     } else {
       throw new CIStageExecutionException(format("Invalid infra type: %s", stageInfraType));
     }
@@ -169,35 +176,46 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
         .build();
   }
 
-  private AsyncExecutableResponse executeVmAsyncAfterRbac(Ambiance ambiance, String stepIdentifier,
-      CIStepInfo ciStepInfo, String accountId, String logKey, long timeoutInMillis) {
-    if (ciStepInfo.getNonYamlInfo().getStepInfoType() != CIStepInfoType.RUN) {
-      throw new CIStageExecutionException(
-          format("Unsupported step type for VM %s", ciStepInfo.getNonYamlInfo().getStepInfoType()));
-    }
-
-    RunStepInfo runStepInfo = (RunStepInfo) ciStepInfo;
-    String command =
-        RunTimeInputHandler.resolveStringParameter("Command", "Run", stepIdentifier, runStepInfo.getCommand(), true);
-    String image =
-        RunTimeInputHandler.resolveStringParameter("Image", "Run", stepIdentifier, runStepInfo.getImage(), true);
-    String logServiceBaseUrl = logServiceUtils.getLogServiceConfig().getBaseUrl();
-
+  private AsyncExecutableResponse executeVmAsyncAfterRbac(Ambiance ambiance, String stepIdentifier, String runtimeId,
+      CIStepInfo ciStepInfo, String accountId, String logKey, long timeoutInMillis, String stringTimeout) {
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputResolver.resolveOptional(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails));
     if (!optionalSweepingOutput.isFound()) {
       throw new CIStageExecutionException("Stage details sweeping output cannot be empty");
     }
-
     StageDetails stageDetails = (StageDetails) optionalSweepingOutput.getOutput();
+
+    OptionalOutcome optionalOutput = outcomeService.resolveOptional(
+        ambiance, RefObjectUtils.getOutcomeRefObject(VmDetailsOutcome.VM_DETAILS_OUTCOME));
+    if (!optionalOutput.isFound()) {
+      throw new CIStageExecutionException("Initialise outcome cannot be empty");
+    }
+    VmDetailsOutcome vmDetailsOutcome = (VmDetailsOutcome) optionalOutput.getOutcome();
+    if (isEmpty(vmDetailsOutcome.getIpAddress())) {
+      throw new CIStageExecutionException("Ip address in initialise outcome cannot be empty");
+    }
+
+    OptionalSweepingOutput optionalInfraSweepingOutput = executionSweepingOutputResolver.resolveOptional(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(STAGE_INFRA_DETAILS));
+    if (!optionalInfraSweepingOutput.isFound()) {
+      throw new CIStageExecutionException("Stage infra details sweeping output cannot be empty");
+    }
+    VmStageInfraDetails vmStageInfraDetails = (VmStageInfraDetails) optionalInfraSweepingOutput.getOutput();
+
+    VmStepInfo vmStepInfo = vmStepSerializer.serialize(
+        ambiance, ciStepInfo, stepIdentifier, ParameterField.createValueField(Timeout.fromString(stringTimeout)));
+    Set<String> secrets = vmStepSerializer.getStepSecrets(vmStepInfo, ambiance);
     CIVmExecuteStepTaskParams params = CIVmExecuteStepTaskParams.builder()
+                                           .ipAddress(vmDetailsOutcome.getIpAddress())
+                                           .poolId(vmStageInfraDetails.getPoolId())
+                                           .volToMountPath(vmStageInfraDetails.getVolToMountPathMap())
                                            .stageRuntimeId(stageDetails.getStageRuntimeID())
+                                           .stepRuntimeId(runtimeId)
                                            .stepId(stepIdentifier)
-                                           .accountId(accountId)
-                                           .command(command)
-                                           .image(image)
+                                           .stepInfo(vmStepInfo)
+                                           .secrets(new ArrayList<>(secrets))
                                            .logKey(logKey)
-                                           .logStreamUrl(logServiceBaseUrl)
+                                           .workingDir(vmStageInfraDetails.getWorkDir())
                                            .build();
     String taskId = queueDelegateTask(ambiance, timeoutInMillis, accountId, ciDelegateTaskExecutor, params);
     return AsyncExecutableResponse.newBuilder()
@@ -264,6 +282,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
   }
 
   private StepResponse handleVmStepResponse(String stepIdentifier, Map<String, ResponseData> responseDataMap) {
+    log.info("Received response for step {}", stepIdentifier);
     VmTaskExecutionResponse taskResponse = filterVmStepResponse(responseDataMap);
     if (taskResponse == null) {
       log.error("stepStatusTaskResponseData should not be null for step {}", stepIdentifier);
@@ -274,14 +293,27 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     }
 
     if (taskResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      return StepResponse.builder().status(Status.SUCCEEDED).build();
+      StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
+      if (isNotEmpty(taskResponse.getOutputVars())) {
+        StepResponse.StepOutcome stepOutcome =
+            StepResponse.StepOutcome.builder()
+                .outcome(CIStepOutcome.builder().outputVariables(taskResponse.getOutputVars()).build())
+                .name("output")
+                .build();
+        stepResponseBuilder.stepOutcome(stepOutcome);
+      }
+      return stepResponseBuilder.build();
     } else if (taskResponse.getCommandExecutionStatus() == CommandExecutionStatus.SKIPPED) {
       return StepResponse.builder().status(Status.SKIPPED).build();
     } else {
+      String errMsg = "";
+      if (isNotEmpty(taskResponse.getErrorMessage())) {
+        errMsg = taskResponse.getErrorMessage();
+      }
       return StepResponse.builder()
           .status(Status.FAILED)
           .failureInfo(FailureInfo.newBuilder()
-                           .setErrorMessage(taskResponse.getErrorMessage())
+                           .setErrorMessage(errMsg)
                            .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
                            .build())
           .build();
@@ -410,6 +442,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
                                   .taskType(CI_EXECUTE_STEP)
                                   .parameters(new Object[] {ciExecuteStepTaskParams})
                                   .timeout(timeout)
+                                  .expressionFunctorToken((int) ambiance.getExpressionFunctorToken())
                                   .build();
 
     Map<String, String> abstractions = buildAbstractions(ambiance, Scope.PROJECT);

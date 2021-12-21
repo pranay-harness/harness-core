@@ -50,6 +50,7 @@ public class PmsSdkConfiguration {
   Class<? extends ExecutionSummaryModuleInfoProvider> executionSummaryModuleInfoProviderClass;
   @Builder.Default ThreadPoolConfig executionPoolConfig = ThreadPoolConfig.builder().build();
   @Builder.Default ThreadPoolConfig orchestrationEventPoolConfig = ThreadPoolConfig.builder().build();
+  @Builder.Default ThreadPoolConfig planCreatorServiceInternalConfig = ThreadPoolConfig.builder().build();
   @Default Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers = new HashMap<>();
 
   @Default

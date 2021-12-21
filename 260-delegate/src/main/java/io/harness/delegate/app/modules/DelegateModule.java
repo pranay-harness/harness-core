@@ -178,6 +178,9 @@ import io.harness.delegate.task.scm.ScmGitRefTask;
 import io.harness.delegate.task.scm.ScmGitWebhookTask;
 import io.harness.delegate.task.scm.ScmPathFilterEvaluationTask;
 import io.harness.delegate.task.scm.ScmPushTask;
+import io.harness.delegate.task.servicenow.ServiceNowTaskNG;
+import io.harness.delegate.task.servicenow.ServiceNowValidationHandler;
+import io.harness.delegate.task.servicenow.connection.ServiceNowTestConnectionTaskNG;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
 import io.harness.delegate.task.stepstatus.StepStatusTask;
 import io.harness.delegate.task.terraform.TFTaskType;
@@ -379,6 +382,7 @@ import software.wings.delegatetasks.container.ContainerDummyTask;
 import software.wings.delegatetasks.cv.LogDataCollectionTask;
 import software.wings.delegatetasks.cv.MetricsDataCollectionTask;
 import software.wings.delegatetasks.cvng.K8InfoDataService;
+import software.wings.delegatetasks.helm.HelmCollectChartTask;
 import software.wings.delegatetasks.helm.HelmCommandTask;
 import software.wings.delegatetasks.helm.HelmValuesFetchTask;
 import software.wings.delegatetasks.jira.JiraTask;
@@ -1435,6 +1439,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.HELM_VALUES_FETCH).toInstance(HelmValuesFetchTask.class);
     mapBinder.addBinding(TaskType.HELM_VALUES_FETCH_NG).toInstance(HelmValuesFetchTaskNG.class);
     mapBinder.addBinding(TaskType.HELM_COMMAND_TASK_NG).toInstance(HelmCommandTaskNG.class);
+    mapBinder.addBinding(TaskType.HELM_COLLECT_CHART).toInstance(HelmCollectChartTask.class);
     mapBinder.addBinding(TaskType.SLACK).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.INITIALIZATION_PHASE).toInstance(CIInitializeTask.class);
     mapBinder.addBinding(TaskType.CI_EXECUTE_STEP).toInstance(CIExecuteStepTask.class);
@@ -1482,6 +1487,8 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.SCM_GIT_FILE_TASK).toInstance(ScmGitFileTask.class);
     mapBinder.addBinding(TaskType.SCM_PULL_REQUEST_TASK).toInstance(ScmGitPRTask.class);
     mapBinder.addBinding(TaskType.SCM_GIT_WEBHOOK_TASK).toInstance(ScmGitWebhookTask.class);
+    mapBinder.addBinding(TaskType.SERVICENOW_CONNECTIVITY_TASK_NG).toInstance(ServiceNowTestConnectionTaskNG.class);
+    mapBinder.addBinding(TaskType.SERVICENOW_TASK_NG).toInstance(ServiceNowTaskNG.class);
   }
 
   private void registerSecretManagementBindings() {
@@ -1603,6 +1610,8 @@ public class DelegateModule extends AbstractModule {
         .to(CVConnectorValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.JIRA.getDisplayName())
         .to(JiraValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.SERVICENOW.getDisplayName())
+        .to(ServiceNowValidationHandler.class);
   }
 
   private void bindExceptionHandlers() {

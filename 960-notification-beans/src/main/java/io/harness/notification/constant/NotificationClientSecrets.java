@@ -1,5 +1,7 @@
 package io.harness.notification.constant;
 
+import io.harness.secret.ConfigSecret;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -9,5 +11,5 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NotificationClientSecrets {
-  String notificationClientSecret;
+  @ConfigSecret String notificationClientSecret;
 }

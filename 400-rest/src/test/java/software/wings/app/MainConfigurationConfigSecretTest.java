@@ -24,16 +24,21 @@ import org.junit.experimental.categories.Category;
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
 public class MainConfigurationConfigSecretTest {
+  private static final Class<MainConfiguration> ROOT_CONFIG_CLASS = MainConfiguration.class;
+
+  /**
+   * Similar to {@link io.harness.ng.NextGenConfigurationSecretTest}
+   */
   @Test
   @Owner(developers = BOGDAN)
   @Category(UnitTests.class)
   public void configSecretsShouldHaveAllParentsMarkWithConfigSecretAnnotation() {
     List<List<String>> fails = Lists.newArrayList();
-    for (Field field : FieldUtils.getFieldsListWithAnnotation(MainConfiguration.class, JsonProperty.class)) {
-      boolean isSecret = field.isAnnotationPresent(ConfigSecret.class);
+    for (Field field : FieldUtils.getFieldsListWithAnnotation(ROOT_CONFIG_CLASS, JsonProperty.class)) {
+      boolean isSecret = isAnnotatedWithConfigSecret(field);
 
       if (couldBeConfigClass(field)) {
-        fails.addAll(traverse(field, !isSecret, ImmutableList.of(MainConfiguration.class.getName(), field.getName())));
+        fails.addAll(traverse(field, !isSecret, ImmutableList.of(ROOT_CONFIG_CLASS.getName(), field.getName())));
       }
     }
 
@@ -50,7 +55,7 @@ public class MainConfigurationConfigSecretTest {
   private List<List<String>> traverse(Field field, boolean pathLacksMarker, List<String> pathRoute) {
     List<List<String>> currentFails = new ArrayList<>();
     for (Field subfield : FieldUtils.getAllFields(field.getType())) {
-      boolean subfieldMarked = subfield.isAnnotationPresent(ConfigSecret.class);
+      boolean subfieldMarked = isAnnotatedWithConfigSecret(subfield);
 
       if (pathLacksMarker && subfieldMarked) {
         List<String> failPath = Lists.newArrayList(pathRoute);
@@ -66,6 +71,10 @@ public class MainConfigurationConfigSecretTest {
       }
     }
     return currentFails;
+  }
+
+  private boolean isAnnotatedWithConfigSecret(Field field) {
+    return field.isAnnotationPresent(ConfigSecret.class);
   }
 
   private boolean couldBeConfigClass(Field field) {

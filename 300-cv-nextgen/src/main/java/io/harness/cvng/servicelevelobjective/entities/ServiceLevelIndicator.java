@@ -1,10 +1,14 @@
 package io.harness.cvng.servicelevelobjective.entities;
 
+import static io.harness.cvng.CVConstants.DATA_COLLECTION_TIME_RANGE_FOR_SLI;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.services.api.UpdatableEntity;
+import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
@@ -20,7 +24,10 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -61,17 +68,39 @@ public abstract class ServiceLevelIndicator
   private ServiceLevelIndicatorType type;
   private SLIMetricType sliMetricType;
   private SLIMissingDataType sliMissingDataType;
+  private int version;
 
   public abstract SLIMetricType getSLIMetricType();
 
   public abstract List<String> getMetricNames();
+
+  public abstract boolean isUpdatable(ServiceLevelIndicator serviceLevelIndicator);
+
+  public abstract boolean shouldReAnalysis(ServiceLevelIndicator serviceLevelIndicator);
+
+  protected boolean isCoreUpdatable(ServiceLevelIndicator serviceLevelIndicator) {
+    try {
+      Preconditions.checkNotNull(serviceLevelIndicator);
+      Preconditions.checkArgument(
+          this.getHealthSourceIdentifier().equals(serviceLevelIndicator.getHealthSourceIdentifier()));
+      Preconditions.checkArgument(
+          this.getMonitoredServiceIdentifier().equals(serviceLevelIndicator.getMonitoredServiceIdentifier()));
+      Preconditions.checkArgument(this.getSliMissingDataType() == serviceLevelIndicator.getSliMissingDataType());
+      Preconditions.checkArgument(this.getSLIMetricType() == serviceLevelIndicator.getSLIMetricType());
+      Preconditions.checkArgument(this.getType() == serviceLevelIndicator.getType());
+      return true;
+    } catch (Exception ex) {
+      return false;
+    }
+  }
 
   public abstract static class ServiceLevelIndicatorUpdatableEntity<T extends ServiceLevelIndicator, D
                                                                         extends ServiceLevelIndicator>
       implements UpdatableEntity<T, D> {
     protected void setCommonOperations(UpdateOperations<T> updateOperations, D serviceLevelIndicator) {
       updateOperations.set(ServiceLevelIndicatorKeys.type, serviceLevelIndicator.getType())
-          .set(ServiceLevelIndicatorKeys.sliMissingDataType, serviceLevelIndicator.getSliMissingDataType());
+          .set(ServiceLevelIndicatorKeys.sliMissingDataType, serviceLevelIndicator.getSliMissingDataType())
+          .inc(ServiceLevelIndicatorKeys.version);
     }
   }
   @FdIndex Long createNextTaskIteration;
@@ -103,5 +132,14 @@ public abstract class ServiceLevelIndicator
       return createNextTaskIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  public TimeRange getFirstTimeDataCollectionTimeRange() {
+    Instant startTime = Instant.ofEpochMilli(getCreatedAt());
+    Instant endTime = DateTimeUtils.roundDownTo5MinBoundary(startTime);
+    return TimeRange.builder()
+        .startTime(endTime.minus(DATA_COLLECTION_TIME_RANGE_FOR_SLI, ChronoUnit.MINUTES))
+        .endTime(endTime)
+        .build();
   }
 }

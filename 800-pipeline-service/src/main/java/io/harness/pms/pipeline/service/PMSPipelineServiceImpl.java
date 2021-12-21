@@ -24,10 +24,13 @@ import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
+import io.harness.pms.contracts.governance.ExpansionRequestMetadata;
 import io.harness.pms.contracts.governance.ExpansionResponseBatch;
 import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.governance.ExpansionRequest;
 import io.harness.pms.governance.ExpansionRequestsExtractor;
+import io.harness.pms.governance.ExpansionsMerger;
 import io.harness.pms.governance.JsonExpander;
 import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
@@ -48,6 +51,7 @@ import io.harness.telemetry.TelemetryReporter;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -79,6 +83,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private TelemetryReporter telemetryReporter;
   @Inject private JsonExpander jsonExpander;
   @Inject private ExpansionRequestsExtractor expansionRequestsExtractor;
+  @Inject private PmsGitSyncHelper gitSyncHelper;
   public static String PIPELINE_SAVE = "pipeline_save";
   public static String PIPELINE_SAVE_ACTION_TYPE = "action";
   public static String CREATING_PIPELINE = "creating new pipeline";
@@ -166,8 +171,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
             pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(),
             pipelineEntity.getIdentifier(), true);
     if (!optionalOriginalEntity.isPresent()) {
-      throw new InvalidRequestException(format("Pipeline [%s] under Project[%s], Organization [%s] doesn't exist.",
-          pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
+      throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+          pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier()));
     }
     PipelineEntity entityToUpdate = optionalOriginalEntity.get();
     PipelineEntity tempEntity = entityToUpdate.withYaml(pipelineEntity.getYaml())
@@ -229,13 +234,18 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public Optional<PipelineEntity> incrementRunSequence(
+  public int incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean deleted) {
     Criteria criteria = PMSPipelineServiceHelper.getPipelineEqualityCriteria(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, null);
     Update update = new Update();
     update.inc(PipelineEntityKeys.runSequence);
-    return Optional.ofNullable(updatePipelineMetadata(accountId, orgIdentifier, projectIdentifier, criteria, update));
+    Optional<PipelineEntity> pipelineEntityOptional =
+        Optional.ofNullable(updatePipelineMetadata(accountId, orgIdentifier, projectIdentifier, criteria, update));
+    if (pipelineEntityOptional.isPresent()) {
+      return pipelineEntityOptional.get().getRunSequence();
+    }
+    throw new InvalidRequestException("Could not fetch pipeline with the given id: " + pipelineIdentifier);
   }
 
   @Override
@@ -263,8 +273,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     Optional<PipelineEntity> optionalPipelineEntity =
         get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!optionalPipelineEntity.isPresent()) {
-      throw new InvalidRequestException(format("Pipeline [%s] under Project[%s], Organization [%s] does not exist.",
-          pipelineIdentifier, projectIdentifier, orgIdentifier));
+      throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+          orgIdentifier, projectIdentifier, pipelineIdentifier));
     }
 
     PipelineEntity existingEntity = optionalPipelineEntity.get();
@@ -294,6 +304,16 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier, true);
     }
     return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier, false);
+  }
+
+  @Override
+  public PipelineEntity findFirstPipeline(Criteria criteria) {
+    return pmsPipelineRepository.findFirstPipeline(criteria);
+  }
+
+  @Override
+  public Long countAllPipelines(Criteria criteria) {
+    return pmsPipelineRepository.countAllPipelines(criteria);
   }
 
   @Override
@@ -436,20 +456,33 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         PIPELINE_SAVE, properties, Collections.singletonMap(AMPLITUDE, true), io.harness.telemetry.Category.GLOBAL);
   }
 
+  // todo(@Naman Verma): add test for this method
   @Override
   public String fetchExpandedPipelineJSON(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
-    // todo(@NamanVerma): add all parts of the flow as and when implemented. Add test when full method is ready
     Optional<PipelineEntity> pipelineEntityOptional =
         get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntityOptional.isPresent()) {
-      throw new InvalidRequestException(format("Pipeline [%s] under Project[%s], Organization [%s] doesn't exist.",
-          pipelineIdentifier, projectIdentifier, orgIdentifier));
+      throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+          orgIdentifier, projectIdentifier, pipelineIdentifier));
     }
+
+    ExpansionRequestMetadata expansionRequestMetadata = getRequestMetadata(accountId, orgIdentifier, projectIdentifier);
 
     Set<ExpansionRequest> expansionRequests =
         expansionRequestsExtractor.fetchExpansionRequests(pipelineEntityOptional.get().getYaml());
-    Set<ExpansionResponseBatch> expansionResponseBatches = jsonExpander.fetchExpansionResponses(expansionRequests);
-    return null;
+    Set<ExpansionResponseBatch> expansionResponseBatches =
+        jsonExpander.fetchExpansionResponses(expansionRequests, expansionRequestMetadata);
+    return ExpansionsMerger.mergeExpansions(pipelineEntityOptional.get().getYaml(), expansionResponseBatches);
+  }
+
+  ExpansionRequestMetadata getRequestMetadata(String accountId, String orgIdentifier, String projectIdentifier) {
+    ByteString gitSyncBranchContextBytes = gitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
+    return ExpansionRequestMetadata.newBuilder()
+        .setAccountId(accountId)
+        .setOrgId(orgIdentifier)
+        .setProjectId(projectIdentifier)
+        .setGitSyncBranchContext(gitSyncBranchContextBytes)
+        .build();
   }
 }

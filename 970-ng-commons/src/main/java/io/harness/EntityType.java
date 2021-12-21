@@ -32,9 +32,15 @@ public enum EntityType {
       ModuleType.CD, EntityTypeConstants.PIPELINE_STEPS, IdentifierRef.class, EntityYamlRootNames.PIPELINE_STEP),
   @JsonProperty(EntityTypeConstants.HTTP)
   HTTP_STEP(ModuleType.CD, EntityTypeConstants.HTTP, IdentifierRef.class, EntityYamlRootNames.HTTP),
+  @JsonProperty(EntityTypeConstants.JIRA_CREATE)
+  JIRA_CREATE_STEP(
+      ModuleType.CD, EntityTypeConstants.JIRA_CREATE, IdentifierRef.class, EntityYamlRootNames.JIRA_CREATE),
   @JsonProperty(EntityTypeConstants.SHELL_SCRIPT)
   SHELL_SCRIPT_STEP(
       ModuleType.CD, EntityTypeConstants.SHELL_SCRIPT, IdentifierRef.class, EntityYamlRootNames.SHELL_SCRIPT),
+  @JsonProperty(EntityTypeConstants.K8S_CANARY_DEPLOY)
+  K8S_CANARY_DEPLOY_STEP(
+      ModuleType.CD, EntityTypeConstants.K8S_CANARY_DEPLOY, IdentifierRef.class, EntityYamlRootNames.K8S_CANARY_DEPLOY),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
   CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, IdentifierRef.class, EntityYamlRootNames.CONNECTOR),
   @JsonProperty(EntityTypeConstants.SECRETS)
@@ -91,7 +97,10 @@ public enum EntityType {
       ModuleType.CORE, EntityTypeConstants.GIT_REPOSITORIES, IdentifierRef.class, EntityYamlRootNames.GIT_REPOSITORY),
   @JsonProperty(EntityTypeConstants.FEATURE_FLAGS)
   FEATURE_FLAGS(
-      ModuleType.CF, EntityTypeConstants.FEATURE_FLAGS, IdentifierRef.class, EntityYamlRootNames.FEATURE_FLAGS);
+      ModuleType.CF, EntityTypeConstants.FEATURE_FLAGS, IdentifierRef.class, EntityYamlRootNames.FEATURE_FLAGS),
+  @JsonProperty(EntityTypeConstants.SERVICENOW_APPROVAL)
+  SERVICENOW_APPROVAL_STEP(ModuleType.CD, EntityTypeConstants.SERVICENOW_APPROVAL, IdentifierRef.class,
+      EntityYamlRootNames.SERVICENOW_APPROVAL);
 
   private final ModuleType moduleType;
   String yamlName;

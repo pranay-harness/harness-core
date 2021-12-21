@@ -2,7 +2,6 @@ package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
-import static io.harness.AuthorizationServiceHeader.TEMPLATE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
@@ -58,6 +57,7 @@ import io.harness.pms.approval.ApprovalResourceService;
 import io.harness.pms.approval.ApprovalResourceServiceImpl;
 import io.harness.pms.approval.jira.JiraApprovalHelperServiceImpl;
 import io.harness.pms.approval.notification.ApprovalNotificationHandlerImpl;
+import io.harness.pms.approval.servicenow.ServiceNowApprovalHelperServiceImpl;
 import io.harness.pms.barriers.service.PMSBarrierService;
 import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
 import io.harness.pms.event.entitycrud.PipelineEntityCRUDStreamListener;
@@ -96,6 +96,7 @@ import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.rbac.validator.PipelineRbacServiceImpl;
 import io.harness.pms.resourceconstraints.service.PMSResourceConstraintService;
 import io.harness.pms.resourceconstraints.service.PMSResourceConstraintServiceImpl;
+import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionServiceV2;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
@@ -113,10 +114,14 @@ import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
+import io.harness.steps.approval.step.servicenow.ServiceNowApprovalHelperService;
+import io.harness.steps.approval.step.servicenow.ServiceNowApprovalStepNode;
 import io.harness.steps.jira.JiraStepHelperService;
+import io.harness.steps.jira.create.JiraCreateStepNode;
 import io.harness.steps.shellscript.ShellScriptHelperService;
 import io.harness.steps.shellscript.ShellScriptHelperServiceImpl;
 import io.harness.steps.shellscript.ShellScriptStepNode;
+import io.harness.steps.template.TemplateStepNode;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.template.TemplateResourceClientModule;
@@ -155,8 +160,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import javax.cache.Cache;
@@ -177,7 +184,10 @@ public class PipelineServiceModule extends AbstractModule {
   public static Set<Class<?>> commonStepsMovedToNewSchema = new HashSet() {
     {
       add(HttpStepNode.class);
+      add(JiraCreateStepNode.class);
       add(ShellScriptStepNode.class);
+      add(TemplateStepNode.class);
+      add(ServiceNowApprovalStepNode.class);
     }
   };
 
@@ -220,9 +230,9 @@ public class PipelineServiceModule extends AbstractModule {
             .expressionEvaluatorProvider(new PMSExpressionEvaluatorProvider())
             .withPMS(false)
             .isPipelineService(true)
-            .corePoolSize(20)
-            .maxPoolSize(100)
-            .idleTimeInSecs(500L)
+            .corePoolSize(configuration.getOrchestrationPoolConfig().getCorePoolSize())
+            .maxPoolSize(configuration.getOrchestrationPoolConfig().getMaxPoolSize())
+            .idleTimeInSecs(configuration.getOrchestrationPoolConfig().getIdleTime())
             .eventsFrameworkConfiguration(configuration.getEventsFrameworkConfiguration())
             .accountClientId(PIPELINE_SERVICE.getServiceId())
             .accountServiceHttpClientConfig(configuration.getManagerClientConfig())
@@ -236,11 +246,11 @@ public class PipelineServiceModule extends AbstractModule {
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
         configuration.getManagerTarget(), configuration.getManagerAuthority(), true));
     install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
-        configuration.getNgManagerServiceSecret(), MANAGER.getServiceId(), ClientMode.PRIVILEGED));
+        configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId(), ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new TemplateResourceClientModule(configuration.getTemplateServiceClientConfig(),
-        configuration.getTemplateServiceSecret(), TEMPLATE_SERVICE.toString()));
+        configuration.getTemplateServiceSecret(), PIPELINE_SERVICE.toString()));
     install(NGTriggersModule.getInstance(configuration.getTriggerConfig(),
         configuration.getPipelineServiceClientConfig(), configuration.getPipelineServiceSecret()));
     install(PersistentLockModule.getInstance());
@@ -312,6 +322,13 @@ public class PipelineServiceModule extends AbstractModule {
         .toInstance(new ManagedScheduledExecutorService("ProgressUpdateServiceExecutor-Thread"));
     bind(TriggerWebhookExecutionService.class).to(TriggerWebhookExecutionServiceImpl.class);
     bind(TriggerWebhookExecutionServiceV2.class).to(TriggerWebhookExecutionServiceImplV2.class);
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("telemetryPublisherExecutor"))
+        .toInstance(new ScheduledThreadPoolExecutor(1,
+            new ThreadFactoryBuilder()
+                .setNameFormat("pipeline-telemetry-publisher-Thread-%d")
+                .setPriority(Thread.NORM_PRIORITY)
+                .build()));
 
     MapBinder<String, FilterPropertiesMapper> filterPropertiesMapper =
         MapBinder.newMapBinder(binder(), String.class, FilterPropertiesMapper.class);
@@ -331,6 +348,7 @@ public class PipelineServiceModule extends AbstractModule {
                         .build());
 
     bind(PipelineDashboardService.class).to(PipelineDashboardServiceImpl.class);
+    bind(ServiceNowApprovalHelperService.class).to(ServiceNowApprovalHelperServiceImpl.class);
     try {
       bind(TimeScaleDBService.class)
           .toConstructor(TimeScaleDBServiceImpl.class.getConstructor(TimeScaleDBConfig.class));
@@ -524,10 +542,31 @@ public class PipelineServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("shouldUseInstanceCache")
+  public boolean shouldUseInstanceCache() {
+    return configuration.isShouldUseInstanceCache();
+  }
+
+  @Provides
+  @Singleton
   @Named("PipelineExecutorService")
   public ExecutorService pipelineExecutorService() {
-    return ThreadPool.create(
-        5, 10, 10, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
+    return ThreadPool.create(configuration.getPipelineExecutionPoolConfig().getCorePoolSize(),
+        configuration.getPipelineExecutionPoolConfig().getMaxPoolSize(),
+        configuration.getPipelineExecutionPoolConfig().getIdleTime(),
+        configuration.getPipelineExecutionPoolConfig().getTimeUnit(),
+        new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
+  }
+
+  @Provides
+  @Singleton
+  @Named("PlanCreatorMergeExecutorService")
+  public Executor planCreatorMergeExecutorService() {
+    return ThreadPool.create(configuration.getPlanCreatorMergeServicePoolConfig().getCorePoolSize(),
+        configuration.getPlanCreatorMergeServicePoolConfig().getMaxPoolSize(),
+        configuration.getPlanCreatorMergeServicePoolConfig().getIdleTime(),
+        configuration.getPlanCreatorMergeServicePoolConfig().getTimeUnit(),
+        new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
   }
 
   @Provides
@@ -537,5 +576,15 @@ public class PipelineServiceModule extends AbstractModule {
       HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
     return harnessCacheManager.getCache("pmsEventsCache", String.class, Integer.class,
         AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
+  }
+
+  @Provides
+  @Singleton
+  @Named("pmsSdkInstanceCache")
+  public Cache<String, PmsSdkInstance> sdkInstanceCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
+    return harnessCacheManager.getCache("pmsSdkInstanceCache", String.class, PmsSdkInstance.class,
+        AccessedExpiryPolicy.factoryOf(new Duration(TimeUnit.DAYS, 30)),
+        versionInfoManager.getVersionInfo().getBuildNo());
   }
 }

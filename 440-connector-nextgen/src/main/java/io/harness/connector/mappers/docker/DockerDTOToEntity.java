@@ -13,6 +13,7 @@ import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.encryption.SecretRefHelper;
 
 import com.google.inject.Singleton;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @OwnedBy(HarnessTeam.CDC)
@@ -21,7 +22,7 @@ public class DockerDTOToEntity implements ConnectorDTOToEntityMapper<DockerConne
   public DockerConnector toConnectorEntity(DockerConnectorDTO configDTO) {
     DockerAuthType dockerAuthType = configDTO.getAuth().getAuthType();
     DockerConnectorBuilder dockerConnectorBuilder = DockerConnector.builder()
-                                                        .url(configDTO.getDockerRegistryUrl())
+                                                        .url(StringUtils.trim(configDTO.getDockerRegistryUrl()))
                                                         .providerType(configDTO.getProviderType())
                                                         .authType(dockerAuthType);
     if (dockerAuthType == DockerAuthType.USER_PASSWORD) {

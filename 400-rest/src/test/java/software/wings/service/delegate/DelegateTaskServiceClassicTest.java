@@ -13,6 +13,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MARKOM;
 import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
@@ -442,11 +443,44 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     persistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     DelegateTaskPackage delegateTaskPackage =
-        delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid());
+        delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), null);
     assertThat(delegateTaskPackage).isNotNull();
     assertThat(delegateTaskPackage.getDelegateTaskId()).isEqualTo(delegateTask.getUuid());
     assertThat(delegateTaskPackage.getDelegateId()).isEqualTo(DELEGATE_ID);
     assertThat(delegateTaskPackage.getAccountId()).isEqualTo(ACCOUNT_ID);
+
+    delegateTask = persistence.get(DelegateTask.class, delegateTask.getUuid());
+    assertThat(delegateTask.getDelegateInstanceId()).isNull();
+  }
+
+  @Cache
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void onlyOneInstanceShouldAcquireTask() {
+    when(assignDelegateService.isWhitelisted(any(DelegateTask.class), any(String.class))).thenReturn(true);
+    when(assignDelegateService.canAssign(
+             any(BatchDelegateSelectionLog.class), any(String.class), any(DelegateTask.class)))
+        .thenReturn(true);
+    Delegate delegate = createDelegateBuilder().build();
+    delegate.setUuid(DELEGATE_ID);
+    persistence.save(delegate);
+    DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
+    String delegateInstanceId = generateUuid();
+    DelegateTaskPackage delegateTaskPackage = delegateTaskServiceClassic.acquireDelegateTask(
+        ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), delegateInstanceId);
+    assertThat(delegateTaskPackage).isNotNull();
+    assertThat(delegateTaskPackage.getDelegateTaskId()).isEqualTo(delegateTask.getUuid());
+    assertThat(delegateTaskPackage.getDelegateId()).isEqualTo(DELEGATE_ID);
+    assertThat(delegateTaskPackage.getAccountId()).isEqualTo(ACCOUNT_ID);
+
+    delegateTask = persistence.get(DelegateTask.class, delegateTask.getUuid());
+    assertThat(delegateTask.getDelegateInstanceId()).isEqualTo(delegateInstanceId);
+
+    // other instance should not acquire
+    delegateTaskPackage =
+        delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), generateUuid());
+    assertThat(delegateTaskPackage).isNull();
   }
 
   @Cache
@@ -464,7 +498,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     persistence.save(delegate);
     delegateCache.get(ACCOUNT_ID, DELEGATE_ID, true);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
-    assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid()))
+    assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), null))
         .isNotNull();
   }
 
@@ -480,7 +514,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     delegate.setUuid(DELEGATE_ID);
     persistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
-    assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid()))
+    assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), null))
         .isNull();
   }
 
@@ -498,7 +532,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     delegate.setUuid(DELEGATE_ID);
     persistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
-    assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid()))
+    assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), null))
         .isNull();
     verify(alertService, times(0))
         .openAlert(eq(ACCOUNT_ID), anyString(), eq(NoEligibleDelegates), any(NoEligibleDelegatesAlert.class));
@@ -518,7 +552,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     delegate.setUuid(DELEGATE_ID);
     persistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
-    assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid()))
+    assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), null))
         .isNull();
   }
 
@@ -531,7 +565,8 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     delegate.setUuid(DELEGATE_ID + "1");
     persistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
-    assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID + "1", delegateTask.getUuid()))
+    assertThat(
+        delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID + "1", delegateTask.getUuid(), null))
         .isNull();
   }
 
@@ -549,13 +584,13 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     persistence.save(delegate);
 
     DelegateTaskPackage delegateTaskPackage =
-        delegateTaskServiceClassic.acquireDelegateTask(accountId, delegateId, generateUuid());
+        delegateTaskServiceClassic.acquireDelegateTask(accountId, delegateId, generateUuid(), null);
     assertThat(delegateTaskPackage).isNull();
 
     delegate.setStatus(DelegateInstanceStatus.DELETED);
     persistence.save(delegate);
 
-    delegateTaskPackage = delegateTaskServiceClassic.acquireDelegateTask(accountId, delegateId, generateUuid());
+    delegateTaskPackage = delegateTaskServiceClassic.acquireDelegateTask(accountId, delegateId, generateUuid(), null);
     assertThat(delegateTaskPackage).isNull();
   }
 
@@ -564,7 +599,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotAcquireTaskIfDelegateNotFoundInDb() {
     DelegateTaskPackage delegateTaskPackage =
-        delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, generateUuid(), generateUuid());
+        delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, generateUuid(), generateUuid(), null);
     assertThat(delegateTaskPackage).isNull();
   }
 
@@ -592,7 +627,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   public void shouldReportConnectionResults_success() {
     DelegateTask delegateTask = saveDelegateTask(false, emptySet(), QUEUED);
     DelegateTaskPackage delegateTaskPackage =
-        delegateTaskServiceClassic.reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
+        delegateTaskServiceClassic.reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), null,
             singletonList(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
                               .delegateId(DELEGATE_ID)
@@ -610,7 +645,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   public void shouldReportConnectionResults_fail() {
     DelegateTask delegateTask = saveDelegateTask(false, emptySet(), QUEUED);
     DelegateTaskPackage delegateTaskPackage =
-        delegateTaskServiceClassic.reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
+        delegateTaskServiceClassic.reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), null,
             singletonList(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
                               .delegateId(DELEGATE_ID)
@@ -627,7 +662,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   public void shouldReportConnectionResults_unavailable() {
     DelegateTask delegateTask = saveDelegateTask(false, emptySet(), STARTED);
     DelegateTaskPackage delegateTaskPackage =
-        delegateTaskServiceClassic.reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
+        delegateTaskServiceClassic.reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), null,
             singletonList(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
                               .delegateId(DELEGATE_ID)

@@ -20,6 +20,7 @@ import io.harness.ccm.commons.beans.InstanceType;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Singleton;
 import java.io.File;
@@ -31,9 +32,10 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.DataFileWriter;
@@ -113,20 +115,30 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     return null;
   }
 
-  private void refreshLabelCache(String accountId, List<InstanceBillingData> instanceBillingDataList) {
-    Map<String, Set<String>> clusterWorkload =
+  @VisibleForTesting
+  public void refreshLabelCache(String accountId, @NotNull List<InstanceBillingData> instanceBillingDataList) {
+    final List<InstanceBillingData> dataNotPresentInLabelsCache =
         instanceBillingDataList.stream()
             .filter(instanceBillingData
                 -> ImmutableSet.of(InstanceType.K8S_POD.name(), InstanceType.K8S_POD_FARGATE.name())
                        .contains(instanceBillingData.getInstanceType()))
             .filter(instanceBillingData
                 -> null
-                    == k8SWorkloadService.getK8sWorkloadLabel(
-                        accountId, instanceBillingData.getClusterId(), instanceBillingData.getWorkloadName()))
-            .collect(Collectors.groupingBy(InstanceBillingData::getClusterId,
-                Collectors.mapping(InstanceBillingData::getWorkloadName, Collectors.toSet())));
-    clusterWorkload.forEach(
-        (cluster, workloadNames) -> k8SWorkloadService.updateK8sWorkloadLabelCache(accountId, cluster, workloadNames));
+                    == k8SWorkloadService.getK8sWorkloadLabel(accountId, instanceBillingData.getClusterId(),
+                        instanceBillingData.getNamespace(), instanceBillingData.getWorkloadName()))
+            .collect(Collectors.toList());
+
+    final Map<K8SWorkloadService.CacheKey, HashSet<String>> clusterNamespaceWorkload = new HashMap<>();
+
+    for (InstanceBillingData instanceBillingData : dataNotPresentInLabelsCache) {
+      K8SWorkloadService.CacheKey key = new K8SWorkloadService.CacheKey(
+          accountId, instanceBillingData.getClusterId(), instanceBillingData.getNamespace(), null);
+
+      clusterNamespaceWorkload.computeIfAbsent(key, k -> new HashSet<>()).add(instanceBillingData.getWorkloadName());
+    }
+
+    clusterNamespaceWorkload.forEach(
+        (key, workloadNames) -> k8SWorkloadService.updateK8sWorkloadLabelCache(key, workloadNames));
   }
 
   private void writeDataToAvro(String accountId, List<ClusterBillingData> instanceBillingDataAvro,
@@ -244,8 +256,9 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     List<Label> labels = new ArrayList<>();
     if (ImmutableSet.of(InstanceType.K8S_POD.name(), InstanceType.K8S_POD_FARGATE.name())
             .contains(instanceBillingData.getInstanceType())) {
-      Map<String, String> k8sWorkloadLabel = k8SWorkloadService.getK8sWorkloadLabel(
-          accountId, instanceBillingData.getClusterId(), instanceBillingData.getWorkloadName());
+      Map<String, String> k8sWorkloadLabel =
+          k8SWorkloadService.getK8sWorkloadLabel(accountId, instanceBillingData.getClusterId(),
+              instanceBillingData.getNamespace(), instanceBillingData.getWorkloadName());
 
       if (null != k8sWorkloadLabel) {
         k8sWorkloadLabel.forEach((key, value) -> {

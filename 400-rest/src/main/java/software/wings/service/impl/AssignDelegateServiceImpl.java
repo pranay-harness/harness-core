@@ -23,7 +23,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
-import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
@@ -246,14 +245,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     boolean isDelegateNg = delegate.isNg();
     boolean isTaskNg = !isEmpty(taskSetupAbstractions) && taskSetupAbstractions.get(NgSetupFields.NG) != null
         && Boolean.TRUE.equals(Boolean.valueOf(taskSetupAbstractions.get(NgSetupFields.NG)));
-
-    if (featureFlagService.isNotEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, delegate.getAccountId())) {
-      if (log.isDebugEnabled()) {
-        log.debug("CG/NG delegate/task assignment isolation test. Is Delegate NG: {}, Is Task NG: {}", isDelegateNg,
-            isTaskNg);
-      }
-      return true;
-    }
 
     if (isDelegateNg && isTaskNg || !isDelegateNg && !isTaskNg) {
       return true;
@@ -758,7 +749,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   public void saveConnectionResults(List<DelegateConnectionResult> results) {
     List<DelegateConnectionResult> resultsToSave =
         results.stream().filter(result -> isNotBlank(result.getCriteria())).collect(toList());
-
+    log.debug("Delegate connection results [{}]  ", results);
     for (DelegateConnectionResult result : resultsToSave) {
       Query<DelegateConnectionResult> query =
           persistence.createQuery(DelegateConnectionResult.class)
@@ -878,7 +869,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         accountDelegatesCache.invalidate(accountId);
       }
 
-      if (batch != null && featureFlagService.isEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)) {
+      if (batch != null) {
         accountDelegates =
             accountDelegates.stream().filter(delegate -> delegate.isNg() == batch.isTaskNg()).collect(toList());
       }

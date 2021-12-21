@@ -62,11 +62,6 @@ public class AddEnableIteratorsToTriggers implements Migration {
 
       trigger.setNextIterations(new ArrayList<>());
       List<Long> nextFireTime = trigger.recalculateNextIterations(TriggerKeys.nextIterations, true, 0);
-      if (!nextFireTime.isEmpty()) {
-        // It automatically adds current timestamp when list is empty. This is not desired
-        nextFireTime = nextFireTime.subList(1, nextFireTime.size());
-      }
-
       // Update the current trigger to use the IteratorsFramework
       Query<Trigger> query = wingsPersistence.createQuery(Trigger.class)
                                  .filter(TriggerKeys.uuid, trigger.getUuid())

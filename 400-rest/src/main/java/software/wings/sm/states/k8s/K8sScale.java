@@ -120,7 +120,7 @@ public class K8sScale extends AbstractK8sState {
               .maxInstances(maxInstances)
               .skipSteadyStateCheck(this.skipSteadyStateCheck)
               .timeoutIntervalInMin(stateTimeoutInMinutes)
-              .useLatestKustomizeVersion(
+              .useVarSupportForKustomize(
                   featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
               .useNewKubectlVersion(featureFlagService.isEnabled(NEW_KUBECTL_VERSION, infraMapping.getAccountId()))
               .build();

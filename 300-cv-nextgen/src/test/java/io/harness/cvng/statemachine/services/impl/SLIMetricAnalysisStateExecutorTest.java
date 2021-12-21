@@ -111,6 +111,7 @@ public class SLIMetricAnalysisStateExecutorTest extends CvNextGenTestBase {
     List<TimeSeriesRecordDTO> timeSeriesDataCollectionRecordList = new ArrayList<>();
     String host = generateUuid();
     String metric1 = "metric1";
+    String metricName = "metricName";
     String group1 = "group1";
     Double value1 = 90.0;
     for (Instant instant = startTime; instant.isBefore(endTime); instant = instant.plus(1, ChronoUnit.MINUTES)) {
@@ -119,7 +120,8 @@ public class SLIMetricAnalysisStateExecutorTest extends CvNextGenTestBase {
               .verificationTaskId(verificationTaskId)
               .host(host)
               .groupName(group1)
-              .metricName(metric1)
+              .metricIdentifier(metric1)
+              .metricName(metricName)
               .metricValue(value1)
               .epochMinute(TimeUnit.MILLISECONDS.toMinutes(instant.toEpochMilli()))
               .build();

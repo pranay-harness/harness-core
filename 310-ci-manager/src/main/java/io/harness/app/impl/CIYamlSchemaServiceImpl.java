@@ -13,16 +13,17 @@ import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
-import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -36,6 +37,7 @@ import com.google.inject.name.Named;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,13 +52,15 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
-
+  private final List<YamlSchemaRootClass> yamlSchemaRootClasses;
   @Inject
   public CIYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
-      @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes) {
+      @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
+      List<YamlSchemaRootClass> yamlSchemaRootClasses) {
     this.yamlSchemaProvider = yamlSchemaProvider;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
+    this.yamlSchemaRootClasses = yamlSchemaRootClasses;
   }
 
   @Override
@@ -71,7 +75,7 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
 
     JsonNodeUtils.merge(definitions, integrationStepDefinitions);
     yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier, scope, (ObjectNode) definitions,
-        YamlSchemaTransientHelper.ciStepV2EntityTypes);
+        YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()));
 
     JsonNode jsonNode = definitions.get(StepElementConfig.class.getSimpleName());
     modifyStepElementSchema((ObjectNode) jsonNode);
