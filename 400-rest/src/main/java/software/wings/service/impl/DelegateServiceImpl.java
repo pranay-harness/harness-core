@@ -2295,7 +2295,8 @@ public class DelegateServiceImpl implements DelegateService {
                                         .filter(DelegateKeys.hostName, delegate.getHostName());
     // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
     // We ignore IP address because that can change with every restart of the pod.
-    if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
+    if (!(delegate.isNg() && KUBERNETES.equals(delegate.getDelegateType()))
+        && !delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
       delegateQuery.filter(DelegateKeys.ip, delegate.getIp());
     }
 
@@ -2360,7 +2361,8 @@ public class DelegateServiceImpl implements DelegateService {
                                               .filter(DelegateKeys.hostName, delegateParams.getHostName());
     // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
     // We ignore IP address because that can change with every restart of the pod.
-    if (!delegateParams.getHostName().contains(getAccountIdentifier(delegateParams.getAccountId()))) {
+    if (!(delegateParams.isNg() && KUBERNETES.equals(delegateParams.getDelegateType()))
+        && !delegateParams.getHostName().contains(getAccountIdentifier(delegateParams.getAccountId()))) {
       delegateQuery.filter(DelegateKeys.ip, delegateParams.getIp());
     }
 
