@@ -1093,13 +1093,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             "Invalid setting type %s for artifact stream type %s", settingValue.getType(), artifactStreamType));
       }
     }
+    if (AZURE_MACHINE_IMAGE.name().equals(artifactStreamType)) {
+      buildSourceService.validateAndInferArtifactSource(artifactStream);
+    }
   }
 
   private void validateArtifactSourceData(ArtifactStream artifactStream) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
-    if (AZURE_MACHINE_IMAGE.name().equals(artifactStreamType) && artifactStream.shouldValidate()) {
-      buildSourceService.validateAndInferArtifactSource(artifactStream);
-    }
     if (Lists.newArrayList(DOCKER, ECR, GCR, ACR, ARTIFACTORY, NEXUS, AZURE_ARTIFACTS)
             .stream()
             .anyMatch(type -> type.name().equals(artifactStreamType))) {
