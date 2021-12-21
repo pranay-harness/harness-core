@@ -15,6 +15,7 @@ import io.github.resilience4j.retry.Retry;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RedissonClient;
 
 @OwnedBy(PL)
 @Slf4j
@@ -24,6 +25,11 @@ public class GitAwareRedisProducer extends RedisProducer {
   public GitAwareRedisProducer(
       String topicName, @NotNull RedisConfig redisConfig, int maxTopicSize, String producerName) {
     super(topicName, redisConfig, maxTopicSize, producerName);
+  }
+
+  public GitAwareRedisProducer(String topicName, @NotNull RedissonClient redisConfig, int maxTopicSize,
+      String producerName, String envNamespace) {
+    super(topicName, redisConfig, maxTopicSize, producerName, envNamespace);
   }
 
   @Override
@@ -44,5 +50,10 @@ public class GitAwareRedisProducer extends RedisProducer {
   public static GitAwareRedisProducer of(
       String topicName, @NotNull RedisConfig redisConfig, int maxTopicLength, String producerName) {
     return new GitAwareRedisProducer(topicName, redisConfig, maxTopicLength, producerName);
+  }
+
+  public static RedisProducer of(String topicName, @NotNull RedissonClient redissonClient, int maxTopicSize,
+      String producerName, String envNamespace) {
+    return new GitAwareRedisProducer(topicName, redissonClient, maxTopicSize, producerName, envNamespace);
   }
 }
