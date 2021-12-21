@@ -112,7 +112,8 @@ ciExecutionServiceConfig:
   stepConfig:
     # The below config is for K8 steps
     gitCloneConfig:
-      image: harness/drone-git:v1.0.4
+      # Use rootless image only for K8 git clone
+      image: harness/drone-git:1.0.6-rootless-linux-amd64
       entrypoint:
         - /usr/local/bin/clone
     buildAndPushDockerRegistryConfig:
@@ -128,11 +129,11 @@ ciExecutionServiceConfig:
       entrypoint:
         - /kaniko/kaniko-gcr
     gcsUploadConfig:
-      image: plugins/gcs:1.1.1-linux-amd64
+      image: plugins/gcs:1.2.4
       entrypoint:
         - /bin/drone-gcs
     s3UploadConfig:
-      image: plugins/s3:1.0.0-linux-amd64
+      image: plugins/s3:1.0.3
       entrypoint:
         - /bin/drone-s3
     artifactoryUploadConfig:
@@ -140,21 +141,22 @@ ciExecutionServiceConfig:
       entrypoint:
         - /bin/plugin
     cacheGCSConfig:
-      image: plugins/cache:1.3.0
+      image: plugins/cache:1.3.2
       entrypoint:
         - /bin/drone-cache
     cacheS3Config:
-      image: plugins/cache:1.3.0
+      image: plugins/cache:1.3.2
       entrypoint:
         - /bin/drone-cache
 
     vmImageConfig:
-      gitClone: harness/drone-git:latest
+      # Use root image for VM git clone
+      gitClone: harness/drone-git:1.0.6
       buildAndPushDockerRegistry: plugins/docker:latest
       buildAndPushECR: plugins/ecr:latest
       buildAndPushGCR: plugins/gcr:latest
-      gcsUpload: plugins/gcs:1.1.1-linux-amd64
-      s3Upload: plugins/s3:1.0.0-linux-amd64
+      gcsUpload: plugins/gcs:1.2.4
+      s3Upload: plugins/s3:1.0.3
       artifactoryUpload: plugins/artifactory:1.0.2
       cacheGCS: plugins/cache:1.3.2
       cacheS3: plugins/cache:1.3.2
