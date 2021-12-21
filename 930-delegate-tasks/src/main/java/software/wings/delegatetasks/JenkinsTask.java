@@ -39,7 +39,7 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.model.CustomBuildWithDetails;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
+import software.wings.sm.states.JenkinsExecutionResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

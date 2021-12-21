@@ -43,7 +43,7 @@ import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.model.CustomBuildWithDetails;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.sm.states.JenkinsState;
+import software.wings.sm.states.JenkinsExecutionResponse;
 
 import com.google.inject.Inject;
 import com.offbytwo.jenkins.client.JenkinsHttpConnection;
@@ -138,7 +138,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
 
     // Invoke Jenkins Start Task
     when(jenkins.trigger(jobName, params)).thenReturn(new QueueReference(jenkinsUrl));
-    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -164,7 +164,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
 
     // Jenkins Start Task
     when(jenkins.trigger(jobName, params)).thenReturn(new QueueReference(jenkinsUrl));
-    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -189,7 +189,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
 
     // Jenkins Start Task
     when(jenkins.trigger(jobName, params)).thenReturn(new QueueReference(jenkinsUrl));
-    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -211,7 +211,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
 
     when(customBuildWithDetails.details()).thenThrow(new HttpResponseException(404, "Job Not found"));
 
-    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
@@ -231,7 +231,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
     params.setUnstableSuccess(true);
 
     when(jenkins.trigger(jobName, params)).thenReturn(new QueueReference(jenkinsUrl));
-    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, params);
     verify(jenkins).getBuild(any(QueueReference.class), any(JenkinsConfig.class));
@@ -258,7 +258,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
 
     // Invoke Jenkins Start Task
     when(jenkins.trigger(jobName, params)).thenReturn(new QueueReference(jenkinsUrl));
-    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, params);
     assertThat(response.getEnvVars()).isNullOrEmpty();
@@ -291,7 +291,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
 
     // Invoke Jenkins Start Task
     when(jenkins.trigger(jobName, params)).thenReturn(new QueueReference(jenkinsUrl));
-    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, params);
     assertThat(response.getEnvVars()).isNullOrEmpty();
@@ -319,7 +319,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
 
     // Jenkins Start Task
     when(jenkins.trigger(jobName, params)).thenThrow(new GeneralException("Exception"));
-    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    JenkinsExecutionResponse response = jenkinsTask.run(params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.getErrorMessage()).isNotEmpty();
   }
@@ -335,7 +335,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
 
     // Jenkins Start Task
     when(jenkins.trigger(jobName, params)).then(invocationOnMock -> { throw new Exception(); });
-    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    JenkinsExecutionResponse response = jenkinsTask.run(params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.getErrorMessage()).isNotEmpty();
   }
