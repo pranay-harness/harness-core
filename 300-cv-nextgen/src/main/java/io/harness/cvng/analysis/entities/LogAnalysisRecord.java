@@ -1,9 +1,8 @@
 package io.harness.cvng.analysis.entities;
 
-import static io.harness.cvng.analysis.CVAnalysisConstants.ML_RECORDS_TTL_MONTHS;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
+import io.harness.cvng.CVConstants;
 import io.harness.cvng.analysis.beans.LogAnalysisCluster;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -60,5 +59,5 @@ public final class LogAnalysisRecord implements PersistentEntity, UuidAware, Cre
   @SchemaIgnore
   @FdTtlIndex
   @Builder.Default
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plus(CVConstants.MAX_DATA_RETENTION_DURATION).toInstant());
 }

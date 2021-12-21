@@ -174,7 +174,7 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
     CVConfigService cvConfigService = mock(CVConfigService.class);
     FieldUtils.writeField(cvngLogService, "verificationTaskService", verificationTaskService, true);
     FieldUtils.writeField(cvngLogService, "cvConfigService", cvConfigService, true);
-    when(verificationTaskService.getServiceGuardVerificationTaskIds(any(), any())).thenReturn(traceableIds);
+    when(verificationTaskService.getServiceGuardVerificationTaskIds(any(), any(List.class))).thenReturn(traceableIds);
     PageResponse<CVNGLogDTO> cvngLogs =
         cvngLogService.getCVNGLogs(accountId, "", "", null, null, startTime.minus(Duration.ofMillis(1)),
             endTime.plus(Duration.ofMillis(1)), null, CVNGLogType.API_CALL_LOG, 0, 3);

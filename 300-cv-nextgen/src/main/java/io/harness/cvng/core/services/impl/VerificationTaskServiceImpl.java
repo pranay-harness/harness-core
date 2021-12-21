@@ -30,6 +30,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -249,48 +250,21 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   }
 
   @Override
+  public List<String> getServiceGuardVerificationTaskIds(String accountId, String cvConfigId) {
+    return getServiceGuardVerificationTaskIds(accountId, Collections.singletonList(cvConfigId));
+  }
+
+  @Override
   public boolean isServiceGuardId(String verificationTaskId) {
     VerificationTask verificationTask = get(verificationTaskId);
     return VerificationTask.TaskType.LIVE_MONITORING.equals(verificationTask.getTaskInfo().getTaskType());
   }
 
   @Override
-  public void removeCVConfigMappings(String accountId, String cvConfigId) {
+  public void removeLiveMonitoringMappings(String accountId, String cvConfigId) {
     hPersistence.delete(createQueryForLiveMonitoring(accountId, cvConfigId));
     // TODO: remove after data migration
     hPersistence.delete(createQueryForOldLiveMonitoring(accountId, cvConfigId));
-  }
-
-  @Override
-  public List<String> getVerificationTaskIds(String cvConfigId) {
-    List<String> verificationTasksIds = new ArrayList<>();
-    verificationTasksIds.addAll(
-        hPersistence.createQuery(VerificationTask.class, EnumSet.of(QueryChecks.COUNT))
-            .filter(VerificationTaskKeys.taskInfo + "." + TaskInfo.TASK_TYPE_FIELD_NAME, TaskType.DEPLOYMENT)
-            .filter(VerificationTaskKeys.taskInfo + "." + DeploymentInfoKeys.cvConfigId, cvConfigId)
-            .project(VerificationTaskKeys.uuid, true)
-            .asList()
-            .stream()
-            .map(VerificationTask::getUuid)
-            .collect(Collectors.toList()));
-    verificationTasksIds.addAll(
-        hPersistence.createQuery(VerificationTask.class, EnumSet.of(QueryChecks.COUNT))
-            .filter(VerificationTaskKeys.taskInfo + "." + TaskInfo.TASK_TYPE_FIELD_NAME, TaskType.LIVE_MONITORING)
-            .filter(VerificationTaskKeys.taskInfo + "." + LiveMonitoringInfoKeys.cvConfigId, cvConfigId)
-            .project(VerificationTaskKeys.uuid, true)
-            .asList()
-            .stream()
-            .map(VerificationTask::getUuid)
-            .collect(Collectors.toList()));
-    // TODO: remove after data migration
-    verificationTasksIds.addAll(hPersistence.createQuery(VerificationTask.class, excludeAuthority)
-                                    .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
-                                    .project(VerificationTaskKeys.uuid, true)
-                                    .asList()
-                                    .stream()
-                                    .map(verificationTask -> verificationTask.getUuid())
-                                    .collect(Collectors.toList()));
-    return verificationTasksIds;
   }
 
   @Override

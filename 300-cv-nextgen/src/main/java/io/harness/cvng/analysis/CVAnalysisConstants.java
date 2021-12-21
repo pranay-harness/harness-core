@@ -16,7 +16,6 @@ public interface CVAnalysisConstants {
   String PREVIOUS_LOG_ANALYSIS_PATH = "serviceguard-shortterm-history";
   String PREVIOUS_ANALYSIS_URL = "previous-analysis";
   String TEST_DATA_PATH = "test-data";
-  int ML_RECORDS_TTL_MONTHS = 6;
   String TIMESERIES_SAVE_ANALYSIS_PATH = "/timeseries-serviceguard-save-analysis";
   String TIMESERIES_VERIFICATION_TASK_SAVE_ANALYSIS_PATH = "/timeseries-verification-task-save-analysis";
   String CUMULATIVE_SUMS_URL = "timeseries-serviceguard-cumulative-sums";
