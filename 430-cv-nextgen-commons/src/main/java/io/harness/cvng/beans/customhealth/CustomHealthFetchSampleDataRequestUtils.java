@@ -7,26 +7,25 @@ import io.harness.serializer.JsonUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-
 public class CustomHealthFetchSampleDataRequestUtils {
-  public static Map<String, Object> getDSLEnvironmentVariables(String urlPath,
-      Map<String, String> requestTimestampPlaceholderAndValues, CustomHealthMethod method, String body) {
+  public static Map<String, Object> getDSLEnvironmentVariables(
+      String urlPath, CustomHealthMethod method, String body, TimestampInfo startTime, TimestampInfo endTime) {
     Map<String, Object> commonEnvVariables = new HashMap<>();
     commonEnvVariables.put("method", method);
+    commonEnvVariables.put("urlPath", urlPath);
+    commonEnvVariables.put("body", isNotEmpty(body) ? JsonUtils.asMap(body) : null);
 
-    String pathWithReplacedPlaceholders = isNotEmpty(urlPath) ? urlPath : "";
-    String bodyWithReplacedPlaceholders = isNotEmpty(body) ? body : "";
-
-    for (Map.Entry<String, String> entry : requestTimestampPlaceholderAndValues.entrySet()) {
-      String placeholder = entry.getKey();
-      String value = entry.getValue();
-      pathWithReplacedPlaceholders = pathWithReplacedPlaceholders.replaceFirst(placeholder, value);
-      bodyWithReplacedPlaceholders = bodyWithReplacedPlaceholders.replaceFirst(placeholder, value);
+    commonEnvVariables.put("startTimePlaceholder", startTime.getPlaceholder());
+    commonEnvVariables.put("startTimeFormat", startTime.getTimestampFormat().toString());
+    if (startTime.getTimestampFormat().equals(TimestampInfo.TimestampFormat.CUSTOM)) {
+      commonEnvVariables.put("startTimeCustomFormat", startTime.getCustomTimestampFormat());
     }
 
-    commonEnvVariables.put("urlPath", pathWithReplacedPlaceholders);
-    commonEnvVariables.put(
-        "body", bodyWithReplacedPlaceholders.equals("") ? null : JsonUtils.asMap(bodyWithReplacedPlaceholders));
+    commonEnvVariables.put("endTimePlaceholder", endTime.getPlaceholder());
+    commonEnvVariables.put("endTimeFormat", endTime.getTimestampFormat().toString());
+    if (endTime.getTimestampFormat().equals(TimestampInfo.TimestampFormat.CUSTOM)) {
+      commonEnvVariables.put("endTimeCustomFormat", endTime.getCustomTimestampFormat());
+    }
     return commonEnvVariables;
   }
 }

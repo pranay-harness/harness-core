@@ -4,7 +4,6 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.newrelic.NewRelicApplication;
 import io.harness.cvng.core.beans.MetricPackValidationResponse;
-import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -101,26 +100,5 @@ public class NewRelicResource {
                                       .build();
     return ResponseDTO.newResponse(
         newRelicService.fetchSampleData(projectParams, connectorIdentifier, nrql, requestGuid));
-  }
-
-  @GET
-  @Path("/parse-sample-data")
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "parse sample data for given json response", nickname = "getParsedTimeseries")
-  public ResponseDTO<List<TimeSeriesSampleDTO>> parseSampleData(@QueryParam("accountId") @NotNull String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("jsonResponse") @NotNull String jsonResponse, @QueryParam("groupName") @NotNull String groupName,
-      @QueryParam("metricValueJsonPath") @NotNull String metricValueJsonPath,
-      @QueryParam("timestampJsonPath") @NotNull String timestampJsonPath,
-      @QueryParam("timestampFormat") String timestampFormat) {
-    ProjectParams projectParams = ProjectParams.builder()
-                                      .accountIdentifier(accountId)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .build();
-    return ResponseDTO.newResponse(newRelicService.parseSampleData(
-        projectParams, jsonResponse, groupName, metricValueJsonPath, timestampJsonPath, timestampFormat));
   }
 }

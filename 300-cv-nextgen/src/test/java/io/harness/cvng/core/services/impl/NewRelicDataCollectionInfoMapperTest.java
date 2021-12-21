@@ -76,6 +76,7 @@ public class NewRelicDataCollectionInfoMapperTest extends CvNextGenTestBase {
   private NewRelicCVConfig createCVConfigWithCustomMetric() {
     NewRelicCVConfig cvConfig = (NewRelicCVConfig) builderFactory.newRelicCVConfigBuilder()
                                     .groupName("groupName")
+
                                     .connectorIdentifier("connector")
                                     .productName("apm")
                                     .identifier("monService")
