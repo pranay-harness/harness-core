@@ -20,7 +20,7 @@ type LangType int32
 
 const (
 	LangType_JAVA    LangType = 0
-	LangType_GO      LangType = 1
+	LangType_CSHARP  LangType = 1
 	LangType_PYTHON  LangType = 2
 	LangType_UNKNOWN LangType = 3
 )
@@ -64,6 +64,28 @@ func IsTest(node Node) bool {
 // IsSupported checks whether we can perform an action for the node type or not.
 func IsSupported(node Node) bool {
 	return node.Type == NodeType_TEST || node.Type == NodeType_SOURCE || node.Type == NodeType_RESOURCE
+}
+
+// ParseCsharpNode extracts the class name from a Dotnet file path
+// e.g., src/abc/def/A.cs
+// will return class = A
+func ParseCsharpNode(filename string) (*Node, error) {
+	var node Node
+	node.Pkg = ""
+	node.Class = ""
+	node.Lang = LangType_UNKNOWN
+	node.Type = NodeType_OTHER
+
+	filename = strings.TrimSpace(filename)
+	if strings.HasSuffix(filename, ".cs") {
+		node.Lang = LangType_CSHARP
+		node.Type = NodeType_SOURCE // TODO: How to detect source and test from the file name in csharp?
+		f := strings.TrimSuffix(filename, ".cs")
+		parts := strings.Split(f, "/")
+		node.Class = parts[len(parts)-1]
+	}
+
+	return &node, nil
 }
 
 //ParseJavaNode extracts the pkg and class names from a Java file path
@@ -121,9 +143,13 @@ func ParseFileNames(files []string) ([]Node, error) {
 		if len(path) == 0 {
 			continue
 		}
-		//TODO(shiv): right now, defaulting to Java, add support for additional languages
-		node, _ := ParseJavaNode(path)
-		nodes = append(nodes, *node)
+		if strings.HasSuffix(path, ".cs") {
+			node, _ := ParseCsharpNode(path)
+			nodes = append(nodes, *node)
+		} else {
+			node, _ := ParseJavaNode(path)
+			nodes = append(nodes, *node)
+		}
 	}
 	return nodes, nil
 }
