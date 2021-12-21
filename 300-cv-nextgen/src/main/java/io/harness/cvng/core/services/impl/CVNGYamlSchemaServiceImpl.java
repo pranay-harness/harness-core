@@ -17,6 +17,7 @@ import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -52,9 +53,29 @@ public class CVNGYamlSchemaServiceImpl implements CVNGYamlSchemaService {
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
     this.yamlSchemaRootClasses = yamlSchemaRootClasses;
   }
+  @Override
+  public PartialSchemaDTO getMergedDeploymentStageYamlSchema(
+      String projectIdentifier, String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails) {
+    // Will return null once CV steps are moved to new schema because CV does not have its own stage.
+    return getDeploymentStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, stepSchemaWithDetails);
+  }
 
   @Override
-  public PartialSchemaDTO getDeploymentStageYamlSchema(String orgIdentifier, String projectIdentifier, Scope scope) {
+  public List<YamlSchemaWithDetails> getDeploymentStageYamlSchemaWithDetails(
+      String projectIdentifier, String orgIdentifier, Scope scope) {
+    return yamlSchemaProvider.getCrossFunctionalStepsSchemaDetails(projectIdentifier, orgIdentifier, scope,
+        YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), ModuleType.CV);
+  }
+
+  @Override
+  public PartialSchemaDTO getDeploymentStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
+    return getDeploymentStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, null);
+  }
+
+  // stepSchemaWithDetails would be empty because CV is not a stage. No cross-functional step should ask to make it
+  // available to CV module.
+  public PartialSchemaDTO getDeploymentStageYamlSchemaUtil(
+      String orgIdentifier, String projectIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails) {
     JsonNode deploymentSteps =
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STEPS, orgIdentifier, projectIdentifier, scope);
     JsonNode definitions = deploymentSteps.get(DEFINITIONS_NODE);
