@@ -205,11 +205,20 @@ func (mdb *MongoDb) queryHelper(ctx context.Context, targetBranch, repo string, 
 		// It's possible test files might also have source methods. We should get tests
 		// which are dependent on those as well.
 		if n.Type == utils.NodeType_SOURCE || n.Type == utils.NodeType_TEST {
-			allowedPairs = append(allowedPairs,
-				bson.M{"type": "source", "package": n.Pkg, "class": n.Class,
-					"vcs_info.repo":   repo,
-					"vcs_info.branch": targetBranch,
-					"account":         account})
+			if n.Pkg == "" {
+				allowedPairs = append(allowedPairs,
+					bson.M{"type": "source", "class": n.Class,
+						"vcs_info.repo":   repo,
+						"vcs_info.branch": targetBranch,
+						"account":         account})
+			} else {
+				allowedPairs = append(allowedPairs,
+					bson.M{"type": "source", "package": n.Pkg, "class": n.Class,
+						"vcs_info.repo":   repo,
+						"vcs_info.branch": targetBranch,
+						"account":         account})
+			}
+
 		} else if n.Type == utils.NodeType_RESOURCE {
 			// There can be multiple resource files with the same name
 			if _, ok := mResources[n.File]; ok {
@@ -390,8 +399,12 @@ func getVisDirectRelations(ctx context.Context, files []types.File, branch, repo
 }
 
 // isValid checks whether the test is valid or not
-func isValid(t types.RunnableTest) bool {
-	return t.Pkg != "" && t.Class != ""
+func isValid(t types.RunnableTest, language utils.LangType) bool {
+	if language == utils.LangType_JAVA {
+		return t.Pkg != "" && t.Class != ""
+	} else {
+		return t.Class != ""
+	}
 }
 
 /*
@@ -707,7 +720,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 			selectAll = true
 		} else if utils.IsTest(node) {
 			t := types.RunnableTest{Pkg: node.Pkg, Class: node.Class}
-			if !isValid(t) {
+			if !isValid(t, node.Lang) {
 				logger.FromContext(ctx).Errorw("received test without pkg/class as input")
 			} else {
 				// If there is any test which was deleted in this PR, don't process it
@@ -762,43 +775,40 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 		}, nil
 	}
 	for _, t := range tests {
-		if !isValid(t) {
-			logger.FromContext(ctx).Errorw("found test without pkg/class data in mongo")
-		} else {
-			// If there is any test which was deleted in this PR, don't process it
-			if _, ok := deletedTests[t]; ok {
-				logger.FromContext(ctx).Warnw(fmt.Sprintf("removing test %s from selection as it was deleted", t))
-				continue
-			}
-			// Test is valid, add the test
-			if _, ok := m[t]; !ok { // hasn't been added before
-				m[t] = struct{}{}
-				for _, src := range methodMap[t] {
-					l = append(l, types.RunnableTest{Pkg: src.Pkg, Class: src.Class,
-						Method: src.Method, Selection: types.SelectSourceCode})
-				}
+		if t.Pkg == "" && t.Class == "" {
+			continue
+		}
+		// If there is any test which was deleted in this PR, don't process it
+		if _, ok := deletedTests[t]; ok {
+			logger.FromContext(ctx).Warnw(fmt.Sprintf("removing test %s from selection as it was deleted", t))
+			continue
+		}
+		// Test is valid, add the test
+		if _, ok := m[t]; !ok { // hasn't been added before
+			m[t] = struct{}{}
+			for _, src := range methodMap[t] {
+				l = append(l, types.RunnableTest{Pkg: src.Pkg, Class: src.Class,
+					Method: src.Method, Selection: types.SelectSourceCode})
 			}
 		}
 	}
 
-	if enableReflection {
-		// Go through reflection tests and add anything that hasn't been added before
-		for _, rt := range reflectionTests {
-			if _, ok := m[rt]; !ok {
-				m[rt] = struct{}{}
-				for _, src := range methodMap[rt] {
-					l = append(l, types.RunnableTest{Pkg: src.Pkg, Class: src.Class,
-						Method: src.Method, Selection: types.SelectSourceCode})
-				}
-			}
+	selectedTests := len(l)
+	// For dotnet, also add the changed files themselves in the list since we don't
+	// know if they are source or tests.
+	// TODO: This is hacky and needs a proper way of determining information about .Net
+	// files like package (namespace) name, whether it's a test or source, etc.
+	for _, n := range fnodes {
+		if n.Lang == utils.LangType_CSHARP {
+			l = append(l, types.RunnableTest{Class: n.Class, Selection: types.SelectUpdatedTest})
 		}
 	}
 
 	return types.SelectTestsResp{
 		TotalTests:    totalTests,
-		SelectedTests: len(l) - new, // new tests will be added later in upsert with uploading of partial CG
+		SelectedTests: selectedTests - new, // new tests will be added later in upsert with uploading of partial CG
 		UpdatedTests:  updated,
-		SrcCodeTests:  len(l) - updated - new,
+		SrcCodeTests:  selectedTests - updated - new,
 		Tests:         l,
 	}, nil
 }
