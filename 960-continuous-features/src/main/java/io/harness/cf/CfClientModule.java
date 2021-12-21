@@ -55,7 +55,7 @@ public class CfClientModule extends AbstractModule {
 
     } catch (InterruptedException | FeatureFlagInitializeException e) {
 
-      log.error("CF client was not initialized", e);
+      log.error("CF client was not initialized {}", e);
     }
 
     return client;
