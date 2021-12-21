@@ -5,6 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessType;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
@@ -42,11 +45,20 @@ public class UserProfileHelper {
 
   public void setConnectorDetailsFromUserProfile(
       YamlGitConfigDTO yamlGitConfig, UserPrincipal userPrincipal, ConnectorResponseDTO connector) {
-    if (connector.getConnector().getConnectorType() != ConnectorType.GITHUB) {
+    if (connector.getConnector().getConnectorType() != ConnectorType.GITHUB
+        || connector.getConnector().getConnectorType() != ConnectorType.BITBUCKET) {
       throw new InvalidRequestException("Git Sync only supported for github connector");
     }
-    final GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) connector.getConnector().getConnectorConfig();
-    githubConnectorDTO.setUrl(yamlGitConfig.getRepo());
+    GithubConnectorDTO githubConnectorDTO = null;
+    BitbucketConnectorDTO bitbucketConnectorDTO = null;
+    if (connector.getConnector().getConnectorType() != ConnectorType.GITHUB) {
+      githubConnectorDTO = (GithubConnectorDTO) connector.getConnector().getConnectorConfig();
+      githubConnectorDTO.setUrl(yamlGitConfig.getRepo());
+    } else {
+      bitbucketConnectorDTO = (BitbucketConnectorDTO) connector.getConnector().getConnectorConfig();
+      bitbucketConnectorDTO.setUrl(yamlGitConfig.getRepo());
+    }
+
     final List<SourceCodeManagerDTO> sourceCodeManager =
         sourceCodeManagerService.get(userPrincipal.getUserId().getValue(), yamlGitConfig.getAccountIdentifier());
     final Optional<SourceCodeManagerDTO> sourceCodeManagerDTO =
@@ -65,10 +77,16 @@ public class UserProfileHelper {
       throw new InvalidRequestException(
           "User Profile should contain github username token credentials for git sync", e);
     }
-    githubConnectorDTO.setApiAccess(GithubApiAccessDTO.builder()
-                                        .type(GithubApiAccessType.TOKEN)
-                                        .spec(GithubTokenSpecDTO.builder().tokenRef(tokenRef).build())
-                                        .build());
+
+    if (connector.getConnector().getConnectorType() != ConnectorType.GITHUB) {
+      githubConnectorDTO.setApiAccess(GithubApiAccessDTO.builder()
+                                          .type(GithubApiAccessType.TOKEN)
+                                          .spec(GithubTokenSpecDTO.builder().tokenRef(tokenRef).build())
+                                          .build());
+    } else {
+      bitbucketConnectorDTO.setApiAccess(
+          BitbucketApiAccessDTO.builder().type(BitbucketApiAccessType.USERNAME_AND_TOKEN).spec().build());
+    }
   }
 
   public UserPrincipal getUserPrincipal() {
