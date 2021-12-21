@@ -74,7 +74,10 @@ public class ScheduledTriggerHandler implements Handler<Trigger> {
                        .field(TriggerKeys.nextIterations)
                        .notEqual(null)
                        .field(TriggerKeys.nextIterations)
-                       .notEqual(Collections.emptyList()))
+                       .notEqual(Collections.emptyList())
+                       .field(TriggerKeys.nextIterations)
+                       .not()
+                       .sizeEq(0))
             .throttleInterval(ofSeconds(45)));
 
     executor.submit(() -> iterator.process());

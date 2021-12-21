@@ -17,7 +17,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -466,10 +465,6 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   }
 
   private List<Long> validateIterationsAndRemoveCurrentTime(List<Long> nextIterations) {
-    // Removing automatically added current timestamp from the list
-    if (EmptyPredicate.isNotEmpty(nextIterations)) {
-      nextIterations = nextIterations.subList(1, nextIterations.size());
-    }
     if (nextIterations.size() > 1 && ((nextIterations.get(1) - nextIterations.get(0)) / 1000 < MIN_INTERVAL)) {
       throw new InvalidRequestException(
           "Cron Expression should evaluate to time intervals of at least " + MIN_INTERVAL + " seconds.");

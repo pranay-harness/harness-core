@@ -67,11 +67,6 @@ public class EnableIteratorsForLdapSync implements Migration {
       ldapSettings.setNextIterations(new ArrayList<>());
       ldapSettings.setCronExpression(ldapSyncJobConfig.getDefaultCronExpression());
       List<Long> nextFireTime = ldapSettings.recalculateNextIterations(SSOSettingsKeys.nextIterations, true, 0);
-      if (!nextFireTime.isEmpty()) {
-        // It automatically adds current timestamp when list is empty. This is not desired
-        nextFireTime = nextFireTime.subList(1, nextFireTime.size());
-      }
-
       // Update the current ldapSettings to use the IteratorsFramework
       Query<LdapSettings> query = wingsPersistence.createQuery(LdapSettings.class)
                                       .filter(SSOSettings.UUID_KEY, ldapSettings.getUuid())
