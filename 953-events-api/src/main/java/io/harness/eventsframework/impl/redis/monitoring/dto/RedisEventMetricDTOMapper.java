@@ -9,7 +9,7 @@ import io.harness.eventsframework.producer.Message;
 public class RedisEventMetricDTOMapper {
   public RedisEventMetricDTO prepareRedisEventMetricDTO(Message message) {
     return RedisEventMetricDTO.builder()
-        .accountId(message.getMetadataMap().get(message.getMetadataMap().get(ACCOUNT_IDENTIFIER)))
+        .accountId(message.getMetadataMap().get(ACCOUNT_IDENTIFIER))
         .build();
   }
 }
