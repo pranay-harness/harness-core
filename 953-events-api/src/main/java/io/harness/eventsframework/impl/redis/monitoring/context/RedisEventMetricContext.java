@@ -11,14 +11,18 @@ import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.ThreadContext;
 
 @Data
 @OwnedBy(HarnessTeam.PL)
+@Slf4j
 public class RedisEventMetricContext implements AutoCloseable {
   public RedisEventMetricContext(RedisEventMetricDTO redisEventMetricDTO) {
+    log.info("in RedisEventMetricContextinside before if block");
     if (isNotEmpty(redisEventMetricDTO.getAccountId())) {
       ThreadContext.put(METRIC_LABEL_PREFIX + "accountId", redisEventMetricDTO.getAccountId());
+      log.info("in RedisEventMetricContextinside if block");
     }
   }
 
