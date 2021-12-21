@@ -60,6 +60,8 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
+import io.harness.beans.terraform.TerraformPlanParam;
+import io.harness.beans.terraform.TerraformPlanParam.TerraformPlanParamBuilder;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
@@ -83,7 +85,6 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
-import software.wings.api.TerraformPlanParam;
 import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terraform.TfVarGitSource;
@@ -286,7 +287,7 @@ public abstract class TerraformProvisionState extends State {
       fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
           terraformExecutionData.getStateFileId(), null, FileBucket.TERRAFORM_STATE);
     }
-    saveTerraformPlanJson(terraformExecutionData.getTfPlanJson(), context, command());
+    saveTerraformPlanJson(terraformExecutionData, context, command());
 
     TerraformProvisionInheritPlanElement inheritPlanElement =
         TerraformProvisionInheritPlanElement.builder()
@@ -315,7 +316,7 @@ public abstract class TerraformProvisionState extends State {
   }
 
   private void saveTerraformPlanJson(
-      String terraformPlan, ExecutionContext context, TerraformCommand terraformCommand) {
+      TerraformExecutionData executionData, ExecutionContext context, TerraformCommand terraformCommand) {
     if (featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, context.getAccountId())) {
       String variableName = terraformCommand == TerraformCommand.APPLY ? TF_APPLY_VAR_NAME : TF_DESTROY_VAR_NAME;
       // if the plan variable exists overwrite it
@@ -323,13 +324,25 @@ public abstract class TerraformProvisionState extends State {
           sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(variableName).build());
       if (sweepingOutputInstance != null) {
         sweepingOutputService.deleteById(context.getAppId(), sweepingOutputInstance.getUuid());
+
+        if (featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId())) {
+          TerraformPlanParam existingTerraformPlanJson = (TerraformPlanParam) sweepingOutputInstance.getValue();
+          if (isNotEmpty(existingTerraformPlanJson.getTfPlanJsonFileId())) {
+            fileService.deleteFile(existingTerraformPlanJson.getTfPlanJsonFileId(), FileBucket.TERRAFORM_PLAN_JSON);
+          }
+        }
+      }
+
+      TerraformPlanParamBuilder tfPlanParamBuilder = TerraformPlanParam.builder();
+      if (featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId())) {
+        tfPlanParamBuilder.tfPlanJsonFileId(executionData.getTfPlanJsonFiledId());
+      } else {
+        tfPlanParamBuilder.tfplan(format("'%s'", JsonUtils.prettifyJsonString(executionData.getTfPlanJson())));
       }
 
       sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.PIPELINE)
                                      .name(variableName)
-                                     .value(TerraformPlanParam.builder()
-                                                .tfplan(format("'%s'", JsonUtils.prettifyJsonString(terraformPlan)))
-                                                .build())
+                                     .value(tfPlanParamBuilder.build())
                                      .build());
     }
   }
@@ -959,6 +972,7 @@ public abstract class TerraformProvisionState extends State {
             .runPlanOnly(runPlanOnly)
             .exportPlanToApplyStep(exportPlanToApplyStep)
             .saveTerraformJson(featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, context.getAccountId()))
+            .useOptimizedTfPlanJson(featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId()))
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
             .workspace(workspace)
             .delegateTag(delegateTag)

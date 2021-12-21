@@ -19,6 +19,8 @@ import static io.harness.provision.TerraformConstants.TERRAFORM_INTERNAL_FOLDER;
 import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
+import static io.harness.provision.TerraformConstants.TF_APPLY_PLAN_JSON_FILE_PATH_EXPRESSION;
+import static io.harness.provision.TerraformConstants.TF_DESTROY_PLAN_JSON_FILE_PATH_EXPRESSION;
 import static io.harness.provision.TerraformConstants.TF_SCRIPT_DIR;
 import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
 import static io.harness.provision.TerraformConstants.USER_DIR_KEY;
@@ -238,10 +240,12 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         format("Script Directory: [%s]", scriptDirectory), CommandExecutionStatus.RUNNING, INFO, logCallback);
 
     File tfVariablesFile = null, tfBackendConfigsFile = null;
+    String tfPlanJsonFilePath = null;
 
     try (ActivityLogOutputStream activityLogOutputStream = new ActivityLogOutputStream(parameters, logCallback);
          LogCallbackOutputStream logCallbackOutputStream = new LogCallbackOutputStream(logCallback);
-         PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream()) {
+         PlanJsonLogOutputStream planJsonLogOutputStream =
+             new PlanJsonLogOutputStream(parameters.isUseOptimizedTfPlanJson())) {
       ensureLocalCleanup(scriptDirectory);
       String sourceRepoReference = parameters.getCommitId() != null
           ? parameters.getCommitId()
@@ -444,6 +448,25 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         }
       }
 
+      String tfPlanJsonFileId = null;
+      if (code == 0 && parameters.isSaveTerraformJson() && parameters.isUseOptimizedTfPlanJson()) {
+        String planName = getPlanName(parameters);
+        saveExecutionLog(format("Uploading terraform %s json representation", planName), CommandExecutionStatus.RUNNING,
+            INFO, logCallback);
+        // We're going to read content from json plan file and ideally no one should write anything into output
+        // stream at this stage. Just in case let's flush everything from buffer and close output stream
+        // We have enough guards at different layers to prevent repeat close as result of autocloseable
+        planJsonLogOutputStream.flush();
+        planJsonLogOutputStream.close();
+        tfPlanJsonFilePath = planJsonLogOutputStream.getTfPlanJsonLocalPath();
+        tfPlanJsonFileId = terraformBaseHelper.uploadTfPlanJson(parameters.getAccountId(), getDelegateId(), getTaskId(),
+            parameters.getEntityId(), planName, tfPlanJsonFilePath);
+        saveExecutionLog(format("Json representation of %s is available as expression %s %n", planName,
+                             parameters.getCommand() == APPLY ? TF_APPLY_PLAN_JSON_FILE_PATH_EXPRESSION
+                                                              : TF_DESTROY_PLAN_JSON_FILE_PATH_EXPRESSION),
+            CommandExecutionStatus.RUNNING, INFO, logCallback);
+      }
+
       if (code == 0 && !parameters.isRunPlanOnly()) {
         saveExecutionLog(
             format("Waiting: [%s] seconds for resources to be ready", String.valueOf(RESOURCE_READY_WAIT_TIME_SECONDS)),
@@ -495,6 +518,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .entityId(delegateFile.getEntityId())
               .stateFileId(delegateFile.getFileId())
               .tfPlanJson(planJsonLogOutputStream.getPlanJson())
+              .tfPlanJsonFiledId(tfPlanJsonFileId)
               .commandExecuted(parameters.getCommand())
               .sourceRepoReference(sourceRepoReference)
               .variables(parameters.getRawVariables())
@@ -533,6 +557,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     } finally {
       FileUtils.deleteQuietly(new File(workingDir));
       FileUtils.deleteQuietly(new File(baseDir));
+      if (tfPlanJsonFilePath != null) {
+        FileUtils.deleteQuietly(new File(tfPlanJsonFilePath));
+      }
+
       if (parameters.getEncryptedTfPlan() != null) {
         try {
           boolean isSafelyDeleted = planEncryptDecryptHelper.deleteEncryptedRecord(
@@ -605,6 +633,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             .encryptionConfig(parameters.getSecretManagerConfig())
             .isSkipRefreshBeforeApplyingPlan(parameters.isSkipRefreshBeforeApplyingPlan())
             .isSaveTerraformJson(parameters.isSaveTerraformJson())
+            .useOptimizedTfPlan(parameters.isUseOptimizedTfPlanJson())
             .logCallback(logCallback)
             .planJsonLogOutputStream(planJsonLogOutputStream)
             .timeoutInMillis(parameters.getTimeoutInMillis())
@@ -695,10 +724,12 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     saveExecutionLog(command, CommandExecutionStatus.RUNNING, INFO, logCallback);
     int code = executeShellCommand(command, scriptDirectory, parameters, envVars, planJsonLogOutputStream);
     if (code == 0) {
-      saveExecutionLog(
-          format("%nJson representation of %s is exported as a variable %s %n", planName,
-              terraformCommand == APPLY ? TERRAFORM_APPLY_PLAN_FILE_VAR_NAME : TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME),
-          CommandExecutionStatus.RUNNING, INFO, logCallback);
+      if (!parameters.isUseOptimizedTfPlanJson()) {
+        saveExecutionLog(
+            format("%nJson representation of %s is exported as a variable %s %n", planName,
+                terraformCommand == APPLY ? TERRAFORM_APPLY_PLAN_FILE_VAR_NAME : TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME),
+            CommandExecutionStatus.RUNNING, INFO, logCallback);
+      }
     }
     return code;
   }

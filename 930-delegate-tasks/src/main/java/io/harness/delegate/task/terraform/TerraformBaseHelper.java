@@ -67,4 +67,7 @@ public interface TerraformBaseHelper {
   void performCleanupOfTfDirs(TerraformTaskNGParameters parameters, LogCallback logCallback);
 
   String getBaseDir(String entityId);
+
+  String uploadTfPlanJson(String accountId, String delegateId, String taskId, String entityId, String planName,
+      String localFilePath) throws IOException;
 }

@@ -70,6 +70,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.WorkflowType;
+import io.harness.beans.terraform.TerraformPlanParam;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.FileBucket;
@@ -1802,5 +1803,64 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(state.validateFields().size()).isNotEqualTo(0);
     state.setProvisionerId("test provisioner");
     assertThat(state.validateFields().size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void saveTerraformPlanJsonFileId() {
+    testSaveTfPlanJsonUseOptimizedTfPlan(false);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void saveTerraformPlanJsonFileIdReplaceExistingInstance() {
+    testSaveTfPlanJsonUseOptimizedTfPlan(true);
+  }
+
+  private void testSaveTfPlanJsonUseOptimizedTfPlan(boolean replaceExistingInstance) {
+    state.setRunPlanOnly(true);
+    state.setExportPlanToApplyStep(true);
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId",
+        TerraformExecutionData.builder()
+            .encryptedTfPlan(EncryptedRecordData.builder().build())
+            .tfPlanJsonFiledId("fileId")
+            .build());
+    doReturn("workflowExecutionId").when(executionContext).getWorkflowExecutionId();
+    state.setProvisionerId(PROVISIONER_ID);
+    doReturn(SweepingOutputInquiry.builder()).when(executionContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(TerraformInfrastructureProvisioner.builder().build())
+        .when(infrastructureProvisionerService)
+        .get(APP_ID, PROVISIONER_ID);
+    doReturn(SweepingOutputInstance.builder())
+        .when(executionContext)
+        .prepareSweepingOutputBuilder(any(SweepingOutputInstance.Scope.class));
+    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.OPTIMIZED_TF_PLAN), anyString());
+
+    if (replaceExistingInstance) {
+      doReturn(SweepingOutputInstance.builder()
+                   .value(TerraformPlanParam.builder().tfPlanJsonFileId("existingFileId").build())
+                   .build())
+          .when(sweepingOutputService)
+          .find(any(SweepingOutputInquiry.class));
+    }
+
+    state.handleAsyncResponse(executionContext, response);
+
+    // for saving the tfplan json variable
+    ArgumentCaptor<SweepingOutputInstance> instanceCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(instanceCaptor.capture());
+    verify(executionContext, times(1)).prepareSweepingOutputBuilder(eq(Scope.PIPELINE));
+    if (replaceExistingInstance) {
+      verify(fileService, times(1)).deleteFile("existingFileId", FileBucket.TERRAFORM_PLAN_JSON);
+    }
+
+    SweepingOutputInstance savedInstance = instanceCaptor.getValue();
+    assertThat(savedInstance.getValue()).isInstanceOf(TerraformPlanParam.class);
+    TerraformPlanParam savedPlanParam = (TerraformPlanParam) savedInstance.getValue();
+    assertThat(savedPlanParam.getTfplan()).isNull();
+    assertThat(savedPlanParam.getTfPlanJsonFileId()).isEqualTo("fileId");
   }
 }

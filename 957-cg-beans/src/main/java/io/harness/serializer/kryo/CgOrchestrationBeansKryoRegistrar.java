@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutput;
+import io.harness.beans.terraform.TerraformPlanParam;
 import io.harness.context.ContextElementType;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
@@ -77,5 +78,6 @@ public class CgOrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(VMSSAuthType.class, 400127);
     kryo.register(AmiDeploymentType.class, 400125);
     kryo.register(CloudProviderType.class, 400126);
+    kryo.register(TerraformPlanParam.class, 7458);
   }
 }

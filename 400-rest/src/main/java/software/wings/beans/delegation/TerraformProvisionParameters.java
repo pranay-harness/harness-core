@@ -80,6 +80,7 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private final String delegateTag;
 
   private final boolean saveTerraformJson;
+  private final boolean useOptimizedTfPlanJson;
   private final SecretManagerConfig secretManagerConfig;
   private final EncryptedRecordData encryptedTfPlan;
   private final String planName;
