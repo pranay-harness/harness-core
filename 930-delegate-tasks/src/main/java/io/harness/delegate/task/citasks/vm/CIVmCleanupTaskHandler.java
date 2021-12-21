@@ -42,7 +42,7 @@ public class CIVmCleanupTaskHandler implements CICleanupTaskHandler {
       }
     } catch (Exception e) {
       log.error("Failed to destory VM in runner", e);
-      errMessage = e.getMessage();
+      errMessage = e.toString();
     }
 
     return VmTaskExecutionResponse.builder().errorMessage(errMessage).commandExecutionStatus(executionStatus).build();

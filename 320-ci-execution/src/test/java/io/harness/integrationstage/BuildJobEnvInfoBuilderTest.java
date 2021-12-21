@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.VmBuildJobInfo;
+import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.integrationstage.BuildJobEnvInfoBuilder;
 import io.harness.executionplan.CIExecutionTestBase;
@@ -16,6 +17,8 @@ import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -45,10 +48,15 @@ public class BuildJobEnvInfoBuilderTest extends CIExecutionTestBase {
   @Category(UnitTests.class)
   public void getVmBuildJobEnvInfo() {
     StageElementConfig stageElementConfig = vmBuildJobTestHelper.getVmStage("test");
-
-    BuildJobEnvInfo expected = VmBuildJobInfo.builder().workDir(STEP_WORK_DIR).connectorRefs(new ArrayList<>()).build();
-    BuildJobEnvInfo actual =
-        buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(stageElementConfig, null, new ArrayList<>(), null);
+    Map<String, String> volToMountPath = new HashMap<>();
+    volToMountPath.put("harness", "/harness");
+    BuildJobEnvInfo expected = VmBuildJobInfo.builder()
+                                   .workDir(STEP_WORK_DIR)
+                                   .volToMountPath(volToMountPath)
+                                   .connectorRefs(new ArrayList<>())
+                                   .build();
+    BuildJobEnvInfo actual = buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(
+        stageElementConfig, VmInfraYaml.builder().build(), null, new ArrayList<>(), null);
     assertThat(actual).isEqualTo(expected);
   }
 }

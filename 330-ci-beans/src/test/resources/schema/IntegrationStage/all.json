@@ -4841,6 +4841,12 @@
                 "$ref": "#/definitions/NGVariable"
               }
             },
+            "volToMountPath": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
             "workDir": {
               "type": "string"
             }

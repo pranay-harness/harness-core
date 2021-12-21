@@ -351,14 +351,15 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
           initializeStepInfo.getCiCodebase().getConnectorRef(), accountIdentifier, projectIdentifier, orgIdentifier));
     }
 
-    // TODO (shubham): Add entity details for aws vm
     if (infrastructure.getType() == Infrastructure.Type.VM) {
       ArrayList<String> connectorRefs = ((VmBuildJobInfo) initializeStepInfo.getBuildJobEnvInfo()).getConnectorRefs();
-      entityDetails.addAll(
-          connectorRefs.stream()
-              .map(connectorIdentifier
-                  -> createEntityDetails(connectorIdentifier, accountIdentifier, projectIdentifier, orgIdentifier))
-              .collect(Collectors.toList()));
+      if (!isEmpty(connectorRefs)) {
+        entityDetails.addAll(
+            connectorRefs.stream()
+                .map(connectorIdentifier
+                    -> createEntityDetails(connectorIdentifier, accountIdentifier, projectIdentifier, orgIdentifier))
+                .collect(Collectors.toList()));
+      }
       return entityDetails;
     }
 

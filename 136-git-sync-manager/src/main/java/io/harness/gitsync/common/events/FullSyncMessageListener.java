@@ -46,6 +46,7 @@ public class FullSyncMessageListener implements MessageListener {
 
       final FullSyncEventRequest fullSyncEventRequest = getFullSyncEventRequest(message);
       fullSyncTriggerService.triggerFullSync(fullSyncEventRequest, messageId);
+      log.info("Successfully completed the Full Sync event with the id {}", messageId);
       return true;
     }
   }

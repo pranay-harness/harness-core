@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.beans.environment.VmBuildJobInfo;
 import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
@@ -19,6 +20,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.vm.CIVmInitializeTaskParams;
 import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.ff.CIFeatureFlagService;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -54,6 +56,7 @@ public class VmInitializeTaskUtils {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject TIServiceUtils tiServiceUtils;
   @Inject CodebaseUtils codebaseUtils;
+  @Inject private CIFeatureFlagService featureFlagService;
 
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
@@ -71,10 +74,16 @@ public class VmInitializeTaskUtils {
       throw new CIStageExecutionException(
           format("Invalid VM infrastructure spec type: %s", vmInfraYaml.getSpec().getType()));
     }
-
+    VmBuildJobInfo vmBuildJobInfo = (VmBuildJobInfo) initializeStepInfo.getBuildJobEnvInfo();
     VmPoolYaml vmPoolYaml = (VmPoolYaml) vmInfraYaml.getSpec();
     String poolId = vmPoolYaml.getSpec().getIdentifier();
-    consumeSweepingOutput(ambiance, VmStageInfraDetails.builder().poolId(poolId).build(), STAGE_INFRA_DETAILS);
+    consumeSweepingOutput(ambiance,
+        VmStageInfraDetails.builder()
+            .poolId(poolId)
+            .workDir(vmBuildJobInfo.getWorkDir())
+            .volToMountPathMap(vmBuildJobInfo.getVolToMountPath())
+            .build(),
+        STAGE_INFRA_DETAILS);
 
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputResolver.resolveOptional(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails));
@@ -84,7 +93,6 @@ public class VmInitializeTaskUtils {
 
     StageDetails stageDetails = (StageDetails) optionalSweepingOutput.getOutput();
     String accountID = AmbianceUtils.getAccountId(ambiance);
-    VmBuildJobInfo vmBuildJobInfo = (VmBuildJobInfo) initializeStepInfo.getBuildJobEnvInfo();
     NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
 
     ConnectorDetails gitConnector = codebaseUtils.getGitConnector(
@@ -116,9 +124,11 @@ public class VmInitializeTaskUtils {
         .buildID(String.valueOf(ambiance.getMetadata().getRunSequence()))
         .logStreamUrl(logServiceUtils.getLogServiceConfig().getBaseUrl())
         .logSvcToken(getLogSvcToken(accountID))
+        .logSvcIndirectUpload(featureFlagService.isEnabled(FeatureName.CI_INDIRECT_LOG_UPLOAD, accountID))
         .tiUrl(tiServiceUtils.getTiServiceConfig().getBaseUrl())
         .tiSvcToken(getTISvcToken(accountID))
         .secrets(new ArrayList<>(secrets))
+        .volToMountPath(vmBuildJobInfo.getVolToMountPath())
         .build();
   }
 
