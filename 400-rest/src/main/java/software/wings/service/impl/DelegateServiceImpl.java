@@ -2322,7 +2322,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public DelegateRegisterResponse register(final DelegateParams delegateParams) {
+  public DelegateRegisterResponse
+  register(final DelegateParams delegateParams) {
     if (licenseService.isAccountDeleted(delegateParams.getAccountId())) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
       log.warn("Sending self destruct command from register delegate parameters because the account is deleted.");

@@ -44,7 +44,9 @@ import io.harness.ng.core.models.Secret;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.config.ArtifactSourceable;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitCommitRequest;
@@ -52,6 +54,7 @@ import software.wings.beans.yaml.GitDiffRequest;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
+import software.wings.sm.states.JenkinsExecutionResponse;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.Set;
@@ -71,6 +74,7 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Secret.class);
     set.add(SettingAttribute.class);
     set.add(YamlGitConfig.class);
+    set.add(ArtifactSourceable.class);
   }
 
   @Override
@@ -116,5 +120,7 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.yaml.GitCommitRequest", GitCommitRequest.class);
     w.put("beans.yaml.GitDiffRequest", GitDiffRequest.class);
     w.put("beans.yaml.GitDiffResult", GitDiffResult.class);
+    w.put("beans.JenkinsConfig", JenkinsConfig.class);
+    w.put("sm.states.JenkinsExecutionResponse", JenkinsExecutionResponse.class);
   }
 }

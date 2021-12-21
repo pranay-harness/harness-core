@@ -52,7 +52,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
