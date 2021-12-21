@@ -164,7 +164,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       throw new InvalidRequestException(
           "The user group does not exist: " + userGroupIdentifier, ErrorCode.USER_GROUP_ERROR, GROUP);
     }
-    return userGroupOptional.get().getExternallyManaged();
+    return userGroupOptional.get().isExternallyManaged();
   }
 
   @Override
