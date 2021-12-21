@@ -24,7 +24,8 @@ public class CustomHealthFetchSampleDataRequest extends DataCollectionRequest<Cu
       "customhealth-sample-data.datacollection", CustomHealthFetchSampleDataRequest.class);
 
   String urlPath;
-  Map<String, String> requestTimestampPlaceholderAndValues;
+  TimestampInfo startTime;
+  TimestampInfo endTime;
   CustomHealthMethod method;
   String body;
 
@@ -42,7 +43,7 @@ public class CustomHealthFetchSampleDataRequest extends DataCollectionRequest<Cu
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
     return CustomHealthFetchSampleDataRequestUtils.getDSLEnvironmentVariables(
-        urlPath, requestTimestampPlaceholderAndValues, method, body);
+        urlPath, method, body, startTime, endTime);
   }
 
   @Override

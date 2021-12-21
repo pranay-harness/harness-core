@@ -9,6 +9,7 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.beans.customhealth.CustomHealthFetchSampleDataRequest;
+import io.harness.cvng.beans.customhealth.TimestampInfo;
 import io.harness.cvng.core.beans.CustomHealthSampleDataRequest;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
@@ -16,8 +17,8 @@ import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthMet
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,15 +47,17 @@ public class CustomHealthServiceImplTest extends CvNextGenTestBase {
     String requestBody = "postBody";
     CustomHealthMethod requestMethod = CustomHealthMethod.POST;
     String urlPath = "asdasd?asdad";
-    Map<String, String> timestampPlaceholderValues = new HashMap<>();
+    TimestampInfo startTime = TimestampInfo.builder().build();
+    TimestampInfo endTime = TimestampInfo.builder().build();
 
     CustomHealthFetchSampleDataRequest customHealthSampleDataRequest =
         CustomHealthFetchSampleDataRequest.builder()
             .type(DataCollectionRequestType.CUSTOM_HEALTH_SAMPLE_DATA)
             .body(requestBody)
             .method(requestMethod)
+            .startTime(startTime)
+            .endTime(endTime)
             .urlPath(urlPath)
-            .requestTimestampPlaceholderAndValues(timestampPlaceholderValues)
             .build();
 
     OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
@@ -70,7 +73,8 @@ public class CustomHealthServiceImplTest extends CvNextGenTestBase {
                                                 .body(requestBody)
                                                 .method(CustomHealthMethod.POST)
                                                 .urlPath(urlPath)
-                                                .requestTimestampPlaceholderAndValues(timestampPlaceholderValues)
+                                                .startTime(startTime)
+                                                .endTime(endTime)
                                                 .build();
 
     OnboardingResponseDTO responseDTO = OnboardingResponseDTO.builder().result(new HashMap<>()).build();
@@ -78,5 +82,93 @@ public class CustomHealthServiceImplTest extends CvNextGenTestBase {
     assertThat(customHealthService.fetchSampleData(
                    accountId, connectorIdentifier, orgIdentifier, projectIdentifier, tracingId, request))
         .isEqualTo(new HashMap<>());
+  }
+
+  @Test
+  @Owner(developers = ANJAN)
+  @Category(UnitTests.class)
+  public void testFetchSampleData_withArrayList() {
+    String requestBody = "postBody";
+    CustomHealthMethod requestMethod = CustomHealthMethod.POST;
+    String urlPath = "asdasd?asdad";
+    TimestampInfo startTime = TimestampInfo.builder().build();
+    TimestampInfo endTime = TimestampInfo.builder().build();
+
+    CustomHealthFetchSampleDataRequest customHealthSampleDataRequest =
+        CustomHealthFetchSampleDataRequest.builder()
+            .type(DataCollectionRequestType.CUSTOM_HEALTH_SAMPLE_DATA)
+            .body(requestBody)
+            .method(requestMethod)
+            .startTime(startTime)
+            .endTime(endTime)
+            .urlPath(urlPath)
+            .build();
+
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(customHealthSampleDataRequest)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(accountId)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .tracingId(tracingId)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .build();
+
+    CustomHealthSampleDataRequest request = CustomHealthSampleDataRequest.builder()
+                                                .body(requestBody)
+                                                .method(CustomHealthMethod.POST)
+                                                .urlPath(urlPath)
+                                                .startTime(startTime)
+                                                .endTime(endTime)
+                                                .build();
+
+    OnboardingResponseDTO responseDTO = OnboardingResponseDTO.builder().result(new ArrayList<>()).build();
+    when(onboardingServiceMock.getOnboardingResponse(accountId, onboardingRequestDTO)).thenReturn(responseDTO);
+    assertThat(customHealthService.fetchSampleData(
+                   accountId, connectorIdentifier, orgIdentifier, projectIdentifier, tracingId, request))
+        .isEqualTo(new ArrayList<>());
+  }
+
+  @Test
+  @Owner(developers = ANJAN)
+  @Category(UnitTests.class)
+  public void testFetchSampleData_whenResponseIsNull() {
+    String requestBody = "postBody";
+    CustomHealthMethod requestMethod = CustomHealthMethod.POST;
+    String urlPath = "asdasd?asdad";
+    TimestampInfo startTime = TimestampInfo.builder().build();
+    TimestampInfo endTime = TimestampInfo.builder().build();
+
+    CustomHealthFetchSampleDataRequest customHealthSampleDataRequest =
+        CustomHealthFetchSampleDataRequest.builder()
+            .type(DataCollectionRequestType.CUSTOM_HEALTH_SAMPLE_DATA)
+            .body(requestBody)
+            .method(requestMethod)
+            .startTime(startTime)
+            .endTime(endTime)
+            .urlPath(urlPath)
+            .build();
+
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(customHealthSampleDataRequest)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(accountId)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .tracingId(tracingId)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .build();
+
+    CustomHealthSampleDataRequest request = CustomHealthSampleDataRequest.builder()
+                                                .body(requestBody)
+                                                .method(CustomHealthMethod.POST)
+                                                .urlPath(urlPath)
+                                                .startTime(startTime)
+                                                .endTime(endTime)
+                                                .build();
+
+    OnboardingResponseDTO responseDTO = OnboardingResponseDTO.builder().result(null).build();
+    when(onboardingServiceMock.getOnboardingResponse(accountId, onboardingRequestDTO)).thenReturn(responseDTO);
+    assertThat(customHealthService.fetchSampleData(
+                   accountId, connectorIdentifier, orgIdentifier, projectIdentifier, tracingId, request))
+        .isEqualTo(null);
   }
 }
