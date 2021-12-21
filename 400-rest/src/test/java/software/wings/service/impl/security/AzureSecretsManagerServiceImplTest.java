@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.ANKIT;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 import static org.mockito.Mockito.when;
@@ -132,7 +131,7 @@ public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
         "UpdatedSecretKey", azureSecretsManagerService.getEncryptionConfig(accountId, savedConfigId).getSecretKey());
   }
 
-  @Test
+  @Test(expected = NullPointerException.class)
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void deleteAzureVaultConfigWithNoEncryptedSecrets_shouldPass() {
@@ -142,11 +141,12 @@ public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
     String savedConfigId =
         azureSecretsManagerService.saveAzureSecretsManagerConfig(accountId, kryoSerializer.clone(azureVaultConfig));
 
-    assertNotNull(secretManager.getSecretManager(accountId, savedConfigId));
+    assertNotNull(azureSecretsManagerService.getEncryptionConfig(accountId, savedConfigId));
 
     azureSecretsManagerService.deleteConfig(accountId, savedConfigId);
 
-    assertNull(secretManager.getSecretManager(accountId, savedConfigId));
+    // This would result in NPE, as the secret manager config is deleted
+    azureSecretsManagerService.getEncryptionConfig(accountId, savedConfigId);
   }
 
   @Test
