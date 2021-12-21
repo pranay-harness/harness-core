@@ -321,7 +321,6 @@ public class RoleAssignmentResource {
       @RequestBody(description = "These are details for the role assignment to create.",
           required = true) @Body RoleAssignmentDTO roleAssignmentDTO) {
     Scope scope = ScopeMapper.fromParams(harnessScopeParams);
-    validateDeprecatedResourceGroupNotUsed(roleAssignmentDTO.getResourceGroupIdentifier(), scope.getLevel().toString());
     RoleAssignment roleAssignment = fromDTO(scope, roleAssignmentDTO);
     syncDependencies(roleAssignment, scope);
     checkUpdatePermission(harnessScopeParams, roleAssignment);
@@ -332,13 +331,6 @@ public class RoleAssignmentResource {
           response.getScope().getAccountIdentifier(), response.getRoleAssignment(), response.getScope()));
       return ResponseDTO.newResponse(response);
     }));
-  }
-
-  private static void validateDeprecatedResourceGroupNotUsed(String resourceGroupIdentifier, String scopeLevel) {
-    if (HarnessResourceGroupConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(resourceGroupIdentifier)) {
-      throw new InvalidRequestException(
-          String.format("_all_resources is deprecated, please use _all_%s_level_resources.", scopeLevel));
-    }
   }
 
   @PUT
@@ -361,7 +353,6 @@ public class RoleAssignmentResource {
     if (!identifier.equals(roleAssignmentDTO.getIdentifier())) {
       throw new InvalidRequestException("Role assignment identifier in the request body and the url do not match.");
     }
-    validateDeprecatedResourceGroupNotUsed(roleAssignmentDTO.getResourceGroupIdentifier(), scope.getLevel().toString());
     RoleAssignment roleAssignmentUpdate = fromDTO(scope, roleAssignmentDTO);
     checkUpdatePermission(harnessScopeParams, roleAssignmentUpdate);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
@@ -389,11 +380,6 @@ public class RoleAssignmentResource {
   create(@BeanParam HarnessScopeParams harnessScopeParams,
       @RequestBody(description = "List of role assignments to create",
           required = true) @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
-    Scope scope = ScopeMapper.fromParams(harnessScopeParams);
-    roleAssignmentCreateRequestDTO.getRoleAssignments().forEach(roleAssignmentDTO -> {
-      validateDeprecatedResourceGroupNotUsed(
-          roleAssignmentDTO.getResourceGroupIdentifier(), scope.getLevel().toString());
-    });
     return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false));
   }
 
