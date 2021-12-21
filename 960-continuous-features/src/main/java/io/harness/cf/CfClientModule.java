@@ -4,16 +4,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import io.github.resilience4j.core.IntervalFunction;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.RetryRegistry;
 import io.harness.cf.client.api.CfClient;
 import io.harness.cf.client.api.Config;
+import io.harness.cf.client.api.FeatureFlagInitializeException;
 import io.harness.cf.openapi.ApiClient;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.function.Supplier;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -51,34 +46,16 @@ public class CfClientModule extends AbstractModule {
 
     final CfClient client = new CfClient(apiKey, config);
 
-    final IntervalFunction function = IntervalFunction.ofExponentialBackoff(
+    log.info("CF client is initializing");
+    try {
 
-            cfClientConfig.getSleepInterval(),
-            2
-    );
+      client.waitForInitialization();
 
-    final RetryConfig retryConfig = RetryConfig.custom()
-            .maxAttempts(cfClientConfig.getRetries())
-            .intervalFunction(function)
-            .retryOnResult(
+      log.error("CF client is initialized");
 
-                    r -> !((Boolean) r)
-            )
-            .build();
+    } catch (InterruptedException | FeatureFlagInitializeException e) {
 
-    final RetryRegistry registry = RetryRegistry.of(retryConfig);
-    final Retry retry = registry.retry("cfClientInit", retryConfig);
-
-    final Supplier<Boolean> retrySupplier = Retry.decorateSupplier(
-
-            retry,
-            client::isInitialized
-    );
-
-    if (retrySupplier.get()) {
-      log.info("CF client has been initialized");
-    } else {
-      log.error("CF client has not been initialized");
+      log.error("CF client was not initialized", e);
     }
 
     return client;
