@@ -5,11 +5,11 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.UpgradeCheckResult;
+import io.harness.delegate.service.intfc.DelegateUpgraderService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
-import io.harness.service.intfc.DelegateUpgraderService;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;

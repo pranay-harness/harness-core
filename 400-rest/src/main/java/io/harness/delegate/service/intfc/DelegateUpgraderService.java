@@ -1,8 +1,7 @@
-package io.harness.service.intfc;
+package io.harness.delegate.service.intfc;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-
 import io.harness.delegate.beans.UpgradeCheckResult;
 
 @OwnedBy(HarnessTeam.DEL)
