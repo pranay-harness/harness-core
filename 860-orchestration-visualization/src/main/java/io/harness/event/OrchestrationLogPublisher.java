@@ -14,6 +14,7 @@ import io.harness.engine.observers.StepDetailsUpdateObserver;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
+import io.harness.observer.AsyncInformObserver;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.visualisation.log.OrchestrationLogEvent;
@@ -27,13 +28,16 @@ import com.google.inject.name.Named;
 import java.sql.Date;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.concurrent.ExecutorService;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class OrchestrationLogPublisher
-    implements NodeUpdateObserver, NodeStatusUpdateObserver, PlanStatusUpdateObserver, StepDetailsUpdateObserver {
+    implements NodeUpdateObserver, NodeStatusUpdateObserver, PlanStatusUpdateObserver, StepDetailsUpdateObserver,
+               AsyncInformObserver {
   @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
   @Inject @Named(EventsFrameworkConstants.ORCHESTRATION_LOG) private Producer producer;
+  @Inject @Named("PipelineExecutorService") ExecutorService executorService;
 
   @Override
   public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
@@ -78,5 +82,10 @@ public class OrchestrationLogPublisher
   public void onStepDetailsUpdate(StepDetailsUpdateInfo stepDetailsUpdateInfo) {
     createAndHandleEventLog(stepDetailsUpdateInfo.getPlanExecutionId(), stepDetailsUpdateInfo.getNodeExecutionId(),
         OrchestrationEventType.STEP_DETAILS_UPDATE);
+  }
+
+  @Override
+  public ExecutorService getInformExecutorService() {
+    return executorService;
   }
 }

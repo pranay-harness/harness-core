@@ -171,6 +171,15 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
 
   @Provides
   @Singleton
+  @Named("EngineHelperExecutorService")
+  public ExecutorService engineExecutionHelperServiceThreadPool() {
+    return ThreadPool.create(config.getHelperCorePoolSize(), config.getHelperMaxPoolSize(),
+        config.getHelperIdleTimeInSecs(), TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("EngineHelperExecutorService-%d").build());
+  }
+
+  @Provides
+  @Singleton
   public ExpressionEvaluatorProvider expressionEvaluatorProvider() {
     return config.getExpressionEvaluatorProvider();
   }

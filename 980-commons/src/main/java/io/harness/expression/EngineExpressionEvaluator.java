@@ -308,7 +308,7 @@ public class EngineExpressionEvaluator {
 
     if (object == null) {
       // No final expression could be resolved.
-      return PartialEvaluateResult.createPartialResult(createExpression(expressionBlock), null);
+      return PartialEvaluateResult.createPartialResult(createExpression(expressionBlock), partialCtx);
     }
 
     String name = HARNESS_INTERNAL_VARIABLE_PREFIX + RandomStringUtils.random(12, true, false);
@@ -534,16 +534,6 @@ public class EngineExpressionEvaluator {
     public String resolve(String expression) {
       try {
         Object value = engineExpressionEvaluator.evaluateExpressionBlock(expression, ctx, depth);
-        if (value == null) {
-          // check if expression coming from property accessed within an existing object
-          String[] split = expression.split("\\.");
-          if (split.length > 0 && ctx.has(split[0])) {
-            return String.valueOf(value);
-          }
-          String finalExpression = createExpression(expression);
-          unresolvedExpressions.add(finalExpression);
-          return finalExpression;
-        }
         return String.valueOf(value);
       } catch (UnresolvedExpressionsException ex) {
         unresolvedExpressions.addAll(ex.fetchExpressions());

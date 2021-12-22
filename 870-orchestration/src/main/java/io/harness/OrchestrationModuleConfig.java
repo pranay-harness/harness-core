@@ -23,6 +23,9 @@ public class OrchestrationModuleConfig {
   @Default int corePoolSize = 1;
   @Default int maxPoolSize = 5;
   @Default long idleTimeInSecs = 10;
+  @Default int helperCorePoolSize = 1;
+  @Default int helperMaxPoolSize = 5;
+  @Default long helperIdleTimeInSecs = 10;
   @Default String publisherName = PMS_ORCHESTRATION;
   @Default
   EventsFrameworkConfiguration eventsFrameworkConfiguration =

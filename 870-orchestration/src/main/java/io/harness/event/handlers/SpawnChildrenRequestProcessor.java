@@ -40,7 +40,7 @@ public class SpawnChildrenRequestProcessor implements SdkResponseProcessor {
   @Inject private PlanService planService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private OrchestrationEngine engine;
-  @Inject @Named("EngineExecutorService") private ExecutorService executorService;
+  @Inject @Named("EngineHelperExecutorService") private ExecutorService executorService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) private String publisherName;
 
