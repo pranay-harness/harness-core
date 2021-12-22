@@ -7,6 +7,8 @@
 
 package io.harness.delegate.service;
 
+import java.io.IOException;
+
 public interface DelegateAgentService {
   void run(boolean watched);
 
@@ -21,4 +23,6 @@ public interface DelegateAgentService {
   boolean isHeartbeatHealthy();
 
   boolean isSocketHealthy();
+
+  void shutdown() throws InterruptedException;
 }

@@ -116,6 +116,7 @@ import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.DelegateUnregisterRequest;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
@@ -425,6 +426,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   public boolean isSocketHealthy() {
     return socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED;
+  }
+
+  @Override
+  public void shutdown() throws InterruptedException {
+    shutdownExecutors();
+    unregisterDelegate();
   }
 
   @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean kubectlInstalled;
@@ -946,14 +953,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         log.debug("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       }
       try {
-        DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
-        try (TaskLogContext ignore = new TaskLogContext(delegateTaskEvent.getDelegateTaskId(), OVERRIDE_ERROR)) {
-          if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
-            abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
-          } else {
-            dispatchDelegateTask(delegateTaskEvent);
-          }
-        }
+        processDelegateTaskEvent(JsonUtils.asObject(message, DelegateTaskEvent.class));
       } catch (Throwable e) {
         log.error("Exception while decoding task", e);
       }
@@ -1109,6 +1109,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     // Didn't register and not acquiring. Exiting.
     System.exit(1);
     return null;
+  }
+
+  private void unregisterDelegate() {
+    final DelegateUnregisterRequest request =
+        new DelegateUnregisterRequest(delegateId, HOST_NAME, delegateNg, DELEGATE_TYPE, getLocalHostAddress());
+    try {
+      executeRestCall(delegateAgentManagerClient.unregisterDelegate(accountId, request));
+    } catch (final IOException e) {
+      log.error("Failed unregistering delegate {}", delegateId, e);
+    }
   }
 
   private void startProfileCheck() {
@@ -1280,6 +1290,30 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     log.warn("Delegate with id: {} was put in freeze mode.", delegateId);
     frozenAt.set(System.currentTimeMillis());
     frozen.set(true);
+  }
+
+  private void shutdownExecutors() throws InterruptedException {
+    log.info("Initiating delegate shutdown");
+    final long shutdownStart = clock.millis();
+    if (perpetualTaskWorker != null) {
+      log.info("Stopping perpetual task workers");
+      perpetualTaskWorker.stop();
+    }
+    acquireTasks.set(false);
+    log.info("Stopping executors");
+    artifactExecutor.shutdown();
+    asyncExecutor.shutdown();
+    syncExecutor.shutdown();
+    taskPollExecutor.shutdown();
+    final boolean terminatedArtifact = artifactExecutor.awaitTermination(30, TimeUnit.MINUTES);
+    final boolean terminatedAsync = asyncExecutor.awaitTermination(30, TimeUnit.MINUTES);
+    final boolean terminatedSync = syncExecutor.awaitTermination(30, TimeUnit.MINUTES);
+    final boolean terminatedPoll = taskPollExecutor.awaitTermination(30, TimeUnit.MINUTES);
+
+    log.info(
+        "Executors terminated after {}min. All tasks completed? Artifact [{}], Async [{}], Sync [{}], Polling [{}]",
+        Duration.ofMillis(clock.millis() - shutdownStart).toMinutes(), terminatedArtifact, terminatedAsync,
+        terminatedSync, terminatedPoll);
   }
 
   private void handleStopAcquiringMessage(String sender) {
@@ -1785,12 +1819,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   @Getter(lazy = true)
   private final Map<String, ThreadPoolExecutor> logExecutors =
-      NullSafeImmutableMap.builder()
-          .putIfNotNull("systemExecutor", (ThreadPoolExecutor) systemExecutor)
-          .putIfNotNull("asyncExecutor", (ThreadPoolExecutor) asyncExecutor)
-          .putIfNotNull("artifactExecutor", (ThreadPoolExecutor) artifactExecutor)
-          .putIfNotNull("timeoutEnforcement", (ThreadPoolExecutor) timeoutEnforcement)
-          .putIfNotNull("taskPollExecutor", (ThreadPoolExecutor) taskPollExecutor)
+      NullSafeImmutableMap.<String, ThreadPoolExecutor>builder()
+          .putIfNotNull("systemExecutor", systemExecutor)
+          .putIfNotNull("asyncExecutor", asyncExecutor)
+          .putIfNotNull("artifactExecutor", artifactExecutor)
+          .putIfNotNull("timeoutEnforcement", timeoutEnforcement)
+          .putIfNotNull("taskPollExecutor", taskPollExecutor)
           .build();
 
   public Map<String, String> obtainPerformance() {

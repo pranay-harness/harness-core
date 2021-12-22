@@ -113,6 +113,7 @@ import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateTokenDetails;
 import io.harness.delegate.beans.DelegateTokenStatus;
 import io.harness.delegate.beans.DelegateType;
+import io.harness.delegate.beans.DelegateUnregisterRequest;
 import io.harness.delegate.beans.DuplicateDelegateException;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
@@ -2267,20 +2268,9 @@ public class DelegateServiceImpl implements DelegateService {
           .build();
     }
 
-    Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
-                                        .filter(DelegateKeys.accountId, delegate.getAccountId())
-                                        .filter(DelegateKeys.hostName, delegate.getHostName());
-    // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
-    // We ignore IP address because that can change with every restart of the pod.
-    if (!(delegate.isNg() && KUBERNETES.equals(delegate.getDelegateType()))
-        && !delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
-      delegateQuery.filter(DelegateKeys.ip, delegate.getIp());
-    }
+    final Delegate existingDelegate = getExistingDelegate(
+        delegate.getAccountId(), delegate.getHostName(), delegate.isNg(), delegate.getDelegateType(), delegate.getIp());
 
-    Delegate existingDelegate = delegateQuery.project(DelegateKeys.status, true)
-                                    .project(DelegateKeys.delegateProfileId, true)
-                                    .project(DelegateKeys.description, true)
-                                    .get();
     if (existingDelegate != null && existingDelegate.getStatus() == DelegateInstanceStatus.DELETED) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
           .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
@@ -2334,20 +2324,9 @@ public class DelegateServiceImpl implements DelegateService {
           .build();
     }
 
-    final Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
-                                              .filter(DelegateKeys.accountId, delegateParams.getAccountId())
-                                              .filter(DelegateKeys.hostName, delegateParams.getHostName());
-    // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
-    // We ignore IP address because that can change with every restart of the pod.
-    if (!(delegateParams.isNg() && KUBERNETES.equals(delegateParams.getDelegateType()))
-        && !delegateParams.getHostName().contains(getAccountIdentifier(delegateParams.getAccountId()))) {
-      delegateQuery.filter(DelegateKeys.ip, delegateParams.getIp());
-    }
+    final Delegate existingDelegate = getExistingDelegate(delegateParams.getAccountId(), delegateParams.getHostName(),
+        delegateParams.isNg(), delegateParams.getDelegateType(), delegateParams.getIp());
 
-    final Delegate existingDelegate = delegateQuery.project(DelegateKeys.status, true)
-                                          .project(DelegateKeys.delegateProfileId, true)
-                                          .project(DelegateKeys.description, true)
-                                          .get();
     if (existingDelegate != null && existingDelegate.getStatus() == DelegateInstanceStatus.DELETED) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true)
           .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
@@ -2451,6 +2430,37 @@ public class DelegateServiceImpl implements DelegateService {
       return delegateRegisterResponse;
     } else {
       return registerResponseFromDelegate(upsertDelegateOperation(existingDelegate, delegate));
+    }
+  }
+
+  private Delegate getExistingDelegate(
+      final String accountId, final String hostName, final boolean ng, final String delegateType, final String ip) {
+    final Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
+                                              .filter(DelegateKeys.accountId, accountId)
+                                              .filter(DelegateKeys.hostName, hostName);
+    // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
+    // We ignore IP address because that can change with every restart of the pod.
+    if (!(ng && KUBERNETES.equals(delegateType)) && !hostName.contains(getAccountIdentifier(accountId))) {
+      delegateQuery.filter(DelegateKeys.ip, ip);
+    }
+
+    return delegateQuery.project(DelegateKeys.status, true)
+        .project(DelegateKeys.delegateProfileId, true)
+        .project(DelegateKeys.description, true)
+        .get();
+  }
+
+  @Override
+  public void unregister(final String accountId, final DelegateUnregisterRequest request) {
+    final Delegate existingDelegate = getExistingDelegate(
+        accountId, request.getHostName(), request.isNg(), request.getDelegateType(), request.getIpAddress());
+
+    if (existingDelegate != null) {
+      log.info("Removing delegate instance {} from delega {}", request.getHostName(), request.getDelegateId());
+      persistence.delete(existingDelegate);
+    } else {
+      log.warn("Delegate instance {} doesn't exist for {}, nothing to remove", request.getHostName(),
+          request.getDelegateId());
     }
   }
 
