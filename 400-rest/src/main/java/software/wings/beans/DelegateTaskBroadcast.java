@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
-import java.util.Set;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -16,5 +16,5 @@ public class DelegateTaskBroadcast {
   private String taskId;
   private boolean async;
   private String preAssignedDelegateId;
-  private Set<String> alreadyTriedDelegates;
+  private List<String> broadcastToDelegatesIds;
 }
