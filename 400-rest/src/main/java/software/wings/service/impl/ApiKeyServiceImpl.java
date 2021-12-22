@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
@@ -182,7 +183,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     PageRequest<UserGroup> req =
-        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("_id", "name").build();
+        aPageRequest().withLimit(UNLIMITED).addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("_id", "name").build();
     PageResponse<UserGroup> res = userGroupService.list(accountId, req, false);
     List<UserGroup> allUserGroupList = res.getResponse();
     if (isEmpty(allUserGroupList)) {
