@@ -63,6 +63,5 @@ public class DelegateTaskBroadcastHelperTest extends WingsBaseTest {
     assertThat(delegateTaskBroadcast.getTaskId()).isEqualTo(delegateTask.getUuid());
     assertThat(delegateTaskBroadcast.isAsync()).isEqualTo(delegateTask.getData().isAsync());
     assertThat(delegateTaskBroadcast.getPreAssignedDelegateId()).isEqualTo(delegateTask.getPreAssignedDelegateId());
-    assertThat(delegateTaskBroadcast.getAlreadyTriedDelegates()).isEqualTo(delegateTask.getAlreadyTriedDelegates());
   }
 }
