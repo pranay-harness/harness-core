@@ -16,10 +16,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.VerificationApplication;
-import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
-import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
-import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
-import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.VerificationTask.VerificationTaskKeys;
@@ -398,12 +394,8 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testEnticesForExpiresAt_entitiesList() {
+    // If any of the collection has a valid reason to not add validUntil, please add it to BLACKLIST with the reason.
     Set<Class<? extends PersistentEntity>> BLACKLIST = new HashSet<>();
-    BLACKLIST.add(
-        TimeSeriesAnomalousPatterns.class); // these are used for live monitoring and are deleted with CVConfig
-    BLACKLIST.add(TimeSeriesCumulativeSums.class);
-    BLACKLIST.add(TimeSeriesShortTermHistory.class);
-    BLACKLIST.add(TimeSeriesRiskSummary.class);
     Set<Class<?>> withoutTTL = new HashSet<>();
     Reflections reflections = new Reflections(VerificationApplication.class.getPackage().getName());
     reflections.getSubTypesOf(PersistentEntity.class).forEach(entity -> {
