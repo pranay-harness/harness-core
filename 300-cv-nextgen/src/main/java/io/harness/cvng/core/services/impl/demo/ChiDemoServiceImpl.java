@@ -1,0 +1,48 @@
+package io.harness.cvng.core.services.impl.demo;
+
+import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeSourceType;
+import io.harness.cvng.beans.change.DemoChangeEventDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
+import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.entities.changeSource.ChangeSource;
+import io.harness.cvng.core.services.api.ChangeEventService;
+import io.harness.cvng.core.services.api.FeatureFlagService;
+import io.harness.cvng.core.services.api.demo.ChangeSourceDemoDataGenerator;
+import io.harness.cvng.core.services.api.demo.ChiDemoService;
+import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
+import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
+import io.harness.cvng.core.utils.FeatureFlagNames;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import java.util.List;
+import java.util.Map;
+
+public class ChiDemoServiceImpl implements ChiDemoService {
+  @Inject private ChangeSourceService changeSourceService;
+  @Inject private MonitoredServiceService monitoredServiceService;
+  @Inject private ChangeEventService changeEventService;
+  @Inject private Map<ChangeSourceType, ChangeSourceDemoDataGenerator> changeSourceTypeToDemoDataGeneratorMap;
+  @Inject private FeatureFlagService featureFlagService;
+  @Override
+  public void registerDemoChangeEvent(ProjectParams projectParams, DemoChangeEventDTO demoChangeEventDTO) {
+    MonitoredServiceResponse monitoredServiceResponse =
+        monitoredServiceService.get(projectParams, demoChangeEventDTO.getMonitoredServiceIdentifier());
+    ChangeSource changeSource = changeSourceService.get(
+        ServiceEnvironmentParams.builderWithProjectParams(projectParams)
+            .serviceIdentifier(monitoredServiceResponse.getMonitoredServiceDTO().getServiceRef())
+            .environmentIdentifier(monitoredServiceResponse.getMonitoredServiceDTO().getEnvironmentRef())
+            .build(),
+        demoChangeEventDTO.getChangeSourceIdentifier());
+    Preconditions.checkState(featureFlagService.isFeatureFlagEnabled(
+                                 projectParams.getAccountIdentifier(), FeatureFlagNames.CVNG_MONITORED_SERVICE_DEMO),
+        "Feature flag %s is not enabled", FeatureFlagNames.CVNG_MONITORED_SERVICE_DEMO);
+    Preconditions.checkState(changeSource.isConfiguredForDemo(),
+        "Change source with identifier is not a demo change source. Please check the identifier pattern");
+    List<ChangeEventDTO> changeEvents =
+        changeSourceTypeToDemoDataGeneratorMap.get(demoChangeEventDTO.getChangeSourceType()).generate(changeSource);
+    changeEvents.forEach(changeEvent -> changeEventService.register(changeEvent));
+  }
+}
