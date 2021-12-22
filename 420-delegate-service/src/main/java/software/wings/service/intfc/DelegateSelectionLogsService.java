@@ -19,17 +19,12 @@ public interface DelegateSelectionLogsService {
 
   BatchDelegateSelectionLog createBatch(DelegateTask task);
 
-  void logCanAssign(BatchDelegateSelectionLog batch, String accountId, String delegateId);
-
   void logExcludeScopeMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId, String scopeName);
 
   void logOwnerRuleNotMatched(
-      BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateEntityOwner owner);
+      BatchDelegateSelectionLog batch, String accountId, Set<String> delegateIds, DelegateEntityOwner owner);
 
-  void logMissingSelector(
-      BatchDelegateSelectionLog batch, String accountId, String delegateId, String selector, String selectorOrigin);
-
-  void logMissingAllSelectors(BatchDelegateSelectionLog batch, String accountId, String delegateId);
+  void logMissingSelector(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
   void logTaskAssigned(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
@@ -46,12 +41,18 @@ public interface DelegateSelectionLogsService {
 
   void logDisconnectedDelegate(BatchDelegateSelectionLog batch, String accountId, Set<String> delegateIds);
 
-  void logWaitingForApprovalDelegate(BatchDelegateSelectionLog batch, String accountId, Set<String> delegateIds);
-
   void logDisconnectedScalingGroup(
       BatchDelegateSelectionLog batch, String accountId, Set<String> disconnectedScalingGroup, String groupName);
 
   void logMustExecuteOnDelegateMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
   void logMustExecuteOnDelegateNotMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId);
+
+  void logNoEligibleDelegatesToExecuteTask(BatchDelegateSelectionLog batch, String accountId);
+
+  void logNoEligibleDelegatesAvailableToExecuteTask(BatchDelegateSelectionLog batch, String accountId);
+
+  void logEligibleDelegatesToExecuteTask(BatchDelegateSelectionLog batch, Set<String> delegateIds, String accountId);
+
+  void logBroadcastToDelegate(BatchDelegateSelectionLog batch, Set<String> delegateIds, String accountId);
 }

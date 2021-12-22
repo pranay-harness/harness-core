@@ -40,8 +40,12 @@ public class DelegateSelectionLog implements PersistentEntity, UuidAware, Accoun
                  .field(DelegateSelectionLogKeys.taskId)
                  .field(DelegateSelectionLogKeys.message)
                  .field(DelegateSelectionLogKeys.groupId)
-                 .unique(true)
                  .name("selectionLogsGroup")
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .field(DelegateSelectionLogKeys.taskId)
+                 .field(DelegateSelectionLogKeys.accountId)
+                 .name("selectionLogsGroup_updated")
                  .build())
         .build();
   }

@@ -30,8 +30,6 @@ public interface AssignDelegateService {
 
   List<String> extractSelectors(DelegateTask task);
 
-  String pickFirstAttemptDelegate(DelegateTask task);
-
   void refreshWhitelist(DelegateTask task, String delegateId);
 
   void saveConnectionResults(List<DelegateConnectionResult> results);
@@ -43,4 +41,11 @@ public interface AssignDelegateService {
   List<String> retrieveActiveDelegates(String accountId, BatchDelegateSelectionLog batch);
 
   boolean noInstalledDelegates(String accountId);
+
+  List<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch);
+
+  List<String> getConnectedDelegateList(List<String> delegates, String accountId, BatchDelegateSelectionLog batch);
+
+  boolean canAssignTask(BatchDelegateSelectionLog batch, String delegateId, DelegateTask task,
+      Map<String, List<String>> nonAssignableDelegates);
 }
