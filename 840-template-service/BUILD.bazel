@@ -102,6 +102,7 @@ java_library(
     deps = shared_dependencies + [
         ":module",
         "//960-persistence:supporter-test",
+        "//980-commons:tests",
         "//990-commons-test:module",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
