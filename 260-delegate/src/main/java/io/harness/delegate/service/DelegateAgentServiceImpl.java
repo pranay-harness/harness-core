@@ -308,7 +308,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       || (isNotBlank(System.getenv().get("NEXT_GEN")) && Boolean.parseBoolean(System.getenv().get("NEXT_GEN")));
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
-      : 0;
+      : 50;
   private final String delegateTokenName = System.getenv().get("DELEGATE_TOKEN_NAME");
   public static final String JAVA_VERSION = "java.version";
 
@@ -863,9 +863,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void handleMessageSubmit(String message) {
-    if (log.isDebugEnabled()) {
-      log.debug("^^MSG: " + message);
-    }
+    log.info("^^MSG: " + message + " queue size " + (currentlyExecutingTasks.size() + currentlyValidatingTasks.size()));
+//    if (delegateTaskLimit > 0
+//            && (currentlyExecutingTasks.size() + currentlyValidatingTasks.size())
+//            >= delegateTaskLimit) {
+//
+//      return;
+//    }
+
     systemExecutor.submit(() -> handleMessage(message));
   }
 
@@ -921,9 +926,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.warn("Delegate used revoked token. It will be frozen and drained.");
       freeze();
     } else if (!StringUtils.equals(message, "X")) {
-      if (log.isDebugEnabled()) {
-        log.debug("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
-      }
+
+        log.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
+
       try {
         DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
         try (TaskLogContext ignore = new TaskLogContext(delegateTaskEvent.getDelegateTaskId(), OVERRIDE_ERROR)) {
@@ -1857,13 +1862,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         perpetualTaskCount = perpetualTaskWorker.getCurrentlyExecutingPerpetualTasksCount().intValue();
       }
 
-      if (delegateTaskLimit > 0
-          && (currentlyExecutingTasks.size() + currentlyValidatingTasks.size() + perpetualTaskCount)
-              >= delegateTaskLimit) {
-        log.info("Delegate reached Delegate Size Task Limit of {}. It will not acquire this time.", delegateTaskLimit);
-        return;
-      }
 
+      log.info("queue size {} ", (currentlyExecutingTasks.size() + currentlyValidatingTasks.size()));
       currentlyAcquiringTasks.add(delegateTaskId);
 
       // Delay response if already working on many tasks

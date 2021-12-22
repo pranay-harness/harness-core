@@ -194,6 +194,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       String waitId = delegateTask.getWaitId();
       if (waitId != null) {
         waitNotifyEngine.doneWith(waitId, response.getResponse());
+        log.info("Done updating wait instance");
       } else {
         log.error("Async task has no wait ID");
       }

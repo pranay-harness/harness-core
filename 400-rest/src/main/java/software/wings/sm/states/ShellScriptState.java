@@ -186,6 +186,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
     try {
+      log.info("request received: " + context.toString());
       ExecutionResponse resp = executeInternal(context, activityId);
       String taskId = resp.getDelegateTaskId();
       log.info("Execution of phase started at: {} id: {} ", currentTimeMillis(), taskId);
