@@ -1,4 +1,4 @@
-package io.harness.resources;
+package io.harness.delegate.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.rule.OwnerRule.ARPIT;
@@ -10,9 +10,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.UpgradeCheckResult;
-import io.harness.delegate.resources.DelegateUpgraderResource;
+import io.harness.delegate.service.intfc.DelegateUpgraderService;
 import io.harness.rule.Owner;
-import io.harness.service.intfc.DelegateUpgraderService;
 
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
