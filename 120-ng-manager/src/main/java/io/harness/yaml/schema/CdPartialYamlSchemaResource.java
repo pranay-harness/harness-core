@@ -1,5 +1,6 @@
 package io.harness.yaml.schema;
 
+import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.cdng.yaml.CdYamlSchemaService;
 import io.harness.encryption.Scope;
@@ -10,6 +11,7 @@ import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.YamlSchemaDetailsWrapper;
 import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -71,9 +73,17 @@ public class CdPartialYamlSchemaResource implements YamlSchemaResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope,
       @RequestBody(required = true,
           description = "Step Schema with details") YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper) {
-    // TODO: Return merged stage schema here.
     PartialSchemaDTO schema = cdYamlSchemaService.getMergedDeploymentStageYamlSchema(
         projectIdentifier, orgIdentifier, scope, yamlSchemaDetailsWrapper.getYamlSchemaWithDetailsList());
     return ResponseDTO.newResponse(schema);
+  }
+
+  @GET
+  @Path("/step")
+  @ApiOperation(value = "Get step YAML schema", nickname = "getStepYamlSchema")
+  public ResponseDTO<JsonNode> getStepYamlSchema(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType) {
+    return ResponseDTO.newResponse(cdYamlSchemaService.getStepYamlSchema(entityType));
   }
 }

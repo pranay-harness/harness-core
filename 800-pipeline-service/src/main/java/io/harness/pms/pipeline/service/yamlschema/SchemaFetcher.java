@@ -2,6 +2,7 @@ package io.harness.pms.pipeline.service.yamlschema;
 
 import static java.lang.String.format;
 
+import io.harness.EntityType;
 import io.harness.ModuleType;
 import io.harness.SchemaCacheKey;
 import io.harness.annotations.dev.HarnessTeam;
@@ -15,6 +16,7 @@ import io.harness.yaml.schema.beans.YamlSchemaDetailsWrapper;
 import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.schema.client.YamlSchemaClient;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -131,7 +133,7 @@ public class SchemaFetcher {
   private RetryPolicy<Object> getRetryPolicy(ModuleType moduleType) {
     return RetryUtils.getRetryPolicy(format("[PMS] [Retrying] Error while calling %s service", moduleType.name()),
         format("[PMS] Error while calling %s service", moduleType.name()), ImmutableList.of(Exception.class),
-        Duration.ofSeconds(1), 3, log);
+        Duration.ofMillis(500), 3, log);
   }
 
   private void logWarnIfExceedsThreshold(ModuleType moduleType, long startTs) {
@@ -139,6 +141,20 @@ public class SchemaFetcher {
     if (THRESHOLD_PROCESS_DURATION.compareTo(processDuration) < 0) {
       log.warn("[PMS] Fetching schema for {} service took {}s which is more than threshold of {}s", moduleType.name(),
           processDuration.getSeconds(), THRESHOLD_PROCESS_DURATION.getSeconds());
+    }
+  }
+
+  // TODO: introduce cache while fetching step schema
+  public JsonNode fetchStepYamlSchema(String accountId, EntityType entityType) {
+    try {
+      Call<ResponseDTO<JsonNode>> call = obtainYamlSchemaClient(entityType.getEntityProduct().name().toLowerCase())
+                                             .getStepSchema(accountId, null, null, null, entityType);
+      RetryPolicy<Object> retryPolicy = getRetryPolicy(entityType.getEntityProduct());
+      return Failsafe.with(retryPolicy).get(() -> SafeHttpCall.execute(call.clone())).getData();
+
+    } catch (Exception e) {
+      throw new YamlSchemaCacheException(
+          format("[PMS] Unable to get %s step schema information", entityType.getYamlName()), e.getCause());
     }
   }
 }
