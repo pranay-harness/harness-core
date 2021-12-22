@@ -3318,7 +3318,8 @@
                 "Maven",
                 "Bazel",
                 "Gradle",
-                "Dotnet"
+                "Dotnet",
+                "Nunitconsole"
               ]
             },
             "connectorRef": {
