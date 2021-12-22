@@ -84,6 +84,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
@@ -495,6 +496,11 @@ public class HelmTaskHelper {
     if (log.isDebugEnabled()) {
       log.debug("Result of the helm repo search command: {}, chart name: {}", commandOutput,
           helmChartCollectionParams.getHelmChartConfigParams().getChartName());
+    }
+
+    // We do remove repo only when the useFlags FF is on.
+    if (useRepoFlags) {
+      FileUtils.deleteQuietly(new File(tempDir));
     }
 
     return parseHelmVersionFetchOutput(commandOutput, helmChartCollectionParams);

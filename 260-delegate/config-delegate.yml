@@ -14,6 +14,6 @@ queueFilePath: ../eventQueue
 grpcServiceEnabled: true
 grpcServiceConnectorPort: 8080
 logStreamingServiceBaseUrl: http://localhost:8079
-clientToolsDownloadDisabled: true
+clientToolsDownloadDisabled: false
 installClientToolsInBackground: true
 versionCheckDisabled: false

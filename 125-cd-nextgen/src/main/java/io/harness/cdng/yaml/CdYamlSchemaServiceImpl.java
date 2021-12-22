@@ -22,6 +22,7 @@ import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -65,13 +66,28 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   }
 
   @Override
+  public PartialSchemaDTO getMergedDeploymentStageYamlSchema(
+      String projectIdentifier, String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails) {
+    return getDeploymentStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, stepSchemaWithDetails);
+  }
+
+  @Override
+  public List<YamlSchemaWithDetails> getDeploymentStageYamlSchemaWithDetails(
+      String projectIdentifier, String orgIdentifier, Scope scope) {
+    return yamlSchemaProvider.getCrossFunctionalStepsSchemaDetails(projectIdentifier, orgIdentifier, scope,
+        YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), ModuleType.CD);
+  }
+
+  @Override
   public PartialSchemaDTO getDeploymentStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
+    return getDeploymentStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, null);
+  }
+
+  public PartialSchemaDTO getDeploymentStageYamlSchemaUtil(
+      String projectIdentifier, String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails) {
     JsonNode deploymentStageSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STAGE, orgIdentifier, projectIdentifier, scope);
 
-    // Including steps into oneOf field of ExecutionWrapperConfig.properties.spec that are moved to new schema.
-    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(deploymentStageSchema.get(DEFINITIONS_NODE),
-        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), CD_NAMESPACE);
     JsonNode deploymentStepsSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STEPS, orgIdentifier, projectIdentifier, scope);
 
@@ -92,6 +108,14 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
     }
 
     yamlSchemaGenerator.modifyRefsNamespace(deploymentStageSchema, CD_NAMESPACE);
+
+    // Should be after this modifyRefsNamespace call.
+    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(deploymentStageSchema.get(DEFINITIONS_NODE),
+        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), CD_NAMESPACE);
+    if (stepSchemaWithDetails != null) {
+      YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
+          deploymentStageSchema.get(DEFINITIONS_NODE), stepSchemaWithDetails, ModuleType.CD);
+    }
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     JsonNode node = mapper.createObjectNode().set(CD_NAMESPACE, definitions);
 

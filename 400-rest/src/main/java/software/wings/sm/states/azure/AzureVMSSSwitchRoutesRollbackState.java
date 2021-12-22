@@ -40,8 +40,8 @@ public class AzureVMSSSwitchRoutesRollbackState extends AzureVMSSSwitchRoutesSta
 
   @Override
   @SchemaIgnore
-  public boolean isDownsizeOldVMSSS() {
-    return super.isDownsizeOldVMSSS();
+  public boolean isDownsizeOldVMSS() {
+    return super.isDownsizeOldVMSS();
   }
 
   @Override
