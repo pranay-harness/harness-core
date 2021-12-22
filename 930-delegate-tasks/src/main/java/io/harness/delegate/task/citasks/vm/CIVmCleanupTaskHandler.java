@@ -26,17 +26,17 @@ public class CIVmCleanupTaskHandler implements CICleanupTaskHandler {
     return type;
   }
 
-  public VmTaskExecutionResponse executeTaskInternal(CICleanupTaskParams ciCleanupTaskParams) {
+  public VmTaskExecutionResponse executeTaskInternal(CICleanupTaskParams ciCleanupTaskParams, String taskId) {
     CIVmCleanupTaskParams params = (CIVmCleanupTaskParams) ciCleanupTaskParams;
     log.info("Received request to clean VM with stage runtime ID {}", params.getStageRuntimeId());
-    return callRunnerForCleanup(params);
+    return callRunnerForCleanup(params, taskId);
   }
 
-  private VmTaskExecutionResponse callRunnerForCleanup(CIVmCleanupTaskParams params) {
+  private VmTaskExecutionResponse callRunnerForCleanup(CIVmCleanupTaskParams params, String taskId) {
     CommandExecutionStatus executionStatus = CommandExecutionStatus.FAILURE;
     String errMessage = "";
     try {
-      Response<Void> response = httpHelper.cleanupStageWithRetries(convert(params));
+      Response<Void> response = httpHelper.cleanupStageWithRetries(convert(params, taskId));
       if (response.isSuccessful()) {
         executionStatus = CommandExecutionStatus.SUCCESS;
       }
@@ -48,7 +48,11 @@ public class CIVmCleanupTaskHandler implements CICleanupTaskHandler {
     return VmTaskExecutionResponse.builder().errorMessage(errMessage).commandExecutionStatus(executionStatus).build();
   }
 
-  private DestroyVmRequest convert(CIVmCleanupTaskParams params) {
-    return DestroyVmRequest.builder().poolID(params.getPoolId()).id(params.getStageRuntimeId()).build();
+  private DestroyVmRequest convert(CIVmCleanupTaskParams params, String taskId) {
+    return DestroyVmRequest.builder()
+        .poolID(params.getPoolId())
+        .id(params.getStageRuntimeId())
+        .correlationID(taskId)
+        .build();
   }
 }

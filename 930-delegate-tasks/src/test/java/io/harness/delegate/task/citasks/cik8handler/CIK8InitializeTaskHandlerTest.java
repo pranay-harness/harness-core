@@ -112,7 +112,7 @@ public class CIK8InitializeTaskHandlerTest extends CategoryTest {
         .createRegistrySecret(eq(coreV1Api), eq(namespace), any(), eq(imageDetailsWithConnector));
 
     K8sTaskExecutionResponse response =
-        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient);
+        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
@@ -137,7 +137,7 @@ public class CIK8InitializeTaskHandlerTest extends CategoryTest {
         .createOrReplacePodWithRetries(coreV1Api, podBuilder.build(), namespace);
 
     K8sTaskExecutionResponse response =
-        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient);
+        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
@@ -171,7 +171,7 @@ public class CIK8InitializeTaskHandlerTest extends CategoryTest {
     doNothing().when(k8EventHandler).stopEventWatch(watch);
 
     K8sTaskExecutionResponse response =
-        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient);
+        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
@@ -202,7 +202,7 @@ public class CIK8InitializeTaskHandlerTest extends CategoryTest {
     doNothing().when(k8EventHandler).stopEventWatch(watch);
 
     K8sTaskExecutionResponse response =
-        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient);
+        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
@@ -239,7 +239,7 @@ public class CIK8InitializeTaskHandlerTest extends CategoryTest {
     doNothing().when(k8EventHandler).stopEventWatch(watch);
 
     K8sTaskExecutionResponse response =
-        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient);
+        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient, "");
 
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
@@ -289,7 +289,7 @@ public class CIK8InitializeTaskHandlerTest extends CategoryTest {
     doNothing().when(k8EventHandler).stopEventWatch(watch);
 
     K8sTaskExecutionResponse response =
-        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient);
+        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient, "");
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 

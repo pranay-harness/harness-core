@@ -50,7 +50,8 @@ public class CIVmInitializeTaskHandlerTest extends CategoryTest {
     Response<SetupVmResponse> setupResponse =
         Response.success(SetupVmResponse.builder().instanceID("test").ipAddress("1.1.1.1").build());
     when(httpHelper.setupStageWithRetries(any())).thenReturn(setupResponse);
-    VmTaskExecutionResponse response = ciVmInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient);
+    VmTaskExecutionResponse response =
+        ciVmInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient, "");
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 
@@ -62,7 +63,8 @@ public class CIVmInitializeTaskHandlerTest extends CategoryTest {
     ResponseBody body = mock(ResponseBody.class);
     Response<SetupVmResponse> setupResponse = Response.error(400, body);
     when(httpHelper.setupStageWithRetries(any())).thenReturn(setupResponse);
-    VmTaskExecutionResponse response = ciVmInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient);
+    VmTaskExecutionResponse response =
+        ciVmInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 }
