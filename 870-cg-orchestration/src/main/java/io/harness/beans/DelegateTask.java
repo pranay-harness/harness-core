@@ -25,6 +25,7 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +40,7 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Transient;
 
 @Data
 @Builder
@@ -150,6 +152,11 @@ public class DelegateTask
   private boolean forceExecute;
 
   private long expiry;
+
+  private LinkedList<String> eligibleToExecuteDelegateIds;
+  @Transient private List<String> broadcastToDelegateIds;
+
+  @Transient private List<String> taskActivityLogs;
 
   @FdTtlIndex @Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
 
