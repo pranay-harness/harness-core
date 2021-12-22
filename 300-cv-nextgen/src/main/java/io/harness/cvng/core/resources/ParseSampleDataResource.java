@@ -39,7 +39,7 @@ public class ParseSampleDataResource {
   @GET
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "parse sample data for given json response", nickname = "fetchTimeSeries")
+  @ApiOperation(value = "parse sample data for given json response", nickname = "fetchParsedSampleData")
   public ResponseDTO<List<TimeSeriesSampleDTO>> getParsedSampleData(@NotNull @QueryParam("accountId") String accountId,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
