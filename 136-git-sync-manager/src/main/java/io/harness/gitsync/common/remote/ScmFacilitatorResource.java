@@ -193,7 +193,7 @@ public class ScmFacilitatorResource {
         ApiResponse(description = "True if Saas is possible for given Repo Url")
       })
   public ResponseDTO<SaasGitDTO>
-  isSaasGit(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @NotNull @QueryParam(
+  isSaasGit(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
                 NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = "Repo Url") @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
     return ResponseDTO.newResponse(GitUtils.isSaasGit(URLDecoderUtility.getDecodedString(repoURL)));
@@ -205,7 +205,7 @@ public class ScmFacilitatorResource {
   @Operation(operationId = "createPR", summary = "creates a Pull Request",
       responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Successfully created a PR") })
   public ResponseDTO<CreatePRDTO>
-  createPR(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @NotNull @QueryParam(
+  createPR(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
                NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @RequestBody(description = "Details to create a PR",
           required = true) @Valid @NotNull GitPRCreateRequest gitCreatePRRequest) {
