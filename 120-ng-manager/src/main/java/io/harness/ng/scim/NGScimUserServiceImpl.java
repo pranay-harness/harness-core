@@ -52,7 +52,7 @@ public class NGScimUserServiceImpl implements ScimUserService {
   public Response createUser(ScimUser userQuery, String accountId) {
     log.info("NGSCIM: Creating user call for accountId {} with query {}", accountId, userQuery);
     String primaryEmail = getPrimaryEmail(userQuery);
-    Optional<UserMetadataDTO> userOptional = ngUserService.getUserByEmail(primaryEmail, true);
+    Optional<UserMetadataDTO> userOptional = ngUserService.getUserByEmailAndAccountId(primaryEmail, accountId, true);
     UserMetadataDTO user;
     if (userOptional.isPresent()) {
       user = userOptional.get();
@@ -79,7 +79,7 @@ public class NGScimUserServiceImpl implements ScimUserService {
 
       inviteService.create(invite, true);
 
-      userOptional = ngUserService.getUserByEmail(primaryEmail, true);
+      userOptional = ngUserService.getUserByEmailAndAccountId(primaryEmail, accountId, true);
 
       if (userOptional.isPresent()) {
         user = userOptional.get();

@@ -34,6 +34,8 @@ public interface NgUserService {
 
   Optional<UserMetadataDTO> getUserByEmail(String emailId, boolean fetchFromCurrentGen);
 
+  Optional<UserMetadataDTO> getUserByEmailAndAccountId(String emailId, String accountId, boolean fetchFromCurrentGen);
+
   Optional<UserMetadataDTO> getUserMetadata(String userId);
 
   AddUsersResponse addUsers(Scope scope, AddUsersDTO addUsersDTO);

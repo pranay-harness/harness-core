@@ -256,6 +256,14 @@ public class UserResourceNG {
   }
 
   @GET
+  @Path("email/{emailId}/{accountId}")
+  public RestResponse<Optional<UserInfo>> getUserByEmailIdAndAccountId(
+      @PathParam("emailId") String emailId, @PathParam("accountId") String accountId) {
+    User user = userService.getUserByEmail(emailId, accountId);
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+  }
+
+  @GET
   @Path("user-password-present")
   public RestResponse<Boolean> getUserByEmailId(
       @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {

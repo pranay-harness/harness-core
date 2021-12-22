@@ -292,6 +292,30 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
+  public Optional<UserMetadataDTO> getUserByEmailAndAccountId(
+      String email, String accountId, boolean fetchFromCurrentGen) {
+    if (!fetchFromCurrentGen) {
+      Optional<UserMetadata> user = userMetadataRepository.findDistinctByEmail(email);
+      return user.map(UserMetadataMapper::toDTO);
+    } else {
+      Optional<UserInfo> userInfo =
+          RestClientUtils.getResponse(userClient.getUserByEmailIdAndAccountId(email, accountId));
+      UserMetadataDTO userMetadataDTO = userInfo
+                                            .map(user
+                                                -> UserMetadataDTO.builder()
+                                                       .uuid(user.getUuid())
+                                                       .name(user.getName())
+                                                       .email(user.getEmail())
+                                                       .locked(user.isLocked())
+                                                       .disabled(user.isDisabled())
+                                                       .externallyManaged(user.isExternallyManaged())
+                                                       .build())
+                                            .orElse(null);
+      return Optional.ofNullable(userMetadataDTO);
+    }
+  }
+
+  @Override
   public List<UserInfo> listCurrentGenUsers(String accountId, UserFilterNG userFilter) {
     return RestClientUtils.getResponse(userClient.listUsers(
         accountId, UserFilterNG.builder().emailIds(userFilter.getEmailIds()).userIds(userFilter.getUserIds()).build()));
