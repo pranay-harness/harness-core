@@ -6,7 +6,6 @@ import static io.harness.eventsframework.impl.redis.RedisUtils.REDIS_STREAM_INTE
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
-import io.harness.eventsframework.impl.redis.monitoring.dto.RedisEventMetricDTO;
 import io.harness.eventsframework.impl.redis.monitoring.dto.RedisEventMetricDTOMapper;
 import io.harness.eventsframework.impl.redis.monitoring.publisher.RedisEventMetricPublisher;
 import io.harness.eventsframework.producer.Message;
@@ -32,11 +31,11 @@ import org.redisson.api.StreamMessageId;
 @Slf4j
 public class RedisProducer extends AbstractProducer {
   private static final String PRODUCER = "producer";
-  private static final String REDIS_EVENT_METRIC_COUNT = "redis_event_metric_count";
+  private static final String REDIS_PUSH_EVENT_METRIC = "redis_push_event_metric";
   private RStream<String, String> stream;
   private RedissonClient redissonClient;
   @Inject private RedisEventMetricPublisher redisEventMetricPublisher;
-  @Inject private RedisEventMetricDTOMapper redisEventMetricDTOMapper;
+  private RedisEventMetricDTOMapper redisEventMetricDTOMapper;
   // This is used when the consumer for the event are no longer accepting due to some failure and
   // the messages are continuously being accumulated in Redis. To come up with this number, it is
   // very important to understand the alerting on the consumers and the scale estimations of a
@@ -79,10 +78,8 @@ public class RedisProducer extends AbstractProducer {
     populateOtherProducerSpecificData(redisData);
 
     StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
-    RedisEventMetricDTO redisEventMetricDTO = redisEventMetricDTOMapper.prepareRedisEventMetricDTO(message);
-    log.info("redisEventMetricDTO :{}",redisEventMetricDTO);
-    log.info("message: {}",message);
-    redisEventMetricPublisher.sendMetricWithEventContext(redisEventMetricDTO, REDIS_EVENT_METRIC_COUNT);
+    redisEventMetricPublisher.sendMetricWithEventContext(
+        RedisEventMetricDTOMapper.prepareRedisEventMetricDTO(message), REDIS_PUSH_EVENT_METRIC);
     redisData.remove(REDIS_STREAM_INTERNAL_KEY);
     log.info("Events framework message inserted - messageId: {}, metaData: {}", messageId, redisData);
     return messageId.toString();

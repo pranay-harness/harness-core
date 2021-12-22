@@ -249,7 +249,7 @@ public class MetricServiceImpl implements MetricService {
 
   private Map<String, String> getLabelValues(List<String> labelNames) {
     Map<String, String> context = ThreadContext.getContext();
-log.info("context:{}",context);
+
     String env = System.getenv("ENV");
     if (isEmpty(env)) {
       env = "localhost";
@@ -265,8 +265,7 @@ log.info("context:{}",context);
     });
 
     labelValues.put(ENV_LABEL, env);
-log.info("labelName: {}",labelNames);
-log.info("labelvaluess {}:",labelValues);
+
     if (labelNames.size() != labelValues.size()) {
       log.error("Some labels were not found from the object while trying to record metric. Label Names: " + labelNames
           + " and labels: " + labelValues);

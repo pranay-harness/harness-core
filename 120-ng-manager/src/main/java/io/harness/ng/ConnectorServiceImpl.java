@@ -8,6 +8,7 @@ import static io.harness.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACCOUNT_IDENTIFIER_METRICS_KEY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
@@ -324,7 +325,7 @@ public class ConnectorServiceImpl implements ConnectorService {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(
-                  ImmutableMap.of("accountId", accountIdentifier, EventsFrameworkMetadataConstants.ENTITY_TYPE,
+                  ImmutableMap.of(ACCOUNT_IDENTIFIER_METRICS_KEY, accountIdentifier, EventsFrameworkMetadataConstants.ENTITY_TYPE,
                       EventsFrameworkMetadataConstants.CONNECTOR_ENTITY, EventsFrameworkMetadataConstants.ACTION,
                       action, EventsFrameworkMetadataConstants.CONNECTOR_ENTITY_TYPE, connectorType.getDisplayName()))
               .setData(connectorUpdateDTOBuilder.build().toByteString())

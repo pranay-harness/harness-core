@@ -18,9 +18,7 @@ public class RedisEventMetricPublisher {
 
   public void sendMetricWithEventContext(RedisEventMetricDTO redisEventMetricDTO, String metricName) {
     try (RedisEventMetricContext context = new RedisEventMetricContext(redisEventMetricDTO)) {
-      log.info("before incCounter");
       metricService.incCounter(metricName);
-      log.info("after incCounter");
     }
   }
 }
