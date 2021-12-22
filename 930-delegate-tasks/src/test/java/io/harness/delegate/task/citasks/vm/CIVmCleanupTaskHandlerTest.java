@@ -46,7 +46,7 @@ public class CIVmCleanupTaskHandlerTest extends CategoryTest {
     CIVmCleanupTaskParams params = CIVmCleanupTaskParams.builder().stageRuntimeId("stage").build();
     Response<Void> cleanupResponse = Response.success(null);
     when(httpHelper.cleanupStageWithRetries(any())).thenReturn(cleanupResponse);
-    VmTaskExecutionResponse response = ciVmCleanupTaskHandler.executeTaskInternal(params);
+    VmTaskExecutionResponse response = ciVmCleanupTaskHandler.executeTaskInternal(params, "");
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 
@@ -58,7 +58,7 @@ public class CIVmCleanupTaskHandlerTest extends CategoryTest {
     ResponseBody body = mock(ResponseBody.class);
     Response<Void> cleanupResponse = Response.error(400, body);
     when(httpHelper.cleanupStageWithRetries(any())).thenReturn(cleanupResponse);
-    VmTaskExecutionResponse response = ciVmCleanupTaskHandler.executeTaskInternal(params);
+    VmTaskExecutionResponse response = ciVmCleanupTaskHandler.executeTaskInternal(params, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 }

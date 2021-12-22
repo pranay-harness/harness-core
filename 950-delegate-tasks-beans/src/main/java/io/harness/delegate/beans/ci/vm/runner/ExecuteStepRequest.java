@@ -13,6 +13,7 @@ import lombok.Value;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExecuteStepRequest {
+  @JsonProperty("correlation_id") String correlationID;
   @JsonProperty("ip_address") String ipAddress;
   @JsonProperty("pool_id") String poolId;
   @JsonProperty("start_step_request") Config config;
