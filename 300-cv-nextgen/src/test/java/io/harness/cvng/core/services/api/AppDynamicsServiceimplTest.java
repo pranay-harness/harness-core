@@ -358,7 +358,7 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
     assertThat(appdynamicsMetricDataResponse.getEndTime())
         .isEqualTo(builderFactory.getClock().instant().toEpochMilli());
     assertThat(appdynamicsMetricDataResponse.getDataPoints().size()).isEqualTo(4);
-    assertThat(appdynamicsMetricDataResponse.getDataPoints().get(0).getTimestamp()).isEqualTo(1616754300000L);
+    assertThat(appdynamicsMetricDataResponse.getDataPoints().get(0).getTimestamp()).isEqualTo(1595760660000L);
     assertThat(appdynamicsMetricDataResponse.getDataPoints().get(0).getValue()).isEqualTo(233.0);
   }
 
