@@ -311,6 +311,7 @@ public class WorkflowServiceHelper {
   public static final String ECS_UPGRADE_CONTAINERS = "ECS Upgrade Containers";
   public static final String ECS_ROLLBACK_CONTAINERS = "ECS Rollback Containers";
   public static final String KUBERNETES_UPGRADE_CONTAINERS = "Kubernetes Upgrade Containers";
+  public static final String RANCHER_RESOLVE_CLUSTERS = "Rancher Resolve Clusters";
   public static final String KUBERNETES_ROLLBACK_CONTAINERS = "Kubernetes Rollback Containers";
   public static final String GCP_CLUSTER_SETUP_NAME = "GCP Cluster Setup";
   public static final String SWAP_SERVICE_SELECTORS = "Swap Service Selectors";

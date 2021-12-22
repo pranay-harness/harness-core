@@ -65,6 +65,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.RancherConfig;
 import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.ScalyrConfig;
 import software.wings.beans.ServiceNowConfig;
@@ -156,6 +157,7 @@ public class SettingValidationService {
   @Inject private EncryptionService encryptionService;
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private GitConfigHelperService gitConfigHelperService;
+  @Inject private RancherHelperService rancherHelperService;
   @Inject private SettingsService settingsService;
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private JiraHelperService jiraHelperService;
@@ -312,6 +314,8 @@ public class SettingValidationService {
       if (!((KubernetesClusterConfig) settingValue).isSkipValidation()) {
         validateKubernetesClusterConfig(settingAttribute, encryptedDataDetails);
       }
+    } else if (settingValue instanceof RancherConfig) {
+      validateRancherConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
         || settingValue instanceof ArtifactoryConfig || settingValue instanceof SmbConfig
@@ -461,6 +465,17 @@ public class SettingValidationService {
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
+  }
+
+  private boolean validateRancherConfig(
+      SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
+    RancherConfig rancherConfig = (RancherConfig) settingAttribute.getValue();
+    try {
+      rancherHelperService.validateRancherConfig(rancherConfig, encryptedDataDetails);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+    return true;
   }
 
   public CEK8sDelegatePrerequisite validateCEK8sDelegateSetting(SettingAttribute settingAttribute) {

@@ -44,6 +44,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.RancherConfig;
 import software.wings.beans.ScalyrConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SftpConfig;
@@ -275,6 +276,15 @@ public class PluginServiceImpl implements PluginService {
             .withType("AWS")
             .withPluginCategories(asList(CloudProvider))
             .withUiSchema(readUiSchema("AWS"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(RancherConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Rancher")
+            .withType("RANCHER")
+            .withPluginCategories(asList(CloudProvider))
+            .withUiSchema(readUiSchema("RANCHER"))
             .build(),
         anAccountPlugin()
             .withSettingClass(GcpConfig.class)

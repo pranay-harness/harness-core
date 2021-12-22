@@ -172,6 +172,7 @@ import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.sm.states.PrometheusState;
+import software.wings.sm.states.RancherResolveState;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.ResourceConstraintState;
 import software.wings.sm.states.RollingNodeSelectState;
@@ -695,6 +696,8 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_DEPLOY, WRAP_UP), ORCHESTRATION_STENCILS),
+  RANCHER_RESOLVE(RancherResolveState.class, COMMANDS, "Rancher Resolve Clusters",
+      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   KUBERNETES_DEPLOY_ROLLBACK(KubernetesDeployRollback.class, COMMANDS, "Kubernetes Rollback Containers",
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,

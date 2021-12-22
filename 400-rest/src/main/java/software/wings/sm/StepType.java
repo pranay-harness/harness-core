@@ -69,6 +69,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.KUBERNE
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_MAP_ROUTE_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_UNMAP_ROUTE_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PROVISION_SHELL_SCRIPT;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.RANCHER_RESOLVE_CLUSTERS;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_AUTOSCALING_GROUP_ROUTE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_AWS_AMI_CLUSTER;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_AWS_CODE_DEPLOY;
@@ -207,6 +208,7 @@ import software.wings.sm.states.LogzAnalysisState;
 import software.wings.sm.states.NewRelicDeploymentMarkerState;
 import software.wings.sm.states.NewRelicState;
 import software.wings.sm.states.PrometheusState;
+import software.wings.sm.states.RancherResolveState;
 import software.wings.sm.states.ResourceConstraintState;
 import software.wings.sm.states.RollingNodeSelectState;
 import software.wings.sm.states.ShellScriptState;
@@ -475,6 +477,9 @@ public enum StepType {
   KUBERNETES_DEPLOY(KubernetesDeploy.class, KUBERNETES_UPGRADE_CONTAINERS, asList(WorkflowStepType.KUBERNETES),
       asList(CONTAINER_DEPLOY, WRAP_UP), Lists.newArrayList(DeploymentType.KUBERNETES),
       asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN, MULTI_SERVICE)),
+  RANCHER_RESOLVE(RancherResolveState.class, RANCHER_RESOLVE_CLUSTERS, asList(WorkflowStepType.KUBKUBERNETESERNETES),
+          asList(CONTAINER_DEPLOY), Lists.newArrayList(DeploymentType.KUBERNETES),
+          asList(PhaseType.NON_ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN, MULTI_SERVICE)),
   KUBERNETES_STEADY_STATE_CHECK(KubernetesSteadyStateCheck.class, WorkflowServiceHelper.KUBERNETES_STEADY_STATE_CHECK,
       asList(WorkflowStepType.KUBERNETES), asList(CONTAINER_DEPLOY, CONTAINER_SETUP),
       Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
