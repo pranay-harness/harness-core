@@ -1,9 +1,11 @@
-package io.harness.service;
+package io.harness.delegate.service;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.filter.DelegateFilterPropertiesMapper;
 import io.harness.delegate.filter.DelegateProfileFilterPropertiesMapper;
+import io.harness.delegate.service.impl.DelegateUpgraderServiceImpl;
+import io.harness.delegate.service.intfc.DelegateUpgraderService;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
@@ -15,7 +17,6 @@ import io.harness.service.impl.DelegateNgTokenServiceImpl;
 import io.harness.service.impl.DelegateSetupServiceImpl;
 import io.harness.service.impl.DelegateTaskSelectorMapServiceImpl;
 import io.harness.service.impl.DelegateTaskServiceImpl;
-import io.harness.service.impl.DelegateUpgraderServiceImpl;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateInsightsService;
@@ -23,7 +24,6 @@ import io.harness.service.intfc.DelegateNgTokenService;
 import io.harness.service.intfc.DelegateSetupService;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
 import io.harness.service.intfc.DelegateTaskService;
-import io.harness.service.intfc.DelegateUpgraderService;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
