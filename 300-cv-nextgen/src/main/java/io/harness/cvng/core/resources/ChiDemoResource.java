@@ -31,7 +31,7 @@ public class ChiDemoResource {
   @ExceptionMetered
   @NextGenManagerAuth
   @Path("register-event")
-  @ApiOperation(value = "register a ChangeEvent", nickname = "registerChangeEvent")
+  @ApiOperation(value = "register a ChangeEvent", nickname = "registerChangeEventDemo")
   public RestResponse<Void> register(
       @BeanParam ProjectParams projectParams, @NotNull @Valid @Body DemoChangeEventDTO demoChangeEventDTO) {
     chiDemoService.registerDemoChangeEvent(projectParams, demoChangeEventDTO);
