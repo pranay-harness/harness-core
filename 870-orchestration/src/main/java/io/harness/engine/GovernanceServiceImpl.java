@@ -2,9 +2,6 @@ package io.harness.engine;
 
 import static io.harness.security.dto.PrincipalType.USER;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.WRAPPER_OBJECT;
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
@@ -25,16 +22,15 @@ import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.contracts.governance.PolicyMetadata;
 import io.harness.pms.contracts.governance.PolicySetMetadata;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.UserPrincipal;
+import io.harness.serializer.JsonUtils;
 import io.harness.user.remote.UserClient;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -47,37 +43,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class GovernanceServiceImpl implements GovernanceService {
-  private static final ObjectMapper objectMapper = new ObjectMapper();
   private final PmsFeatureFlagService pmsFeatureFlagService;
   private final OpaServiceClient opaServiceClient;
   private final UserClient userClient;
 
-  @Data
-  @Builder
-  @JsonTypeInfo(use = NAME, include = WRAPPER_OBJECT)
-  @FieldDefaults(level = AccessLevel.PRIVATE)
-  @JsonTypeName("pipeline")
-  static class BasicPipelineData {
-    String name;
-    String identifier;
-    String orgIdentifier;
-    String projectIdentifier;
-  }
-
   @Override
-  public GovernanceMetadata evaluateGovernancePolicies(
-      String yaml, String accountId, String action, String planExecutionId) {
+  public GovernanceMetadata evaluateGovernancePolicies(String expandedJson, String accountId, String orgIdentifier,
+      String projectIdentifier, String action, String planExecutionId) {
     if (!pmsFeatureFlagService.isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE)) {
       return GovernanceMetadata.newBuilder()
           .setDeny(false)
@@ -85,11 +64,10 @@ public class GovernanceServiceImpl implements GovernanceService {
               String.format("FF: [%s] is disabled for account: [%s]", FeatureName.OPA_PIPELINE_GOVERNANCE, accountId))
           .build();
     }
-    BasicPipelineData basicPipeline;
+
     PipelineOpaEvaluationContext context;
     try {
-      basicPipeline = YamlUtils.read(yaml, BasicPipelineData.class);
-      context = createEvaluationContext(yaml, action);
+      context = createEvaluationContext(expandedJson, action);
     } catch (IOException ex) {
       log.error("Could not create OPA evaluation context", ex);
       return GovernanceMetadata.newBuilder()
@@ -97,38 +75,47 @@ public class GovernanceServiceImpl implements GovernanceService {
           .setMessage(String.format("Could not create OPA context: [%s]", ex.getMessage()))
           .build();
     }
+
     OpaEvaluationResponseHolder response;
     try {
-      response = SafeHttpCall.executeWithExceptions(opaServiceClient.evaluateWithCredentials(
-          OpaConstants.OPA_EVALUATION_TYPE_PIPELINE, accountId, basicPipeline.getOrgIdentifier(),
-          basicPipeline.getProjectIdentifier(), action, getEntityString(accountId, basicPipeline),
-          getEntityMetadataString(accountId, basicPipeline, planExecutionId), context));
+      YamlField pipelineField = YamlUtils.readTree(expandedJson);
+      String pipelineIdentifier =
+          pipelineField.getNode().getField(YAMLFieldNameConstants.PIPELINE).getNode().getIdentifier();
+      String pipelineName = pipelineField.getNode().getField(YAMLFieldNameConstants.PIPELINE).getNode().getName();
+      String entityString = getEntityString(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+      String entityMetadata = getEntityMetadataString(
+          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineName, planExecutionId);
+
+      response = SafeHttpCall.executeWithExceptions(
+          opaServiceClient.evaluateWithCredentials(OpaConstants.OPA_EVALUATION_TYPE_PIPELINE, accountId, orgIdentifier,
+              projectIdentifier, action, entityString, entityMetadata, context));
     } catch (Exception ex) {
-      log.error("Exception while evluating OPA rules", ex);
+      log.error("Exception while evaluating OPA rules", ex);
       throw new InvalidRequestException(ex.getMessage());
     }
+
     return mapResponseToMetadata(response);
   }
 
-  private String getEntityString(String accountId, BasicPipelineData basicPipeline)
-      throws UnsupportedEncodingException {
+  private String getEntityString(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier) throws UnsupportedEncodingException {
     String entityStringRaw =
         String.format("accountIdentifier:%s/orgIdentifier:%s/projectIdentifier:%s/pipelineIdentifier:%s", accountId,
-            basicPipeline.getOrgIdentifier(), basicPipeline.getProjectIdentifier(), basicPipeline.getIdentifier());
+            orgIdentifier, projectIdentifier, pipelineIdentifier);
     return URLEncoder.encode(entityStringRaw, StandardCharsets.UTF_8.toString());
   }
 
-  private String getEntityMetadataString(String accountId, BasicPipelineData basicPipeline, String planExecutionId)
-      throws JsonProcessingException, UnsupportedEncodingException {
+  private String getEntityMetadataString(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, String pipelineName, String planExecutionId) {
     Map<String, String> metadataMap = ImmutableMap.<String, String>builder()
                                           .put("accountIdentifier", accountId)
-                                          .put("orgIdentifier", basicPipeline.getOrgIdentifier())
-                                          .put("projectIdentifier", basicPipeline.getProjectIdentifier())
-                                          .put("pipelineIdentifier", basicPipeline.getIdentifier())
-                                          .put("pipelineName", basicPipeline.getName())
+                                          .put("orgIdentifier", orgIdentifier)
+                                          .put("projectIdentifier", projectIdentifier)
+                                          .put("pipelineIdentifier", pipelineIdentifier)
+                                          .put("pipelineName", pipelineName)
                                           .put("executionIdentifier", planExecutionId)
                                           .build();
-    return URLEncoder.encode(objectMapper.writeValueAsString(metadataMap), StandardCharsets.UTF_8.toString());
+    return JsonUtils.asJson(metadataMap);
   }
 
   private GovernanceMetadata mapResponseToMetadata(OpaEvaluationResponseHolder response) {

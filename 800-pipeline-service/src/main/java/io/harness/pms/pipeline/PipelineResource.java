@@ -180,8 +180,10 @@ public class PipelineResource implements YamlSchemaResource {
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo,
       @RequestBody(required = true, description = "Pipeline YAML") @NotNull String yaml) throws IOException {
+    String expandedPipelineJSON =
+        pmsPipelineService.fetchExpandedPipelineJSONFromYaml(accountId, orgId, projectId, yaml);
     GovernanceMetadata governanceMetadata = governanceService.evaluateGovernancePolicies(
-        yaml, accountId, OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_SAVE, "");
+        expandedPipelineJSON, accountId, orgId, projectId, OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_SAVE, "");
     if (governanceMetadata.getDeny()) {
       return ResponseDTO.newResponse(PipelineSaveResponse.builder().governanceMetadata(governanceMetadata).build());
     }
@@ -337,8 +339,10 @@ public class PipelineResource implements YamlSchemaResource {
       @BeanParam GitEntityUpdateInfoDTO gitEntityInfo,
       @RequestBody(required = true, description = "Pipeline YAML to be updated") @NotNull String yaml)
       throws IOException {
+    String expandedPipelineJSON =
+        pmsPipelineService.fetchExpandedPipelineJSONFromYaml(accountId, orgId, projectId, yaml);
     GovernanceMetadata governanceMetadata = governanceService.evaluateGovernancePolicies(
-        yaml, accountId, OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_SAVE, "");
+        expandedPipelineJSON, accountId, orgId, projectId, OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_SAVE, "");
     if (governanceMetadata.getDeny()) {
       return ResponseDTO.newResponse(PipelineSaveResponse.builder().governanceMetadata(governanceMetadata).build());
     }

@@ -457,7 +457,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         PIPELINE_SAVE, properties, Collections.singletonMap(AMPLITUDE, true), io.harness.telemetry.Category.GLOBAL);
   }
 
-  // todo(@Naman Verma): add test for this method
   @Override
   public String fetchExpandedPipelineJSON(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
@@ -468,13 +467,19 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
           orgIdentifier, projectIdentifier, pipelineIdentifier));
     }
 
+    return fetchExpandedPipelineJSONFromYaml(
+        accountId, orgIdentifier, projectIdentifier, pipelineEntityOptional.get().getYaml());
+  }
+
+  @Override
+  public String fetchExpandedPipelineJSONFromYaml(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineYaml) {
     ExpansionRequestMetadata expansionRequestMetadata = getRequestMetadata(accountId, orgIdentifier, projectIdentifier);
 
-    Set<ExpansionRequest> expansionRequests =
-        expansionRequestsExtractor.fetchExpansionRequests(pipelineEntityOptional.get().getYaml());
+    Set<ExpansionRequest> expansionRequests = expansionRequestsExtractor.fetchExpansionRequests(pipelineYaml);
     Set<ExpansionResponseBatch> expansionResponseBatches =
         jsonExpander.fetchExpansionResponses(expansionRequests, expansionRequestMetadata);
-    return ExpansionsMerger.mergeExpansions(pipelineEntityOptional.get().getYaml(), expansionResponseBatches);
+    return ExpansionsMerger.mergeExpansions(pipelineYaml, expansionResponseBatches);
   }
 
   ExpansionRequestMetadata getRequestMetadata(String accountId, String orgIdentifier, String projectIdentifier) {
