@@ -51,7 +51,7 @@ public class CIVMExecuteStepTaskHandlerTest extends CategoryTest {
     Response<ExecuteStepResponse> executeStepResponse =
         Response.success(ExecuteStepResponse.builder().error("").build());
     when(httpHelper.executeStepWithRetries(any())).thenReturn(executeStepResponse);
-    VmTaskExecutionResponse response = CIVMExecuteStepTaskHandler.executeTaskInternal(params);
+    VmTaskExecutionResponse response = CIVMExecuteStepTaskHandler.executeTaskInternal(params, "");
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 
@@ -63,7 +63,7 @@ public class CIVMExecuteStepTaskHandlerTest extends CategoryTest {
     Response<ExecuteStepResponse> executeStepResponse =
         Response.success(ExecuteStepResponse.builder().error("exit code 1").build());
     when(httpHelper.executeStepWithRetries(any())).thenReturn(executeStepResponse);
-    VmTaskExecutionResponse response = CIVMExecuteStepTaskHandler.executeTaskInternal(params);
+    VmTaskExecutionResponse response = CIVMExecuteStepTaskHandler.executeTaskInternal(params, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 }

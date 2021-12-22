@@ -57,16 +57,16 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   }
 
   @Override
-  public VmTaskExecutionResponse executeTaskInternal(CIExecuteStepTaskParams ciExecuteStepTaskParams) {
+  public VmTaskExecutionResponse executeTaskInternal(CIExecuteStepTaskParams ciExecuteStepTaskParams, String taskId) {
     CIVmExecuteStepTaskParams CIVmExecuteStepTaskParams = (CIVmExecuteStepTaskParams) ciExecuteStepTaskParams;
     log.info(
         "Received request to execute step with stage runtime ID {}", CIVmExecuteStepTaskParams.getStageRuntimeId());
-    return callRunnerForStepExecution(CIVmExecuteStepTaskParams);
+    return callRunnerForStepExecution(CIVmExecuteStepTaskParams, taskId);
   }
 
-  private VmTaskExecutionResponse callRunnerForStepExecution(CIVmExecuteStepTaskParams params) {
+  private VmTaskExecutionResponse callRunnerForStepExecution(CIVmExecuteStepTaskParams params, String taskId) {
     try {
-      Response<ExecuteStepResponse> response = httpHelper.executeStepWithRetries(convert(params));
+      Response<ExecuteStepResponse> response = httpHelper.executeStepWithRetries(convert(params, taskId));
       if (!response.isSuccessful()) {
         return VmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
       }
@@ -91,7 +91,7 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     }
   }
 
-  private ExecuteStepRequest convert(CIVmExecuteStepTaskParams params) {
+  private ExecuteStepRequest convert(CIVmExecuteStepTaskParams params, String taskId) {
     ConfigBuilder configBuilder = ExecuteStepRequest.Config.builder()
                                       .id(getIdentifier(params.getStepRuntimeId()))
                                       .name(params.getStepId())
@@ -112,6 +112,7 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
       params.getSecrets().forEach(secret -> configBuilder.secret(secret));
     }
     return ExecuteStepRequest.builder()
+        .correlationID(taskId)
         .poolId(params.getPoolId())
         .ipAddress(params.getIpAddress())
         .config(configBuilder.build())

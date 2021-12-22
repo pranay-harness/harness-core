@@ -22,6 +22,7 @@ import io.harness.delegate.beans.ci.vm.CIVmInitializeTaskParams;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ff.CIFeatureFlagService;
 import io.harness.logserviceclient.CILogServiceUtils;
+import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -31,6 +32,7 @@ import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.StepUtils;
 import io.harness.tiserviceclient.TIServiceUtils;
 import io.harness.util.CIVmSecretEvaluator;
 import io.harness.yaml.utils.NGVariablesUtils;
@@ -122,6 +124,7 @@ public class VmInitializeTaskUtils {
         .pipelineID(ambiance.getMetadata().getPipelineIdentifier())
         .stageID(stageDetails.getStageID())
         .buildID(String.valueOf(ambiance.getMetadata().getRunSequence()))
+        .logKey(getLogKey(ambiance))
         .logStreamUrl(logServiceUtils.getLogServiceConfig().getBaseUrl())
         .logSvcToken(getLogSvcToken(accountID))
         .logSvcIndirectUpload(featureFlagService.isEnabled(FeatureName.CI_INDIRECT_LOG_UPLOAD, accountID))
@@ -188,5 +191,10 @@ public class VmInitializeTaskUtils {
     if (!optionalSweepingOutput.isFound()) {
       executionSweepingOutputResolver.consume(ambiance, key, value, StepOutcomeGroup.STAGE.name());
     }
+  }
+
+  private String getLogKey(Ambiance ambiance) {
+    LinkedHashMap<String, String> logAbstractions = StepUtils.generateLogAbstractions(ambiance);
+    return LogStreamingHelper.generateLogBaseKey(logAbstractions);
   }
 }

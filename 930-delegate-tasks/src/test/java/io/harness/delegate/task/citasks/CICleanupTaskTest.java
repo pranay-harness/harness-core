@@ -50,7 +50,7 @@ public class CICleanupTaskTest extends CategoryTest {
   public void runWithTaskParams() {
     CICleanupTaskParams params = CIK8CleanupTaskParams.builder().build();
     K8sTaskExecutionResponse response = mock(K8sTaskExecutionResponse.class);
-    when(ciK8CleanupTaskHandler.executeTaskInternal(params)).thenReturn(response);
+    when(ciK8CleanupTaskHandler.executeTaskInternal(params, task.getTaskId())).thenReturn(response);
     assertEquals(task.run(params), response);
   }
 

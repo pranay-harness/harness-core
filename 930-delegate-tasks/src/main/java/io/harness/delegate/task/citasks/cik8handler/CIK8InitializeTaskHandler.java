@@ -90,7 +90,7 @@ public class CIK8InitializeTaskHandler implements CIInitializeTaskHandler {
   }
 
   public K8sTaskExecutionResponse executeTaskInternal(
-      CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient) {
+      CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient, String taskId) {
     Stopwatch timer = Stopwatch.createStarted();
     CIK8InitializeTaskParams cik8InitializeTaskParams = (CIK8InitializeTaskParams) ciInitializeTaskParams;
     String cik8BuildTaskParamsStr = cik8InitializeTaskParams.toString();
