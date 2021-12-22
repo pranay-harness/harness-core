@@ -214,7 +214,11 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
       List<ContainerInfo> containerInfos = getContainerInfos(
           commandRequest, workloads, useSteadyStateCheck, logCallback, commandRequest.getTimeoutInMillis());
+      if (!useSteadyStateCheck) {
+        setReleaseNameForContainers(containerInfos, commandRequest.getReleaseName(), commandRequest.getNamespace());
+      }
       commandResponse.setContainerInfoList(containerInfos);
+      commandResponse.setHelmVersion(commandRequest.getHelmVersion());
 
       logCallback = markDoneAndStartNew(commandRequest, logCallback, WrapUp);
       return commandResponse;
@@ -233,6 +237,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
                       .append(" ]")
                       .toString())
           .helmChartInfo(helmChartInfo)
+          .helmVersion(commandRequest.getHelmVersion())
           .build();
     } catch (WingsException e) {
       String exceptionMessage = ExceptionUtils.getMessage(e);
@@ -244,6 +249,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .output(msg)
           .helmChartInfo(helmChartInfo)
+          .helmVersion(commandRequest.getHelmVersion())
           .build();
       // throw e;
     } catch (Exception e) {
@@ -256,6 +262,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .output(msg)
           .helmChartInfo(helmChartInfo)
+          .helmVersion(commandRequest.getHelmVersion())
           .build();
     } finally {
       if (checkIfReleasePurgingNeeded(commandRequest)) {
@@ -263,6 +270,18 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
         deleteAndPurgeHelmRelease(commandRequest, logCallback);
       }
       cleanUpWorkingDirectory(commandRequest.getWorkingDir());
+    }
+  }
+
+  private void setReleaseNameForContainers(List<ContainerInfo> containerInfos, String releaseName, String namespace) {
+    // if Fabric8() to get containerInfos then setReleaseName and Namespace
+    for (ContainerInfo containerInfo : containerInfos) {
+      if (containerInfo.getReleaseName() == null) {
+        containerInfo.setReleaseName(releaseName);
+      }
+      if (containerInfo.getNamespace() == null) {
+        containerInfo.setNamespace(namespace);
+      }
     }
   }
 
@@ -462,6 +481,9 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
       List<ContainerInfo> containerInfos = getContainerInfos(
           commandRequest, rollbackWorkloads, useSteadyStateCheck, logCallback, commandRequest.getTimeoutInMillis());
+      if (!useSteadyStateCheck) {
+        setReleaseNameForContainers(containerInfos, commandRequest.getReleaseName(), commandRequest.getNamespace());
+      }
       commandResponse.setContainerInfoList(containerInfos);
 
       logCallback.saveExecutionLog("\nDone", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
