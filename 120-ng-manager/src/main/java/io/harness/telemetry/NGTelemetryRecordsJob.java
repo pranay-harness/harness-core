@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class NGTelemetryRecordsJob {
-  public static final int METRICS_RECORD_PERIOD_HOURS = 1;
+  public static final int METRICS_RECORD_PERIOD_HOURS = 2;
 
   @Inject private Injector injector;
   @Inject @Named("ngTelemetryPublisherExecutor") protected ScheduledExecutorService executorService;
@@ -22,8 +22,10 @@ public class NGTelemetryRecordsJob {
     long initialDelay = new SecureRandom().nextInt(1);
 
     try {
+      log.info("NGTelemetryRecordsJob scheduler starting");
       executorService.scheduleAtFixedRate(
-          () -> publisher.recordTelemetry(), initialDelay, METRICS_RECORD_PERIOD_HOURS, TimeUnit.HOURS);
+          () -> publisher.recordTelemetry(), initialDelay, METRICS_RECORD_PERIOD_HOURS, TimeUnit.MINUTES);
+      log.info("NGTelemetryRecordsJob scheduler started");
     } catch (Exception e) {
       log.error("Exception while creating the scheduled job", e);
     }
