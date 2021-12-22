@@ -3079,7 +3079,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       if (preOrPostDeploymentStepNeededManifest) {
         if (!manifestRequiredServiceIds.contains(serviceId)
-            && hasPollingEnabled(serviceId, appId, pollingDisabledServices)) {
+            && requiresManifest(serviceId, appId, pollingDisabledServices)) {
           manifestRequiredServiceIds.add(serviceId);
         }
       }
@@ -3117,15 +3117,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return requiredEntityTypes;
   }
 
-  private boolean hasPollingEnabled(String serviceId, String appId, List<String> pollingDisabledServices) {
+  private boolean requiresManifest(String serviceId, String appId, List<String> pollingDisabledServices) {
     if (serviceId == null) {
       return false;
     }
     if (pollingDisabledServices.contains(serviceId)) {
       return false;
     }
-    ApplicationManifest appManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
-    if (appManifest != null && Boolean.TRUE.equals(appManifest.getPollForChanges())) {
+    Service service = serviceResourceService.get(appId, serviceId);
+    if (Boolean.TRUE.equals(service.getArtifactFromManifest())) {
       return true;
     }
     pollingDisabledServices.add(serviceId);
@@ -3250,7 +3250,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (featureFlagService.isEnabled(HELM_CHART_AS_ARTIFACT, accountId)
-        && hasPollingEnabled(serviceId, appId, pollingDisabledServices)
+        && requiresManifest(serviceId, appId, pollingDisabledServices)
         && phaseStep.getSteps().stream().anyMatch(this::checkManifestNeededForStep)) {
       requiredEntityTypes.add(HELM_CHART);
     }

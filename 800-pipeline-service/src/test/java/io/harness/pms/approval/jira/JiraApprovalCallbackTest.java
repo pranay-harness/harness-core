@@ -16,8 +16,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.jira.JiraTaskNGResponse;
+import io.harness.exception.ApprovalStepNGException;
 import io.harness.exception.HarnessJiraException;
-import io.harness.exception.JiraStepException;
 import io.harness.jira.JiraIssueNG;
 import io.harness.logstreaming.ILogStreamingStepClient;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
@@ -100,7 +100,8 @@ public class JiraApprovalCallbackTest extends CategoryTest {
     rejectionCriteria.setExpression("a==a");
     jiraApprovalCallback.push(response);
 
-    when(CriteriaEvaluator.evaluateCriteria(any(), eq(rejectionCriteria))).thenThrow(new JiraStepException("", true));
+    when(CriteriaEvaluator.evaluateCriteria(any(), eq(rejectionCriteria)))
+        .thenThrow(new ApprovalStepNGException("", true));
     jiraApprovalCallback.push(response);
 
     // Testing the case when approval criteria not available

@@ -3,6 +3,7 @@ package io.harness.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.ModuleType;
+import io.harness.SchemaCacheKey;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.InputSetValidatorType;
 import io.harness.connector.ConnectivityStatus;
@@ -77,5 +78,6 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(FilterCreatorException.class, 970006);
     kryo.register(PlanCreatorException.class, 970007);
     kryo.register(ServiceAccountDTO.class, 970008);
+    kryo.register(SchemaCacheKey.class, 970009);
   }
 }

@@ -18,6 +18,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
@@ -44,13 +45,14 @@ public class AbortHelper {
   @Inject private OrchestrationEngine engine;
 
   public void discontinueMarkedInstance(NodeExecution nodeExecution, Interrupt interrupt) {
-    try {
+    try (AutoLogContext ignore = interrupt.autoLogContext()) {
       boolean taskDiscontinued = interruptHelper.discontinueTaskIfRequired(nodeExecution);
       if (!taskDiscontinued) {
         log.error("Delegate Task Cannot be aborted for NodeExecutionId: {}", nodeExecution.getUuid());
       }
 
       if (nodeExecution.getMode() == ExecutionMode.SYNC || ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
+        log.info("Aborting directly because mode is {}", nodeExecution.getMode());
         abortDiscontinuingNode(nodeExecution, interrupt.getUuid(), interrupt.getInterruptConfig());
         return;
       }
@@ -64,6 +66,7 @@ public class AbortHelper {
                                                  .build();
       waitNotifyEngine.waitForAllOnInList(
           publisherName, abortCallback, Collections.singletonList(notifyId), Duration.ofMinutes(1));
+      log.info("AbortCallback Registered with notifyId: {}", notifyId);
     } catch (NodeExecutionUpdateFailedException ex) {
       throw new InterruptProcessingFailedException(InterruptType.ABORT_ALL,
           "Abort failed for execution Plan :" + nodeExecution.getAmbiance().getPlanExecutionId()
@@ -89,6 +92,7 @@ public class AbortHelper {
                   .interruptConfig(interruptConfig)
                   .build());
         }, EnumSet.noneOf(Status.class));
+    log.info("Updated NodeExecution :{} Status to ABORTED", nodeExecution.getUuid());
     engine.endNodeExecution(updatedNodeExecution.getAmbiance());
   }
 }

@@ -17,6 +17,8 @@ services:
       - REMOTE_WATCHER_URL_CDN=http://localhost:9500/builds
       - DELEGATE_STORAGE_URL=http://localhost:8888
       - DELEGATE_CHECK_LOCATION=delegateci.txt
+      - USE_CDN=false
+      - CDN_URL=http://localhost:9500
       - DEPLOY_MODE=KUBERNETES
       - DELEGATE_NAME=harness-delegate
       - NEXT_GEN=true
@@ -27,7 +29,5 @@ services:
       - DELEGATE_ORG_IDENTIFIER=9S5HMP0xROugl3_QgO62rQO
       - DELEGATE_PROJECT_IDENTIFIER=9S5HMP0xROugl3_QgO62rQP
       - PROXY_MANAGER=true
-      - USE_CDN=false
-      - CDN_URL=http://localhost:9500
       - VERSION_CHECK_DISABLED=false
       - INIT_SCRIPT=echo "Docker delegate init script executed."

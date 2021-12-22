@@ -87,4 +87,8 @@ public class UserGroup implements PersistentEntity, NGAccountAccess {
   @LastModifiedDate long lastModifiedAt;
   @Version long version;
   boolean deleted;
+
+  public boolean isExternallyManaged(){
+    return Boolean.TRUE.equals(externallyManaged);
+  }
 }

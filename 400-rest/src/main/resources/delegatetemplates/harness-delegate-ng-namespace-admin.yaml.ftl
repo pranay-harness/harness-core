@@ -1,4 +1,5 @@
 <#import "common/delegate-environment.ftl" as delegateEnvironment>
+<#import "common/delegate-service.ftl" as delegateService>
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -104,25 +105,11 @@ spec:
         env:
 <@delegateEnvironment.common />
 <@delegateEnvironment.ngSpecific />
-<#if isImmutable == "true">
-    <@delegateEnvironment.immutable />
-<#else>
-    <@delegateEnvironment.mutable />
-</#if>
+<@delegateEnvironment.mutable />
       restartPolicy: Always
 
 <#if ciEnabled == "true">
 ---
 
-apiVersion: v1
-kind: Service
-metadata:
-  name: delegate-service
-  namespace: ${delegateNamespace}
-spec:
-  type: ClusterIP
-  selector:
-    harness.io/name: ${delegateName}
-  ports:
-    - port: ${delegateGrpcServicePort}
+    <@delegateService.ng />
 </#if>

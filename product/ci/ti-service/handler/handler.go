@@ -64,6 +64,19 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config) http.Handler {
 		return sr
 	}())
 
+	r.Mount("/agents", func() http.Handler {
+		sr := chi.NewRouter()
+		// use the logging middleware
+		sr.Use(logger.Middleware)
+		// Validate the accountId in URL with the token generated above and authorize the request
+		if !config.Secrets.DisableAuth {
+			sr.Use(AuthMiddleware(config))
+		}
+
+		sr.Get("/link", HandleDownloadLink(config))
+		return sr
+	}())
+
 	r.Mount("/vg", func() http.Handler {
 		sr := chi.NewRouter()
 		// Validate the accountId in URL with the token generated above and authorize the request

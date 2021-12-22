@@ -31,6 +31,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -52,10 +53,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
 @Path("/v2")
-@Api("/v2")
+@Api(value = "/v2", hidden = true)
 @Produces("application/json")
 @AuthRule(permissionType = LOGGED_IN)
 @OwnedBy(HarnessTeam.DEL)
+@Hidden
 @Tag(name = "Delegate Configuration Resource",
     description = "Contains APIs related to Delegate Configuration management")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
@@ -83,9 +85,10 @@ public class DelegateConfigNgV2Resource {
 
   @GET
   @Path("/accounts/{accountId}/delegate-configs/{delegateConfigIdentifier}")
-  @ApiOperation(value = "Gets Delegate config by identifier", nickname = "getDelegateConfigNgV2")
+  @ApiOperation(value = "Gets Delegate config by identifier", nickname = "getDelegateConfigNgV2", hidden = true)
   @Timed
   @ExceptionMetered
+  @Hidden
   @Operation(operationId = "getDelegateConfigrationDetailsV2",
       summary = "Retrieves Delegate Configuration details for given Delegate Configuration identifier.",
       responses =
@@ -111,7 +114,9 @@ public class DelegateConfigNgV2Resource {
   @Path("/accounts/{accountId}/delegate-configs/{delegateConfigIdentifier}/scoping-rules")
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "Updates the Scoping Rules inside the Delegate config", nickname = "updateScopingRulesNgV2")
+  @ApiOperation(value = "Updates the Scoping Rules inside the Delegate config", nickname = "updateScopingRulesNgV2",
+      hidden = true)
+  @Hidden
   @Operation(operationId = "updateScopingRulesV2",
       summary = "Updates Scoping Rules for the Delegate Configuration specified by identifier",
       responses =
@@ -136,9 +141,10 @@ public class DelegateConfigNgV2Resource {
 
   @DELETE
   @Path("/accounts/{accountId}/delegate-configs/{delegateConfigIdentifier}")
-  @ApiOperation(value = "Deletes a Delegate config by identifier", nickname = "deleteDelegateConfigNgV2")
+  @ApiOperation(value = "Deletes a Delegate config by identifier", nickname = "deleteDelegateConfigNgV2", hidden = true)
   @Timed
   @ExceptionMetered
+  @Hidden
   @Operation(operationId = "deleteDelegateConfigV2", summary = "Deletes Delegate Configuration specified by identifier",
       responses =
       {
@@ -159,9 +165,11 @@ public class DelegateConfigNgV2Resource {
 
   @PUT
   @Path("/accounts/{accountId}/delegate-configs/{delegateConfigIdentifier}/selectors")
-  @ApiOperation(value = "Updates the selectors inside the Delegate config", nickname = "updateSelectorsNgV2")
+  @ApiOperation(
+      value = "Updates the selectors inside the Delegate config", nickname = "updateSelectorsNgV2", hidden = true)
   @Timed
   @ExceptionMetered
+  @Hidden
   @Operation(operationId = "updateDelegateSelectorsV2",
       summary = "Updates Delegate selectors for Delegate Configuration specified by identifier",
       responses =
@@ -185,9 +193,10 @@ public class DelegateConfigNgV2Resource {
 
   @PUT
   @Path("/accounts/{accountId}/delegate-configs/{delegateConfigIdentifier}")
-  @ApiOperation(value = "Updates a Delegate Configuration", nickname = "updateDelegateConfigNgV2")
+  @ApiOperation(value = "Updates a Delegate Configuration", nickname = "updateDelegateConfigNgV2", hidden = true)
   @Timed
   @ExceptionMetered
+  @Hidden
   @Operation(operationId = "updateDelegateConfigurationV2",
       summary = "Updates Delegate Configuration specified by Identifier",
       responses =
@@ -218,7 +227,8 @@ public class DelegateConfigNgV2Resource {
 
   @POST
   @Path("/delegate-configs")
-  @ApiOperation(value = "Adds a Delegate profile", nickname = "addDelegateProfileNgV2noQueryParamsV2")
+  @ApiOperation(value = "Adds a Delegate profile", nickname = "addDelegateProfileNgV2noQueryParamsV2", hidden = true)
+  @Hidden
   @Operation(operationId = "createDelegateConfigurationV2",
       summary = "Creates Delegate Configuration specified by config details",
       responses =
@@ -242,7 +252,8 @@ public class DelegateConfigNgV2Resource {
 
   @POST
   @Path("/accounts/{accountId}/delegate-configs")
-  @ApiOperation(value = "Adds a Delegate profile", nickname = "addDelegateProfileNgV2")
+  @ApiOperation(value = "Adds a Delegate profile", nickname = "addDelegateProfileNgV2", hidden = true)
+  @Hidden
   @Operation(operationId = "addDelegateConfigurationForAccount",
       summary = "Creates Delegate Configuration specified by config details for specified account",
       responses =
@@ -264,10 +275,11 @@ public class DelegateConfigNgV2Resource {
   }
 
   @GET
-  @ApiOperation(value = "Lists the Delegate Configurations", nickname = "listDelegateConfigsNgV2")
+  @ApiOperation(value = "Lists the Delegate Configurations", nickname = "listDelegateConfigsNgV2", hidden = true)
   @Timed
   @Path("/accounts/{accountId}/delegate-configs")
   @ExceptionMetered
+  @Hidden
   @Operation(operationId = "getDelegateConfigurationsForAccountV2",
       summary = "Lists Delegate Configuration for specified account, org and project",
       responses =
@@ -287,10 +299,12 @@ public class DelegateConfigNgV2Resource {
   }
 
   @POST
-  @ApiOperation(value = "Lists the Delegate configs with filter", nickname = "listDelegateConfigsNgV2WithFilter")
+  @ApiOperation(
+      value = "Lists the Delegate configs with filter", nickname = "listDelegateConfigsNgV2WithFilter", hidden = true)
   @Timed
   @Path("/accounts/{accountId}/delegate-configs/listV2")
   @ExceptionMetered
+  @Hidden
   @Operation(operationId = "getDelegateConfigurationsWithFiltering",
       summary = "Lists Delegate Configuration for specified account, org and project and filter applied",
       responses =

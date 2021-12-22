@@ -45,33 +45,36 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
 
   @Override
   public void triggerFullSync(FullSyncEventRequest fullSyncEventRequest, String messageId) {
-    log.info("Started triggering the git full sync job");
+    log.info("Started triggering the git full sync job for the message Id {}", messageId);
     final EntityScopeInfo gitConfigScope = fullSyncEventRequest.getGitConfigScope();
     final ScopeDetails scopeDetails = getScopeDetails(gitConfigScope, messageId);
-    fullSyncServiceBlockingStubMap.forEach((microservice, fullSyncServiceBlockingStub) -> {
+    for (Map.Entry<Microservice, FullSyncServiceBlockingStub> fullSyncStubEntry : fullSyncServiceBlockingStubMap.entrySet()) {
+      FullSyncServiceBlockingStub fullSyncServiceBlockingStub = fullSyncStubEntry.getValue();
+      Microservice microservice = fullSyncStubEntry.getKey();
       FileChanges entitiesForFullSync = null;
       try {
         // todo(abhinav): add retryInputSetReferenceProtoDTO
+        log.info("Trying to get of the files for the message Id {} for the microservice {}", messageId, microservice);
         entitiesForFullSync = GitSyncGrpcClientUtils.retryAndProcessException(
             fullSyncServiceBlockingStub::getEntitiesForFullSync, scopeDetails);
       } catch (Exception e) {
         log.error("Error encountered while getting entities while full sync for msvc {}", microservice, e);
-        return;
+        continue;
       }
-      log.info("Started saving the git full sync job");
-      GitFullSyncJob gitFullSyncJob = saveTheFullSyncJob(fullSyncEventRequest, messageId);
-      log.info("Saved the git full sync job");
-      if (gitFullSyncJob == null) {
-        log.info("The job is not created for the message id {}, as a job with id already exists", messageId);
-        return;
-      }
-      if (fullSyncEventRequest.getCreatePr()) {
-        createAPullRequest(fullSyncEventRequest);
-      }
+      int fileNumber = entitiesForFullSync == null ? 0 : emptyIfNull(entitiesForFullSync.getFileChangesList()).size();
+      log.info("Saving {} files for the microservice {}", fileNumber, microservice);
       emptyIfNull(entitiesForFullSync.getFileChangesList()).forEach(entityForFullSync -> {
-        saveFullSyncEntityInfo(gitConfigScope, messageId, microservice, entityForFullSync, gitFullSyncJob.getUuid());
+        saveFullSyncEntityInfo(gitConfigScope, messageId, microservice, entityForFullSync);
       });
-    });
+    }
+    GitFullSyncJob gitFullSyncJob = saveTheFullSyncJob(fullSyncEventRequest, messageId);
+    if (gitFullSyncJob == null) {
+      log.info("The job is not created for the message id {}, as a job with id already exists", messageId);
+      return;
+    }
+    if (fullSyncEventRequest.getCreatePr()) {
+      createAPullRequest(fullSyncEventRequest);
+    }
   }
 
   private GitFullSyncJob saveTheFullSyncJob(FullSyncEventRequest fullSyncEventRequest, String messageId) {
@@ -115,7 +118,7 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
   }
 
   private void saveFullSyncEntityInfo(EntityScopeInfo entityScopeInfo, String messageId, Microservice microservice,
-      FileChange entityForFullSync, String fullSyncJobId) {
+      FileChange entityForFullSync) {
     final GitFullSyncEntityInfo gitFullSyncEntityInfo =
         GitFullSyncEntityInfo.builder()
             .accountIdentifier(entityScopeInfo.getAccountId())
@@ -128,7 +131,6 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
             .syncStatus(QUEUED.name())
             .yamlGitConfigId(entityScopeInfo.getIdentifier())
             .retryCount(0)
-            .fullSyncJobId(fullSyncJobId)
             .build();
     gitFullSyncEntityService.save(gitFullSyncEntityInfo);
   }

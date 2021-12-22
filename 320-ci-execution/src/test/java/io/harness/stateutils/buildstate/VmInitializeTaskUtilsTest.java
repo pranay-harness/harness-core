@@ -18,6 +18,7 @@ import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.delegate.beans.ci.vm.CIVmInitializeTaskParams;
 import io.harness.executionplan.CIExecutionTestBase;
+import io.harness.ff.CIFeatureFlagService;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -38,10 +39,12 @@ import org.mockito.MockitoAnnotations;
 
 public class VmInitializeTaskUtilsTest extends CIExecutionTestBase {
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
+  @Mock ExecutionSweepingOutputService executionSweepingOutputService;
   @InjectMocks private VmInitializeTaskUtils vmInitializeTaskUtils;
   @Mock private CILogServiceUtils logServiceUtils;
   @Mock private TIServiceUtils tiServiceUtils;
   @Mock private CodebaseUtils codebaseUtils;
+  @Mock private CIFeatureFlagService featureFlagService;
 
   private Ambiance ambiance;
 
@@ -65,6 +68,9 @@ public class VmInitializeTaskUtilsTest extends CIExecutionTestBase {
                                                 .infrastructure(VmInfraYaml.builder().spec(vmPoolYaml).build())
                                                 .buildJobEnvInfo(VmBuildJobInfo.builder().build())
                                                 .build();
+
+    when(executionSweepingOutputService.resolveOptional(any(), any()))
+        .thenReturn(OptionalSweepingOutput.builder().found(false).build());
     when(executionSweepingOutputResolver.consume(any(), any(), any(), any())).thenReturn("");
     when(executionSweepingOutputResolver.resolveOptional(
              ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails)))
@@ -83,6 +89,7 @@ public class VmInitializeTaskUtilsTest extends CIExecutionTestBase {
     when(logServiceUtils.getLogServiceToken(any())).thenReturn("test");
     when(tiServiceUtils.getTiServiceConfig()).thenReturn(TIServiceConfig.builder().baseUrl("1.1.1.2").build());
     when(tiServiceUtils.getTIServiceToken(any())).thenReturn("test");
+    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     CIVmInitializeTaskParams response = vmInitializeTaskUtils.getInitializeTaskParams(initializeStepInfo, ambiance, "");
     assertThat(response.getStageRuntimeId()).isEqualTo(stageRuntimeId);
   }

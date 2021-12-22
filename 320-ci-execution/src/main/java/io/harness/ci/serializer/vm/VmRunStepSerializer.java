@@ -40,6 +40,8 @@ public class VmRunStepSerializer {
           runStepInfo.getOutputVariables().stream().map(OutputNGVariable::getName).collect(Collectors.toList());
     }
 
+    String earlyExitCommand = SerializerUtils.getEarlyExitCommand(runStepInfo.getShell());
+    command = earlyExitCommand + command;
     VmRunStepBuilder runStepBuilder = VmRunStep.builder()
                                           .image(image)
                                           .entrypoint(SerializerUtils.getEntrypoint(runStepInfo.getShell()))

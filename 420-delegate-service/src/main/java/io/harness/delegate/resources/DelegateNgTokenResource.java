@@ -22,6 +22,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,17 +34,17 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 
-@Api("/v2/delegate-token")
+@Api(value = "/v2/delegate-token", hidden = false)
 @Path("/v2/delegate-token")
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
+@Hidden
 @Tag(name = "Delegate Token Resource", description = "Contains APIs related to Delegate NG Token management")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content =
@@ -70,6 +71,7 @@ public class DelegateNgTokenResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = MANAGE_DELEGATES)
+  @Hidden
   @Operation(operationId = "createToken", summary = "Creates Delegate NG Token.",
       responses =
       {
@@ -91,6 +93,7 @@ public class DelegateNgTokenResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = MANAGE_DELEGATES)
+  @Hidden
   @Operation(operationId = "revokeDelegateToken", summary = "Revokes Delegate Ng Token.",
       responses =
       {
@@ -104,7 +107,7 @@ public class DelegateNgTokenResource {
           NGCommonEntityConstants.ORG_KEY) String orgId,
       @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @Parameter(description = "Delegate Token name") @PathParam("tokenName") @NotNull String tokenName) {
+      @Parameter(description = "Delegate Token name") @QueryParam("tokenName") @NotNull String tokenName) {
     DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
     delegateTokenService.revokeDelegateToken(accountId, owner, tokenName);
     return new RestResponse<>();
@@ -113,6 +116,7 @@ public class DelegateNgTokenResource {
   @GET
   @Timed
   @ExceptionMetered
+  @Hidden
   @Operation(operationId = "getDelegateTokens",
       summary = "Retrieves Delegate Ng Tokens by Account, Organization, Project, status and name.",
       responses =
@@ -132,5 +136,32 @@ public class DelegateNgTokenResource {
       DelegateTokenStatus status) {
     DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
     return new RestResponse<>(delegateTokenService.getDelegateTokens(accountId, owner, status));
+  }
+
+  @PUT
+  @Path("default")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATES)
+  @Hidden
+  @Operation(operationId = "upsertDefaultToken",
+      summary = "Creates or a default Delegate Token for account, org and project. "
+          + "If default token already exists its value will be re-generated.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "200 Ok response if successfully created default token")
+      })
+  public RestResponse<Void>
+  upsertDefaultToken(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                         "accountId") @NotNull String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @Parameter(description = "skipIfExists") @QueryParam("skipIfExists") Boolean skipIfExists) {
+    delegateTokenService.upsertDefaultToken(
+        accountId, DelegateEntityOwnerHelper.buildOwner(orgId, projectId), skipIfExists);
+    return new RestResponse<>();
   }
 }

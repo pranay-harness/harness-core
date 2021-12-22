@@ -24,6 +24,7 @@ import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -64,7 +65,25 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
   }
 
   @Override
+  public PartialSchemaDTO getMergedIntegrationStageYamlSchema(
+      String projectIdentifier, String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails) {
+    return getIntegrationStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, stepSchemaWithDetails);
+  }
+
+  @Override
+  public List<YamlSchemaWithDetails> getIntegrationStageYamlSchemaWithDetails(
+      String projectIdentifier, String orgIdentifier, Scope scope) {
+    return yamlSchemaProvider.getCrossFunctionalStepsSchemaDetails(projectIdentifier, orgIdentifier, scope,
+        YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), ModuleType.CI);
+  }
+
+  @Override
   public PartialSchemaDTO getIntegrationStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
+    return getIntegrationStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, null);
+  }
+
+  public PartialSchemaDTO getIntegrationStageYamlSchemaUtil(
+      String projectIdentifier, String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails) {
     JsonNode integrationStageSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.INTEGRATION_STAGE, orgIdentifier, projectIdentifier, scope);
     JsonNode integrationStageSteps =
@@ -87,6 +106,14 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
     removeUnwantedNodes(definitions);
 
     yamlSchemaGenerator.modifyRefsNamespace(integrationStageSchema, CI_NAMESPACE);
+    // Should be after this modifyRefsNamespace call.
+    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(integrationStageSchema.get(DEFINITIONS_NODE),
+        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), CI_NAMESPACE);
+    if (stepSchemaWithDetails != null) {
+      YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
+          integrationStageSchema.get(DEFINITIONS_NODE), stepSchemaWithDetails, ModuleType.CD);
+    }
+
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     JsonNode node = mapper.createObjectNode().set(CI_NAMESPACE, definitions);
 

@@ -108,8 +108,8 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
                 .helmPath(k8sGlobalConfigService.getHelmPath(helmVersion))
                 .ocPath(k8sGlobalConfigService.getOcPath())
                 .kustomizeBinaryPath(
-                    k8sGlobalConfigService.getKustomizePath(k8sDeployRequest.isUseLatestKustomizeVersion()))
-                .useLatestKustomizeVersion(k8sDeployRequest.isUseLatestKustomizeVersion())
+                    k8sGlobalConfigService.getKustomizePath(k8sDeployRequest.isUseVarSupportForKustomize()))
+                .useVarSupportForKustomize(k8sDeployRequest.isUseVarSupportForKustomize())
                 .build();
         // TODO: @anshul/vaibhav , fix this
         //        logK8sVersion(k8sDeployRequest, k8SDelegateTaskParams, commandUnitsProgress);

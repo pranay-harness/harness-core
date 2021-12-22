@@ -21,6 +21,7 @@ public class VmBuildJobTestHelper {
             .build();
     StageElementConfig stageElementConfig =
         StageElementConfig.builder()
+            .type("CI")
             .stageType(IntegrationStageConfig.builder().infrastructure(awsVmInfraYaml).build())
             .build();
     return stageElementConfig;

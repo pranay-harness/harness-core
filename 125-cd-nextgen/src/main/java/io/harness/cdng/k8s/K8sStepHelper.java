@@ -597,7 +597,7 @@ public class K8sStepHelper {
 
   public List<String> renderPatches(
       ManifestOutcome manifestOutcome, Ambiance ambiance, List<String> patchesFileContents) {
-    if (!isUseLatestKustomizeVersion(AmbianceUtils.getAccountId(ambiance)) || null == manifestOutcome) {
+    if (!isUseVarSupportForKustomize(AmbianceUtils.getAccountId(ambiance)) || null == manifestOutcome) {
       return emptyList();
     }
 
@@ -897,8 +897,9 @@ public class K8sStepHelper {
     validateManifestsOutcome(ambiance, manifestsOutcome);
 
     ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(manifestsOutcome.values());
+
     if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
-      if (isUseLatestKustomizeVersion(AmbianceUtils.getAccountId(ambiance))) {
+      if (isUseVarSupportForKustomize(AmbianceUtils.getAccountId(ambiance))) {
         List<KustomizePatchesManifestOutcome> kustomizePatchesManifests =
             getKustomizePatchesManifests(getOrderedManifestOutcome(manifestsOutcome.values()));
         if (isEmpty(kustomizePatchesManifests)) {
@@ -1465,7 +1466,7 @@ public class K8sStepHelper {
                .equals(GithubHttpAuthenticationType.USERNAME_AND_TOKEN);
   }
 
-  public boolean isUseLatestKustomizeVersion(String accountId) {
+  public boolean isUseVarSupportForKustomize(String accountId) {
     return cdFeatureFlagHelper.isEnabled(accountId, FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE);
   }
 

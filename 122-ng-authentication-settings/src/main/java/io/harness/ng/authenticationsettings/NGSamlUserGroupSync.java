@@ -93,7 +93,6 @@ public class NGSamlUserGroupSync {
       }
     });
     userGroupService.addUserToUserGroups(accountIdentifier, user.getUuid(), userAddedToGroups);
-    removeUsersFromScopesPostSync(user.getUuid());
   }
 
   @VisibleForTesting

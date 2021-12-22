@@ -11,21 +11,21 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.pipeline.service.yamlschema.exception.YamlSchemaCacheException;
 import io.harness.utils.RetryUtils;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
+import io.harness.yaml.schema.beans.YamlSchemaDetailsWrapper;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.schema.client.YamlSchemaClient;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import javax.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import retrofit2.Call;
 
@@ -34,18 +34,8 @@ import retrofit2.Call;
 @Singleton
 public class SchemaFetcher {
   private static final Duration THRESHOLD_PROCESS_DURATION = Duration.ofSeconds(5);
-
-  private static final int CACHE_EVICTION_TIME_HOUR = 1;
-
-  private final LoadingCache<SchemaCacheKey, PartialSchemaDTO> schemaCache =
-      CacheBuilder.newBuilder()
-          .expireAfterAccess(CACHE_EVICTION_TIME_HOUR, TimeUnit.HOURS)
-          .build(new CacheLoader<SchemaCacheKey, PartialSchemaDTO>() {
-            @Override
-            public PartialSchemaDTO load(@NotNull final SchemaCacheKey moduleType) {
-              return fetchSchemaWithRetry(moduleType.getModuleType(), moduleType.getAccountIdentifier());
-            }
-          });
+  @Inject @Named("schemaDetailsCache") Cache<SchemaCacheKey, YamlSchemaDetailsWrapper> schemaDetailsCache;
+  @Inject @Named("partialSchemaCache") Cache<SchemaCacheKey, PartialSchemaValue> schemaCache;
 
   private final Map<String, YamlSchemaClient> yamlSchemaClientMapper;
 
@@ -59,45 +49,56 @@ public class SchemaFetcher {
    * In order to avoid that, we do deep copy of cached object
    */
   @Nullable
-  public PartialSchemaDTO fetchSchema(String accountId, ModuleType moduleType) {
+  public PartialSchemaDTO fetchSchema(
+      String accountId, ModuleType moduleType, List<YamlSchemaWithDetails> yamlSchemaWithDetailsList) {
     long startTs = System.currentTimeMillis();
     try {
-      // use account id here
-      PartialSchemaDTO partialSchemaDTO =
-          schemaCache.get(SchemaCacheKey.builder().accountIdentifier(accountId).moduleType(moduleType).build());
+      SchemaCacheKey schemaCacheKey =
+          SchemaCacheKey.builder().accountIdentifier(accountId).moduleType(moduleType).build();
+      if (schemaCache.containsKey(schemaCacheKey)) {
+        return PartialSchemaCacheUtils.getPartialSchemaDTO(schemaCache.get(schemaCacheKey));
+      }
+      PartialSchemaDTO partialSchemaDTO = fetchSchemaWithRetry(moduleType, accountId, yamlSchemaWithDetailsList);
+
+      schemaCache.put(schemaCacheKey, PartialSchemaCacheUtils.getPartialSchemaValue(partialSchemaDTO));
 
       log.info("[PMS] Successfully fetched schema for {}", moduleType.name());
       logWarnIfExceedsThreshold(moduleType, startTs);
 
-      return PartialSchemaDTO.builder()
-          .namespace(partialSchemaDTO.getNamespace())
-          .schema(partialSchemaDTO.getSchema().deepCopy())
-          .nodeName(partialSchemaDTO.getNodeName())
-          .nodeType(partialSchemaDTO.getNodeType())
-          .moduleType(partialSchemaDTO.getModuleType())
-          .build();
+      return partialSchemaDTO;
     } catch (Exception e) {
       log.warn(format("[PMS] Unable to get %s schema information", moduleType.name()), e);
       return null;
     }
   }
 
-  public void invalidateCache(ModuleType moduleType) {
-    log.info("[PMS] Invalidating yaml schema cache for {}", moduleType.name());
-    schemaCache.invalidate(moduleType);
-    log.info("[PMS] Yaml schema cache was successfully invalidated for {}", moduleType.name());
+  public YamlSchemaDetailsWrapper fetchSchemaDetail(String accountId, ModuleType moduleType) {
+    try {
+      SchemaCacheKey schemaCacheKey =
+          SchemaCacheKey.builder().accountIdentifier(accountId).moduleType(moduleType).build();
+      if (schemaDetailsCache.containsKey(schemaCacheKey)) {
+        return schemaDetailsCache.get(schemaCacheKey);
+      }
+      YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper = fetchSchemaDetailsWithRetry(moduleType, accountId);
+      schemaDetailsCache.put(schemaCacheKey, yamlSchemaDetailsWrapper);
+      return yamlSchemaDetailsWrapper;
+    } catch (Exception e) {
+      log.warn(format("[PMS] Unable to get %s schema information", moduleType.name()), e);
+      return null;
+    }
   }
 
   public void invalidateAllCache() {
     log.info("[PMS] Invalidating yaml schema cache");
-    schemaCache.invalidateAll();
+    schemaCache.clear();
+    schemaDetailsCache.clear();
     log.info("[PMS] Yaml schema cache was successfully invalidated");
   }
 
-  private PartialSchemaDTO fetchSchemaWithRetry(ModuleType moduleType, String accountIdentifier) {
+  private YamlSchemaDetailsWrapper fetchSchemaDetailsWithRetry(ModuleType moduleType, String accountIdentifier) {
     try {
-      Call<ResponseDTO<PartialSchemaDTO>> call =
-          obtainYamlSchemaClient(moduleType.name().toLowerCase()).get(accountIdentifier, null, null, null);
+      Call<ResponseDTO<YamlSchemaDetailsWrapper>> call =
+          obtainYamlSchemaClient(moduleType.name().toLowerCase()).getSchemaDetails(accountIdentifier, null, null, null);
 
       RetryPolicy<Object> retryPolicy = getRetryPolicy(moduleType);
       return Failsafe.with(retryPolicy).get(() -> SafeHttpCall.execute(call.clone())).getData();
@@ -105,6 +106,22 @@ public class SchemaFetcher {
       throw new YamlSchemaCacheException(
           format("[PMS] Unable to get %s schema information", moduleType.name()), e.getCause());
     }
+  }
+
+  private PartialSchemaDTO fetchSchemaWithRetry(
+      ModuleType moduleType, String accountIdentifier, List<YamlSchemaWithDetails> yamlSchemaWithDetailsList) {
+    try {
+      Call<ResponseDTO<PartialSchemaDTO>> call =
+          obtainYamlSchemaClient(moduleType.name().toLowerCase())
+              .get(accountIdentifier, null, null, null,
+                  YamlSchemaDetailsWrapper.builder().yamlSchemaWithDetailsList(yamlSchemaWithDetailsList).build());
+
+      RetryPolicy<Object> retryPolicy = getRetryPolicy(moduleType);
+      return Failsafe.with(retryPolicy).get(() -> SafeHttpCall.execute(call.clone())).getData();
+    } catch (Exception e) {
+      log.error(format("[PMS] Unable to get %s schema information", moduleType.name()), e.getCause());
+    }
+    return null;
   }
 
   private YamlSchemaClient obtainYamlSchemaClient(String instanceName) {

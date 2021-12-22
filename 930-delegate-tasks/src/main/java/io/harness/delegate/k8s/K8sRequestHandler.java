@@ -72,7 +72,7 @@ public abstract class K8sRequestHandler {
   }
 
   protected List<String> getManifestOverrideFlies(K8sDeployRequest request) {
-    if (request.isUseLatestKustomizeVersion()
+    if (request.isUseVarSupportForKustomize()
         && KUSTOMIZE.equals(request.getManifestDelegateConfig().getManifestType())) {
       return request.getKustomizePatchesList();
     } else {

@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import javax.xml.stream.XMLStreamException;
 import lombok.extern.slf4j.Slf4j;
@@ -239,12 +240,12 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public List<BuildDetails> getVersions(
-      String repositoryFormat, NexusRequest nexusConfig, String repoId, String packageName) {
+  public List<BuildDetails> getVersions(String repositoryFormat, NexusRequest nexusConfig, String repoId,
+      String packageName, Set<String> collectedBuilds) {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       if (isNexusTwo) {
-        return nexusTwoService.getVersions(repositoryFormat, nexusConfig, repoId, packageName);
+        return nexusTwoService.getVersions(repositoryFormat, nexusConfig, repoId, packageName, collectedBuilds);
       } else {
         return nexusThreeService.getPackageVersions(nexusConfig, repoId, packageName);
       }

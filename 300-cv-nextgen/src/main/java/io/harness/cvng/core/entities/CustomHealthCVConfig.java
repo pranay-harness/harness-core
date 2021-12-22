@@ -5,14 +5,17 @@ import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageF
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.customhealth.TimestampInfo;
 import io.harness.cvng.core.beans.HealthSourceMetricDefinition;
 import io.harness.cvng.core.beans.HealthSourceMetricDefinition.AnalysisDTO;
 import io.harness.cvng.core.beans.HealthSourceMetricDefinition.SLIDTO;
 import io.harness.cvng.core.beans.HealthSourceQueryType;
-import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.core.beans.RiskProfile;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.MetricResponseMapping;
 import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthMethod;
 import io.harness.exception.InvalidRequestException;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,6 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @SuperBuilder
@@ -31,7 +35,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class CustomHealthCVConfig extends CVConfig {
+public class CustomHealthCVConfig extends MetricCVConfig {
   String groupName;
   List<MetricDefinition> metricDefinitions;
 
@@ -44,26 +48,14 @@ public class CustomHealthCVConfig extends CVConfig {
     String urlPath;
     String requestBody;
     CustomHealthMethod method;
-
-    String timestampFieldPathString;
-    String timestampFormat;
-    String metricValueFieldPathString;
-    String serviceInstance;
-  }
-
-  @Override
-  public boolean queueAnalysisForPreDeploymentTask() {
-    return false;
+    TimestampInfo startTime;
+    TimestampInfo endTime;
+    MetricResponseMapping metricResponseMapping;
   }
 
   @Override
   public String getDataCollectionDsl() {
-    return null;
-  }
-
-  @Override
-  public TimeRange getFirstTimeDataCollectionTimeRange() {
-    return null;
+    return getMetricPack().getDataCollectionDsl();
   }
 
   @Override
@@ -120,6 +112,38 @@ public class CustomHealthCVConfig extends CVConfig {
                 metricDefinition.getMetricName()));
       }
       uniqueMetricDefinitionsNames.add(uniqueKey);
+    }
+  }
+
+  public MetricPack generateMetricPack(String metricName, RiskProfile riskProfile) {
+    Set<TimeSeriesThreshold> timeSeriesThresholds = getThresholdsToCreateOnSaveForCustomProviders(
+        metricName, riskProfile.getMetricType(), riskProfile.getThresholdTypes());
+    MetricPack metricPack = MetricPack.builder()
+                                .category(riskProfile.getCategory())
+                                .accountId(getAccountId())
+                                .dataSourceType(DataSourceType.CUSTOM_HEALTH)
+                                .projectIdentifier(getProjectIdentifier())
+                                .identifier(riskProfile.getCategory().getDisplayName())
+                                .build();
+
+    metricPack.addToMetrics(MetricPack.MetricDefinition.builder()
+                                .thresholds(new ArrayList<>(timeSeriesThresholds))
+                                .type(riskProfile.getMetricType())
+                                .name(metricName)
+                                .included(true)
+                                .build());
+
+    return metricPack;
+  }
+
+  public static class CustomHealthCVConfigUpdatableEntity
+      extends MetricCVConfigUpdatableEntity<CustomHealthCVConfig, CustomHealthCVConfig> {
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<CustomHealthCVConfig> updateOperations, CustomHealthCVConfig customHealthCVConfig) {
+      setCommonOperations(updateOperations, customHealthCVConfig);
+      updateOperations.set(CustomHealthCVConfigKeys.groupName, customHealthCVConfig.getGroupName())
+          .set(CustomHealthCVConfigKeys.metricDefinitions, customHealthCVConfig.getMetricDefinitions());
     }
   }
 

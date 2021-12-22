@@ -40,6 +40,8 @@ public class YamlSchemaHelper {
               YamlSchemaWithDetails.builder()
                   .isAvailableAtAccountLevel(yamlSchemaRootClass.isAvailableAtAccountLevel())
                   .isAvailableAtOrgLevel(yamlSchemaRootClass.isAvailableAtOrgLevel())
+                  .schemaClassName(yamlSchemaRootClass.getClazz().getSimpleName())
+                  .yamlSchemaMetadata(yamlSchemaRootClass.getYamlSchemaMetadata())
                   .isAvailableAtProjectLevel(yamlSchemaRootClass.isAvailableAtProjectLevel())
                   .schema(schemaJson)
                   .build();

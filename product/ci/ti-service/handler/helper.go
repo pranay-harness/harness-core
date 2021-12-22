@@ -31,6 +31,11 @@ const (
 	limitParam        = "limit"
 	shaParam          = "sha"
 	commitLinkParam   = "commitLink"
+	// agent specific params
+	languageParam  = "language"
+	osParam        = "os"
+	archParam      = "arch"
+	frameworkParam = "framework"
 )
 
 // writeBadRequest writes the json-encoded error message

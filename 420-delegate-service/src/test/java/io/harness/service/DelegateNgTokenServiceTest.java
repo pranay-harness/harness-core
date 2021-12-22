@@ -16,6 +16,7 @@ import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.service.impl.DelegateNgTokenServiceImpl;
+import io.harness.service.intfc.DelegateNgTokenService;
 
 import com.google.inject.Inject;
 import org.junit.Before;
@@ -130,5 +131,25 @@ public class DelegateNgTokenServiceTest extends DelegateServiceTestBase {
     delegateNgTokenService.createToken(TEST_ACCOUNT_ID, null, tokenName2);
     String result = delegateNgTokenService.getDelegateTokenValue(TEST_ACCOUNT_ID, null, tokenName1);
     assertThat(result).isEqualTo(delegateTokenDetails.getValue());
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldUpsertDefaultToken() {
+    String tokenName1 = DelegateNgTokenService.DEFAULT_TOKEN_NAME;
+    DelegateTokenDetails delegateTokenDetails = delegateNgTokenService.createToken(TEST_ACCOUNT_ID, null, tokenName1);
+    DelegateTokenDetails result = delegateNgTokenService.upsertDefaultToken(TEST_ACCOUNT_ID, null, false);
+    assertThat(result.getValue()).isNotEqualTo(delegateTokenDetails.getValue());
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldUpsertDefaultTokenSkipIfExists() {
+    String tokenName1 = DelegateNgTokenService.DEFAULT_TOKEN_NAME;
+    DelegateTokenDetails delegateTokenDetails = delegateNgTokenService.createToken(TEST_ACCOUNT_ID, null, tokenName1);
+    DelegateTokenDetails result = delegateNgTokenService.upsertDefaultToken(TEST_ACCOUNT_ID, null, true);
+    assertThat(result.getValue()).isEqualTo(delegateTokenDetails.getValue());
   }
 }

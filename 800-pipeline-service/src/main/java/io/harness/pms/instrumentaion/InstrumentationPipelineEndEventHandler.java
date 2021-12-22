@@ -30,6 +30,8 @@ import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.PIP
 import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.STAGE_COUNT;
 import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.STAGE_TYPES;
 import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.STATUS;
+import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.STEP_COUNT;
+import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.STEP_TYPES;
 import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.TRIGGER_TYPE;
 import static io.harness.telemetry.Destination.AMPLITUDE;
 
@@ -37,8 +39,10 @@ import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.observers.OrchestrationEndObserver;
+import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.notification.bean.NotificationRules;
@@ -46,12 +50,14 @@ import io.harness.notification.bean.PipelineEvent;
 import io.harness.observer.AsyncInformObserver;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.notification.NotificationInstrumentationHelper;
 import io.harness.pms.pipeline.observer.OrchestrationObserverUtils;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.sdk.SdkStepHelper;
 import io.harness.telemetry.Category;
 import io.harness.telemetry.TelemetryOption;
 import io.harness.telemetry.TelemetryReporter;
@@ -80,6 +86,8 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
   @Inject PlanExecutionService planExecutionService;
   @Inject AccountService accountService;
   @Inject @Named("PipelineExecutorService") ExecutorService executorService;
+  @Inject NodeExecutionService nodeExecutionService;
+  @Inject SdkStepHelper sdkStepHelper;
 
   @Override
   public void onEnd(Ambiance ambiance) {
@@ -89,6 +97,15 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
     String accountName = accountDTO.getName();
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
     String orgId = AmbianceUtils.getOrgIdentifier(ambiance);
+    List<NodeExecution> nodeExecutionList = nodeExecutionService.fetchNodeExecutions(planExecutionId);
+    Set<String> allSdkSteps = sdkStepHelper.getAllStepVisibleInUI();
+
+    List<String> stepTypes = nodeExecutionList.stream()
+                                 .map(nodeExecution -> nodeExecution.getNode().getStepType())
+                                 .filter(stepType -> stepType.getStepCategory() == StepCategory.STEP)
+                                 .map(StepType::getType)
+                                 .filter(allSdkSteps::contains)
+                                 .collect(Collectors.toList());
     String pipelineId = ambiance.getMetadata().getPipelineIdentifier();
     PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
@@ -102,11 +119,14 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
     HashMap<String, Object> propertiesMap = new HashMap<>();
     propertiesMap.put(ACCOUNT_NAME, accountName);
     propertiesMap.put(STAGE_TYPES, executedModules);
+    // step types
     propertiesMap.put(TRIGGER_TYPE, pipelineExecutionSummaryEntity.getExecutionTriggerInfo().getTriggerType());
     propertiesMap.put(STATUS, pipelineExecutionSummaryEntity.getStatus());
     propertiesMap.put(LEVEL, StepCategory.PIPELINE);
     propertiesMap.put(IS_RERUN, pipelineExecutionSummaryEntity.getExecutionTriggerInfo().getIsRerun());
     propertiesMap.put(STAGE_COUNT, pipelineExecutionSummaryEntity.getLayoutNodeMap().size());
+    propertiesMap.put(STEP_TYPES, new HashSet<>(stepTypes));
+    propertiesMap.put(STEP_COUNT, stepTypes.size());
     propertiesMap.put(EXECUTION_TIME, getExecutionTimeInSeconds(pipelineExecutionSummaryEntity));
     propertiesMap.put(NOTIFICATION_RULES_COUNT, notificationRulesList.size());
     propertiesMap.put(FAILURE_TYPES,

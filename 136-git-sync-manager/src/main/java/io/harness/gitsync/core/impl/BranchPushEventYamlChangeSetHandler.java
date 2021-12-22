@@ -140,6 +140,10 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       return YamlChangeSetStatus.COMPLETED;
     } catch (Exception ex) {
       log.error("Error while processing branch push event {}", yamlChangeSetDTO, ex);
+      String gitConnectivityErrorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
+      if (!gitConnectivityErrorMessage.isEmpty()) {
+        recordErrors(yamlChangeSetDTO, gitConnectivityErrorMessage);
+      }
       // Update the g2h status to ERROR
       gitToHarnessProgressService.updateProgressStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProgressStatus.ERROR);
@@ -173,8 +177,6 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       log.info(gitFileChangeDTOListAsString.toString());
     } catch (Exception ex) {
       log.error("Error occurred while perform step : {}" + GitToHarnessProcessingStepType.GET_FILES, ex);
-      String errorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
-      recordErrors(yamlChangeSetDTO, errorMessage);
       // Mark step status error
       gitToHarnessProgressService.updateStepStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);

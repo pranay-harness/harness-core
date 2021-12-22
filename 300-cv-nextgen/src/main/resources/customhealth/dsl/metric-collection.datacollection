@@ -1,0 +1,75 @@
+Var index = 0
+Var one = 1
+Var null = null
+Var totalMetrics = Env:metricNames.length()
+Var timeSeriesList = []
+
+while Var:index != Var:totalMetrics {
+
+    Var metricName = Env:metricNames[Var:index]
+    Var urlPath = Env:urlPaths[Var:index]
+    Var dataCollectionURL = concat(Env:baseUrl, Var:urlPath)
+    Var startTimePlaceholder = Env:startTimePlaceholders[Var:index]
+    Var endTimePlaceholder = Env:endTimePlaceholders[Var:index]
+    Var startTimeFormat = Env:startTimeFormats[Var:index]
+    Var endTimeFormat = Env:endTimeFormats[Var:index]
+    Var metricValueJSONPath = Env:metricValueJSONPaths[Var:index]
+    Var timestampValueJSONPath = Env:timestampValueJSONPaths[Var:index]
+    Var serviceInstanceJSONPath = Env:serviceInstanceJSONPaths[Var:index]
+    Var body = Env:bodies[Var:index]
+    Var innerIndex = 0
+
+    if Var:startTimeFormat == "MILLISECONDS" {
+       Var startTimeStr = concat("", Env:startTimeMillis)
+       Var:dataCollectionURL.replaceAll(Var:startTimePlaceholder, Var:startTimeStr)
+    }
+
+    if Var:startTimeFormat == "SECONDS" {
+       Var startTimeStr = concat("", Env:startTimeSeconds)
+       Var:dataCollectionURL.replaceAll(Var:startTimePlaceholder, Var:startTimeStr)
+    }
+
+    if Var:endTimeFormat == "MILLISECONDS" {
+       Var endTimeStr = concat("", Env:endTimeMillis)
+       Var:dataCollectionURL.replaceAll(Var:endTimePlaceholder, Var:endTimeStr)
+    }
+
+    if Var:endTimeFormat == "SECONDS" {
+       Var endTimeStr = concat("", Env:endTimeSeconds)
+       Var:dataCollectionURL.replaceAll(Var:endTimePlaceholder, Var:endTimeStr)
+    }
+
+    Request request = new Request(url=Var:dataCollectionURL, header=Env:commonHeaders, options=Env:commonOptions, body=Var:body)
+    print Var:request
+    Var response = sync-call(Var:request)
+
+    Var metricValArr = extract(Var:response,Var:metricValueJSONPath)
+    Var timestampArr = extract(Var:response,Var:timestampValueJSONPath)
+    Var serviceInstanceArr = []
+    Var serviceInstance = null
+
+    if Var:serviceInstanceJSONPath != Var:null {
+        serviceInstanceArr = extract(Var:response,Var:serviceInstanceJSONPath)
+        serviceInstance = Var:serviceInstanceArr[Var:index]
+    }
+
+    if Var:metricValArr != Var:null  {
+
+        Var totalMetricValues = Var:metricValArr.length()
+
+        while Var:innerIndex != Var:totalMetricValues {
+           Var metricVal = Var:metricValArr[Var:innerIndex]
+           Var timestamp = Var:timestampArr[Var:innerIndex]
+
+           if Var:metricVal != Var:null {
+              Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp, host=Var:serviceInstance)
+              Var:timeSeriesList.append(Var:tsRecord)
+           }
+           innerIndex = Var:one + Var:innerIndex
+        }
+    }
+
+    index = Var:index + Var:one
+}
+
+return Var:timeSeriesList

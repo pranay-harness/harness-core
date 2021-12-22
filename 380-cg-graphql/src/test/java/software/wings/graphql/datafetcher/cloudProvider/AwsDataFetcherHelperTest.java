@@ -2,9 +2,11 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.IGOR;
+import static io.harness.rule.OwnerRule.JELENA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doReturn;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -21,7 +23,10 @@ import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsManualCrede
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateAwsCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateAwsCrossAccountAttributes;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateAwsManualCredentials;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateIrsaCredentials;
 import software.wings.graphql.schema.type.cloudProvider.aws.QLAwsCredentialsType;
+import software.wings.graphql.schema.type.secrets.QLUsageScope;
+import software.wings.security.UsageRestrictions;
 
 import java.sql.SQLException;
 import org.junit.Before;
@@ -112,6 +117,22 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
                                         .name(RequestField.absent())
                                         .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.MANUAL))
                                         .manualCredentials(RequestField.ofNull())
+                                        .crossAccountAttributes(RequestField.absent())
+                                        .build();
+
+    SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
+
+    assertThat(setting).isNotNull();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void toSettingAttributeWithEmptyIrsaInput() {
+    QLAwsCloudProviderInput input = QLAwsCloudProviderInput.builder()
+                                        .name(RequestField.absent())
+                                        .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.IRSA))
+                                        .irsaCredentials(RequestField.ofNull())
                                         .crossAccountAttributes(RequestField.absent())
                                         .build();
 
@@ -284,5 +305,44 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
                                    .build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
     return setting;
+  }
+
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void updateSettingAttributeIrsaUsageScope() {
+    final QLUpdateAwsCloudProviderInput input =
+        QLUpdateAwsCloudProviderInput.builder()
+            .name(RequestField.ofNullable(NAME))
+            .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.IRSA))
+            .irsaCredentials(RequestField.ofNullable(
+                QLUpdateIrsaCredentials.builder().delegateSelector(RequestField.ofNullable("DELEGATE")).build()))
+            .crossAccountAttributes(
+                RequestField.ofNullable(QLUpdateAwsCrossAccountAttributes.builder()
+                                            .assumeCrossAccountRole(RequestField.ofNullable(Boolean.TRUE))
+                                            .crossAccountRoleArn(RequestField.ofNullable(ARN))
+                                            .externalId(RequestField.ofNullable(EXTERN_ID))
+                                            .build()))
+            .build();
+
+    UsageRestrictions usageRestrictions = new UsageRestrictions();
+    QLUsageScope qlUsageScope = QLUsageScope.builder().build();
+    doReturn(qlUsageScope).when(usageScopeController).populateUsageScope(usageRestrictions);
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withValue(AwsConfig.builder().useIRSA(true).build())
+                                   .withUsageRestrictions(usageRestrictions)
+                                   .build();
+
+    helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
+
+    assertThat(setting).isNotNull();
+    assertThat(setting.getName()).isEqualTo(NAME);
+    assertThat(setting.getUsageRestrictions()).isEqualTo(usageRestrictions);
+    assertThat(setting.getValue()).isInstanceOf(AwsConfig.class);
+    AwsConfig config = (AwsConfig) setting.getValue();
+    assertThat(config.isUseIRSA()).isTrue();
+    assertThat(config.getCrossAccountAttributes()).isNotNull();
+    assertThat(config.getCrossAccountAttributes().getCrossAccountRoleArn()).isEqualTo(ARN);
+    assertThat(config.getCrossAccountAttributes().getExternalId()).isEqualTo(EXTERN_ID);
   }
 }

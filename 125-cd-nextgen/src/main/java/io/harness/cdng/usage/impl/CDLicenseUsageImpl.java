@@ -4,6 +4,7 @@ import static io.harness.cdng.usage.beans.CDLicenseUsageConstants.LICENSE_INSTAN
 import static io.harness.cdng.usage.beans.CDLicenseUsageConstants.PERCENTILE;
 import static io.harness.cdng.usage.beans.CDLicenseUsageConstants.TIME_PERIOD_IN_DAYS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.licensing.beans.modules.types.CDLicenseType.SERVICES;
 import static io.harness.licensing.beans.modules.types.CDLicenseType.SERVICE_INSTANCES;
 
@@ -60,9 +61,11 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
     Table<Record3<String, String, String>> serviceTableFromInstances =
         cdLicenseUsageHelper.getOrgProjectServiceTableFromInstances(activeInstancesByAccount);
 
-    List<AggregateServiceUsageInfo> activeServicesUsageInfo =
-        cdLicenseUsageHelper.getActiveServicesInfoWithPercentileServiceInstanceCount(
-            accountIdentifier, PERCENTILE, startInterval, timestamp, serviceTableFromInstances);
+    List<AggregateServiceUsageInfo> activeServicesUsageInfo = new ArrayList<>();
+    if (serviceTableFromInstances != null) {
+      activeServicesUsageInfo = cdLicenseUsageHelper.getActiveServicesInfoWithPercentileServiceInstanceCount(
+          accountIdentifier, PERCENTILE, startInterval, timestamp, serviceTableFromInstances);
+    }
 
     UsageDataDTO activeServices =
         getActiveServicesUsageDTO(activeServicesUsageInfo, accountIdentifier, serviceTableFromInstances);
@@ -97,7 +100,7 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
   private UsageDataDTO getServiceLicenseUsedDTO(
       CDUsageRequestParams usageRequest, List<AggregateServiceUsageInfo> activeServicesInfo) {
     UsageDataDTO serviceLicenseUsed = null;
-    if (usageRequest.getCdLicenseType().equals(SERVICES)) {
+    if (usageRequest.getCdLicenseType().equals(SERVICES) && isNotEmpty(activeServicesInfo)) {
       long cumulativeLicenseCount = getCumulativeLicenseCount(activeServicesInfo);
       serviceLicenseUsed = getServiceLicenseUseDTO(activeServicesInfo, cumulativeLicenseCount);
     }

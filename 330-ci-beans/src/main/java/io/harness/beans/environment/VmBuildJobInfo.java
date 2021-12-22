@@ -3,7 +3,9 @@ package io.harness.beans.environment;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.yaml.core.variables.NGVariable;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
@@ -19,9 +21,11 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("vmBuildJobInfo")
 public class VmBuildJobInfo implements BuildJobEnvInfo {
-  @NotEmpty private String workDir;
-  private CIExecutionArgs ciExecutionArgs;
-  private List<NGVariable> stageVars;
+  @NotEmpty String workDir;
+  CIExecutionArgs ciExecutionArgs;
+  ArrayList<String> connectorRefs;
+  List<NGVariable> stageVars;
+  Map<String, String> volToMountPath;
 
   @Override
   public Type getType() {

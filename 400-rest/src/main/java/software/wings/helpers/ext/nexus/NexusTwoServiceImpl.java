@@ -20,6 +20,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.datacollection.utils.EmptyPredicate;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
@@ -58,6 +59,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -333,11 +335,11 @@ public class NexusTwoServiceImpl {
         versionToArtifactDownloadUrls, extension, classifier);
   }
 
-  public List<BuildDetails> getVersions(
-      String repositoryFormat, NexusRequest nexusConfig, String repositoryId, String packageName) throws IOException {
+  public List<BuildDetails> getVersions(String repositoryFormat, NexusRequest nexusConfig, String repositoryId,
+      String packageName, Set<String> collectedBuilds) throws IOException {
     switch (repositoryFormat) {
       case "nuget":
-        return getVersionsForNuGet(nexusConfig, repositoryId, packageName);
+        return getVersionsForNuGet(nexusConfig, repositoryId, packageName, collectedBuilds);
       case "npm":
         return getVersionsForNPM(nexusConfig, repositoryId, packageName);
       default:
@@ -358,8 +360,8 @@ public class NexusTwoServiceImpl {
   }
 
   @NotNull
-  private List<BuildDetails> getVersionsForNuGet(NexusRequest nexusConfig, String repositoryId, String packageName)
-      throws IOException {
+  private List<BuildDetails> getVersionsForNuGet(NexusRequest nexusConfig, String repositoryId, String packageName,
+      Set<String> collectedBuilds) throws IOException {
     log.info("Retrieving versions for NuGet repositoryId {} for packageName {}", repositoryId, packageName);
     Call<ContentListResourceResponse> request;
     NexusRestClient nexusRestClient = getRestClient(nexusConfig);
@@ -378,11 +380,14 @@ public class NexusTwoServiceImpl {
       response.body().getData().forEach(content -> {
         versions.add(content.getText());
         try {
-          List<ArtifactFileMetadata> artifactFileMetadata =
-              getArtifactDownloadMetadataForVersionForNuGet(nexusConfig, repositoryId, packageName, content.getText());
-          versionToArtifactDownloadUrls.put(content.getText(), artifactFileMetadata);
-          if (isNotEmpty(artifactFileMetadata)) {
-            versionToArtifactUrls.put(content.getText(), artifactFileMetadata.get(0).getUrl());
+          // We skip the URL fetching for versions that are already collected
+          if (EmptyPredicate.isEmpty(collectedBuilds) || !collectedBuilds.contains(content.getText())) {
+            List<ArtifactFileMetadata> artifactFileMetadata = getArtifactDownloadMetadataForVersionForNuGet(
+                nexusConfig, repositoryId, packageName, content.getText());
+            versionToArtifactDownloadUrls.put(content.getText(), artifactFileMetadata);
+            if (isNotEmpty(artifactFileMetadata)) {
+              versionToArtifactUrls.put(content.getText(), artifactFileMetadata.get(0).getUrl());
+            }
           }
         } catch (IOException e) {
           log.info("Failed in getting artifact download urls");

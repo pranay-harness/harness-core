@@ -103,7 +103,7 @@ public class CDPaidLicenseToNGMigration implements Migration {
     AccountLicenseDTO accountLicenseDTO = getResponse(adminLicenseHttpClient.getAccountLicense(account.getUuid()));
     LicenseInfo licenseInfo = account.getLicenseInfo();
 
-    if (migrationType.contains(licenseInfo.getAccountType())) {
+    if (licenseInfo != null && migrationType.contains(licenseInfo.getAccountType())) {
       log.info("Account {} requires a migrate", account.getUuid());
       List<ModuleLicenseDTO> CDNGLicenses = accountLicenseDTO.getAllModuleLicenses().get(ModuleType.CD);
       // Only migrate PAID and ESSENTIALS

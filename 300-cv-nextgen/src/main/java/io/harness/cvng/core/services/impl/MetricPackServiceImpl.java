@@ -60,6 +60,9 @@ public class MetricPackServiceImpl implements MetricPackService {
       Lists.newArrayList("/datadog/metric-packs/default-performance-pack.yaml",
           "/datadog/metric-packs/default-error-pack.yaml", "/datadog/metric-packs/default-infra-pack.yaml");
 
+  static final List<String> CUSTOM_HEALTH_METRICPACK_FILES =
+      Lists.newArrayList("/customhealth/metric-packs/default-custom-pack.yaml");
+
   private static final URL APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/appdynamics/dsl/performance-pack.datacollection");
   public static final String APPDYNAMICS_PERFORMANCE_PACK_DSL;
@@ -91,6 +94,11 @@ public class MetricPackServiceImpl implements MetricPackService {
   private static final URL NEWRELIC_CUSTOM_PACK_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/newrelic/dsl/custom-pack.datacollection");
   public static final String NEWRELIC_CUSTOM_PACK_DSL;
+
+  public static final URL CUSTOM_HEALTH_DSL_PATH =
+      MetricPackServiceImpl.class.getResource("/customhealth/dsl/metric-collection.datacollection");
+  public static final String CUSTOM_HEALTH_DSL;
+
   static {
     String appDPeformancePackDsl = null;
     String appDqualityPackDsl = null;
@@ -101,6 +109,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     String newrelicCustomDsl = null;
     String prometheusDsl = null;
     String datadogDsl = null;
+    String customHealthDsl = null;
     try {
       appDPeformancePackDsl = Resources.toString(APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH, Charsets.UTF_8);
       appDqualityPackDsl = Resources.toString(APPDYNAMICS_QUALITY_PACK_DSL_PATH, Charsets.UTF_8);
@@ -111,6 +120,7 @@ public class MetricPackServiceImpl implements MetricPackService {
       newrelicCustomDsl = Resources.toString(NEWRELIC_CUSTOM_PACK_DSL_PATH, Charsets.UTF_8);
       prometheusDsl = Resources.toString(PROMETHEUS_DSL_PATH, Charsets.UTF_8);
       datadogDsl = Resources.toString(DATADOG_DSL_PATH, Charsets.UTF_8);
+      customHealthDsl = Resources.toString(CUSTOM_HEALTH_DSL_PATH, Charsets.UTF_8);
     } catch (Exception e) {
       // TODO: this should throw an exception but we risk delegate not starting up. We can remove this log term and
       // throw and exception once things stabilize
@@ -125,6 +135,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     NEWRELIC_CUSTOM_PACK_DSL = newrelicCustomDsl;
     PROMETHEUS_DSL = prometheusDsl;
     DATADOG_DSL = datadogDsl;
+    CUSTOM_HEALTH_DSL = customHealthDsl;
   }
 
   @Inject private HPersistence hPersistence;
@@ -226,6 +237,9 @@ public class MetricPackServiceImpl implements MetricPackService {
         break;
       case NEW_RELIC:
         yamlFileNames.addAll(NEWRELIC_METRICPACK_FILES);
+        break;
+      case CUSTOM_HEALTH:
+        yamlFileNames.addAll(CUSTOM_HEALTH_METRICPACK_FILES);
         break;
       default:
         unhandled(dataSourceType);
@@ -405,6 +419,9 @@ public class MetricPackServiceImpl implements MetricPackService {
         break;
       case NEW_RELIC:
         metricPack.setDataCollectionDsl(getNewRelicMetricPackDsl(metricPack));
+        break;
+      case CUSTOM_HEALTH:
+        metricPack.setDataCollectionDsl(CUSTOM_HEALTH_DSL);
         break;
       default:
         throw new IllegalArgumentException("Invalid type " + dataSourceType);

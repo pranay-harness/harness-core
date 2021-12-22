@@ -13,6 +13,7 @@ import io.harness.expression.ExpressionEvaluator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -31,6 +32,7 @@ public class CIVmExecuteStepTaskParams implements CIExecuteStepTaskParams, Execu
   @Expression(ALLOW_SECRETS) private List<String> secrets;
   @NotNull private String logKey;
   @NotNull private String workingDir;
+  private Map<String, String> volToMountPath;
 
   @Builder.Default private static final Type type = Type.VM;
 

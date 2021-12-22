@@ -7,7 +7,6 @@ java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    
 )
 
 run_analysis()
