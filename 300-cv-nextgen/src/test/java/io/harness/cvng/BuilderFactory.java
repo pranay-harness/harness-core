@@ -730,6 +730,22 @@ public class BuilderFactory {
                   .build());
   }
 
+  public ServiceLevelIndicatorDTOBuilder getRatioServiceLevelIndicatorDTOBuilder() {
+    return ServiceLevelIndicatorDTO.builder()
+        .type(ServiceLevelIndicatorType.LATENCY)
+        .healthSourceRef("healthSourceIdentifier")
+        .sliMissingDataType(SLIMissingDataType.GOOD)
+        .spec(ServiceLevelIndicatorSpec.builder()
+                  .type(SLIMetricType.RATIO)
+                  .spec(RatioSLIMetricSpec.builder()
+                            .metric1("Errors per Minute")
+                            .metric2("Calls per Minute")
+                            .thresholdValue(100.0)
+                            .thresholdType(ThresholdType.GREATER_THAN_EQUAL_TO)
+                            .build())
+                  .build());
+  }
+
   public ThresholdSLIMetricSpecBuilder getThresholdSLIMetricSpecBuilder() {
     return ThresholdSLIMetricSpec.builder()
         .metric1("metric1")
