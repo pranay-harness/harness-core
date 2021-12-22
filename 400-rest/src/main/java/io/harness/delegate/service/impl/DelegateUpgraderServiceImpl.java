@@ -20,12 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateUpgraderServiceImpl implements DelegateUpgraderService {
-  private final HPersistence persistence;
+  @Inject private HPersistence persistence;
 
-  @Inject
-  public DelegateUpgraderServiceImpl(HPersistence persistence) {
-    this.persistence = persistence;
-  }
+  // @Inject
+  //  public DelegateUpgraderServiceImpl(HPersistence persistence) {
+  //    this.persistence = persistence;
+  //  }
 
   @Override
   public UpgradeCheckResult getDelegateImageTag(String accountId, String currentDelegateImageTag) {

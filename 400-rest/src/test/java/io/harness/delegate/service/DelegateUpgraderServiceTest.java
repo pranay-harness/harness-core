@@ -11,7 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateRing;
 import io.harness.delegate.beans.UpgradeCheckResult;
-import io.harness.delegate.service.intfc.DelegateUpgraderService;
+import io.harness.delegate.service.impl.DelegateUpgraderServiceImpl;
 import io.harness.delegate.utils.DelegateRingConstants;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateUpgraderServiceTest extends CategoryTest {
@@ -32,7 +33,7 @@ public class DelegateUpgraderServiceTest extends CategoryTest {
   private static final String DELEGATE_IMAGE_TAG_1 = "harness/delegate:1";
   private static final String UPGRADER_IMAGE_TAG_1 = "harness/upgrader:1";
 
-  @Inject private DelegateUpgraderService upgraderService;
+  @InjectMocks @Inject private DelegateUpgraderServiceImpl upgraderService;
   @Inject private HPersistence persistence;
 
   @Before
