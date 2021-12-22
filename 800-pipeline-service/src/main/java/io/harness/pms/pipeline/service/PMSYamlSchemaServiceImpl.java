@@ -328,4 +328,12 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     }
     return yamlSchemaWithDetailsList;
   }
+
+  @Override
+  public JsonNode getStepYamlSchema(String accountId, EntityType entityType) {
+    if (entityType.getEntityProduct() == ModuleType.PMS) {
+      return yamlSchemaProvider.getYamlSchema(entityType, null, null, null);
+    }
+    return schemaFetcher.fetchStepYamlSchema(accountId, entityType);
+  }
 }
