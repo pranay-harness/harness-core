@@ -5,7 +5,6 @@ import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.GROUP;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.utils.UserGroupMapper.toDTO;
 import static io.harness.ng.core.utils.UserGroupMapper.toEntity;
@@ -29,7 +28,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
 import io.harness.enforcement.constants.FeatureRestrictionName;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -158,11 +156,14 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public boolean isExternallyManaged(String accountIdentifier, String userGroupIdentifier) {
-    Optional<UserGroup> userGroupOptional = get(accountIdentifier, null, null, userGroupIdentifier);
+  public boolean isExternallyManaged(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String userGroupIdentifier) {
+    Optional<UserGroup> userGroupOptional =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
     if (!userGroupOptional.isPresent()) {
-      throw new InvalidRequestException(
-          "The user group does not exist: " + userGroupIdentifier, ErrorCode.USER_GROUP_ERROR, GROUP);
+      throw new InvalidRequestException(String.format(
+          "During checking isExternallyManaged Usergroup with Identifier: {} does not exist at Scope: {}/{}/{}",
+          userGroupIdentifier, accountIdentifier, orgIdentifier, projectIdentifier));
     }
     return userGroupOptional.get().isExternallyManaged();
   }
