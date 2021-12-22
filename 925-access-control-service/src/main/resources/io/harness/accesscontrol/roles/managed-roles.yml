@@ -346,6 +346,12 @@ roles:
         - core_user_view
         - core_role_view
         - core_resourcegroup_view
+        - core_delegate_view
+        - core_delegateconfiguration_view
+        - core_serviceaccount_view
+        - core_template_view
+        - chi_monitoredservice_view
+        - chi_slo_view
       allowedScopeLevels:
         - project
       managed: true
@@ -353,6 +359,23 @@ roles:
       name: Feature Flag Manage Role
       description: Can edit and view existing feature flags
       permissions:
+        - core_account_view
+        - core_project_view
+        - core_secret_view
+        - core_connector_view
+        - core_delegate_view
+        - core_delegateconfiguration_view
+        - core_pipeline_view
+        - core_service_view
+        - core_environment_view
+        - core_usergroup_view
+        - core_user_view
+        - core_role_view
+        - core_resourcegroup_view
+        - core_serviceaccount_view
+        - core_template_view
+        - chi_monitoredservice_view
+        - chi_slo_view
         - ff_environment_edit
         - ff_environment_view
         - ff_featureflag_edit
