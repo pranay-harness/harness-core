@@ -41,6 +41,7 @@ metadata:
   name: harness-delegate
   namespace: harness-delegate-ng
 spec:
+  revisionHistoryLimit: 3
   replicas: 8
   selector:
     matchLabels:
@@ -154,7 +155,10 @@ metadata:
 rules:
   - apiGroups: ["batch", "apps", "extensions"]
     resources: ["cronjobs"]
-    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["extensions", "apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
 
 ---
 
@@ -190,7 +194,7 @@ metadata:
   name: harness-delegate-upgrader-job
   namespace: harness-delegate-ng
 spec:
-  schedule: "*/3 * * * *"
+  schedule: "0 */1 * * *"
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 20
   jobTemplate:

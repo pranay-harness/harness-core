@@ -43,6 +43,7 @@ metadata:
   name: ${delegateName}
   namespace: ${delegateNamespace}
 spec:
+  revisionHistoryLimit: 3
   replicas: ${delegateReplicas}
   selector:
     matchLabels:

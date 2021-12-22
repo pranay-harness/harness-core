@@ -41,6 +41,7 @@ metadata:
   name: ${delegateName}-${kubernetesAccountLabel}
   namespace: ${delegateNamespace}
 spec:
+  revisionHistoryLimit: 3
   replicas: 1
   selector:
     matchLabels:
