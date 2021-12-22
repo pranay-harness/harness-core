@@ -630,42 +630,56 @@ permissions:
     status: ACTIVE
     includeInAllRoles: true
     allowedScopeLevels:
+    - account
+    - organization
     - project
   - identifier: chi_monitoredservice_edit
     name: Create or Edit a Monitored Service
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+    - account
+    - organization
     - project
   - identifier: chi_monitoredservice_delete
     name: Delete a Monitored Service
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+    - account
+    - organization
     - project
   - identifier: chi_monitoredservice_toggle
     name: Toggle a Monitored Service On or Off
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+    - account
+    - organization
     - project
   - identifier: chi_slo_view
     name: View SLO
     status: ACTIVE
     includeInAllRoles: true
     allowedScopeLevels:
+    - account
+    - organization
     - project
   - identifier: chi_slo_edit
     name: Create or Edit a SLO
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+    - account
+    - organization
     - project
   - identifier: chi_slo_delete
     name: Delete a SLO
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
+    - account
+    - organization
     - project
   - identifier: gitops_agent_view
     name: View a Gitops Agent

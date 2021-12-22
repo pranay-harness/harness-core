@@ -176,6 +176,13 @@ roles:
         - core_pipeline_delete
         - core_pipeline_execute
         - core_pipeline_view
+        - chi_monitoredservice_view
+        - chi_monitoredservice_edit
+        - chi_monitoredservice_delete
+        - chi_monitoredservice_toggle
+        - chi_slo_view
+        - chi_slo_edit
+        - chi_slo_delete
       allowedScopeLevels:
         - organization
       managed: true
@@ -201,6 +208,8 @@ roles:
         - core_governancePolicySets_view
         - core_project_view
         - core_pipeline_view
+        - chi_monitoredservice_view
+        - chi_slo_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -277,6 +286,13 @@ roles:
         - core_pipeline_delete
         - core_pipeline_execute
         - core_pipeline_view
+        - chi_monitoredservice_view
+        - chi_monitoredservice_edit
+        - chi_monitoredservice_delete
+        - chi_monitoredservice_toggle
+        - chi_slo_view
+        - chi_slo_edit
+        - chi_slo_delete
       allowedScopeLevels:
         - account
       managed: true
@@ -305,6 +321,8 @@ roles:
         - core_project_view
         - core_organization_view
         - core_pipeline_view
+        - chi_monitoredservice_view
+        - chi_slo_view
       allowedScopeLevels:
         - account
       managed: true
