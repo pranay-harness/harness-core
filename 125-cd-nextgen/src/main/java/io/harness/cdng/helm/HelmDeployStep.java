@@ -8,6 +8,7 @@ import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.helm.NativeHelmDeployOutcome.NativeHelmDeployOutcomeBuilder;
 import io.harness.cdng.helm.beans.NativeHelmExecutionPassThroughData;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
@@ -15,6 +16,7 @@ import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
+import io.harness.delegate.beans.instancesync.mapper.K8sContainerToHelmServiceInstanceInfoMapper;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
 import io.harness.delegate.task.helm.HelmCmdExecResponseNG;
@@ -37,6 +39,7 @@ import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 
@@ -57,6 +60,7 @@ public class HelmDeployStep extends TaskChainExecutableWithRollbackAndRbac imple
   @Inject NativeHelmStepHelper nativeHelmStepHelper;
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject CDFeatureFlagHelper cdFeatureFlagHelper;
+  @Inject private InstanceInfoService instanceInfoService;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -142,9 +146,14 @@ public class HelmDeployStep extends TaskChainExecutableWithRollbackAndRbac imple
     executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.HELM_DEPLOY_OUTCOME,
         nativeHelmDeployOutcome, StepOutcomeGroup.STEP.name());
 
+    StepOutcome stepOutcome = instanceInfoService.saveServerInstancesIntoSweepingOutput(ambiance,
+        K8sContainerToHelmServiceInstanceInfoMapper.toServerInstanceInfoList(
+            helmInstallCmdResponseNG.getContainerInfoList(), helmInstallCmdResponseNG.getHelmChartInfo(), helmInstallCmdResponseNG.getHelmVersion()));
+
     return StepResponse.builder()
         .unitProgressList(helmCmdExecResponseNG.getCommandUnitsProgress().getUnitProgresses())
         .status(Status.SUCCEEDED)
+        .stepOutcome(stepOutcome)
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.OUTPUT)
                          .outcome(nativeHelmDeployOutcome)

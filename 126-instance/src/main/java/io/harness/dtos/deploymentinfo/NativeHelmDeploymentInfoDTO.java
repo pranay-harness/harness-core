@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.service.beans.ServiceSpecType;
+import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.util.InstanceSyncKey;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -18,14 +20,15 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(CDP)
-public class K8sDeploymentInfoDTO extends DeploymentInfoDTO {
+public class NativeHelmDeploymentInfoDTO extends DeploymentInfoDTO {
   @NotNull private LinkedHashSet<String> namespaces;
   @NotNull private String releaseName;
-  private String blueGreenStageColor;
+  private HelmChartInfo helmChartInfo;
+  @NotNull private HelmVersion helmVersion;
 
   @Override
   public String getType() {
-    return ServiceSpecType.KUBERNETES;
+    return ServiceSpecType.NATIVE_HELM;
   }
 
   @Override
