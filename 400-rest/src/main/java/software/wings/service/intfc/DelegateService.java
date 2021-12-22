@@ -29,6 +29,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSizeDetails;
+import io.harness.delegate.beans.DelegateUnregisterRequest;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.validation.Create;
@@ -120,6 +121,8 @@ public interface DelegateService extends OwnedByAccount {
   DelegateRegisterResponse register(@Valid Delegate delegate);
 
   DelegateRegisterResponse register(@Valid DelegateParams delegateParams);
+
+  void unregister(String accountId, DelegateUnregisterRequest request);
 
   void registerHeartbeat(
       String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat, ConnectionMode mode);

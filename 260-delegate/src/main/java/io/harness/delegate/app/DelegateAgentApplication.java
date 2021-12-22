@@ -113,6 +113,13 @@ public class DelegateAgentApplication extends Application<DelegateAgentConfig> {
 
   private void addShutdownHook(final Injector injector) {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      try {
+        injector.getInstance(DelegateAgentService.class).shutdown();
+      } catch (final InterruptedException e) {
+        log.error("Delegate shutdown interrupted", e);
+        Thread.currentThread().interrupt();
+      }
+
       injector.getInstance(ExecutorService.class).shutdown();
       injector.getInstance(EventPublisher.class).shutdown();
       log.info("Executor services have been shut down.");

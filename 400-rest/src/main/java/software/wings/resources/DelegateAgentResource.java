@@ -35,6 +35,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateUnregisterRequest;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
@@ -240,6 +241,19 @@ public class DelegateAgentResource {
       final DelegateRegisterResponse registerResponse = delegateService.register(delegateParams);
       log.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
       return new RestResponse<>(registerResponse);
+    }
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("unregister")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Void> unregister(
+      @QueryParam("accountId") @NotEmpty final String accountId, final DelegateUnregisterRequest request) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      delegateService.unregister(accountId, request);
+      return new RestResponse<>();
     }
   }
 

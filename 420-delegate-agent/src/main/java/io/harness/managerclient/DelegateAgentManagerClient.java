@@ -20,6 +20,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.DelegateUnregisterRequest;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.instancesync.InstanceSyncPerpetualTaskResponse;
@@ -49,6 +50,10 @@ public interface DelegateAgentManagerClient {
   @POST("agent/delegates/register")
   Call<RestResponse<DelegateRegisterResponse>> registerDelegate(
       @Query("accountId") String accountId, @Body DelegateParams delegateParams);
+
+  @POST("agent/delegates/unregister")
+  Call<RestResponse<Void>> unregisterDelegate(
+      @Query("accountId") String accountId, @Body DelegateUnregisterRequest request);
 
   @POST("agent/delegates/connectionHeartbeat/{delegateId}")
   Call<RestResponse> doConnectionHeartbeat(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
