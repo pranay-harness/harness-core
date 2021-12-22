@@ -78,6 +78,11 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
   }
 
   @Override
+  public JsonNode getStepYamlSchema(EntityType entityType) {
+    return yamlSchemaProvider.getYamlSchema(entityType, null, null, null);
+  }
+
+  @Override
   public PartialSchemaDTO getIntegrationStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
     return getIntegrationStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, null);
   }
