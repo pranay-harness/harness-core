@@ -6,7 +6,6 @@ function usage {
   echo "./$(basename $0) -l <file> [-s <file>] [-f <file>]"
   echo "Options"
   echo "  -h        prints usage"
-  echo "  -d        dry run"
   echo "  -l <file> path to file containing license text"
   echo "  -s <file> path to file containing source files to process"
   echo "  -f <file> path to a single file to process"
@@ -28,13 +27,13 @@ function error_cannot_read_file {
   exit 4
 }
 
-while getopts ":df:hl:s:" arg; do
+while getopts ":df:hl:s:v" arg; do
   case ${arg} in
-    d) DRY_RUN="true" ;;
     f) SOURCE_FILES=${OPTARG} ;;
     h) usage ; exit 0 ;;
     l) PATH_TO_LICENSE=${OPTARG} ;;
     s) PATH_TO_INPUT=${OPTARG} ;;
+    v) VERBOSE="ON" ;;
     :)
        echo "$0: Must supply an argument to -$OPTARG." >&2
        exit 1 ;;
@@ -64,23 +63,25 @@ fi
 ##  Common Functions      ##
 ############################
 
-function print_possible_alternates {
-  POTENTIAL_ALTERNATE=$(find . -name "$(basename "$FILE")")
-  if [ ! -z "$POTENTIAL_ALTERNATE" ]; then
-    echo "Has the file been moved to         $POTENTIAL_ALTERNATE"
+function debug {
+  if [ "$VERBOSE" = "ON" ]; then
+    echo $1
   fi
 }
 
 function create_output_file {
+  FILE_COUNT=$(( FILE_COUNT + 1 ))
+  LINE_COUNT=$(( LINE_COUNT + $(wc -l "$FILE" | awk '{print $1}') ))
   cp -p "$FILE" "$NEW_FILE"
   : > "$NEW_FILE"
 }
 
 function add_header_if_required {
+  HEADER_WITHOUT_COMMENT_SYMBOL=$(sed 's/ 20[0-9][0-9] / <YEAR> /' <<< "$HEADER_WITHOUT_COMMENT_SYMBOL")
   if [ "$HEADER_WITHOUT_COMMENT_SYMBOL" = "$LICENSE_TEXT" ]; then
-    return 0
+    debug "File has correct license header: $FILE"
   elif [ $(grep -m1 -ciE "(copyright|license)" <<<"$EXISTING_HEADER") -eq 1 ]; then
-    echo "Skipping file as it already has a different license header $FILE"
+    debug "Skipping file with alternate license header: $FILE"
   else
     $1
   fi
@@ -124,13 +125,12 @@ function read_header_double_slash {
 }
 
 function write_file_double_slash {
-  if [ "$DRY_RUN" != "true" ]; then
-    NEW_FILE="$FILE.new"
-    SYMBOL="//"
-    create_output_file
-    write_file_header
-    write_remaining_file_content
-  fi
+  debug "Adding license header: $FILE"
+  NEW_FILE="$FILE.new"
+  SYMBOL="//"
+  create_output_file
+  write_file_header
+  write_remaining_file_content
 }
 
 ############################
@@ -152,15 +152,14 @@ function read_header_slash_star {
 }
 
 function write_file_slash_star {
-  if [ "$DRY_RUN" != "true" ]; then
-    NEW_FILE="$FILE.new"
-    SYMBOL=" *"
-    create_output_file
-    echo "/*" > "$NEW_FILE"
-    write_file_header
-    echo " */" >> "$NEW_FILE"
-    write_remaining_file_content
-  fi
+  debug "Adding license header: $FILE"
+  NEW_FILE="$FILE.new"
+  SYMBOL=" *"
+  create_output_file
+  echo "/*" > "$NEW_FILE"
+  write_file_header
+  echo " */" >> "$NEW_FILE"
+  write_remaining_file_content
 }
 
 ############################
@@ -185,19 +184,18 @@ function read_header_hash {
 }
 
 function write_file_hash {
-  if [ "$DRY_RUN" != "true" ]; then
-    NEW_FILE="$FILE.new"
-    SYMBOL="#"
-    create_output_file
-    if [ "$IS_MISSING_SHE_BANG" != "TRUE" ]; then
-      head -1 <<<"$FILE_CONTENT" > "$NEW_FILE"
-    fi
-    write_file_header
-    if [ "$IS_MISSING_SHE_BANG" != "TRUE" ]; then
-      FILE_CONTENT=$(echo "$FILE_CONTENT" | awk "NR > 1")
-    fi
-    write_remaining_file_content
+  debug "Adding license header: $FILE"
+  NEW_FILE="$FILE.new"
+  SYMBOL="#"
+  create_output_file
+  if [ "$IS_MISSING_SHE_BANG" != "TRUE" ]; then
+    head -1 <<<"$FILE_CONTENT" > "$NEW_FILE"
   fi
+  write_file_header
+  if [ "$IS_MISSING_SHE_BANG" != "TRUE" ]; then
+    FILE_CONTENT=$(echo "$FILE_CONTENT" | awk "NR > 1")
+  fi
+  write_remaining_file_content
 }
 
 ############################
@@ -219,12 +217,42 @@ function read_header_double_hyphen {
 }
 
 function write_file_double_hyphen {
-  if [ "$DRY_RUN" != "true" ]; then
-    NEW_FILE="$FILE.new"
-    SYMBOL="--"
-    create_output_file
-    write_file_header
-    write_remaining_file_content
+  debug "Adding license header: $FILE"
+  NEW_FILE="$FILE.new"
+  SYMBOL="--"
+  create_output_file
+  write_file_header
+  write_remaining_file_content
+}
+
+############################
+##  Execution Functions   ##
+############################
+
+function print_possible_alternates {
+  POTENTIAL_ALTERNATE=$(find . -name "$(basename "$FILE")")
+  if [ ! -z "$POTENTIAL_ALTERNATE" ]; then
+    echo "Has the file been moved to         $POTENTIAL_ALTERNATE"
+  fi
+}
+
+function handle_directory {
+  FILE_EXTENSIONS=$(awk 'NR>1 {print $1}' "$SUPPORTED_EXTENSIONS_FILE" | paste -s -d '|' -)
+  FILES_IN_DIR=$(find "$FILE" -type f | grep -E "\.($FILE_EXTENSIONS)$")
+  while read -r FILE; do
+    handle_file_based_on_extension
+  done <<< "$FILES_IN_DIR"
+}
+
+function handle_file_based_on_extension {
+  FILE_TYPE=$(basename "$FILE" | awk '{gsub(/.*\./, ""); print}' <<<"$FILE")
+  FILE_CONTENT=$(cat "$FILE")
+  FILE_TYPE_HANDLER=$(grep "$FILE_TYPE " "$SUPPORTED_EXTENSIONS_FILE" | awk '{print $3}')
+
+  if [ -z "$FILE_TYPE_HANDLER" ]; then
+    debug "Skipping file with extension '$FILE_TYPE' as it is not a supported filetype, file is $FILE"
+  else
+    handle_${FILE_TYPE_HANDLER}
   fi
 }
 
@@ -232,6 +260,9 @@ function write_file_double_hyphen {
 ##  Execution             ##
 ############################
 
+FILE_COUNT=0
+LINE_COUNT=0
+SUPPORTED_EXTENSIONS_FILE=".license-extensions.txt"
 LICENSE_TEXT=$(cat $PATH_TO_LICENSE)
 if [ ! -z "$PATH_TO_INPUT" ]; then
   SOURCE_FILES=$(cat $PATH_TO_INPUT)
@@ -240,57 +271,21 @@ PREVIOUSLY_OVERWRITTEN_HEADER=""
 
 while read -r FILE; do
   if [ ! -e "$FILE" ]; then
-    echo "Skipping file as it does not exist $FILE"
+    echo "ERROR: Skipping file as it does not exist $FILE"
     print_possible_alternates
     echo
     continue
   elif [ -d "$FILE" ]; then
-    echo "Skipping directory, only files are supported $FILE"
+    handle_directory
     continue
   elif [ ! -w "$FILE" ]; then
-    echo "Skipping file as it is not writable $FILE"
+    echo "ERROR: Skipping file as it is not writable $FILE"
     continue
   fi
 
-  FILE_TYPE=$(basename "$FILE" | awk '{gsub(/^[^.]*\./, ""); print}' <<<"$FILE")
-  FILE_CONTENT=$(cat "$FILE")
-  if [ "$FILE_TYPE" = "cjs" ]; then # Common JavaScript
-    handle_slash_star
-  elif [ "$FILE_TYPE" = "css" ]; then
-    handle_slash_star
-  elif [ "$FILE_TYPE" = "go" ]; then
-    handle_double_slash
-  elif [ "$FILE_TYPE" = "groovy" ]; then
-    handle_slash_star
-  elif [ "$FILE_TYPE" = "java" ]; then
-    handle_slash_star
-  elif [ "$FILE_TYPE" = "js" ]; then
-    handle_slash_star
-  elif [ "$FILE_TYPE" = "jsx" ]; then
-    handle_slash_star
-  elif [ "$FILE_TYPE" = "mjs" ]; then # JavaScript
-    handle_slash_star
-  elif [ "$FILE_TYPE" = "pl" ]; then # Perl
-    handle_hash
-  elif [ "$FILE_TYPE" = "proto" ]; then
-    handle_double_slash
-  elif [ "$FILE_TYPE" = "py" ]; then # Python
-    handle_hash
-  elif [ "$FILE_TYPE" = "rs" ]; then # Rust
-    handle_double_slash
-  elif [ "$FILE_TYPE" = "scss" ]; then
-    handle_slash_star
-  elif [ "$FILE_TYPE" = "sh" ]; then
-    handle_hash
-  elif [ "$FILE_TYPE" = "sh.ftl" ]; then
-    handle_hash
-  elif [ "$FILE_TYPE" = "sql" ]; then
-    handle_double_hyphen
-  elif [ "$FILE_TYPE" = "ts" ]; then
-    handle_slash_star
-  elif [ "$FILE_TYPE" = "tsx" ]; then
-    handle_slash_star
-  else
-    echo "Skipping file with extension '$FILE_TYPE' as it is not a supported filetype, file is $FILE"
-  fi
+  handle_file_based_on_extension
 done <<< "$SOURCE_FILES"
+
+if [ "$FILE_COUNT" -gt 0 ]; then
+  echo "License added to $FILE_COUNT files with a total line count of $LINE_COUNT"
+fi
