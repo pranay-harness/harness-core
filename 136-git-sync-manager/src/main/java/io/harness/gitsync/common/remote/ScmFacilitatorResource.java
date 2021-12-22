@@ -199,7 +199,7 @@ public class ScmFacilitatorResource {
     return ResponseDTO.newResponse(GitUtils.isSaasGit(URLDecoderUtility.getDecodedString(repoURL)));
   }
 
-  @POST
+  @GET
   @Path("createPR")
   @ApiOperation(value = "creates a pull request", nickname = "createPR")
   @Operation(operationId = "createPR", summary = "creates a Pull Request",
