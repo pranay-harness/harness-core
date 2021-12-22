@@ -44,6 +44,7 @@ metadata:
   name: harness-delegate-accoun
   namespace: harness-delegate
 spec:
+  revisionHistoryLimit: 3
   replicas: 1
   selector:
     matchLabels:
@@ -146,7 +147,10 @@ metadata:
 rules:
   - apiGroups: ["batch", "apps", "extensions"]
     resources: ["cronjobs"]
-    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["extensions", "apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
 
 ---
 
@@ -182,7 +186,7 @@ metadata:
   name: harness-delegate-upgrader-job
   namespace: harness-delegate
 spec:
-  schedule: "*/3 * * * *"
+  schedule: "0 */1 * * *"
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 20
   jobTemplate:

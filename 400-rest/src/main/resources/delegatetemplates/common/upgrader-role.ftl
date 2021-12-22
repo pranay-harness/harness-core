@@ -7,7 +7,10 @@ metadata:
 rules:
   - apiGroups: ["batch", "apps", "extensions"]
     resources: ["cronjobs"]
-    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["extensions", "apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
 
 ---
 
