@@ -10,6 +10,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.servicelevelobjective.beans.DayOfWeek;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
@@ -30,7 +31,10 @@ import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTarg
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
+import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
+import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrchestratorKeys;
 import io.harness.exception.InvalidRequestException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -49,8 +53,9 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   @Inject ServiceLevelObjectiveService serviceLevelObjectiveService;
 
   @Inject MonitoredServiceService monitoredServiceService;
-
+  @Inject VerificationTaskService verificationTaskService;
   @Inject ServiceLevelIndicatorService serviceLevelIndicatorService;
+  @Inject HPersistence hPersistence;
   String accountId;
   String orgIdentifier;
   String projectIdentifier;
@@ -277,6 +282,48 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
                                              .getIdentifier())
                                      .getUuid();
     assertThat(sliIndicator).isEqualTo(updatedSliIndicator);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testUpdate_SLIUpdateWithSLOTarget() {
+    ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    createMonitoredService();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    assertThat(serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
+    ServiceLevelIndicatorDTO responseSLIDTO =
+        serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators().get(0);
+    String sliIndicator =
+        serviceLevelIndicatorService
+            .getServiceLevelIndicator(builderFactory.getProjectParams(), responseSLIDTO.getIdentifier())
+            .getUuid();
+    ServiceLevelIndicatorDTO serviceLevelIndicatorDTO1 = sloDTO.getServiceLevelIndicators().get(0);
+    RatioSLIMetricSpec ratioSLIMetricSpec = (RatioSLIMetricSpec) serviceLevelIndicatorDTO1.getSpec().getSpec();
+    ratioSLIMetricSpec.setThresholdType(ThresholdType.LESS_THAN);
+    serviceLevelIndicatorDTO1.setIdentifier(responseSLIDTO.getIdentifier());
+    serviceLevelIndicatorDTO1.setName(responseSLIDTO.getName());
+    serviceLevelIndicatorDTO1.getSpec().setSpec(ratioSLIMetricSpec);
+    sloDTO.setTarget(calendarSloTarget);
+    ServiceLevelObjectiveResponse updateServiceLevelObjectiveResponse =
+        serviceLevelObjectiveService.update(projectParams, sloDTO.getIdentifier(), sloDTO);
+    String updatedSliIndicator = serviceLevelIndicatorService
+                                     .getServiceLevelIndicator(builderFactory.getProjectParams(),
+                                         updateServiceLevelObjectiveResponse.getServiceLevelObjectiveDTO()
+                                             .getServiceLevelIndicators()
+                                             .get(0)
+                                             .getIdentifier())
+                                     .getUuid();
+
+    assertThat(sliIndicator).isEqualTo(updatedSliIndicator);
+    String verificationTaskId =
+        verificationTaskService.createSLIVerificationTask(builderFactory.getContext().getAccountId(), sliIndicator);
+    AnalysisOrchestrator analysisOrchestrator =
+        hPersistence.createQuery(AnalysisOrchestrator.class)
+            .filter(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId)
+            .get();
+    assertThat(analysisOrchestrator.getAnalysisStateMachineQueue().size()).isEqualTo(13);
   }
 
   @Test
