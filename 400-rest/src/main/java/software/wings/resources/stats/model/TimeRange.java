@@ -90,7 +90,9 @@ public class TimeRange {
       timeRangeYamlBuilder.duration(String.valueOf(duration));
       timeRangeYamlBuilder.durationBased(durationBased);
     }
+
     Yaml yaml = timeRangeYamlBuilder.to(String.valueOf(this.getTo())).build();
+
     if (endTime != null && freezeOccurrence != null) {
       yaml.setEndTime(String.valueOf(this.getEndTime()));
       yaml.setFreezeOccurrence(this.getFreezeOccurrence().name());
@@ -98,6 +100,9 @@ public class TimeRange {
     if (EmptyPredicate.isNotEmpty(this.getTimeZone())) {
       yaml.setTimeZone(this.getTimeZone());
     }
+
+    //Setting the expires boolean value
+    yaml.setExpires(this.isExpires());
     return yaml;
   }
 
@@ -110,12 +115,13 @@ public class TimeRange {
     private String duration;
     private String freezeOccurrence;
     private String endTime;
+    private boolean expires;
 
     @Builder
     public Yaml(@JsonProperty("from") String from, @JsonProperty("to") String to,
         @JsonProperty("timeZone") String timeZone, @JsonProperty("durationBased") boolean durationBased,
         @JsonProperty("duration") String duration, @JsonProperty("freezeOccurrence") String freezeOccurrence,
-        @JsonProperty("endTime") String endTime) {
+        @JsonProperty("endTime") String endTime, @JsonProperty("expires") boolean expires) {
       setFrom(from);
       setTo(to);
       setTimeZone(timeZone);
@@ -123,6 +129,7 @@ public class TimeRange {
       setDuration(duration);
       setFreezeOccurrence(freezeOccurrence);
       setEndTime(endTime);
+      setExpires(expires);
     }
   }
 }
