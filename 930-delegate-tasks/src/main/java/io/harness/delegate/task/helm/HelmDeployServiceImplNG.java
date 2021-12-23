@@ -30,6 +30,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.concurrent.HTimeLimiter;
+import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.service.git.NGGitService;
 import io.harness.connector.task.git.GitDecryptionHelper;
 import io.harness.container.ContainerInfo;
@@ -44,6 +45,7 @@ import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfigType;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
+import io.harness.delegate.task.git.ScmFetchFilesHelperNG;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -75,6 +77,7 @@ import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.shell.SshSessionConfig;
 
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
@@ -122,6 +125,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   @Inject private NGGitService ngGitService;
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+  @Inject private ScmFetchFilesHelperNG scmFetchFilesHelper;
+  @Inject private SecretDecryptionService secretDecryptionService;
   private ILogStreamingTaskClient logStreamingTaskClient;
   @Inject private TimeLimiter timeLimiter;
   public static final String TIMED_OUT_IN_STEADY_STATE = "Timed out waiting for controller to reach in steady state";
@@ -646,14 +651,21 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
       printGitConfigInExecutionLogs(gitStoreDelegateConfig, commandRequest.getLogCallback());
 
-      GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
-
-      gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
-      SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
-          gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
-
-      ngGitService.downloadFiles(gitStoreDelegateConfig, manifestFilesDirectory, commandRequest.getAccountId(),
-          sshSessionConfig, gitConfigDTO);
+      if (gitStoreDelegateConfig.isOptimizedFilesFetch()) {
+        commandRequest.getLogCallback().saveExecutionLog("Using optimized file fetch");
+        secretDecryptionService.decrypt(
+            GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(gitStoreDelegateConfig.getGitConfigDTO()),
+            gitStoreDelegateConfig.getApiAuthEncryptedDataDetails());
+        scmFetchFilesHelper.downloadFilesUsingScm(
+            manifestFilesDirectory, gitStoreDelegateConfig, commandRequest.getLogCallback());
+      } else {
+        GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+        gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
+        SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
+            gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
+        ngGitService.downloadFiles(gitStoreDelegateConfig, manifestFilesDirectory, commandRequest.getAccountId(),
+            sshSessionConfig, gitConfigDTO);
+      }
 
       commandRequest.setWorkingDir(manifestFilesDirectory);
       commandRequest.getLogCallback().saveExecutionLog(color("Successfully fetched following files:", White, Bold));
