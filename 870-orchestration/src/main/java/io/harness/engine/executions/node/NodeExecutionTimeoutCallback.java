@@ -12,6 +12,7 @@ import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.interrupts.IssuedBy;
 import io.harness.pms.contracts.interrupts.TimeoutIssuer;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.serializer.ProtoUtils;
 import io.harness.timeout.TimeoutCallback;
@@ -38,12 +39,13 @@ public class NodeExecutionTimeoutCallback implements TimeoutCallback {
 
   @Override
   public void onTimeout(TimeoutInstance timeoutInstance) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution =
+        nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndMode);
     if (nodeExecution == null || !StatusUtils.finalizableStatuses().contains(nodeExecution.getStatus())) {
       return;
     }
 
-    nodeExecutionService.update(
+    nodeExecutionService.updateV2(
         nodeExecutionId, ops -> ops.set(NodeExecutionKeys.timeoutDetails, new TimeoutDetails(timeoutInstance)));
 
     if (ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {

@@ -24,7 +24,7 @@ public class HandleProgressRequestProcessor implements SdkResponseProcessor {
   public void handleEvent(SdkResponseEventProto event) {
     HandleProgressRequest progressRequest = event.getProgressRequest();
     Map<String, Object> progressDoc = RecastOrchestrationUtils.fromJson(progressRequest.getProgressJson());
-    nodeExecutionService.update(SdkResponseEventUtils.getNodeExecutionId(event),
+    nodeExecutionService.updateV2(SdkResponseEventUtils.getNodeExecutionId(event),
         ops -> setUnset(ops, NodeExecutionKeys.progressData, progressDoc));
   }
 }

@@ -71,12 +71,11 @@ public class EngineProgressCallbackTest extends OrchestrationTestBase {
         BinaryResponseData.builder().data(kryoSerializer.asDeflatedBytes(unitProgressData)).build();
 
     when(progressEventPublisher.publishEvent(nodeExecutionId, binaryResponseData)).thenReturn(null);
-    when(nodeExecutionService.update(anyString(), any())).thenReturn(null);
 
     engineProgressCallback.notify(correlationId, binaryResponseData);
 
     verify(progressEventPublisher).publishEvent(nodeExecutionId, binaryResponseData);
-    verify(nodeExecutionService).update(anyString(), any());
+    verify(nodeExecutionService).updateV2(anyString(), any());
   }
 
   @Test
@@ -94,7 +93,7 @@ public class EngineProgressCallbackTest extends OrchestrationTestBase {
     engineProgressCallback.notify(correlationId, binaryResponseData);
 
     verify(progressEventPublisher).publishEvent(nodeExecutionId, binaryResponseData);
-    verify(nodeExecutionService, never()).update(anyString(), any());
+    verify(nodeExecutionService, never()).updateV2(anyString(), any());
   }
 
   private static class TestResponseData implements ProgressData {}

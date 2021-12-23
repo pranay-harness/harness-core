@@ -43,6 +43,7 @@ import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -51,9 +52,11 @@ import com.mongodb.client.result.UpdateResult;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.Getter;
@@ -78,9 +81,31 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Getter private final Subject<NodeExecutionStartObserver> nodeExecutionStartSubject = new Subject<>();
   @Getter private final Subject<NodeUpdateObserver> nodeUpdateObserverSubject = new Subject<>();
 
+  /**
+   * This is deprecated, use function
+   * @param nodeExecutionId
+   * @return
+   */
   @Override
+  @Deprecated
   public NodeExecution get(String nodeExecutionId) {
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    NodeExecution nodeExecution = mongoTemplate.findOne(query, NodeExecution.class);
+    if (nodeExecution == null) {
+      throw new InvalidRequestException("Node Execution is null for id: " + nodeExecutionId);
+    }
+    return nodeExecution;
+  }
+
+  @Override
+  public NodeExecution getWithFieldsIncluded(String nodeExecutionId, Set<String> fieldsToInclude) {
+    Set<String> defaultFields = new HashSet<>();
+    defaultFields.add(NodeExecutionKeys.oldRetry);
+    fieldsToInclude.addAll(defaultFields);
+    Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    for (String field : fieldsToInclude) {
+      query.fields().include(field);
+    }
     NodeExecution nodeExecution = mongoTemplate.findOne(query, NodeExecution.class);
     if (nodeExecution == null) {
       throw new InvalidRequestException("Node Execution is null for id: " + nodeExecutionId);
@@ -158,6 +183,9 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     return mongoTemplate.find(query, NodeExecution.class);
   }
 
+  /**
+   * This is deprecated, use below update to get only required fields
+   */
   @Override
   public NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops) {
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
@@ -168,9 +196,35 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       throw new NodeExecutionUpdateFailedException(
           "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
     }
+
     nodeUpdateObserverSubject.fireInform(
         NodeUpdateObxxxxxxxx:onNodeUpdate, NodeUpdateInfo.builder().nodeExecution(updated).build());
     return updated;
+  }
+
+  @Override
+  public NodeExecution update(
+      @NonNull String nodeExecutionId, @NonNull Consumer<Update> ops, Set<String> fieldsToBeIncluded) {
+    Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    fieldsToBeIncluded.addAll(NodeProjectionUtils.fieldsForNodeUpdateObserver);
+    for (String field : fieldsToBeIncluded) {
+      query.fields().include(field);
+    }
+    Update updateOps = new Update().set(NodeExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
+    ops.accept(updateOps);
+    NodeExecution updated = mongoTemplate.findAndModify(query, updateOps, returnNewOptions, NodeExecution.class);
+    if (updated == null) {
+      throw new NodeExecutionUpdateFailedException(
+          "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
+    }
+    nodeUpdateObserverSubject.fireInform(
+        NodeUpdateObxxxxxxxx:onNodeUpdate, NodeUpdateInfo.builder().nodeExecution(updated).build());
+    return updated;
+  }
+
+  @Override
+  public void updateV2(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops) {
+    update(nodeExecutionId, ops, NodeProjectionUtils.fieldsForNodeUpdateObserver);
   }
 
   @Override
