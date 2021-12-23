@@ -85,6 +85,7 @@ public class ManagerGrpcClientModule extends ProviderModule {
   }
 
   private String computeAuthority(Config config, VersionInfo versionInfo) {
+    log.info("The GRPC config is: {}", config);
     String defaultAuthority = "default-authority.harness.io";
     String authorityToUse;
     if (!isValidAuthority(config.authority)) {
@@ -98,7 +99,7 @@ public class ManagerGrpcClientModule extends ProviderModule {
         authorityToUse = versionedAuthority;
       } else {
         authorityToUse = config.authority;
-        log.info("Versioned authority {} is invalid. Using non-versioned", versionedAuthority);
+        log.info("Versioned authority {} is invalid. Using non-versioned {}", versionedAuthority, authorityToUse);
       }
     } else {
       log.info("Deploy Mode is {}. Using non-versioned authority", deployMode);
