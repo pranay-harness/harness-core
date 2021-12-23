@@ -38,6 +38,7 @@ public final class EventsFrameworkMetadataConstants {
   // deprecated, use setupusage and entityActivity channel.
   public static final String SETUP_USAGE_ENTITY = "setupUsage";
   public static final String ACCOUNT_ENTITY = "account";
+  public static final String ACCOUNT_IDENTIFIER_METRICS_KEY = "accountId";
 
   public static final String REFERRED_ENTITY_TYPE = "referredEntityType";
   public static final String CONNECTOR_ENTITY_TYPE = "connectorType";
