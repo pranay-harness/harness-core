@@ -11,22 +11,18 @@ import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
 import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.variables.NGVariable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 
 @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
 @OwnedBy(CDC)
 public interface ServiceSpec {
   ArtifactListConfig getArtifacts();
-  @ApiModelProperty(dataType = "[Lio.harness.cdng.manifest.yaml.ManifestConfigWrapper;")
-  ParameterField<List<ManifestConfigWrapper>> getManifests();
-  @ApiModelProperty(dataType = "[Lio.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;")
-  ParameterField<List<ManifestOverrideSetWrapper>> getManifestOverrideSets();
+  List<ManifestConfigWrapper> getManifests();
+  List<ManifestOverrideSetWrapper> getManifestOverrideSets();
   List<ArtifactOverrideSetWrapper> getArtifactOverrideSets();
   List<NGVariableOverrideSetWrapper> getVariableOverrideSets();
   List<NGVariable> getVariables();
