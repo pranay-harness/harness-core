@@ -25,36 +25,43 @@ public class NGTelemetryPublisher {
   String TOTAL_NUMBER_OF_SERVICE_INSTANCES_IN_A_MONTH = "total_number_of_service_instances_in_a_month";
 
   public void recordTelemetry() {
-    Long CURRENT_TIMESTAMP = System.currentTimeMillis();
-    Long MILLISECONDS_IN_A_DAY = 86400000L;
-    Long MILLISECONDS_IN_A_MONTH = 2592000000L;
-    Long totalDistinctActiveServicesInADay = 0L;
-    Long totalDistinctActiveServicesInAMonth = 0L;
-    Long totalNumberOfServiceInstancesInADay = 0L;
-    Long totalNumberOfServiceInstancesInAMonth = 0L;
+    log.info("NGTelemetryPublisher recordTelemetry execute started.");
+    try {
+      Long CURRENT_TIMESTAMP = System.currentTimeMillis();
+      Long MILLISECONDS_IN_A_DAY = 86400000L;
+      Long MILLISECONDS_IN_A_MONTH = 2592000000L;
+      Long totalDistinctActiveServicesInADay = 0L;
+      Long totalDistinctActiveServicesInAMonth = 0L;
+      Long totalNumberOfServiceInstancesInADay = 0L;
+      Long totalNumberOfServiceInstancesInAMonth = 0L;
 
-    String accountId = getAccountId();
+      String accountId = getAccountId();
 
-    if (EmptyPredicate.isNotEmpty(accountId)) {
+      if (EmptyPredicate.isNotEmpty(accountId)) {
 
-      List<InstanceDTO> serviceInstancesInAMonth = cdPipelineInstrumentationHelper.getServiceInstancesInInterval(accountId, CURRENT_TIMESTAMP - MILLISECONDS_IN_A_MONTH, CURRENT_TIMESTAMP);
-      totalNumberOfServiceInstancesInAMonth = (long) serviceInstancesInAMonth.size();
-      totalDistinctActiveServicesInAMonth = cdPipelineInstrumentationHelper.getTotalNumberOfActiveServices(serviceInstancesInAMonth);
+        List<InstanceDTO> serviceInstancesInAMonth = cdPipelineInstrumentationHelper.getServiceInstancesInInterval(accountId, CURRENT_TIMESTAMP - MILLISECONDS_IN_A_MONTH, CURRENT_TIMESTAMP);
+        totalNumberOfServiceInstancesInAMonth = (long) serviceInstancesInAMonth.size();
+        totalDistinctActiveServicesInAMonth = cdPipelineInstrumentationHelper.getTotalNumberOfActiveServices(serviceInstancesInAMonth);
 
-      List<InstanceDTO> serviceInstancesInADay = cdPipelineInstrumentationHelper.getServiceInstancesInInterval(accountId, CURRENT_TIMESTAMP - MILLISECONDS_IN_A_DAY, CURRENT_TIMESTAMP);
-      totalNumberOfServiceInstancesInADay = (long) serviceInstancesInADay.size();
-      totalDistinctActiveServicesInADay = cdPipelineInstrumentationHelper.getTotalNumberOfActiveServices(serviceInstancesInADay);
+        List<InstanceDTO> serviceInstancesInADay = cdPipelineInstrumentationHelper.getServiceInstancesInInterval(accountId, CURRENT_TIMESTAMP - MILLISECONDS_IN_A_DAY, CURRENT_TIMESTAMP);
+        totalNumberOfServiceInstancesInADay = (long) serviceInstancesInADay.size();
+        totalDistinctActiveServicesInADay = cdPipelineInstrumentationHelper.getTotalNumberOfActiveServices(serviceInstancesInADay);
 
-      HashMap<String, Object> map = new HashMap<>();
-      map.put(TOTAL_DISTINCT_ACTIVE_SERVICES_IN_A_DAY, totalDistinctActiveServicesInADay);
-      map.put(TOTAL_DISTINCT_ACTIVE_SERVICES_IN_A_MONTH, totalDistinctActiveServicesInAMonth);
-      map.put(TOTAL_NUMBER_OF_SERVICE_INSTANCES_IN_A_DAY, totalNumberOfServiceInstancesInADay);
-      map.put(TOTAL_NUMBER_OF_SERVICE_INSTANCES_IN_A_MONTH, totalNumberOfServiceInstancesInAMonth);
-      telemetryReporter.sendGroupEvent(
-              accountId, null, map, null, TelemetryOption.builder().sendForCommunity(true).build());
-      log.info("Scheduled NGTelemetryPublisher event sent!");
-    } else {
-      log.info("There is no Account found!. Can not send scheduled NGTelemetryPublisher event.");
+        HashMap<String, Object> map = new HashMap<>();
+        map.put(TOTAL_DISTINCT_ACTIVE_SERVICES_IN_A_DAY, totalDistinctActiveServicesInADay);
+        map.put(TOTAL_DISTINCT_ACTIVE_SERVICES_IN_A_MONTH, totalDistinctActiveServicesInAMonth);
+        map.put(TOTAL_NUMBER_OF_SERVICE_INSTANCES_IN_A_DAY, totalNumberOfServiceInstancesInADay);
+        map.put(TOTAL_NUMBER_OF_SERVICE_INSTANCES_IN_A_MONTH, totalNumberOfServiceInstancesInAMonth);
+        telemetryReporter.sendGroupEvent(
+                accountId, null, map, null, TelemetryOption.builder().sendForCommunity(true).build());
+        log.info("Scheduled NGTelemetryPublisher event sent!");
+      } else {
+        log.info("There is no Account found!. Can not send scheduled NGTelemetryPublisher event.");
+      }
+    } catch(Exception e) {
+      log.error("NGTelemetryPublisher recordTelemetry execute failed.", e);
+    } finally {
+      log.info("NGTelemetryPublisher recordTelemetry execute finished.");
     }
   }
 

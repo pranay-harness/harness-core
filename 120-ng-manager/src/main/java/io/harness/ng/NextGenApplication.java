@@ -399,14 +399,18 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     }
     registerMigrations(injector);
 
+    log.info("NextGenApplication DEPLOY_VERSION = " + System.getenv().get(DEPLOY_VERSION));
     if (DeployVariant.isCommunity(System.getenv().get(DEPLOY_VERSION))) {
       initializeNGMonitoring(appConfig, injector);
+    } else {
+      log.info("NextGenApplication DEPLOY_VERSION is not COMMUNITY");
     }
 
     MaintenanceController.forceMaintenance(false);
   }
 
   private void initializeNGMonitoring(NextGenConfiguration appConfig, Injector injector) {
+    log.info("Initializing NGMonitoring");
     injector.getInstance(NGTelemetryRecordsJob.class).scheduleTasks();
   }
 
