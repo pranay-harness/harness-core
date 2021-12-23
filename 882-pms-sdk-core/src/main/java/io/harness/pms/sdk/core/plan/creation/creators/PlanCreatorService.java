@@ -8,6 +8,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.ExceptionManager;
@@ -129,10 +130,26 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
     List<Map.Entry<String, String>> dependenciesList = new ArrayList<>(dependencies.getDependenciesMap().entrySet());
     String currentYaml = dependencies.getYaml();
 
+    // Field of complete yaml is passed so that we don't convert to yamlField always per dependency
+    YamlField fullField;
+    try {
+      fullField = YamlUtils.readTree(currentYaml);
+    } catch (IOException ex) {
+      String message = "Invalid yaml during plan creation";
+      log.error(message, ex);
+      throw new InvalidRequestException(message);
+    }
     dependenciesList.stream()
         .map(Map.Entry::getValue)
-        .forEach(yamlPath
-            -> completableFutures.supplyAsync(() -> createPlanForDependencyInternal(currentYaml, yamlPath, ctx)));
+        .map(yamlPath -> {
+          try {
+            return fullField.fromYamlPath(yamlPath);
+          } catch (IOException e) {
+            throw new InvalidRequestException("Unable to parse the field in the path:" + yamlPath);
+          }
+        })
+        .forEach(yamlField
+            -> completableFutures.supplyAsync(() -> createPlanForDependencyInternal(currentYaml, yamlField, ctx)));
 
     try {
       List<PlanCreationResponse> planCreationResponses = completableFutures.allOf().get(2, TimeUnit.MINUTES);
@@ -196,10 +213,8 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
   }
 
   private PlanCreationResponse createPlanForDependencyInternal(
-      String currentYaml, String fieldYamlPath, PlanCreationContext ctx) {
+      String currentYaml, YamlField field, PlanCreationContext ctx) {
     try {
-      YamlField field = YamlField.fromYamlPath(currentYaml, fieldYamlPath);
-
       Optional<PartialPlanCreator<?>> planCreatorOptional =
           PlanCreatorServiceHelper.findPlanCreator(planCreators, field);
       if (!planCreatorOptional.isPresent()) {
@@ -223,7 +238,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
             .build();
       }
     } catch (IOException ex) {
-      String message = format("Invalid yaml path [%s] during execution plan creation", fieldYamlPath);
+      String message = format("Invalid yaml path [%s] during execution plan creation", field.getYamlPath());
       log.error(message, ex);
       return PlanCreationResponse.builder().errorMessage(message).build();
     }
