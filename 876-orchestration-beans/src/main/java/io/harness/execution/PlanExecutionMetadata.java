@@ -45,6 +45,7 @@ public class PlanExecutionMetadata implements PersistentEntity, UuidAware, PmsNo
   private String inputSetYaml;
   private String yaml;
   private String processedYaml;
+  private String expandedPipelineJson;
 
   private StagesExecutionMetadata stagesExecutionMetadata;
 

@@ -57,8 +57,9 @@ public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan, PlanEx
     String accountId = ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.accountId);
     String orgIdentifier = ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.orgIdentifier);
     String projectIdentifier = ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.projectIdentifier);
+    String expandedPipelineJson = metadata.getExpandedPipelineJson();
     GovernanceMetadata governanceMetadata =
-        governanceService.evaluateGovernancePolicies(metadata.getYaml(), accountId, orgIdentifier, projectIdentifier,
+        governanceService.evaluateGovernancePolicies(expandedPipelineJson, accountId, orgIdentifier, projectIdentifier,
             OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_RUN, ambiance.getPlanExecutionId());
     PlanExecution planExecution = createPlanExecution(ambiance, metadata, governanceMetadata);
     eventEmitter.emitEvent(
