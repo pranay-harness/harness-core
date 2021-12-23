@@ -477,7 +477,7 @@ public enum StepType {
   KUBERNETES_DEPLOY(KubernetesDeploy.class, KUBERNETES_UPGRADE_CONTAINERS, asList(WorkflowStepType.KUBERNETES),
       asList(CONTAINER_DEPLOY, WRAP_UP), Lists.newArrayList(DeploymentType.KUBERNETES),
       asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN, MULTI_SERVICE)),
-  RANCHER_RESOLVE(RancherResolveState.class, RANCHER_RESOLVE_CLUSTERS, asList(WorkflowStepType.KUBKUBERNETESERNETES),
+  RANCHER_RESOLVE(RancherResolveState.class, RANCHER_RESOLVE_CLUSTERS, asList(WorkflowStepType.KUBERNETES),
           asList(CONTAINER_DEPLOY), Lists.newArrayList(DeploymentType.KUBERNETES),
           asList(PhaseType.NON_ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN, MULTI_SERVICE)),
   KUBERNETES_STEADY_STATE_CHECK(KubernetesSteadyStateCheck.class, WorkflowServiceHelper.KUBERNETES_STEADY_STATE_CHECK,

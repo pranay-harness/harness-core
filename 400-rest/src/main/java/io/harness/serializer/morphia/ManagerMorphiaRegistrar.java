@@ -671,6 +671,7 @@ import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.sm.states.PrometheusState;
+import software.wings.sm.states.RancherResolveState;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.sm.states.ResourceConstraintState;
@@ -1493,6 +1494,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.k8s.K8sScale", K8sScale.class);
     w.put("sm.states.k8s.K8sTrafficSplitState", K8sTrafficSplitState.class);
     w.put("sm.states.KubernetesDeploy", KubernetesDeploy.class);
+    w.put("sm.states.RancherResolveState", RancherResolveState.class);
     w.put("sm.states.KubernetesDeployRollback", KubernetesDeployRollback.class);
     w.put("sm.states.KubernetesSetup", KubernetesSetup.class);
     w.put("sm.states.KubernetesSetupRollback", KubernetesSetupRollback.class);
