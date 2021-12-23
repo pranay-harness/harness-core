@@ -7,8 +7,6 @@
 
 package io.harness.delegate.service;
 
-import java.io.IOException;
-
 public interface DelegateAgentService {
   void run(boolean watched);
 
