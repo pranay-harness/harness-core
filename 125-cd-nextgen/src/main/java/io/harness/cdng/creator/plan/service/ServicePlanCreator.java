@@ -43,6 +43,7 @@ import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -50,25 +51,45 @@ import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.CDC)
-@Singleton
-public class ServicePMSPlanCreator {
+public class ServicePlanCreator implements PartialPlanCreator<ServiceConfig> {
   @Inject EnforcementValidator enforcementValidator;
-  @Inject private KryoSerializer kryoSerializer;
-  public PlanCreationResponse createPlanForServiceNode(YamlField serviceField, ServiceConfig serviceConfig,
-      InfraSectionStepParameters infraSectionStepParameters, PlanCreationContext ctx) {
+  @Inject KryoSerializer kryoSerializer;
+
+  @Override
+  public Class<ServiceConfig> getFieldClass() {
+    return ServiceConfig.class;
+  }
+
+  @Override
+  public Map<String, Set<String>> getSupportedTypes() {
+    return Collections.singletonMap(YamlTypes.SERVICE_CONFIG, Collections.singleton(PlanCreatorUtils.ANY_TYPE));
+  }
+
+  @Override
+  public PlanCreationResponse createPlanForField(PlanCreationContext ctx, ServiceConfig serviceConfig) {
+    // enforcement validator
     enforcementValidator.validate(ctx.getMetadata().getAccountIdentifier(), ctx.getMetadata().getOrgIdentifier(),
         ctx.getMetadata().getProjectIdentifier(), ctx.getMetadata().getMetadata().getPipelineIdentifier(),
         ctx.getYaml(), ctx.getMetadata().getMetadata().getExecutionUuid());
+
+    YamlField serviceField = ctx.getCurrentField();
+
+    // Fetching infraSectionParameters dependency
+    InfraSectionStepParameters infraSectionStepParameters =
+        (InfraSectionStepParameters) kryoSerializer.asInflatedObject(
+            ctx.getDependency().getMetadataMap().get(YamlTypes.INFRASTRUCTURE_STEP_PARAMETERS).toByteArray());
+
     YamlNode serviceNode = serviceField.getNode();
     ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
     actualServiceConfig = applyUseFromStageOverrides(actualServiceConfig);
@@ -116,7 +137,7 @@ public class ServicePMSPlanCreator {
             .skipExpressionChain(false)
             .build();
     planNodes.put(serviceConfigPlanNode.getUuid(), serviceConfigPlanNode);
-    return PlanCreationResponse.builder().nodes(planNodes).startingNodeId(serviceConfigPlanNode.getUuid()).build();
+    return PlanCreationResponse.builder().nodes(planNodes).build();
   }
 
   private String addServiceNode(ServiceConfig actualServiceConfig, Map<String, PlanNode> planNodes,
