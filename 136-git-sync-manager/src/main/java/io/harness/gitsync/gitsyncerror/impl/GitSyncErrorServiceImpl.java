@@ -102,7 +102,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         skip(pageable.getOffset()), limit(pageable.getPageSize()));
     List<GitSyncErrorAggregateByCommit> gitSyncErrorAggregateByCommitList =
         gitSyncErrorRepository.aggregate(aggregation, GitSyncErrorAggregateByCommit.class).getMappedResults();
-    long totalCount = gitSyncErrorRepository.count(criteria);
+    long totalCount = getAggregateErrorsCount(criteria, pageable, numberOfErrorsInSummary);
     List<GitSyncErrorAggregateByCommitDTO> gitSyncErrorAggregateByCommitDTOList =
         emptyIfNull(gitSyncErrorAggregateByCommitList)
             .stream()
@@ -161,7 +161,14 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .andExpression(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView)
         .slice(numberOfErrorsInSummary)
         .as(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView);
-    //
+  }
+
+  private long getAggregateErrorsCount(Criteria criteria, Pageable pageable, Integer numberOfErrorsInSummary) {
+    Aggregation aggregation = newAggregation(match(criteria), getProjectionOperationForProjectingActiveError(),
+        getGroupOperationForGroupingErrorsWithCommitId(),
+        getProjectionOperationForProjectingGitSyncErrorAggregateByCommitKeys(numberOfErrorsInSummary),
+        skip(pageable.getOffset()));
+    return gitSyncErrorRepository.aggregate(aggregation, GitSyncErrorAggregateByCommit.class).getMappedResults().size();
   }
 
   private String getRepoId(String repoUrl, String accountId, String orgId, String projectId) {
