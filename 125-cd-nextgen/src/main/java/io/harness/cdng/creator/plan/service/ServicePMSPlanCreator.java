@@ -1,6 +1,5 @@
 package io.harness.cdng.creator.plan.service;
 
-import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -223,15 +222,13 @@ public class ServicePMSPlanCreator {
                         overrideSet
                         -> ArtifactOverrideSetsStepParametersWrapper.fromArtifactOverrideSets(
                             overrideSet.getOverrideSet()))))
-            .manifestOverrideSets(getParameterFieldValue(serviceSpec.getManifestOverrideSets()) == null
+            .manifestOverrideSets(serviceSpec.getManifestOverrideSets() == null
                     ? null
-                    : getParameterFieldValue(serviceSpec.getManifestOverrideSets())
-                          .stream()
-                          .collect(Collectors.toMap(overrideSet
-                              -> overrideSet.getOverrideSet().getIdentifier(),
-                              overrideSet
-                              -> ManifestOverrideSetsStepParametersWrapper.fromManifestOverrideSets(
-                                  overrideSet.getOverrideSet()))))
+                    : serviceSpec.getManifestOverrideSets().stream().collect(Collectors.toMap(overrideSet
+                        -> overrideSet.getOverrideSet().getIdentifier(),
+                        overrideSet
+                        -> ManifestOverrideSetsStepParametersWrapper.fromManifestOverrideSets(
+                            overrideSet.getOverrideSet()))))
             .childrenNodeIds(serviceSpecChildrenIds)
             .build();
     PlanNode node =
