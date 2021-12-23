@@ -10,6 +10,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.events.base.PmsBaseEventHandler;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.execution.utils.SdkResponseEventUtils;
 import io.harness.registries.SdkResponseProcessorFactory;
 
@@ -53,7 +54,8 @@ public class SdkResponseHandler extends PmsBaseEventHandler<SdkResponseEventProt
     if (event.hasAmbiance()) {
       ambiance = event.getAmbiance();
     } else {
-      NodeExecution nodeExecution = nodeExecutionService.get(SdkResponseEventUtils.getNodeExecutionId(event));
+      NodeExecution nodeExecution = nodeExecutionService.getWithFieldsIncluded(
+          SdkResponseEventUtils.getNodeExecutionId(event), NodeProjectionUtils.withAmbiance);
       ambiance = nodeExecution.getAmbiance();
     }
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {

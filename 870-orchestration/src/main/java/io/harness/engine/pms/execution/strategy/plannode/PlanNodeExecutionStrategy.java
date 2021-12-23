@@ -42,6 +42,7 @@ import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
@@ -124,14 +125,14 @@ public class PlanNodeExecutionStrategy
         return;
       }
       log.info("Proceeding with  Execution. Reason : {}", check.getReason());
-      NodeExecution updatedNodeExecution = resolveParameters(ambiance, nodeExecution);
+      resolveParameters(ambiance, nodeExecution);
 
-      if (facilitationHelper.customFacilitatorPresent(updatedNodeExecution.getNode())) {
+      if (facilitationHelper.customFacilitatorPresent(nodeExecution.getNode())) {
         facilitateEventPublisher.publishEvent(nodeExecution.getUuid());
         return;
       }
       FacilitatorResponseProto facilitatorResponseProto =
-          facilitationHelper.calculateFacilitatorResponse(updatedNodeExecution);
+          facilitationHelper.calculateFacilitatorResponse(nodeExecution);
       processFacilitationResponse(ambiance, facilitatorResponseProto);
     } catch (Exception exception) {
       log.error("Exception Occurred in facilitateAndStartStep NodeExecutionId : {}, PlanExecutionId: {}",
@@ -142,9 +143,6 @@ public class PlanNodeExecutionStrategy
 
   @Override
   public void processFacilitationResponse(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
-    String nodeExecutionId = Objects.requireNonNull(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    nodeExecutionService.update(
-        nodeExecutionId, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode()));
     ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
         ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     if (!check.isProceed()) {
@@ -185,7 +183,8 @@ public class PlanNodeExecutionStrategy
   @Override
   public void concludeExecution(Ambiance ambiance, Status status, EnumSet<Status> overrideStatusSet) {
     String nodeExecutionId = Objects.requireNonNull(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution =
+        nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndNode);
     PlanNode node = nodeExecution.getNode();
     if (isEmpty(node.getAdviserObtainments())) {
       NodeExecution updatedNodeExecution =
@@ -223,9 +222,7 @@ public class PlanNodeExecutionStrategy
   @Override
   public void processAdviserResponse(Ambiance ambiance, AdviserResponse adviserResponse) {
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
-    NodeExecution nodeExecution = Preconditions.checkNotNull(
-        nodeExecutionService.get(nodeExecutionId), "NodeExecution not found for id: " + nodeExecutionId);
-    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(nodeExecution.getAmbiance())) {
+    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       if (adviserResponse.getType() == AdviseType.UNKNOWN) {
         log.warn("Got null advise for node execution with id {}", nodeExecutionId);
         endNodeExecution(ambiance);
@@ -279,7 +276,7 @@ public class PlanNodeExecutionStrategy
   }
 
   @VisibleForTesting
-  NodeExecution resolveParameters(Ambiance ambiance, NodeExecution nodeExecution) {
+  void resolveParameters(Ambiance ambiance, NodeExecution nodeExecution) {
     PlanNode node = nodeExecution.getNode();
     boolean skipUnresolvedExpressionsCheck = node.isSkipUnresolvedExpressionsCheck();
     log.info("Starting to Resolve step parameters and Inputs");
@@ -290,12 +287,12 @@ public class PlanNodeExecutionStrategy
         pmsEngineExpressionService.resolve(ambiance, node.getStepInputs(), skipUnresolvedExpressionsCheck);
     log.info("Step Parameters and Inputs Resolution complete");
 
-    return Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
+    nodeExecutionService.updateV2(nodeExecution.getUuid(), ops -> {
       setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters);
       setUnset(ops, NodeExecutionKeys.resolvedInputs,
           PmsStepParameters.parse(
               OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepInputs)));
-    }));
+    });
   }
 
   private ExecutionCheck performPreFacilitationChecks(NodeExecution nodeExecution) {
