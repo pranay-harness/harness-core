@@ -2,6 +2,7 @@ package io.harness.ng.userprofile.commons;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.SourceCodeManagerAuthentication;
 import io.harness.mongo.index.FdIndex;
@@ -25,12 +26,13 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 public abstract class SourceCodeManagerDTO {
-  String id;
-  String userIdentifier;
-  @FdIndex String accountIdentifier;
-  @NotNull String name;
-  Long createdAt;
-  Long lastModifiedAt;
-  public abstract SCMType getType();
+  @Schema(description = "Source Code Manager Identifier") String id;
+  @Schema(description = "Id of the User") String userIdentifier;
+  @Schema(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @FdIndex String accountIdentifier;
+  @Schema(description = "Name of Source Code Manager") @NotNull String name;
+  @Schema(description = "Time at which this Source Code Manager was created") Long createdAt;
+  @Schema(description = "Time at which this Source Code Manager was last Updated") Long lastModifiedAt;
+  @Schema(description = "Type of SCM") public abstract SCMType getType();
+  @Schema(description = "Authentication Details of Source Code Manager")
   public abstract SourceCodeManagerAuthentication getAuthentication();
 }
