@@ -54,6 +54,7 @@ public class DelegateAgentModule extends AbstractModule {
     install(new DelegateManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
         configuration.getCvNextGenUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
 
+    log.info("Logs streaming config: {}", configuration.getLogStreamingServiceBaseUrl());
     install(new LogStreamingModule(configuration.getLogStreamingServiceBaseUrl()));
     install(new DelegateGrpcClientModule(configuration));
 
