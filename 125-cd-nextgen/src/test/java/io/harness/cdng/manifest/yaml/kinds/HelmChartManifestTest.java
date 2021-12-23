@@ -2,7 +2,6 @@ package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.cdng.manifest.yaml.HelmCommandFlagType.Fetch;
 import static io.harness.cdng.manifest.yaml.HelmCommandFlagType.Template;
-import static io.harness.cdng.manifest.yaml.HelmCommandFlagType.Version;
 import static io.harness.rule.OwnerRule.ABOSII;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,13 +35,9 @@ public class HelmChartManifestTest extends CategoryTest {
                                      .skipResourceVersioning(ParameterField.createValueField(true))
                                      .store(ParameterField.createValueField(originalStoreConfig))
                                      .commandFlags(Arrays.asList(HelmManifestCommandFlag.builder()
-                                                                     .commandType(Version)
-                                                                     .flag(ParameterField.createValueField("--version"))
-                                                                     .build(),
-                                         HelmManifestCommandFlag.builder()
-                                             .commandType(Fetch)
-                                             .flag(ParameterField.createValueField("--debug"))
-                                             .build()))
+                                                                     .commandType(Fetch)
+                                                                     .flag(ParameterField.createValueField("--debug"))
+                                                                     .build()))
                                      .build();
 
     HelmChartManifest override =
@@ -68,9 +63,9 @@ public class HelmChartManifestTest extends CategoryTest {
     assertThat(original.getSkipResourceVersioning().getValue()).isTrue();
     assertThat(original.getStore().getValue()).isEqualTo(originalStoreConfig);
     assertThat(original.getCommandFlags().stream().map(HelmManifestCommandFlag::getCommandType))
-        .containsExactlyInAnyOrder(Version, Fetch);
+        .containsExactlyInAnyOrder(Fetch);
     assertThat(original.getCommandFlags().stream().map(HelmManifestCommandFlag::getFlag).map(ParameterField::getValue))
-        .containsExactlyInAnyOrder("--version", "--debug");
+        .containsExactlyInAnyOrder("--debug");
 
     assertThat(override.getHelmVersion()).isEqualTo(HelmVersion.V2);
     assertThat(override.getSkipResourceVersioning().getValue()).isFalse();

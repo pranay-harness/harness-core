@@ -6,6 +6,7 @@ import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -65,6 +66,14 @@ public final class K8sWorkload implements PersistentEntity, UuidAware, CreatedAt
                  .field(K8sWorkloadKeys.clusterId)
                  .field(K8sWorkloadKeys.namespace)
                  .field(K8sWorkloadKeys.name)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_clusterId_namespace_name_lastUpdatedAt")
+                 .field(K8sWorkloadKeys.accountId)
+                 .field(K8sWorkloadKeys.clusterId)
+                 .field(K8sWorkloadKeys.namespace)
+                 .field(K8sWorkloadKeys.name)
+                 .descSortField(K8sWorkloadKeys.lastUpdatedAt)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("accountId_name_labels")

@@ -19,9 +19,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.dto.FailureInfoDTO;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.FailureType;
+import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.instrumentation.ServiceInstrumentationConstants;
 import io.harness.ng.core.dto.AccountDTO;
@@ -31,22 +33,27 @@ import io.harness.notification.bean.PipelineEvent;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.notification.NotificationInstrumentationHelper;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.sdk.SdkStepHelper;
 import io.harness.rule.Owner;
 import io.harness.telemetry.TelemetryReporter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,6 +71,8 @@ public class InstrumentationPipelineEndEventHandlerTest extends CategoryTest {
   @Mock TelemetryReporter telemetryReporter;
   @Mock PMSExecutionService pmsExecutionService;
   @Mock NotificationInstrumentationHelper notificationInstrumentationHelper;
+  @Mock NodeExecutionService nodeExecutionService;
+  @Mock SdkStepHelper sdkStepHelper;
   @Mock AccountService accountService;
   @Mock PlanExecutionService planExecutionService;
   @InjectMocks InstrumentationPipelineEndEventHandler instrumentationPipelineEndEventHandler;
@@ -126,6 +135,18 @@ public class InstrumentationPipelineEndEventHandlerTest extends CategoryTest {
                 Collections.singletonList(PipelineEvent.builder().type(PipelineEventType.PIPELINE_END).build()))
             .build());
     Set<String> notificationMethods = Collections.singleton("slack");
+    List<NodeExecution> nodeExecutionList = Arrays.asList(
+        NodeExecution.builder()
+            .node(PlanNodeProto.newBuilder()
+                      .setStepType(StepType.newBuilder().setStepCategory(StepCategory.STEP).setType("Http").build())
+                      .build())
+            .build());
+    doReturn(nodeExecutionList).when(nodeExecutionService).fetchNodeExecutions(any());
+    doReturn(new HashSet() {
+      { add("Http"); }
+    })
+        .when(sdkStepHelper)
+        .getAllStepVisibleInUI();
     doReturn(pipelineExecutionSummaryEntity)
         .when(pmsExecutionService)
         .getPipelineExecutionSummaryEntity("accountId", "orgId", "projectId", "planExecutionId", false);
@@ -202,6 +223,8 @@ public class InstrumentationPipelineEndEventHandlerTest extends CategoryTest {
     assertEquals(propertiesMap.get(PipelineInstrumentationConstants.LEVEL), StepCategory.PIPELINE);
     assertEquals(propertiesMap.get(PipelineInstrumentationConstants.STATUS), ExecutionStatus.FAILED);
     assertEquals(propertiesMap.get(PipelineInstrumentationConstants.EXECUTION_TIME), 1L);
+    assertEquals(((HashSet<String>) propertiesMap.get(PipelineInstrumentationConstants.STEP_TYPES)).size(), 1);
+    assertTrue(((HashSet<String>) propertiesMap.get(PipelineInstrumentationConstants.STEP_TYPES)).contains("Http"));
     assertEquals(propertiesMap.get(PipelineInstrumentationConstants.ACCOUNT_NAME), "TestAccountName");
     assertEquals(returnedNotificationMethods, notificationMethods);
     assertTrue(returnedFailureTypes.contains(FailureType.AUTHENTICATION));

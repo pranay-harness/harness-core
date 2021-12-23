@@ -80,7 +80,7 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
 
     when(cik8JavaClientHandler.deletePodWithRetries(any(), any(), any())).thenThrow(new ApiException());
 
-    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
+    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
@@ -96,7 +96,7 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
     when(cik8JavaClientHandler.deleteService(any(), any(), any())).thenReturn(Boolean.TRUE);
     when(cik8JavaClientHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
+    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
@@ -113,7 +113,7 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
     when(cik8JavaClientHandler.deleteService(any(), any(), any())).thenReturn(Boolean.TRUE);
     when(cik8JavaClientHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
+    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams, "");
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 
@@ -130,7 +130,7 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
     when(cik8JavaClientHandler.deleteService(any(), any(), any())).thenReturn(Boolean.FALSE);
     when(cik8JavaClientHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.FALSE);
 
-    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
+    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 

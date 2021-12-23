@@ -28,6 +28,7 @@ public class CIVmInitializeTaskParams
   @NotNull private String poolID;
   @NotNull private String workingDir;
 
+  @NotNull private String logKey;
   @NotNull private String logStreamUrl;
   @NotNull private String logSvcToken;
   @NotNull private boolean logSvcIndirectUpload;
@@ -45,6 +46,7 @@ public class CIVmInitializeTaskParams
   @Expression(ALLOW_SECRETS) Map<String, String> environment;
   @Expression(ALLOW_SECRETS) private List<String> secrets;
   private ConnectorDetails gitConnector;
+  private Map<String, String> volToMountPath;
 
   private String stageRuntimeId;
   @Builder.Default private static final Type type = Type.VM;

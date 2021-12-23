@@ -30,7 +30,7 @@ public class CIK8ExecuteStepTaskHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void executeTaskInternalInvalidStep() {
     CIK8ExecuteStepTaskParams params = CIK8ExecuteStepTaskParams.builder().serializedStep("foo".getBytes()).build();
-    K8sTaskExecutionResponse response = cik8ExecuteStepTaskHandler.executeTaskInternal(params);
+    K8sTaskExecutionResponse response = cik8ExecuteStepTaskHandler.executeTaskInternal(params, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 }

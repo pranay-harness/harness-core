@@ -69,6 +69,10 @@ public class YamlNode implements Visitable {
     return field.getNode().gotoPath(path);
   }
 
+  public static YamlNode fromYamlPath(YamlField field, String path) throws IOException {
+    return field.getNode().gotoPath(path);
+  }
+
   @Override
   public String toString() {
     return currJsonNode.toString();

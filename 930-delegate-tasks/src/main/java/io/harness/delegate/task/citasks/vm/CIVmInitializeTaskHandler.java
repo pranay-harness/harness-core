@@ -1,6 +1,7 @@
 package io.harness.delegate.task.citasks.vm;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_COMMIT_BRANCH;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_COMMIT_LINK;
@@ -9,8 +10,6 @@ import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_REM
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_SOURCE_BRANCH;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.DRONE_TARGET_BRANCH;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.NETWORK_ID;
-import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.WORKDIR_VOLUME_ID;
-import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.WORKDIR_VOLUME_NAME;
 
 import static java.lang.String.format;
 
@@ -25,12 +24,12 @@ import io.harness.delegate.beans.ci.vm.runner.SetupVmResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.citasks.CIInitializeTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder;
+import io.harness.delegate.task.citasks.cik8handler.helper.ProxyVariableHelper;
 import io.harness.delegate.task.citasks.vm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +43,7 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
   @NotNull private Type type = CIInitializeTaskHandler.Type.VM;
   @Inject private HttpHelper httpHelper;
   @Inject private SecretSpecBuilder secretSpecBuilder;
+  @Inject private ProxyVariableHelper proxyVariableHelper;
 
   @Override
   public Type getType() {
@@ -51,17 +51,17 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
   }
 
   public VmTaskExecutionResponse executeTaskInternal(
-      CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient) {
+      CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient, String taskId) {
     CIVmInitializeTaskParams ciVmInitializeTaskParams = (CIVmInitializeTaskParams) ciInitializeTaskParams;
     log.info(
         "Received request to initialize stage with stage runtime ID {}", ciVmInitializeTaskParams.getStageRuntimeId());
-    return callRunnerForSetup(ciVmInitializeTaskParams);
+    return callRunnerForSetup(ciVmInitializeTaskParams, taskId);
   }
 
-  private VmTaskExecutionResponse callRunnerForSetup(CIVmInitializeTaskParams ciVmInitializeTaskParams) {
+  private VmTaskExecutionResponse callRunnerForSetup(CIVmInitializeTaskParams ciVmInitializeTaskParams, String taskId) {
     String errMessage = "";
     try {
-      Response<SetupVmResponse> response = httpHelper.setupStageWithRetries(convert(ciVmInitializeTaskParams));
+      Response<SetupVmResponse> response = httpHelper.setupStageWithRetries(convert(ciVmInitializeTaskParams, taskId));
       if (response.isSuccessful()) {
         return VmTaskExecutionResponse.builder()
             .ipAddress(response.body().getIpAddress())
@@ -73,7 +73,7 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
       }
     } catch (Exception e) {
       log.error("Failed to setup VM in runner", e);
-      errMessage = e.getMessage();
+      errMessage = e.toString();
     }
 
     return VmTaskExecutionResponse.builder()
@@ -82,7 +82,7 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
         .build();
   }
 
-  private SetupVmRequest convert(CIVmInitializeTaskParams params) {
+  private SetupVmRequest convert(CIVmInitializeTaskParams params, String taskId) {
     Map<String, String> env = new HashMap<>();
     List<String> secrets = new ArrayList<>();
     if (isNotEmpty(params.getSecrets())) {
@@ -95,6 +95,14 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
     if (params.getGitConnector() != null) {
       Map<String, SecretParams> secretVars = secretSpecBuilder.decryptGitSecretVariables(params.getGitConnector());
       for (Map.Entry<String, SecretParams> entry : secretVars.entrySet()) {
+        String secret = new String(decodeBase64(entry.getValue().getValue()));
+        env.put(entry.getKey(), secret);
+        secrets.add(secret);
+      }
+    }
+    if (proxyVariableHelper != null && proxyVariableHelper.checkIfProxyIsConfigured()) {
+      Map<String, SecretParams> proxyConfiguration = proxyVariableHelper.getProxyConfiguration();
+      for (Map.Entry<String, SecretParams> entry : proxyConfiguration.entrySet()) {
         String secret = new String(decodeBase64(entry.getValue().getValue()));
         env.put(entry.getKey(), secret);
         secrets.add(secret);
@@ -117,14 +125,6 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
                                            .commitLink(env.getOrDefault(DRONE_COMMIT_LINK, ""))
                                            .build();
 
-    SetupVmRequest.Volume workdirVol = SetupVmRequest.Volume.builder()
-                                           .hostVolume(SetupVmRequest.HostVolume.builder()
-                                                           .id(WORKDIR_VOLUME_ID)
-                                                           .name(WORKDIR_VOLUME_NAME)
-                                                           .path(params.getWorkingDir())
-                                                           .build())
-                                           .build();
-
     SetupVmRequest.Config config = SetupVmRequest.Config.builder()
                                        .envs(env)
                                        .secrets(secrets)
@@ -133,10 +133,35 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
                                                       .url(params.getLogStreamUrl())
                                                       .token(params.getLogSvcToken())
                                                       .accountID(params.getAccountID())
+                                                      .indirectUpload(params.isLogSvcIndirectUpload())
                                                       .build())
                                        .tiConfig(tiConfig)
-                                       .volumes(Collections.singletonList(workdirVol))
+                                       .volumes(getVolumes(params.getVolToMountPath()))
                                        .build();
-    return SetupVmRequest.builder().id(params.getStageRuntimeId()).poolID(params.getPoolID()).config(config).build();
+    return SetupVmRequest.builder()
+        .id(params.getStageRuntimeId())
+        .correlationID(taskId)
+        .poolID(params.getPoolID())
+        .config(config)
+        .logKey(params.getLogKey())
+        .build();
+  }
+
+  private List<SetupVmRequest.Volume> getVolumes(Map<String, String> volToMountPath) {
+    List<SetupVmRequest.Volume> volumes = new ArrayList<>();
+    if (isEmpty(volToMountPath)) {
+      return volumes;
+    }
+
+    for (Map.Entry<String, String> entry : volToMountPath.entrySet()) {
+      volumes.add(SetupVmRequest.Volume.builder()
+                      .hostVolume(SetupVmRequest.HostVolume.builder()
+                                      .id(entry.getKey())
+                                      .name(entry.getKey())
+                                      .path(entry.getValue())
+                                      .build())
+                      .build());
+    }
+    return volumes;
   }
 }

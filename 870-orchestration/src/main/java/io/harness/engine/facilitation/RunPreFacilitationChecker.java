@@ -44,7 +44,7 @@ public class RunPreFacilitationChecker extends ExpressionEvalPreFacilitationChec
             pmsEngineExpressionService.prepareExpressionEvaluator(ambiance);
         Object evaluatedExpression = engineExpressionEvaluator.evaluateExpression(whenCondition);
         boolean whenConditionValue = (Boolean) evaluatedExpression;
-        nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
+        nodeExecutionService.updateV2(nodeExecution.getUuid(), ops -> {
           ops.set(NodeExecutionKeys.nodeRunInfo,
               NodeRunInfo.newBuilder()
                   .setEvaluatedCondition(whenConditionValue)

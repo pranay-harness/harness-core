@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.RUNTEST_STEP_KIND;
 import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.RUN_STEP_KIND;
-import static io.harness.delegate.task.citasks.vm.helper.CIVMConstants.WORKDIR_VOLUME_NAME;
 
 import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
 
@@ -58,22 +57,25 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   }
 
   @Override
-  public VmTaskExecutionResponse executeTaskInternal(CIExecuteStepTaskParams ciExecuteStepTaskParams) {
+  public VmTaskExecutionResponse executeTaskInternal(CIExecuteStepTaskParams ciExecuteStepTaskParams, String taskId) {
     CIVmExecuteStepTaskParams CIVmExecuteStepTaskParams = (CIVmExecuteStepTaskParams) ciExecuteStepTaskParams;
     log.info(
         "Received request to execute step with stage runtime ID {}", CIVmExecuteStepTaskParams.getStageRuntimeId());
-    return callRunnerForStepExecution(CIVmExecuteStepTaskParams);
+    return callRunnerForStepExecution(CIVmExecuteStepTaskParams, taskId);
   }
 
-  private VmTaskExecutionResponse callRunnerForStepExecution(CIVmExecuteStepTaskParams params) {
+  private VmTaskExecutionResponse callRunnerForStepExecution(CIVmExecuteStepTaskParams params, String taskId) {
     try {
-      Response<ExecuteStepResponse> response = httpHelper.executeStepWithRetries(convert(params));
+      Response<ExecuteStepResponse> response = httpHelper.executeStepWithRetries(convert(params, taskId));
       if (!response.isSuccessful()) {
         return VmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
       }
 
       if (isEmpty(response.body().getError())) {
-        return VmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+        return VmTaskExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .outputVars(response.body().getOutputs())
+            .build();
       } else {
         return VmTaskExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -84,21 +86,18 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
       log.error("Failed to execute step in runner", e);
       return VmTaskExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(e.getMessage())
+          .errorMessage(e.toString())
           .build();
     }
   }
 
-  private ExecuteStepRequest convert(CIVmExecuteStepTaskParams params) {
-    ExecuteStepRequest.VolumeMount workdirVol =
-        ExecuteStepRequest.VolumeMount.builder().name(WORKDIR_VOLUME_NAME).path(params.getWorkingDir()).build();
-
+  private ExecuteStepRequest convert(CIVmExecuteStepTaskParams params, String taskId) {
     ConfigBuilder configBuilder = ExecuteStepRequest.Config.builder()
                                       .id(getIdentifier(params.getStepRuntimeId()))
                                       .name(params.getStepId())
                                       .logKey(params.getLogKey())
                                       .workingDir(params.getWorkingDir())
-                                      .volumeMounts(Collections.singletonList(workdirVol));
+                                      .volumeMounts(getVolumeMounts(params.getVolToMountPath()));
     if (params.getStepInfo().getType() == VmStepInfo.Type.RUN) {
       VmRunStep runStep = (VmRunStep) params.getStepInfo();
       setRunConfig(runStep, configBuilder);
@@ -113,10 +112,23 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
       params.getSecrets().forEach(secret -> configBuilder.secret(secret));
     }
     return ExecuteStepRequest.builder()
+        .correlationID(taskId)
         .poolId(params.getPoolId())
         .ipAddress(params.getIpAddress())
         .config(configBuilder.build())
         .build();
+  }
+
+  private List<ExecuteStepRequest.VolumeMount> getVolumeMounts(Map<String, String> volToMountPath) {
+    List<ExecuteStepRequest.VolumeMount> volumeMounts = new ArrayList<>();
+    if (isEmpty(volToMountPath)) {
+      return volumeMounts;
+    }
+
+    for (Map.Entry<String, String> entry : volToMountPath.entrySet()) {
+      volumeMounts.add(ExecuteStepRequest.VolumeMount.builder().name(entry.getKey()).path(entry.getValue()).build());
+    }
+    return volumeMounts;
   }
 
   private void setRunConfig(VmRunStep runStep, ConfigBuilder configBuilder) {
@@ -175,9 +187,9 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
                            .entrypoint(runTestStep.getEntrypoint())
                            .preCommand(runTestStep.getPreCommand())
                            .postCommand(runTestStep.getPostCommand())
-                           .buildTool(runTestStep.getBuildTool())
-                           .language(runTestStep.getLanguage())
-                           .packages(runTestStep.getLanguage())
+                           .buildTool(runTestStep.getBuildTool().toLowerCase())
+                           .language(runTestStep.getLanguage().toLowerCase())
+                           .packages(runTestStep.getPackages())
                            .runOnlySelectedTests(runTestStep.isRunOnlySelectedTests())
                            .testAnnotations(runTestStep.getTestAnnotations())
                            .build())

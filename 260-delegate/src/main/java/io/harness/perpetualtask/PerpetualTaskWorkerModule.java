@@ -24,6 +24,7 @@ import io.harness.perpetualtask.instancesync.AzureWebAppInstanceSyncPerpetualPro
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
 import io.harness.perpetualtask.instancesync.K8sInstanceSyncPerpetualTaskParams;
+import io.harness.perpetualtask.instancesync.NativeHelmInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.k8s.watch.K8SWatchTaskExecutor;
@@ -89,6 +90,8 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
         .to(ConnectorHeartbeatPerpetualTaskExecutor.class);
 
     // NG
+    mapBinder.addBinding(NativeHelmInstanceSyncPerpetualTaskParams.class.getSimpleName())
+        .to(NativeHelmInstanceSyncPerpetualTaskExcecutor.class);
     mapBinder.addBinding(K8sInstanceSyncPerpetualTaskParams.class.getSimpleName())
         .to(K8sInstanceSyncPerpetualTaskExecutor.class);
     mapBinder.addBinding(ManifestCollectionTaskParamsNg.class.getSimpleName())

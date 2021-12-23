@@ -210,6 +210,7 @@ public class IdentityNodeExecutionStrategy
   @Override
   public void resumeNodeExecution(Ambiance ambiance, Map<String, ByteString> response, boolean asyncError) {
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
+    // Todo: Make
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {

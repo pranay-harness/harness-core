@@ -42,9 +42,11 @@ public class CIInitializeTask extends AbstractDelegateRunnableTask {
   public DelegateResponseData run(TaskParameters parameters) {
     CIInitializeTaskParams ciInitializeTaskParams = (CIInitializeTaskParams) parameters;
     if (ciInitializeTaskParams.getType() == CIInitializeTaskParams.Type.GCP_K8) {
-      return ciK8InitializeTaskHandler.executeTaskInternal(ciInitializeTaskParams, getLogStreamingTaskClient());
+      return ciK8InitializeTaskHandler.executeTaskInternal(
+          ciInitializeTaskParams, getLogStreamingTaskClient(), getTaskId());
     } else if (ciInitializeTaskParams.getType() == CIInitializeTaskParams.Type.VM) {
-      return ciVmInitializeTaskHandler.executeTaskInternal(ciInitializeTaskParams, getLogStreamingTaskClient());
+      return ciVmInitializeTaskHandler.executeTaskInternal(
+          ciInitializeTaskParams, getLogStreamingTaskClient(), getTaskId());
     } else {
       throw new CIStageExecutionException(
           format("Invalid infra type for initializing stage", ciInitializeTaskParams.getType()));

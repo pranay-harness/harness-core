@@ -222,7 +222,7 @@ public enum TaskType {
   DYNA_TRACE_GET_SERVICES(TaskGroup.DYNA_TRACE),
   DYNATRACE_COLLECT_24_7_METRIC_DATA(TaskGroup.GUARD_24x7),
   HELM_COMMAND_TASK(TaskGroup.HELM),
-  HELM_COMMAND_TASK_NG(TaskGroup.HELM),
+  HELM_COMMAND_TASK_NG(TaskGroup.HELM, "Helm Command Task"),
   KUBERNETES_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER),
   PCF_COMMAND_TASK(TaskGroup.PCF),
   SPOTINST_COMMAND_TASK(TaskGroup.SPOTINST),
@@ -328,7 +328,8 @@ public enum TaskType {
   SCM_GIT_FILE_TASK(TaskGroup.GIT, "SCM Git File Task"),
   SCM_PULL_REQUEST_TASK(TaskGroup.GIT, "SCM Git PR Task"),
   SCM_GIT_WEBHOOK_TASK(TaskGroup.GIT, "SCM Git Webhook Task"),
-  SERVICENOW_CONNECTIVITY_TASK_NG(TaskGroup.SERVICENOW_NG, "ServiceNow connectivity test Task");
+  SERVICENOW_CONNECTIVITY_TASK_NG(TaskGroup.SERVICENOW_NG, "ServiceNow connectivity test Task"),
+  SERVICENOW_TASK_NG(TaskGroup.SERVICENOW_NG, "ServiceNow Task");
 
   private final TaskGroup taskGroup;
   private final String displayName;

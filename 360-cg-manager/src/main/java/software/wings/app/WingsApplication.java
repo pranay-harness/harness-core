@@ -92,6 +92,7 @@ import io.harness.manifest.ManifestCollectionPTaskServiceClient;
 import io.harness.marketplace.gcp.GcpMarketplaceSubscriberService;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.modules.MetricsModule;
 import io.harness.migrations.MigrationModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.QuartzCleaner;
@@ -867,7 +868,7 @@ public class WingsApplication extends Application<MainConfiguration> {
                       }
                     }))
                     .build());
-
+    modules.add(new MetricsModule());
     modules.add(new ValidationModule(validatorFactory) {
       @Override
       protected void configureAop(ValidationMethodInterceptor interceptor) {

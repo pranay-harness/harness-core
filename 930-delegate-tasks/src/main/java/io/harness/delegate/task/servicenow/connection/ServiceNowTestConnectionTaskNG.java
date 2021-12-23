@@ -15,7 +15,7 @@ import io.harness.delegate.task.servicenow.ServiceNowTaskNGParameters;
 import io.harness.delegate.task.servicenow.ServiceNowTaskNgHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HintException;
-import io.harness.jira.ServiceNowActionNG;
+import io.harness.servicenow.ServiceNowActionNG;
 
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;

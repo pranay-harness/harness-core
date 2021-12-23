@@ -736,7 +736,6 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     // savedAppManifest -> True, applicationManifest -> False
     applicationManifestServiceImpl.checkForUpdates(savedAppManifest, applicationManifest);
-    verify(helmChartService, times(1)).deleteByAppManifest(anyString(), anyString());
     verify(applicationManifestServiceImpl, times(1)).deletePerpetualTask(savedAppManifest);
   }
 

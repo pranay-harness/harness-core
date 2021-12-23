@@ -4,9 +4,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.instanceinfo.InstanceInfoDTO;
 import io.harness.dtos.instanceinfo.K8sInstanceInfoDTO;
+import io.harness.dtos.instanceinfo.NativeHelmInstanceInfoDTO;
 import io.harness.dtos.instanceinfo.ReferenceInstanceInfoDTO;
 import io.harness.entities.instanceinfo.InstanceInfo;
 import io.harness.entities.instanceinfo.K8sInstanceInfo;
+import io.harness.entities.instanceinfo.NativeHelmInstanceInfo;
 import io.harness.entities.instanceinfo.ReferenceInstanceInfo;
 import io.harness.exception.InvalidRequestException;
 
@@ -20,6 +22,8 @@ public class InstanceInfoMapper {
       return ReferenceInstanceInfoMapper.toDTO((ReferenceInstanceInfo) instanceInfo);
     } else if (instanceInfo instanceof K8sInstanceInfo) {
       return K8sInstanceInfoMapper.toDTO((K8sInstanceInfo) instanceInfo);
+    } else if (instanceInfo instanceof NativeHelmInstanceInfo) {
+      return NativeHelmInstanceInfoMapper.toDTO((NativeHelmInstanceInfo) instanceInfo);
     }
     throw new InvalidRequestException("No InstanceInfoMapper toDTO found for instanceInfo : {}" + instanceInfo);
   }
@@ -29,6 +33,8 @@ public class InstanceInfoMapper {
       return ReferenceInstanceInfoMapper.toEntity((ReferenceInstanceInfoDTO) instanceInfoDTO);
     } else if (instanceInfoDTO instanceof K8sInstanceInfoDTO) {
       return K8sInstanceInfoMapper.toEntity((K8sInstanceInfoDTO) instanceInfoDTO);
+    } else if (instanceInfoDTO instanceof NativeHelmInstanceInfoDTO) {
+      return NativeHelmInstanceInfoMapper.toEntity((NativeHelmInstanceInfoDTO) instanceInfoDTO);
     }
     throw new InvalidRequestException(
         "No InstanceInfoMapper toEntity found for instanceInfoDTO : {}" + instanceInfoDTO);

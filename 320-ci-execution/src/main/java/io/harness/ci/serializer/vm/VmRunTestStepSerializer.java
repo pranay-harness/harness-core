@@ -61,6 +61,9 @@ public class VmRunTestStepSerializer {
     Map<String, String> envVars =
         resolveMapParameter("envVariables", stepName, identifier, runTestsStepInfo.getEnvVariables(), false);
 
+    String earlyExitCommand = SerializerUtils.getEarlyExitCommand(runTestsStepInfo.getShell());
+    preCommand = earlyExitCommand + preCommand;
+
     VmRunTestStepBuilder runTestStepBuilder =
         VmRunTestStep.builder()
             .image(image)

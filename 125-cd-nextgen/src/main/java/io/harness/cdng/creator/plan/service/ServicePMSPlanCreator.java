@@ -1,6 +1,5 @@
 package io.harness.cdng.creator.plan.service;
 
-import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -64,9 +63,9 @@ import java.util.stream.Collectors;
 @Singleton
 public class ServicePMSPlanCreator {
   @Inject EnforcementValidator enforcementValidator;
-
+  @Inject private KryoSerializer kryoSerializer;
   public PlanCreationResponse createPlanForServiceNode(YamlField serviceField, ServiceConfig serviceConfig,
-      KryoSerializer kryoSerializer, InfraSectionStepParameters infraSectionStepParameters, PlanCreationContext ctx) {
+      InfraSectionStepParameters infraSectionStepParameters, PlanCreationContext ctx) {
     enforcementValidator.validate(ctx.getMetadata().getAccountIdentifier(), ctx.getMetadata().getOrgIdentifier(),
         ctx.getMetadata().getProjectIdentifier(), ctx.getMetadata().getMetadata().getPipelineIdentifier(),
         ctx.getYaml(), ctx.getMetadata().getMetadata().getExecutionUuid());
@@ -93,10 +92,9 @@ public class ServicePMSPlanCreator {
     }
 
     String serviceYamlNodeId = serviceNode.getUuid();
-    String serviceDefinitionNodeId = addServiceDefinitionNode(actualServiceConfig, planNodes, serviceYamlNodeId,
-        serviceSpecChildrenIds, infraSectionStepParameters, kryoSerializer);
-    String serviceNodeId =
-        addServiceNode(actualServiceConfig, planNodes, serviceYamlNodeId, serviceDefinitionNodeId, kryoSerializer);
+    String serviceDefinitionNodeId = addServiceDefinitionNode(
+        actualServiceConfig, planNodes, serviceYamlNodeId, serviceSpecChildrenIds, infraSectionStepParameters);
+    String serviceNodeId = addServiceNode(actualServiceConfig, planNodes, serviceYamlNodeId, serviceDefinitionNodeId);
 
     ServiceConfigStepParameters serviceConfigStepParameters = ServiceConfigStepParameters.builder()
                                                                   .useFromStage(actualServiceConfig.getUseFromStage())
@@ -114,7 +112,7 @@ public class ServicePMSPlanCreator {
                 FacilitatorObtainment.newBuilder()
                     .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
                     .build())
-            .adviserObtainments(getAdviserObtainmentFromMetaData(serviceNode, kryoSerializer))
+            .adviserObtainments(getAdviserObtainmentFromMetaData(serviceNode))
             .skipExpressionChain(false)
             .build();
     planNodes.put(serviceConfigPlanNode.getUuid(), serviceConfigPlanNode);
@@ -122,7 +120,7 @@ public class ServicePMSPlanCreator {
   }
 
   private String addServiceNode(ServiceConfig actualServiceConfig, Map<String, PlanNode> planNodes,
-      String serviceNodeId, String serviceDefinitionNodeId, KryoSerializer kryoSerializer) {
+      String serviceNodeId, String serviceDefinitionNodeId) {
     ServiceStepParameters stepParameters = ServiceStepParameters.fromServiceConfig(actualServiceConfig);
     PlanNode node =
         PlanNode.builder()
@@ -149,8 +147,8 @@ public class ServicePMSPlanCreator {
   }
 
   private String addServiceDefinitionNode(ServiceConfig actualServiceConfig, Map<String, PlanNode> planNodes,
-      String serviceNodeId, List<String> serviceSpecChildrenIds, InfraSectionStepParameters infraSectionStepParameters,
-      KryoSerializer kryoSerializer) {
+      String serviceNodeId, List<String> serviceSpecChildrenIds,
+      InfraSectionStepParameters infraSectionStepParameters) {
     String serviceSpecNodeId =
         addServiceSpecNode(actualServiceConfig, planNodes, serviceNodeId, serviceSpecChildrenIds);
     String environmentStepNodeId =
@@ -223,15 +221,13 @@ public class ServicePMSPlanCreator {
                         overrideSet
                         -> ArtifactOverrideSetsStepParametersWrapper.fromArtifactOverrideSets(
                             overrideSet.getOverrideSet()))))
-            .manifestOverrideSets(getParameterFieldValue(serviceSpec.getManifestOverrideSets()) == null
+            .manifestOverrideSets(serviceSpec.getManifestOverrideSets() == null
                     ? null
-                    : getParameterFieldValue(serviceSpec.getManifestOverrideSets())
-                          .stream()
-                          .collect(Collectors.toMap(overrideSet
-                              -> overrideSet.getOverrideSet().getIdentifier(),
-                              overrideSet
-                              -> ManifestOverrideSetsStepParametersWrapper.fromManifestOverrideSets(
-                                  overrideSet.getOverrideSet()))))
+                    : serviceSpec.getManifestOverrideSets().stream().collect(Collectors.toMap(overrideSet
+                        -> overrideSet.getOverrideSet().getIdentifier(),
+                        overrideSet
+                        -> ManifestOverrideSetsStepParametersWrapper.fromManifestOverrideSets(
+                            overrideSet.getOverrideSet()))))
             .childrenNodeIds(serviceSpecChildrenIds)
             .build();
     PlanNode node =
@@ -307,8 +303,7 @@ public class ServicePMSPlanCreator {
     }
   }
 
-  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(
-      YamlNode currentNode, KryoSerializer kryoSerializer) {
+  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlNode currentNode) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentNode != null) {
       YamlField siblingField = currentNode.nextSiblingNodeFromParentObject("infrastructure");

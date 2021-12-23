@@ -31,9 +31,9 @@ public interface VerificationTaskService {
   String getServiceGuardVerificationTaskId(String accountId, String cvConfigId);
   String getSLIVerificationTaskId(String accountId, String sliId);
   List<String> getServiceGuardVerificationTaskIds(String accountId, List<String> cvConfigIds);
+  List<String> getServiceGuardVerificationTaskIds(String accountId, String cvConfigId);
   boolean isServiceGuardId(String verificationTaskId);
-  void removeCVConfigMappings(String accountId, String cvConfigId);
-  List<String> getVerificationTaskIds(String cvConfigId);
+  void removeLiveMonitoringMappings(String accountId, String cvConfigId);
   Optional<String> findBaselineVerificationTaskId(
       String currentVerificationTaskId, VerificationJobInstance verificationJobInstance);
   List<String> getAllVerificationJobInstanceIdsForCVConfig(String cvConfigId);

@@ -6,7 +6,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@Schema(name = "CreatePR", description = "This contains PR Id")
+@Schema(name = "PRDetails", description = "This contains PR Id")
 public class CreatePRDTO {
-  int prNumber;
+  @Schema(description = "PR Id") int prNumber;
 }

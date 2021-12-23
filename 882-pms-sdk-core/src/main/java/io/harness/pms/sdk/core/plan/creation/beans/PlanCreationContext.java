@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.async.AsyncCreatorContext;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.pms.contracts.plan.Dependency;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
@@ -32,12 +33,14 @@ public class PlanCreationContext implements AsyncCreatorContext {
   YamlField currentField;
   @Singular("globalContext") Map<String, PlanCreationContextValue> globalContext;
   String yaml;
+  Dependency dependency;
 
   public static PlanCreationContext cloneWithCurrentField(
-      PlanCreationContext planCreationContext, YamlField field, String yaml) {
+      PlanCreationContext planCreationContext, YamlField field, String yaml, Dependency dependency) {
     return PlanCreationContext.builder()
         .currentField(field)
         .yaml(yaml)
+        .dependency(dependency)
         .globalContext(planCreationContext.getGlobalContext())
         .build();
   }

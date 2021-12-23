@@ -1,8 +1,8 @@
 package io.harness.cvng.core.beans;
 
+import io.harness.cvng.beans.customhealth.TimestampInfo;
 import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthMethod;
 
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -15,7 +15,8 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CustomHealthSampleDataRequest {
   @NotNull @NotBlank String urlPath;
-  @NotNull Map<String, String> requestTimestampPlaceholderAndValues;
+  @NotNull TimestampInfo startTime;
+  @NotNull TimestampInfo endTime;
   @NotNull CustomHealthMethod method;
   String body;
 }

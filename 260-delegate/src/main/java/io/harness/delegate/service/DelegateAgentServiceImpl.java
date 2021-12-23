@@ -386,6 +386,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final AtomicBoolean switchStorage = new AtomicBoolean(false);
   private final AtomicBoolean reconnectingSocket = new AtomicBoolean(false);
   private final AtomicBoolean closingSocket = new AtomicBoolean(false);
+  private final AtomicBoolean sentFirstHeartbeat = new AtomicBoolean(false);
 
   private Client client;
   private Socket socket;
@@ -409,6 +410,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   public static Optional<String> getDelegateId() {
     return Optional.ofNullable(delegateId);
+  }
+
+  public boolean isHeartbeatHealthy() {
+    return sentFirstHeartbeat.get() && ((clock.millis() - lastHeartbeatSentAt.get()) <= HEARTBEAT_TIMEOUT);
+  }
+
+  public boolean isSocketHealthy() {
+    return socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED;
   }
 
   @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean kubectlInstalled;
@@ -1644,6 +1653,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         HTimeLimiter.callInterruptible21(
             timeLimiter, Duration.ofSeconds(15), () -> socket.fire(JsonUtils.asJson(delegateParams)));
         lastHeartbeatSentAt.set(clock.millis());
+        sentFirstHeartbeat.set(true);
       } catch (UncheckedTimeoutException ex) {
         log.warn("Timed out sending heartbeat", ex);
       } catch (Exception e) {
@@ -1698,7 +1708,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               .location(Paths.get("").toAbsolutePath().toString())
               .build();
       lastHeartbeatSentAt.set(clock.millis());
-
+      sentFirstHeartbeat.set(true);
       RestResponse<DelegateHeartbeatResponse> delegateParamsResponse =
           executeRestCall(delegateAgentManagerClient.delegateHeartbeat(accountId, delegateParams));
       long now = clock.millis();

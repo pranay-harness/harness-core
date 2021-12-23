@@ -92,6 +92,16 @@ aws_cur_table_schema = [
         "type": "STRING"
     },
     {
+        "mode": "NULLABLE",
+        "name": "instanceFamily",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "marketOption",
+        "type": "STRING"
+    },
+    {
         "fields": [
             {
                 "mode": "NULLABLE",

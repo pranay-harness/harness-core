@@ -25,7 +25,7 @@ public class InitializeStepGenerator {
       StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs, Infrastructure infrastructure,
       String accountId) {
     BuildJobEnvInfo buildJobEnvInfo = buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(
-        stageElementConfig, ciExecutionArgs, executionElement.getSteps(), accountId);
+        stageElementConfig, infrastructure, ciExecutionArgs, executionElement.getSteps(), accountId);
 
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 

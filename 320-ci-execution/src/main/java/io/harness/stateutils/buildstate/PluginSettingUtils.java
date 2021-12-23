@@ -376,7 +376,7 @@ public class PluginSettingUtils {
     ArchiveFormat archiveFormat = resolveArchiveFormat(stepInfo.getArchiveFormat());
     setMandatoryEnvironmentVariable(map, PLUGIN_ARCHIVE_FORMAT, archiveFormat.toString());
 
-    boolean override = resolveBooleanParameter(stepInfo.getOverride(), true);
+    boolean override = resolveBooleanParameter(stepInfo.getOverride(), false);
     setMandatoryEnvironmentVariable(map, PLUGIN_OVERRIDE, String.valueOf(override));
     setMandatoryEnvironmentVariable(map, PLUGIN_MOUNT, listToStringSlice(sourcePaths));
     setMandatoryEnvironmentVariable(map, PLUGIN_REBUILD, "true");
@@ -452,7 +452,7 @@ public class PluginSettingUtils {
     boolean pathStyle = resolveBooleanParameter(stepInfo.getPathStyle(), false);
     setOptionalEnvironmentVariable(map, PLUGIN_PATH_STYLE, String.valueOf(pathStyle));
 
-    boolean override = resolveBooleanParameter(stepInfo.getOverride(), true);
+    boolean override = resolveBooleanParameter(stepInfo.getOverride(), false);
     setMandatoryEnvironmentVariable(map, PLUGIN_OVERRIDE, String.valueOf(override));
 
     setMandatoryEnvironmentVariable(map, PLUGIN_EXIT_CODE, "true");

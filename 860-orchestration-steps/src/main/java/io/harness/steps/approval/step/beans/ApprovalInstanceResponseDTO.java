@@ -36,4 +36,5 @@ public class ApprovalInstanceResponseDTO {
 
   Long createdAt;
   Long lastModifiedAt;
+  String errorMessage;
 }

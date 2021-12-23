@@ -1455,23 +1455,23 @@ public class AbstractK8SStateTest extends WingsBaseTest {
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
     appManifestMap.put(K8sValuesLocation.Service,
-            ApplicationManifest.builder().storeType(Remote).kind(AppManifestKind.K8S_MANIFEST).build());
+        ApplicationManifest.builder().storeType(Remote).kind(AppManifestKind.K8S_MANIFEST).build());
     when(applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.KUSTOMIZE_PATCHES))
-            .thenReturn(appManifestMap);
+        .thenReturn(appManifestMap);
     when(openShiftManagerService.isOpenShiftManifestConfig(context)).thenReturn(false);
     when(applicationManifestUtils.isValuesInHelmChartRepo(context)).thenReturn(false);
     when(applicationManifestUtils.isKustomizeSource(context)).thenReturn(true);
-    when(featureFlagService.isEnabled(VARIABLE_SUPPORT_FOR_KUSTOMIZE,context.getAccountId())).thenReturn(true);
+    when(featureFlagService.isEnabled(VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId())).thenReturn(true);
     when(activityService.save(any(Activity.class))).thenReturn(Activity.builder().uuid(ACTIVITY_ID).build());
     when(applicationManifestUtils.createGitFetchFilesTaskParams(context, application, appManifestMap))
-            .thenReturn(GitFetchFilesTaskParams.builder().build());
+        .thenReturn(GitFetchFilesTaskParams.builder().build());
     ExecutionResponse executionResponse =
-            abstractK8SState.executeWrapperWithManifest(k8sStateExecutor, context, 10 * 60 * 1000L);
+        abstractK8SState.executeWrapperWithManifest(k8sStateExecutor, context, 10 * 60 * 1000L);
     assertThat(((K8sStateExecutionData) executionResponse.getStateExecutionData()).getCurrentTaskType())
-            .isEqualTo(TaskType.GIT_COMMAND);
+        .isEqualTo(TaskType.GIT_COMMAND);
   }
 
-    @Test
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecuteWrapperWithManifest() {

@@ -25,16 +25,16 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "GitSyncConfigDTOKeys")
-@Schema(name = "GitSyncConfig", description = "Contains information of Git Sync Config")
+@Schema(name = "GitSyncConfig", description = "This contains details of Git Sync Config")
 @OwnedBy(DX)
 @ApiModel("GitSyncConfig")
 public class GitSyncConfigDTO {
   @Schema(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE) @Trimmed @NotEmpty private String identifier;
-  @Schema(description = "Repo Name") @Trimmed @NotEmpty private String name;
+  @Schema(description = GitSyncApiConstants.REPO_NAME_PARAM_MESSAGE) @Trimmed @NotEmpty private String name;
   @Schema(description = PROJECT_PARAM_MESSAGE) @Trimmed private String projectIdentifier;
   @Schema(description = ORG_PARAM_MESSAGE) @Trimmed private String orgIdentifier;
-  @Schema(description = "Referenced Connector Identifier") @Trimmed @NotEmpty private String gitConnectorRef;
-  @Schema(description = "Repo Url") @Trimmed @NotEmpty private String repo;
+  @Schema(description = "Id of the Connector referenced in Git") @Trimmed @NotEmpty private String gitConnectorRef;
+  @Schema(description = GitSyncApiConstants.REPO_URL_PARAM_MESSAGE) @Trimmed @NotEmpty private String repo;
   @Schema(description = GitSyncApiConstants.BRANCH_PARAM_MESSAGE) @Trimmed @NotEmpty private String branch;
   @Schema(description = "Connector Type")
   @ApiModelProperty(allowableValues = "Github, Gitlab, Bitbucket")

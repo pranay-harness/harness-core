@@ -3,7 +3,6 @@ package io.harness.cvng.core.services.api;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.newrelic.NewRelicApplication;
 import io.harness.cvng.core.beans.MetricPackValidationResponse;
-import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 
 import java.util.LinkedHashMap;
@@ -17,6 +16,4 @@ public interface NewRelicService {
       String projectIdentifier, String appName, String appId, List<MetricPackDTO> metricPacks, String tracingId);
   LinkedHashMap fetchSampleData(
       ProjectParams projectParams, String connectorIdentifier, String query, String tracingId);
-  List<TimeSeriesSampleDTO> parseSampleData(ProjectParams projectParams, String jsonResponse, String groupName,
-      String metricValueJsonPath, String timestampJsonPath, String timestampFormat);
 }

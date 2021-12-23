@@ -39,9 +39,9 @@ public class CICleanupTask extends AbstractDelegateRunnableTask {
   public DelegateResponseData run(TaskParameters parameters) {
     CICleanupTaskParams ciCleanupTaskParams = (CICleanupTaskParams) parameters;
     if (ciCleanupTaskParams.getType() == CICleanupTaskParams.Type.GCP_K8) {
-      return ciK8CleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams);
+      return ciK8CleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams, getTaskId());
     } else if (ciCleanupTaskParams.getType() == CICleanupTaskParams.Type.VM) {
-      return ciVmCleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams);
+      return ciVmCleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams, getTaskId());
     } else {
       throw new CIStageExecutionException(
           String.format("Invalid infra type for cleanup step", ciCleanupTaskParams.getType()));

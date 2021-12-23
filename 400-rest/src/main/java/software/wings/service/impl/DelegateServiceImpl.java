@@ -64,7 +64,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
-import io.harness.beans.DelegateTask.Status;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -1183,8 +1182,8 @@ public class DelegateServiceImpl implements DelegateService {
 
     final boolean useCDN = mainConfiguration.useCdnForDelegateStorage() && cdnConfig != null;
 
-    final String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(
-        templateParameters.getAccountId(), templateParameters.getManagerHost(), mainConfiguration.getDeployMode().name());
+    final String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(templateParameters.getAccountId(),
+        templateParameters.getManagerHost(), mainConfiguration.getDeployMode().name());
     final String delegateStorageUrl = getDelegateStorageUrl(cdnConfig, useCDN, delegateMetadataUrl);
     final String delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
 
@@ -1194,8 +1193,10 @@ public class DelegateServiceImpl implements DelegateService {
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         log.info("Multi-Version is enabled");
         latestVersion = templateParameters.getVersion();
-        final String fullVersion = Optional.ofNullable(getDelegateBuildVersion(templateParameters.getVersion())).orElse(null);
-        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(fullVersion, templateParameters.getAccountId());
+        final String fullVersion =
+            Optional.ofNullable(getDelegateBuildVersion(templateParameters.getVersion())).orElse(null);
+        delegateJarDownloadUrl =
+            infraDownloadService.getDownloadUrlForDelegate(fullVersion, templateParameters.getAccountId());
       } else {
         final String delegateMatadata = delegateVersionCache.get(templateParameters.getAccountId());
         log.info("Delegate metadata: [{}]", delegateMatadata);
@@ -1209,20 +1210,21 @@ public class DelegateServiceImpl implements DelegateService {
           latestVersion, delegateJarDownloadUrl);
     }
 
-    log.info("Found delegate latest version: [{}] url: [{}]", latestVersion, delegateJarDownloadUrl);
+    log.info("Current version of delegate :[{}], latest version: [{}] url: [{}]", templateParameters.getVersion(),
+        latestVersion, delegateJarDownloadUrl);
     if (doesJarFileExist(delegateJarDownloadUrl)) {
       final String watcherMetadataUrl;
       if (useCDN) {
         watcherMetadataUrl = infraDownloadService.getCdnWatcherMetaDataFileUrl();
       } else {
-        watcherMetadataUrl = subdomainUrlHelper.getWatcherMetadataUrl(
-            templateParameters.getAccountId(), templateParameters.getManagerHost(), mainConfiguration.getDeployMode().name());
+        watcherMetadataUrl = subdomainUrlHelper.getWatcherMetadataUrl(templateParameters.getAccountId(),
+            templateParameters.getManagerHost(), mainConfiguration.getDeployMode().name());
       }
       final String watcherStorageUrl = watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/'));
       final String watcherCheckLocation = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
-      final String hexkey =
-          format("%040x", new BigInteger(1, templateParameters.getAccountId().substring(0, 6).getBytes(StandardCharsets.UTF_8)))
-              .replaceFirst("^0+(?!$)", "");
+      final String hexkey = format("%040x",
+          new BigInteger(1, templateParameters.getAccountId().substring(0, 6).getBytes(StandardCharsets.UTF_8)))
+                                .replaceFirst("^0+(?!$)", "");
 
       final boolean isCiEnabled = isCiEnabled(templateParameters);
       ImmutableMap.Builder<String, String> params =
@@ -1370,8 +1372,8 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateTokenName", templateParameters.getDelegateTokenName());
       }
 
-      params.put(
-          "isImmutable", String.valueOf(featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, templateParameters.getAccountId())));
+      params.put("isImmutable",
+          String.valueOf(featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, templateParameters.getAccountId())));
 
       return params.build();
     }
@@ -2293,7 +2295,8 @@ public class DelegateServiceImpl implements DelegateService {
                                         .filter(DelegateKeys.hostName, delegate.getHostName());
     // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
     // We ignore IP address because that can change with every restart of the pod.
-    if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
+    if (!(delegate.isNg() && KUBERNETES.equals(delegate.getDelegateType()))
+        && !delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
       delegateQuery.filter(DelegateKeys.ip, delegate.getIp());
     }
 
@@ -2358,7 +2361,8 @@ public class DelegateServiceImpl implements DelegateService {
                                               .filter(DelegateKeys.hostName, delegateParams.getHostName());
     // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
     // We ignore IP address because that can change with every restart of the pod.
-    if (!delegateParams.getHostName().contains(getAccountIdentifier(delegateParams.getAccountId()))) {
+    if (!(delegateParams.isNg() && KUBERNETES.equals(delegateParams.getDelegateType()))
+        && !delegateParams.getHostName().contains(getAccountIdentifier(delegateParams.getAccountId()))) {
       delegateQuery.filter(DelegateKeys.ip, delegateParams.getIp());
     }
 
@@ -2723,11 +2727,6 @@ public class DelegateServiceImpl implements DelegateService {
       log.error("Could not get delegates from DB.", e);
       return null;
     }
-  }
-
-  @Override
-  public void saveDelegateTask(DelegateTask task, Status status) {
-    delegateTaskServiceClassic.saveDelegateTask(task, status);
   }
 
   @VisibleForTesting
@@ -3963,8 +3962,7 @@ public class DelegateServiceImpl implements DelegateService {
             .ceEnabled(false)
             .build();
 
-    ImmutableMap<String, String> paramMap =
-        getJarAndScriptRunTimeParamMap(templateParameters, useNgToken, true);
+    ImmutableMap<String, String> paramMap = getJarAndScriptRunTimeParamMap(templateParameters, useNgToken, true);
 
     if (isEmpty(paramMap)) {
       throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));

@@ -1,40 +1,55 @@
-set -x
+set -xe
 
 export BRANCH_PREFIX=`echo ${ghprbTargetBranch} | sed 's/\(........\).*/\1/g'`
+echo "INFO: BRANCH_PREFIX=$BRANCH_PREFIX"
+
 export VERSION_FILE=build.properties
 
-export VERSION=`cat ${VERSION_FILE} |\
-    grep 'build.number=' |\
-    sed -e 's: *build.number=::g'`
-export OLD_VERSION=$(( ${VERSION}-1 ))
+export VERSION=`cat ${VERSION_FILE} | grep 'build.number=' | sed -e 's: *build.number=::g'`
+echo "INFO: VERSION=$VERSION"
 
-export PATCH=`cat ${VERSION_FILE} |\
-    grep 'build.patch=' |\
-    sed -e 's: *build.patch=::g'`
+export OLD_VERSION=$(( ${VERSION}-1 ))
+echo "INFO: OLD_VERSION=$OLD_VERSION"
+
+export PATCH=`cat ${VERSION_FILE} | grep 'build.patch=' | sed -e 's: *build.patch=::g'`
+echo "INFO: PATCH=$PATCH"
 
 git checkout origin/${ghprbTargetBranch} -b temp246_test
 git checkout ${ghprbTargetBranch}
 
-set -e
+VERSION_DIFF=$(git diff temp246_test..${ghprbTargetBranch} -- ${VERSION_FILE} | { grep "+build.number=$VERSION" || true;})
+echo "INFO: $?: VERSION_DIFF=$VERSION_DIFF"
 
-if [ "${BRANCH_PREFIX}" = "release/" ] && [ `git diff temp246_test..${ghprbTargetBranch} -- ${VERSION_FILE} | grep "+build.number=$VERSION"` ] && [ `git diff temp246_test..${ghprbTargetBranch} -- ${VERSION_FILE} | grep "+build.patch=$PATCH"` ]
+PATCH_DIFF=$(git diff temp246_test..${ghprbTargetBranch} -- ${VERSION_FILE} | { grep  "+build.patch=$PATCH" || true;})
+echo "INFO: $?: PATCH_DIFF=$PATCH_DIFF"
+
+if [ "${BRANCH_PREFIX}" = "release/" ] && [ $VERSION_DIFF ] && [ $PATCH_DIFF ]
 then
-  echo "Both buildversion and patch cannot be modified"
+
+  echo "ERROR: Both build.number and build.patch cannot be modified."
   exit 1
-elif [ "${BRANCH_PREFIX}" = "release/" ] && [ ! `git diff temp246_test..${ghprbTargetBranch} -- ${VERSION_FILE} | grep "+build.number=$VERSION"` ] && [ ! `git diff temp246_test..${ghprbTargetBranch} -- ${VERSION_FILE} | grep "+build.patch=$PATCH"` ]
+
+elif [ "${BRANCH_PREFIX}" = "release/" ] && [ ! $VERSION_DIFF ] && [ ! $PATCH_DIFF ]
 then
-  echo "Either buildversion or patch version must be incremented"
+
+  echo "ERROR:  Either build.number or build.patch must be incremented."
   exit 1
-elif [ "${BRANCH_PREFIX}" = "release/" ] && [ `git diff temp246_test..${ghprbTargetBranch} -- ${VERSION_FILE} | grep "+build.number=$VERSION"` ]
+
+elif [ "${BRANCH_PREFIX}" = "release/" ] && [ $VERSION_DIFF ]
 then
+
+  echo "INFO:  OLD VERSION INFO."
   git diff temp246_test..${ghprbTargetBranch} -- ${VERSION_FILE} | grep "\-build.number=$OLD_VERSION"
-elif [ "${BRANCH_PREFIX}" = "release/" ] && [ `git diff temp246_test..${ghprbTargetBranch} -- ${VERSION_FILE} | grep "+build.patch=$PATCH"` ]
+
+elif [ "${BRANCH_PREFIX}" = "release/" ] && [ $PATCH_DIFF ]
 then
+
+  echo "INFO:  OLD PATCH INFO."
   export OLD_PATCH=$(printf %03d $(( ${PATCH}-1 )) )
   git diff temp246_test..${ghprbTargetBranch} -- ${VERSION_FILE} | grep "+build.patch=$PATCH"
   git diff temp246_test..${ghprbTargetBranch} -- ${VERSION_FILE} | grep "\-build.patch=$OLD_PATCH"
-fi
 
+fi
 
 if [ "${ghprbTargetBranch}" = "master" ]
 then

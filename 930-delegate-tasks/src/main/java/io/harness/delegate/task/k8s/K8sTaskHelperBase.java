@@ -2551,14 +2551,6 @@ public class K8sTaskHelperBase {
         errorSummary += "few of the visibility permissions are missing, ";
       }
 
-      if (featuresEnabled.contains(CEFeatures.OPTIMIZATION)) {
-        errorDetails.addAll(this.validateLightwingResourceExists(kubernetesConfig));
-
-        errorDetails.addAll(this.validateLightwingResourcePermissions(kubernetesConfig));
-
-        errorSummary += "few of the optimization permissions are missing, ";
-      }
-
       if (!errorDetails.isEmpty()) {
         return ConnectorValidationResult.builder()
             .errorSummary(errorSummary)

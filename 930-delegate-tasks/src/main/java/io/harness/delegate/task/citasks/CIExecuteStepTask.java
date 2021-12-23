@@ -35,9 +35,9 @@ public class CIExecuteStepTask extends AbstractDelegateRunnableTask {
   public DelegateResponseData run(TaskParameters parameters) {
     CIExecuteStepTaskParams ciExecuteStepTaskParams = (CIExecuteStepTaskParams) parameters;
     if (ciExecuteStepTaskParams.getType() == CIExecuteStepTaskParams.Type.K8) {
-      return ciK8ExecuteStepTaskHandler.executeTaskInternal(ciExecuteStepTaskParams);
+      return ciK8ExecuteStepTaskHandler.executeTaskInternal(ciExecuteStepTaskParams, getTaskId());
     } else if (ciExecuteStepTaskParams.getType() == CIExecuteStepTaskParams.Type.VM) {
-      return ciVmExecuteStepTaskHandler.executeTaskInternal(ciExecuteStepTaskParams);
+      return ciVmExecuteStepTaskHandler.executeTaskInternal(ciExecuteStepTaskParams, getTaskId());
     } else {
       throw new CIStageExecutionException(
           format("Invalid infra type for executing step", ciExecuteStepTaskParams.getType()));
