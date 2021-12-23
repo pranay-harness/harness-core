@@ -155,8 +155,18 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
       HelmCliResponse helmCliResponse =
           helmClient.releaseHistory(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest));
-      logCallback.saveExecutionLog(
-          preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
+
+      // helm hist fails due to any reason other than 'release not found' -- then we fail deployment
+      // (for first time deployment, release history cmd fails with release not found)
+      if (helmCliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE
+          && !(helmCliResponse.getOutput().contains("not found") && helmCliResponse.getOutput().contains("release"))) {
+        return HelmReleaseHistoryCmdResponseNG.builder()
+            .commandExecutionStatus(helmCliResponse.getCommandExecutionStatus())
+            .output(helmCliResponse.getOutput())
+            .build();
+      }
+
+      logCallback.saveExecutionLog(helmCliResponse.getOutput());
 
       prevVersion = getPrevReleaseVersion(helmCliResponse);
 
@@ -603,14 +613,6 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     }
     return commandRequest.getHelmVersion() == HelmVersion.V3 ? ensureHelm3Installed(commandRequest)
                                                              : ensureHelmCliAndTillerInstalled(commandRequest);
-  }
-
-  private String preProcessReleaseHistoryCommandOutput(HelmCliResponse helmCliResponse, String releaseName) {
-    if (helmCliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
-      return "Release: \"" + releaseName + "\" not found\n";
-    }
-
-    return helmCliResponse.getOutput();
   }
 
   @VisibleForTesting

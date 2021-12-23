@@ -375,6 +375,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   }
 
   private void initForDeploy() throws Exception {
+    helmCliReleaseHistoryResponse.setCommandExecutionStatus(SUCCESS);
     when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.install(any())).thenReturn(helmCliResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
@@ -941,7 +942,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   }
 
   private HelmCliResponse getHelmCliResponse() {
-    return HelmCliResponse.builder().build();
+    return HelmCliResponse.builder().output("Some sensible output").build();
   }
 
   private HelmInstallCommandRequestNG createHelmInstallCommandRequestNG() {
