@@ -1,7 +1,5 @@
 package io.harness.cdng.creator.plan.manifest;
 
-import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.PlanCreatorConstants;
@@ -46,7 +44,7 @@ public class ManifestsPlanCreator {
   public PlanCreationResponse createPlanForManifestsNode(ServiceConfig serviceConfig) {
     String manifestsId = UUIDGenerator.generateUuid();
     List<ManifestConfigWrapper> manifestListConfig =
-        getParameterFieldValue(serviceConfig.getServiceDefinition().getServiceSpec().getManifests());
+        serviceConfig.getServiceDefinition().getServiceSpec().getManifests();
     ManifestListBuilder manifestListBuilder = new ManifestListBuilder(manifestListConfig);
     manifestListBuilder.addOverrideSets(serviceConfig);
     manifestListBuilder.addStageOverrides(serviceConfig);
@@ -147,7 +145,9 @@ public class ManifestsPlanCreator {
 
       for (String useManifestOverrideSet : serviceConfig.getStageOverrides().getUseManifestOverrideSets().getValue()) {
         List<ManifestOverrideSets> manifestOverrideSetsList =
-            getParameterFieldValue(serviceConfig.getServiceDefinition().getServiceSpec().getManifestOverrideSets())
+            serviceConfig.getServiceDefinition()
+                .getServiceSpec()
+                .getManifestOverrideSets()
                 .stream()
                 .map(ManifestOverrideSetWrapper::getOverrideSet)
                 .filter(overrideSet -> overrideSet.getIdentifier().equals(useManifestOverrideSet))

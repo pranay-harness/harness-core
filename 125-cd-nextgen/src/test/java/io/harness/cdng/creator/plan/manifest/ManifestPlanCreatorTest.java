@@ -1,6 +1,5 @@
 package io.harness.cdng.creator.plan.manifest;
 
-import static io.harness.pms.yaml.ParameterField.createValueField;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
@@ -48,9 +47,8 @@ public class ManifestPlanCreatorTest extends CDNGTestBase {
         ServiceConfig.builder()
             .serviceDefinition(
                 ServiceDefinition.builder()
-                    .serviceSpec(KubernetesServiceSpec.builder()
-                                     .manifests(createValueField(Arrays.asList(k8sManifest, valuesManifest)))
-                                     .build())
+                    .serviceSpec(
+                        KubernetesServiceSpec.builder().manifests(Arrays.asList(k8sManifest, valuesManifest)).build())
                     .build())
             .build();
 
@@ -65,14 +63,14 @@ public class ManifestPlanCreatorTest extends CDNGTestBase {
   public void shouldCreateWithProperOrder() {
     ServiceConfig serviceConfig =
         ServiceConfig.builder()
-            .serviceDefinition(ServiceDefinition.builder()
-                                   .serviceSpec(KubernetesServiceSpec.builder()
-                                                    .manifests(createValueField(Arrays.asList(
-                                                        manifestWith("m1", ManifestConfigType.K8_MANIFEST),
-                                                        manifestWith("m2", ManifestConfigType.VALUES),
-                                                        manifestWith("m3", ManifestConfigType.VALUES))))
-                                                    .build())
-                                   .build())
+            .serviceDefinition(
+                ServiceDefinition.builder()
+                    .serviceSpec(KubernetesServiceSpec.builder()
+                                     .manifests(Arrays.asList(manifestWith("m1", ManifestConfigType.K8_MANIFEST),
+                                         manifestWith("m2", ManifestConfigType.VALUES),
+                                         manifestWith("m3", ManifestConfigType.VALUES)))
+                                     .build())
+                    .build())
             .stageOverrides(
                 StageOverridesConfig.builder()
                     .manifests(Arrays.asList(manifestWith("m1", ManifestConfigType.K8_MANIFEST),
