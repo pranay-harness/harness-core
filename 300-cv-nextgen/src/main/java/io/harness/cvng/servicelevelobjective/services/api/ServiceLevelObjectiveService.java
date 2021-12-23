@@ -25,4 +25,5 @@ public interface ServiceLevelObjectiveService {
 
   PageResponse<ServiceLevelObjectiveResponse> getSLOForDashboard(
       ProjectParams projectParams, SLODashboardApiFilter filter, PageParams pageParams);
+  ServiceLevelObjective getFromSLIIdentifier(ProjectParams projectParams, String serviceLevelIndicatorIdentifier);
 }

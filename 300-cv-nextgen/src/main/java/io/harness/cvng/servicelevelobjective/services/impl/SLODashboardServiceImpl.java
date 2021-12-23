@@ -94,6 +94,8 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .sloTargetPercentage(serviceLevelObjective.getSloTargetPercentage())
         .monitoredServiceIdentifier(slo.getMonitoredServiceRef())
         .monitoredServiceName(monitoredService.getName())
+        .environmentIdentifier(monitoredService.getEnvironmentRef())
+        .serviceIdentifier(monitoredService.getServiceRef())
         .healthSourceIdentifier(slo.getHealthSourceRef())
         .healthSourceName(getHealthSourceName(monitoredService, slo.getHealthSourceRef()))
         .tags(slo.getTags())
