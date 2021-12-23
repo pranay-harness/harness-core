@@ -39,6 +39,7 @@ echo "accountSecret: $ACCOUNT_SECRET" >> config-delegate.yml
 echo "managerUrl: $MANAGER_HOST_AND_PORT/api/" >> config-delegate.yml
 echo "verificationServiceUrl: $MANAGER_HOST_AND_PORT/verification/" >> config-delegate.yml
 echo "cvNextGenUrl: $MANAGER_HOST_AND_PORT/cv/api/" >> config-delegate.yml
+echo "logStreamingServiceBaseUrl: $LOG_STREAMING_SERVICE_URL" >> config-delegate.yml
 echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
 echo "localDiskPath: /tmp" >> config-delegate.yml
 echo "maxCachedArtifacts: 2" >> config-delegate.yml

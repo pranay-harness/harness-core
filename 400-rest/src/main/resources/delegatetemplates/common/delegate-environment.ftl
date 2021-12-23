@@ -27,6 +27,8 @@
 <#macro immutable>
         - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
           value: "true"
+        - name: LOG_STREAMING_SERVICE_URL
+          value: "${logStreamingServiceBaseUrl}"
 </#macro>
 <#macro cgSpecific>
         - name: DELEGATE_PROFILE
