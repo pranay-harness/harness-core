@@ -13,6 +13,8 @@ import io.harness.gitsync.common.dtos.TriggerFullSyncRequestDTO;
 import io.harness.gitsync.common.dtos.TriggerFullSyncResponseDTO;
 import io.harness.gitsync.common.service.FullSyncTriggerService;
 import io.harness.gitsync.core.fullsync.GitFullSyncConfigService;
+import io.harness.gitsync.core.fullsync.entity.GitFullSyncJob;
+import io.harness.gitsync.core.fullsync.service.FullSyncJobService;
 import io.harness.gitsync.fullsync.dtos.GitFullSyncConfigDTO;
 
 import com.google.common.collect.ImmutableMap;
@@ -20,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -27,12 +30,15 @@ import lombok.extern.slf4j.Slf4j;
 public class FullSyncTriggerServiceImpl implements FullSyncTriggerService {
   private final Producer eventProducer;
   private final GitFullSyncConfigService gitFullSyncConfigService;
+  private final FullSyncJobService fullSyncJobService;
 
   @Inject
-  public FullSyncTriggerServiceImpl(@Named(EventsFrameworkConstants.GIT_FULL_SYNC_STREAM)
-                                    Producer fullSyncEventProducer, GitFullSyncConfigService gitFullSyncConfigService) {
+  public FullSyncTriggerServiceImpl(
+      @Named(EventsFrameworkConstants.GIT_FULL_SYNC_STREAM) Producer fullSyncEventProducer,
+      GitFullSyncConfigService gitFullSyncConfigService, FullSyncJobService fullSyncJobService) {
     this.eventProducer = fullSyncEventProducer;
     this.gitFullSyncConfigService = gitFullSyncConfigService;
+    this.fullSyncJobService = fullSyncJobService;
   }
 
   @Override
@@ -45,6 +51,11 @@ public class FullSyncTriggerServiceImpl implements FullSyncTriggerService {
                                  "There is no configuration saved for performing full sync, please save and try again",
                                  WingsException.USER));
 
+    Optional<GitFullSyncJob> fullSyncJob =
+        fullSyncJobService.getRunningJobs(accountIdentifier, orgIdentifier, projectIdentifier);
+    if (fullSyncJob.isPresent()) {
+      throw new InvalidRequestException("Full Sync is in process");
+    }
     TriggerFullSyncRequestDTO triggerFullSyncRequestDTO =
         TriggerFullSyncRequestDTO.builder()
             .branch(gitFullSyncConfigDTO.getBranch())
