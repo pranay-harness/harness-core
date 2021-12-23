@@ -110,6 +110,7 @@ Nikhil Ranjan nikhil.ranjan@harness.io
 Nikola Obucina nikola.obucina@harness.io
 Nikunj Badjatya nikunj.badjatya@harness.io
 Nitin Kotwal nitin.kotwal@harness.io
+Nishant Saini nishant.saini@harness.io
 Parnian Zargham parnian@harness.io
 Piyush Patel piyush.patel@harness.io
 Pooja Singhal pooja.singhal@harness.io
