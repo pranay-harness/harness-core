@@ -1,0 +1,4 @@
+name: Redis Event
+identifier: redis_event
+labels:
+  - accountId
