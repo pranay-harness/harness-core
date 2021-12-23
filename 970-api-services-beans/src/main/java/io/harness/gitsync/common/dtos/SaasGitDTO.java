@@ -15,5 +15,5 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "SaasGitDTOKeys")
 @Schema(name = "SaasGit", description = "This contains a boolean which specifies whether the repoURL is SaasGit or not")
 public class SaasGitDTO {
-  @NotNull boolean isSaasGit;
+  @Schema(description = "Specifies whether the repoURL is SaasGit or not") @NotNull boolean isSaasGit;
 }

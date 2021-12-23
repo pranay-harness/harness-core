@@ -19,8 +19,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @OwnedBy(DX)
 public class GitPRCreateRequest {
-  @Schema(description = "Branch on which changes are done") @NotEmpty @NotNull @Trimmed String sourceBranch;
-  @Schema(description = "Branch on which changes need to be merged") @NotEmpty @NotNull @Trimmed String targetBranch;
+  @Schema(description = "Source Branch for pull request") @NotEmpty @NotNull @Trimmed String sourceBranch;
+  @Schema(description = "Target Branch for pull request") @NotEmpty @NotNull @Trimmed String targetBranch;
   @Schema(description = "PR title") @NotEmpty @NotNull String title;
   @Schema(description = "Git Sync Config Id") @NotNull String yamlGitConfigRef;
   @Schema(description = ACCOUNT_PARAM_MESSAGE) @NotBlank String accountIdentifier;
