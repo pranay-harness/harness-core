@@ -15,9 +15,9 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
+import io.harness.cvng.servicelevelobjective.beans.ErrorBudgetRisk;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardApiFilter;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget;
-import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget.ErrorBudgetRisk;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget.Point;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.entities.SLIRecord;
@@ -113,6 +113,8 @@ public class SLODashboardServiceImplTest extends CvNextGenTestBase {
     assertThat(sloDashboardWidget.getErrorBudgetRisk()).isEqualTo(ErrorBudgetRisk.HEALTHY);
     assertThat(sloDashboardWidget.isRecalculatingSLI()).isFalse();
     assertThat(sloDashboardWidget.getTimeRemainingDays()).isEqualTo(0);
+    assertThat(sloDashboardWidget.getServiceIdentifier()).isEqualTo(monitoredServiceDTO.getServiceRef());
+    assertThat(sloDashboardWidget.getEnvironmentIdentifier()).isEqualTo(monitoredServiceDTO.getEnvironmentRef());
   }
 
   @Test
@@ -166,6 +168,8 @@ public class SLODashboardServiceImplTest extends CvNextGenTestBase {
     assertThat(sloDashboardWidget.getErrorBudgetRisk()).isEqualTo(ErrorBudgetRisk.HEALTHY);
     assertThat(sloDashboardWidget.isRecalculatingSLI()).isFalse();
     assertThat(sloDashboardWidget.getTimeRemainingDays()).isEqualTo(0);
+    assertThat(sloDashboardWidget.getServiceIdentifier()).isEqualTo(monitoredServiceDTO.getServiceRef());
+    assertThat(sloDashboardWidget.getEnvironmentIdentifier()).isEqualTo(monitoredServiceDTO.getEnvironmentRef());
   }
 
   private void createData(Instant startTime, List<SLIRecord.SLIState> sliStates, String sliId) {

@@ -32,8 +32,8 @@ import org.mongodb.morphia.query.Sort;
 
 public class SLIRecordServiceImpl implements SLIRecordService {
   @VisibleForTesting static int MAX_NUMBER_OF_POINTS = 2000;
-  @Inject private HPersistence hPersistence;
   private static final int RETRY_COUNT = 3;
+  @Inject private HPersistence hPersistence;
 
   @Override
   public void create(List<SLIRecordParam> sliRecordParamList, String sliId, String verificationTaskId, int sliVersion) {
