@@ -1210,7 +1210,8 @@ public class DelegateServiceImpl implements DelegateService {
           latestVersion, delegateJarDownloadUrl);
     }
 
-    log.info("Found delegate latest version: [{}] url: [{}]", latestVersion, delegateJarDownloadUrl);
+    log.info("Current version of delegate :[{}], latest version: [{}] url: [{}]", templateParameters.getVersion(),
+        latestVersion, delegateJarDownloadUrl);
     if (doesJarFileExist(delegateJarDownloadUrl)) {
       final String watcherMetadataUrl;
       if (useCDN) {
