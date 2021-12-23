@@ -340,8 +340,8 @@ public class CVServiceModule extends AbstractModule {
                 .setUncaughtExceptionHandler((t, e) -> log.error("error while processing task", e))
                 .build()));
     install(PrimaryVersionManagerModule.getInstance());
-    install(AccessControlClientModule.getInstance(
-        this.verificationConfiguration.getAccessControlClientConfiguration(), CV_NEXT_GEN.getServiceId()));
+    /*install(AccessControlClientModule.getInstance(
+        this.verificationConfiguration.getAccessControlClientConfiguration(), CV_NEXT_GEN.getServiceId()));*/
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(TimeSeriesRecordService.class).to(TimeSeriesRecordServiceImpl.class);
     bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
