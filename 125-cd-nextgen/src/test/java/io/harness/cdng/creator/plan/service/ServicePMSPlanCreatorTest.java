@@ -100,8 +100,8 @@ public class ServicePMSPlanCreatorTest extends CDNGTestBase {
     PipelineInfrastructure actualInfraConfig =
         InfrastructurePmsPlanCreator.getActualInfraConfig(infrastructure, infraField);
     PlanCreationContext ctx = getPlanCreationContext();
-    PlanCreationResponse response = servicePMSPlanCreator.createPlanForServiceNode(field, serviceConfig, kryoSerializer,
-        InfrastructurePmsPlanCreator.getInfraSectionStepParams(actualInfraConfig, ""), ctx);
+    PlanCreationResponse response = servicePMSPlanCreator.createPlanForServiceNode(
+        field, serviceConfig, InfrastructurePmsPlanCreator.getInfraSectionStepParams(actualInfraConfig, ""), ctx);
     assertThat(response).isNotNull();
     String startingNodeId = response.getStartingNodeId();
     assertThat(startingNodeId).isNotNull();
