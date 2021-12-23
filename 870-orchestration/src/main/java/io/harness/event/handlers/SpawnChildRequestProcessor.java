@@ -58,7 +58,7 @@ public class SpawnChildRequestProcessor implements SdkResponseProcessor {
     waitNotifyEngine.waitForAllOn(publisherName, callback, childNodeExecution.getUuid());
 
     // Update the parent with executable response
-    nodeExecutionService.update(SdkResponseEventUtils.getNodeExecutionId(event),
+    nodeExecutionService.updateV2(SdkResponseEventUtils.getNodeExecutionId(event),
         ops -> ops.addToSet(NodeExecutionKeys.executableResponses, buildExecutableResponse(request)));
 
     executorService.submit(ExecutionEngineDispatcher.builder()

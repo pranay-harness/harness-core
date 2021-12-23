@@ -15,6 +15,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -63,7 +64,8 @@ public class OrchestrationEngine {
 
   @Deprecated
   public void resumeNodeExecution(String nodeExecutionId, Map<String, ByteString> response, boolean asyncError) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution =
+        nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withAmbiance);
     resumeNodeExecution(nodeExecution.getAmbiance(), response, asyncError);
   }
 

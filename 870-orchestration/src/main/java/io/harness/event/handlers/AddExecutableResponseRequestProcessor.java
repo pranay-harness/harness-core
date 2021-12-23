@@ -21,7 +21,7 @@ public class AddExecutableResponseRequestProcessor implements SdkResponseProcess
   @Override
   public void handleEvent(SdkResponseEventProto event) {
     AddExecutableResponseRequest request = event.getAddExecutableResponseRequest();
-    nodeExecutionService.update(SdkResponseEventUtils.getNodeExecutionId(event),
+    nodeExecutionService.updateV2(SdkResponseEventUtils.getNodeExecutionId(event),
         ops -> ops.addToSet(NodeExecutionKeys.executableResponses, request.getExecutableResponse()));
   }
 }

@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class NodeExecutionUtilsTest extends PmsSdkCoreTestBase {
+public class NodeProjectionUtilsTest extends PmsSdkCoreTestBase {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
