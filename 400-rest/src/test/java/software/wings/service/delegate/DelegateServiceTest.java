@@ -185,6 +185,7 @@ import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.states.JenkinsExecutionResponse;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableList;
@@ -232,7 +233,6 @@ import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.sm.states.JenkinsExecutionResponse;
 
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)

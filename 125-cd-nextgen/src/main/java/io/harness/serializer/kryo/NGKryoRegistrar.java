@@ -22,6 +22,7 @@ import io.harness.cdng.helm.rollback.HelmRollbackStepInfo;
 import io.harness.cdng.helm.rollback.HelmRollbackStepParams;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
+import io.harness.cdng.infra.steps.InfraSectionStepParameters;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
@@ -76,6 +77,7 @@ import io.harness.cdng.service.beans.NativeHelmServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceConfigOutcome;
 import io.harness.cdng.service.beans.ServiceDefinition;
+import io.harness.cdng.service.beans.ServiceDefinitionType;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
 import io.harness.cdng.service.beans.StageOverridesConfig;
@@ -181,5 +183,8 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sExecutionPassThroughData.class, 12546);
     kryo.register(KustomizePatchesManifest.class, 12549);
     kryo.register(CDAccountExecutionMetadata.class, 12550);
+
+    kryo.register(ServiceDefinitionType.class, 12551);
+    kryo.register(InfraSectionStepParameters.class, 12552);
   }
 }

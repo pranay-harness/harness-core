@@ -148,7 +148,8 @@ public class HelmDeployStep extends TaskChainExecutableWithRollbackAndRbac imple
 
     StepOutcome stepOutcome = instanceInfoService.saveServerInstancesIntoSweepingOutput(ambiance,
         K8sContainerToHelmServiceInstanceInfoMapper.toServerInstanceInfoList(
-            helmInstallCmdResponseNG.getContainerInfoList(), helmInstallCmdResponseNG.getHelmChartInfo(), helmInstallCmdResponseNG.getHelmVersion()));
+            helmInstallCmdResponseNG.getContainerInfoList(), helmInstallCmdResponseNG.getHelmChartInfo(),
+            helmInstallCmdResponseNG.getHelmVersion()));
 
     return StepResponse.builder()
         .unitProgressList(helmCmdExecResponseNG.getCommandUnitsProgress().getUnitProgresses())

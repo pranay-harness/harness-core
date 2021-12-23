@@ -18,7 +18,8 @@ public class HelmInstallCmdResponseNG extends HelmCommandResponseNG {
 
   @Builder
   public HelmInstallCmdResponseNG(CommandExecutionStatus commandExecutionStatus, String output,
-      List<ContainerInfo> containerInfoList, HelmChartInfo helmChartInfo, int prevReleaseVersion, String releaseName, HelmVersion helmVersion) {
+      List<ContainerInfo> containerInfoList, HelmChartInfo helmChartInfo, int prevReleaseVersion, String releaseName,
+      HelmVersion helmVersion) {
     super(commandExecutionStatus, output);
     this.containerInfoList = containerInfoList;
     this.helmChartInfo = helmChartInfo;

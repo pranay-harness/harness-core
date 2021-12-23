@@ -23,7 +23,7 @@ public class HelmCmdExecResponseNG implements DelegateTaskNotifyResponseData {
   private CommandExecutionStatus commandExecutionStatus;
   private UnitProgressData commandUnitsProgress;
   @NonFinal DelegateMetaInfo delegateMetaInfo;
-  
+
   @Override
   public void setDelegateMetaInfo(DelegateMetaInfo metaInfo) {
     this.delegateMetaInfo = metaInfo;

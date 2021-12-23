@@ -232,8 +232,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   public SecretManagerConfig getSecretManager(String accountId, String entityId, boolean maskSecrets) {
     SecretManagerConfig secretManagerConfig = getSecretManagerInternal(accountId, entityId);
     if (secretManagerConfig == null) {
-      String message =
-              String.format("Secret manager with id %s for account %s can't be found.", entityId, accountId);
+      String message = String.format("Secret manager with id %s for account %s can't be found.", entityId, accountId);
       log.warn(message);
       throw new SecretManagementException(SECRET_MANAGER_ID_NOT_FOUND, message, USER);
     } else {

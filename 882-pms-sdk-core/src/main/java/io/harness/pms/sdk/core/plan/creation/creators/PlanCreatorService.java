@@ -13,6 +13,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.pms.contracts.plan.Dependencies;
+import io.harness.pms.contracts.plan.Dependency;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
@@ -130,7 +131,6 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
     List<Map.Entry<String, String>> dependenciesList = new ArrayList<>(dependencies.getDependenciesMap().entrySet());
     String currentYaml = dependencies.getYaml();
 
-    // Field of complete yaml is passed so that we don't convert to yamlField always per dependency
     YamlField fullField;
     try {
       fullField = YamlUtils.readTree(currentYaml);
@@ -139,17 +139,15 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       log.error(message, ex);
       throw new InvalidRequestException(message);
     }
-    dependenciesList.stream()
-        .map(Map.Entry::getValue)
-        .map(yamlPath -> {
-          try {
-            return fullField.fromYamlPath(yamlPath);
-          } catch (IOException e) {
-            throw new InvalidRequestException("Unable to parse the field in the path:" + yamlPath);
-          }
-        })
-        .forEach(yamlField
-            -> completableFutures.supplyAsync(() -> createPlanForDependencyInternal(currentYaml, yamlField, ctx)));
+
+    dependenciesList.forEach(key -> completableFutures.supplyAsync(() -> {
+      try {
+        return createPlanForDependencyInternal(currentYaml, fullField.fromYamlPath(key.getValue()), ctx,
+            dependencies.getDependencyMetadataMap().get(key.getKey()));
+      } catch (IOException e) {
+        throw new InvalidRequestException("Unable to parse the field in the path:" + key.getValue());
+      }
+    }));
 
     try {
       List<PlanCreationResponse> planCreationResponses = completableFutures.allOf().get(2, TimeUnit.MINUTES);
@@ -213,7 +211,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
   }
 
   private PlanCreationResponse createPlanForDependencyInternal(
-      String currentYaml, YamlField field, PlanCreationContext ctx) {
+      String currentYaml, YamlField field, PlanCreationContext ctx, Dependency dependency) {
     try {
       Optional<PartialPlanCreator<?>> planCreatorOptional =
           PlanCreatorServiceHelper.findPlanCreator(planCreators, field);
@@ -226,8 +224,8 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       Object obj = YamlField.class.isAssignableFrom(cls) ? field : YamlUtils.read(field.getNode().toString(), cls);
 
       try {
-        PlanCreationResponse planForField =
-            planCreator.createPlanForField(PlanCreationContext.cloneWithCurrentField(ctx, field, currentYaml), obj);
+        PlanCreationResponse planForField = planCreator.createPlanForField(
+            PlanCreationContext.cloneWithCurrentField(ctx, field, currentYaml, dependency), obj);
         PlanCreatorServiceHelper.decorateNodesWithStageFqn(field, planForField);
         return planForField;
       } catch (Exception ex) {

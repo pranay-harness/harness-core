@@ -23,7 +23,8 @@ import lombok.experimental.UtilityClass;
 public class InstanceSyncStepResolver {
   public final Set<String> INSTANCE_SYN_STEP_TYPES =
       Collections.unmodifiableSet(Sets.newHashSet(K8sRollingStep.STEP_TYPE.getType(), K8sCanaryStep.STEP_TYPE.getType(),
-          K8sBlueGreenStep.STEP_TYPE.getType(), K8sRollingRollbackStep.STEP_TYPE.getType(), HelmDeployStep.STEP_TYPE.getType(), HelmRollbackStep.STEP_TYPE.getType()));
+          K8sBlueGreenStep.STEP_TYPE.getType(), K8sRollingRollbackStep.STEP_TYPE.getType(),
+          HelmDeployStep.STEP_TYPE.getType(), HelmRollbackStep.STEP_TYPE.getType()));
 
   public boolean shouldRunInstanceSync(StepType stepType) {
     return nonNull(stepType) && INSTANCE_SYN_STEP_TYPES.contains(stepType.getType());

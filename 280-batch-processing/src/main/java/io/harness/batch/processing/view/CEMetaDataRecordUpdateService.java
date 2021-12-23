@@ -89,36 +89,30 @@ public class CEMetaDataRecordUpdateService {
       isAzureConnectorPresent =
           updateConnectorPresent(isAzureConnectorPresent, ConnectorType.CE_AZURE, nextGenConnectorResponses);
 
-      CEMetadataRecordBuilder ceMetadataRecordBuilder = CEMetadataRecord.builder()
-          .accountId(accountId)
-          .awsDataPresent(false)
-          .gcpDataPresent(false)
-          .azureDataPresent(false);
+      CEMetadataRecordBuilder ceMetadataRecordBuilder =
+          CEMetadataRecord.builder().accountId(accountId).awsDataPresent(false).gcpDataPresent(false).azureDataPresent(
+              false);
 
       if (isAwsConnectorPresent || isGCPConnectorPresent || isAzureConnectorPresent) {
         bigQueryHelperService.updateCloudProviderMetaData(accountId, ceMetadataRecordBuilder);
       }
-      CEMetadataRecord ceMetadataRecord = ceMetadataRecordBuilder
-          .awsConnectorConfigured(isAwsConnectorPresent)
-          .gcpConnectorConfigured(isGCPConnectorPresent)
-          .azureConnectorConfigured(isAzureConnectorPresent)
-          .build();
+      CEMetadataRecord ceMetadataRecord = ceMetadataRecordBuilder.awsConnectorConfigured(isAwsConnectorPresent)
+                                              .gcpConnectorConfigured(isGCPConnectorPresent)
+                                              .azureConnectorConfigured(isAzureConnectorPresent)
+                                              .build();
 
       cloudToHarnessMappingService.upsertCEMetaDataRecord(ceMetadataRecord);
 
-      createDefaultPerspective(accountId, isAwsConnectorPresent, isAzureConnectorPresent, isGCPConnectorPresent, ceMetadataRecord);
+      createDefaultPerspective(
+          accountId, isAwsConnectorPresent, isAzureConnectorPresent, isGCPConnectorPresent, ceMetadataRecord);
 
     } catch (Exception ex) {
       log.error("Exception while updateCloudProviderMetadata for accountId: {}", accountId, ex);
     }
   }
 
-  private void createDefaultPerspective(
-      String accountId,
-      Boolean isAwsConnectorPresent,
-      Boolean isAzureConnectorPresent,
-      Boolean isGCPConnectorPresent,
-      CEMetadataRecord ceMetadataRecord) {
+  private void createDefaultPerspective(String accountId, Boolean isAwsConnectorPresent,
+      Boolean isAzureConnectorPresent, Boolean isGCPConnectorPresent, CEMetadataRecord ceMetadataRecord) {
     DefaultViewIdDto defaultViewIds = ceViewService.getDefaultViewIds(accountId);
     if (isAwsConnectorPresent && ceMetadataRecord.getAwsDataPresent() && defaultViewIds.getAwsViewId() == null) {
       ceViewService.createDefaultView(accountId, ViewFieldIdentifier.AWS);

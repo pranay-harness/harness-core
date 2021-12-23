@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.plan.Dependencies;
+import io.harness.pms.contracts.plan.Dependency;
 import io.harness.pms.plan.creation.PlanCreationBlobResponseUtils;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -44,12 +45,15 @@ public class PlanCreatorServiceHelper {
     }
 
     Map<String, String> newDependencies = new HashMap<>();
+    Map<String, Dependency> newMetadataDependency = new HashMap<>();
     for (int i = 0; i < dependenciesList.size(); i++) {
       Map.Entry<String, String> entry = dependenciesList.get(i);
       String fieldYamlPath = entry.getValue();
       PlanCreationResponse response = planCreationResponses.get(i);
       if (response == null) {
         finalResponse.addDependency(currentYaml, entry.getKey(), fieldYamlPath);
+        finalResponse.addDependencyMetadata(
+            currentYaml, entry.getKey(), dependencies.getDependencyMetadataMap().get(entry.getKey()));
         continue;
       }
 
@@ -58,6 +62,10 @@ public class PlanCreatorServiceHelper {
       if (response.getDependencies() != null
           && EmptyPredicate.isNotEmpty(response.getDependencies().getDependenciesMap())) {
         newDependencies.putAll(response.getDependencies().getDependenciesMap());
+
+        if (EmptyPredicate.isNotEmpty(response.getDependencies().getDependencyMetadataMap())) {
+          newMetadataDependency.putAll(response.getDependencies().getDependencyMetadataMap());
+        }
       }
       if (response.getYamlUpdates() != null && EmptyPredicate.isNotEmpty(response.getYamlUpdates().getFqnToYamlMap())) {
         updatedYaml = PlanCreationBlobResponseUtils.mergeYamlUpdates(
@@ -69,6 +77,7 @@ public class PlanCreatorServiceHelper {
         .setYaml(updatedYaml)
         .clearDependencies()
         .putAllDependencies(newDependencies)
+        .putAllDependencyMetadata(newMetadataDependency)
         .build();
   }
 
