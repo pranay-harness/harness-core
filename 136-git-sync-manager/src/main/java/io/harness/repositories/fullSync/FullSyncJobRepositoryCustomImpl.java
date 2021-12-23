@@ -26,4 +26,10 @@ public class FullSyncJobRepositoryCustomImpl implements FullSyncJobRepositoryCus
     Query query = query(criteria);
     return mongoTemplate.updateFirst(query, update, GitFullSyncJob.class);
   }
+
+  @Override
+  public GitFullSyncJob find(Criteria criteria) {
+    Query query = query(criteria);
+    return mongoTemplate.findOne(query, GitFullSyncJob.class);
+  }
 }
