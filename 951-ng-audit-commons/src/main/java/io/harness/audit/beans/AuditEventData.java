@@ -16,6 +16,7 @@ import io.harness.audit.beans.custom.user.UserMembershipAuditEventData;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotBlank;
@@ -35,5 +36,7 @@ import org.hibernate.validator.constraints.NotBlank;
           @JsonSubTypes.Type(value = UserMembershipAuditEventData.class, name = USER_MEMBERSHIP)
     })
 public abstract class AuditEventData {
-  @NotNull @NotBlank protected String type;
+  public static final String AUDIT_EVENT_DATA_TYPE = "io.harness.audit.beans.AuditEventDataType";
+
+  @NotNull @NotBlank @ApiModelProperty(dataType = AUDIT_EVENT_DATA_TYPE) protected String type;
 }
