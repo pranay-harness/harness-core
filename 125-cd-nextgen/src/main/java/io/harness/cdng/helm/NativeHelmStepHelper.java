@@ -1,10 +1,9 @@
 package io.harness.cdng.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
+import static io.harness.beans.FeatureName.OPTIMIZED_GIT_FETCH_FILES;
 import static io.harness.common.ParameterFieldHelper.getBooleanParameterFieldValue;
 import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
-import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -27,9 +26,12 @@ import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
+import io.harness.beans.FeatureName;
 import io.harness.cdng.AggregatedManifestHelper;
 import io.harness.cdng.ReleaseNameHelper;
 import io.harness.cdng.expressions.CDExpressionResolveFunctor;
+import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.helm.beans.NativeHelmExecutionPassThroughData;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.K8sEntityHelper;
@@ -46,21 +48,14 @@ import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome.HelmChartManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.HttpStoreConfig;
-import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
-import io.harness.cdng.manifest.yaml.K8sManifestOutcome.K8sManifestOutcomeKeys;
-import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
-import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome.KustomizeManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
-import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
-import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome.OpenshiftManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.connector.ConnectorInfoDTO;
-import io.harness.connector.helper.EncryptionHelper;
-import io.harness.connector.services.ConnectorService;
+import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
@@ -71,8 +66,20 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -92,6 +99,7 @@ import io.harness.delegate.task.helm.HelmValuesFetchResponse;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
+import io.harness.encryption.SecretRefData;
 import io.harness.eraro.Level;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.ExceptionUtils;
@@ -99,7 +107,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
 import io.harness.expression.ExpressionEvaluatorUtils;
-import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.helm.HelmSubCommandType;
@@ -167,27 +174,22 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class NativeHelmStepHelper {
   public static final Set<String> HELM_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(ManifestType.HelmChart);
 
-  private static final Set<String> VALUES_YAML_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(ManifestType.HelmChart);
-
   public static final String RELEASE_NAME = "Release Name";
-  public static final String MISSING_INFRASTRUCTURE_ERROR = "Infrastructure section is missing or is not configured";
   public static final String RELEASE_NAME_VALIDATION_REGEX =
       "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*";
   public static final Pattern releaseNamePattern = Pattern.compile(RELEASE_NAME_VALIDATION_REGEX);
-  @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
   @Named("PRIVILEGED") @Inject private SecretManagerClientService secretManagerClientService;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private OutcomeService outcomeService;
   @Inject GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
-  @Inject private EncryptionHelper encryptionHelper;
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Inject private StepHelper stepHelper;
   @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
   @Inject private SdkGraphVisualizationDataService sdkGraphVisualizationDataService;
   @Inject private K8sEntityHelper k8sEntityHelper;
-  @Inject private FeatureFlagService featureFlagService;
+  @Inject private CDFeatureFlagHelper cdFeatureFlagHelper;
   @Inject private ReleaseNameHelper releaseNameHelper;
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
   List<String> valuesFileContents;
@@ -253,12 +255,9 @@ public class NativeHelmStepHelper {
   }
 
   public ManifestDelegateConfig getManifestDelegateConfig(ManifestOutcome manifestOutcome, Ambiance ambiance) {
-    if (manifestOutcome.getType() == ManifestType.HelmChart) {
+    if (ManifestType.HelmChart.equals(manifestOutcome.getType())) {
       HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
       String chartName = getParameterFieldValue(helmChartManifestOutcome.getChartName());
-      if (chartName.isEmpty()) {
-        throw new InvalidRequestException("Chart name can't be empty");
-      }
       return HelmChartManifestDelegateConfig.builder()
           .storeDelegateConfig(getStoreDelegateConfig(
               helmChartManifestOutcome.getStore(), ambiance, manifestOutcome, manifestOutcome.getType() + " manifest"))
@@ -279,15 +278,8 @@ public class NativeHelmStepHelper {
       ConnectorInfoDTO connectorDTO = getConnector(getParameterFieldValue(gitStoreConfig.getConnectorRef()), ambiance);
       validateManifest(storeConfig.getKind(), connectorDTO, validationErrorMessage);
 
-      GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-      NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
-      SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
-      List<EncryptedDataDetail> encryptedDataDetails =
-          gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
-
       List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestOutcome.getType());
-      return getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO,
-          manifestOutcome, gitFilePaths);
+      return getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, manifestOutcome, gitFilePaths, ambiance);
     }
 
     if (ManifestStoreType.HTTP.equals(storeConfig.getKind())) {
@@ -320,8 +312,8 @@ public class NativeHelmStepHelper {
           .awsConnector((AwsConnectorDTO) awsConnectorDTO.getConnectorConfig())
           .encryptedDataDetails(
               k8sEntityHelper.getEncryptionDataDetails(awsConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
-          .useLatestChartMuseumVersion(
-              featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, AmbianceUtils.getAccountId(ambiance)))
+          .useLatestChartMuseumVersion(cdFeatureFlagHelper.isEnabled(
+              AmbianceUtils.getAccountId(ambiance), FeatureName.USE_LATEST_CHARTMUSEUM_VERSION))
           .build();
     }
 
@@ -339,8 +331,8 @@ public class NativeHelmStepHelper {
           .gcpConnector((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
           .encryptedDataDetails(
               k8sEntityHelper.getEncryptionDataDetails(gcpConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
-          .useLatestChartMuseumVersion(
-              featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, AmbianceUtils.getAccountId(ambiance)))
+          .useLatestChartMuseumVersion(cdFeatureFlagHelper.isEnabled(
+              AmbianceUtils.getAccountId(ambiance), FeatureName.USE_LATEST_CHARTMUSEUM_VERSION))
           .build();
     }
 
@@ -348,14 +340,34 @@ public class NativeHelmStepHelper {
   }
 
   public GitStoreDelegateConfig getGitStoreDelegateConfig(@Nonnull GitStoreConfig gitstoreConfig,
-      @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList,
-      SSHKeySpecDTO sshKeySpecDTO, @Nonnull GitConfigDTO gitConfigDTO, ManifestOutcome manifestOutcome,
-      List<String> paths) {
-    convertToRepoGitConfig(gitstoreConfig, gitConfigDTO);
+      @Nonnull ConnectorInfoDTO connectorDTO, ManifestOutcome manifestOutcome, List<String> paths, Ambiance ambiance) {
+    NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
+    ScmConnector scmConnector;
+    List<EncryptedDataDetail> apiAuthEncryptedDataDetails = null;
+    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
+    SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
+
+    scmConnector = gitConfigDTO;
+
+    boolean optimizedFilesFetch = isOptimizedFilesFetch(connectorDTO, AmbianceUtils.getAccountId(ambiance));
+
+    if (optimizedFilesFetch) {
+      scmConnector = (ScmConnector) connectorDTO.getConnectorConfig();
+      addApiAuthIfRequired(scmConnector);
+      final DecryptableEntity apiAccessDecryptableEntity =
+          GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector);
+      apiAuthEncryptedDataDetails =
+          secretManagerClientService.getEncryptionDetails(basicNGAccessObject, apiAccessDecryptableEntity);
+    }
+
+    convertToRepoGitConfig(gitstoreConfig, scmConnector);
     return GitStoreDelegateConfig.builder()
-        .gitConfigDTO(gitConfigDTO)
+        .gitConfigDTO(scmConnector)
         .sshKeySpecDTO(sshKeySpecDTO)
-        .encryptedDataDetails(encryptedDataDetailList)
+        .encryptedDataDetails(encryptedDataDetails)
+        .apiAuthEncryptedDataDetails(apiAuthEncryptedDataDetails)
         .fetchType(gitstoreConfig.getGitFetchType())
         .branch(trim(getParameterFieldValue(gitstoreConfig.getBranch())))
         .commitId(trim(getParameterFieldValue(gitstoreConfig.getCommitId())))
@@ -363,22 +375,100 @@ public class NativeHelmStepHelper {
         .connectorName(connectorDTO.getName())
         .manifestType(manifestOutcome.getType())
         .manifestId(manifestOutcome.getIdentifier())
+        .optimizedFilesFetch(optimizedFilesFetch)
         .build();
   }
 
-  private void convertToRepoGitConfig(GitStoreConfig gitstoreConfig, GitConfigDTO gitConfigDTO) {
-    String repoName = gitstoreConfig.getRepoName() != null ? gitstoreConfig.getRepoName().getValue() : null;
-    if (gitConfigDTO.getGitConnectionType() == GitConnectionType.ACCOUNT) {
-      String repoUrl = getGitRepoUrl(gitConfigDTO, repoName);
-      gitConfigDTO.setUrl(repoUrl);
-      gitConfigDTO.setGitConnectionType(GitConnectionType.REPO);
+  private void addApiAuthIfRequired(ScmConnector scmConnector) {
+    if (scmConnector instanceof GithubConnectorDTO && ((GithubConnectorDTO) scmConnector).getApiAccess() == null
+        && isGithubUsernameTokenAuth((GithubConnectorDTO) scmConnector)) {
+      GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) scmConnector;
+      SecretRefData tokenRef =
+          ((GithubUsernameTokenDTO) ((GithubHttpCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials())
+                  .getHttpCredentialsSpec())
+              .getTokenRef();
+      GithubApiAccessDTO apiAccessDTO = GithubApiAccessDTO.builder()
+                                            .type(GithubApiAccessType.TOKEN)
+                                            .spec(GithubTokenSpecDTO.builder().tokenRef(tokenRef).build())
+                                            .build();
+      githubConnectorDTO.setApiAccess(apiAccessDTO);
+    } else if (scmConnector instanceof GitlabConnectorDTO && ((GitlabConnectorDTO) scmConnector).getApiAccess() == null
+        && isGitlabUsernameTokenAuth((GitlabConnectorDTO) scmConnector)) {
+      GitlabConnectorDTO gitlabConnectorDTO = (GitlabConnectorDTO) scmConnector;
+      SecretRefData tokenRef =
+          ((GitlabUsernameTokenDTO) ((GitlabHttpCredentialsDTO) gitlabConnectorDTO.getAuthentication().getCredentials())
+                  .getHttpCredentialsSpec())
+              .getTokenRef();
+      GitlabApiAccessDTO apiAccessDTO = GitlabApiAccessDTO.builder()
+                                            .type(GitlabApiAccessType.TOKEN)
+                                            .spec(GitlabTokenSpecDTO.builder().tokenRef(tokenRef).build())
+                                            .build();
+      gitlabConnectorDTO.setApiAccess(apiAccessDTO);
     }
   }
 
-  private String getGitRepoUrl(GitConfigDTO gitConfigDTO, String repoName) {
+  private boolean isGithubUsernameTokenAuth(GithubConnectorDTO githubConnectorDTO) {
+    return githubConnectorDTO.getAuthentication().getCredentials() instanceof GithubHttpCredentialsDTO
+        && ((GithubHttpCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials())
+               .getType()
+               .equals(GithubHttpAuthenticationType.USERNAME_AND_TOKEN);
+  }
+
+  private boolean isGitlabUsernameTokenAuth(GitlabConnectorDTO gitlabConnectorDTO) {
+    return gitlabConnectorDTO.getAuthentication().getCredentials() instanceof GitlabHttpCredentialsDTO
+        && ((GitlabHttpCredentialsDTO) gitlabConnectorDTO.getAuthentication().getCredentials())
+               .getType()
+               .equals(GitlabHttpAuthenticationType.USERNAME_AND_TOKEN);
+  }
+
+  private boolean isOptimizedFilesFetch(@Nonnull ConnectorInfoDTO connectorDTO, String accountId) {
+    return cdFeatureFlagHelper.isEnabled(accountId, OPTIMIZED_GIT_FETCH_FILES)
+        && (isGithubTokenAuth((ScmConnector) connectorDTO.getConnectorConfig())
+            || isGitlabTokenAuth((ScmConnector) connectorDTO.getConnectorConfig()));
+  }
+
+  private void convertToRepoGitConfig(GitStoreConfig gitstoreConfig, ScmConnector scmConnector) {
+    String repoName = gitstoreConfig.getRepoName() != null ? gitstoreConfig.getRepoName().getValue() : null;
+    if (scmConnector instanceof GitConfigDTO) {
+      GitConfigDTO gitConfigDTO = (GitConfigDTO) scmConnector;
+      if (gitConfigDTO.getGitConnectionType() == GitConnectionType.ACCOUNT) {
+        String repoUrl = getGitRepoUrl(gitConfigDTO, repoName);
+        gitConfigDTO.setUrl(repoUrl);
+        gitConfigDTO.setGitConnectionType(GitConnectionType.REPO);
+      }
+    } else if (scmConnector instanceof GithubConnectorDTO) {
+      GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) scmConnector;
+      if (githubConnectorDTO.getConnectionType() == GitConnectionType.ACCOUNT) {
+        String repoUrl = getGitRepoUrl(githubConnectorDTO, repoName);
+        githubConnectorDTO.setUrl(repoUrl);
+        githubConnectorDTO.setConnectionType(GitConnectionType.REPO);
+      }
+    } else if (scmConnector instanceof GitlabConnectorDTO) {
+      GitlabConnectorDTO gitlabConnectorDTO = (GitlabConnectorDTO) scmConnector;
+      if (gitlabConnectorDTO.getConnectionType() == GitConnectionType.ACCOUNT) {
+        String repoUrl = getGitRepoUrl(gitlabConnectorDTO, repoName);
+        gitlabConnectorDTO.setUrl(repoUrl);
+        gitlabConnectorDTO.setConnectionType(GitConnectionType.REPO);
+      }
+    }
+  }
+
+  private boolean isGithubTokenAuth(ScmConnector scmConnector) {
+    return scmConnector instanceof GithubConnectorDTO
+        && (((GithubConnectorDTO) scmConnector).getApiAccess() != null
+            || isGithubUsernameTokenAuth((GithubConnectorDTO) scmConnector));
+  }
+
+  private boolean isGitlabTokenAuth(ScmConnector scmConnector) {
+    return scmConnector instanceof GitlabConnectorDTO
+        && (((GitlabConnectorDTO) scmConnector).getApiAccess() != null
+            || isGitlabUsernameTokenAuth((GitlabConnectorDTO) scmConnector));
+  }
+
+  private String getGitRepoUrl(ScmConnector scmConnector, String repoName) {
     repoName = trimToEmpty(repoName);
     notEmptyCheck("Repo name cannot be empty for Account level git connector", repoName);
-    String purgedRepoUrl = gitConfigDTO.getUrl().replaceAll("/*$", "");
+    String purgedRepoUrl = scmConnector.getUrl().replaceAll("/*$", "");
     String purgedRepoName = repoName.replaceAll("^/*", "");
     return purgedRepoUrl + "/" + purgedRepoName;
   }
@@ -624,15 +714,9 @@ public class NativeHelmStepHelper {
     ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
     validateManifest(store.getKind(), connectorDTO, validationMessage);
 
-    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-    NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
-    SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
-    List<EncryptedDataDetail> encryptedDataDetails =
-        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
-
     List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestOutcome.getType());
-    GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(
-        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestOutcome, gitFilePaths);
+    GitStoreDelegateConfig gitStoreDelegateConfig =
+        getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, manifestOutcome, gitFilePaths, ambiance);
 
     return GitFetchFilesConfig.builder()
         .identifier(manifestOutcome.getIdentifier())
@@ -643,21 +727,15 @@ public class NativeHelmStepHelper {
   }
 
   private GitFetchFilesConfig getValuesGitFetchFilesConfig(Ambiance ambiance, String identifier, StoreConfig store,
-      String validationMessage, ManifestOutcome helmChartManifestOutcome) {
+      String validationMessage, ManifestOutcome k8sManifestOutcome) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
     String connectorId = gitStoreConfig.getConnectorRef().getValue();
     ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
     validateManifest(store.getKind(), connectorDTO, validationMessage);
 
-    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-    NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
-    SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
-    List<EncryptedDataDetail> encryptedDataDetails =
-        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
-
-    List<String> gitFilePaths = getValuesPathsBasedOnManifest(gitStoreConfig, helmChartManifestOutcome.getType());
-    GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(gitStoreConfig, connectorDTO,
-        encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, helmChartManifestOutcome, gitFilePaths);
+    List<String> gitFilePaths = getValuesPathsBasedOnManifest(gitStoreConfig, k8sManifestOutcome.getType());
+    GitStoreDelegateConfig gitStoreDelegateConfig =
+        getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, k8sManifestOutcome, gitFilePaths, ambiance);
 
     return GitFetchFilesConfig.builder()
         .identifier(identifier)
@@ -988,39 +1066,14 @@ public class NativeHelmStepHelper {
 
   public boolean getSkipResourceVersioning(ManifestOutcome manifestOutcome) {
     switch (manifestOutcome.getType()) {
-      case ManifestType.K8Manifest:
-        K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
-        return getParameterFieldBooleanValue(k8sManifestOutcome.getSkipResourceVersioning(),
-            K8sManifestOutcomeKeys.skipResourceVersioning, k8sManifestOutcome);
-
       case ManifestType.HelmChart:
         HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
         return getParameterFieldBooleanValue(helmChartManifestOutcome.getSkipResourceVersioning(),
             HelmChartManifestOutcomeKeys.skipResourceVersioning, helmChartManifestOutcome);
 
-      case ManifestType.Kustomize:
-        KustomizeManifestOutcome kustomizeManifestOutcome = (KustomizeManifestOutcome) manifestOutcome;
-        return getParameterFieldBooleanValue(kustomizeManifestOutcome.getSkipResourceVersioning(),
-            KustomizeManifestOutcomeKeys.skipResourceVersioning, kustomizeManifestOutcome);
-
-      case ManifestType.OpenshiftTemplate:
-        OpenshiftManifestOutcome openshiftManifestOutcome = (OpenshiftManifestOutcome) manifestOutcome;
-        return getParameterFieldBooleanValue(openshiftManifestOutcome.getSkipResourceVersioning(),
-            OpenshiftManifestOutcomeKeys.skipResourceVersioning, openshiftManifestOutcome);
-
       default:
         return false;
     }
-  }
-
-  public InfrastructureOutcome getInfrastructureOutcome(Ambiance ambiance) {
-    OptionalOutcome optionalOutcome = outcomeService.resolveOptional(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
-    if (!optionalOutcome.isFound()) {
-      throw new InvalidRequestException(MISSING_INFRASTRUCTURE_ERROR, USER);
-    }
-
-    return (InfrastructureOutcome) optionalOutcome.getOutcome();
   }
 
   public LogCallback getLogCallback(String commandUnitName, Ambiance ambiance, boolean shouldOpenStream) {
