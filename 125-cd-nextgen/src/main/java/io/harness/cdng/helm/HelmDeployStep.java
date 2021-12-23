@@ -23,6 +23,7 @@ import io.harness.delegate.task.helm.HelmCmdExecResponseNG;
 import io.harness.delegate.task.helm.HelmInstallCmdResponseNG;
 import io.harness.delegate.task.helm.HelmInstallCommandRequestNG;
 import io.harness.delegate.task.helm.HelmListReleaseResponseNG;
+import io.harness.delegate.task.helm.HelmReleaseHistoryCmdResponseNG;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreator.steps.common.StepElementParameters;
@@ -111,6 +112,15 @@ public class HelmDeployStep extends TaskChainExecutableWithRollbackAndRbac imple
     } catch (Exception e) {
       log.error("Error while processing Helm Task response: {}", e.getMessage(), e);
       return nativeHelmStepHelper.handleTaskException(ambiance, nativeHelmExecutionPassThroughData, e);
+    }
+
+    if (helmCmdExecResponseNG.getHelmCommandResponse() instanceof HelmReleaseHistoryCmdResponseNG) {
+      // this means helm hist has failed
+      return StepResponse.builder()
+          .status(Status.FAILED)
+          .failureInfo(FailureInfo.newBuilder().setErrorMessage(helmCmdExecResponseNG.getErrorMessage()).build())
+          .unitProgressList(helmCmdExecResponseNG.getCommandUnitsProgress().getUnitProgresses())
+          .build();
     }
 
     if (helmCmdExecResponseNG.getHelmCommandResponse() instanceof HelmListReleaseResponseNG) {
