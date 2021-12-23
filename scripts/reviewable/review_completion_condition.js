@@ -16,13 +16,15 @@ let numApprovals = _.where(approvals, 'approved').length;
 const numRejections = _.where(approvals, 'changes_requested').length;
 
 const discussionBlockers = _(review.discussions)
-  .where({resolved: false})
-  .pluck('participants')
-  .flatten()
-  .reject(participant => participant.username === review.pullRequest.author.username)
-  .where({resolved: false})
-  .map(user => _.pick(user, 'username'))
-  .value();
+                               .where({resolved: false})
+                               .pluck('participants')
+                               .flatten()
+                               .reject(
+                                   participant => participant.username ===
+                                       review.pullRequest.author.username)
+                               .where({resolved: false})
+                               .map(user => _.pick(user, 'username'))
+                               .value();
 
 let pendingReviewers = [];
 let required = _.pluck(review.pullRequest.assignees, 'username');
@@ -72,13 +74,9 @@ _.forEach(review.files, function(file) {
   );
 });
 
-const completed =
-      !tooOld &&
-      numUnreviewedFiles === 0 &&
-      pendingReviewers.length === 0 &&
-      numApprovals >= numApprovalsRequired &&
-      discussionBlockers.length === 0 &&
-      Object.keys(requestedTeams).length === 0;
+const completed = !tooOld && numUnreviewedFiles === 0 &&
+    pendingReviewers.length === 0 && numApprovals >= numApprovalsRequired &&
+    discussionBlockers.length === 0 && Object.keys(requestedTeams).length === 0;
 
 const description = (completed ? "✓" :
   (tooOld ? `Some of the checks are too old. ` : '') +
@@ -90,6 +88,4 @@ const description = (completed ? "✓" :
 
 const shortDescription = (completed ? "✓" : "✗");
 
-return {
-  completed, description, shortDescription, pendingReviewers
-};
+return {completed, description, shortDescription, pendingReviewers};

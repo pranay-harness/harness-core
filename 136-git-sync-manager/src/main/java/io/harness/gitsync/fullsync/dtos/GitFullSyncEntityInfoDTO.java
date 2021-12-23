@@ -3,8 +3,10 @@ package io.harness.gitsync.fullsync.dtos;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.EntityType;
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
+import io.harness.gitsync.sdk.GitSyncApiConstants;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
@@ -16,18 +18,18 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Schema(name = "FullSyncEntityInfo", description = "Contains full sync information for entity")
+@Schema(name = "FullSyncEntityInfo", description = "This contains full sync details of a Git Sync Entity")
 @OwnedBy(PL)
 public class GitFullSyncEntityInfoDTO {
-  String accountIdentifier;
-  String orgIdentifier;
-  String projectIdentifier;
-  String filePath;
-  EntityType entityType;
-  GitFullSyncEntityInfo.SyncStatus syncStatus;
-  String name;
-  String branch;
-  String repo;
-  long retryCount;
-  List<String> errorMessages;
+  @Schema(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) String accountIdentifier;
+  @Schema(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) String orgIdentifier;
+  @Schema(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) String projectIdentifier;
+  @Schema(description = GitSyncApiConstants.FILEPATH_PARAM_MESSAGE) String filePath;
+  @Schema(description = GitSyncApiConstants.ENTITY_TYPE_PARAM_MESSAGE) EntityType entityType;
+  @Schema(description = GitSyncApiConstants.SYNC_STATUS_PARAM_MESSAGE) GitFullSyncEntityInfo.SyncStatus syncStatus;
+  @Schema(description = "Name of the Entity") String name;
+  @Schema(description = GitSyncApiConstants.BRANCH_PARAM_MESSAGE) String branch;
+  @Schema(description = GitSyncApiConstants.REPO_URL_PARAM_MESSAGE) String repo;
+  @Schema(description = "This is the number of Full Sync retry attempts") long retryCount;
+  @Schema(description = "This is the list of Full Sync errors") List<String> errorMessages;
 }

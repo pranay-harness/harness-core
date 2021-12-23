@@ -112,7 +112,8 @@ public class ScmFacilitatorResource {
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Repo Url") @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL,
+      @Parameter(description = GitSyncApiConstants.REPO_URL_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.REPO_URL) String repoURL,
       @Parameter(description = PAGE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue(
           "0") int pageNum,
       @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue(
@@ -193,7 +194,8 @@ public class ScmFacilitatorResource {
         ApiResponse(description = "True if Saas is possible for given Repo Url")
       })
   public ResponseDTO<SaasGitDTO>
-  isSaasGit(@Parameter(description = "Repo Url") @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
+  isSaasGit(@Parameter(description = GitSyncApiConstants.REPO_URL_PARAM_MESSAGE) @QueryParam(
+      NGCommonEntityConstants.REPO_URL) String repoURL) {
     return ResponseDTO.newResponse(GitUtils.isSaasGit(URLDecoderUtility.getDecodedString(repoURL)));
   }
 
