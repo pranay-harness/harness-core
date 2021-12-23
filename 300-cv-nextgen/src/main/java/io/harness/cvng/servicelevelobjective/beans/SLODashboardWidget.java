@@ -2,8 +2,6 @@ package io.harness.cvng.servicelevelobjective.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.cvng.core.utils.Thresholds;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -21,6 +19,8 @@ public class SLODashboardWidget {
   @NotNull String monitoredServiceName;
   @NotNull String healthSourceIdentifier;
   @NotNull String healthSourceName;
+  @NotNull String serviceIdentifier;
+  @NotNull String environmentIdentifier;
   Map<String, String> tags;
   @NotNull ServiceLevelIndicatorType type;
   @NotNull BurnRate burnRate;
@@ -85,23 +85,6 @@ public class SLODashboardWidget {
         }
         // calculating in hours to avoid boundary condition with days.
         return (errorBudgetSpentPercentage() * 24.0) / duration.toHours();
-      }
-    }
-  }
-  public enum ErrorBudgetRisk {
-    HEALTHY,
-    OBSERVE,
-    NEED_ATTENTION,
-    UNHEALTHY;
-    public static ErrorBudgetRisk getFromPercentage(double errorBudgetRemainingPercentage) {
-      if (errorBudgetRemainingPercentage >= Thresholds.HEALTHY_PERCENTAGE) {
-        return ErrorBudgetRisk.HEALTHY;
-      } else if (errorBudgetRemainingPercentage >= Thresholds.NEED_ATTENTION_PERCENTAGE) {
-        return ErrorBudgetRisk.NEED_ATTENTION;
-      } else if (errorBudgetRemainingPercentage >= Thresholds.OBSERVE_PERCENTAGE) {
-        return ErrorBudgetRisk.OBSERVE;
-      } else {
-        return ErrorBudgetRisk.UNHEALTHY;
       }
     }
   }

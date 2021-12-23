@@ -68,6 +68,9 @@ import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.servicelevelobjective.beans.ErrorBudgetRisk;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -87,6 +90,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -115,6 +119,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Mock NextGenService nextGenService;
   @Mock SetupUsageEventService setupUsageEventService;
   @Mock ChangeSourceService changeSourceServiceMock;
+  @Mock ServiceLevelObjectiveService serviceLevelObjectiveService;
 
   private BuilderFactory builderFactory;
   String healthSourceName;
@@ -180,6 +185,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(monitoredServiceService, "changeSourceService", changeSourceService, true);
     FieldUtils.writeField(heatMapService, "clock", clock, true);
     FieldUtils.writeField(monitoredServiceService, "heatMapService", heatMapService, true);
+    FieldUtils.writeField(monitoredServiceService, "serviceLevelObjectiveService", serviceLevelObjectiveService, true);
   }
 
   @Test
@@ -1311,6 +1317,44 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(monitoredServiceListItemDTO.getDependentHealthScore().size()).isEqualTo(2);
     assertThat(monitoredServiceListItemDTO.getDependentHealthScore().get(0).getRiskStatus()).isEqualTo(Risk.UNHEALTHY);
     assertThat(monitoredServiceListItemDTO.getDependentHealthScore().get(1).getRiskStatus()).isEqualTo(Risk.OBSERVE);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testGetMonitoredService_withSLOHealthIndicator() {
+    MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
+    monitoredServiceDTO.setDependencies(Collections.emptySet());
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    when(nextGenService.listService(any(), any(), any(), any())).thenReturn(new ArrayList<ServiceResponse>() {
+      { add(ServiceResponse.builder().service(ServiceResponseDTO.builder().name("serviceName").build()).build()); }
+    });
+    when(nextGenService.listEnvironment(any(), any(), any(), any())).thenReturn(new ArrayList<EnvironmentResponse>() {
+      {
+        add(EnvironmentResponse.builder()
+                .environment(EnvironmentResponseDTO.builder().name("environmentName").build())
+                .build());
+      }
+    });
+    SLOHealthIndicator sloHealthIndicator = SLOHealthIndicator.builder()
+                                                .accountId(builderFactory.getContext().getAccountId())
+                                                .orgIdentifier(builderFactory.getContext().getOrgIdentifier())
+                                                .projectIdentifier(builderFactory.getContext().getProjectIdentifier())
+                                                .monitoredServiceIdentifier(monitoredServiceIdentifier)
+                                                .serviceLevelObjectiveIdentifier("sloIdentifier")
+                                                .errorBudgetRemainingPercentage(70.0)
+                                                .build();
+    hPersistence.save(sloHealthIndicator);
+    PageResponse<MonitoredServiceListItemDTO> monitoredServiceListItemDTOPageResponse =
+        monitoredServiceService.list(projectParams, environmentIdentifier, 0, 10, null, false);
+    MonitoredServiceListItemDTO monitoredServiceListItemDTO =
+        monitoredServiceListItemDTOPageResponse.getContent().get(0);
+    assertThat(monitoredServiceListItemDTO.getSloHealthIndicators().size()).isEqualTo(1);
+    MonitoredServiceListItemDTO.SloHealthIndicatorDTO sloHealthIndicatorResponse =
+        monitoredServiceListItemDTO.getSloHealthIndicators().get(0);
+    assertThat(sloHealthIndicatorResponse.getErrorBudgetRisk()).isEqualTo(ErrorBudgetRisk.NEED_ATTENTION);
+    assertThat(sloHealthIndicatorResponse.getErrorBudgetRemainingPercentage()).isEqualTo(70.0);
+    assertThat(sloHealthIndicatorResponse.getServiceLevelObjectiveIdentifier()).isEqualTo("sloIdentifier");
   }
 
   @Test

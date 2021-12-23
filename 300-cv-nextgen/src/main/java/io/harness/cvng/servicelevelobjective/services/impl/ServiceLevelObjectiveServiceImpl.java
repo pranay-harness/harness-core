@@ -149,6 +149,18 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
             .userJourneys(filter.getUserJourneyIdentifiers())
             .build());
   }
+
+  @Override
+  public ServiceLevelObjective getFromSLIIdentifier(
+      ProjectParams projectParams, String serviceLevelIndicatorIdentifier) {
+    return hPersistence.createQuery(ServiceLevelObjective.class)
+        .filter(ServiceLevelObjectiveKeys.accountId, projectParams.getAccountIdentifier())
+        .filter(ServiceLevelObjectiveKeys.orgIdentifier, projectParams.getOrgIdentifier())
+        .filter(ServiceLevelObjectiveKeys.projectIdentifier, projectParams.getProjectIdentifier())
+        .filter(ServiceLevelObjectiveKeys.serviceLevelIndicators, serviceLevelIndicatorIdentifier)
+        .get();
+  }
+
   @Override
   public ServiceLevelObjective getEntity(ProjectParams projectParams, String identifier) {
     return hPersistence.createQuery(ServiceLevelObjective.class)

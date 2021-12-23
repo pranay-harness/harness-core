@@ -26,6 +26,7 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDe
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO.MonitoredServiceListItemDTOBuilder;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO.SloHealthIndicatorDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources.HealthSourceSummary;
@@ -49,6 +50,9 @@ import io.harness.cvng.core.utils.ServiceEnvKey;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
+import io.harness.cvng.servicelevelobjective.services.api.SLOHealthIndicatorService;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -112,6 +116,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Inject private Clock clock;
   @Inject private TimeSeriesDashboardService timeSeriesDashboardService;
   @Inject private LogDashboardService logDashboardService;
+  @Inject private SLOHealthIndicatorService sloHealthIndicatorService;
+  @Inject private ServiceLevelObjectiveService serviceLevelObjectiveService;
 
   @Override
   public MonitoredServiceResponse create(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
@@ -734,6 +740,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
 
     List<MonitoredServiceListItemDTO> monitoredServiceListDTOS = new ArrayList<>();
     int index = 0;
+    Map<String, List<SloHealthIndicatorDTO>> sloHealthIndicatorDTOMap =
+        getSloHealthIndicators(projectParams, monitoredServiceListDTOBuilderPageResponse.getContent());
     for (MonitoredServiceListItemDTOBuilder monitoredServiceListDTOBuilder :
         monitoredServiceListDTOBuilderPageResponse.getContent()) {
       ServiceEnvKey serviceEnvKey = ServiceEnvKey.builder()
@@ -760,13 +768,15 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       ChangeSummaryDTO changeSummary = changeSourceService.getChangeSummary(serviceEnvironmentParams,
           idToMonitoredServiceMap.get(monitoredServiceListDTOBuilder.getIdentifier()).getChangeSourceIdentifiers(),
           clock.instant().minus(Duration.ofDays(1)), clock.instant());
-      monitoredServiceListDTOS.add(monitoredServiceListDTOBuilder.historicalTrend(historicalTrend)
-                                       .currentHealthScore(monitoredServiceRiskScore)
-                                       .dependentHealthScore(dependentServiceRiskScoreList)
-                                       .serviceName(serviceName)
-                                       .environmentName(environmentName)
-                                       .changeSummary(changeSummary)
-                                       .build());
+      monitoredServiceListDTOS.add(
+          monitoredServiceListDTOBuilder.historicalTrend(historicalTrend)
+              .currentHealthScore(monitoredServiceRiskScore)
+              .dependentHealthScore(dependentServiceRiskScoreList)
+              .serviceName(serviceName)
+              .environmentName(environmentName)
+              .changeSummary(changeSummary)
+              .sloHealthIndicators(sloHealthIndicatorDTOMap.get(monitoredServiceListDTOBuilder.getIdentifier()))
+              .build());
     }
     return PageResponse.<MonitoredServiceListItemDTO>builder()
         .pageSize(pageSize)
@@ -1131,7 +1141,6 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         serviceEnvironmentParams, dependentServices, latestRiskScoreByServiceMap);
     ChangeSummaryDTO changeSummary = changeSourceService.getChangeSummary(serviceEnvironmentParams,
         monitoredService.getChangeSourceIdentifiers(), clock.instant().minus(Duration.ofDays(1)), clock.instant());
-
     return monitoredServiceListItemDTOBuilder.historicalTrend(historicalTrendList.get(0))
         .currentHealthScore(monitoredServiceRiskScore)
         .dependentHealthScore(dependentServiceRiskScoreList)
@@ -1139,5 +1148,30 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .environmentName(environmentName)
         .changeSummary(changeSummary)
         .build();
+  }
+
+  private Map<String, List<SloHealthIndicatorDTO>> getSloHealthIndicators(
+      ProjectParams projectParams, List<MonitoredServiceListItemDTOBuilder> monitoredServiceListItemDTOList) {
+    Map<String, List<SloHealthIndicatorDTO>> sloHealthIndicatorDTOMap = new HashMap<>();
+    if (isEmpty(monitoredServiceListItemDTOList)) {
+      return sloHealthIndicatorDTOMap;
+    }
+    List<String> monitoredServiceIdentifiers = monitoredServiceListItemDTOList.stream()
+                                                   .map(MonitoredServiceListItemDTOBuilder::getIdentifier)
+                                                   .collect(Collectors.toList());
+    List<SLOHealthIndicator> sloHealthIndicatorList =
+        sloHealthIndicatorService.getFromMonitoredServiceIdentifiers(projectParams, monitoredServiceIdentifiers);
+    for (SLOHealthIndicator sloHealthIndicator : sloHealthIndicatorList) {
+      List<SloHealthIndicatorDTO> sloHealthIndicatorDTOList =
+          sloHealthIndicatorDTOMap.getOrDefault(sloHealthIndicator.getMonitoredServiceIdentifier(), new ArrayList<>());
+      sloHealthIndicatorDTOList.add(
+          SloHealthIndicatorDTO.builder()
+              .errorBudgetRemainingPercentage(sloHealthIndicator.getErrorBudgetRemainingPercentage())
+              .errorBudgetRisk(sloHealthIndicator.getErrorBudgetRisk())
+              .serviceLevelObjectiveIdentifier(sloHealthIndicator.getServiceLevelObjectiveIdentifier())
+              .build());
+      sloHealthIndicatorDTOMap.put(sloHealthIndicator.getMonitoredServiceIdentifier(), sloHealthIndicatorDTOList);
+    }
+    return sloHealthIndicatorDTOMap;
   }
 }
