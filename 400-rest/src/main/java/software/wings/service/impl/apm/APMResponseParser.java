@@ -77,11 +77,19 @@ public class APMResponseParser {
     for (Multimap<String, Object> record : response) {
       Iterator<Object> timestamps = record.containsKey("timestamp") ? record.get("timestamp").iterator() : null;
       Iterator<Object> values = record.get("value").iterator();
+      Iterator<Object> txnNames = record.containsKey("txnName") ? record.get("txnName").iterator() : null;
       while (values.hasNext()) {
         long timestamp = timestamps != null ? parseTimestamp(timestamps.next(), timestampFormat) : 0;
-        txnName = record.containsKey("txnName") ? (String) record.get("txnName").iterator().next() : txnName;
+        if (txnNames != null && record.get("value").size() == record.get("txnName").size()) {
+          txnName = (String) txnNames.next();
+        } else {
+          txnName = record.containsKey("txnName") ? (String) record.get("txnName").iterator().next() : txnName;
+        }
         hostName = record.containsKey("host") ? (String) record.get("host").iterator().next() : hostName;
+        metricName =
+            record.containsKey("metricName") ? (String) record.get("metricName").iterator().next() : metricName;
         String key = timestamp + ":" + txnName + ":" + hostName;
+
         if (!resultMap.containsKey(key)) {
           resultMap.put(key, new NewRelicMetricDataRecord());
           resultMap.get(key).setTimeStamp(timestamp);
@@ -93,8 +101,6 @@ public class APMResponseParser {
         }
 
         Object val = values.next();
-        metricName =
-            record.containsKey("metricName") ? (String) record.get("metricName").iterator().next() : metricName;
 
         resultMap.get(key).getValues().put(metricName, (Double) VerificationResponseParser.cast(val, "value"));
       }
