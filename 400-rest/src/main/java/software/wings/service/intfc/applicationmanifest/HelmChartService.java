@@ -48,4 +48,6 @@ public interface HelmChartService extends OwnedByApplicationManifest {
 
   HelmChart fetchByChartVersion(
       String accountId, String appId, String serviceId, String appManifestName, String chartVersion);
+
+  List<HelmChart> fetchChartsFromRepo(String accountId, String appId, String serviceId, String appManifestName);
 }

@@ -19,6 +19,7 @@ import io.harness.perpetualtask.manifest.ManifestRepositoryService;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
+import software.wings.helpers.ext.helm.request.HelmChartCollectionParams.HelmChartCollectionType;
 import software.wings.helpers.ext.helm.response.HelmCollectChartResponse;
 
 import com.google.inject.Inject;
@@ -50,12 +51,16 @@ public class HelmCollectChartTask extends AbstractDelegateRunnableTask {
     try {
       List<HelmChart> helmCharts = manifestRepositoryService.collectManifests(taskParams);
 
-      // that specific version is found
-      if (helmCharts.size() == 1
-          && helmCharts.get(0).getVersion().equals(taskParams.getHelmChartConfigParams().getChartVersion())) {
-        return HelmCollectChartResponse.builder().commandExecutionStatus(SUCCESS).helmChart(helmCharts.get(0)).build();
+      if (taskParams.getCollectionType() == HelmChartCollectionType.SPECIFIC_VERSION) {
+        // that specific version is found
+        if (helmCharts.size() == 1
+            && helmCharts.get(0).getVersion().equals(taskParams.getHelmChartConfigParams().getChartVersion())) {
+          return HelmCollectChartResponse.builder().commandExecutionStatus(SUCCESS).helmCharts(helmCharts).build();
+        } else {
+          return HelmCollectChartResponse.builder().commandExecutionStatus(SUCCESS).helmCharts(null).build();
+        }
       } else {
-        return HelmCollectChartResponse.builder().commandExecutionStatus(SUCCESS).helmChart(null).build();
+        return HelmCollectChartResponse.builder().commandExecutionStatus(SUCCESS).helmCharts(helmCharts).build();
       }
 
     } catch (Exception e) {

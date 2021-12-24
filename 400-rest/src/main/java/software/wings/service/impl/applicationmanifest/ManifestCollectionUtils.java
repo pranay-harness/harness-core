@@ -29,6 +29,7 @@ import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
+import software.wings.helpers.ext.helm.request.HelmChartCollectionParams.HelmChartCollectionType;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams.HelmChartConfigParamsBuilder;
 import software.wings.service.intfc.AppService;
@@ -97,7 +98,7 @@ public class ManifestCollectionUtils {
   }
 
   public ManifestCollectionParams prepareCollectTaskParamsWithChartVersion(
-      String appManifestId, String appId, String chartVersion) {
+      String appManifestId, String appId, HelmChartCollectionType helmChartCollectionType, String chartVersion) {
     ApplicationManifest appManifest = applicationManifestService.getById(appId, appManifestId);
     if (appManifest == null) {
       throw new InvalidRequestException("Cannot find app manifest with id " + appManifestId);
@@ -130,6 +131,7 @@ public class ManifestCollectionUtils {
         .publishedVersions(getPublishedVersionsForAppManifest(accountId, appManifestId))
         .helmChartConfigParams(helmChartConfigParamsBuilder.build())
         .useRepoFlags(useRepoFlags)
+        .collectionType(helmChartCollectionType)
         .build();
   }
 
