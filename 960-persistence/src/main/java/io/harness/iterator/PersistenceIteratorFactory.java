@@ -92,6 +92,8 @@ public final class PersistenceIteratorFactory {
     return iterator;
   }
 
+  // TODO (prashant) : this method looks wrong for loop iterators, scheduled at fixed rate do not make sense
+  // Investigate more when time permits
   public <T extends PersistentIterable, F extends FilterExpander> PersistenceIterator<T>
   createLoopIteratorWithDedicatedThreadPool(
       PumpExecutorOptions options, Class<?> cls, MongoPersistenceIteratorBuilder<T, F> builder) {

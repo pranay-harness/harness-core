@@ -85,6 +85,7 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
 
       schemaFetcher.invalidateAllCache();
     }
+    //TODO: ADD ERROR HANDLING
     responseObserver.onNext(InitializeSdkResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
