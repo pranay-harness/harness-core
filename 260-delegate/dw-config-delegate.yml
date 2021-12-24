@@ -1,8 +1,13 @@
 # Dropwizard config
 xxxxxxxx
   applicationConnectors:
-    - type: http
+    - type: https
       port: 3460
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
       maxRequestHeaderSize: 100KiB
   maxThreads: 1024
 

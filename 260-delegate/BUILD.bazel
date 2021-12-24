@@ -42,6 +42,7 @@ java_library(
         "//930-delegate-tasks:module",
         "//930-ng-core-clients:module",
         "//932-connector-task:module",
+        "//940-primary-version-manager:module",
         "//940-secret-manager-client:module",
         "//950-command-library-common:module",
         "//950-delegate-tasks-beans:module",

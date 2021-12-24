@@ -7,17 +7,21 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.delegate.app.modules.DelegateAgentModule;
 import io.harness.delegate.configuration.DelegateConfiguration;
+import io.harness.delegate.resources.DelegateAgentHealthResource;
 import io.harness.delegate.service.DelegateAgentService;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.pingpong.PingPongClient;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
+import io.harness.persistence.HPersistence;
+import io.harness.resource.VersionInfoResource;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 
 import ch.qos.logback.classic.LoggerContext;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.ning.http.client.AsyncHttpClient;
@@ -77,9 +81,8 @@ public class DelegateAgentApplication extends Application<DelegateAgentConfig> {
     final Injector injector = Guice.createInjector(new DelegateAgentModule(configuration));
 
     addShutdownHook(injector);
-
+    registerResources(environment, injector);
     registerHealthChecks(environment, injector);
-
     injector.getInstance(PingPongClient.class).startAsync();
 
     log.info("Starting Delegate");
@@ -130,5 +133,10 @@ public class DelegateAgentApplication extends Application<DelegateAgentConfig> {
 
     healthService.registerMonitor(injector.getInstance(HealthMonitor.class));
     environment.healthChecks().register("DelegateAgentApp", healthService);
+  }
+
+  private void registerResources(final Environment environment, final Injector injector) {
+    // environment.jersey().register(injector.getInstance(VersionInfoResource.class));
+    environment.jersey().register(injector.getInstance(DelegateAgentHealthResource.class));
   }
 }
