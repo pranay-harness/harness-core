@@ -41,6 +41,7 @@ import io.harness.cvng.core.beans.params.filterParams.LiveMonitoringLogAnalysisF
 import io.harness.cvng.core.beans.params.filterParams.TimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.MonitoredService.MonitoredServiceKeys;
+import io.harness.cvng.core.handler.monitoredService.BaseMonitoredServiceHandler;
 import io.harness.cvng.core.services.api.SetupUsageEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
@@ -118,6 +119,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Inject private LogDashboardService logDashboardService;
   @Inject private SLOHealthIndicatorService sloHealthIndicatorService;
   @Inject private ServiceLevelObjectiveService serviceLevelObjectiveService;
+  @Inject private Set<BaseMonitoredServiceHandler> monitoredServiceHandlers;
 
   @Override
   public MonitoredServiceResponse create(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
@@ -215,6 +217,11 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     Preconditions.checkArgument(
         monitoredService.getEnvironmentIdentifier().equals(monitoredServiceDTO.getEnvironmentRef()),
         "environmentRef update is not allowed");
+    MonitoredServiceDTO existingMonitoredServiceDTO =
+        createMonitoredServiceDTOFromEntity(monitoredService, environmentParams).getMonitoredServiceDTO();
+    monitoredServiceHandlers.forEach(baseMonitoredServiceHandler
+        -> baseMonitoredServiceHandler.beforeUpdate(
+            environmentParams, existingMonitoredServiceDTO, monitoredServiceDTO));
     validate(monitoredServiceDTO);
 
     updateHealthSources(monitoredService, monitoredServiceDTO);
