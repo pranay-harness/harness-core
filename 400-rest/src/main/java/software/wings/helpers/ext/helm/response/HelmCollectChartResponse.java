@@ -11,6 +11,7 @@ import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.appmanifest.HelmChart;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,5 +26,5 @@ public class HelmCollectChartResponse implements DelegateTaskNotifyResponseData 
   private String errorMessage;
   private CommandExecutionStatus commandExecutionStatus;
 
-  private HelmChart helmChart;
+  private List<HelmChart> helmCharts;
 }
