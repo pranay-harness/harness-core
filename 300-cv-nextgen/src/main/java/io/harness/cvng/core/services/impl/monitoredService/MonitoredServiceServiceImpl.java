@@ -78,12 +78,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.NonNull;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -468,19 +468,21 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       throw new InvalidRequestException(String.format(
           "There are no Monitored Services for the given project: %s", projectParams.getProjectIdentifier()));
     }
-
+    Map<String, Set<HealthSource>> healthSourceMap = healthSourceService.getHealthSource(monitoredServiceEntities);
     return monitoredServiceEntities.stream()
         .map(monitoredServiceEntity -> {
-          Set<HealthSource> healthSource = healthSourceService.get(monitoredServiceEntity.getAccountId(),
-              monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
-              monitoredServiceEntity.getIdentifier(), monitoredServiceEntity.getHealthSourceIdentifiers());
+          Set<HealthSource> healthSource = healthSourceMap.get(monitoredServiceEntity.getIdentifier());
           return MonitoredServiceWithHealthSources.builder()
               .name(monitoredServiceEntity.getName())
               .identifier(monitoredServiceEntity.getIdentifier())
-              .healthSources(
-                  healthSource.stream()
-                      .map(x -> HealthSourceSummary.builder().name(x.getName()).identifier(x.getIdentifier()).build())
-                      .collect(Collectors.toSet()))
+              .healthSources(Objects.nonNull(healthSource) ? healthSource.stream()
+                                                                 .map(x
+                                                                     -> HealthSourceSummary.builder()
+                                                                            .name(x.getName())
+                                                                            .identifier(x.getIdentifier())
+                                                                            .build())
+                                                                 .collect(Collectors.toSet())
+                                                           : Collections.emptySet())
               .build();
         })
         .collect(Collectors.toList());
@@ -1088,7 +1090,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .map(healthSource -> healthSource.getSpec())
         .filter(spec -> spec instanceof MetricHealthSourceSpec)
         .map(spec -> (MetricHealthSourceSpec) spec)
-        .filter(spec -> CollectionUtils.isNotEmpty(spec.getMetricDefinitions()))
+        .filter(spec -> isNotEmpty(spec.getMetricDefinitions()))
         .flatMap(spec -> spec.getMetricDefinitions().stream())
         .filter(metricDefinition -> metricDefinition.getSli().getEnabled())
         .map(metricDefinition

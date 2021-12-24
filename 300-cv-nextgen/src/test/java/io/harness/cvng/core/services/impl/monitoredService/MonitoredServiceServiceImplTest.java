@@ -1049,6 +1049,15 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
 
     assertThat(monitoredServiceWithHealthSourcesList.size()).isEqualTo(2);
     assertThat(monitoredServiceWithHealthSourcesList.get(0).getIdentifier()).isEqualTo(identifier1);
+    assertThat(monitoredServiceWithHealthSourcesList.get(0).getHealthSources().size()).isEqualTo(1);
+    assertThat(
+        monitoredServiceWithHealthSourcesList.get(0).getHealthSources().stream().findFirst().get().getIdentifier())
+        .isEqualTo("monitoredService1/healthSourceIdentifier");
+    assertThat(monitoredServiceWithHealthSourcesList.get(1).getIdentifier()).isEqualTo(identifier2);
+    assertThat(monitoredServiceWithHealthSourcesList.get(1).getHealthSources().size()).isEqualTo(1);
+    assertThat(
+        monitoredServiceWithHealthSourcesList.get(1).getHealthSources().stream().findFirst().get().getIdentifier())
+        .isEqualTo("monitoredService2/healthSourceIdentifier");
   }
 
   @Test
