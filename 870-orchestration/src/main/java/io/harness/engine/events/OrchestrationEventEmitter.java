@@ -28,7 +28,7 @@ public class OrchestrationEventEmitter {
       eventSender.sendEvent(
           event.getAmbiance(), event.toByteString(), PmsEventCategory.ORCHESTRATION_EVENT, serviceName, true);
     } catch (Exception ex) {
-      log.error("Failed to create orchestration event", ex);
+      log.error("Failed to create orchestration event of type {}", event.getEventType(), ex);
       throw ex;
     }
   }
