@@ -78,7 +78,7 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
           ((InvalidRequestException) ((RemoteMethodReturnValueData) responseData).getException()).getMessage();
       throw new ConnectorValidationException(errorMessage);
     }
-    return responseData;
+    return (ConnectorValidationResponseData) responseData;
   }
 
   private ConnectorValidationResponseData validateViaManager(

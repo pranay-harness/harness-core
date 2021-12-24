@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.git;
 
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.ConnectorValidationResponseData;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.eraro.ErrorCode;
@@ -12,7 +13,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class GitCommandExecutionResponse implements DelegateTaskNotifyResponseData {
+public class GitCommandExecutionResponse implements ConnectorValidationResponseData, DelegateTaskNotifyResponseData {
   private GitBaseResult gitCommandResult;
   private GitBaseRequest gitCommandRequest;
   private GitCommandStatus gitCommandStatus;

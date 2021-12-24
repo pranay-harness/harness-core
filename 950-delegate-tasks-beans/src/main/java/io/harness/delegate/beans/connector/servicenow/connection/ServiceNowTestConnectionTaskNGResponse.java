@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.connector.servicenow.connection;
 
+import io.harness.delegate.beans.ConnectorValidationResponseData;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
@@ -14,7 +15,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class ServiceNowTestConnectionTaskNGResponse implements DelegateTaskNotifyResponseData {
+public class ServiceNowTestConnectionTaskNGResponse
+    implements ConnectorValidationResponseData, DelegateTaskNotifyResponseData {
   Boolean canConnect;
   String errorMessage;
 

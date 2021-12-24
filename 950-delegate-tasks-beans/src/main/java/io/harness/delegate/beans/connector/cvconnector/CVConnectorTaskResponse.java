@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.connector.cvconnector;
 
+import io.harness.delegate.beans.ConnectorValidationResponseData;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
@@ -8,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class CVConnectorTaskResponse implements DelegateTaskNotifyResponseData {
+public class CVConnectorTaskResponse implements ConnectorValidationResponseData, DelegateTaskNotifyResponseData {
   private boolean valid;
   private String errorMessage;
   private DelegateMetaInfo delegateMetaInfo;

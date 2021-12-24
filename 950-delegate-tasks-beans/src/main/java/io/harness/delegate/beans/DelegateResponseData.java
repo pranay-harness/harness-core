@@ -11,4 +11,4 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 @TargetModule(HarnessModule._955_DELEGATE_BEANS)
 @OwnedBy(HarnessTeam.DEL)
-public interface DelegateResponseData extends ResponseData, ConnectorValidationResponseData {}
+public interface DelegateResponseData extends ResponseData {}
