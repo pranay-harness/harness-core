@@ -24,7 +24,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.ConnectorValidationException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
-import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -83,32 +82,6 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
   }
 
   private ConnectorValidationResponseData validateViaManager(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    AtomicReference<ConnectorValidationHandler> connectorValidationHandler = new AtomicReference<>();
-
-    final Optional<ConnectorResponseDTO> connectorResponseDTO =
-        connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    final ConnectorValidationParams connectorValidationParams =
-        connectorResponseDTO
-            .map(connectorResponse -> {
-              ConnectorType connectorType = connectorResponse.getConnector().getConnectorType();
-              connectorValidationHandler.set(
-                  connectorTypeToConnectorValidationHandlerMap.get(connectorType.getDisplayName()));
-              return connectorValidationParamsProviderMap.get(connectorType.getDisplayName())
-                  .getConnectorValidationParams(connectorResponse.getConnector(),
-                      connectorResponse.getConnector().getName(), accountIdentifier, orgIdentifier, projectIdentifier);
-            })
-            .orElseThrow(()
-                             -> new InvalidRequestException(String.format(
-                                 CONNECTOR_STRING, identifier, accountIdentifier, orgIdentifier, projectIdentifier)));
-
-    final ConnectorValidationResponseData validate =
-        connectorValidationHandler.get().validateConnector(connectorValidationParams, accountIdentifier);
-
-    return validate;
-  }
-
-  public ConnectorValidationResponseData validateConnectorViaManager(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     AtomicReference<ConnectorValidationHandler> connectorValidationHandler = new AtomicReference<>();
 
