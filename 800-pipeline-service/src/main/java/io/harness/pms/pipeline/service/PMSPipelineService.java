@@ -66,5 +66,5 @@ public interface PMSPipelineService {
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
 
   String fetchExpandedPipelineJSONFromYaml(
-          String accountId, String orgIdentifier, String projectIdentifier, String pipelineYaml);
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineYaml);
 }

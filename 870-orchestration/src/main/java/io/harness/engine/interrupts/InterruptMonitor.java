@@ -134,12 +134,13 @@ public class InterruptMonitor implements Handler<Interrupt> {
               .collect(Collectors.toList());
       if (isNotEmpty(runningNodes)) {
         log.info("Running Nodes found {}", runningNodes);
-        if (runningNodes.stream().allMatch(ne -> ne.getStatus() == Status.DISCONTINUING || ne.getStatus() == Status.QUEUED)) {
+        if (runningNodes.stream().allMatch(
+                ne -> ne.getStatus() == Status.DISCONTINUING || ne.getStatus() == Status.QUEUED)) {
           log.info("All running nodes are discontinuing, Aborting these");
           for (NodeExecution ne : runningNodes) {
-            try{
+            try {
               abortHelper.abortDiscontinuingNode(ne, interrupt.getUuid(), interrupt.getInterruptConfig());
-            }catch (MappingInstantiationException ex){
+            } catch (MappingInstantiationException ex) {
               log.info("Node Execution Instantiation Exception Occurred. Cannot Recover from it ignore");
               interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
               break;

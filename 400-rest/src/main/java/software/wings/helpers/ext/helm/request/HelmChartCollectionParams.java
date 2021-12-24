@@ -26,6 +26,9 @@ public class HelmChartCollectionParams implements ManifestCollectionParams {
   private HelmChartConfigParams helmChartConfigParams;
   private Set<String> publishedVersions;
   private boolean useRepoFlags;
+  private HelmChartCollectionType collectionType;
+
+  public enum HelmChartCollectionType { ALL, SPECIFIC_VERSION }
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
