@@ -13,6 +13,7 @@ import lombok.experimental.SuperBuilder;
 public class DatadogMetricHealthDefinition extends HealthSourceMetricDefinition {
   String dashboardId;
   String dashboardName;
+  String metricPath;
   String query;
   String groupingQuery;
   String metric;
