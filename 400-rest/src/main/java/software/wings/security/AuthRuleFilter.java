@@ -107,6 +107,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       "harness-api-keys",
       "users/set-default-account",
       "account/new",
+      "/setup/delegates/ng/v2",
   };
   private static final String[] NO_FILTERING_URIS_SUFFIXES = new String[] {"/logout"};
   private static final String[] EXEMPTED_URI_PREFIXES = new String[] {"limits/configure", "account/license",
