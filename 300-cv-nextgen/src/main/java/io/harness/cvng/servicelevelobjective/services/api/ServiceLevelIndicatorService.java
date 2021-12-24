@@ -29,4 +29,9 @@ public interface ServiceLevelIndicatorService {
   List<CVConfig> fetchCVConfigForSLI(ServiceLevelIndicator serviceLevelIndicator);
 
   ServiceLevelIndicator getServiceLevelIndicator(ProjectParams projectParams, String identifier);
+
+  List<String> getSLIsWithMetrics(ProjectParams projectParams, String monitoredServiceIdentifier,
+      String healthSourceIdentifier, List<String> metricIdentifiers);
+
+  List<String> getSLIs(ProjectParams projectParams, String monitoredServiceIdentifier);
 }
