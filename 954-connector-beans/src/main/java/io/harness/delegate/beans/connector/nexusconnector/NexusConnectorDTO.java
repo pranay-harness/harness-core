@@ -32,7 +32,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @Schema(name = "NexusConnector", description = "This entity contains the details of the Nexus Connectors")
 public class NexusConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @NotNull @NotBlank String nexusServerUrl;
-  @NotNull String version;
+  @NotNull @NotBlank String version;
   @Valid NexusAuthenticationDTO auth;
   Set<String> delegateSelectors;
 
