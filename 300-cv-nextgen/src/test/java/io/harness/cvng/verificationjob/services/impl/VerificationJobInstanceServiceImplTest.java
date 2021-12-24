@@ -1,6 +1,8 @@
 package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
+import static io.harness.cvng.beans.activity.ActivityVerificationStatus.VERIFICATION_FAILED;
+import static io.harness.cvng.beans.activity.ActivityVerificationStatus.VERIFICATION_PASSED;
 import static io.harness.cvng.beans.job.VerificationJobType.CANARY;
 import static io.harness.cvng.beans.job.VerificationJobType.TEST;
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
@@ -22,7 +24,10 @@ import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.CanaryAdditionalInfo;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.Risk;
+import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
+import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -104,6 +109,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private VerificationJobInstanceAnalysisService verificationJobInstanceAnalysisService;
+  @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
 
   @Mock private Clock clock;
   private Instant fakeNow;
@@ -354,6 +360,28 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetDeploymentVerificationStatus() {
+    cvConfigService.save(newCVConfig());
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    verificationJobInstance.setExecutionStatus(ExecutionStatus.SUCCESS);
+    String verificationJobInstanceId = verificationJobInstance.getUuid();
+    String verificationTaskId =
+        verificationTaskService.getVerificationTaskId(accountId, cvConfigId, verificationJobInstanceId);
+    DeploymentLogAnalysis deploymentLogAnalysis =
+        DeploymentLogAnalysis.builder()
+            .accountId(accountId)
+            .verificationTaskId(verificationTaskId)
+            .resultSummary(DeploymentLogAnalysisDTO.ResultSummary.builder().risk(1).build())
+            .build();
+    deploymentLogAnalysisService.save(deploymentLogAnalysis);
+    ActivityVerificationStatus activityVerificationStatus =
+        verificationJobInstanceService.getDeploymentVerificationStatus(verificationJobInstance);
+    assertThat(activityVerificationStatus).isEqualTo(VERIFICATION_FAILED);
+  }
+
+  @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testLogProgress_multipleVerificationTasks() {
@@ -508,13 +536,13 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
         Arrays.asList(ExecutionStatus.QUEUED, ExecutionStatus.SUCCESS, ExecutionStatus.FAILED);
     List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
     for (ExecutionStatus executionStatus : executionStatuses) {
-      verificationJobInstances.add(createVerificationJobInstance(verificationJobIdentifier, generateUuid(),
-          executionStatus, TEST, ActivityVerificationStatus.VERIFICATION_PASSED));
+      verificationJobInstances.add(createVerificationJobInstance(
+          verificationJobIdentifier, generateUuid(), executionStatus, TEST, VERIFICATION_PASSED));
     }
     verificationJobInstances.add(createVerificationJobInstance(verificationJobIdentifier, generateUuid(),
         ExecutionStatus.SUCCESS, TEST, ActivityVerificationStatus.VERIFICATION_FAILED));
-    verificationJobInstances.add(createVerificationJobInstance(verificationJobIdentifier, generateUuid(),
-        ExecutionStatus.SUCCESS, TEST, ActivityVerificationStatus.VERIFICATION_PASSED));
+    verificationJobInstances.add(createVerificationJobInstance(
+        verificationJobIdentifier, generateUuid(), ExecutionStatus.SUCCESS, TEST, VERIFICATION_PASSED));
     assertThat(verificationJobInstanceService
                    .getLastSuccessfulTestVerificationJobExecutionId(
                        accountId, orgIdentifier, projectIdentifier, verificationJobIdentifier)
@@ -851,7 +879,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     Optional<Risk> riskScore =
         verificationJobInstanceAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceIds.get(0));
     assertThat(riskScore).isPresent();
-    assertThat(riskScore.get()).isEqualTo(Risk.NEED_ATTENTION);
+    assertThat(riskScore.get()).isEqualTo(Risk.UNHEALTHY);
   }
 
   private VerificationJobDTO newCanaryVerificationJobDTO() {
@@ -941,7 +969,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .resolvedJob(verificationJob)
             .createdAt(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())
             .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))
-            .verificationStatus(ActivityVerificationStatus.VERIFICATION_PASSED)
+            .verificationStatus(VERIFICATION_PASSED)
             .cvConfigMap(Collections.singletonMap(cvConfigId, cvConfig))
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
@@ -962,7 +990,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .resolvedJob(verificationJob)
             .createdAt(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())
             .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))
-            .verificationStatus(ActivityVerificationStatus.VERIFICATION_PASSED)
+            .verificationStatus(VERIFICATION_PASSED)
             .cvConfigMap(Collections.singletonMap(cvConfigId, cvConfig))
             .build();
     verificationJobInstanceService.create(verificationJobInstance);

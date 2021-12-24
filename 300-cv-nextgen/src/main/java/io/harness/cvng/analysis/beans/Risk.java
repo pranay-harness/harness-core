@@ -14,10 +14,27 @@ public enum Risk {
   NEED_ATTENTION(2),
   UNHEALTHY(3);
   private static final Map<Integer, Risk> INT_TO_RISK_MAP = new HashMap<>();
+  private static final Map<Integer, Risk> INT_TO_RISK_MAP_FOR_DEPLOYMENT_LOG_ANALYSIS = new HashMap<>();
+  private static final Map<Integer, Risk> INT_TO_RISK_MAP_FOR_DEPLOYMENT_TIMESERIES_ANALYSIS = new HashMap<>();
+
   static {
     for (Risk r : Risk.values()) {
       INT_TO_RISK_MAP.put(r.value, r);
     }
+
+    INT_TO_RISK_MAP_FOR_DEPLOYMENT_LOG_ANALYSIS.put(0, HEALTHY);
+    INT_TO_RISK_MAP_FOR_DEPLOYMENT_LOG_ANALYSIS.put(1, UNHEALTHY);
+    // LE doest not send 2 for log analysis, but keeping this entry for backward compatibility
+    INT_TO_RISK_MAP_FOR_DEPLOYMENT_LOG_ANALYSIS.put(2, UNHEALTHY);
+
+    INT_TO_RISK_MAP_FOR_DEPLOYMENT_TIMESERIES_ANALYSIS.put(-2, NO_DATA);
+    INT_TO_RISK_MAP_FOR_DEPLOYMENT_TIMESERIES_ANALYSIS.put(-1, NO_ANALYSIS);
+    INT_TO_RISK_MAP_FOR_DEPLOYMENT_TIMESERIES_ANALYSIS.put(0, HEALTHY);
+    INT_TO_RISK_MAP_FOR_DEPLOYMENT_TIMESERIES_ANALYSIS.put(1, OBSERVE);
+    INT_TO_RISK_MAP_FOR_DEPLOYMENT_TIMESERIES_ANALYSIS.put(2, UNHEALTHY);
+    // LE doest not send 3 for deployment timeseries analysis, but as the demo data deserializer converts unhealthy into
+    // value 3, that's why adding this entry
+    INT_TO_RISK_MAP_FOR_DEPLOYMENT_TIMESERIES_ANALYSIS.put(3, UNHEALTHY);
   }
 
   private final int value;
@@ -31,6 +48,18 @@ public enum Risk {
   public static Risk valueOf(int risk) {
     Preconditions.checkState(INT_TO_RISK_MAP.containsKey(risk), "Invalid value of risk %s", risk);
     return INT_TO_RISK_MAP.get(risk);
+  }
+
+  public static Risk valueOfRiskForDeploymentLogAnalysis(int risk) {
+    Preconditions.checkState(
+        INT_TO_RISK_MAP_FOR_DEPLOYMENT_LOG_ANALYSIS.containsKey(risk), "Invalid value of risk for deployment %s", risk);
+    return INT_TO_RISK_MAP_FOR_DEPLOYMENT_LOG_ANALYSIS.get(risk);
+  }
+
+  public static Risk valueOfRiskForDeploymentTimeSeriesAnalysis(int risk) {
+    Preconditions.checkState(INT_TO_RISK_MAP_FOR_DEPLOYMENT_TIMESERIES_ANALYSIS.containsKey(risk),
+        "Invalid value of risk for deployment %s", risk);
+    return INT_TO_RISK_MAP_FOR_DEPLOYMENT_TIMESERIES_ANALYSIS.get(risk);
   }
 
   public static Risk getRiskFromRiskScore(double riskScore) {

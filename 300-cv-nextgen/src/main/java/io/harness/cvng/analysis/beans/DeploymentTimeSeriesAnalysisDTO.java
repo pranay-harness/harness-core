@@ -13,7 +13,7 @@ import lombok.Value;
 public class DeploymentTimeSeriesAnalysisDTO {
   @JsonDeserialize(using = RiskDeserializer.class) int risk;
   public Risk getRisk() {
-    return Risk.valueOf(risk);
+    return Risk.valueOfRiskForDeploymentTimeSeriesAnalysis(risk);
   }
   Double score;
   List<HostInfo> hostSummaries;
@@ -41,7 +41,7 @@ public class DeploymentTimeSeriesAnalysisDTO {
     boolean canary;
     @JsonDeserialize(using = RiskDeserializer.class) int risk;
     public Risk getRisk() {
-      return Risk.valueOf(risk);
+      return Risk.valueOfRiskForDeploymentTimeSeriesAnalysis(risk);
     }
     Double score;
   }
@@ -52,7 +52,7 @@ public class DeploymentTimeSeriesAnalysisDTO {
     String hostName;
     @JsonDeserialize(using = RiskDeserializer.class) int risk;
     public Risk getRisk() {
-      return Risk.valueOf(risk);
+      return Risk.valueOfRiskForDeploymentTimeSeriesAnalysis(risk);
     }
     Double score;
     List<Double> controlData;
@@ -80,7 +80,7 @@ public class DeploymentTimeSeriesAnalysisDTO {
     String metricName;
     @JsonDeserialize(using = RiskDeserializer.class) int risk;
     public Risk getRisk() {
-      return Risk.valueOf(this.risk);
+      return Risk.valueOfRiskForDeploymentTimeSeriesAnalysis(this.risk);
     }
 
     Double score;
