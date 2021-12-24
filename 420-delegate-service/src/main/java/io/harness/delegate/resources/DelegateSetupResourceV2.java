@@ -5,8 +5,6 @@ import static io.harness.delegate.utils.RbacConstants.DELEGATE_RESOURCE_TYPE;
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_VIEW_PERMISSION;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
-
 import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
@@ -23,8 +21,6 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.DelegateSetupService;
-
-import software.wings.security.annotations.AuthRule;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -51,7 +47,6 @@ import retrofit2.http.Body;
 @Api("/setup/delegates/ng/v2")
 @Path("/setup/delegates/ng/v2")
 @Produces("application/json")
-@AuthRule(permissionType = LOGGED_IN)
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 @Tag(name = "Delegate Setup", description = "Contains APIs related to Delegate Setup")
