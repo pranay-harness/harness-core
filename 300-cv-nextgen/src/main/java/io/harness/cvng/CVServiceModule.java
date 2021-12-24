@@ -83,6 +83,8 @@ import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDCurrentGenChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
+import io.harness.cvng.core.handler.monitoredService.BaseMonitoredServiceHandler;
+import io.harness.cvng.core.handler.monitoredService.MonitoredServiceSLIMetricUpdateHandler;
 import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
@@ -303,6 +305,7 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.dropwizard.jackson.Jackson;
@@ -551,6 +554,10 @@ public class CVServiceModule extends AbstractModule {
         .to(HarnessCDCurrentGenChangeSourceSpecTransformer.class);
 
     bindAnalysisStateExecutor();
+
+    Multibinder<BaseMonitoredServiceHandler> monitoredServiceHandlerMultibinder =
+        Multibinder.newSetBinder(binder(), BaseMonitoredServiceHandler.class);
+    monitoredServiceHandlerMultibinder.addBinding().to(MonitoredServiceSLIMetricUpdateHandler.class);
 
     MapBinder<ActivityType, ActivityUpdatableEntity> activityTypeActivityUpdatableEntityMapBinder =
         MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdatableEntity.class);

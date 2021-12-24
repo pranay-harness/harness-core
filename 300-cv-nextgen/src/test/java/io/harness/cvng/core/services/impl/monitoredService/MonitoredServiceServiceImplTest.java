@@ -27,9 +27,16 @@ import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition.AnalysisDTO;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition.AnalysisDTO.DeploymentVerificationDTO;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition.AnalysisDTO.LiveMonitoringDTO;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition.SLIDTO;
+import io.harness.cvng.core.beans.RiskProfile;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.CountServiceDTO;
@@ -44,6 +51,8 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec.AppDMetricDefinitions;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.beans.params.ProjectParams;
@@ -70,6 +79,7 @@ import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.servicelevelobjective.beans.ErrorBudgetRisk;
 import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -116,6 +126,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject HPersistence hPersistence;
   @Inject ServiceDependencyService serviceDependencyService;
   @Inject HealthSourceService healthSourceService;
+  @Inject ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Mock NextGenService nextGenService;
   @Mock SetupUsageEventService setupUsageEventService;
   @Mock ChangeSourceService changeSourceServiceMock;
@@ -393,6 +404,64 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
             .map(changeSource -> changeSource.getIdentifier())
             .collect(toList()));
     assertThat(changeSources.size()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testUpdate_beforeUpdatehandlerInvoked() {
+    MonitoredServiceDTO existingMonitoredService =
+        builderFactory.monitoredServiceDTOBuilder()
+            .sources(
+                Sources.builder()
+                    .healthSources(new HashSet<>(Arrays.asList(
+                        HealthSource.builder()
+                            .identifier("healthSourceIdentifier")
+                            .name("health source name")
+                            .type(MonitoredServiceDataSourceType.APP_DYNAMICS)
+                            .spec(AppDynamicsHealthSourceSpec.builder()
+                                      .applicationName("appApplicationName")
+                                      .tierName("tier")
+                                      .connectorRef("CONNECTOR_IDENTIFIER")
+                                      .feature("Application Monitoring")
+                                      .metricDefinitions(Arrays.asList(
+                                          AppDMetricDefinitions.builder()
+                                              .identifier("metric1")
+                                              .metricName("metric2")
+                                              .groupName("group1")
+                                              .metricPath("path2")
+                                              .baseFolder("baseFolder2")
+                                              .sli(SLIDTO.builder().enabled(true).build())
+                                              .analysis(
+                                                  AnalysisDTO.builder()
+                                                      .riskProfile(RiskProfile.builder()
+                                                                       .category(CVMonitoringCategory.ERRORS)
+                                                                       .metricType(TimeSeriesMetricType.INFRA)
+                                                                       .build())
+                                                      .deploymentVerification(DeploymentVerificationDTO.builder()
+                                                                                  .enabled(true)
+                                                                                  .serviceInstanceMetricPath("path")
+                                                                                  .build())
+                                                      .liveMonitoring(LiveMonitoringDTO.builder().enabled(true).build())
+                                                      .build())
+                                              .build()))
+                                      .build())
+                            .build())))
+                    .build())
+            .build();
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), existingMonitoredService);
+    MonitoredServiceDTO updatingMonitoredService =
+        builderFactory.monitoredServiceDTOBuilder()
+            .identifier(existingMonitoredService.getIdentifier())
+            .sources(Sources.builder().healthSources(new HashSet<>()).build())
+            .build();
+    serviceLevelIndicatorService.create(builderFactory.getProjectParams(),
+        Arrays.asList(builderFactory.getServiceLevelIndicatorDTOBuilder()), "sloIdentifier",
+        existingMonitoredService.getIdentifier(), "healthSourceIdentifier");
+    assertThatThrownBy(
+        () -> monitoredServiceService.update(builderFactory.getContext().getAccountId(), updatingMonitoredService))
+        .hasMessage(
+            "Deleting metrics are used in SLIs, Please delete the SLIs before deleting metrics. SLIs : sloIdentifier_metric1");
   }
 
   @Test

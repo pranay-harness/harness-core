@@ -28,10 +28,12 @@ import io.harness.cvng.servicelevelobjective.beans.SLIAnalyseRequest;
 import io.harness.cvng.servicelevelobjective.beans.SLIAnalyseResponse;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
+import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator.RatioServiceLevelIndicatorKeys;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorKeys;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorUpdatableEntity;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.TimePeriod;
+import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator.ThresholdServiceLevelIndicatorKeys;
 import io.harness.cvng.servicelevelobjective.services.api.SLIDataProcessorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorEntityAndDTOTransformer;
@@ -61,6 +63,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
@@ -324,6 +327,36 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
         .filter(ServiceLevelIndicatorKeys.projectIdentifier, projectParams.getProjectIdentifier())
         .filter(ServiceLevelIndicatorKeys.identifier, identifier)
         .get();
+  }
+
+  @Override
+  public List<String> getSLIsWithMetrics(ProjectParams projectParams, String monitoredServiceIdentifier,
+      String healthSourceIdentifier, List<String> metricIdentifiers) {
+    Query<ServiceLevelIndicator> query =
+        hPersistence.createQuery(ServiceLevelIndicator.class)
+            .disableValidation()
+            .filter(ServiceLevelIndicatorKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(ServiceLevelIndicatorKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(ServiceLevelIndicatorKeys.projectIdentifier, projectParams.getProjectIdentifier())
+            .filter(ServiceLevelIndicatorKeys.healthSourceIdentifier, healthSourceIdentifier)
+            .filter(ServiceLevelIndicatorKeys.monitoredServiceIdentifier, monitoredServiceIdentifier)
+            .project(ServiceLevelIndicatorKeys.identifier, true);
+    query.or(query.criteria(ThresholdServiceLevelIndicatorKeys.metric1).in(metricIdentifiers),
+        query.criteria(RatioServiceLevelIndicatorKeys.metric1).in(metricIdentifiers),
+        query.criteria(RatioServiceLevelIndicatorKeys.metric2).in(metricIdentifiers));
+    return query.asList().stream().map(ServiceLevelIndicator::getIdentifier).collect(Collectors.toList());
+  }
+
+  @Override
+  public List<String> getSLIs(ProjectParams projectParams, String monitoredServiceIdentifier) {
+    Query<ServiceLevelIndicator> query =
+        hPersistence.createQuery(ServiceLevelIndicator.class)
+            .filter(ServiceLevelIndicatorKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(ServiceLevelIndicatorKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(ServiceLevelIndicatorKeys.projectIdentifier, projectParams.getProjectIdentifier())
+            .filter(ServiceLevelIndicatorKeys.monitoredServiceIdentifier, monitoredServiceIdentifier)
+            .project(ServiceLevelIndicatorKeys.identifier, true);
+    return query.asList().stream().map(ServiceLevelIndicator::getIdentifier).collect(Collectors.toList());
   }
 
   private ServiceLevelIndicatorDTO sliEntityToDTO(ServiceLevelIndicator serviceLevelIndicator) {
