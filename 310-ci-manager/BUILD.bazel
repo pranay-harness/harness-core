@@ -7,6 +7,7 @@ HarnessTeam = "CI"
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
+    "@k8s//:com_squareup_okhttp3_okhttp",
 ] + [
     "//320-ci-execution:module",
     "//330-ci-beans:module",
@@ -173,7 +174,6 @@ shared_dependencies = [
     "@maven//:com_papertrail_profiler",
     "@maven//:com_smoketurner_dropwizard_swagger",
     "@maven//:com_squareup_okhttp3_logging_interceptor",
-    "@maven//:com_squareup_okhttp3_okhttp",
     "@maven//:com_squareup_okhttp3_okhttp_urlconnection",
     "@maven//:com_squareup_okio_okio",
     "@maven//:com_squareup_retrofit2_adapter_rxjava",

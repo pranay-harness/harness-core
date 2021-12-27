@@ -33,6 +33,7 @@ import io.kubernetes.client.openapi.models.V1PersistentVolume;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeList;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeSpec;
 import io.kubernetes.client.util.CallGeneratorParams;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -105,8 +106,9 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
     try {
       log.debug(EVENT_LOG_MSG, persistentVolume.getMetadata().getUid(), EventType.ADDED);
 
-      DateTime creationTimestamp = persistentVolume.getMetadata().getCreationTimestamp();
-      if (!isClusterSeen || creationTimestamp == null || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
+      OffsetDateTime creationTimestamp = persistentVolume.getMetadata().getCreationTimestamp();
+      if (!isClusterSeen || creationTimestamp == null
+          || creationTimestamp.isAfter(OffsetDateTime.now().minusHours(2))) {
         publishPVInfo(persistentVolume);
       } else {
         publishedPVs.add(persistentVolume.getMetadata().getUid());
@@ -145,8 +147,10 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
       log.debug(EVENT_LOG_MSG, persistentVolume.getMetadata().getUid(), EventType.DELETED);
 
       publishPVEvent(persistentVolume,
-          HTimestamps.fromMillis(
-              ofNullable(persistentVolume.getMetadata().getDeletionTimestamp()).orElse(DateTime.now()).getMillis()),
+          HTimestamps.fromMillis(ofNullable(persistentVolume.getMetadata().getDeletionTimestamp())
+                                     .orElse(OffsetDateTime.now())
+                                     .toInstant()
+                                     .toEpochMilli()),
           EVENT_TYPE_STOP);
 
       publishedPVs.remove(persistentVolume.getMetadata().getUid());
@@ -156,7 +160,8 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
   }
 
   private void publishPVInfo(V1PersistentVolume persistentVolume) {
-    Timestamp timestamp = HTimestamps.fromMillis(persistentVolume.getMetadata().getCreationTimestamp().getMillis());
+    Timestamp timestamp =
+        HTimestamps.fromMillis(persistentVolume.getMetadata().getCreationTimestamp().toInstant().toEpochMilli());
 
     PVInfo pvInfo =
         PVInfo.newBuilder(pvInfoPrototype)

@@ -15,6 +15,7 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_protobuf",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
+    "@k8s//:com_squareup_okhttp3_okhttp",
 ] + [
     "//:lombok",
     "//122-ng-authentication-settings:module",
@@ -243,7 +244,6 @@ shared_dependencies = [
     "@maven//:com_segment_backo_backo",
     "@maven//:com_splunk_splunk",
     "@maven//:com_squareup_okhttp3_logging_interceptor",
-    "@maven//:com_squareup_okhttp3_okhttp",
     "@maven//:com_squareup_okhttp3_okhttp_urlconnection",
     "@maven//:com_squareup_okio_okio",
     "@maven//:com_squareup_retrofit2_adapter_rxjava",

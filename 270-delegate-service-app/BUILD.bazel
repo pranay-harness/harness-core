@@ -7,6 +7,7 @@ HarnessTeam = "DEL"
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
+    "@k8s//:com_squareup_okhttp3_okhttp",
 ] + [
     "//360-cg-manager:module",
     "//380-cg-graphql:module",
@@ -700,7 +701,6 @@ java_library(
         ":module",
         "@maven//:com_icegreen_greenmail",
         "@maven//:com_openpojo_openpojo",
-        "@maven//:com_squareup_okhttp3_okhttp",
         "@maven//:io_dropwizard_dropwizard_testing",
         "@maven//:io_github_benas_random_beans",
         "@maven//:io_grpc_grpc_testing",
