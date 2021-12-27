@@ -161,6 +161,8 @@ public class HelmRollbackStep extends TaskExecutableWithRollbackAndRbac<HelmCmdE
         .namespace(nativeHelmStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance).getNamespace())
         .k8SteadyStateCheckEnabled(cdFeatureFlagHelper.isEnabled(
             AmbianceUtils.getAccountId(ambiance), FeatureName.HELM_STEADY_STATE_CHECK_1_16))
+        .useLatestKubectlVersion(
+            cdFeatureFlagHelper.isEnabled(AmbianceUtils.getAccountId(ambiance), FeatureName.NEW_KUBECTL_VERSION))
         .shouldOpenFetchFilesLogStream(true);
 
     return nativeHelmStepHelper
