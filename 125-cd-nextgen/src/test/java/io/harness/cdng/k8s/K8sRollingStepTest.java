@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.TimeOutHelper;
 import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.instance.outcome.DeploymentInfoOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
@@ -150,7 +151,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
 
     K8sRollingDeployRequest request = executeTask(stepElementParameters, K8sRollingDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepElementParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(TimeOutHelper.getTimeoutInMin(stepElementParameters));
     assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 

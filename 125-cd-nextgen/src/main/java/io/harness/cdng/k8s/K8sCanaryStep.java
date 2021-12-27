@@ -3,6 +3,8 @@ package io.harness.cdng.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.ParameterFieldBooleanValueHelper;
+import io.harness.cdng.TimeOutHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.k8s.K8sCanaryBaseStepInfo.K8sCanaryBaseStepInfoKeys;
@@ -92,7 +94,7 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
     final K8sCanaryStepParameters canaryStepParameters = (K8sCanaryStepParameters) stepElementParameters.getSpec();
     final Integer instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
     final String accountId = AmbianceUtils.getAccountId(ambiance);
-    final boolean skipDryRun = K8sStepHelper.getParameterFieldBooleanValue(
+    final boolean skipDryRun = ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
         canaryStepParameters.getSkipDryRun(), K8sCanaryBaseStepInfoKeys.skipDryRun, stepElementParameters);
     List<String> manifestFilesContents =
         k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, manifestOverrideContents);
@@ -106,7 +108,7 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
             .taskType(K8sTaskType.CANARY_DEPLOY)
             .instanceUnitType(canaryStepParameters.getInstanceSelection().getType().getInstanceUnitType())
             .instances(instancesValue)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepElementParameters))
+            .timeoutIntervalInMin(TimeOutHelper.getTimeoutInMin(stepElementParameters))
             .valuesYamlList(!isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .openshiftParamList(isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .kustomizePatchesList(k8sStepHelper.renderPatches(k8sManifestOutcome, ambiance, manifestOverrideContents))
