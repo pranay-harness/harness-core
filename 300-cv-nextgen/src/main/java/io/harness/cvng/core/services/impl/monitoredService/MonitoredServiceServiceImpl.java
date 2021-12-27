@@ -750,7 +750,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     List<MonitoredServiceListItemDTO> monitoredServiceListDTOS = new ArrayList<>();
     int index = 0;
     Map<String, List<SloHealthIndicatorDTO>> sloHealthIndicatorDTOMap =
-        getSloHealthIndicators(projectParams, monitoredServiceListDTOBuilderPageResponse.getContent());
+        getSloHealthIndicators(projectParams, monitoredServiceIdentifiers);
     for (MonitoredServiceListItemDTOBuilder monitoredServiceListDTOBuilder :
         monitoredServiceListDTOBuilderPageResponse.getContent()) {
       ServiceEnvKey serviceEnvKey = ServiceEnvKey.builder()
@@ -1150,9 +1150,12 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         serviceEnvironmentParams, dependentServices, latestRiskScoreByServiceMap);
     ChangeSummaryDTO changeSummary = changeSourceService.getChangeSummary(serviceEnvironmentParams,
         monitoredService.getChangeSourceIdentifiers(), clock.instant().minus(Duration.ofDays(1)), clock.instant());
+    Map<String, List<SloHealthIndicatorDTO>> sloHealthIndicatorDTOMap =
+        getSloHealthIndicators(serviceEnvironmentParams, Collections.singletonList(monitoredService.getIdentifier()));
     return monitoredServiceListItemDTOBuilder.historicalTrend(historicalTrendList.get(0))
         .currentHealthScore(monitoredServiceRiskScore)
         .dependentHealthScore(dependentServiceRiskScoreList)
+        .sloHealthIndicators(sloHealthIndicatorDTOMap.get(monitoredService.getIdentifier()))
         .serviceName(serviceName)
         .environmentName(environmentName)
         .changeSummary(changeSummary)
@@ -1160,14 +1163,11 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   private Map<String, List<SloHealthIndicatorDTO>> getSloHealthIndicators(
-      ProjectParams projectParams, List<MonitoredServiceListItemDTOBuilder> monitoredServiceListItemDTOList) {
+      ProjectParams projectParams, List<String> monitoredServiceIdentifiers) {
     Map<String, List<SloHealthIndicatorDTO>> sloHealthIndicatorDTOMap = new HashMap<>();
-    if (isEmpty(monitoredServiceListItemDTOList)) {
+    if (isEmpty(monitoredServiceIdentifiers)) {
       return sloHealthIndicatorDTOMap;
     }
-    List<String> monitoredServiceIdentifiers = monitoredServiceListItemDTOList.stream()
-                                                   .map(MonitoredServiceListItemDTOBuilder::getIdentifier)
-                                                   .collect(Collectors.toList());
     List<SLOHealthIndicator> sloHealthIndicatorList =
         sloHealthIndicatorService.getByMonitoredServiceIdentifiers(projectParams, monitoredServiceIdentifiers);
     for (SLOHealthIndicator sloHealthIndicator : sloHealthIndicatorList) {
