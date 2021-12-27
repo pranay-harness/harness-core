@@ -1,5 +1,6 @@
 package io.harness.cdng.k8s;
 
+import com.google.inject.Inject;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
@@ -35,11 +36,11 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
-import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDP)
@@ -85,6 +86,11 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implem
 
     if (stepParameters.getDeleteResources().getSpec() == null) {
       throw new InvalidRequestException("DeleteResources spec is mandatory");
+    }
+
+    if (DeleteResourcesType.ResourceName.equals(stepParameters.getDeleteResources().getSpec().getType())
+            && StringUtils.isBlank(stepParameters.getDeleteResources().getSpec().getResourceNamesValue())) {
+      throw new InvalidRequestException("DeleteResources spec should contain at least one valid Resource Name");
     }
   }
 
