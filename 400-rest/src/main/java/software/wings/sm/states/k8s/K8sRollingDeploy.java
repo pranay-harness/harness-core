@@ -1,19 +1,14 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
-import static io.harness.beans.FeatureName.PRUNE_KUBERNETES_RESOURCES;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.exception.WingsException.USER;
-
-import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.Attributes;
+import com.google.inject.Inject;
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -21,7 +16,8 @@ import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
-
+import lombok.Getter;
+import lombok.Setter;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sApplicationManifestSourceInfo;
 import software.wings.api.k8s.K8sElement;
@@ -40,12 +36,7 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ApplicationManifestService;
-import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.*;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -53,14 +44,17 @@ import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.ApplicationManifestUtils;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.Attributes;
-import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.Getter;
-import lombok.Setter;
+
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
+import static io.harness.beans.FeatureName.PRUNE_KUBERNETES_RESOURCES;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
+import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TargetModule(_870_CG_ORCHESTRATION)
@@ -281,5 +275,10 @@ public class K8sRollingDeploy extends AbstractK8sState {
       invalidFields.put("Export manifests & inherit manifests", "Can't export and inherit manifests at the same time");
     }
     return invalidFields;
+  }
+
+  @Override
+  public ContextElementType getRequiredContextElementType() {
+    return ContextElementType.RANCHER_K8S_CLUSTER_CRITERIA;
   }
 }
