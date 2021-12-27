@@ -108,8 +108,8 @@ public class SLIMetricAnalysisStateExecutorTest extends CvNextGenTestBase {
                                         .asList();
     assertThat(sliMetricAnalysisState.getStatus().name()).isEqualTo(AnalysisStatus.SUCCESS.name());
     assertThat(sliRecordList.size()).isEqualTo(5);
-    SLOHealthIndicator sloHealthIndicator =
-        sloHealthIndicatorService.get(builderFactory.getProjectParams(), serviceLevelObjective.getIdentifier());
+    SLOHealthIndicator sloHealthIndicator = sloHealthIndicatorService.getBySLOIdentifier(
+        builderFactory.getProjectParams(), serviceLevelObjective.getIdentifier());
     assertThat(sloHealthIndicator.getErrorBudgetRemainingPercentage()).isEqualTo(100);
   }
 

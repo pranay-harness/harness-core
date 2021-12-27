@@ -2,6 +2,7 @@ package io.harness.cvng.servicelevelobjective.services.api;
 
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.servicelevelobjective.SLORiskCountResponse;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardApiFilter;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveFilter;
@@ -19,6 +20,9 @@ public interface ServiceLevelObjectiveService {
 
   PageResponse<ServiceLevelObjectiveResponse> get(ProjectParams projectParams, Integer offset, Integer pageSize,
       ServiceLevelObjectiveFilter serviceLevelObjectiveFilter);
+
+  SLORiskCountResponse getRiskCount(
+      ProjectParams projectParams, ServiceLevelObjectiveFilter serviceLevelObjectiveFilter);
 
   ServiceLevelObjectiveResponse get(ProjectParams projectParams, String identifier);
   ServiceLevelObjective getEntity(ProjectParams projectParams, String identifier);
