@@ -339,6 +339,10 @@ public abstract class TerraformProvisionState extends State {
     return String.format(planPrefix, context.getWorkflowExecutionId());
   }
 
+  private String getEncryptedPlanName(ExecutionContext context) {
+    return getPlanName(context).replaceAll("_", "-");
+  }
+
   protected String getMarkerName() {
     return format("tfApplyCompleted_%s", provisionerId).trim();
   }
@@ -717,7 +721,7 @@ public abstract class TerraformProvisionState extends State {
             .skipRefreshBeforeApplyingPlan(terraformProvisioner.isSkipRefreshBeforeApplyingPlan())
             .encryptedTfPlan(element.getEncryptedTfPlan())
             .secretManagerConfig(secretManagerConfig)
-            .planName(getPlanName(context))
+            .planName(getEncryptedPlanName(context))
             .useTfClient(
                 featureFlagService.isEnabled(FeatureName.USE_TF_CLIENT, executionContext.getApp().getAccountId()))
             .isGitHostConnectivityCheck(
@@ -962,7 +966,7 @@ public abstract class TerraformProvisionState extends State {
             .skipRefreshBeforeApplyingPlan(terraformProvisioner.isSkipRefreshBeforeApplyingPlan())
             .secretManagerConfig(secretManagerConfig)
             .encryptedTfPlan(null)
-            .planName(getPlanName(context))
+            .planName(getEncryptedPlanName(context))
             .useTfClient(
                 featureFlagService.isEnabled(FeatureName.USE_TF_CLIENT, executionContext.getApp().getAccountId()))
             .isGitHostConnectivityCheck(
