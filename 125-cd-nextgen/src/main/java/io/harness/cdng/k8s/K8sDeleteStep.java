@@ -3,6 +3,8 @@ package io.harness.cdng.k8s;
 import com.google.inject.Inject;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.ParameterFieldBooleanValueHelper;
+import io.harness.cdng.TimeOutHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.DeleteReleaseNameSpec.DeleteReleaseNameSpecKeys;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
@@ -116,7 +118,7 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implem
             .deleteResourcesType(deleteStepParameters.getDeleteResources().getType())
             .resources(
                 isResourceName ? deleteStepParameters.getDeleteResources().getSpec().getResourceNamesValue() : "")
-            .deleteNamespacesForRelease(K8sStepHelper.getParameterFieldBooleanValue(
+            .deleteNamespacesForRelease(ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
                 deleteStepParameters.getDeleteResources().getSpec().getDeleteNamespaceParameterField(),
                 DeleteReleaseNameSpecKeys.deleteNamespace, stepParameters))
             .filePaths(
@@ -126,7 +128,7 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implem
                     : Collections.emptyList())
             .kustomizePatchesList(k8sStepHelper.renderPatches(k8sManifestOutcome, ambiance, manifestOverrideContents))
             .taskType(K8sTaskType.DELETE)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
+            .timeoutIntervalInMin(TimeOutHelper.getTimeoutInMin(stepParameters))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sManifestOutcome != null
                     ? k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance)
