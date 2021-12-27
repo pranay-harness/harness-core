@@ -7,8 +7,10 @@ import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import java.util.List;
 
 public interface SLOHealthIndicatorService {
-  List<SLOHealthIndicator> getFromMonitoredServiceIdentifiers(
+  List<SLOHealthIndicator> getByMonitoredServiceIdentifiers(
       ProjectParams projectParams, List<String> monitoredServiceIdentifiers);
-  SLOHealthIndicator get(ProjectParams projectParams, String serviceLevelObjectiveIdentifier);
+  SLOHealthIndicator getBySLOIdentifier(ProjectParams projectParams, String serviceLevelObjectiveIdentifier);
+  List<SLOHealthIndicator> getBySLOIdentifiers(
+      ProjectParams projectParams, List<String> serviceLevelObjectiveIdentifiers);
   void upsert(ServiceLevelIndicator serviceLevelIndicator);
 }
