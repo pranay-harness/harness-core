@@ -10,8 +10,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.VmBuildJobInfo;
 import io.harness.beans.executionargs.CIExecutionArgs;
@@ -23,13 +26,13 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.ff.CIFeatureFlagService;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.yaml.ParameterField;
 
-import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,13 +44,15 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
 public class VmInitializeStepUtils {
+  @Inject CIFeatureFlagService featureFlagService;
+
   public BuildJobEnvInfo getInitializeStepInfoBuilder(StageElementConfig stageElementConfig,
       CIExecutionArgs ciExecutionArgs, List<ExecutionWrapperConfig> steps, String accountId) {
     ArrayList<String> connectorIdentifiers = new ArrayList<>();
     for (ExecutionWrapperConfig executionWrapper : steps) {
       if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
         StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
-        validateConfig(stepElementConfig);
+        validateStepConfig(stepElementConfig);
         String identifier = getConnectorIdentifier(stepElementConfig);
         if (identifier != null) {
           connectorIdentifiers.add(identifier);
@@ -62,7 +67,7 @@ public class VmInitializeStepUtils {
             }
             StepElementConfig stepElementConfig =
                 IntegrationStageUtils.getStepElementConfig(executionWrapperInParallel);
-            validateConfig(stepElementConfig);
+            validateStepConfig(stepElementConfig);
             String identifier = getConnectorIdentifier(stepElementConfig);
             if (identifier != null) {
               connectorIdentifiers.add(identifier);
@@ -72,6 +77,7 @@ public class VmInitializeStepUtils {
       }
     }
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
+    validateStageConfig(integrationStageConfig, accountId);
 
     Map<String, String> volumeToMountPath = getVolumeToMountPath(integrationStageConfig.getSharedPaths());
     return VmBuildJobInfo.builder()
@@ -83,7 +89,13 @@ public class VmInitializeStepUtils {
         .build();
   }
 
-  private void validateConfig(StepElementConfig stepElementConfig) {
+  private void validateStageConfig(IntegrationStageConfig integrationStageConfig,String accountId) {
+    if(!featureFlagService.isEnabled(FeatureName.CI_VM_INFRASTRUCTURE, accountId)) {
+      throw new CIStageExecutionException("infrastructure VM is not allowed");
+    }
+  }
+
+  private void validateStepConfig(StepElementConfig stepElementConfig) {
     if (stepElementConfig.getStepSpecType() instanceof CIStepInfo) {
       CIStepInfo ciStepInfo = (CIStepInfo) stepElementConfig.getStepSpecType();
       switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
