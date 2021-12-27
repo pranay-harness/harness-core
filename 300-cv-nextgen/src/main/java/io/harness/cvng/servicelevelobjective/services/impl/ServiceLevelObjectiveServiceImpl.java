@@ -3,17 +3,24 @@ package io.harness.cvng.servicelevelobjective.services.impl;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
+import io.harness.cvng.servicelevelobjective.SLORiskCountResponse;
+import io.harness.cvng.servicelevelobjective.SLORiskCountResponse.RiskCount;
+import io.harness.cvng.servicelevelobjective.beans.ErrorBudgetRisk;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardApiFilter;
 import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
+import io.harness.cvng.servicelevelobjective.beans.SLOTarget.SLOTargetKeys;
 import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveFilter;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.ServiceLevelObjectiveKeys;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.TimePeriod;
+import io.harness.cvng.servicelevelobjective.services.api.SLOHealthIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.SLOTargetTransformer;
@@ -28,9 +35,11 @@ import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Value;
@@ -47,6 +56,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
   @Inject private MonitoredServiceService monitoredServiceService;
   @Inject Clock clock;
   @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
+  @Inject private SLOHealthIndicatorService sloHealthIndicatorService;
   @Inject private Map<SLOTargetType, SLOTargetTransformer> sloTargetTypeSLOTargetTransformerMap;
 
   @Override
@@ -95,27 +105,47 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
         Filter.builder()
             .userJourneys(serviceLevelObjectiveFilter.getUserJourneys())
             .identifiers(serviceLevelObjectiveFilter.getIdentifiers())
+            .targetTypes(serviceLevelObjectiveFilter.getTargetTypes())
+            .sliTypes(serviceLevelObjectiveFilter.getSliTypes())
+            .errorBudgetRisks(serviceLevelObjectiveFilter.getErrorBudgetRisks())
             .build());
+  }
+
+  @Override
+  public SLORiskCountResponse getRiskCount(
+      ProjectParams projectParams, ServiceLevelObjectiveFilter serviceLevelObjectiveFilter) {
+    List<ServiceLevelObjective> serviceLevelObjectiveList = get(projectParams,
+        Filter.builder()
+            .userJourneys(serviceLevelObjectiveFilter.getUserJourneys())
+            .identifiers(serviceLevelObjectiveFilter.getIdentifiers())
+            .targetTypes(serviceLevelObjectiveFilter.getTargetTypes())
+            .sliTypes(serviceLevelObjectiveFilter.getSliTypes())
+            .build());
+    List<SLOHealthIndicator> sloHealthIndicators = sloHealthIndicatorService.getBySLOIdentifiers(projectParams,
+        serviceLevelObjectiveList.stream()
+            .map(serviceLevelObjective -> serviceLevelObjective.getIdentifier())
+            .collect(Collectors.toList()));
+
+    Map<ErrorBudgetRisk, Long> riskToCountMap =
+        sloHealthIndicators.stream()
+            .map(sloHealthIndicator -> sloHealthIndicator.getErrorBudgetRisk())
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+    return SLORiskCountResponse.builder()
+        .totalCount(serviceLevelObjectiveList.size())
+        .riskCounts(Arrays.stream(ErrorBudgetRisk.values())
+                        .map(risk
+                            -> RiskCount.builder()
+                                   .errorBudgetRisk(risk)
+                                   .count(riskToCountMap.getOrDefault(risk, 0L).intValue())
+                                   .build())
+                        .collect(Collectors.toList()))
+        .build();
   }
 
   private PageResponse<ServiceLevelObjectiveResponse> get(
       ProjectParams projectParams, Integer offset, Integer pageSize, Filter filter) {
-    Query<ServiceLevelObjective> sloQuery =
-        hPersistence.createQuery(ServiceLevelObjective.class)
-            .filter(ServiceLevelObjectiveKeys.accountId, projectParams.getAccountIdentifier())
-            .filter(ServiceLevelObjectiveKeys.orgIdentifier, projectParams.getOrgIdentifier())
-            .filter(ServiceLevelObjectiveKeys.projectIdentifier, projectParams.getProjectIdentifier())
-            .order(Sort.descending(ServiceLevelObjectiveKeys.lastUpdatedAt));
-    if (CollectionUtils.isNotEmpty(filter.getUserJourneys())) {
-      sloQuery.field(ServiceLevelObjectiveKeys.userJourneyIdentifier).in(filter.getUserJourneys());
-    }
-    if (CollectionUtils.isNotEmpty(filter.getIdentifiers())) {
-      sloQuery.field(ServiceLevelObjectiveKeys.identifier).in(filter.getIdentifiers());
-    }
-    if (filter.getMonitoredServiceIdentifier() != null) {
-      sloQuery.filter(ServiceLevelObjectiveKeys.monitoredServiceIdentifier, filter.monitoredServiceIdentifier);
-    }
-    List<ServiceLevelObjective> serviceLevelObjectiveList = sloQuery.asList();
+    List<ServiceLevelObjective> serviceLevelObjectiveList = get(projectParams, filter);
     PageResponse<ServiceLevelObjective> sloEntitiesPageResponse =
         PageUtils.offsetAndLimit(serviceLevelObjectiveList, offset, pageSize);
     List<ServiceLevelObjectiveResponse> sloPageResponse =
@@ -129,6 +159,48 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
         .pageItemCount(sloEntitiesPageResponse.getPageItemCount())
         .content(sloPageResponse)
         .build();
+  }
+
+  private List<ServiceLevelObjective> get(ProjectParams projectParams, Filter filter) {
+    Query<ServiceLevelObjective> sloQuery =
+        hPersistence.createQuery(ServiceLevelObjective.class)
+            .disableValidation()
+            .filter(ServiceLevelObjectiveKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(ServiceLevelObjectiveKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(ServiceLevelObjectiveKeys.projectIdentifier, projectParams.getProjectIdentifier())
+            .order(Sort.descending(ServiceLevelObjectiveKeys.lastUpdatedAt));
+    if (CollectionUtils.isNotEmpty(filter.getUserJourneys())) {
+      sloQuery.field(ServiceLevelObjectiveKeys.userJourneyIdentifier).in(filter.getUserJourneys());
+    }
+    if (CollectionUtils.isNotEmpty(filter.getIdentifiers())) {
+      sloQuery.field(ServiceLevelObjectiveKeys.identifier).in(filter.getIdentifiers());
+    }
+    if (CollectionUtils.isNotEmpty(filter.getSliTypes())) {
+      sloQuery.field(ServiceLevelObjectiveKeys.type).in(filter.getSliTypes());
+    }
+    if (CollectionUtils.isNotEmpty(filter.getTargetTypes())) {
+      sloQuery.field(ServiceLevelObjectiveKeys.sloTarget + "." + SLOTargetKeys.type).in(filter.getTargetTypes());
+    }
+    if (filter.getMonitoredServiceIdentifier() != null) {
+      sloQuery.filter(ServiceLevelObjectiveKeys.monitoredServiceIdentifier, filter.monitoredServiceIdentifier);
+    }
+    List<ServiceLevelObjective> serviceLevelObjectiveList = sloQuery.asList();
+    if (CollectionUtils.isNotEmpty(filter.getErrorBudgetRisks())) {
+      List<SLOHealthIndicator> sloHealthIndicators = sloHealthIndicatorService.getBySLOIdentifiers(projectParams,
+          serviceLevelObjectiveList.stream()
+              .map(serviceLevelObjective -> serviceLevelObjective.getIdentifier())
+              .collect(Collectors.toList()));
+      Map<String, ErrorBudgetRisk> sloIdToRiskMap =
+          sloHealthIndicators.stream().collect(Collectors.toMap(sloHealthIndicator
+              -> sloHealthIndicator.getServiceLevelObjectiveIdentifier(),
+              sloHealthIndicator -> sloHealthIndicator.getErrorBudgetRisk(), (slo1, slo2) -> slo1));
+      serviceLevelObjectiveList =
+          serviceLevelObjectiveList.stream()
+              .filter(slo -> sloIdToRiskMap.containsKey(slo.getIdentifier()))
+              .filter(slo -> filter.getErrorBudgetRisks().contains(sloIdToRiskMap.get(slo.getIdentifier())))
+              .collect(Collectors.toList());
+    }
+    return serviceLevelObjectiveList;
   }
 
   @Override
@@ -252,6 +324,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
             .identifier(serviceLevelObjectiveDTO.getIdentifier())
             .name(serviceLevelObjectiveDTO.getName())
             .desc(serviceLevelObjectiveDTO.getDescription())
+            .type(serviceLevelObjectiveDTO.getType())
             .serviceLevelIndicators(serviceLevelIndicatorService.create(projectParams,
                 serviceLevelObjectiveDTO.getServiceLevelIndicators(), serviceLevelObjectiveDTO.getIdentifier(),
                 serviceLevelObjectiveDTO.getMonitoredServiceRef(), serviceLevelObjectiveDTO.getHealthSourceRef()))
@@ -289,6 +362,9 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
   private static class Filter {
     List<String> userJourneys;
     List<String> identifiers;
+    List<ServiceLevelIndicatorType> sliTypes;
+    List<SLOTargetType> targetTypes;
+    List<ErrorBudgetRisk> errorBudgetRisks;
     String monitoredServiceIdentifier;
   }
 }

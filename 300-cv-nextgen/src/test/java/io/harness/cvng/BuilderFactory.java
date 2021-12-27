@@ -77,6 +77,7 @@ import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
+import io.harness.cvng.servicelevelobjective.beans.ErrorBudgetRisk;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
@@ -97,6 +98,8 @@ import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
 import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator.RatioServiceLevelIndicatorBuilder;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator.SLOHealthIndicatorBuilder;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.RollingSLOTarget;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.ServiceLevelObjectiveBuilder;
@@ -188,6 +191,17 @@ public class BuilderFactory {
         .cvConfigMap(cvConfigMap)
         .dataCollectionDelay(Duration.ofMinutes(2))
         .resolvedJob(getVerificationJob());
+  }
+
+  public SLOHealthIndicatorBuilder sLOHealthIndicatorBuilder() {
+    return SLOHealthIndicator.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .errorBudgetRisk(ErrorBudgetRisk.EXHAUSTED)
+        .errorBudgetRemainingPercentage(10)
+        .monitoredServiceIdentifier("monitoredServiceIdentifier")
+        .serviceLevelObjectiveIdentifier("sloIdentifier");
   }
 
   public MonitoredServiceDTOBuilder monitoredServiceDTOBuilder() {

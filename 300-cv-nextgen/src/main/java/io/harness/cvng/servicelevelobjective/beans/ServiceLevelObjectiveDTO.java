@@ -15,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import org.apache.commons.collections4.CollectionUtils;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -30,7 +31,14 @@ public class ServiceLevelObjectiveDTO implements YamlDTO {
   @ApiModelProperty(required = true) @NotNull String userJourneyRef;
   @ApiModelProperty(required = true) @NotNull String monitoredServiceRef;
   @ApiModelProperty(required = true) @NotNull String healthSourceRef;
-
+  ServiceLevelIndicatorType type;
   @Valid @NotNull List<ServiceLevelIndicatorDTO> serviceLevelIndicators;
   @Valid @NotNull SLOTarget target;
+
+  public ServiceLevelIndicatorType getType() {
+    if (type == null && CollectionUtils.isNotEmpty(serviceLevelIndicators)) {
+      return serviceLevelIndicators.get(0).getType();
+    }
+    return type;
+  }
 }

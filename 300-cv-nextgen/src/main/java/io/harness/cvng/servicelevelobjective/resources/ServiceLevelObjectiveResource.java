@@ -12,6 +12,7 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.servicelevelobjective.SLORiskCountResponse;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveFilter;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
@@ -27,9 +28,9 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -38,7 +39,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import org.apache.commons.collections.CollectionUtils;
 import retrofit2.http.Body;
 
 @Api("slo")
@@ -121,22 +121,25 @@ public class ServiceLevelObjectiveResource {
   @ApiOperation(value = "get all service level objectives ", nickname = "getServiceLevelObjectives")
   @NGAccessControlCheck(resourceType = SLO, permission = VIEW_PERMISSION)
   public ResponseDTO<PageResponse<ServiceLevelObjectiveResponse>> getServiceLevelObjectives(
-      @NotNull @QueryParam("accountId") @AccountIdentifier String accountId,
-      @QueryParam("orgIdentifier") @NotNull @OrgIdentifier String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull @ProjectIdentifier String projectIdentifier,
-      @QueryParam("offset") @NotNull Integer offset, @QueryParam("pageSize") @NotNull Integer pageSize,
-      @QueryParam("userJourneys") List<String> userJourneys) {
-    ServiceLevelObjectiveFilter serviceLevelObjectiveFilter = ServiceLevelObjectiveFilter.builder().build();
-    if (CollectionUtils.isNotEmpty(userJourneys)) {
-      serviceLevelObjectiveFilter.setUserJourneys(userJourneys);
-    }
-    ProjectParams projectParams = ProjectParams.builder()
-                                      .accountIdentifier(accountId)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .build();
+      @NotNull @BeanParam ProjectParams projectParams, @QueryParam("offset") @NotNull Integer offset,
+      @QueryParam("pageSize") @NotNull Integer pageSize,
+      @BeanParam ServiceLevelObjectiveFilter serviceLevelObjectiveFilter) {
     return ResponseDTO.newResponse(
         serviceLevelObjectiveService.get(projectParams, offset, pageSize, serviceLevelObjectiveFilter));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("risk-count")
+  @ApiOperation(
+      value = "get all service level objectives count by risk", nickname = "getServiceLevelObjectivesRiskCount")
+  @NGAccessControlCheck(resourceType = SLO, permission = VIEW_PERMISSION)
+  public ResponseDTO<SLORiskCountResponse>
+  getServiceLevelObjectivesRiskCount(@NotNull @BeanParam ProjectParams projectParams,
+      @BeanParam ServiceLevelObjectiveFilter serviceLevelObjectiveFilter) {
+    return ResponseDTO.newResponse(
+        serviceLevelObjectiveService.getRiskCount(projectParams, serviceLevelObjectiveFilter));
   }
 
   @GET

@@ -1169,7 +1169,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                                                    .map(MonitoredServiceListItemDTOBuilder::getIdentifier)
                                                    .collect(Collectors.toList());
     List<SLOHealthIndicator> sloHealthIndicatorList =
-        sloHealthIndicatorService.getFromMonitoredServiceIdentifiers(projectParams, monitoredServiceIdentifiers);
+        sloHealthIndicatorService.getByMonitoredServiceIdentifiers(projectParams, monitoredServiceIdentifiers);
     for (SLOHealthIndicator sloHealthIndicator : sloHealthIndicatorList) {
       List<SloHealthIndicatorDTO> sloHealthIndicatorDTOList =
           sloHealthIndicatorDTOMap.getOrDefault(sloHealthIndicator.getMonitoredServiceIdentifier(), new ArrayList<>());
