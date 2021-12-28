@@ -228,28 +228,28 @@ public class CommonGitSCMHelperTest extends CategoryTest {
   public void shouldGetGitStoreDelegateConfigOptimizedFilesFetchWithKustomize() {
     List<String> paths = asList("path/to");
     GitStoreConfig gitStoreConfig = GithubStore.builder()
-            .repoName(ParameterField.createValueField("parent-repo/module"))
-            .paths(ParameterField.createValueField(paths))
-            .build();
+                                        .repoName(ParameterField.createValueField("parent-repo/module"))
+                                        .paths(ParameterField.createValueField(paths))
+                                        .build();
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
     List<EncryptedDataDetail> apiEncryptedDataDetails = new ArrayList<>();
     GithubConnectorDTO githubConnectorDTO =
-            GithubConnectorDTO.builder()
-                    .connectionType(GitConnectionType.ACCOUNT)
-                    .url("http://localhost")
-                    .apiAccess(GithubApiAccessDTO.builder().spec(GithubTokenSpecDTO.builder().build()).build())
-                    .authentication(GithubAuthenticationDTO.builder()
-                            .authType(GitAuthType.HTTP)
-                            .credentials(GithubHttpCredentialsDTO.builder()
-                                    .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                                    .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
-                                            .username("usermane")
-                                            .passwordRef(SecretRefData.builder().build())
-                                            .build())
-                                    .build())
-                            .build())
-                    .build();
+        GithubConnectorDTO.builder()
+            .connectionType(GitConnectionType.ACCOUNT)
+            .url("http://localhost")
+            .apiAccess(GithubApiAccessDTO.builder().spec(GithubTokenSpecDTO.builder().build()).build())
+            .authentication(GithubAuthenticationDTO.builder()
+                                .authType(GitAuthType.HTTP)
+                                .credentials(GithubHttpCredentialsDTO.builder()
+                                                 .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                                                 .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
+                                                                          .username("usermane")
+                                                                          .passwordRef(SecretRefData.builder().build())
+                                                                          .build())
+                                                 .build())
+                                .build())
+            .build();
     connectorInfoDTO.setConnectorConfig(githubConnectorDTO);
 
     doReturn(true).when(cdFeatureFlagHelper).isEnabled(any(), eq(OPTIMIZED_GIT_FETCH_FILES));
@@ -257,7 +257,7 @@ public class CommonGitSCMHelperTest extends CategoryTest {
     doReturn(apiEncryptedDataDetails).when(secretManagerClientService).getEncryptionDetails(any(), any());
 
     GitStoreDelegateConfig gitStoreDelegateConfig = commonGitSCMHelper.getGitStoreDelegateConfig(
-            gitStoreConfig, connectorInfoDTO, KustomizeManifestOutcome.builder().build(), paths, ambiance);
+        gitStoreConfig, connectorInfoDTO, KustomizeManifestOutcome.builder().build(), paths, ambiance);
 
     assertThat(gitStoreDelegateConfig).isNotNull();
     assertThat(gitStoreDelegateConfig.isOptimizedFilesFetch()).isFalse();

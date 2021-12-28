@@ -39,7 +39,8 @@ public class K8sScaleStepParameter extends K8sScaleBaseStepInfo implements K8sSp
   @JsonIgnore
   public List<String> getCommandUnits() {
     if (!ParameterField.isNull(skipSteadyStateCheck)
-        && ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(skipSteadyStateCheck, K8sScaleBaseStepInfoKeys.skipSteadyStateCheck,
+        && ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(skipSteadyStateCheck,
+            K8sScaleBaseStepInfoKeys.skipSteadyStateCheck,
             String.format("%s step", ExecutionNodeType.K8S_SCALE.getYamlType()))) {
       return Arrays.asList(K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Scale, K8sCommandUnitConstants.WrapUp);
     } else {

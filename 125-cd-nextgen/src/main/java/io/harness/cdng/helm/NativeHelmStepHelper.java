@@ -452,12 +452,13 @@ public class NativeHelmStepHelper extends CommonGitSCMHelper {
     String accountId = AmbianceUtils.getAccountId(ambiance);
     HelmChartManifestDelegateConfig helmManifest =
         (HelmChartManifestDelegateConfig) getManifestDelegateConfig(helmChartManifestOutcome, ambiance);
-    HelmValuesFetchRequest helmValuesFetchRequest = HelmValuesFetchRequest.builder()
-                                                        .accountId(accountId)
-                                                        .helmChartManifestDelegateConfig(helmManifest)
-                                                        .timeout(TimeOutHelper.getTimeoutInMillis(stepElementParameters))
-                                                        .closeLogStream(!isAnyRemoteStore(aggregatedValuesManifests))
-                                                        .build();
+    HelmValuesFetchRequest helmValuesFetchRequest =
+        HelmValuesFetchRequest.builder()
+            .accountId(accountId)
+            .helmChartManifestDelegateConfig(helmManifest)
+            .timeout(TimeOutHelper.getTimeoutInMillis(stepElementParameters))
+            .closeLogStream(!isAnyRemoteStore(aggregatedValuesManifests))
+            .build();
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)
@@ -874,8 +875,9 @@ public class NativeHelmStepHelper extends CommonGitSCMHelper {
     switch (manifestOutcome.getType()) {
       case ManifestType.HelmChart:
         HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
-        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(helmChartManifestOutcome.getSkipResourceVersioning(),
-            HelmChartManifestOutcomeKeys.skipResourceVersioning, helmChartManifestOutcome);
+        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
+            helmChartManifestOutcome.getSkipResourceVersioning(), HelmChartManifestOutcomeKeys.skipResourceVersioning,
+            helmChartManifestOutcome);
 
       default:
         return false;

@@ -38,7 +38,8 @@ public class K8sApplyStepParameters extends K8sApplyBaseStepInfo implements K8sS
   @JsonIgnore
   public List<String> getCommandUnits() {
     if (!ParameterField.isNull(skipSteadyStateCheck)
-        && ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(skipSteadyStateCheck, K8sApplyBaseStepInfoKeys.skipSteadyStateCheck,
+        && ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(skipSteadyStateCheck,
+            K8sApplyBaseStepInfoKeys.skipSteadyStateCheck,
             String.format("%s step", ExecutionNodeType.K8S_APPLY.getYamlType()))) {
       return Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init,
           K8sCommandUnitConstants.Prepare, K8sCommandUnitConstants.Apply, K8sCommandUnitConstants.WrapUp);

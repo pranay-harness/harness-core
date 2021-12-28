@@ -106,7 +106,7 @@ public class K8sApplyStep extends TaskChainExecutableWithRollbackAndRbac impleme
     boolean skipDryRun = ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
         k8sApplyStepParameters.getSkipDryRun(), K8sApplyBaseStepInfoKeys.skipDryRun, stepElementParameters);
     boolean skipSteadyStateCheck =
-            ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(k8sApplyStepParameters.getSkipSteadyStateCheck(),
+        ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(k8sApplyStepParameters.getSkipSteadyStateCheck(),
             K8sApplyBaseStepInfoKeys.skipSteadyStateCheck, stepElementParameters);
 
     final String accountId = AmbianceUtils.getAccountId(ambiance);
