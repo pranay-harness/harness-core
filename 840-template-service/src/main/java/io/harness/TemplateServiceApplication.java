@@ -40,6 +40,7 @@ import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.request.RequestContextFilter;
+import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
@@ -271,6 +272,7 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerScheduledJobs(Injector injector) {
