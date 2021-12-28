@@ -27,6 +27,8 @@ import com.google.inject.Singleton;
 import com.microsoft.aad.msal4j.MsalServiceException;
 import java.net.UnknownHostException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -68,13 +70,24 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
     String directoryName = billingExportSpec.getDirectoryName();
     String reportName = billingExportSpec.getReportName();
     String tenantId = ceAzureConnectorDTO.getTenantId();
+    String prefix = directoryName + "/" + reportName;
+    final List<ErrorDetail> errorList = new ArrayList<>();
 
     try {
       if (featuresEnabled.contains(CEFeatures.BILLING)) {
         String endpoint = String.format(AZURE_STORAGE_URL_FORMAT, storageAccountName, AZURE_STORAGE_SUFFIX);
         BlobContainerClient blobContainerClient = getBlobContainerClient(endpoint, containerName, tenantId);
+        com.azure.core.http.rest.PagedIterable<BlobItem> blobItem = getBlobItems(blobContainerClient, prefix);
         if (connectorResponseDTO.getLastModifiedAt() < oneDayOld) {
-          validateIfFileIsPresent(blobContainerClient, directoryName + "/" + reportName);
+          errorList.addAll(validateIfFileIsPresent(blobItem, prefix));
+          if (!errorList.isEmpty()) {
+            return ConnectorValidationResult.builder()
+                .status(ConnectivityStatus.FAILURE)
+                .errors(errorList)
+                .errorSummary("No billing export file is found")
+                .testedAt(Instant.now().toEpochMilli())
+                .build();
+          }
         }
       }
     } catch (BlobStorageException ex) {
@@ -144,6 +157,7 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
             .build();
       }
     }
+
     // Check for data at destination only when 24 hrs have elapsed since connector last modified at
     if (connectorResponseDTO.getLastModifiedAt() < oneDayOld) {
       if (featuresEnabled.contains(CEFeatures.BILLING)
@@ -163,12 +177,13 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
         .build();
   }
 
-  public void validateIfFileIsPresent(BlobContainerClient blobContainerClient, String prefix) throws Exception {
-    ListBlobsOptions options = new ListBlobsOptions().setPrefix(prefix);
+  public Collection<ErrorDetail> validateIfFileIsPresent(
+      com.azure.core.http.rest.PagedIterable<BlobItem> blobItems, String prefix) {
+    List<ErrorDetail> errorDetails = new ArrayList<>();
     String latestFileName = "";
     Instant latestFileLastModifiedTime = Instant.EPOCH;
     // Caveat: This can be slow for some accounts.
-    for (BlobItem blobItem : blobContainerClient.listBlobs(options, null)) {
+    for (BlobItem blobItem : blobItems) {
       Instant lastModifiedTime = Instant.from(blobItem.getProperties().getLastModified());
       String blobName = blobItem.getName();
       if (blobName.endsWith(".csv")) {
@@ -183,11 +198,17 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
         latestFileLastModifiedTime);
     long oneDayOld = Instant.now().getEpochSecond() - 24 * 60 * 60;
     if (!latestFileName.isEmpty() && latestFileLastModifiedTime.getEpochSecond() < oneDayOld) {
-      throw new Exception(String.format("No billing export file is found in last 24 hrs in %s. "
-              + "Please verify your billing export config in your Azure account and CCM connector. "
-              + "Follow CCM documentation for more information",
-          prefix));
+      errorDetails.add(
+          ErrorDetail.builder()
+              .reason(String.format("No billing export file is found in last 24 hrs in %s. "
+                      + "Please verify your billing export config in your Azure account and CCM connector. "
+                      + "Follow CCM documentation for more information",
+                  prefix))
+              .message("No billing export file is found")
+              .code(403)
+              .build());
     }
+    return errorDetails;
   }
 
   @VisibleForTesting
@@ -201,5 +222,12 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
     BlobServiceClient blobServiceClient =
         new BlobServiceClientBuilder().endpoint(endpoint).credential(clientSecretCredential).buildClient();
     return blobServiceClient.getBlobContainerClient(containerName);
+  }
+
+  public com.azure.core.http.rest.PagedIterable<BlobItem> getBlobItems(
+      BlobContainerClient blobContainerClient, String prefix) {
+    ListBlobsOptions options = new ListBlobsOptions().setPrefix(prefix);
+    com.azure.core.http.rest.PagedIterable<BlobItem> blobItem = blobContainerClient.listBlobs(options, null);
+    return blobItem;
   }
 }
