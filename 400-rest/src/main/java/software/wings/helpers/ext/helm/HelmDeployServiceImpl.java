@@ -86,7 +86,6 @@ import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
-import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -557,7 +556,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   private void saveK8sReleaseHistory(
-      HelmCommandRequest request, HelmCommandResponse response, ReleaseHistory releaseHistory) throws YamlException {
+      HelmCommandRequest request, HelmCommandResponse response, ReleaseHistory releaseHistory) throws IOException {
     KubernetesConfig kubernetesConfig =
         containerDeploymentDelegateHelper.getKubernetesConfig(request.getContainerServiceParams());
     releaseHistory.setReleaseStatus(

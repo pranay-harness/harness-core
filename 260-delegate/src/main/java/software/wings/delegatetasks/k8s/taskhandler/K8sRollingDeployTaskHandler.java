@@ -66,9 +66,9 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
-import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -292,7 +292,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   }
 
   private void saveRelease(K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters, Status status)
-      throws YamlException {
+      throws IOException {
     k8sRollingHandlerConfig.getReleaseHistory().setReleaseStatus(status);
     k8sTaskHelperBase.saveReleaseHistory(k8sRollingHandlerConfig.getKubernetesConfig(),
         k8sRollingDeployTaskParameters.getReleaseName(), k8sRollingHandlerConfig.getReleaseHistory().getAsYaml(),
