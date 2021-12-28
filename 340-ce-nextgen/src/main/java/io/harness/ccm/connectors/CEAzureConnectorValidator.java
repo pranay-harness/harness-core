@@ -78,17 +78,17 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
         String endpoint = String.format(AZURE_STORAGE_URL_FORMAT, storageAccountName, AZURE_STORAGE_SUFFIX);
         BlobContainerClient blobContainerClient = getBlobContainerClient(endpoint, containerName, tenantId);
         com.azure.core.http.rest.PagedIterable<BlobItem> blobItem = getBlobItems(blobContainerClient, prefix);
-        if (connectorResponseDTO.getLastModifiedAt() < oneDayOld) {
-          errorList.addAll(validateIfFileIsPresent(blobItem, prefix));
-          if (!errorList.isEmpty()) {
-            return ConnectorValidationResult.builder()
-                .status(ConnectivityStatus.FAILURE)
-                .errors(errorList)
-                .errorSummary("No billing export file is found")
-                .testedAt(Instant.now().toEpochMilli())
-                .build();
-          }
+        // if (connectorResponseDTO.getLastModifiedAt() < oneDayOld) {
+        errorList.addAll(validateIfFileIsPresent(blobItem, prefix));
+        if (!errorList.isEmpty()) {
+          return ConnectorValidationResult.builder()
+              .status(ConnectivityStatus.FAILURE)
+              .errors(errorList)
+              .errorSummary("No billing export file is found")
+              .testedAt(Instant.now().toEpochMilli())
+              .build();
         }
+        //}
       }
     } catch (BlobStorageException ex) {
       if (ex.getErrorCode().toString().equals("ContainerNotFound")) {
@@ -227,7 +227,7 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
   public com.azure.core.http.rest.PagedIterable<BlobItem> getBlobItems(
       BlobContainerClient blobContainerClient, String prefix) {
     ListBlobsOptions options = new ListBlobsOptions().setPrefix(prefix);
-    com.azure.core.http.rest.PagedIterable<BlobItem> blobItem = blobContainerClient.listBlobs(options, null);
-    return blobItem;
+    com.azure.core.http.rest.PagedIterable<BlobItem> blobItems = blobContainerClient.listBlobs(options, null);
+    return blobItems;
   }
 }
