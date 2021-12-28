@@ -616,11 +616,12 @@ public class K8sStepHelper extends CommonGitSCMHelper {
     String accountId = AmbianceUtils.getAccountId(ambiance);
     HelmChartManifestDelegateConfig helmManifest =
         (HelmChartManifestDelegateConfig) getManifestDelegateConfig(k8sManifestOutcome, ambiance);
-    HelmValuesFetchRequest helmValuesFetchRequest = HelmValuesFetchRequest.builder()
-                                                        .accountId(accountId)
-                                                        .helmChartManifestDelegateConfig(helmManifest)
-                                                        .timeout(TimeOutHelper.getTimeoutInMillis(stepElementParameters))
-                                                        .build();
+    HelmValuesFetchRequest helmValuesFetchRequest =
+        HelmValuesFetchRequest.builder()
+            .accountId(accountId)
+            .helmChartManifestDelegateConfig(helmManifest)
+            .timeout(TimeOutHelper.getTimeoutInMillis(stepElementParameters))
+            .build();
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)
@@ -1170,23 +1171,27 @@ public class K8sStepHelper extends CommonGitSCMHelper {
     switch (manifestOutcome.getType()) {
       case ManifestType.K8Manifest:
         K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
-        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(k8sManifestOutcome.getSkipResourceVersioning(),
-            K8sManifestOutcomeKeys.skipResourceVersioning, k8sManifestOutcome);
+        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
+            k8sManifestOutcome.getSkipResourceVersioning(), K8sManifestOutcomeKeys.skipResourceVersioning,
+            k8sManifestOutcome);
 
       case ManifestType.HelmChart:
         HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
-        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(helmChartManifestOutcome.getSkipResourceVersioning(),
-            HelmChartManifestOutcomeKeys.skipResourceVersioning, helmChartManifestOutcome);
+        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
+            helmChartManifestOutcome.getSkipResourceVersioning(), HelmChartManifestOutcomeKeys.skipResourceVersioning,
+            helmChartManifestOutcome);
 
       case ManifestType.Kustomize:
         KustomizeManifestOutcome kustomizeManifestOutcome = (KustomizeManifestOutcome) manifestOutcome;
-        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(kustomizeManifestOutcome.getSkipResourceVersioning(),
-            KustomizeManifestOutcomeKeys.skipResourceVersioning, kustomizeManifestOutcome);
+        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
+            kustomizeManifestOutcome.getSkipResourceVersioning(), KustomizeManifestOutcomeKeys.skipResourceVersioning,
+            kustomizeManifestOutcome);
 
       case ManifestType.OpenshiftTemplate:
         OpenshiftManifestOutcome openshiftManifestOutcome = (OpenshiftManifestOutcome) manifestOutcome;
-        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(openshiftManifestOutcome.getSkipResourceVersioning(),
-            OpenshiftManifestOutcomeKeys.skipResourceVersioning, openshiftManifestOutcome);
+        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
+            openshiftManifestOutcome.getSkipResourceVersioning(), OpenshiftManifestOutcomeKeys.skipResourceVersioning,
+            openshiftManifestOutcome);
 
       default:
         return false;

@@ -10,8 +10,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
@@ -33,6 +31,8 @@ import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.yaml.ParameterField;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -89,8 +89,8 @@ public class VmInitializeStepUtils {
         .build();
   }
 
-  private void validateStageConfig(IntegrationStageConfig integrationStageConfig,String accountId) {
-    if(!featureFlagService.isEnabled(FeatureName.CI_VM_INFRASTRUCTURE, accountId)) {
+  private void validateStageConfig(IntegrationStageConfig integrationStageConfig, String accountId) {
+    if (!featureFlagService.isEnabled(FeatureName.CI_VM_INFRASTRUCTURE, accountId)) {
       throw new CIStageExecutionException("infrastructure VM is not allowed");
     }
   }
