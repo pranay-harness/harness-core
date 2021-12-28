@@ -174,7 +174,7 @@ pmsSdkOrchestrationEventPoolConfig:
   timeUnit: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
 
 asyncDelegateResponseConsumption:
-  corePoolSize: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_CORE_SIZE:-1}
+  corePoolSize: ${ASYNC_DELEGATE_RESPONSE_THREAD_COUNT:-1}
 
 pmsSdkGrpcServerConfig:
   connectors:
