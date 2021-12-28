@@ -10,9 +10,11 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "SLOTargetKeys")
 public class SLOTarget {
   @JsonProperty(SLO_TARGET_TYPE) SLOTargetType type;
   @NotNull Double sloTargetPercentage;

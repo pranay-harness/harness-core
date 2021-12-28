@@ -285,7 +285,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerCorrelationFilter(environment, injector);
     registerStores(configuration, injector);
     registerYamlSdk(injector);
-    scheduleJobs(injector);
+    scheduleJobs(injector, configuration);
     registerQueueListener(injector);
     registerPmsSdkEvents(injector);
     initializeEnforcementFramework(injector);
@@ -394,15 +394,18 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .build();
   }
 
-  private void scheduleJobs(Injector injector) {
+  private void scheduleJobs(Injector injector, CIManagerConfiguration config) {
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
+
+    for (int i = 0; i < config.getAsyncDelegateResponseConsumption().getCorePoolSize(); i++) {
+      injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("async-taskPollExecutor")))
+          .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
+    }
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))

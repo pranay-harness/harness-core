@@ -72,7 +72,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Tag(name = "execute", description = "This contains APIs related to pipeline execution")
+@Tag(name = "Execute", description = "This contains APIs for executing a Pipeline.")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content =
     {
@@ -591,14 +591,6 @@ public class PlanExecutionResource {
           description = "Preflight Id from the start Preflight Checks API") String preflightCheckId,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
     return ResponseDTO.newResponse(preflightService.getPreflightCheckResponse(preflightCheckId));
-  }
-
-  @GET
-  @ApiOperation(value = "Run a schema on db.", nickname = "runSchemaOnDb")
-  @Path("/internal/runSchema")
-  public ResponseDTO<String> runASchemaMigration() {
-    orchestrationEventLogRepository.schemaMigrationForOldEvenLog();
-    return ResponseDTO.newResponse("Deleted Old Orchestration event log entries");
   }
 
   @GET

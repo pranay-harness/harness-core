@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.servicelevelobjective.beans.DayOfWeek;
 import io.harness.cvng.servicelevelobjective.beans.SLOCalenderType;
 import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -73,6 +74,7 @@ public class ServiceLevelObjective
   String monitoredServiceIdentifier;
   List<String> serviceLevelIndicators;
   SLOTarget sloTarget;
+  ServiceLevelIndicatorType type;
   private long lastUpdatedAt;
   private long createdAt;
   private Double sloTargetPercentage;

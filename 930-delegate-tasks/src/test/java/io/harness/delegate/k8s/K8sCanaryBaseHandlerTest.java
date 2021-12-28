@@ -50,7 +50,6 @@ import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.rule.Owner;
 
-import com.esotericsoftware.yamlbeans.YamlException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -338,7 +337,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testFailAndSaveKubernetesRelease() throws YamlException {
+  public void testFailAndSaveKubernetesRelease() throws IOException {
     String releaseHistoryAsYaml = "dummy content";
     ReleaseHistory releaseHistory = mock(ReleaseHistory.class);
     K8sCanaryHandlerConfig canaryHandlerConfig = new K8sCanaryHandlerConfig();

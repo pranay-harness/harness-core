@@ -53,7 +53,6 @@ import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
 import io.harness.cvng.servicelevelobjective.services.api.SLOHealthIndicatorService;
-import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -118,7 +117,6 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Inject private TimeSeriesDashboardService timeSeriesDashboardService;
   @Inject private LogDashboardService logDashboardService;
   @Inject private SLOHealthIndicatorService sloHealthIndicatorService;
-  @Inject private ServiceLevelObjectiveService serviceLevelObjectiveService;
   @Inject private Set<BaseMonitoredServiceHandler> monitoredServiceHandlers;
 
   @Override
@@ -750,7 +748,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     List<MonitoredServiceListItemDTO> monitoredServiceListDTOS = new ArrayList<>();
     int index = 0;
     Map<String, List<SloHealthIndicatorDTO>> sloHealthIndicatorDTOMap =
-        getSloHealthIndicators(projectParams, monitoredServiceListDTOBuilderPageResponse.getContent());
+        getSloHealthIndicators(projectParams, monitoredServiceIdentifiers);
     for (MonitoredServiceListItemDTOBuilder monitoredServiceListDTOBuilder :
         monitoredServiceListDTOBuilderPageResponse.getContent()) {
       ServiceEnvKey serviceEnvKey = ServiceEnvKey.builder()
@@ -1150,9 +1148,12 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         serviceEnvironmentParams, dependentServices, latestRiskScoreByServiceMap);
     ChangeSummaryDTO changeSummary = changeSourceService.getChangeSummary(serviceEnvironmentParams,
         monitoredService.getChangeSourceIdentifiers(), clock.instant().minus(Duration.ofDays(1)), clock.instant());
+    Map<String, List<SloHealthIndicatorDTO>> sloHealthIndicatorDTOMap =
+        getSloHealthIndicators(serviceEnvironmentParams, Collections.singletonList(monitoredService.getIdentifier()));
     return monitoredServiceListItemDTOBuilder.historicalTrend(historicalTrendList.get(0))
         .currentHealthScore(monitoredServiceRiskScore)
         .dependentHealthScore(dependentServiceRiskScoreList)
+        .sloHealthIndicators(sloHealthIndicatorDTOMap.get(monitoredService.getIdentifier()))
         .serviceName(serviceName)
         .environmentName(environmentName)
         .changeSummary(changeSummary)
@@ -1160,16 +1161,13 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   private Map<String, List<SloHealthIndicatorDTO>> getSloHealthIndicators(
-      ProjectParams projectParams, List<MonitoredServiceListItemDTOBuilder> monitoredServiceListItemDTOList) {
+      ProjectParams projectParams, List<String> monitoredServiceIdentifiers) {
     Map<String, List<SloHealthIndicatorDTO>> sloHealthIndicatorDTOMap = new HashMap<>();
-    if (isEmpty(monitoredServiceListItemDTOList)) {
+    if (isEmpty(monitoredServiceIdentifiers)) {
       return sloHealthIndicatorDTOMap;
     }
-    List<String> monitoredServiceIdentifiers = monitoredServiceListItemDTOList.stream()
-                                                   .map(MonitoredServiceListItemDTOBuilder::getIdentifier)
-                                                   .collect(Collectors.toList());
     List<SLOHealthIndicator> sloHealthIndicatorList =
-        sloHealthIndicatorService.getFromMonitoredServiceIdentifiers(projectParams, monitoredServiceIdentifiers);
+        sloHealthIndicatorService.getByMonitoredServiceIdentifiers(projectParams, monitoredServiceIdentifiers);
     for (SLOHealthIndicator sloHealthIndicator : sloHealthIndicatorList) {
       List<SloHealthIndicatorDTO> sloHealthIndicatorDTOList =
           sloHealthIndicatorDTOMap.getOrDefault(sloHealthIndicator.getMonitoredServiceIdentifier(), new ArrayList<>());

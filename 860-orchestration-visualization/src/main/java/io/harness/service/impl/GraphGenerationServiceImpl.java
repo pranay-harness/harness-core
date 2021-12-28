@@ -93,7 +93,6 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
         }
         lastUpdatedAt = orchestrationEventLog.getCreatedAt();
       }
-      orchestrationEventLogRepository.updateTtlForProcessedEvents(unprocessedEventLogs);
       orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
       cachePartialOrchestrationGraph(orchestrationGraph, lastUpdatedAt);
       log.info("[PMS_GRAPH] Processing of [{}] orchestration event logs completed in [{}ms]",
