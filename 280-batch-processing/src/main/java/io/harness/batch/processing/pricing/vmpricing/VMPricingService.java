@@ -8,7 +8,8 @@ import com.google.common.collect.ImmutableSet;
 public interface VMPricingService {
   static String getSimilarRegionIfNotSupportedByBanzai(String region) {
     // these region names are present in Azure cloud Provider Only
-    if (ImmutableSet.of("switzerlandnorth", "switzerlandwest", "germanywestcentral", "norwayeast").contains(region)) {
+    if (ImmutableSet.of("switzerlandnorth", "switzerlandwest", "germanywestcentral", "norwayeast", "uaenorth")
+            .contains(region)) {
       return "uksouth";
     }
 
