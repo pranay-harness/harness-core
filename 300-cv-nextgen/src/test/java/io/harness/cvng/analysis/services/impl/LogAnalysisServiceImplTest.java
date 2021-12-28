@@ -93,7 +93,6 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationJobService verificationJobService;
   @Inject private HeatMapService heatMapService;
   @Mock private NextGenService nextGenService;
-  private String verificationJobIdentifier;
   private Instant instant;
   private String accountId;
   BuilderFactory builderFactory;
@@ -445,6 +444,26 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
     }
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetPreviousDeploymentAnalysis() {
+    CanaryLogAnalysisLearningEngineTask task =
+        CanaryLogAnalysisLearningEngineTask.builder().controlHosts(Sets.newHashSet("host1", "host2")).build();
+    task.setControlDataUrl("controlData");
+    task.setTestDataUrl("testData");
+    fillCommon(task, LearningEngineTaskType.CANARY_LOG_ANALYSIS);
+    learningEngineTaskService.createLearningEngineTask(task);
+    DeploymentLogAnalysisDTO deploymentLogAnalysisDTO = createDeploymentAnalysisDTO();
+    logAnalysisService.saveAnalysis(task.getUuid(), deploymentLogAnalysisDTO);
+    assertThat(logAnalysisService.getPreviousDeploymentAnalysis(
+                   verificationTaskId, instant.minus(Duration.ofMinutes(10)), instant))
+        .isNull();
+    assertThat(logAnalysisService.getPreviousDeploymentAnalysis(
+                   verificationTaskId, instant.minus(Duration.ofMinutes(9)), instant))
+        .isNotNull();
+  }
+
   private List<ClusteredLog> createClusteredLogRecords(Instant startTime, Instant endTime) {
     List<ClusteredLog> logRecords = new ArrayList<>();
 
@@ -553,7 +572,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
 
   private VerificationJob newTestVerificationJob() {
     TestVerificationJobDTO testVerificationJob = new TestVerificationJobDTO();
-    testVerificationJob.setIdentifier(verificationJobIdentifier);
+    testVerificationJob.setIdentifier(generateUuid());
     testVerificationJob.setJobName(generateUuid());
     testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());

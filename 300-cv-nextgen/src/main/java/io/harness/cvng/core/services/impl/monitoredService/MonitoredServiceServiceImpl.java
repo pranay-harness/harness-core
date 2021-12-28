@@ -53,7 +53,6 @@ import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
 import io.harness.cvng.servicelevelobjective.services.api.SLOHealthIndicatorService;
-import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -118,7 +117,6 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Inject private TimeSeriesDashboardService timeSeriesDashboardService;
   @Inject private LogDashboardService logDashboardService;
   @Inject private SLOHealthIndicatorService sloHealthIndicatorService;
-  @Inject private ServiceLevelObjectiveService serviceLevelObjectiveService;
   @Inject private Set<BaseMonitoredServiceHandler> monitoredServiceHandlers;
 
   @Override

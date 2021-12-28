@@ -80,7 +80,6 @@ import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.servicelevelobjective.beans.ErrorBudgetRisk;
 import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
-import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -125,12 +124,10 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject HeatMapService heatMapService;
   @Inject HPersistence hPersistence;
   @Inject ServiceDependencyService serviceDependencyService;
-  @Inject HealthSourceService healthSourceService;
   @Inject ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Mock NextGenService nextGenService;
   @Mock SetupUsageEventService setupUsageEventService;
   @Mock ChangeSourceService changeSourceServiceMock;
-  @Mock ServiceLevelObjectiveService serviceLevelObjectiveService;
 
   private BuilderFactory builderFactory;
   String healthSourceName;
@@ -196,7 +193,6 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(monitoredServiceService, "changeSourceService", changeSourceService, true);
     FieldUtils.writeField(heatMapService, "clock", clock, true);
     FieldUtils.writeField(monitoredServiceService, "heatMapService", heatMapService, true);
-    FieldUtils.writeField(monitoredServiceService, "serviceLevelObjectiveService", serviceLevelObjectiveService, true);
   }
 
   @Test
