@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
-import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
@@ -42,7 +41,6 @@ import java.util.Set;
 @OwnedBy(CDC)
 public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private ServicePMSPlanCreator servicePMSPlanCreator;
 
   @Override
   public Set<String> getSupportedStageTypes() {
