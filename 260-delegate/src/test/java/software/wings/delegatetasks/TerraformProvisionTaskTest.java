@@ -682,14 +682,16 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     List<String> tfVarFiles = Arrays.asList("tfVarFile");
 
     return getTerraformProvisionParametersBuilder(runPlanOnly, exportPlanToApplyStep, encryptedTfPlan, commandUnit,
-        command, saveTerraformJson, skipRefresh, backendConfigs, variables, environmentVariables, tfVarFiles, useOptimizedTfPlan)
+        command, saveTerraformJson, skipRefresh, backendConfigs, variables, environmentVariables, tfVarFiles,
+        useOptimizedTfPlan)
         .build();
   }
 
   private TerraformProvisionParametersBuilder getTerraformProvisionParametersBuilder(boolean runPlanOnly,
       boolean exportPlanToApplyStep, EncryptedRecordData encryptedTfPlan, TerraformCommandUnit commandUnit,
       TerraformCommand command, boolean saveTerraformJson, boolean skipRefresh, Map<String, String> backendConfigs,
-      Map<String, String> variables, Map<String, String> environmentVariables, List<String> tfVarFiles, boolean useOptimizedTfPlan) {
+      Map<String, String> variables, Map<String, String> environmentVariables, List<String> tfVarFiles,
+      boolean useOptimizedTfPlan) {
     return TerraformProvisionParameters.builder()
         .sourceRepo(gitConfig)
         .sourceRepoSettingId(SOURCE_REPO_SETTINGS_ID)

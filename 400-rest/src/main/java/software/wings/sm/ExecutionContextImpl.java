@@ -926,16 +926,18 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       ShellScriptFunctor shellScriptFunctor =
           ShellScriptFunctor.builder().scriptType(stateExecutionContext.getScriptType()).build();
       evaluator.addFunctor("shell", shellScriptFunctor);
+    }
 
-      if (featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, getAccountId())) {
-        evaluator.addFunctor(TerraformPlanExpressionInterface.FUNCTOR_NAME,
-            TerraformPlanExpressionFunctor.builder()
-                .obtainTfPlanFunction(planName
-                    -> sweepingOutputService.findSweepingOutput(
-                        prepareSweepingOutputInquiryBuilder().name(planName).build()))
-                .expressionFunctorToken(stateExecutionContext.getExpressionFunctorToken())
-                .build());
-      }
+    Application app = getApp();
+    if (stateExecutionContext != null && app != null
+        && featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, app.getAccountId())) {
+      evaluator.addFunctor(TerraformPlanExpressionInterface.FUNCTOR_NAME,
+          TerraformPlanExpressionFunctor.builder()
+              .obtainTfPlanFunction(planName
+                  -> sweepingOutputService.findSweepingOutput(
+                      prepareSweepingOutputInquiryBuilder().name(planName).build()))
+              .expressionFunctorToken(stateExecutionContext.getExpressionFunctorToken())
+              .build());
     }
 
     LateBindingServiceVariablesBuilder serviceVariablesBuilder =
@@ -979,7 +981,6 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     contextMap.put("harnessShellUtils", SubstitutionFunctor.builder().build());
 
-    Application app = getApp();
     if (app != null) {
       Environment env = getEnv();
       contextMap.put("secrets",

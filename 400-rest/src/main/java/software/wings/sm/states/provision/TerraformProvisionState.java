@@ -78,6 +78,7 @@ import io.harness.provision.TfVarSource;
 import io.harness.provision.TfVarSource.TfVarSourceType;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.serializer.JsonUtils;
 import io.harness.tasks.ResponseData;
 
@@ -280,6 +281,7 @@ public abstract class TerraformProvisionState extends State {
     terraformExecutionData.setActivityId(activityId);
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     updateActivityStatus(activityId, context.getAppId(), terraformExecutionData.getExecutionStatus());
+    boolean useOptimizedTfPlan = featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId());
     if (exportPlanToApplyStep || (runPlanOnly && TerraformCommand.DESTROY == command())) {
       String planName = getPlanName(context);
       terraformPlanHelper.saveEncryptedTfPlanToSweepingOutput(
@@ -303,7 +305,10 @@ public abstract class TerraformProvisionState extends State {
             .backendConfigs(terraformExecutionData.getBackendConfigs())
             .environmentVariables(terraformExecutionData.getEnvironmentVariables())
             .workspace(terraformExecutionData.getWorkspace())
-            .encryptedTfPlan(terraformExecutionData.getEncryptedTfPlan())
+            // In case of OPTIMIZED_TF_PLAN FF enabled we don't want to store encryptedTfPlan record in context element
+            // We're ending in storing 3 times, since the encryptedValue for KMS secret manager will be the value itself
+            // it will reduce the max encrypted plan size to 5mb. Will use sweeping output for getting encrypted tf plan
+            .encryptedTfPlan(useOptimizedTfPlan ? null : terraformExecutionData.getEncryptedTfPlan())
             .build();
 
     return ExecutionResponse.builder()
@@ -701,6 +706,11 @@ public abstract class TerraformProvisionState extends State {
       }
     }
 
+    EncryptedRecordData encryptedTfPlan =
+        featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId())
+        ? terraformPlanHelper.getEncryptedTfPlanFromSweepingOutput(context, getPlanName(context))
+        : element.getEncryptedTfPlan();
+
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerraformProvisionParametersBuilder terraformProvisionParametersBuilder =
         TerraformProvisionParameters.builder()
@@ -732,7 +742,7 @@ public abstract class TerraformProvisionState extends State {
             .workspace(workspace)
             .delegateTag(element.getDelegateTag())
             .skipRefreshBeforeApplyingPlan(terraformProvisioner.isSkipRefreshBeforeApplyingPlan())
-            .encryptedTfPlan(element.getEncryptedTfPlan())
+            .encryptedTfPlan(encryptedTfPlan)
             .secretManagerConfig(secretManagerConfig)
             .planName(getEncryptedPlanName(context))
             .useTfClient(

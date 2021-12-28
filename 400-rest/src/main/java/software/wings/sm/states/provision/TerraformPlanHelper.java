@@ -39,8 +39,7 @@ public class TerraformPlanHelper {
                                    .build());
   }
 
-  @VisibleForTesting
-  EncryptedRecordData getEncryptedTfPlanFromSweepingOutput(ExecutionContext context, String planName) {
+  public EncryptedRecordData getEncryptedTfPlanFromSweepingOutput(ExecutionContext context, String planName) {
     SweepingOutputInstance sweepingOutputInstance =
         sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(planName).build());
 
