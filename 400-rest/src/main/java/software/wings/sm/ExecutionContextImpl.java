@@ -49,12 +49,14 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.LateBindingMap;
 import io.harness.expression.SecretString;
+import io.harness.expression.TerraformPlanExpressionFunctor;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.security.SimpleEncryption;
 import io.harness.serializer.KryoSerializer;
+import io.harness.terraform.expression.TerraformPlanExpressionInterface;
 
 import software.wings.api.DeploymentType;
 import software.wings.api.InfraMappingElement;
@@ -924,6 +926,16 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       ShellScriptFunctor shellScriptFunctor =
           ShellScriptFunctor.builder().scriptType(stateExecutionContext.getScriptType()).build();
       evaluator.addFunctor("shell", shellScriptFunctor);
+
+      if (featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, getAccountId())) {
+        evaluator.addFunctor(TerraformPlanExpressionInterface.FUNCTOR_NAME,
+            TerraformPlanExpressionFunctor.builder()
+                .obtainTfPlanFunction(planName
+                    -> sweepingOutputService.findSweepingOutput(
+                        prepareSweepingOutputInquiryBuilder().name(planName).build()))
+                .expressionFunctorToken(stateExecutionContext.getExpressionFunctorToken())
+                .build());
+      }
     }
 
     LateBindingServiceVariablesBuilder serviceVariablesBuilder =

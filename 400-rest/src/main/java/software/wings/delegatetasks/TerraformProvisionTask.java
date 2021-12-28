@@ -19,8 +19,6 @@ import static io.harness.provision.TerraformConstants.TERRAFORM_INTERNAL_FOLDER;
 import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
-import static io.harness.provision.TerraformConstants.TF_APPLY_PLAN_JSON_FILE_PATH_EXPRESSION;
-import static io.harness.provision.TerraformConstants.TF_DESTROY_PLAN_JSON_FILE_PATH_EXPRESSION;
 import static io.harness.provision.TerraformConstants.TF_SCRIPT_DIR;
 import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
 import static io.harness.provision.TerraformConstants.USER_DIR_KEY;
@@ -65,6 +63,7 @@ import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.terraform.TerraformHelperUtils;
+import io.harness.terraform.expression.TerraformPlanExpressionInterface;
 import io.harness.terraform.request.TerraformExecuteStepRequest;
 
 import software.wings.api.TerraformExecutionData;
@@ -461,9 +460,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         tfPlanJsonFilePath = planJsonLogOutputStream.getTfPlanJsonLocalPath();
         tfPlanJsonFileId = terraformBaseHelper.uploadTfPlanJson(parameters.getAccountId(), getDelegateId(), getTaskId(),
             parameters.getEntityId(), planName, tfPlanJsonFilePath);
-        saveExecutionLog(format("Json representation of %s is available as expression %s %n", planName,
-                             parameters.getCommand() == APPLY ? TF_APPLY_PLAN_JSON_FILE_PATH_EXPRESSION
-                                                              : TF_DESTROY_PLAN_JSON_FILE_PATH_EXPRESSION),
+        saveExecutionLog(format("Path to '%s' json representation is available via expression %s %n", planName,
+                             parameters.getCommand() == APPLY ? TerraformPlanExpressionInterface.EXAMPLE_USAGE
+                                                              : TerraformPlanExpressionInterface.DESTROY_EXAMPLE_USAGE),
             CommandExecutionStatus.RUNNING, INFO, logCallback);
       }
 

@@ -43,8 +43,6 @@ public final class TerraformConstants {
   public static final String TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME = "tfdestroyplan";
   public static final String TERRAFORM_APPLY_PLAN_FILE_VAR_NAME = "${terraformApply.tfplan}";
   public static final String TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME = "${terraformDestroy.tfplan}";
-  public static final String TF_APPLY_PLAN_JSON_FILE_PATH_EXPRESSION = "<Not yet available>";
-  public static final String TF_DESTROY_PLAN_JSON_FILE_PATH_EXPRESSION = "<Not yet available>";
   public static final String TERRAFORM_PLAN_FILE_NAME = "terraform.tfplan";
   public static final String TERRAFORM_PLAN_JSON_FILE_NAME = "%s.json";
   public static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform-%s.tfvars";
