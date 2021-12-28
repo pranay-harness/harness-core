@@ -70,8 +70,9 @@ public class K8sScaleStep extends TaskExecutableWithRollbackAndRbac<K8sDeployRes
 
     Integer instances = scaleStepParameter.getInstanceSelection().getSpec().getInstances();
 
-    boolean skipSteadyCheck = ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(scaleStepParameter.getSkipSteadyStateCheck(),
-        K8sScaleBaseStepInfoKeys.skipSteadyStateCheck, stepElementParameters);
+    boolean skipSteadyCheck =
+        ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(scaleStepParameter.getSkipSteadyStateCheck(),
+            K8sScaleBaseStepInfoKeys.skipSteadyStateCheck, stepElementParameters);
     String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
 
     K8sScaleRequest request =

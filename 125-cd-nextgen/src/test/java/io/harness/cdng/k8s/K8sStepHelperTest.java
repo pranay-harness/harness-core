@@ -1403,9 +1403,10 @@ public class K8sStepHelperTest extends CategoryTest {
                    ParameterField.createValueField("false"), "testField", StepElementParameters.builder().build()))
         .isFalse();
 
-    assertThatThrownBy(()
-                           -> ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(ParameterField.createValueField("absad"),
-                               "testField", StepElementParameters.builder().identifier("test").type("Test").build()))
+    assertThatThrownBy(
+        ()
+            -> ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(ParameterField.createValueField("absad"),
+                "testField", StepElementParameters.builder().identifier("test").type("Test").build()))
         .hasMessageContaining("for field testField in Test step with identifier: test");
   }
 
