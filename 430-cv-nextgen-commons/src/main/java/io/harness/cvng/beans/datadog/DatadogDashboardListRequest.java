@@ -17,7 +17,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class DatadogDashboardListRequest extends DatadogRequest {
   private static final String DSL =
-      DataCollectionRequest.readDSL("datadog-dashboard-list.datacollection", DatadogDashboardListRequest.class);
+      DataCollectionRequest.readDSL("`datadog-dashboard-list.datacollection`", DatadogDashboardListRequest.class);
 
   @Override
   public String getDSL() {

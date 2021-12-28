@@ -61,6 +61,8 @@ import io.harness.cvng.beans.datadog.DatadogLogIndexesRequest;
 import io.harness.cvng.beans.datadog.DatadogLogSampleDataRequest;
 import io.harness.cvng.beans.datadog.DatadogMetricTagsRequest;
 import io.harness.cvng.beans.datadog.DatadogTimeSeriesPointsRequest;
+import io.harness.cvng.beans.dynatrace.DynatraceServiceDetailsRequest;
+import io.harness.cvng.beans.dynatrace.DynatraceServiceListRequest;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
 import io.harness.cvng.beans.newrelic.NewRelicFetchSampleDataRequest;
 import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
@@ -176,5 +178,7 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DatadogMetricsDataCollectionInfo.class, 9088);
     kryo.register(NewRelicDataCollectionInfo.class, 9089);
     kryo.register(CustomHealthDataCollectionInfo.class, 9090);
+    kryo.register(DynatraceServiceListRequest.class, 9091);
+    kryo.register(DynatraceServiceDetailsRequest.class, 9092);
   }
 }

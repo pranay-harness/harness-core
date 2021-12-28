@@ -1,0 +1,14 @@
+Var servicesUrl = concat(Env:baseUrl, "api/v2/entities")
+Var params = {}
+Var:params.put("fields", Env:fields)
+Var:params.put("pageSize", Env:pageSize)
+Var:params.put("entitySelector", Env:entitySelector)
+Var servicesResponse = sync-call(url=Var:dashboardUrl, header=Env:commonHeaders, options=Var:params)
+
+Var responseList = []
+
+foreach service in Var:servicesResponse {
+
+}
+
+return Var:servicesResponse

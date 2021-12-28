@@ -73,6 +73,8 @@ import io.harness.cvng.core.entities.CustomHealthCVConfig.CustomHealthCVConfigUp
 import io.harness.cvng.core.entities.DataCollectionTask.Type;
 import io.harness.cvng.core.entities.DatadogLogCVConfig.DatadogLogCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.DatadogMetricCVConfig.DatadogMetricCVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.DynatraceCVConfig;
+import io.harness.cvng.core.entities.DynatraceCVConfig.DynatraceCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.PrometheusCVConfig.PrometheusUpdatableEntity;
 import io.harness.cvng.core.entities.SplunkCVConfig.SplunkCVConfigUpdatableEntity;
@@ -105,6 +107,7 @@ import io.harness.cvng.core.services.api.DataSourceConnectivityChecker;
 import io.harness.cvng.core.services.api.DatadogService;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
+import io.harness.cvng.core.services.api.DynatraceService;
 import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
@@ -144,6 +147,8 @@ import io.harness.cvng.core.services.impl.DatadogMetricDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.DatadogServiceImpl;
 import io.harness.cvng.core.services.impl.DefaultDeleteEntityByHandler;
 import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
+import io.harness.cvng.core.services.impl.DynatraceDataCollectionInfoMapper;
+import io.harness.cvng.core.services.impl.DynatraceServiceImpl;
 import io.harness.cvng.core.services.impl.FeatureFlagServiceImpl;
 import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.KubernetesChangeSourceUpdateHandler;
@@ -198,6 +203,7 @@ import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransfo
 import io.harness.cvng.core.utils.monitoredService.CustomHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.DatadogLogHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.DatadogMetricHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.DynatraceHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.NewRelicHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.PrometheusHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.SplunkHealthSourceSpecTransformer;
@@ -399,6 +405,8 @@ public class CVServiceModule extends AbstractModule {
         .to(DatadogLogHealthSourceSpecTransformer.class);
     dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.CUSTOM_HEALTH)
         .to(CustomHealthSourceSpecTransformer.class);
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.DYNATRACE)
+        .to(DynatraceHealthSourceSpecTransformer.class);
     MapBinder<DataSourceType, DataCollectionInfoMapper> dataSourceTypeDataCollectionInfoMapperMapBinder =
         MapBinder.newMapBinder(binder(), DataSourceType.class, DataCollectionInfoMapper.class);
     dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
@@ -419,6 +427,8 @@ public class CVServiceModule extends AbstractModule {
         .to(DatadogMetricDataCollectionInfoMapper.class);
     dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.DATADOG_LOG)
         .to(DatadogLogDataCollectionInfoMapper.class);
+    dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.DYNATRACE)
+        .to(DynatraceDataCollectionInfoMapper.class);
 
     MapBinder<DataSourceType, DataCollectionSLIInfoMapper> dataSourceTypeDataCollectionSLIInfoMapperMapBinder =
         MapBinder.newMapBinder(binder(), DataSourceType.class, DataCollectionSLIInfoMapper.class);
@@ -455,6 +465,7 @@ public class CVServiceModule extends AbstractModule {
     bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     bind(StackdriverService.class).to(StackdriverServiceImpl.class);
     bind(DatadogService.class).to(DatadogServiceImpl.class);
+    bind(DynatraceService.class).to(DynatraceServiceImpl.class);
     bind(RedisConfig.class)
         .annotatedWith(Names.named("lock"))
         .toInstance(verificationConfiguration.getEventsFrameworkConfiguration().getRedisConfig());
@@ -507,6 +518,7 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_METRICS)
         .to(DatadogMetricCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_LOG).to(DatadogLogCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DYNATRACE).to(DynatraceCVConfigUpdatableEntity.class);
 
     MapBinder<SLIMetricType, ServiceLevelIndicatorUpdatableEntity> serviceLevelIndicatorMapBinder =
         MapBinder.newMapBinder(binder(), SLIMetricType.class, ServiceLevelIndicatorUpdatableEntity.class);
@@ -689,6 +701,7 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkService.class);
     dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackdriverService.class);
     dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.DATADOG_METRICS).to(DatadogService.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.DYNATRACE).to(DynatraceService.class);
 
     MapBinder<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder =
         MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigUpdatableEntity.class);
@@ -703,6 +716,8 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_METRICS)
         .to(DatadogMetricCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_LOG).to(DatadogLogCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DYNATRACE)
+        .to(DynatraceCVConfigUpdatableEntity.class);
   }
 
   @Provides
