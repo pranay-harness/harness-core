@@ -594,14 +594,6 @@ public class PlanExecutionResource {
   }
 
   @GET
-  @ApiOperation(value = "Run a schema on db.", nickname = "runSchemaOnDb")
-  @Path("/internal/runSchema")
-  public ResponseDTO<String> runASchemaMigration() {
-    orchestrationEventLogRepository.schemaMigrationForOldEvenLog();
-    return ResponseDTO.newResponse("Deleted Old Orchestration event log entries");
-  }
-
-  @GET
   @ApiOperation(value = "get list of stages for stage execution", nickname = "getStagesExecutionList")
   @Path("/stagesExecutionList")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
