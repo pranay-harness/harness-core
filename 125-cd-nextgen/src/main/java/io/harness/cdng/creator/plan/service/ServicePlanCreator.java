@@ -4,9 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets.ArtifactOverrideSetsStepParametersWrapper;
 import io.harness.cdng.creator.plan.PlanCreatorConstants;
-import io.harness.cdng.creator.plan.artifact.ArtifactsPlanCreator;
 import io.harness.cdng.creator.plan.manifest.ManifestsPlanCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.infra.steps.EnvironmentStep;
@@ -35,6 +35,8 @@ import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.plan.Dependencies;
+import io.harness.pms.contracts.plan.Dependency;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
@@ -44,6 +46,7 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -96,12 +99,24 @@ public class ServicePlanCreator implements PartialPlanCreator<ServiceConfig> {
 
     Map<String, PlanNode> planNodes = new HashMap<>();
     List<String> serviceSpecChildrenIds = new ArrayList<>();
-    PlanCreationResponse response = ArtifactsPlanCreator.createPlanForArtifactsNode(actualServiceConfig);
-    if (response != null && isNotEmpty(response.getNodes())) {
-      planNodes.putAll(response.getNodes());
-      if (isNotEmpty(response.getStartingNodeId())) {
-        serviceSpecChildrenIds.add(response.getStartingNodeId());
-      }
+    PlanCreationResponse response;
+
+    Dependencies.Builder dependencies = Dependencies.newBuilder();
+    Map<String, YamlField> dependenciesMap = new HashMap<>();
+    Map<String, ByteString> metadataDependency = new HashMap<>();
+
+    boolean createPlanForArtifacts = validateCreatePlanNodeForArtifacts(actualServiceConfig);
+    if (createPlanForArtifacts) {
+      YamlField artifactYamlField = fetchArtifactYamlField(ctx.getCurrentField(), actualServiceConfig);
+      String artifactsPlanNodeId = UUIDGenerator.generateUuid();
+
+      prepareMetadataForArtifactsPlanCreator(artifactsPlanNodeId, actualServiceConfig, metadataDependency);
+
+      dependenciesMap.put(artifactsPlanNodeId, artifactYamlField);
+      dependencies.putAllDependencies(DependenciesUtils.toDependenciesProto(dependenciesMap).getDependenciesMap())
+          .putDependencyMetadata(
+              artifactsPlanNodeId, Dependency.newBuilder().putAllMetadata(metadataDependency).build());
+      serviceSpecChildrenIds.add(artifactsPlanNodeId);
     }
 
     response = ManifestsPlanCreator.createPlanForManifestsNode(actualServiceConfig);
@@ -137,7 +152,63 @@ public class ServicePlanCreator implements PartialPlanCreator<ServiceConfig> {
             .skipExpressionChain(false)
             .build();
     planNodes.put(serviceConfigPlanNode.getUuid(), serviceConfigPlanNode);
-    return PlanCreationResponse.builder().nodes(planNodes).build();
+
+    return PlanCreationResponse.builder().nodes(planNodes).dependencies(dependencies.build()).build();
+  }
+
+  public void prepareMetadataForArtifactsPlanCreator(
+      String artifactsPlanNodeId, ServiceConfig actualServiceConfig, Map<String, ByteString> metadataDependency) {
+    metadataDependency.put(YamlTypes.UUID, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(artifactsPlanNodeId)));
+    // TODO: Find an efficient way to not pass whole service config
+    metadataDependency.put(
+        YamlTypes.SERVICE_CONFIG, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(actualServiceConfig)));
+  }
+
+  public YamlField fetchArtifactYamlField(YamlField serviceField, ServiceConfig actualServiceConfig) {
+    if (actualServiceConfig.getUseFromStage() == null) {
+      return serviceField.getNode()
+          .getField(YamlTypes.SERVICE_DEFINITION)
+          .getNode()
+          .getField(YamlTypes.SPEC)
+          .getNode()
+          .getField(YamlTypes.ARTIFACT_LIST_CONFIG);
+    } else {
+      // pass the original stage artifacts yaml field
+      String stage = actualServiceConfig.getUseFromStage().getStage();
+      YamlField stageYamlField = PlanCreatorUtils.getStageConfig(serviceField, stage);
+
+      return stageYamlField.getNode()
+          .getField(YamlTypes.SPEC)
+          .getNode()
+          .getField(YamlTypes.SERVICE_CONFIG)
+          .getNode()
+          .getField(YamlTypes.SERVICE_DEFINITION)
+          .getNode()
+          .getField(YamlTypes.SPEC)
+          .getNode()
+          .getField(YamlTypes.ARTIFACT_LIST_CONFIG);
+    }
+  }
+
+  public boolean validateCreatePlanNodeForArtifacts(ServiceConfig actualServiceConfig) {
+    ArtifactListConfig artifactListConfig = actualServiceConfig.getServiceDefinition().getServiceSpec().getArtifacts();
+
+    // Contains either primary artifacts or side-car artifacts
+    if (artifactListConfig != null) {
+      if (artifactListConfig.getPrimary() != null || EmptyPredicate.isNotEmpty(artifactListConfig.getSidecars())) {
+        return true;
+      }
+    }
+
+    if (actualServiceConfig.getStageOverrides() != null
+        && actualServiceConfig.getStageOverrides().getArtifacts() != null) {
+      if (actualServiceConfig.getStageOverrides().getArtifacts().getPrimary() != null
+          || EmptyPredicate.isNotEmpty(actualServiceConfig.getStageOverrides().getArtifacts().getSidecars())) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private String addServiceNode(ServiceConfig actualServiceConfig, Map<String, PlanNode> planNodes,
