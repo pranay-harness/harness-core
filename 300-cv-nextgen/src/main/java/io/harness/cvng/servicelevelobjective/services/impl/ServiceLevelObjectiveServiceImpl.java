@@ -112,14 +112,13 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
   }
 
   @Override
-  public SLORiskCountResponse getRiskCount(
-      ProjectParams projectParams, ServiceLevelObjectiveFilter serviceLevelObjectiveFilter) {
+  public SLORiskCountResponse getRiskCount(ProjectParams projectParams, SLODashboardApiFilter sloDashboardApiFilter) {
     List<ServiceLevelObjective> serviceLevelObjectiveList = get(projectParams,
         Filter.builder()
-            .userJourneys(serviceLevelObjectiveFilter.getUserJourneys())
-            .identifiers(serviceLevelObjectiveFilter.getIdentifiers())
-            .targetTypes(serviceLevelObjectiveFilter.getTargetTypes())
-            .sliTypes(serviceLevelObjectiveFilter.getSliTypes())
+            .userJourneys(sloDashboardApiFilter.getUserJourneyIdentifiers())
+            .monitoredServiceIdentifier(sloDashboardApiFilter.getMonitoredServiceIdentifier())
+            .targetTypes(sloDashboardApiFilter.getTargetTypes())
+            .sliTypes(sloDashboardApiFilter.getSliTypes())
             .build());
     List<SLOHealthIndicator> sloHealthIndicators = sloHealthIndicatorService.getBySLOIdentifiers(projectParams,
         serviceLevelObjectiveList.stream()
@@ -219,6 +218,9 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
         Filter.builder()
             .monitoredServiceIdentifier(filter.getMonitoredServiceIdentifier())
             .userJourneys(filter.getUserJourneyIdentifiers())
+            .sliTypes(filter.getSliTypes())
+            .errorBudgetRisks(filter.getErrorBudgetRisks())
+            .targetTypes(filter.getTargetTypes())
             .build());
   }
 
