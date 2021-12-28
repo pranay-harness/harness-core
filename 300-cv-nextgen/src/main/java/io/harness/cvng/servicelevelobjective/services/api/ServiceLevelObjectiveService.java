@@ -21,8 +21,7 @@ public interface ServiceLevelObjectiveService {
   PageResponse<ServiceLevelObjectiveResponse> get(ProjectParams projectParams, Integer offset, Integer pageSize,
       ServiceLevelObjectiveFilter serviceLevelObjectiveFilter);
 
-  SLORiskCountResponse getRiskCount(
-      ProjectParams projectParams, ServiceLevelObjectiveFilter serviceLevelObjectiveFilter);
+  SLORiskCountResponse getRiskCount(ProjectParams projectParams, SLODashboardApiFilter serviceLevelObjectiveFilter);
 
   ServiceLevelObjectiveResponse get(ProjectParams projectParams, String identifier);
   ServiceLevelObjective getEntity(ProjectParams projectParams, String identifier);

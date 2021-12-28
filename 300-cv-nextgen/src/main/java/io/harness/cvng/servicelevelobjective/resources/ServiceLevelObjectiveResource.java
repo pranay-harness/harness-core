@@ -12,7 +12,6 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.params.ProjectParams;
-import io.harness.cvng.servicelevelobjective.SLORiskCountResponse;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveFilter;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
@@ -121,25 +120,18 @@ public class ServiceLevelObjectiveResource {
   @ApiOperation(value = "get all service level objectives ", nickname = "getServiceLevelObjectives")
   @NGAccessControlCheck(resourceType = SLO, permission = VIEW_PERMISSION)
   public ResponseDTO<PageResponse<ServiceLevelObjectiveResponse>> getServiceLevelObjectives(
-      @NotNull @BeanParam ProjectParams projectParams, @QueryParam("offset") @NotNull Integer offset,
-      @QueryParam("pageSize") @NotNull Integer pageSize,
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") @AccountIdentifier String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") @ProjectIdentifier String projectIdentifier,
+      @QueryParam("offset") @NotNull Integer offset, @QueryParam("pageSize") @NotNull Integer pageSize,
       @BeanParam ServiceLevelObjectiveFilter serviceLevelObjectiveFilter) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
     return ResponseDTO.newResponse(
         serviceLevelObjectiveService.get(projectParams, offset, pageSize, serviceLevelObjectiveFilter));
-  }
-
-  @GET
-  @Timed
-  @ExceptionMetered
-  @Path("risk-count")
-  @ApiOperation(
-      value = "get all service level objectives count by risk", nickname = "getServiceLevelObjectivesRiskCount")
-  @NGAccessControlCheck(resourceType = SLO, permission = VIEW_PERMISSION)
-  public ResponseDTO<SLORiskCountResponse>
-  getServiceLevelObjectivesRiskCount(@NotNull @BeanParam ProjectParams projectParams,
-      @BeanParam ServiceLevelObjectiveFilter serviceLevelObjectiveFilter) {
-    return ResponseDTO.newResponse(
-        serviceLevelObjectiveService.getRiskCount(projectParams, serviceLevelObjectiveFilter));
   }
 
   @GET
