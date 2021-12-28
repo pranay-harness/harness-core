@@ -22,7 +22,7 @@
     <logger name="software.wings" level="INFO"/>
     <logger name="org.zeroturnaround" level="WARN"/>
 
-    <root level="${LOGGING_LEVEL:-INFO}">
+    <root level="${LOGGING_LEVEL:-DEBUG}">
         <appender-ref ref="stdout"/>
 
     </root>
