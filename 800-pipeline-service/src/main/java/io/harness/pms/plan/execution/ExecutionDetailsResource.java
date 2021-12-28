@@ -81,7 +81,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
           @ApiResponse(code = 403, response = TemplateInputsErrorResponseDTO.class,
               message = "TemplateRefs Resolved failed in pipeline yaml.")
     })
-@Tag(name = "executionDetails", description = "This contains APIs related to pipeline executions")
+@Tag(name = "Execution Details", description = "This contains APIs for fetching Pipeline Execution details.")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content =
     {
