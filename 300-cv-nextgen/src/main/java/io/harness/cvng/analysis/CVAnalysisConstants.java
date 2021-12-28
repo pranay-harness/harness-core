@@ -9,7 +9,6 @@ public interface CVAnalysisConstants {
   String LOG_CLUSTER_RESOURCE = "log-cluster";
 
   String LOG_ANALYSIS_RESOURCE = "log-analysis";
-  String CD_10_MAPPING_RESOURCE = "cd10-mapping";
   String MARK_FAILURE_PATH = "mark-failure";
   String LOG_ANALYSIS_SAVE_PATH = "serviceguard-save-analysis";
   String DEPLOYMENT_LOG_ANALYSIS_SAVE_PATH = "deployment-save-analysis";
