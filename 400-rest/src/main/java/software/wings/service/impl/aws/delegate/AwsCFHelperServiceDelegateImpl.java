@@ -9,6 +9,8 @@ import static java.util.stream.Collectors.toList;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.aws.beans.AwsClientBackoffStrategy;
+import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -21,6 +23,7 @@ import software.wings.beans.GitOperationContext;
 import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
+import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
 import software.wings.utils.GitUtilsDelegate;
 
 import com.amazonaws.AmazonClientException;
@@ -50,8 +53,15 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
   @VisibleForTesting
   AmazonCloudFormationClient getAmazonCloudFormationClient(Regions region, AwsConfig awsConfig) {
     AmazonCloudFormationClientBuilder builder = AmazonCloudFormationClientBuilder.standard().withRegion(region);
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    attacheCredentialsAndPolicyWithExponentialBackoffStrategy(builder, awsConfig);
     return (AmazonCloudFormationClient) builder.build();
+  }
+
+  private void attacheCredentialsAndPolicyWithExponentialBackoffStrategy(
+      AmazonCloudFormationClientBuilder builder, AwsConfig awsConfig) {
+    AwsInternalConfig awsInternalConfig = AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig);
+    awsInternalConfig.setBackoffStrategy(AwsClientBackoffStrategy.EXPONENTIAL);
+    attachCredentialsAndBackoffPolicy(builder, awsInternalConfig);
   }
 
   @Override

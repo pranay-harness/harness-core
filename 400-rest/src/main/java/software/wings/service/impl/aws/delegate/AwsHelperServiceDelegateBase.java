@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
+import io.harness.aws.beans.AwsInternalConfig;
 
 import software.wings.beans.AwsConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -34,6 +35,11 @@ class AwsHelperServiceDelegateBase {
   protected void attachCredentialsAndBackoffPolicy(AwsClientBuilder builder, AwsConfig awsConfig) {
     awsEcrApiHelperServiceDelegateBase.attachCredentialsAndBackoffPolicy(
         builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
+  }
+
+  protected final <T extends AwsClientBuilder<T, U>, U> void attachCredentialsAndBackoffPolicy(
+      AwsClientBuilder<T, U> builder, AwsInternalConfig awsInternalConfig) {
+    awsEcrApiHelperServiceDelegateBase.attachCredentialsAndBackoffPolicy(builder, awsInternalConfig);
   }
 
   @VisibleForTesting

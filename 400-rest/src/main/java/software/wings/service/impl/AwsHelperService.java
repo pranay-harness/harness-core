@@ -25,6 +25,8 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
+import io.harness.aws.beans.AwsClientBackoffStrategy;
+import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.concurrent.HTimeLimiter;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -365,8 +367,7 @@ public class AwsHelperService {
   @VisibleForTesting
   AmazonCloudFormationClient getAmazonCloudFormationClient(Regions region, AwsConfig awsConfig) {
     AmazonCloudFormationClientBuilder builder = AmazonCloudFormationClientBuilder.standard().withRegion(region);
-    awsApiHelperService.attachCredentialsAndBackoffPolicy(
-        builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
+    attacheCredentialsAndPolicyWithExponentialBackoffStrategy(builder, awsConfig);
     return (AmazonCloudFormationClient) builder.build();
   }
 
@@ -394,6 +395,13 @@ public class AwsHelperService {
     awsApiHelperService.attachCredentialsAndBackoffPolicy(
         builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
     return (com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient) builder.build();
+  }
+
+  private void attacheCredentialsAndPolicyWithExponentialBackoffStrategy(
+      AmazonCloudFormationClientBuilder builder, AwsConfig awsConfig) {
+    AwsInternalConfig awsInternalConfig = AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig);
+    awsInternalConfig.setBackoffStrategy(AwsClientBackoffStrategy.EXPONENTIAL);
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(builder, awsInternalConfig);
   }
 
   /**

@@ -1,11 +1,14 @@
 package software.wings.service.impl;
 
+import static io.harness.aws.beans.AwsClientBackoffStrategy.EXPONENTIAL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+import static software.wings.service.impl.aws.model.AwsConstants.BASE_DELAY_IN_MILLISECONDS;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_BACKOFF_MAX_ERROR_RETRIES;
+import static software.wings.service.impl.aws.model.AwsConstants.MAX_BACKOFF_TIME_IN_MILLISECONDS;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -188,13 +191,28 @@ public class AwsApiHelperService {
   }
 
   public void attachCredentialsAndBackoffPolicy(AwsClientBuilder builder, AwsInternalConfig awsConfig) {
+    log.info("Instantiating AWS client: {} with backoff strategy: {},"
+            + (awsConfig.getBackoffStrategy() == EXPONENTIAL
+                    ? " maxErrorRetries: {}, baseDelay: {}, maxBackoffTime: {}, "
+                    : " maxErrorRetries: {}"),
+        builder.getClass(), awsConfig.getBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES,
+        BASE_DELAY_IN_MILLISECONDS, MAX_BACKOFF_TIME_IN_MILLISECONDS);
+
     AWSCredentialsProvider credentialsProvider = getAwsCredentialsProvider(awsConfig);
     builder.withCredentials(credentialsProvider);
     ClientConfiguration clientConfiguration = new ClientConfiguration();
-    RetryPolicy retryPolicy = new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
-        new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
-    clientConfiguration.setRetryPolicy(retryPolicy);
+    clientConfiguration.setRetryPolicy(getRetryPolicy(awsConfig));
     builder.withClientConfiguration(clientConfiguration);
+  }
+
+  private RetryPolicy getRetryPolicy(AwsInternalConfig config) {
+    return config.getBackoffStrategy() == EXPONENTIAL
+        ? new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
+            new PredefinedBackoffStrategies.ExponentialBackoffStrategy(
+                BASE_DELAY_IN_MILLISECONDS, MAX_BACKOFF_TIME_IN_MILLISECONDS),
+            DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false)
+        : new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
+            new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
   }
 
   public AWSCredentialsProvider getAwsCredentialsProvider(AwsInternalConfig awsConfig) {
