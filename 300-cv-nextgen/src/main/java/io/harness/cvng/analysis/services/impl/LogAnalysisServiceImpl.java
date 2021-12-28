@@ -216,7 +216,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     DeploymentLogAnalysis logAnalysis = hPersistence.createQuery(DeploymentLogAnalysis.class, excludeAuthority)
                                             .filter(DeploymentLogAnalysisKeys.verificationTaskId, verificationTaskId)
                                             .field(DeploymentLogAnalysisKeys.startTime)
-                                            .lessThanOrEq(analysisStartTime)
+                                            .lessThan(analysisStartTime)
                                             .order(Sort.descending(DeploymentLogAnalysisKeys.startTime))
                                             .get();
 
