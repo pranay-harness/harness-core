@@ -5,6 +5,7 @@ import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.utils.DateTimeUtils;
+import io.harness.cvng.servicelevelobjective.SLORiskCountResponse;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardApiFilter;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
@@ -62,6 +63,12 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .pageItemCount(sloPageResponse.getPageItemCount())
         .content(sloDashboardWidgets)
         .build();
+  }
+
+  @Override
+  public SLORiskCountResponse getRiskCount(
+      ProjectParams projectParams, SLODashboardApiFilter serviceLevelObjectiveFilter) {
+    return serviceLevelObjectiveService.getRiskCount(projectParams, serviceLevelObjectiveFilter);
   }
 
   private SLODashboardWidget getSloDashboardWidget(ProjectParams projectParams,

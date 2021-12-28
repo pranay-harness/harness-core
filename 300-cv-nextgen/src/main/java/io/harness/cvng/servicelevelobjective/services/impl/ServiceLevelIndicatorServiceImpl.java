@@ -28,12 +28,10 @@ import io.harness.cvng.servicelevelobjective.beans.SLIAnalyseRequest;
 import io.harness.cvng.servicelevelobjective.beans.SLIAnalyseResponse;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
-import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator.RatioServiceLevelIndicatorKeys;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorKeys;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator.ServiceLevelIndicatorUpdatableEntity;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.TimePeriod;
-import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator.ThresholdServiceLevelIndicatorKeys;
 import io.harness.cvng.servicelevelobjective.services.api.SLIDataProcessorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorEntityAndDTOTransformer;
@@ -54,6 +52,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -63,6 +62,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -341,9 +341,10 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
             .filter(ServiceLevelIndicatorKeys.healthSourceIdentifier, healthSourceIdentifier)
             .filter(ServiceLevelIndicatorKeys.monitoredServiceIdentifier, monitoredServiceIdentifier)
             .project(ServiceLevelIndicatorKeys.identifier, true);
-    query.or(query.criteria(ThresholdServiceLevelIndicatorKeys.metric1).in(metricIdentifiers),
-        query.criteria(RatioServiceLevelIndicatorKeys.metric1).in(metricIdentifiers),
-        query.criteria(RatioServiceLevelIndicatorKeys.metric2).in(metricIdentifiers));
+    query.or(Arrays.stream(SLIMetricType.values())
+                 .flatMap(type -> type.getMetricDbFields().stream())
+                 .map(metricFieldName -> query.criteria(metricFieldName).in(metricIdentifiers))
+                 .toArray(Criteria[] ::new));
     return query.asList().stream().map(ServiceLevelIndicator::getIdentifier).collect(Collectors.toList());
   }
 

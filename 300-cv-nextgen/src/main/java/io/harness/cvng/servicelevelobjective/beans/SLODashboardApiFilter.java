@@ -16,4 +16,7 @@ import lombok.experimental.FieldDefaults;
 public class SLODashboardApiFilter {
   @QueryParam("userJourneyIdentifiers") List<String> userJourneyIdentifiers;
   @QueryParam("monitoredServiceIdentifier") String monitoredServiceIdentifier;
+  @QueryParam("sliTypes") List<ServiceLevelIndicatorType> sliTypes;
+  @QueryParam("targetTypes") List<SLOTargetType> targetTypes;
+  @QueryParam("errorBudgetRisks") List<ErrorBudgetRisk> errorBudgetRisks;
 }
