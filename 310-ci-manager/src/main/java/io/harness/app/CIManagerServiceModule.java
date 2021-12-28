@@ -64,6 +64,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
@@ -187,6 +188,15 @@ public class CIManagerServiceModule extends AbstractModule {
             new ThreadFactoryBuilder()
                 .setNameFormat("default-ci-executor-%d")
                 .setPriority(Thread.MIN_PRIORITY)
+                .build()));
+
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("async-taskPollExecutor"))
+        .toInstance(new ScheduledThreadPoolExecutor(
+            ciManagerConfiguration.getAsyncDelegateResponseConsumption().getCorePoolSize(),
+            new ThreadFactoryBuilder()
+                .setNameFormat("async-taskPollExecutor-Thread-%d")
+                .setPriority(Thread.NORM_PRIORITY)
                 .build()));
 
     bind(ScheduledExecutorService.class)

@@ -173,6 +173,9 @@ pmsSdkOrchestrationEventPoolConfig:
   idleTime: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME:-120}
   timeUnit: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
 
+asyncDelegateResponseConsumption:
+  corePoolSize: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_CORE_SIZE:-1}
+
 pmsSdkGrpcServerConfig:
   connectors:
     - port: 12301
