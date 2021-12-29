@@ -44,5 +44,6 @@ public class EntityYamlRootNames {
   public static String JIRA_CREATE = "JiraCreate";
   public static String SHELL_SCRIPT = "ShellScript";
   public static String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
+  public static String K8S_APPLY = "K8sApply";
   public static String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }

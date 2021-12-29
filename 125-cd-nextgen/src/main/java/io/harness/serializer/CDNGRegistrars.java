@@ -6,6 +6,7 @@ import io.harness.accesscontrol.serializer.AccessControlClientRegistrars;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
+import io.harness.cdng.k8s.K8sApplyStepNode;
 import io.harness.cdng.k8s.K8sCanaryStepNode;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.morphia.MorphiaRegistrar;
@@ -81,6 +82,17 @@ public class CDNGRegistrars {
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
                    .clazz(K8sCanaryStepNode.class)
+                   .yamlSchemaMetadata(YamlSchemaMetadata.builder()
+                                           .modulesSupported(Collections.singletonList(ModuleType.CD))
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
+                                           .build())
+                   .build())
+          .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.K8S_APPLY_STEP)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(K8sApplyStepNode.class)
                    .yamlSchemaMetadata(YamlSchemaMetadata.builder()
                                            .modulesSupported(Collections.singletonList(ModuleType.CD))
                                            .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())

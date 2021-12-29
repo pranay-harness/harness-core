@@ -168,6 +168,7 @@ io.harness.steps.jira.create.JiraCreateStepNode
 io.harness.steps.shellscript.ShellScriptStepNode
 io.harness.steps.servicenow.approval.ServiceNowApprovalStepNode
 io.harness.cdng.k8s.K8sCanaryStepNode
+io.harness.cdng.k8s.K8sApplyStepNode
 io.harness.steps.template.TemplateStepNode
 io.harness.cdng.manifest.yaml.GcsStoreConfig
 io.harness.ngpipeline.artifact.bean.EcrArtifactOutcome

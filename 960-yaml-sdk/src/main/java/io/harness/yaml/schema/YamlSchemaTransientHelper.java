@@ -37,6 +37,7 @@ public class YamlSchemaTransientHelper {
       add(EntityType.K8S_CANARY_DEPLOY_STEP);
       add(EntityType.TEMPLATE);
       add(EntityType.SERVICENOW_APPROVAL_STEP);
+      add(EntityType.K8S_APPLY_STEP);
     }
   };
 
