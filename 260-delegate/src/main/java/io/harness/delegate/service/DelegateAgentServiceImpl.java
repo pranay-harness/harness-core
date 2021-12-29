@@ -864,14 +864,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void handleMessageSubmit(String message) {
     log.info("^^MSG: " + message + " queue size " + (currentlyExecutingTasks.size() + currentlyValidatingTasks.size()));
-//    if (delegateTaskLimit > 0
-//            && (currentlyExecutingTasks.size() + currentlyValidatingTasks.size())
-//            >= delegateTaskLimit) {
-//
-//      return;
-//    }
-
     systemExecutor.submit(() -> handleMessage(message));
+
   }
 
   @SuppressWarnings("PMD")

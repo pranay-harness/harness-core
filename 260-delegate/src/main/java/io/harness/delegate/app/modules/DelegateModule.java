@@ -1,6 +1,6 @@
 package io.harness.delegate.app.modules;
 
-import io.harness.annotations.dev.BreakDependencyOn;
+import  io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -726,7 +726,7 @@ public class DelegateModule extends AbstractModule {
   @Singleton
   @Named("systemExecutor")
   public ExecutorService systemExecutor() {
-    ExecutorService systemExecutor = ThreadPool.create(4, 9, 1, TimeUnit.SECONDS,
+    ExecutorService systemExecutor = ThreadPool.create(4,  400, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("system-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(systemExecutor::shutdownNow));
     return systemExecutor;
