@@ -89,7 +89,7 @@ public class DelegateAgentManagerClientFactory implements Provider<DelegateAgent
       log.info("Entering DelegateAgentManagerClientFactory {} ", Http.connectionPool);
       return Http.getOkHttpClientWithProxyAuthSetup()
           .hostnameVerifier(new NoopHostnameVerifier())
-          .connectionPool(Http.connectionPool)
+          .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(true)
           .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) trustManagers[0])
