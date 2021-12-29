@@ -159,6 +159,7 @@ import io.harness.service.intfc.DelegateTaskService;
 import io.harness.service.intfc.DelegateTokenService;
 import io.harness.stream.BoundedInputStream;
 import io.harness.telemetry.Category;
+import io.harness.telemetry.TelemetryOption;
 import io.harness.telemetry.TelemetryReporter;
 import io.harness.validation.SuppressValidation;
 import io.harness.version.VersionInfoManager;
@@ -1621,7 +1622,8 @@ public class DelegateServiceImpl implements DelegateService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("NG", false);
     properties.put("Type", SHELL_SCRIPT);
-    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL);
+    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL,
+        TelemetryOption.builder().sendForCommunity(true).build());
     return gzipDelegateFile;
   }
 
@@ -1724,7 +1726,8 @@ public class DelegateServiceImpl implements DelegateService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("NG", false);
     properties.put("Type", DOCKER);
-    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL);
+    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL,
+        TelemetryOption.builder().sendForCommunity(true).build());
     return gzipDockerDelegateFile;
   }
 
@@ -1785,7 +1788,8 @@ public class DelegateServiceImpl implements DelegateService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("NG", false);
     properties.put("Type", KUBERNETES);
-    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL);
+    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL,
+        TelemetryOption.builder().sendForCommunity(true).build());
     return gzipKubernetesDelegateFile;
   }
 
@@ -1825,7 +1829,8 @@ public class DelegateServiceImpl implements DelegateService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("NG", false);
     properties.put("Type", CE_KUBERNETES);
-    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL);
+    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL,
+        TelemetryOption.builder().sendForCommunity(true).build());
 
     return new File(yaml.getAbsolutePath());
   }
@@ -1873,7 +1878,8 @@ public class DelegateServiceImpl implements DelegateService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("NG", false);
     properties.put("Type", HELM_DELEGATE);
-    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL);
+    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL,
+        TelemetryOption.builder().sendForCommunity(true).build());
     return yaml;
   }
 
@@ -1957,7 +1963,8 @@ public class DelegateServiceImpl implements DelegateService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("NG", false);
     properties.put("Type", ECS);
-    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL);
+    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL,
+        TelemetryOption.builder().sendForCommunity(true).build());
     return gzipEcsDelegateFile;
   }
 
@@ -2471,7 +2478,7 @@ public class DelegateServiceImpl implements DelegateService {
         properties.put("NG", delegate.isNg());
         properties.put("Type", delegate.getDelegateType());
         telemetryReporter.sendTrackEvent(DELEGATE_REGISTERED_EVENT, delegate.getAccountId(), delegate.getAccountId(),
-            properties, null, Category.GLOBAL);
+            properties, null, Category.GLOBAL, TelemetryOption.builder().sendForCommunity(true).build());
       }
       return delegateRegisterResponse;
     } else {
@@ -2501,7 +2508,7 @@ public class DelegateServiceImpl implements DelegateService {
       properties.put("NG", delegate.isNg());
       properties.put("Type", delegate.getDelegateType());
       telemetryReporter.sendTrackEvent(DELEGATE_REGISTERED_EVENT, delegate.getAccountId(), delegate.getAccountId(),
-          properties, null, Category.GLOBAL);
+          properties, null, Category.GLOBAL, TelemetryOption.builder().sendForCommunity(true).build());
     } else {
       log.info("Delegate exists, updating: {}", delegate.getUuid());
       delegate.setUuid(existingDelegate.getUuid());
@@ -2979,7 +2986,8 @@ public class DelegateServiceImpl implements DelegateService {
       HashMap<String, Object> properties = new HashMap<>();
       properties.put("NG", true);
       properties.put("Type", delegateSetupDetails.getDelegateType());
-      telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL);
+      telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL,
+          TelemetryOption.builder().sendForCommunity(true).build());
     }
     return delegateGroup;
   }
@@ -3923,7 +3931,8 @@ public class DelegateServiceImpl implements DelegateService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("NG", true);
     properties.put("Type", KUBERNETES);
-    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL);
+    telemetryReporter.sendTrackEvent(DELEGATE_CREATED_EVENT, accountId, accountId, properties, null, Category.GLOBAL,
+        TelemetryOption.builder().sendForCommunity(true).build());
     return gzipKubernetesDelegateFile;
   }
 

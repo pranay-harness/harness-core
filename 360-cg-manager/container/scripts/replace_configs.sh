@@ -402,6 +402,10 @@ if [[ "" != "$SEGMENT_APIKEY_NG" ]]; then
   yq write -i $CONFIG_FILE segmentConfiguration.apiKey "$SEGMENT_APIKEY_NG"
 fi
 
+if [[ "" != "$SEGMENT_VERIFY_CERT_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.certValidationRequired "$SEGMENT_VERIFY_CERT_NG"
+fi
+
 if [[ "" != "$SALESFORCE_USERNAME" ]]; then
   yq write -i $CONFIG_FILE salesforceConfig.userName "$SALESFORCE_USERNAME"
 fi
