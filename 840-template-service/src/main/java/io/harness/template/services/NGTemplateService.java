@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.template.entity.TemplateEntity;
 
@@ -44,4 +45,6 @@ public interface NGTemplateService {
 
   boolean markEntityInvalid(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, String versionLabel, String invalidYaml);
+
+  TemplateEntity fullSyncTemplate(EntityDetailProtoDTO entityDetailProtoDTO);
 }

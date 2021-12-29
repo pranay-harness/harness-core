@@ -10,6 +10,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.TemplateReferenceProtoDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -19,6 +21,7 @@ import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
+import io.harness.grpc.utils.StringValueUtils;
 import io.harness.repositories.NGTemplateRepository;
 import io.harness.springdata.TransactionHelper;
 import io.harness.template.TemplateFilterPropertiesDTO;
@@ -469,6 +472,40 @@ public class NGTemplateServiceImpl implements NGTemplateService {
     return true;
   }
 
+  @Override
+  public TemplateEntity fullSyncTemplate(EntityDetailProtoDTO entityDetailProtoDTO) {
+    try {
+      TemplateReferenceProtoDTO templateRef = entityDetailProtoDTO.getTemplateRef();
+
+      Optional<TemplateEntity> unSyncedTemplate =
+          getUnSyncedTemplate(StringValueUtils.getStringFromStringValue(templateRef.getAccountIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getOrgIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getProjectIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getVersionLabel()));
+
+      return makeTemplateUpdateCall(unSyncedTemplate.get(), unSyncedTemplate.get(), ChangeType.ADD, "",
+          TemplateUpdateEventType.OTHERS_EVENT, true);
+    } catch (DuplicateKeyException ex) {
+      TemplateReferenceProtoDTO templateRef = entityDetailProtoDTO.getTemplateRef();
+      throw new DuplicateFieldException(
+          format(DUP_KEY_EXP_FORMAT_STRING, StringValueUtils.getStringFromStringValue(templateRef.getIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getVersionLabel()),
+              StringValueUtils.getStringFromStringValue(templateRef.getProjectIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getOrgIdentifier())),
+          USER_SRE, ex);
+    } catch (Exception e) {
+      TemplateReferenceProtoDTO templateRef = entityDetailProtoDTO.getTemplateRef();
+      log.error(String.format("Error while saving template [%s] of versionLabel [%s]",
+                    StringValueUtils.getStringFromStringValue(templateRef.getIdentifier()),
+                    StringValueUtils.getStringFromStringValue(templateRef.getVersionLabel())),
+          e);
+      throw new InvalidRequestException(String.format("Error while saving template [%s] of versionLabel [%s]: %s",
+          StringValueUtils.getStringFromStringValue(templateRef.getIdentifier()),
+          StringValueUtils.getStringFromStringValue(templateRef.getVersionLabel()), e.getMessage()));
+    }
+  }
+
   @VisibleForTesting
   String getActualComments(String accountId, String orgIdentifier, String projectIdentifier, String comments) {
     boolean gitSyncEnabled = gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier);
@@ -663,5 +700,22 @@ public class NGTemplateServiceImpl implements NGTemplateService {
     PageRequest pageRequest = PageRequest.of(0, 1000, Sort.by(Sort.Direction.DESC, TemplateEntityKeys.lastUpdatedAt));
     return list(criteria, pageRequest, accountId, orgIdentifier, projectIdentifier, getDistinctFromBranches)
         .getContent();
+  }
+
+  private Optional<TemplateEntity> getUnSyncedTemplate(String accountId, String orgIdentifier, String projectIdentifier,
+      String templateIdentifier, String versionLabel) {
+    try (TemplateGitSyncBranchContextGuard ignored =
+             templateServiceHelper.getTemplateGitContextForGivenTemplate(null, null, "")) {
+      Optional<TemplateEntity> optionalTemplate =
+          templateRepository
+              .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndVersionLabelAndDeletedNot(
+                  accountId, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, true);
+      if (!optionalTemplate.isPresent()) {
+        throw new InvalidRequestException(format(
+            "Template with identifier [%s] and versionLabel [%s] under Project[%s], Organization [%s] doesn't exist.",
+            accountId, versionLabel, projectIdentifier, orgIdentifier));
+      }
+      return optionalTemplate;
+    }
   }
 }
