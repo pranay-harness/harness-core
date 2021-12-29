@@ -31,6 +31,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +50,7 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
   private FeatureFlagService featureFlagService;
   private ManagerDecryptionService managerDecryptionService;
   private SecretManager secretManager;
+  private Cache<String, String> secretsCache;
   private String accountId;
   private String appId;
   private String envId;
@@ -155,8 +157,10 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
             .collect(Collectors.toList());
 
     if (isNotEmpty(localEncryptedDetails)) {
-      managerDecryptionService.decrypt(serviceVariable, localEncryptedDetails);
-      String value = new String(serviceVariable.getValue());
+      String value = secretsCache.get(encryptedData.getUuid(), key -> {
+        managerDecryptionService.decrypt(serviceVariable, localEncryptedDetails);
+        return new String(serviceVariable.getValue());
+      });
       evaluatedSecrets.put(secretName, value);
       return returnSecretValue(secretName, value);
     }
