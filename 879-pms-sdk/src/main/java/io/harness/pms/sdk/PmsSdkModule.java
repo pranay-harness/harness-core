@@ -69,6 +69,7 @@ public class PmsSdkModule extends AbstractModule {
                                          .executionPoolConfig(config.getExecutionPoolConfig())
                                          .orchestrationEventPoolConfig(config.getOrchestrationEventPoolConfig())
                                          .planCreatorServicePoolConfig(config.getPlanCreatorServiceInternalConfig())
+                                         .pipelineRedisEventsConfig(config.getPipelineRedisEventsConfig())
                                          .build()));
     modules.add(
         PmsSdkEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));
