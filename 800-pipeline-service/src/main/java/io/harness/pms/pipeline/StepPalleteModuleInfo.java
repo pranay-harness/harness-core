@@ -10,10 +10,10 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.PIPELINE)
-@Schema(name = "StepPalleteModuleInfo", description = "This is the view of the Step Pallete")
+@Schema(name = "StepPalleteModuleInfo", description = "This has details of the Step Palette.")
 public class StepPalleteModuleInfo {
-  String module;
-  String category;
-  boolean shouldShowCommonSteps;
-  String commonStepCategory;
+  @Schema(description = "Module Type like CD/CI etc") String module;
+  @Schema(description = "Step Category like Approval/Provisioner etc") String category;
+  @Schema(description = "Whether Pallete should list the common Steps") boolean shouldShowCommonSteps;
+  @Schema(description = "Category for common Steps") String commonStepCategory;
 }
