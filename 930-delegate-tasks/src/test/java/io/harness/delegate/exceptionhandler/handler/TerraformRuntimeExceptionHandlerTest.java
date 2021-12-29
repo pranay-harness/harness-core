@@ -1,11 +1,13 @@
 package io.harness.delegate.exceptionhandler.handler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_LOCATION;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_LOCATION_ARGUMENT;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_FAILED_TO_GET_EXISTING_WORKSPACES;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Message.MESSAGE_FAILED_TO_GET_EXISTING_WORKSPACES;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -40,6 +42,8 @@ public class TerraformRuntimeExceptionHandlerTest {
   private static final String TEST_ERROR_FAILED_WORKSPACES =
       "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1mFailed to get existing workspaces: Get \"http://127.0.0.1:8500/v1/kv/state-env:?keys=&separator=%2F\": dial tcp 127.0.0.1:8500: connect: connection refused\u001B[0m  \u001B[0m\u001B[0m\u001B[0m";
 
+  private static final String TEST_ERROR_INVALID_REGION_TF13 =
+      "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1mInvalid AWS Region: random\u001B[0m  \u001B[0m  on config.tf line 15, in provider \"aws\":   15: provider \"aws\" \u001B[4m{\u001B[0m \u001B[0m \u001B[0m\u001B[0m";
   TerraformRuntimeExceptionHandler handler = new TerraformRuntimeExceptionHandler();
 
   @Test
@@ -76,6 +80,17 @@ public class TerraformRuntimeExceptionHandlerTest {
         format(HINT_CHECK_TERRAFORM_CONFIG_LOCATION_ARGUMENT, "main.tf", "1", "cloud \"test\"", "argument \"test\""),
         "Something went wrong and we're not aware of this error or error itself is self explanatory",
         "Unknown error with terraform block");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testHandleUnknownErrorInvalidRegionOldTfVersion13() {
+    TerraformCliRuntimeException cliRuntimeException =
+        new TerraformCliRuntimeException("Terraform failed", "terraform refresh", TEST_ERROR_INVALID_REGION_TF13);
+    assertSingleErrorMessage(handler.handleException(cliRuntimeException),
+        format(HINT_CHECK_TERRAFORM_CONFIG_LOCATION, "config.tf", "15", "provider \"aws\""), null,
+        "terraform refresh failed with: Invalid AWS Region: random");
   }
 
   @Test
@@ -118,7 +133,9 @@ public class TerraformRuntimeExceptionHandlerTest {
         ExceptionUtils.cause(TerraformCommandExecutionException.class, exception);
 
     assertThat(hintException.getMessage()).isEqualTo(hint);
-    assertThat(explanationException.getMessage()).contains(explanation);
+    if (explanationException != null && isNotEmpty(explanationException.getMessage())) {
+      assertThat(explanationException.getMessage()).contains(explanation);
+    }
     assertThat(terraformException.getMessage()).contains(message);
   }
 
