@@ -176,6 +176,7 @@ import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1Status;
 import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
+import io.kubernetes.client.openapi.models.VersionInfo;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -202,8 +203,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import io.kubernetes.client.openapi.models.VersionInfo;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.networking.v1alpha3.Destination;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
@@ -2510,10 +2509,10 @@ public class K8sTaskHelperBase {
     } catch (Exception ex) {
       log.error(K8sExceptionConstants.KUBERNETES_CLUSTER_CONNECTION_VALIDATION_FAILED, ex);
       return ConnectorValidationResult.builder()
-              .status(ConnectivityStatus.FAILURE)
-              .errorSummary(K8sExceptionConstants.KUBERNETES_CLUSTER_CONNECTION_VALIDATION_FAILED)
-              .errors(new ArrayList<>(Arrays.asList(ErrorDetail.builder().message(ex.getMessage()).build())))
-              .build();
+          .status(ConnectivityStatus.FAILURE)
+          .errorSummary(K8sExceptionConstants.KUBERNETES_CLUSTER_CONNECTION_VALIDATION_FAILED)
+          .errors(new ArrayList<>(Arrays.asList(ErrorDetail.builder().message(ex.getMessage()).build())))
+          .build();
     }
   }
 
