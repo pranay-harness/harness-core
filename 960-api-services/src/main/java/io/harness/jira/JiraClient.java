@@ -10,6 +10,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.JiraClientException;
 import io.harness.network.Http;
 import io.harness.network.SafeHttpCall;
+import io.harness.validation.Validator;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,7 +69,9 @@ public class JiraClient {
    * @return the list of projects
    */
   public List<JiraProjectBasicNG> getProjects() {
-    return executeCall(restClient.getProjects(), "fetching projects");
+    List<JiraProjectBasicNG> projects = executeCall(restClient.getProjects(), "fetching projects");
+    Validator.notEmptyCheck("Project list is empty", projects);
+    return projects;
   }
 
   /**
