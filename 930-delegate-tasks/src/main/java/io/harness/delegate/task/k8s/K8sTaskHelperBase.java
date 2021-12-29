@@ -104,8 +104,6 @@ import io.harness.exception.KubernetesTaskException;
 import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.NestedExceptionUtils;
-import io.harness.exception.UrlNotProvidedException;
-import io.harness.exception.UrlNotReachableException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.filesystem.FileIo;
@@ -2502,8 +2500,7 @@ public class K8sTaskHelperBase {
     return true;
   }
 
-  public ConnectorValidationResult validate(
-      ConnectorConfigDTO connector, List<EncryptedDataDetail> encryptionDetailList) {
+  public ConnectorValidationResult validate(ConnectorConfigDTO connector, List<EncryptedDataDetail> encryptionDetailList) {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(connector, encryptionDetailList);
     try {
       VersionInfo versionInfo = kubernetesContainerService.getVersion(kubernetesConfig);
