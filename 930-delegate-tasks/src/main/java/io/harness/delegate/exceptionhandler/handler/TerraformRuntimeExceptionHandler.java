@@ -165,15 +165,18 @@ public class TerraformRuntimeExceptionHandler implements ExceptionHandler {
         nextError = errorLines.next();
         // in some cases the next error line will be '{', so just ignore it
         if (nextError.charAt(0) == '{') {
-          nextError = errorLines.next();
+          if (errorLines.hasNext()) {
+            nextError = errorLines.next();
+          }
         }
 
         StringBuilder explanation = new StringBuilder(nextError);
         while (errorLines.hasNext()) {
           explanation.append(' ').append(errorLines.next());
         }
-
-        explanations.add(explanation.toString());
+        if (!explanation.toString().equals("{")) {
+          explanations.add(explanation.toString());
+        }
       }
     }
 
