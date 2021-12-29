@@ -2500,7 +2500,8 @@ public class K8sTaskHelperBase {
     return true;
   }
 
-  public ConnectorValidationResult validate(ConnectorConfigDTO connector, List<EncryptedDataDetail> encryptionDetailList) {
+  public ConnectorValidationResult validate(
+      ConnectorConfigDTO connector, List<EncryptedDataDetail> encryptionDetailList) {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(connector, encryptionDetailList);
     try {
       VersionInfo versionInfo = kubernetesContainerService.getVersion(kubernetesConfig);
