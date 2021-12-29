@@ -59,6 +59,27 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.K8S_CANARY_DEPLOY)
   K8S_CANARY_DEPLOY_STEP(
       ModuleType.CD, EntityTypeConstants.K8S_CANARY_DEPLOY, IdentifierRef.class, EntityYamlRootNames.K8S_CANARY_DEPLOY),
+  @JsonProperty(EntityTypeConstants.K8S_APPLY)
+  K8S_APPLY_STEP(ModuleType.CD, EntityTypeConstants.K8S_APPLY, IdentifierRef.class, EntityYamlRootNames.K8S_APPLY),
+  @JsonProperty(EntityTypeConstants.K8S_BLUE_GREEN_DEPLOY)
+  K8S_BLUE_GREEN_DEPLOY_STEP(ModuleType.CD, EntityTypeConstants.K8S_BLUE_GREEN_DEPLOY, IdentifierRef.class,
+      EntityYamlRootNames.K8S_BLUE_GREEN_DEPLOY),
+  @JsonProperty(EntityTypeConstants.K8S_ROLLING_DEPLOY)
+  K8S_ROLLING_DEPLOY_STEP(ModuleType.CD, EntityTypeConstants.K8S_ROLLING_DEPLOY, IdentifierRef.class,
+      EntityYamlRootNames.K8S_ROLLING_DEPLOY),
+  @JsonProperty(EntityTypeConstants.K8S_ROLLING_ROLLBACK)
+  K8S_ROLLING_ROLLBACK_STEP(ModuleType.CD, EntityTypeConstants.K8S_ROLLING_ROLLBACK, IdentifierRef.class,
+      EntityYamlRootNames.K8S_ROLLING_ROLLBACK),
+  @JsonProperty(EntityTypeConstants.K8S_SCALE)
+  K8S_SCALE_STEP(ModuleType.CD, EntityTypeConstants.K8S_SCALE, IdentifierRef.class, EntityYamlRootNames.K8S_SCALE),
+  @JsonProperty(EntityTypeConstants.K8S_DELETE)
+  K8S_DELETE_STEP(ModuleType.CD, EntityTypeConstants.K8S_DELETE, IdentifierRef.class, EntityYamlRootNames.K8S_DELETE),
+  @JsonProperty(EntityTypeConstants.K8S_BG_SWAP_SERVICES)
+  K8S_BG_SWAP_SERVICES_STEP(ModuleType.CD, EntityTypeConstants.K8S_BG_SWAP_SERVICES, IdentifierRef.class,
+      EntityYamlRootNames.K8S_SWAP_SERVICES),
+  @JsonProperty(EntityTypeConstants.K8S_CANARY_DELETE)
+  K8S_CANARY_DELETE_STEP(
+      ModuleType.CD, EntityTypeConstants.K8S_CANARY_DELETE, IdentifierRef.class, EntityYamlRootNames.K8S_CANARY_DELETE),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
   CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, IdentifierRef.class, EntityYamlRootNames.CONNECTOR),
   @JsonProperty(EntityTypeConstants.SECRETS)

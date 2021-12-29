@@ -52,6 +52,14 @@ public class EntityYamlRootNames {
   public static String JIRA_UPDATE = "JiraUpdate";
   public static String SHELL_SCRIPT = "ShellScript";
   public static String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
+  public static String K8S_APPLY = "K8sApply";
+  public static String K8S_BLUE_GREEN_DEPLOY = "K8sBlueGreenDeploy";
+  public static String K8S_ROLLING_DEPLOY = "K8sRollingDeploy";
+  public static String K8S_ROLLING_ROLLBACK = "K8sRollingRollback";
+  public static String K8S_SCALE = "K8sScale";
+  public static String K8S_DELETE = "K8sDelete";
+  public static String K8S_SWAP_SERVICES = "K8sBGSwapServices";
+  public static String K8S_CANARY_DELETE = "K8sCanaryDelete";
   public static String SERVICENOW_APPROVAL = "ServiceNowApproval";
   public static String JIRA_APPROVAL = "JiraApproval";
   public static String HARNESS_APPROVAL = "HarnessApproval";
