@@ -30,6 +30,7 @@ import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.springdata.TransactionHelper;
 import io.harness.waiter.WaitNotifyEngine;
@@ -210,9 +211,8 @@ public class IdentityNodeExecutionStrategy
   @Override
   public void resumeNodeExecution(Ambiance ambiance, Map<String, ByteString> response, boolean asyncError) {
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
-    // Todo: Make
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-
+    NodeExecution nodeExecution =
+        nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.fieldsForResume);
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       identityNodeResumeHelper.resume(nodeExecution, response, asyncError, SERVICE_NAME_IDENTITY);
     } catch (Exception exception) {

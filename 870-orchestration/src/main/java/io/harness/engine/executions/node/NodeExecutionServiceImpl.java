@@ -47,6 +47,7 @@ import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
 import java.util.ArrayList;
@@ -73,6 +74,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @Slf4j
 @OwnedBy(PIPELINE)
 public class NodeExecutionServiceImpl implements NodeExecutionService {
+  private static Set<String> DEFAULT_FIELDS = ImmutableSet.of(NodeExecutionKeys.oldRetry);
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;
@@ -99,9 +101,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
 
   @Override
   public NodeExecution getWithFieldsIncluded(String nodeExecutionId, Set<String> fieldsToInclude) {
-    Set<String> defaultFields = new HashSet<>();
-    defaultFields.add(NodeExecutionKeys.oldRetry);
-    fieldsToInclude.addAll(defaultFields);
+    fieldsToInclude.addAll(DEFAULT_FIELDS);
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
     for (String field : fieldsToInclude) {
       query.fields().include(field);
@@ -207,6 +207,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       @NonNull String nodeExecutionId, @NonNull Consumer<Update> ops, Set<String> fieldsToBeIncluded) {
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
     fieldsToBeIncluded.addAll(NodeProjectionUtils.fieldsForNodeUpdateObserver);
+    fieldsToBeIncluded.addAll(DEFAULT_FIELDS);
     for (String field : fieldsToBeIncluded) {
       query.fields().include(field);
     }
@@ -275,12 +276,34 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
+  public NodeExecution updateStatusWithOpsV2(@NonNull String nodeExecutionId, @NonNull Status status,
+      Consumer<Update> ops, EnumSet<Status> overrideStatusSet, Set<String> fieldsToBeIncluded) {
+    Update updateOps = new Update();
+    if (ops != null) {
+      ops.accept(updateOps);
+    }
+    return updateStatusWithUpdate(nodeExecutionId, status, updateOps, overrideStatusSet, fieldsToBeIncluded, true);
+  }
+
+  @Override
   public NodeExecution updateStatusWithUpdate(
       @NotNull String nodeExecutionId, @NotNull Status status, Update ops, EnumSet<Status> overrideStatusSet) {
+    return updateStatusWithUpdate(nodeExecutionId, status, ops, overrideStatusSet, new HashSet<>(), false);
+  }
+
+  @Override
+  public NodeExecution updateStatusWithUpdate(@NotNull String nodeExecutionId, @NotNull Status status, Update ops,
+      EnumSet<Status> overrideStatusSet, Set<String> includedFields, boolean shouldUseProjections) {
     EnumSet<Status> allowedStartStatuses =
         isEmpty(overrideStatusSet) ? StatusUtils.nodeAllowedStartSet(status) : overrideStatusSet;
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId))
                       .addCriteria(where(NodeExecutionKeys.status).in(allowedStartStatuses));
+    if (shouldUseProjections) {
+      includedFields.addAll(DEFAULT_FIELDS);
+      for (String field : includedFields) {
+        query.fields().include(field);
+      }
+    }
     Update updateOps =
         ops.set(NodeExecutionKeys.status, status).set(NodeExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
     NodeExecution updated = mongoTemplate.findAndModify(query, updateOps, returnNewOptions, NodeExecution.class);

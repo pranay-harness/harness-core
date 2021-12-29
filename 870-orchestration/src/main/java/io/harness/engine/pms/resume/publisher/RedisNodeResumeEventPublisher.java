@@ -2,10 +2,8 @@ package io.harness.engine.pms.resume.publisher;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.engine.pms.execution.strategy.identity.IdentityStep;
-import io.harness.execution.NodeExecution;
 import io.harness.plan.Node;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
@@ -27,20 +25,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
   @Inject private PmsEventSender eventSender;
-  @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
-  public void publishEvent(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError) {
-    Node planNode = nodeExecution.getNode();
+  public void publishEvent(ResumeMetadata resumeMetadata, Map<String, ByteString> responseMap, boolean isError) {
+    Node planNode = resumeMetadata.getPlanNode();
     String serviceName = planNode.getServiceName();
     NodeResumeEvent.Builder resumeEventBuilder = NodeResumeEvent.newBuilder()
-                                                     .setAmbiance(nodeExecution.getAmbiance())
-                                                     .setExecutionMode(nodeExecution.getMode())
-                                                     .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+                                                     .setAmbiance(resumeMetadata.getAmbiance())
+                                                     .setExecutionMode(resumeMetadata.getMode())
+                                                     .setStepParameters(resumeMetadata.getResolvedStepParameters())
                                                      .setAsyncError(isError)
                                                      .putAllResponse(responseMap);
 
-    ChainDetails chainDetails = buildChainDetails(nodeExecution);
+    ChainDetails chainDetails = buildChainDetails(resumeMetadata);
     if (chainDetails != null) {
       resumeEventBuilder.setChainDetails(chainDetails);
     }
@@ -51,16 +48,16 @@ public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
 
   @Override
   public void publishEventForIdentityNode(
-      NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError, String serviceName) {
+      ResumeMetadata resumeMetadata, Map<String, ByteString> responseMap, boolean isError, String serviceName) {
     NodeResumeEvent.Builder resumeEventBuilder =
         NodeResumeEvent.newBuilder()
-            .setAmbiance(IdentityStep.modifyAmbiance(nodeExecution.getAmbiance()))
-            .setExecutionMode(nodeExecution.getMode())
-            .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+            .setAmbiance(IdentityStep.modifyAmbiance(resumeMetadata.getAmbiance()))
+            .setExecutionMode(resumeMetadata.getMode())
+            .setStepParameters(resumeMetadata.getResolvedStepParameters())
             .setAsyncError(isError)
             .putAllResponse(responseMap);
 
-    ChainDetails chainDetails = buildChainDetails(nodeExecution);
+    ChainDetails chainDetails = buildChainDetails(resumeMetadata);
     if (chainDetails != null) {
       resumeEventBuilder.setChainDetails(chainDetails);
     }
@@ -69,21 +66,21 @@ public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
         PmsEventCategory.NODE_RESUME, serviceName, true);
   }
 
-  public ChainDetails buildChainDetails(NodeExecution nodeExecution) {
-    ExecutionMode mode = nodeExecution.getMode();
+  public ChainDetails buildChainDetails(ResumeMetadata resumeMetadata) {
+    ExecutionMode mode = resumeMetadata.getMode();
 
     if (mode == ExecutionMode.TASK_CHAIN || mode == ExecutionMode.CHILD_CHAIN) {
       switch (mode) {
         case TASK_CHAIN:
           TaskChainExecutableResponse lastLinkResponse =
-              Objects.requireNonNull(nodeExecution.obtainLatestExecutableResponse()).getTaskChain();
+              Objects.requireNonNull(resumeMetadata.getLatestExecutableResponse()).getTaskChain();
           return ChainDetails.newBuilder()
               .setIsEnd(lastLinkResponse.getChainEnd())
               .setPassThroughData(lastLinkResponse.getPassThroughData())
               .build();
         case CHILD_CHAIN:
           ChildChainExecutableResponse lastChildChainExecutableResponse = Preconditions.checkNotNull(
-              Objects.requireNonNull(nodeExecution.obtainLatestExecutableResponse()).getChildChain());
+              Objects.requireNonNull(resumeMetadata.getLatestExecutableResponse()).getChildChain());
           boolean chainEnd =
               lastChildChainExecutableResponse.getLastLink() || lastChildChainExecutableResponse.getSuspend();
           return ChainDetails.newBuilder()
