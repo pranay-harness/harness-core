@@ -28,6 +28,13 @@ public class JiraTaskNGHandler {
       jiraClient.getProjects();
       return JiraTaskNGResponse.builder().build();
     } catch (Exception ex) {
+      if (ex.getMessage().equals("Project list is empty")) {
+        log.error("Fetched Project list is empty", ex);
+        throw NestedExceptionUtils.hintWithExplanationException(
+            "Check if the Jira credentials are correct and you have necessary permissions to Jira Projects",
+            "Either the credentials provided are invalid or the user does not have necessary permissions to Jira Projects",
+            new InvalidArtifactServerException("Unable to fetch projects", USER));
+      }
       String errorMessage = "Failed to fetch projects during credential validation";
       log.error(errorMessage, ex);
       throw NestedExceptionUtils.hintWithExplanationException(
