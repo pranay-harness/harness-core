@@ -86,7 +86,7 @@ public class DelegateAgentManagerClientFactory implements Provider<DelegateAgent
 
       SSLContext sslContext = SSLContext.getInstance("TLS");
       sslContext.init(null, trustManagers, null);
-
+      log.info("Entering DelegateAgentManagerClientFactory {} ", Http.connectionPool);
       return Http.getOkHttpClientWithProxyAuthSetup()
           .hostnameVerifier(new NoopHostnameVerifier())
           .connectionPool(Http.connectionPool)
