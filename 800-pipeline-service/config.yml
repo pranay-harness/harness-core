@@ -356,3 +356,17 @@ planCreatorMergeServicePoolConfig:
   maxPoolSize: ${PLAN_CREATOR_MERGE_SERVICE_EXECUTOR_POOL_MAX_SIZE:-10}
   idleTime: ${PLAN_CREATOR_MERGE_SERVICE_EXECUTOR_POOL_IDLE_TIME:-30}
   timeUnit: ${PLAN_CREATOR_MERGE_SERVICE_EXECUTOR_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
+pipelineRedisEventsConfig:
+  setupUsage:
+    maxTopicSize: ${SETUP_USAGE_MAX_TOPIC_SIZE:-10000}
+  planNotifyEvent:
+    maxTopicSize: ${PLAN_NOTIFY_EVENT_MAX_TOPIC_SIZE:-5000}
+  webhookPayloadDetails:
+    maxTopicSize: ${WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE:-10000}
+  entityCrud:
+    maxTopicSize: ${ENTITY_CRUD_MAX_TOPIC_SIZE:-100000}
+  orchestrationNotifyEvent:
+    maxTopicSize: ${PMS_ORCHESTRATION_NOTIFY_EVENT_MAX_TOPIC_SIZE:-5000}
+  pipelineSdkResponseEvent:
+    maxTopicSize: ${PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE:-5000}

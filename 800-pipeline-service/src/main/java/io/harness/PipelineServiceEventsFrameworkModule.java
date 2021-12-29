@@ -6,7 +6,6 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ORCHESTRATION_
 import static io.harness.eventsframework.EventsFrameworkConstants.PLAN_NOTIFY_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_REQUEST_PAYLOAD_DETAILS;
-import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
@@ -19,6 +18,7 @@ import io.harness.eventsframework.impl.redis.GitAwareRedisProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.eventsframework.impl.redis.RedisUtils;
+import io.harness.pms.sdk.core.PipelineRedisEventsConfig;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
@@ -30,6 +30,7 @@ import org.redisson.api.RedissonClient;
 @OwnedBy(PIPELINE)
 public class PipelineServiceEventsFrameworkModule extends AbstractModule {
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  private final PipelineRedisEventsConfig pipelineRedisEventsConfig;
 
   @Override
   protected void configure() {
@@ -60,33 +61,33 @@ public class PipelineServiceEventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
           .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redissonClient,
-              EventsFrameworkConstants.SETUP_USAGE_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId(),
+              pipelineRedisEventsConfig.getSetupUsage().getMaxTopicSize(), PIPELINE_SERVICE.getServiceId(),
               redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.PLAN_NOTIFY_EVENT_PRODUCER))
           .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.PLAN_NOTIFY_EVENT_TOPIC, redissonClient,
-              EventsFrameworkConstants.PLAN_NOTIFY_EVENT_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId(),
+              pipelineRedisEventsConfig.getPlanNotifyEvent().getMaxTopicSize(), PIPELINE_SERVICE.getServiceId(),
               redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(WEBHOOK_REQUEST_PAYLOAD_DETAILS))
           .toInstance(RedisProducer.of(WEBHOOK_REQUEST_PAYLOAD_DETAILS, redissonClient,
-              WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId(),
+              pipelineRedisEventsConfig.getWebhookPayloadDetails().getMaxTopicSize(), PIPELINE_SERVICE.getServiceId(),
               redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redissonClient,
-              EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId(),
+              pipelineRedisEventsConfig.getEntityCrud().getMaxTopicSize(), PIPELINE_SERVICE.getServiceId(),
               redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(ORCHESTRATION_LOG))
-          .toInstance(
-              RedisProducer.of(ORCHESTRATION_LOG, redissonClient, EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE,
-                  PIPELINE_SERVICE.getServiceId(), redisConfig.getEnvNamespace()));
+          .toInstance(RedisProducer.of(ORCHESTRATION_LOG, redissonClient,
+              pipelineRedisEventsConfig.getEntityCrud().getMaxTopicSize(), PIPELINE_SERVICE.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT))
           .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT, redissonClient,
-              EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId(),
-              redisConfig.getEnvNamespace()));
+              pipelineRedisEventsConfig.getOrchestrationNotifyEvent().getMaxTopicSize(),
+              PIPELINE_SERVICE.getServiceId(), redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, PIPELINE_SERVICE.getServiceId(),
