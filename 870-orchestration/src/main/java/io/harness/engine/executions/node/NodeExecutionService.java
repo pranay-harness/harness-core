@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import lombok.NonNull;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PIPELINE)
@@ -45,12 +46,18 @@ public interface NodeExecutionService {
   NodeExecution updateStatusWithOps(@NonNull String nodeExecutionId, @NonNull Status targetStatus, Consumer<Update> ops,
       EnumSet<Status> overrideStatusSet);
 
+  NodeExecution updateStatusWithOpsV2(@NonNull String nodeExecutionId, @NonNull Status targetStatus,
+      Consumer<Update> ops, EnumSet<Status> overrideStatusSet, Set<String> fieldsToBeIncluded);
+
   NodeExecution updateStatusWithUpdate(
       @NonNull String nodeExecutionId, @NonNull Status targetStatus, Update ops, EnumSet<Status> overrideStatusSet);
 
   NodeExecution save(NodeExecution nodeExecution);
 
   NodeExecution save(NodeExecutionProto nodeExecution);
+
+  NodeExecution updateStatusWithUpdate(@NotNull String nodeExecutionId, @NotNull Status status, Update ops,
+      EnumSet<Status> overrideStatusSet, Set<String> includedFields, boolean shouldUseProjections);
 
   long markLeavesDiscontinuing(String planExecutionId, List<String> leafInstanceIds);
 
