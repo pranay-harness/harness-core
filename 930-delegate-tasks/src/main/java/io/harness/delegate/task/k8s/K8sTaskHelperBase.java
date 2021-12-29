@@ -188,6 +188,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -203,6 +204,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import io.kubernetes.client.openapi.models.VersionInfo;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.networking.v1alpha3.Destination;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
@@ -2503,14 +2506,16 @@ public class K8sTaskHelperBase {
       ConnectorConfigDTO connector, List<EncryptedDataDetail> encryptionDetailList) {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(connector, encryptionDetailList);
     try {
-      kubernetesContainerService.validateMasterUrl(kubernetesConfig);
+      VersionInfo versionInfo = kubernetesContainerService.getVersion(kubernetesConfig);
+      log.debug(versionInfo.toString());
       return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
-    } catch (UrlNotProvidedException ex) {
-      throw NestedExceptionUtils.hintWithExplanationException(
-          K8sExceptionConstants.PROVIDE_MASTER_URL_HINT, K8sExceptionConstants.PROVIDE_MASTER_URL_EXPLANATION, ex);
-    } catch (UrlNotReachableException ex) {
-      throw NestedExceptionUtils.hintWithExplanationException(
-          K8sExceptionConstants.INCORRECT_MASTER_URL_HINT, K8sExceptionConstants.INCORRECT_MASTER_URL_EXPLANATION, ex);
+    } catch (Exception ex) {
+      log.error(K8sExceptionConstants.KUBERNETES_CLUSTER_CONNECTION_VALIDATION_FAILED, ex);
+      return ConnectorValidationResult.builder()
+              .status(ConnectivityStatus.FAILURE)
+              .errorSummary(K8sExceptionConstants.KUBERNETES_CLUSTER_CONNECTION_VALIDATION_FAILED)
+              .errors(new ArrayList<>(Arrays.asList(ErrorDetail.builder().message(ex.getMessage()).build())))
+              .build();
     }
   }
 
