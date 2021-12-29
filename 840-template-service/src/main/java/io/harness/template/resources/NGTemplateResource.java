@@ -401,8 +401,8 @@ public class NGTemplateResource {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(TEMPLATE, null), PermissionTypes.TEMPLATE_VIEW_PERMISSION);
     log.info(String.format("Get List of templates in project: %s, org: %s, account: %s", projectId, orgId, accountId));
-    Criteria criteria = templateServiceHelper.formCriteria(
-        accountId, orgId, projectId, filterIdentifier, filterProperties, false, searchTerm, false);
+    Criteria criteria = templateServiceHelper.formCriteria(accountId, orgId, projectId, filterIdentifier,
+        filterProperties, false, searchTerm, includeAllTemplatesAccessibleAtScope);
 
     // Adding criteria needed for ui homepage
     criteria = templateServiceHelper.formCriteria(criteria, templateListType);
