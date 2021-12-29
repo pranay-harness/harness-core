@@ -158,7 +158,8 @@ public class PlanNodeExecutionStrategy
   @Override
   public void resumeNodeExecution(Ambiance ambiance, Map<String, ByteString> response, boolean asyncError) {
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution =
+        nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.fieldsForResume);
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       if (!StatusUtils.resumableStatuses().contains(nodeExecution.getStatus())) {
         log.warn("NodeExecution is no longer in RESUMABLE state Uuid: {} Status {} ", nodeExecution.getUuid(),
@@ -167,8 +168,8 @@ public class PlanNodeExecutionStrategy
       }
       if (nodeExecution.getStatus() != RUNNING) {
         log.info("Marking the nodeExecution with id {} as RUNNING", nodeExecutionId);
-        nodeExecution = Preconditions.checkNotNull(
-            nodeExecutionService.updateStatusWithOps(nodeExecutionId, RUNNING, null, EnumSet.noneOf(Status.class)));
+        nodeExecution = Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOpsV2(
+            nodeExecutionId, RUNNING, null, EnumSet.noneOf(Status.class), NodeProjectionUtils.fieldsForResume));
       } else {
         log.warn("NodeExecution with id {} is already in Running status", nodeExecutionId);
       }

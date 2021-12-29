@@ -205,7 +205,8 @@ public class PlanNodeExecutionStrategyTest extends OrchestrationTestBase {
     NodeExecution nodeExecution =
         NodeExecution.builder().uuid(nodeExecutionId).ambiance(ambiance).status(Status.RUNNING).build();
     Map<String, ByteString> responseMap = ImmutableMap.of(generateUuid(), ByteString.copyFromUtf8(generateUuid()));
-    when(nodeExecutionService.get(eq(nodeExecutionId))).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(eq(nodeExecutionId), eq(NodeProjectionUtils.fieldsForResume)))
+        .thenReturn(nodeExecution);
     executionStrategy.resumeNodeExecution(ambiance, responseMap, false);
     verify(resumeHelper).resume(eq(nodeExecution), eq(responseMap), eq(false));
   }
