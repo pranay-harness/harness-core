@@ -35,6 +35,8 @@ import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTarg
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTargetSpec.WeeklyCalendarSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
 import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator.SLOHealthIndicatorKeys;
+import io.harness.cvng.servicelevelobjective.services.api.SLOHealthIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
@@ -63,6 +65,7 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   @Inject MonitoredServiceService monitoredServiceService;
   @Inject VerificationTaskService verificationTaskService;
   @Inject ServiceLevelIndicatorService serviceLevelIndicatorService;
+  @Inject SLOHealthIndicatorService sloHealthIndicatorService;
   @Inject HPersistence hPersistence;
   String accountId;
   String orgIdentifier;
@@ -146,6 +149,19 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testCreate_validateSLOHealthIndicatorCreationTest() {
+    ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    createMonitoredService();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    SLOHealthIndicator sloHealthIndicator =
+        sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO.getIdentifier());
+    assertThat(sloHealthIndicator.getErrorBudgetRemainingPercentage()).isEqualTo(100.0);
+  }
+
+  @Test
   @Owner(developers = DEEPAK_CHHIKARA)
   @Category(UnitTests.class)
   public void testCreate_WithoutTagsSuccess() {
@@ -221,6 +237,25 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
     ServiceLevelObjectiveResponse updateServiceLevelObjectiveResponse =
         serviceLevelObjectiveService.update(projectParams, sloDTO.getIdentifier(), sloDTO);
     assertThat(updateServiceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testUpdate_validateSLOHealthIndicatorUpdate() {
+    ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    createMonitoredService();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    SLOHealthIndicator existingSloHealthIndicator =
+        sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO.getIdentifier());
+    sloDTO.setDescription("newDescription");
+    ServiceLevelObjectiveResponse updatedServiceLevelObjectiveResponse =
+        serviceLevelObjectiveService.update(projectParams, sloDTO.getIdentifier(), sloDTO);
+    SLOHealthIndicator updatedSloHealthIndicator =
+        sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO.getIdentifier());
+    assertThat(updatedSloHealthIndicator.getLastUpdatedAt())
+        .isGreaterThan(existingSloHealthIndicator.getLastUpdatedAt());
   }
 
   @Test
@@ -405,23 +440,18 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
     createMonitoredService();
 
     ServiceLevelObjectiveDTO sloDTO1 = builderFactory.getServiceLevelObjectiveDTOBuilder().identifier("id1").build();
-    SLOHealthIndicator sloHealthIndicator1 = builderFactory.sLOHealthIndicatorBuilder()
-                                                 .serviceLevelObjectiveIdentifier(sloDTO1.getIdentifier())
-                                                 .errorBudgetRemainingPercentage(10)
-                                                 .errorBudgetRisk(ErrorBudgetRisk.UNHEALTHY)
-                                                 .build();
-    hPersistence.save(sloHealthIndicator1);
+    serviceLevelObjectiveService.create(projectParams, sloDTO1);
+    hPersistence.update(sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO1.getIdentifier()),
+        hPersistence.createUpdateOperations(SLOHealthIndicator.class)
+            .set(SLOHealthIndicatorKeys.errorBudgetRemainingPercentage, 10)
+            .set(SLOHealthIndicatorKeys.errorBudgetRisk, ErrorBudgetRisk.getFromPercentage(10)));
 
     ServiceLevelObjectiveDTO sloDTO2 = builderFactory.getServiceLevelObjectiveDTOBuilder().identifier("id2").build();
-    SLOHealthIndicator sloHealthIndicator2 = builderFactory.sLOHealthIndicatorBuilder()
-                                                 .serviceLevelObjectiveIdentifier(sloDTO2.getIdentifier())
-                                                 .errorBudgetRemainingPercentage(-10)
-                                                 .errorBudgetRisk(ErrorBudgetRisk.EXHAUSTED)
-                                                 .build();
-    hPersistence.save(sloHealthIndicator2);
-
-    serviceLevelObjectiveService.create(projectParams, sloDTO1);
     serviceLevelObjectiveService.create(projectParams, sloDTO2);
+    hPersistence.update(sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO2.getIdentifier()),
+        hPersistence.createUpdateOperations(SLOHealthIndicator.class)
+            .set(SLOHealthIndicatorKeys.errorBudgetRemainingPercentage, -10)
+            .set(SLOHealthIndicatorKeys.errorBudgetRisk, ErrorBudgetRisk.getFromPercentage(-10)));
 
     PageResponse<ServiceLevelObjectiveResponse> serviceLevelObjectiveResponse =
         serviceLevelObjectiveService.get(projectParams, 0, 1,
@@ -435,23 +465,18 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   public void testGetSLOForDashboard_errorBudgetRiskBasedQuery() {
     createMonitoredService();
     ServiceLevelObjectiveDTO sloDTO1 = builderFactory.getServiceLevelObjectiveDTOBuilder().identifier("id1").build();
-    SLOHealthIndicator sloHealthIndicator1 = builderFactory.sLOHealthIndicatorBuilder()
-                                                 .serviceLevelObjectiveIdentifier(sloDTO1.getIdentifier())
-                                                 .errorBudgetRemainingPercentage(10)
-                                                 .errorBudgetRisk(ErrorBudgetRisk.UNHEALTHY)
-                                                 .build();
-    hPersistence.save(sloHealthIndicator1);
+    serviceLevelObjectiveService.create(projectParams, sloDTO1);
+    hPersistence.update(sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO1.getIdentifier()),
+        hPersistence.createUpdateOperations(SLOHealthIndicator.class)
+            .set(SLOHealthIndicatorKeys.errorBudgetRemainingPercentage, 10)
+            .set(SLOHealthIndicatorKeys.errorBudgetRisk, ErrorBudgetRisk.getFromPercentage(10)));
 
     ServiceLevelObjectiveDTO sloDTO2 = builderFactory.getServiceLevelObjectiveDTOBuilder().identifier("id2").build();
-    SLOHealthIndicator sloHealthIndicator2 = builderFactory.sLOHealthIndicatorBuilder()
-                                                 .serviceLevelObjectiveIdentifier(sloDTO2.getIdentifier())
-                                                 .errorBudgetRemainingPercentage(-10)
-                                                 .errorBudgetRisk(ErrorBudgetRisk.EXHAUSTED)
-                                                 .build();
-    hPersistence.save(sloHealthIndicator2);
-
-    serviceLevelObjectiveService.create(projectParams, sloDTO1);
     serviceLevelObjectiveService.create(projectParams, sloDTO2);
+    hPersistence.update(sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO2.getIdentifier()),
+        hPersistence.createUpdateOperations(SLOHealthIndicator.class)
+            .set(SLOHealthIndicatorKeys.errorBudgetRemainingPercentage, -10)
+            .set(SLOHealthIndicatorKeys.errorBudgetRisk, ErrorBudgetRisk.getFromPercentage(-10)));
 
     PageResponse<ServiceLevelObjectiveResponse> serviceLevelObjectiveResponse =
         serviceLevelObjectiveService.getSLOForDashboard(projectParams,
@@ -542,6 +567,7 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
                  .type(ServiceLevelIndicatorType.AVAILABILITY)
                  .target(SLOTarget.builder()
                              .type(SLOTargetType.CALENDER)
+                             .sloTargetPercentage(80.0)
                              .spec(CalenderSLOTargetSpec.builder()
                                        .type(SLOCalenderType.WEEKLY)
                                        .spec(WeeklyCalendarSpec.builder().dayOfWeek(DayOfWeek.MONDAY).build())
