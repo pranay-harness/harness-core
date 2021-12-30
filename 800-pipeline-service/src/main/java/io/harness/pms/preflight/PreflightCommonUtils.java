@@ -25,6 +25,16 @@ public class PreflightCommonUtils {
         .build();
   }
 
+  public PreFlightEntityErrorInfo getInvalidConnectorInfo() {
+    return PreFlightEntityErrorInfo.builder()
+        .summary("Connector not valid")
+        .causes(Collections.singletonList(
+            PreFlightCause.builder().cause("The connector YAML provided on git is invalid").build()))
+        .resolution(
+            Collections.singletonList(PreFlightResolution.builder().resolution("Fix the connector yaml").build()))
+        .build();
+  }
+
   public PreFlightEntityErrorInfo getInternalIssueErrorInfo() {
     return PreFlightEntityErrorInfo.builder()
         .summary("Error connecting to systems upstream")

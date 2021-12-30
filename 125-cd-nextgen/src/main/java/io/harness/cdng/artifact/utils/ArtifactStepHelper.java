@@ -14,6 +14,7 @@ import io.harness.cdng.artifact.mappers.ArtifactConfigToDelegateReqMapper;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.connector.utils.ConnectorUtils;
 import io.harness.delegate.TaskSelector;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
@@ -113,6 +114,7 @@ public class ArtifactStepHelper {
       throw new InvalidRequestException(
           String.format("Connector not found for identifier : [%s]", connectorIdentifierRef), WingsException.USER);
     }
+    ConnectorUtils.checkForConnectorValidityOrThrow(connectorDTO.get());
     return connectorDTO.get().getConnector();
   }
 
