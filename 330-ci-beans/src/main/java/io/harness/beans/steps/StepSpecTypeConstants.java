@@ -15,6 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 public interface StepSpecTypeConstants {
   String RUN = "Run";
   String RUN_TEST = "RunTests";
+  String SECURITY = "Security";
   String PLUGIN = "Plugin";
   String RESTORE_CACHE_GCS = "RestoreCacheGCS";
   String RESTORE_CACHE_S3 = "RestoreCacheS3";

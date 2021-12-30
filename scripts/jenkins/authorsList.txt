@@ -219,4 +219,14 @@ Hodaya Gamliel hodaya.gamliel@harness.io
 Amnon Danieli amnon.danieli@harness.io
 Gaurav Jain gaurav.jain@harness.io
 Trunapushpa trunapushpa.surkar@harness.io
-David Warren david.warren@harness.io
+Anders Hokinson anders.hokinson@harness.io
+Andrew Mollohan andrew.mollohan@harness.io
+Aubrey Klaft aubrey.klaft@harness.io>
+Bruce McPherson bruce.mcpherson@harness.io>
+Chris Hamper christopher.hamper@harness.io
+David McNamara david.mcnamara@harness.io
+Gabriel Aboy gabriel.aboy@harness.io
+Joseph Sentongo joseph.sentongo@harness.io
+Sergey Bobrov sergey.bobrov@harness.io
+William Wissemann william.wissemann@harness.io
+

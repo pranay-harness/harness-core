@@ -87,6 +87,14 @@ public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvide
                                   .setType(StepSpecTypeConstants.PLUGIN)
                                   .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
                                   .build();
+
+    StepInfo securityStepInfo = StepInfo.newBuilder()
+                                    .setName("Security")
+                                    .setType(StepSpecTypeConstants.SECURITY)
+                                    .setFeatureRestrictionName(FeatureRestrictionName.SECURITY.name())
+                                    .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Security").build())
+                                    .build();
+
     StepInfo restoreCacheFromGCS = StepInfo.newBuilder()
                                        .setName("Restore Cache From GCS")
                                        .setType(StepSpecTypeConstants.RESTORE_CACHE_GCS)
@@ -161,6 +169,7 @@ public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     stepInfos.add(restoreCacheFromGCS);
     stepInfos.add(runTestsStepInfo);
     stepInfos.add(pluginStepInfo);
+    stepInfos.add(securityStepInfo);
     stepInfos.add(restoreCacheFromS3);
     stepInfos.add(dockerPushBuild);
     stepInfos.add(uploadArtifactsToJfrogBuild);

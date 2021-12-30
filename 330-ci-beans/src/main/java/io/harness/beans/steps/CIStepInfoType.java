@@ -23,6 +23,7 @@ public enum CIStepInfoType {
   GIT_CLONE(CI_LITE_ENGINE, "GitClone"),
   INITIALIZE_TASK(CI_LITE_ENGINE, "liteEngineTask"),
   RUN_TESTS(CI_LITE_ENGINE, "RunTests"),
+  SECURITY(CI_LITE_ENGINE, "Security"),
   ECR(CI_LITE_ENGINE, "BuildAndPushECR"),
   GCR(CI_LITE_ENGINE, "BuildAndPushGCR"),
   DOCKER(CI_LITE_ENGINE, "BuildAndPushDockerRegistry"),

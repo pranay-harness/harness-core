@@ -25,6 +25,7 @@ import io.harness.states.RunStep;
 import io.harness.states.RunTestsStep;
 import io.harness.states.SaveCacheGCSStep;
 import io.harness.states.SaveCacheS3Step;
+import io.harness.states.SecurityStep;
 import io.harness.states.UploadToArtifactoryStep;
 import io.harness.states.UploadToGCSStep;
 import io.harness.states.UploadToS3Step;
@@ -45,6 +46,7 @@ public class ExecutionRegistrar {
     engineSteps.put(CleanupStep.STEP_TYPE, CleanupStep.class);
     engineSteps.put(RunStep.STEP_TYPE, RunStep.class);
     engineSteps.put(PluginStep.STEP_TYPE, PluginStep.class);
+    engineSteps.put(SecurityStep.STEP_TYPE, SecurityStep.class);
     engineSteps.put(ECRStep.STEP_TYPE, ECRStep.class);
     engineSteps.put(GCRStep.STEP_TYPE, GCRStep.class);
     engineSteps.put(DockerStep.STEP_TYPE, DockerStep.class);

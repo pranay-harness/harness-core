@@ -3,6 +3,7 @@ io.harness.ngpipeline.status.BuildStatusUpdateParameter
 io.harness.yaml.core.properties.NGProperties
 io.harness.steps.approval.step.jira.JiraApprovalOutcome
 io.harness.beans.steps.stepinfo.PluginStepInfo
+io.harness.beans.steps.stepinfo.SecurityStepInfo
 io.harness.plancreator.steps.internal.FlagConfigurationStepInfo
 barrierSpecParameters
 io.harness.steps.jira.update.beans.TransitionTo

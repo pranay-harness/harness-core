@@ -64,6 +64,9 @@ public enum FeatureRestrictionName {
   TERRAFORM_ROLLBACK,
   INTEGRATED_APPROVALS_WITH_SERVICE_NOW,
 
+  // STO Features
+  SECURITY,
+
   // FF Features
   DEVELOPERS,
   MONTHLY_ACTIVE_USERS;
