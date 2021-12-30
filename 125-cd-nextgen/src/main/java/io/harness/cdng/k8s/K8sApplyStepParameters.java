@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.ParameterFieldBooleanValueHelper;
+import io.harness.cdng.CDStepHelper;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.plancreator.steps.TaskSelectorYaml;
@@ -38,7 +38,7 @@ public class K8sApplyStepParameters extends K8sApplyBaseStepInfo implements K8sS
   @JsonIgnore
   public List<String> getCommandUnits() {
     if (!ParameterField.isNull(skipSteadyStateCheck)
-        && ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(skipSteadyStateCheck,
+        && CDStepHelper.getParameterFieldBooleanValue(skipSteadyStateCheck,
             K8sApplyBaseStepInfoKeys.skipSteadyStateCheck,
             String.format("%s step", ExecutionNodeType.K8S_APPLY.getYamlType()))) {
       return Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init,
