@@ -3,10 +3,14 @@ package io.harness.delegate.exceptionhandler.handler;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.ERROR_CONFIGURING_S3_BACKEND;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.ERROR_INSPECTING_STATE_IN_BACKEND;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.ERROR_VALIDATING_PROVIDER_CRED;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.FAILED_TO_GET_EXISTING_WORKSPACES;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.FAILED_TO_READ_MODULE_DIRECTORY;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.INVALID_CREDENTIALS_AWS;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.NO_VALID_CRED_FOUND_FOR_AWS;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.NO_VALID_CRED_FOUND_FOR_S3_BACKEND;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Explanation.EXPLANATION_INVALID_CREDENTIALS_AWS;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_FIE;
@@ -15,6 +19,7 @@ import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hin
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_ERROR_INSPECTING_STATE_IN_BACKEND;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_FAILED_TO_GET_EXISTING_WORKSPACES;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_INVALID_CREDENTIALS_AWS;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_INVALID_CRED_FOR_S3_BACKEND;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Message.MESSAGE_ERROR_INSPECTING_STATE_IN_BACKEND;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Message.MESSAGE_FAILED_TO_GET_EXISTING_WORKSPACES;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Message.MESSAGE_INVALID_CREDENTIALS_AWS;
@@ -40,6 +45,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @OwnedBy(CDP)
@@ -67,8 +73,19 @@ public class TerraformRuntimeExceptionHandler implements ExceptionHandler {
       if (error.contains(FAILED_TO_READ_MODULE_DIRECTORY)) {
         continue;
       }
+      if (error.toLowerCase().contains(ERROR_CONFIGURING_S3_BACKEND.toLowerCase())) {
+        explanations.add(cleanError(error));
+        hints.add(HINT_ERROR_INSPECTING_STATE_IN_BACKEND);
+        if (error.toLowerCase().contains(NO_VALID_CRED_FOUND_FOR_S3_BACKEND.toLowerCase())
+            || error.toLowerCase().contains(ERROR_VALIDATING_PROVIDER_CRED.toLowerCase())) {
+          hints.add(HINT_INVALID_CRED_FOR_S3_BACKEND);
+        }
+      }
 
-      if (error.toLowerCase().contains(INVALID_CREDENTIALS_AWS.toLowerCase())) {
+      if (StringUtils.indexOfAny(error.toLowerCase(),
+              new String[] {INVALID_CREDENTIALS_AWS.toLowerCase(), ERROR_VALIDATING_PROVIDER_CRED.toLowerCase(),
+                  NO_VALID_CRED_FOUND_FOR_AWS.toLowerCase()})
+          != -1) {
         structuredErrors.add(MESSAGE_INVALID_CREDENTIALS_AWS);
         if (error.indexOf('\t') != -1) {
           explanations.add(EXPLANATION_INVALID_CREDENTIALS_AWS
