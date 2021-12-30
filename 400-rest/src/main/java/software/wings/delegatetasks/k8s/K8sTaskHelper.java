@@ -21,10 +21,16 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
+import io.harness.beans.KeyValuePair;
+import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.connector.service.scm.ScmDelegateClient;
 import io.harness.delegate.k8s.beans.K8sHandlerConfig;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
@@ -33,9 +39,13 @@ import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitFile;
+import io.harness.http.HttpService;
+import io.harness.http.beans.HttpInternalConfig;
+import io.harness.http.beans.HttpInternalResponse;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
@@ -45,10 +55,15 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.manifest.CustomManifestService;
+import io.harness.ng.core.switchaccount.LdapIdentificationInfo;
 import io.harness.service.ScmServiceClient;
 
+import org.apache.http.HttpHeaders;
+import org.jose4j.json.JsonUtil;
+import org.jose4j.lang.JoseException;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.RancherConfig;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -67,6 +82,7 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
+import software.wings.infra.RancherKubernetesInfrastructure;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -76,9 +92,15 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -102,6 +124,7 @@ public class K8sTaskHelper {
   @Inject private ScmDelegateClient scmDelegateClient;
   @Inject private ScmServiceClient scmServiceClient;
   @Inject private ScmFetchFilesHelper scmFetchFilesHelper;
+  @Inject private HttpService httpService;
 
   public boolean doStatusCheckAllResourcesForHelm(Kubectl client, List<KubernetesResourceId> resourceIds, String ocPath,
       String workingDir, String namespace, String kubeconfigPath, ExecutionLogCallback executionLogCallback)
@@ -498,5 +521,75 @@ public class K8sTaskHelper {
       return false;
     }
     return true;
+  }
+
+  public List<String> resolveRancherClusters(RancherConfig rancherConfig, List<RancherKubernetesInfrastructure.ClusterSelectionCriteriaEntry> clusterSelectionCriteria) throws IOException, JoseException {
+
+    StringBuffer urlBuffer = new StringBuffer();
+    urlBuffer.append(rancherConfig.getRancherUrl()).append("/v3/clusters");
+
+    List<KeyValuePair> headers = new ArrayList<>();
+    headers.add(KeyValuePair.builder()
+            .key(HttpHeaders.AUTHORIZATION)
+            .value("Bearer " + new String(rancherConfig.getBearerToken()))
+            .build());
+
+    HttpInternalResponse httpInternalResponse;
+
+    httpInternalResponse = httpService.executeUrl(HttpInternalConfig.builder()
+            .method("GET")
+            .headers(headers)
+            .socketTimeoutMillis(10000)
+            .url(urlBuffer.toString())
+            // TODO: Check if useProxy field need to be added in Rancher cloud provider
+            .useProxy(false)
+            .isCertValidationRequired(rancherConfig.isCertValidationRequired())
+            .build());
+
+    // Map of cluster name and list of labels
+    Map<String, Map<String, String>> clustersLabelsInfo = new HashMap<>();
+
+
+    if (httpInternalResponse != null && httpInternalResponse.getHttpResponseCode() == 200) {
+      JsonObject httpResponseBodyJson = new JsonParser().parse(httpInternalResponse.getHttpResponseBody()).getAsJsonObject();
+      JsonArray data = httpResponseBodyJson.getAsJsonArray("data");
+      data.forEach(clusterData -> {
+        String clusterName = clusterData.getAsJsonObject().get("name").getAsString();
+        Map<String, String> labels = new HashMap<>();
+        JsonElement labelsJsonElement = clusterData.getAsJsonObject().get("labels");
+        if (labelsJsonElement != null) {
+          labelsJsonElement.getAsJsonObject().entrySet().forEach(label -> {labels.put(label.getKey(), label.getValue().getAsString());});
+        }
+
+        clustersLabelsInfo.put(clusterName, labels);
+      });
+    } else {
+      throw new InvalidRequestException("Rancher http call failed");
+    }
+
+    // filter clusters based on clusterSelectionCriteria
+    List<String> filteredClusters = new ArrayList<>();
+    if (clustersLabelsInfo.size() > 0) {
+      List<String> currentClustersList = new ArrayList<>(clustersLabelsInfo.keySet());
+
+      if (clusterSelectionCriteria != null) {
+        for (int index = 0; index < clusterSelectionCriteria.size(); index++) {
+          RancherKubernetesInfrastructure.ClusterSelectionCriteriaEntry clusterSelectionCriteriaEntry = clusterSelectionCriteria.get(index);
+          List<String> filteredClustersListOnCriteria = new ArrayList<>();
+          if (currentClustersList != null) {
+            currentClustersList.forEach(cluster -> {
+              if (clustersLabelsInfo.get(cluster) != null && clusterSelectionCriteriaEntry.getLabelValues() != null && new HashSet<>(Arrays.asList(clusterSelectionCriteriaEntry.getLabelValues().split(",")).stream().map(e -> e.trim()).collect(Collectors.toList())).contains(clustersLabelsInfo.get(clusterSelectionCriteriaEntry.getLabelName()))) {
+                filteredClustersListOnCriteria.add(cluster);
+              }
+            });
+          }
+          currentClustersList = filteredClustersListOnCriteria;
+        }
+      }
+
+      filteredClusters = currentClustersList;
+    }
+
+    return filteredClusters;
   }
 }

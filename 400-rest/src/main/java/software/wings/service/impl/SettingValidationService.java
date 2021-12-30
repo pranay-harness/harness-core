@@ -473,6 +473,7 @@ public class SettingValidationService {
     try {
       rancherHelperService.validateRancherConfig(rancherConfig, encryptedDataDetails);
     } catch (Exception e) {
+      log.error("Exception while validating RancherConfig", e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
     return true;

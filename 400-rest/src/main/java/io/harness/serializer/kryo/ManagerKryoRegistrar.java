@@ -1172,5 +1172,10 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(RancherK8sClusterProcessor.RancherClusterElementList.class, 50001);
     kryo.register(RancherClusterElement.class, 50002);
     kryo.register(RancherKubernetesInfrastructureMapping.class, 50003);
+    kryo.register(RancherResolveClustersTaskParameters.class, 50004);
+    kryo.register(RancherResolveClustersResponse.class, 50005);
+    kryo.register(RancherConfig.class, 50006);
+    kryo.register(RancherKubernetesInfrastructure.class, 50007);
+    kryo.register(RancherKubernetesInfrastructure.ClusterSelectionCriteriaEntry.class, 50008);
   }
 }

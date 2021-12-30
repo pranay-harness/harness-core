@@ -326,7 +326,8 @@ public enum TaskType {
   SCM_GIT_REF_TASK(TaskGroup.GIT, "SCM Git Ref Task"),
   SCM_GIT_FILE_TASK(TaskGroup.GIT, "SCM Git File Task"),
   SCM_PULL_REQUEST_TASK(TaskGroup.GIT, "SCM Git PR Task"),
-  SCM_GIT_WEBHOOK_TASK(TaskGroup.GIT, "SCM Git Webhook Task");
+  SCM_GIT_WEBHOOK_TASK(TaskGroup.GIT, "SCM Git Webhook Task"),
+  RANCHER_RESOLVE_CLUSTERS(TaskGroup.K8S, "Rancher Resolve Clusters");
 
   private final TaskGroup taskGroup;
   private final String displayName;
