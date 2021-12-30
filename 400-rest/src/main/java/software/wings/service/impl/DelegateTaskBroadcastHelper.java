@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -15,6 +14,8 @@ import software.wings.service.intfc.AssignDelegateService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.Broadcaster;
