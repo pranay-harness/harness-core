@@ -9,11 +9,13 @@ import io.harness.ng.core.account.OauthProviderType;
 
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @OwnedBy(PL)
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
