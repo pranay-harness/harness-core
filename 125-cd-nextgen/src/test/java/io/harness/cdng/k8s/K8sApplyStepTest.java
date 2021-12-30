@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.TimeOutHelper;
+import io.harness.cdng.CDStepHelper;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
@@ -84,7 +84,7 @@ public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
     K8sApplyRequest request = executeTask(stepElementParameters, K8sApplyRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
     assertThat(request.isSkipSteadyStateCheck()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(TimeOutHelper.getTimeoutInMin(stepElementParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(CDStepHelper.getTimeoutInMin(stepElementParameters));
   }
 
   @Test

@@ -43,7 +43,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @AllArgsConstructor
 public class HelmCommandRequestNG implements TaskParameters, ExecutionCapabilityDemander {
-  private boolean skipDryRun;
   @Expression(DISALLOW_SECRETS) private String releaseName;
   @NotEmpty private HelmCommandType helmCommandType;
   @Expression(ALLOW_SECRETS) List<String> valuesYamlList;

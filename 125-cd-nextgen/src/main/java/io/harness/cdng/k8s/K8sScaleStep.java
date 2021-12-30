@@ -7,7 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.ParameterFieldBooleanValueHelper;
+import io.harness.cdng.CDStepHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.k8s.K8sScaleBaseStepInfo.K8sScaleBaseStepInfoKeys;
@@ -70,9 +70,8 @@ public class K8sScaleStep extends TaskExecutableWithRollbackAndRbac<K8sDeployRes
 
     Integer instances = scaleStepParameter.getInstanceSelection().getSpec().getInstances();
 
-    boolean skipSteadyCheck =
-        ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(scaleStepParameter.getSkipSteadyStateCheck(),
-            K8sScaleBaseStepInfoKeys.skipSteadyStateCheck, stepElementParameters);
+    boolean skipSteadyCheck = CDStepHelper.getParameterFieldBooleanValue(scaleStepParameter.getSkipSteadyStateCheck(),
+        K8sScaleBaseStepInfoKeys.skipSteadyStateCheck, stepElementParameters);
     String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
 
     K8sScaleRequest request =

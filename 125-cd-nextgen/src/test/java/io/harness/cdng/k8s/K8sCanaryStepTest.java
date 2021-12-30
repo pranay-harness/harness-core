@@ -18,7 +18,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.NGInstanceUnitType;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.TimeOutHelper;
+import io.harness.cdng.CDStepHelper;
 import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -101,7 +101,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
 
     K8sCanaryDeployRequest request = executeTask(stepElementParameters, K8sCanaryDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(TimeOutHelper.getTimeoutInMin(stepElementParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(CDStepHelper.getTimeoutInMin(stepElementParameters));
     assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 

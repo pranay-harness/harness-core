@@ -2,7 +2,6 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
-import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -10,9 +9,7 @@ import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static io.harness.logging.UnitStatus.RUNNING;
 import static io.harness.steps.StepUtils.prepareCDTaskRequest;
 
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
@@ -22,14 +19,8 @@ import static java.util.Collections.emptyList;
 
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
-import io.harness.cdng.AggregatedManifestHelper;
-import io.harness.cdng.CommonGitSCMHelper;
-import io.harness.cdng.ParameterFieldBooleanValueHelper;
-import io.harness.cdng.ReleaseNameHelper;
-import io.harness.cdng.TimeOutHelper;
+import io.harness.cdng.CDStepHelper;
 import io.harness.cdng.expressions.CDExpressionResolveFunctor;
-import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
@@ -37,14 +28,11 @@ import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
-import io.harness.cdng.manifest.mappers.ManifestOutcomeValidator;
 import io.harness.cdng.manifest.steps.ManifestsOutcome;
-import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome.HelmChartManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
-import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome.K8sManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
@@ -54,27 +42,14 @@ import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome.OpenshiftManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
-import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.helper.EncryptionHelper;
-import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
-import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
-import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
-import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
-import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
-import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
-import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
@@ -86,13 +61,11 @@ import io.harness.delegate.task.helm.HelmValuesFetchResponse;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
-import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.eraro.Level;
-import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -100,13 +73,6 @@ import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.helm.HelmSubCommandType;
-import io.harness.logging.LogCallback;
-import io.harness.logging.LogLevel;
-import io.harness.logging.UnitProgress;
-import io.harness.logging.UnitStatus;
-import io.harness.logstreaming.LogStreamingStepClientFactory;
-import io.harness.logstreaming.NGLogCallback;
-import io.harness.ng.core.NGAccess;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -118,7 +84,6 @@ import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.expression.EngineExpressionService;
-import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.execution.SdkGraphVisualizationDataService;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -129,7 +94,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.EntityReferenceExtractorUtils;
 import io.harness.steps.StepHelper;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
@@ -141,13 +105,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -159,7 +121,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDP)
 @Singleton
-public class K8sStepHelper extends CommonGitSCMHelper {
+public class K8sStepHelper extends CDStepHelper {
   public static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(
       ManifestType.K8Manifest, ManifestType.HelmChart, ManifestType.Kustomize, ManifestType.OpenshiftTemplate);
 
@@ -172,80 +134,13 @@ public class K8sStepHelper extends CommonGitSCMHelper {
   public static final String RELEASE_NAME_VALIDATION_REGEX =
       "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*";
   public static final Pattern releaseNamePattern = Pattern.compile(RELEASE_NAME_VALIDATION_REGEX);
-  @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private OutcomeService outcomeService;
   @Inject private EncryptionHelper encryptionHelper;
-  @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Inject private StepHelper stepHelper;
-  @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
-  @Inject private PipelineRbacHelper pipelineRbacHelper;
   @Inject private SdkGraphVisualizationDataService sdkGraphVisualizationDataService;
-  @Inject private K8sEntityHelper k8sEntityHelper;
   @Inject private AccountClient accountClient;
-  @Inject private ReleaseNameHelper releaseNameHelper;
-  @Inject private CDFeatureFlagHelper cdFeatureFlagHelper;
-
-  String getReleaseName(Ambiance ambiance, InfrastructureOutcome infrastructure) {
-    return releaseNameHelper.getReleaseName(ambiance, infrastructure);
-  }
-
-  public ConnectorInfoDTO getConnector(String connectorId, Ambiance ambiance) {
-    NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
-    return k8sEntityHelper.getConnectorInfoDTO(connectorId, ngAccess);
-  }
-
-  public void validateManifest(String manifestStoreType, ConnectorInfoDTO connectorInfoDTO, String message) {
-    switch (manifestStoreType) {
-      case ManifestStoreType.GIT:
-        if (!(connectorInfoDTO.getConnectorConfig() instanceof GitConfigDTO)) {
-          throw new InvalidRequestException(format("Invalid connector selected in %s. Select Git connector", message));
-        }
-        break;
-      case ManifestStoreType.GITHUB:
-        if (!(connectorInfoDTO.getConnectorConfig() instanceof GithubConnectorDTO)) {
-          throw new InvalidRequestException(
-              format("Invalid connector selected in %s. Select Github connector", message));
-        }
-        break;
-      case ManifestStoreType.GITLAB:
-        if (!(connectorInfoDTO.getConnectorConfig() instanceof GitlabConnectorDTO)) {
-          throw new InvalidRequestException(
-              format("Invalid connector selected in %s. Select GitLab connector", message));
-        }
-        break;
-      case ManifestStoreType.BITBUCKET:
-        if (!(connectorInfoDTO.getConnectorConfig() instanceof BitbucketConnectorDTO)) {
-          throw new InvalidRequestException(
-              format("Invalid connector selected in %s. Select Bitbucket connector", message));
-        }
-        break;
-      case ManifestStoreType.HTTP:
-        if (!(connectorInfoDTO.getConnectorConfig() instanceof HttpHelmConnectorDTO)) {
-          throw new InvalidRequestException(
-              format("Invalid connector selected in %s. Select Http Helm connector", message));
-        }
-        break;
-
-      case ManifestStoreType.S3:
-        if (!((connectorInfoDTO.getConnectorConfig()) instanceof AwsConnectorDTO)) {
-          throw new InvalidRequestException(
-              format("Invalid connector selected in %s. Select Amazon Web Services connector", message));
-        }
-        break;
-
-      case ManifestStoreType.GCS:
-        if (!(connectorInfoDTO.getConnectorConfig() instanceof GcpConnectorDTO)) {
-          throw new InvalidRequestException(
-              format("Invalid connector selected in %s. Select Google cloud connector", message));
-        }
-        break;
-
-      default:
-        throw new UnsupportedOperationException(format("Unknown manifest store type: [%s]", manifestStoreType));
-    }
-  }
 
   public ManifestDelegateConfig getManifestDelegateConfig(ManifestOutcome manifestOutcome, Ambiance ambiance) {
     switch (manifestOutcome.getType()) {
@@ -294,92 +189,6 @@ public class K8sStepHelper extends CommonGitSCMHelper {
     }
   }
 
-  public StoreDelegateConfig getStoreDelegateConfig(
-      StoreConfig storeConfig, Ambiance ambiance, ManifestOutcome manifestOutcome, String validationErrorMessage) {
-    if (ManifestStoreType.isInGitSubset(storeConfig.getKind())) {
-      GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
-      ConnectorInfoDTO connectorDTO = getConnector(getParameterFieldValue(gitStoreConfig.getConnectorRef()), ambiance);
-      validateManifest(storeConfig.getKind(), connectorDTO, validationErrorMessage);
-
-      List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestOutcome.getType());
-      return getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, manifestOutcome, gitFilePaths, ambiance);
-    }
-
-    if (ManifestStoreType.HTTP.equals(storeConfig.getKind())) {
-      HttpStoreConfig httpStoreConfig = (HttpStoreConfig) storeConfig;
-      ConnectorInfoDTO helmConnectorDTO =
-          getConnector(getParameterFieldValue(httpStoreConfig.getConnectorRef()), ambiance);
-      validateManifest(storeConfig.getKind(), helmConnectorDTO, validationErrorMessage);
-
-      return HttpHelmStoreDelegateConfig.builder()
-          .repoName(helmConnectorDTO.getIdentifier())
-          .repoDisplayName(helmConnectorDTO.getName())
-          .httpHelmConnector((HttpHelmConnectorDTO) helmConnectorDTO.getConnectorConfig())
-          .encryptedDataDetails(
-              k8sEntityHelper.getEncryptionDataDetails(helmConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
-          .build();
-    }
-
-    if (ManifestStoreType.S3.equals(storeConfig.getKind())) {
-      S3StoreConfig s3StoreConfig = (S3StoreConfig) storeConfig;
-      ConnectorInfoDTO awsConnectorDTO =
-          getConnector(getParameterFieldValue(s3StoreConfig.getConnectorRef()), ambiance);
-      validateManifest(storeConfig.getKind(), awsConnectorDTO, validationErrorMessage);
-
-      return S3HelmStoreDelegateConfig.builder()
-          .repoName(awsConnectorDTO.getIdentifier())
-          .repoDisplayName(awsConnectorDTO.getName())
-          .bucketName(getParameterFieldValue(s3StoreConfig.getBucketName()))
-          .region(getParameterFieldValue(s3StoreConfig.getRegion()))
-          .folderPath(getParameterFieldValue(s3StoreConfig.getFolderPath()))
-          .awsConnector((AwsConnectorDTO) awsConnectorDTO.getConnectorConfig())
-          .encryptedDataDetails(
-              k8sEntityHelper.getEncryptionDataDetails(awsConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
-          .useLatestChartMuseumVersion(cdFeatureFlagHelper.isEnabled(
-              AmbianceUtils.getAccountId(ambiance), FeatureName.USE_LATEST_CHARTMUSEUM_VERSION))
-          .build();
-    }
-
-    if (ManifestStoreType.GCS.equals(storeConfig.getKind())) {
-      GcsStoreConfig gcsStoreConfig = (GcsStoreConfig) storeConfig;
-      ConnectorInfoDTO gcpConnectorDTO =
-          getConnector(getParameterFieldValue(gcsStoreConfig.getConnectorRef()), ambiance);
-      validateManifest(storeConfig.getKind(), gcpConnectorDTO, validationErrorMessage);
-
-      return GcsHelmStoreDelegateConfig.builder()
-          .repoName(gcpConnectorDTO.getIdentifier())
-          .repoDisplayName(gcpConnectorDTO.getName())
-          .bucketName(getParameterFieldValue(gcsStoreConfig.getBucketName()))
-          .folderPath(getParameterFieldValue(gcsStoreConfig.getFolderPath()))
-          .gcpConnector((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
-          .encryptedDataDetails(
-              k8sEntityHelper.getEncryptionDataDetails(gcpConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
-          .useLatestChartMuseumVersion(cdFeatureFlagHelper.isEnabled(
-              AmbianceUtils.getAccountId(ambiance), FeatureName.USE_LATEST_CHARTMUSEUM_VERSION))
-          .build();
-    }
-
-    throw new UnsupportedOperationException(format("Unsupported Store Config type: [%s]", storeConfig.getKind()));
-  }
-
-  private List<String> getPathsBasedOnManifest(GitStoreConfig gitstoreConfig, String manifestType) {
-    List<String> paths = new ArrayList<>();
-    switch (manifestType) {
-      case ManifestType.HelmChart:
-        paths.add(getParameterFieldValue(gitstoreConfig.getFolderPath()));
-        break;
-      case ManifestType.Kustomize:
-        // Set as repository root
-        paths.add("/");
-        break;
-
-      default:
-        paths.addAll(getParameterFieldValue(gitstoreConfig.getPaths()));
-    }
-
-    return paths;
-  }
-
   private List<String> getValuesPathsBasedOnManifest(GitStoreConfig gitstoreConfig, String manifestType) {
     List<String> paths = new ArrayList<>();
     switch (manifestType) {
@@ -400,17 +209,12 @@ public class K8sStepHelper extends CommonGitSCMHelper {
     return paths;
   }
 
-  public K8sInfraDelegateConfig getK8sInfraDelegateConfig(InfrastructureOutcome infrastructure, Ambiance ambiance) {
-    NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
-    return k8sEntityHelper.getK8sInfraDelegateConfig(infrastructure, ngAccess);
-  }
-
   public TaskChainResponse queueK8sTask(StepElementParameters stepElementParameters, K8sDeployRequest k8sDeployRequest,
       Ambiance ambiance, K8sExecutionPassThroughData executionPassThroughData) {
     TaskData taskData = TaskData.builder()
                             .parameters(new Object[] {k8sDeployRequest})
                             .taskType(TaskType.K8S_COMMAND_TASK_NG.name())
-                            .timeout(TimeOutHelper.getTimeoutInMillis(stepElementParameters))
+                            .timeout(CDStepHelper.getTimeoutInMillis(stepElementParameters))
                             .async(true)
                             .build();
 
@@ -433,10 +237,7 @@ public class K8sStepHelper extends CommonGitSCMHelper {
       return emptyList();
     }
 
-    List<String> renderedValuesFileContents =
-        valuesFileContents.stream()
-            .map(valuesFileContent -> engineExpressionService.renderExpression(ambiance, valuesFileContent))
-            .collect(Collectors.toList());
+    List<String> renderedValuesFileContents = getValuesFileContents(ambiance, valuesFileContents);
 
     if (ManifestType.OpenshiftTemplate.equals(manifestOutcome.getType())) {
       Collections.reverse(renderedValuesFileContents);
@@ -616,16 +417,15 @@ public class K8sStepHelper extends CommonGitSCMHelper {
     String accountId = AmbianceUtils.getAccountId(ambiance);
     HelmChartManifestDelegateConfig helmManifest =
         (HelmChartManifestDelegateConfig) getManifestDelegateConfig(k8sManifestOutcome, ambiance);
-    HelmValuesFetchRequest helmValuesFetchRequest =
-        HelmValuesFetchRequest.builder()
-            .accountId(accountId)
-            .helmChartManifestDelegateConfig(helmManifest)
-            .timeout(TimeOutHelper.getTimeoutInMillis(stepElementParameters))
-            .build();
+    HelmValuesFetchRequest helmValuesFetchRequest = HelmValuesFetchRequest.builder()
+                                                        .accountId(accountId)
+                                                        .helmChartManifestDelegateConfig(helmManifest)
+                                                        .timeout(CDStepHelper.getTimeoutInMillis(stepElementParameters))
+                                                        .build();
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)
-                                  .timeout(TimeOutHelper.getTimeoutInMillis(stepElementParameters))
+                                  .timeout(CDStepHelper.getTimeoutInMillis(stepElementParameters))
                                   .taskType(TaskType.HELM_VALUES_FETCH_NG.name())
                                   .parameters(new Object[] {helmValuesFetchRequest})
                                   .build();
@@ -663,7 +463,7 @@ public class K8sStepHelper extends CommonGitSCMHelper {
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)
-                                  .timeout(TimeOutHelper.getTimeoutInMillis(stepElementParameters))
+                                  .timeout(CDStepHelper.getTimeoutInMillis(stepElementParameters))
                                   .taskType(TaskType.GIT_FETCH_NEXT_GEN_TASK.name())
                                   .parameters(new Object[] {gitFetchRequest})
                                   .build();
@@ -698,25 +498,6 @@ public class K8sStepHelper extends CommonGitSCMHelper {
       default:
         throw new UnsupportedOperationException(format("Unsupported Manifest type: [%s]", manifestOutcome.getType()));
     }
-  }
-
-  private GitFetchFilesConfig getGitFetchFilesConfig(
-      Ambiance ambiance, StoreConfig store, String validationMessage, ManifestOutcome manifestOutcome) {
-    GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
-    String connectorId = gitStoreConfig.getConnectorRef().getValue();
-    ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
-    validateManifest(store.getKind(), connectorDTO, validationMessage);
-
-    List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestOutcome.getType());
-    GitStoreDelegateConfig gitStoreDelegateConfig =
-        getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, manifestOutcome, gitFilePaths, ambiance);
-
-    return GitFetchFilesConfig.builder()
-        .identifier(manifestOutcome.getIdentifier())
-        .manifestType(manifestOutcome.getType())
-        .succeedIfFileNotFound(false)
-        .gitStoreDelegateConfig(gitStoreDelegateConfig)
-        .build();
   }
 
   private GitFetchFilesConfig getValuesGitFetchFilesConfig(Ambiance ambiance, String identifier, StoreConfig store,
@@ -831,7 +612,7 @@ public class K8sStepHelper extends CommonGitSCMHelper {
   private TaskChainResponse prepareK8sOrHelmWithValuesManifests(K8sStepExecutor k8sStepExecutor,
       List<ManifestOutcome> manifestOutcomes, ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       StepElementParameters stepElementParameters, InfrastructureOutcome infrastructureOutcome) {
-    List<ValuesManifestOutcome> aggregatedValuesManifests = getAggregatedValuesManifests(manifestOutcomes);
+    List<ValuesManifestOutcome> aggregatedValuesManifests = CDStepHelper.getAggregatedValuesManifests(manifestOutcomes);
 
     if (isNotEmpty(aggregatedValuesManifests) && !isAnyRemoteStore(aggregatedValuesManifests)) {
       List<String> valuesFileContentsForLocalStore = getValuesFileContentsForLocalStore(aggregatedValuesManifests);
@@ -862,11 +643,6 @@ public class K8sStepHelper extends CommonGitSCMHelper {
           USER);
     }
     return k8sManifests.get(0);
-  }
-
-  @VisibleForTesting
-  public List<ValuesManifestOutcome> getAggregatedValuesManifests(@NotEmpty List<ManifestOutcome> manifestOutcomeList) {
-    return AggregatedManifestHelper.getAggregatedValuesManifests(manifestOutcomeList);
   }
 
   public List<KustomizePatchesManifestOutcome> getKustomizePatchesManifests(
@@ -962,32 +738,6 @@ public class K8sStepHelper extends CommonGitSCMHelper {
     return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, emptyList(),
         K8sExecutionPassThroughData.builder().infrastructure(k8sStepPassThroughData.getInfrastructure()).build(), true,
         unitProgressData);
-  }
-
-  private UnitProgressData completeUnitProgressData(
-      UnitProgressData currentProgressData, Ambiance ambiance, Exception exception) {
-    if (currentProgressData == null) {
-      return UnitProgressData.builder().unitProgresses(new ArrayList<>()).build();
-    }
-
-    List<UnitProgress> finalUnitProgressList =
-        currentProgressData.getUnitProgresses()
-            .stream()
-            .map(unitProgress -> {
-              if (unitProgress.getStatus() == RUNNING) {
-                LogCallback logCallback = getLogCallback(unitProgress.getUnitName(), ambiance, false);
-                logCallback.saveExecutionLog(ExceptionUtils.getMessage(exception), LogLevel.ERROR, FAILURE);
-                return UnitProgress.newBuilder(unitProgress)
-                    .setStatus(UnitStatus.FAILURE)
-                    .setEndTime(System.currentTimeMillis())
-                    .build();
-              }
-
-              return unitProgress;
-            })
-            .collect(Collectors.toList());
-
-    return UnitProgressData.builder().unitProgresses(finalUnitProgressList).build();
   }
 
   private TaskChainResponse handleGitFetchFilesResponse(ResponseData responseData, K8sStepExecutor k8sStepExecutor,
@@ -1123,42 +873,6 @@ public class K8sStepHelper extends CommonGitSCMHelper {
     return k8sDeployResponse.getErrorMessage() == null ? "" : k8sDeployResponse.getErrorMessage();
   }
 
-  StepResponse handleGitTaskFailure(GitFetchResponsePassThroughData gitFetchResponse) {
-    UnitProgressData unitProgressData = gitFetchResponse.getUnitProgressData();
-    return StepResponse.builder()
-        .unitProgressList(unitProgressData.getUnitProgresses())
-        .status(Status.FAILED)
-        .failureInfo(FailureInfo.newBuilder().setErrorMessage(gitFetchResponse.getErrorMsg()).build())
-        .build();
-  }
-
-  StepResponse handleHelmValuesFetchFailure(HelmValuesFetchResponsePassThroughData helmValuesFetchResponse) {
-    UnitProgressData unitProgressData = helmValuesFetchResponse.getUnitProgressData();
-    return StepResponse.builder()
-        .unitProgressList(unitProgressData.getUnitProgresses())
-        .status(Status.FAILED)
-        .failureInfo(FailureInfo.newBuilder().setErrorMessage(helmValuesFetchResponse.getErrorMsg()).build())
-        .build();
-  }
-
-  public StepResponse handleStepExceptionFailure(StepExceptionPassThroughData stepException) {
-    FailureData failureData = FailureData.newBuilder()
-                                  .addFailureTypes(FailureType.APPLICATION_FAILURE)
-                                  .setLevel(Level.ERROR.name())
-                                  .setCode(GENERAL_ERROR.name())
-                                  .setMessage(emptyIfNull(stepException.getErrorMessage()))
-                                  .build();
-    return StepResponse.builder()
-        .unitProgressList(stepException.getUnitProgressData().getUnitProgresses())
-        .status(Status.FAILED)
-        .failureInfo(FailureInfo.newBuilder()
-                         .addAllFailureTypes(failureData.getFailureTypesList())
-                         .setErrorMessage(failureData.getMessage())
-                         .addFailureData(failureData)
-                         .build())
-        .build();
-  }
-
   public static StepResponseBuilder getFailureResponseBuilder(
       K8sDeployResponse k8sDeployResponse, StepResponseBuilder stepResponseBuilder) {
     stepResponseBuilder.status(Status.FAILED)
@@ -1171,27 +885,23 @@ public class K8sStepHelper extends CommonGitSCMHelper {
     switch (manifestOutcome.getType()) {
       case ManifestType.K8Manifest:
         K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
-        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
-            k8sManifestOutcome.getSkipResourceVersioning(), K8sManifestOutcomeKeys.skipResourceVersioning,
-            k8sManifestOutcome);
+        return CDStepHelper.getParameterFieldBooleanValue(k8sManifestOutcome.getSkipResourceVersioning(),
+            K8sManifestOutcomeKeys.skipResourceVersioning, k8sManifestOutcome);
 
       case ManifestType.HelmChart:
         HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
-        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
-            helmChartManifestOutcome.getSkipResourceVersioning(), HelmChartManifestOutcomeKeys.skipResourceVersioning,
-            helmChartManifestOutcome);
+        return CDStepHelper.getParameterFieldBooleanValue(helmChartManifestOutcome.getSkipResourceVersioning(),
+            HelmChartManifestOutcomeKeys.skipResourceVersioning, helmChartManifestOutcome);
 
       case ManifestType.Kustomize:
         KustomizeManifestOutcome kustomizeManifestOutcome = (KustomizeManifestOutcome) manifestOutcome;
-        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
-            kustomizeManifestOutcome.getSkipResourceVersioning(), KustomizeManifestOutcomeKeys.skipResourceVersioning,
-            kustomizeManifestOutcome);
+        return CDStepHelper.getParameterFieldBooleanValue(kustomizeManifestOutcome.getSkipResourceVersioning(),
+            KustomizeManifestOutcomeKeys.skipResourceVersioning, kustomizeManifestOutcome);
 
       case ManifestType.OpenshiftTemplate:
         OpenshiftManifestOutcome openshiftManifestOutcome = (OpenshiftManifestOutcome) manifestOutcome;
-        return ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
-            openshiftManifestOutcome.getSkipResourceVersioning(), OpenshiftManifestOutcomeKeys.skipResourceVersioning,
-            openshiftManifestOutcome);
+        return CDStepHelper.getParameterFieldBooleanValue(openshiftManifestOutcome.getSkipResourceVersioning(),
+            OpenshiftManifestOutcomeKeys.skipResourceVersioning, openshiftManifestOutcome);
 
       default:
         return false;
@@ -1206,10 +916,6 @@ public class K8sStepHelper extends CommonGitSCMHelper {
     }
 
     return (InfrastructureOutcome) optionalOutcome.getOutcome();
-  }
-
-  public LogCallback getLogCallback(String commandUnitName, Ambiance ambiance, boolean shouldOpenStream) {
-    return new NGLogCallback(logStreamingStepClientFactory, ambiance, commandUnitName, shouldOpenStream);
   }
 
   public StepResponse handleTaskException(
@@ -1240,28 +946,10 @@ public class K8sStepHelper extends CommonGitSCMHelper {
         .build();
   }
 
-  private void validateManifestsOutcome(Ambiance ambiance, ManifestsOutcome manifestsOutcome) {
-    Set<EntityDetailProtoDTO> entityDetails = new HashSet<>();
-    manifestsOutcome.values().forEach(value -> {
-      entityDetails.addAll(entityReferenceExtractorUtils.extractReferredEntities(ambiance, value.getStore()));
-      ManifestOutcomeValidator.validate(value, false);
-    });
-
-    pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails);
-  }
-
   public void publishReleaseNameStepDetails(Ambiance ambiance, String releaseName) {
     if (isNotEmpty(releaseName)) {
       sdkGraphVisualizationDataService.publishStepDetailInformation(
           ambiance, K8sReleaseDetailsInfo.builder().releaseName(releaseName).build(), RELEASE_NAME);
     }
-  }
-
-  public boolean isUseVarSupportForKustomize(String accountId) {
-    return cdFeatureFlagHelper.isEnabled(accountId, FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE);
-  }
-
-  public boolean isUseNewKubectlVersion(String accountId) {
-    return cdFeatureFlagHelper.isEnabled(accountId, FeatureName.NEW_KUBECTL_VERSION);
   }
 }
