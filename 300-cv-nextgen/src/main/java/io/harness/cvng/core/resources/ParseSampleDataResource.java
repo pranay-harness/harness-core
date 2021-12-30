@@ -1,6 +1,7 @@
 package io.harness.cvng.core.resources;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.core.beans.SampleDataDTO;
 import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.ParseSampleDataService;
@@ -18,10 +19,11 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import retrofit2.http.Body;
 
 @Api("parseSampleDara")
 @Path("/parse-sample-data")
@@ -36,23 +38,18 @@ import javax.ws.rs.QueryParam;
 public class ParseSampleDataResource {
   @Inject private ParseSampleDataService sampleDataService;
 
-  @GET
+  @POST
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "parse sample data for given json response", nickname = "fetchParsedSampleData")
   public ResponseDTO<List<TimeSeriesSampleDTO>> getParsedSampleData(@NotNull @QueryParam("accountId") String accountId,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("jsonResponse") @NotNull String jsonResponse, @QueryParam("groupName") @NotNull String groupName,
-      @QueryParam("metricValueJSONPath") @NotNull String metricValueJSONPath,
-      @QueryParam("timestampJSONPath") @NotNull String timestampJSONPath,
-      @QueryParam("timestampFormat") String timestampFormat) {
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @Body @NotNull SampleDataDTO sampleData) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
                                       .orgIdentifier(orgIdentifier)
                                       .projectIdentifier(projectIdentifier)
                                       .build();
-    return ResponseDTO.newResponse(sampleDataService.parseSampleData(
-        projectParams, jsonResponse, groupName, metricValueJSONPath, timestampJSONPath, timestampFormat));
+    return ResponseDTO.newResponse(sampleDataService.parseSampleData(projectParams, sampleData));
   }
 }

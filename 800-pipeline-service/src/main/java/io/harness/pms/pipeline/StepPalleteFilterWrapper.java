@@ -11,7 +11,7 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.PIPELINE)
-@Schema(name = "StepPalleteFilterWrapper", description = "This is the view of Step Pallete Filter.")
+@Schema(name = "StepPalleteFilterWrapper", description = "This has details of the Step Palette Filter.")
 public class StepPalleteFilterWrapper {
-  List<StepPalleteModuleInfo> stepPalleteModuleInfos;
+  @Schema(description = "List of Step Pallete Module Info") List<StepPalleteModuleInfo> stepPalleteModuleInfos;
 }

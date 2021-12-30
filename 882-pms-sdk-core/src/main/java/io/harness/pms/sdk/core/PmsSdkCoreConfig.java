@@ -24,6 +24,7 @@ public class PmsSdkCoreConfig {
   ThreadPoolConfig executionPoolConfig;
   ThreadPoolConfig orchestrationEventPoolConfig;
   ThreadPoolConfig planCreatorServicePoolConfig;
+  PipelineRedisEventsConfig pipelineRedisEventsConfig;
 
   @Default
   EventsFrameworkConfiguration eventsFrameworkConfiguration =

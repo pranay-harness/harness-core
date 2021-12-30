@@ -963,18 +963,18 @@ if [[ "" != "$USE_GLOBAL_KMS_AS_BASE_ALGO" ]]; then
   yq write -i $CONFIG_FILE useGlobalKMSAsBaseAlgo "$USE_GLOBAL_KMS_AS_BASE_ALGO"
 fi
 
-if [[ "" != "$SEGMENT_NG_ENABLED" ]]; then
-  yq write -i $CONFIG_FILE segmentConfiguration.enabled "$SEGMENT_NG_ENABLED"
+if [[ "" != "$SEGMENT_ENABLED_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.enabled "$SEGMENT_ENABLED_NG"
 fi
 
-if [[ "" != "$SEGMENT_NG_URL" ]]; then
-  yq write -i $CONFIG_FILE segmentConfiguration.url "$SEGMENT_NG_URL"
+if [[ "" != "$SEGMENT_URL_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.url "$SEGMENT_URL_NG"
 fi
 
-if [[ "" != "$SEGMENT_NG_APIKEY" ]]; then
-  yq write -i $CONFIG_FILE segmentConfiguration.apiKey "$SEGMENT_NG_APIKEY"
+if [[ "" != "$SEGMENT_APIKEY_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.apiKey "$SEGMENT_APIKEY_NG"
 fi
 
-if [[ "" != "$SEGMENT_NG_VERIFY_CERT" ]]; then
-  yq write -i $CONFIG_FILE segmentConfiguration.certValidationRequired "$SEGMENT_NG_VERIFY_CERT"
+if [[ "" != "$SEGMENT_VERIFY_CERT_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.certValidationRequired "$SEGMENT_VERIFY_CERT_NG"
 fi

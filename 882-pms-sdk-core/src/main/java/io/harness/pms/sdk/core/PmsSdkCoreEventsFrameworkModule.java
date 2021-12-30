@@ -21,17 +21,21 @@ public class PmsSdkCoreEventsFrameworkModule extends AbstractModule {
   private static PmsSdkCoreEventsFrameworkModule instance;
 
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  private final PipelineRedisEventsConfig pipelineRedisEventsConfig;
   private final String serviceName;
 
-  public static PmsSdkCoreEventsFrameworkModule getInstance(EventsFrameworkConfiguration config, String serviceName) {
+  public static PmsSdkCoreEventsFrameworkModule getInstance(
+      EventsFrameworkConfiguration config, PipelineRedisEventsConfig pipelineRedisEventsConfig, String serviceName) {
     if (instance == null) {
-      instance = new PmsSdkCoreEventsFrameworkModule(config, serviceName);
+      instance = new PmsSdkCoreEventsFrameworkModule(config, pipelineRedisEventsConfig, serviceName);
     }
     return instance;
   }
 
-  private PmsSdkCoreEventsFrameworkModule(EventsFrameworkConfiguration config, String serviceName) {
+  private PmsSdkCoreEventsFrameworkModule(
+      EventsFrameworkConfiguration config, PipelineRedisEventsConfig pipelineRedisEventsConfig, String serviceName) {
     this.eventsFrameworkConfiguration = config;
+    this.pipelineRedisEventsConfig = pipelineRedisEventsConfig;
     this.serviceName = serviceName;
   }
 
@@ -50,12 +54,12 @@ public class PmsSdkCoreEventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(SDK_RESPONSE_EVENT_PRODUCER))
           .toInstance(RedisProducer.of(PIPELINE_SDK_RESPONSE_EVENT_TOPIC, redissonClient,
-              EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE, serviceName,
+              pipelineRedisEventsConfig.getPipelineSdkResponseEvent().getMaxTopicSize(), serviceName,
               redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(PARTIAL_PLAN_RESPONSE_EVENT_PRODUCER))
           .toInstance(RedisProducer.of(PIPELINE_PARTIAL_PLAN_RESPONSE, redissonClient,
-              EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE, serviceName,
+              pipelineRedisEventsConfig.getPipelineSdkResponseEvent().getMaxTopicSize(), serviceName,
               redisConfig.getEnvNamespace()));
     }
   }
