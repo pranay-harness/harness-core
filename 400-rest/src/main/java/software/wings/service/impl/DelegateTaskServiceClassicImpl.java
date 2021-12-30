@@ -424,6 +424,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         if (task.getData().isAsync()) {
           task.setNextBroadcast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
         }
+        // shuffle the eligible delegates to evenly distribute the load
+        Collections.shuffle(eligibleListOfDelegates);
 
         checkTaskRankRateLimit(task.getRank());
 
