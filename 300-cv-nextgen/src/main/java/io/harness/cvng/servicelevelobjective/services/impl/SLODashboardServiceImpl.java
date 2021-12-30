@@ -1,5 +1,6 @@
 package io.harness.cvng.servicelevelobjective.services.impl;
 
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
@@ -38,6 +39,7 @@ public class SLODashboardServiceImpl implements SLODashboardService {
   @Inject private SLIRecordService sliRecordService;
   @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Inject private Clock clock;
+  @Inject private NextGenService nextGenService;
   @Override
   public PageResponse<SLODashboardWidget> getSloDashboardWidgets(
       ProjectParams projectParams, SLODashboardApiFilter filter, PageParams pageParams) {
@@ -102,6 +104,15 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .monitoredServiceIdentifier(slo.getMonitoredServiceRef())
         .monitoredServiceName(monitoredService.getName())
         .environmentIdentifier(monitoredService.getEnvironmentRef())
+        .environmentName(
+            nextGenService
+                .getEnvironment(serviceLevelObjective.getAccountId(), serviceLevelObjective.getOrgIdentifier(),
+                    serviceLevelObjective.getProjectIdentifier(), monitoredService.getEnvironmentRef())
+                .getName())
+        .serviceName(nextGenService
+                         .getService(serviceLevelObjective.getAccountId(), serviceLevelObjective.getOrgIdentifier(),
+                             serviceLevelObjective.getProjectIdentifier(), monitoredService.getServiceRef())
+                         .getName())
         .serviceIdentifier(monitoredService.getServiceRef())
         .healthSourceIdentifier(slo.getHealthSourceRef())
         .healthSourceName(getHealthSourceName(monitoredService, slo.getHealthSourceRef()))
