@@ -9,6 +9,7 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.SplunkDataCollectionInfo;
 import io.harness.cvng.core.entities.SplunkCVConfig;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.models.VerificationType;
 import io.harness.rule.Owner;
 
@@ -28,7 +29,7 @@ public class SplunkDataCollectionInfoMapperTest extends CvNextGenTestBase {
     cvConfig.setAccountId(generateUuid());
     cvConfig.setQuery("exception");
     cvConfig.setServiceInstanceIdentifier("host");
-    SplunkDataCollectionInfo splunkDataCollectionInfo = mapper.toDataCollectionInfo(cvConfig);
+    SplunkDataCollectionInfo splunkDataCollectionInfo = mapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
     assertThat(splunkDataCollectionInfo.getQuery()).isEqualTo(cvConfig.getQuery());
     assertThat(splunkDataCollectionInfo.getServiceInstanceIdentifier())
         .isEqualTo(cvConfig.getServiceInstanceIdentifier());
