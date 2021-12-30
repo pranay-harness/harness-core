@@ -6,6 +6,7 @@ import io.harness.cvng.beans.CustomHealthDataCollectionInfo;
 import io.harness.cvng.beans.MetricResponseMappingDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.MetricResponseMapping;
 import io.harness.cvng.core.entities.CustomHealthCVConfig;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionSLIInfoMapper;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
@@ -18,7 +19,7 @@ public class CustomHealthDataCollectionInfoMapper
     implements DataCollectionInfoMapper<CustomHealthDataCollectionInfo, CustomHealthCVConfig>,
                DataCollectionSLIInfoMapper<CustomHealthDataCollectionInfo, CustomHealthCVConfig> {
   @Override
-  public CustomHealthDataCollectionInfo toDataCollectionInfo(CustomHealthCVConfig cvConfig) {
+  public CustomHealthDataCollectionInfo toDataCollectionInfo(CustomHealthCVConfig cvConfig, TaskType taskType) {
     CustomHealthDataCollectionInfo customHealthDataCollectionInfo =
         CustomHealthDataCollectionInfo.builder()
             .groupName(cvConfig.getGroupName())
