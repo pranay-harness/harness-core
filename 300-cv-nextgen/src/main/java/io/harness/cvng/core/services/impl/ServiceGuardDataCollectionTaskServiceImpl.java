@@ -8,6 +8,7 @@ import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.ServiceGuardDataCollectionTask;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskManagementService;
@@ -109,8 +110,8 @@ public class ServiceGuardDataCollectionTaskServiceImpl implements DataCollection
         .endTime(endTime)
         .verificationTaskId(
             verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid()))
-        .dataCollectionInfo(
-            dataSourceTypeDataCollectionInfoMapperMap.get(cvConfig.getType()).toDataCollectionInfo(cvConfig))
+        .dataCollectionInfo(dataSourceTypeDataCollectionInfoMapperMap.get(cvConfig.getType())
+                                .toDataCollectionInfo(cvConfig, TaskType.LIVE_MONITORING))
         .build();
   }
 }

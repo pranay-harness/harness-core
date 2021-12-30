@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +18,7 @@ import io.harness.cvng.core.entities.AnalysisInfo;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicMetricInfo;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -45,7 +47,7 @@ public class NewRelicDataCollectionInfoMapperTest extends CvNextGenTestBase {
     cvConfig.setApplicationName("cv-app");
     cvConfig.setMetricPack(metricPack);
     cvConfig.setApplicationId(12345l);
-    NewRelicDataCollectionInfo dataCollectionInfo = mapper.toDataCollectionInfo(cvConfig);
+    NewRelicDataCollectionInfo dataCollectionInfo = mapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
     assertThat(dataCollectionInfo.getMetricPack()).isEqualTo(metricPack.toDTO());
     assertThat(dataCollectionInfo.getApplicationName()).isEqualTo("cv-app");
     assertThat(dataCollectionInfo.getApplicationId()).isEqualTo(cvConfig.getApplicationId());
@@ -57,7 +59,22 @@ public class NewRelicDataCollectionInfoMapperTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testToDataConnectionInfo_withCustomMetrics() {
     NewRelicCVConfig cvConfig = createCVConfigWithCustomMetric();
-    NewRelicDataCollectionInfo dataCollectionInfo = mapper.toDataCollectionInfo(cvConfig);
+    NewRelicDataCollectionInfo dataCollectionInfo = mapper.toDataCollectionInfo(cvConfig, TaskType.LIVE_MONITORING);
+    assertThat(dataCollectionInfo.getMetricPack()).isEqualTo(cvConfig.getMetricPack().toDTO());
+    assertThat(dataCollectionInfo.getApplicationName()).isNull();
+    assertThat(dataCollectionInfo.getApplicationId()).isEqualTo(0);
+    assertThat(dataCollectionInfo.getDataCollectionDsl()).isEqualTo("metric-pack-dsl");
+
+    assertThat(dataCollectionInfo.getGroupName()).isEqualTo("groupName");
+    assertThat(dataCollectionInfo.getMetricInfoList().size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testToDataConnectionInfo_withCustomMetricsTaskTypeFilter() {
+    NewRelicCVConfig cvConfig = createCVConfigWithCustomMetric();
+    NewRelicDataCollectionInfo dataCollectionInfo = mapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
     assertThat(dataCollectionInfo.getMetricPack()).isEqualTo(cvConfig.getMetricPack().toDTO());
     assertThat(dataCollectionInfo.getApplicationName()).isNull();
     assertThat(dataCollectionInfo.getApplicationId()).isEqualTo(0);
@@ -95,7 +112,7 @@ public class NewRelicDataCollectionInfoMapperTest extends CvNextGenTestBase {
                                  .timestampJsonPath("$.timestamp")
                                  .build())
             .deploymentVerification(AnalysisInfo.DeploymentVerification.builder().enabled(Boolean.TRUE).build())
-            .liveMonitoring(AnalysisInfo.LiveMonitoring.builder().enabled(Boolean.TRUE).build())
+            .liveMonitoring(AnalysisInfo.LiveMonitoring.builder().enabled(Boolean.FALSE).build())
             .sli(AnalysisInfo.SLI.builder().enabled(Boolean.TRUE).build())
             .build()));
     return cvConfig;

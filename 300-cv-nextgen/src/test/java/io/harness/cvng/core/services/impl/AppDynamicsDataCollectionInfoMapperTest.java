@@ -11,10 +11,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo.AppMetricInfoDTO;
+import io.harness.cvng.core.entities.AnalysisInfo.LiveMonitoring;
 import io.harness.cvng.core.entities.AnalysisInfo.SLI;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.MetricInfo;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig.MetricInfo.MetricInfoBuilder;
 import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.rule.Owner;
 
@@ -47,11 +50,36 @@ public class AppDynamicsDataCollectionInfoMapperTest extends CvNextGenTestBase {
     cvConfig.setApplicationName("cv-app");
     cvConfig.setMetricPack(metricPack);
     cvConfig.setTierName("docker-tier");
-    AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo = mapper.toDataCollectionInfo(cvConfig);
+    AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
+        mapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
     assertThat(appDynamicsDataCollectionInfo.getMetricPack()).isEqualTo(metricPack.toDTO());
     assertThat(appDynamicsDataCollectionInfo.getApplicationName()).isEqualTo("cv-app");
     assertThat(appDynamicsDataCollectionInfo.getTierName()).isEqualTo("docker-tier");
     assertThat(appDynamicsDataCollectionInfo.getDataCollectionDsl()).isEqualTo("metric-pack-dsl");
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testToDataConnectionInfo_customMetricByTypeFilteration() {
+    MetricPack metricPack = MetricPack.builder().dataCollectionDsl("metric-pack-dsl").build();
+
+    AppDynamicsCVConfig cvConfig =
+        builderFactory.appDynamicsCVConfigBuilder()
+            .metricInfos(Arrays.asList(
+                getMetricInfoBuilder("1").liveMonitoring(LiveMonitoring.builder().enabled(true).build()).build(),
+                getMetricInfoBuilder("2").liveMonitoring(LiveMonitoring.builder().enabled(false).build()).build()))
+            .build();
+    cvConfig.setUuid(generateUuid());
+    cvConfig.setAccountId(generateUuid());
+    cvConfig.setApplicationName("cv-app");
+    cvConfig.setMetricPack(metricPack);
+    cvConfig.setTierName("docker-tier");
+    AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
+        mapper.toDataCollectionInfo(cvConfig, TaskType.LIVE_MONITORING);
+    assertThat(appDynamicsDataCollectionInfo.getMetricPack()).isEqualTo(metricPack.toDTO());
+    assertThat(appDynamicsDataCollectionInfo.getCustomMetrics()).hasSize(1);
+    assertThat(appDynamicsDataCollectionInfo.getCustomMetrics().get(0).getMetricIdentifier()).isEqualTo("metric1");
   }
 
   @Test
@@ -98,12 +126,15 @@ public class AppDynamicsDataCollectionInfoMapperTest extends CvNextGenTestBase {
   }
 
   private MetricInfo getMetricInfo(String suffix) {
+    return getMetricInfoBuilder(suffix).build();
+  }
+
+  private MetricInfoBuilder getMetricInfoBuilder(String suffix) {
     return MetricInfo.builder()
         .metricName("metricName" + suffix)
         .identifier("metric" + suffix)
         .metricPath("metricPath" + suffix)
         .baseFolder("baseFolder" + suffix)
-        .sli(SLI.builder().enabled(true).build())
-        .build();
+        .sli(SLI.builder().enabled(true).build());
   }
 }
