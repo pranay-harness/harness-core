@@ -21,6 +21,8 @@ public class SLODashboardWidget {
   @NotNull String healthSourceName;
   @NotNull String serviceIdentifier;
   @NotNull String environmentIdentifier;
+  @NotNull String environmentName;
+  @NotNull String serviceName;
   Map<String, String> tags;
   @NotNull ServiceLevelIndicatorType type;
   @NotNull BurnRate burnRate;
