@@ -123,6 +123,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
             .commandUnitsProgress(UnitProgressDataMapper.toCommandUnitsProgress(unitProgressData))
             .useVarSupportForKustomize(k8sStepHelper.isUseVarSupportForKustomize(accountId))
             .useNewKubectlVersion(k8sStepHelper.isUseNewKubectlVersion(accountId))
+            .pruningEnabled(k8sStepHelper.isPruningEnabled(accountId))
             .build();
 
     k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
@@ -182,8 +183,9 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
 
     K8sRollingDeployResponse k8sTaskResponse =
         (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
-    K8sRollingOutcome k8sRollingOutcome =
-        k8sRollingOutcomeBuilder.releaseNumber(k8sTaskResponse.getReleaseNumber()).build();
+    K8sRollingOutcome k8sRollingOutcome = k8sRollingOutcomeBuilder.releaseNumber(k8sTaskResponse.getReleaseNumber())
+                                              .prunedResourceIds(k8sTaskResponse.getPrunedResourceIds())
+                                              .build();
     executionSweepingOutputService.consume(
         ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT, k8sRollingOutcome, StepOutcomeGroup.STEP.name());
 

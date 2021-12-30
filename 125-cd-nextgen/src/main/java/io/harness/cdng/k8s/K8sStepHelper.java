@@ -1264,4 +1264,8 @@ public class K8sStepHelper extends CommonGitSCMHelper {
   public boolean isUseNewKubectlVersion(String accountId) {
     return cdFeatureFlagHelper.isEnabled(accountId, FeatureName.NEW_KUBECTL_VERSION);
   }
+
+  public boolean isPruningEnabled(String accountId) {
+    return cdFeatureFlagHelper.isEnabled(accountId, FeatureName.PRUNE_KUBERNETES_RESOURCES);
+  }
 }
