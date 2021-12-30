@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan, PlanExecution, PlanExecutionMetadata> {
-  @Inject @Named("EngineExecutorService") private ExecutorService executorService;
+  @Inject @Named("PipelineExecutionStartExecutorService") private ExecutorService executorService;
   @Inject private OrchestrationEngine orchestrationEngine;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;

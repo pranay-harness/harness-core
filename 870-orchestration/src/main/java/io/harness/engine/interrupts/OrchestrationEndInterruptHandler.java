@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationEndInterruptHandler implements AsyncInformObserver, OrchestrationEndObserver {
   @Inject private InterruptService interruptService;
-  @Inject @Named("EngineExecutorService") ExecutorService executorService;
+  @Inject @Named("AsyncNodeObserverHandler") ExecutorService executorService;
 
   @Override
   public void onEnd(Ambiance ambiance) {

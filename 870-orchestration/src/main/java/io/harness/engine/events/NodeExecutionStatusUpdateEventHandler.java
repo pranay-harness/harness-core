@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutorService;
 
 @OwnedBy(PIPELINE)
 public class NodeExecutionStatusUpdateEventHandler implements AsyncInformObserver, NodeStatusUpdateObserver {
-  @Inject @Named("EngineExecutorService") ExecutorService executorService;
+  @Inject @Named("AsyncNodeObserverHandler") ExecutorService executorService;
   @Inject private TimeoutEngine timeoutEngine;
 
   @Override

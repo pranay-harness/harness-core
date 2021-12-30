@@ -171,6 +171,30 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
 
   @Provides
   @Singleton
+  @Named("PipelineExecutionStartExecutorService")
+  public ExecutorService pipelineExecutionServiceThreadPool() {
+    return ThreadPool.create(5, 20, config.getIdleTimeInSecs(), TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("PipelineExecutionStartExecutorService-%d").build());
+  }
+
+  @Provides
+  @Singleton
+  @Named("AsyncNodeObserverHandler")
+  public ExecutorService asyncNodeObserverHandler() {
+    return ThreadPool.create(3, 10, config.getIdleTimeInSecs(), TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("AsyncNodeObserverHandler-%d").build());
+  }
+
+  @Provides
+  @Singleton
+  @Named("SdkResponseEventExecutorService")
+  public ExecutorService sdkResponseEventExecutorService() {
+    return ThreadPool.create(5, 30, config.getIdleTimeInSecs(), TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("AsyncNodeObserverHandler-%d").build());
+  }
+
+  @Provides
+  @Singleton
   public ExpressionEvaluatorProvider expressionEvaluatorProvider() {
     return config.getExpressionEvaluatorProvider();
   }
