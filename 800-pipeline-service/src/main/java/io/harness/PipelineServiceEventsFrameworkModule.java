@@ -18,7 +18,6 @@ import io.harness.eventsframework.impl.redis.GitAwareRedisProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.eventsframework.impl.redis.RedisUtils;
-import io.harness.pms.sdk.core.PipelineRedisEventsConfig;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;

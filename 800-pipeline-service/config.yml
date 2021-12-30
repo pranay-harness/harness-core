@@ -368,6 +368,8 @@ pipelineRedisEventsConfig:
     maxTopicSize: ${ENTITY_CRUD_MAX_TOPIC_SIZE:-100000}
   orchestrationNotifyEvent:
     maxTopicSize: ${PMS_ORCHESTRATION_NOTIFY_EVENT_MAX_TOPIC_SIZE:-5000}
+
+pipelineSdkRedisEventsConfig:
   pipelineSdkResponseEvent:
     maxTopicSize: ${PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE:-5000}
 

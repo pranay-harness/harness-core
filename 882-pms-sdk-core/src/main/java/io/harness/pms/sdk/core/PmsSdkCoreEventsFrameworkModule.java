@@ -21,21 +21,21 @@ public class PmsSdkCoreEventsFrameworkModule extends AbstractModule {
   private static PmsSdkCoreEventsFrameworkModule instance;
 
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;
-  private final PipelineRedisEventsConfig pipelineRedisEventsConfig;
+  private final PipelineSdkRedisEventsConfig pipelineSdkRedisEventsConfig;
   private final String serviceName;
 
-  public static PmsSdkCoreEventsFrameworkModule getInstance(
-      EventsFrameworkConfiguration config, PipelineRedisEventsConfig pipelineRedisEventsConfig, String serviceName) {
+  public static PmsSdkCoreEventsFrameworkModule getInstance(EventsFrameworkConfiguration config,
+      PipelineSdkRedisEventsConfig pipelineSdkRedisEventsConfig, String serviceName) {
     if (instance == null) {
-      instance = new PmsSdkCoreEventsFrameworkModule(config, pipelineRedisEventsConfig, serviceName);
+      instance = new PmsSdkCoreEventsFrameworkModule(config, pipelineSdkRedisEventsConfig, serviceName);
     }
     return instance;
   }
 
-  private PmsSdkCoreEventsFrameworkModule(
-      EventsFrameworkConfiguration config, PipelineRedisEventsConfig pipelineRedisEventsConfig, String serviceName) {
+  private PmsSdkCoreEventsFrameworkModule(EventsFrameworkConfiguration config,
+      PipelineSdkRedisEventsConfig pipelineSdkRedisEventsConfig, String serviceName) {
     this.eventsFrameworkConfiguration = config;
-    this.pipelineRedisEventsConfig = pipelineRedisEventsConfig;
+    this.pipelineSdkRedisEventsConfig = pipelineSdkRedisEventsConfig;
     this.serviceName = serviceName;
   }
 
@@ -54,12 +54,12 @@ public class PmsSdkCoreEventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(SDK_RESPONSE_EVENT_PRODUCER))
           .toInstance(RedisProducer.of(PIPELINE_SDK_RESPONSE_EVENT_TOPIC, redissonClient,
-              pipelineRedisEventsConfig.getPipelineSdkResponseEvent().getMaxTopicSize(), serviceName,
+              pipelineSdkRedisEventsConfig.getPipelineSdkResponseEvent().getMaxTopicSize(), serviceName,
               redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(PARTIAL_PLAN_RESPONSE_EVENT_PRODUCER))
           .toInstance(RedisProducer.of(PIPELINE_PARTIAL_PLAN_RESPONSE, redissonClient,
-              pipelineRedisEventsConfig.getPipelineSdkResponseEvent().getMaxTopicSize(), serviceName,
+              pipelineSdkRedisEventsConfig.getPipelineSdkResponseEvent().getMaxTopicSize(), serviceName,
               redisConfig.getEnvNamespace()));
     }
   }

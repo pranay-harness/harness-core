@@ -10,7 +10,7 @@ import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.PipelineRedisEventsConfig;
+import io.harness.pms.sdk.core.PipelineSdkRedisEventsConfig;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
@@ -60,7 +60,7 @@ public class PmsSdkConfiguration {
           .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
           .build();
 
-  @Default PipelineRedisEventsConfig pipelineRedisEventsConfig = PipelineRedisEventsConfig.builder().build();
+  @Default PipelineSdkRedisEventsConfig pipelineSdkRedisEventsConfig = PipelineSdkRedisEventsConfig.builder().build();
 
   public String getServiceName() {
     return moduleType.name().toLowerCase();
