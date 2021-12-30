@@ -1,14 +1,12 @@
-package io.harness.pms.sdk.core;
+package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PLAN_NOTIFY_EVENT_MAX_TOPIC_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT_MAX_TOPIC_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE_MAX_TOPIC_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE;
 
-import io.harness.RedisEventConfig;
 import io.harness.annotations.dev.OwnedBy;
 
 import lombok.Builder;
@@ -29,7 +27,4 @@ public class PipelineRedisEventsConfig {
   @Default
   RedisEventConfig orchestrationNotifyEvent =
       RedisEventConfig.builder().maxTopicSize(PMS_ORCHESTRATION_NOTIFY_EVENT_MAX_TOPIC_SIZE).build();
-  @Default
-  RedisEventConfig pipelineSdkResponseEvent =
-      RedisEventConfig.builder().maxTopicSize(PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE).build();
 }

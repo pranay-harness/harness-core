@@ -555,7 +555,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .executionPoolConfig(config.getPmsSdkExecutionPoolConfig())
         .orchestrationEventPoolConfig(config.getPmsSdkOrchestrationEventPoolConfig())
         .planCreatorServiceInternalConfig(config.getPmsPlanCreatorServicePoolConfig())
-        .pipelineRedisEventsConfig(config.getPipelineRedisEventsConfig())
+        .pipelineSdkRedisEventsConfig(config.getPipelineSdkRedisEventsConfig())
         .build();
   }
 

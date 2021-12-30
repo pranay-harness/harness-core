@@ -60,7 +60,7 @@ public class PmsSdkCoreModule extends AbstractModule {
     bind(SdkGraphVisualizationDataService.class).to(SdkGraphVisualizationDataServiceImpl.class).in(Singleton.class);
 
     install(PmsSdkCoreEventsFrameworkModule.getInstance(
-        config.getEventsFrameworkConfiguration(), config.getPipelineRedisEventsConfig(), config.getServiceName()));
+        config.getEventsFrameworkConfiguration(), config.getPipelineSdkRedisEventsConfig(), config.getServiceName()));
     bind(SdkResponseEventPublisher.class).to(RedisSdkResponseEventPublisher.class);
     MapBinder<Class<? extends Exception>, ExceptionHandler> exceptionHandlerMapBinder = MapBinder.newMapBinder(
         binder(), new TypeLiteral<Class<? extends Exception>>() {}, new TypeLiteral<ExceptionHandler>() {});
