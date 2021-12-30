@@ -14,12 +14,11 @@ import software.wings.service.intfc.AssignDelegateService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
+import static java.lang.System.currentTimeMillis;
 
 @Singleton
 @Slf4j
@@ -59,9 +58,8 @@ public class DelegateTaskBroadcastHelper {
                                                       .async(delegateTask.getData().isAsync())
                                                       .preAssignedDelegateId(delegateTask.getPreAssignedDelegateId())
                                                       .build();
-
-    Broadcaster broadcaster = broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true);
     long startTime = currentTimeMillis();
+    Broadcaster broadcaster = broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true);
     broadcaster.broadcast(delegateTaskBroadcast);
     log.info("broadcasting task id: {} took: {} ", delegateTaskBroadcast.getTaskId(), currentTimeMillis() - startTime);
   }
