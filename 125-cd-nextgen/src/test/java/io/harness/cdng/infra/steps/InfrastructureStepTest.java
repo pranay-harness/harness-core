@@ -42,6 +42,7 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.sdk.EntityValidityDetails;
 import io.harness.logstreaming.ILogStreamingStepClient;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.ng.core.environment.beans.Environment;
@@ -109,6 +110,7 @@ public class InfrastructureStepTest extends CategoryTest {
             .build();
     doReturn(Optional.of(ConnectorResponseDTO.builder()
                              .connector(ConnectorInfoDTO.builder().connectorConfig(gcpConnectorServiceAccount).build())
+                             .entityValidityDetails(EntityValidityDetails.builder().valid(true).build())
                              .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), eq("gcp-sa"));
@@ -251,12 +253,14 @@ public class InfrastructureStepTest extends CategoryTest {
             .build();
     doReturn(Optional.empty()).when(connectorService).get(anyString(), anyString(), anyString(), eq("missing"));
     doReturn(Optional.of(ConnectorResponseDTO.builder()
+                             .entityValidityDetails(EntityValidityDetails.builder().valid(true).build())
                              .connector(ConnectorInfoDTO.builder().connectorConfig(gcpConnectorServiceAccount).build())
                              .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), eq("gcp-sa"));
     doReturn(
         Optional.of(ConnectorResponseDTO.builder()
+                        .entityValidityDetails(EntityValidityDetails.builder().valid(true).build())
                         .connector(ConnectorInfoDTO.builder().connectorConfig(gcpConnectorInheritFromDelegate).build())
                         .build()))
         .when(connectorService)
