@@ -14,6 +14,7 @@ import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorS
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Instant;
@@ -72,6 +73,25 @@ public class SLOHealthIndicatorServiceImpl implements SLOHealthIndicatorService 
                                       .build();
     ServiceLevelObjective serviceLevelObjective =
         serviceLevelObjectiveService.getFromSLIIdentifier(projectParams, serviceLevelIndicator.getIdentifier());
+    upsert(projectParams, serviceLevelObjective, serviceLevelIndicator);
+  }
+
+  @Override
+  public void upsert(ServiceLevelObjective serviceLevelObjective) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(serviceLevelObjective.getAccountId())
+                                      .orgIdentifier(serviceLevelObjective.getOrgIdentifier())
+                                      .projectIdentifier(serviceLevelObjective.getProjectIdentifier())
+                                      .build();
+    Preconditions.checkState(
+        serviceLevelObjective.getServiceLevelIndicators().size() == 1, "Only one service level indicator is supported");
+    ServiceLevelIndicator serviceLevelIndicator = serviceLevelIndicatorService.getServiceLevelIndicator(
+        projectParams, serviceLevelObjective.getServiceLevelIndicators().get(0));
+    upsert(projectParams, serviceLevelObjective, serviceLevelIndicator);
+  }
+
+  private void upsert(ProjectParams projectParams, ServiceLevelObjective serviceLevelObjective,
+      ServiceLevelIndicator serviceLevelIndicator) {
     SLOHealthIndicator sloHealthIndicator = getBySLOIdentifier(projectParams, serviceLevelObjective.getIdentifier());
     LocalDateTime currentLocalDate = LocalDateTime.ofInstant(clock.instant(), serviceLevelObjective.getZoneOffset());
     int totalErrorBudgetMinutes = serviceLevelObjective.getTotalErrorBudgetMinutes(currentLocalDate);
