@@ -132,4 +132,12 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
       pmsExecutionSummaryRepository.update(query, update);
     }
   }
+
+  @Override
+  public void update(String planExecutionId, Update update) {
+    Criteria criteria =
+        Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
+    Query query = new Query(criteria);
+    pmsExecutionSummaryRepository.update(query, update);
+  }
 }
