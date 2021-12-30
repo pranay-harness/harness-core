@@ -27,7 +27,6 @@ services:
       - DELEGATE_DESCRIPTION=${delegateDescription}
       - DELEGATE_TYPE=DOCKER
       - DELEGATE_TAGS=${delegateTags}
-      - DELEGATE_TASK_LIMIT=${delegateTaskLimit}
       - DELEGATE_ORG_IDENTIFIER=${delegateOrgIdentifier}
       - DELEGATE_PROJECT_IDENTIFIER=${delegateProjectIdentifier}
       - PROXY_MANAGER=true
