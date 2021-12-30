@@ -41,9 +41,11 @@ public class TerraformRuntimeExceptionHandlerTest {
       "\u001B[31m\u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1mUnknown error with terraform block and argument\u001B[0m\u001B[0m  on main.tf line 1, in cloud \"test\":   1: argument \"test\" \u001B[4m{\u001B[0m\u001B[0mSomething went wrong and we're not aware of this error or error itself is self explanatory\u001B[0m\u001B[0m";
   private static final String TEST_ERROR_FAILED_WORKSPACES =
       "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1mFailed to get existing workspaces: Get \"http://127.0.0.1:8500/v1/kv/state-env:?keys=&separator=%2F\": dial tcp 127.0.0.1:8500: connect: connection refused\u001B[0m  \u001B[0m\u001B[0m\u001B[0m";
-
   private static final String TEST_ERROR_INVALID_REGION_TF13 =
       "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1mInvalid AWS Region: random\u001B[0m  \u001B[0m  on config.tf line 15, in provider \"aws\":   15: provider \"aws\" \u001B[4m{\u001B[0m \u001B[0m \u001B[0m\u001B[0m";
+  private static final String TEST_ERROR_S3_BACKEND_CONFIG =
+      "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1merror configuring S3 Backend: no valid credential sources for S3 Backend found \u001B[0m  \u001B[0m\u001B[0m\u001B[0m";
+
   TerraformRuntimeExceptionHandler handler = new TerraformRuntimeExceptionHandler();
 
   @Test
@@ -85,12 +87,23 @@ public class TerraformRuntimeExceptionHandlerTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
-  public void testHandleUnknownErrorInvalidRegionOldTfVersion13() {
+  public void testHandleErrorInvalidRegionOldTfVersion13() {
     TerraformCliRuntimeException cliRuntimeException =
         new TerraformCliRuntimeException("Terraform failed", "terraform refresh", TEST_ERROR_INVALID_REGION_TF13);
     assertSingleErrorMessage(handler.handleException(cliRuntimeException),
         format(HINT_CHECK_TERRAFORM_CONFIG_LOCATION, "config.tf", "15", "provider \"aws\""), null,
         "terraform refresh failed with: Invalid AWS Region: random");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testHandleErrorInvalidS3BackendConfig() {
+    TerraformCliRuntimeException cliRuntimeException =
+        new TerraformCliRuntimeException("Terraform failed", "terraform init", TEST_ERROR_S3_BACKEND_CONFIG);
+    assertSingleErrorMessage(handler.handleException(cliRuntimeException), HINT_FAILED_TO_GET_EXISTING_WORKSPACES,
+        "error configuring S3 Backend: no valid credential sources for S3 Backend found",
+        "terraform init failed with: error configuring S3 Backend: no valid credential sources for S3 Backend found");
   }
 
   @Test
