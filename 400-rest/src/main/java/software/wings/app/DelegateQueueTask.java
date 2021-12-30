@@ -57,6 +57,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
@@ -279,7 +280,7 @@ public class DelegateQueueTask implements Runnable {
                 .set(DelegateTaskKeys.lastBroadcastAt, now)
                 .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
                 .set(DelegateTaskKeys.eligibleToExecuteDelegateIds, eligibleDelegatesList)
-                .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask));
+                .set(DelegateTaskKeys.nextBroadcast, now + TimeUnit.SECONDS.toMillis(5));
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {
@@ -302,8 +303,10 @@ public class DelegateQueueTask implements Runnable {
         try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR);
              AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId(), OVERRIDE_ERROR)) {
-          log.info("Rebroadcast queued task id {}. Broadcast count: {}", delegateTask.getUuid(),
-              delegateTask.getBroadcastCount());
+          log.info(delegateTask.getBroadcastCount() > 1 ? "Rebroadcast"
+                                                        : "Broadcast"
+                      + " queued task id {}. Broadcast count: {}",
+              delegateTask.getUuid(), delegateTask.getBroadcastCount());
           broadcastHelper.rebroadcastDelegateTask(delegateTask);
           count++;
         }
