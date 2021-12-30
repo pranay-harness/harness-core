@@ -283,9 +283,10 @@ public class UserEventHandlerTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
+    String userName = randomAlphabetic(10);
     AddCollaboratorEvent addCollaboratorEvent = new AddCollaboratorEvent(accountIdentifier,
         Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
-        randomAlphabetic(10), UserMembershipUpdateSource.ACCEPTED_INVITE);
+        randomAlphabetic(10), userName, UserMembershipUpdateSource.ACCEPTED_INVITE);
     String eventData = objectMapper.writeValueAsString(addCollaboratorEvent);
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .id(randomAlphabetic(10))
@@ -317,9 +318,10 @@ public class UserEventHandlerTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
+    String userName = randomAlphabetic(10);
     RemoveCollaboratorEvent removeCollaboratorEvent = new RemoveCollaboratorEvent(accountIdentifier,
         Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
-        randomAlphabetic(10), UserMembershipUpdateSource.SYSTEM);
+        randomAlphabetic(10), userName, UserMembershipUpdateSource.SYSTEM);
     String eventData = objectMapper.writeValueAsString(removeCollaboratorEvent);
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .id(randomAlphabetic(10))

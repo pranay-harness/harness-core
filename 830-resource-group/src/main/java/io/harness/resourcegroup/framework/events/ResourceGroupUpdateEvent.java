@@ -10,10 +10,13 @@ import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.OrgScope;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
+import io.harness.ng.core.ResourceConstants;
 import io.harness.ng.core.ResourceScope;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -47,7 +50,9 @@ public class ResourceGroupUpdateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(newResourceGroup.getIdentifier()).type(RESOURCE_GROUP).build();
+    Map<String, String> labels = new HashMap<>();
+    labels.put(ResourceConstants.LABEL_KEY_RESOURCE_NAME, newResourceGroup.getName());
+    return Resource.builder().identifier(newResourceGroup.getIdentifier()).type(RESOURCE_GROUP).labels(labels).build();
   }
 
   @JsonIgnore
