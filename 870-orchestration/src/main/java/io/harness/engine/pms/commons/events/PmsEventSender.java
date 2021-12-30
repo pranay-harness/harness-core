@@ -9,11 +9,11 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.OrchestrationModuleConfig;
+import io.harness.OrchestrationRedisEventsConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.events.PmsRedissonClientFactory;
-import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
@@ -116,31 +116,32 @@ public class PmsEventSender {
   @VisibleForTesting
   Producer obtainProducer(ProducerCacheKey cacheKey) {
     PmsSdkInstance instance = getPmsSdkInstance(cacheKey.getServiceName());
+    OrchestrationRedisEventsConfig orchestrationRedisEventsConfig = moduleConfig.getOrchestrationRedisEventsConfig();
     switch (cacheKey.getEventCategory()) {
       case INTERRUPT_EVENT:
-        return extractProducer(
-            instance.getInterruptConsumerConfig(), EventsFrameworkConstants.PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE);
+        return extractProducer(instance.getInterruptConsumerConfig(),
+            orchestrationRedisEventsConfig.getPipelineInterruptEvent().getMaxTopicSize());
       case ORCHESTRATION_EVENT:
         return extractProducer(instance.getOrchestrationEventConsumerConfig(),
-            EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_MAX_TOPIC_SIZE);
+            orchestrationRedisEventsConfig.getPipelineOrchestrationEvent().getMaxTopicSize());
       case FACILITATOR_EVENT:
         return extractProducer(instance.getFacilitatorEventConsumerConfig(),
-            EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_MAX_TOPIC_SIZE);
+            orchestrationRedisEventsConfig.getPipelineFacilitatorEvent().getMaxTopicSize());
       case NODE_START:
         return extractProducer(instance.getNodeStartEventConsumerConfig(),
-            EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_MAX_TOPIC_SIZE);
+            orchestrationRedisEventsConfig.getPipelineNodeStartEvent().getMaxTopicSize());
       case PROGRESS_EVENT:
-        return extractProducer(
-            instance.getProgressEventConsumerConfig(), EventsFrameworkConstants.PIPELINE_PROGRESS_MAX_TOPIC_SIZE);
+        return extractProducer(instance.getProgressEventConsumerConfig(),
+            orchestrationRedisEventsConfig.getPipelineProgressEvent().getMaxTopicSize());
       case NODE_ADVISE:
-        return extractProducer(
-            instance.getNodeAdviseEventConsumerConfig(), EventsFrameworkConstants.PIPELINE_NODE_ADVISE_MAX_TOPIC_SIZE);
+        return extractProducer(instance.getNodeAdviseEventConsumerConfig(),
+            orchestrationRedisEventsConfig.getPipelineNodeAdviseEvent().getMaxTopicSize());
       case NODE_RESUME:
-        return extractProducer(
-            instance.getNodeResumeEventConsumerConfig(), EventsFrameworkConstants.PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE);
+        return extractProducer(instance.getNodeResumeEventConsumerConfig(),
+            orchestrationRedisEventsConfig.getPipelineNodeResumeEvent().getMaxTopicSize());
       case CREATE_PARTIAL_PLAN:
         return extractProducer(instance.getStartPlanCreationEventConsumerConfig(),
-            EventsFrameworkConstants.PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE);
+            orchestrationRedisEventsConfig.getPipelineStartPartialPlanCreator().getMaxTopicSize());
       default:
         throw new InvalidRequestException("Invalid Event Category while obtaining Producer");
     }

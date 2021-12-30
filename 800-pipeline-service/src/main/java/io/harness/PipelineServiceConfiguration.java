@@ -110,6 +110,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("pmsPlanCreatorServicePoolConfig") private ThreadPoolConfig pmsPlanCreatorServicePoolConfig;
   @JsonProperty("planCreatorMergeServicePoolConfig") private ThreadPoolConfig planCreatorMergeServicePoolConfig;
   @JsonProperty("pipelineRedisEventsConfig") private PipelineRedisEventsConfig pipelineRedisEventsConfig;
+  @JsonProperty("orchestrationRedisEventsConfig") private OrchestrationRedisEventsConfig orchestrationRedisEventsConfig;
 
   private String managerServiceSecret;
   private String managerTarget;
