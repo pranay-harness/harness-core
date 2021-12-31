@@ -257,21 +257,17 @@ public class DelegateQueueTask implements Runnable {
         LinkedList<String> eligibleDelegatesList = delegateTask.getEligibleToExecuteDelegateIds();
 
         if (isEmpty(eligibleDelegatesList)) {
+          log.info("No eligible delegates for task {}", delegateTask.getUuid());
           continue;
         }
         // add connected eligible delegates to broadcast list. Also rotate the eligibleDelegatesList list
         List<String> broadcastToDelegates = Lists.newArrayList();
-        List<String> nonActiveDelegates = Lists.newArrayList();
         int broadcastLimit = Math.min(eligibleDelegatesList.size(), broadcastHelper.getMaxBroadcastCount(delegateTask));
         Iterator<String> delegateIdIterator = eligibleDelegatesList.iterator();
 
         while (delegateIdIterator.hasNext() && broadcastLimit > broadcastToDelegates.size()) {
           String delegateId = eligibleDelegatesList.removeFirst();
-          if (delegateService.checkDelegateConnected(delegateTask.getAccountId(), delegateId)) {
-            broadcastToDelegates.add(delegateId);
-          } else {
-            nonActiveDelegates.add(delegateId);
-          }
+          broadcastToDelegates.add(delegateId);
           eligibleDelegatesList.addLast(delegateId);
         }
 
@@ -284,7 +280,7 @@ public class DelegateQueueTask implements Runnable {
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {
-          log.info("Cannot find delegate task, update failed on broadcast");
+          log.info("Cannot find delegate task {}, update failed on broadcast", delegateTask.getUuid());
           continue;
         }
         delegateTask.setBroadcastToDelegateIds(broadcastToDelegates);
@@ -294,19 +290,19 @@ public class DelegateQueueTask implements Runnable {
           delegateSelectionLogsService.logBroadcastToDelegate(
               batch, Sets.newHashSet(broadcastToDelegates), delegateTask.getAccountId());
         }
-        if (isNotEmpty(nonActiveDelegates)) {
-          delegateSelectionLogsService.logDisconnectedDelegate(
-              batch, delegateTask.getAccountId(), Sets.newHashSet(nonActiveDelegates));
-        }
+
         delegateSelectionLogsService.save(batch);
 
         try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR);
              AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId(), OVERRIDE_ERROR)) {
-          log.info(delegateTask.getBroadcastCount() > 1 ? "Rebroadcast"
-                                                        : "Broadcast"
-                      + " queued task id {}. Broadcast count: {}",
-              delegateTask.getUuid(), delegateTask.getBroadcastCount());
+          if (delegateTask.getBroadcastCount() > 1) {
+            log.info("Rebroadcast queued task id {}. Broadcast count: {}", delegateTask.getUuid(),
+                delegateTask.getBroadcastCount());
+          } else {
+            log.debug("Broadcast queued task id {}. Broadcast count: {}", delegateTask.getUuid(),
+                delegateTask.getBroadcastCount());
+          }
           broadcastHelper.rebroadcastDelegateTask(delegateTask);
           count++;
         }
