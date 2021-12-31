@@ -7,6 +7,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.pms.contracts.steps.StepInfo;
@@ -78,6 +79,18 @@ public class CommonStepInfoTest extends CategoryTest {
           .setName("Barrier")
           .setType("Barrier")
           .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("FlowControl/Barrier").build())
+          .build();
+  StepInfo serviceNowApprovalStepInfo =
+      StepInfo.newBuilder()
+          .setName("ServiceNow Approval")
+          .setType("ServiceNowApproval")
+          .setStepMetaData(StepMetaData.newBuilder()
+                               .addCategory("Provisioner")
+                               .addCategory("Approval")
+                               .addFolderPaths("Approval")
+                               .build())
+          .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_SERVICE_NOW.name())
+          .setFeatureFlag(FeatureName.SERVICENOW_NG_INTEGRATION.name())
           .build();
 
   @Before

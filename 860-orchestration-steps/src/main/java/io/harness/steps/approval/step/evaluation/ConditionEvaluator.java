@@ -1,4 +1,4 @@
-package io.harness.steps.approval.step.jira.evaluation;
+package io.harness.steps.approval.step.evaluation;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
@@ -7,7 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ApprovalStepNGException;
 import io.harness.jira.JiraIssueUtilsNG;
-import io.harness.steps.approval.step.jira.beans.Operator;
+import io.harness.steps.approval.step.beans.Operator;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.HashMap;
