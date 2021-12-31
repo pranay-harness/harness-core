@@ -1527,4 +1527,14 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
             .equal(appManifestId);
     return wingsPersistence.delete(query);
   }
+
+  @Override
+  public List<ApplicationManifest> listHelmChartSourceBySettingId(String accountId, String settingAttributeUuid) {
+    Query<ApplicationManifest> query =
+        wingsPersistence.createQuery(ApplicationManifest.class)
+            .filter(ApplicationKeys.accountId, accountId)
+            .filter(join(".", ApplicationManifestKeys.helmChartConfig, HelmChartConfigKeys.connectorId),
+                settingAttributeUuid);
+    return query.asList();
+  }
 }

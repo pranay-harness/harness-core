@@ -257,6 +257,9 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject
   @Getter(onMethod = @__(@SuppressValidation))
   private Subject<SettingAttributeObserver> artifactStreamSubject = new Subject<>();
+  @Inject
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<SettingAttributeObserver> appManifestSubject = new Subject<>();
   @Inject private SettingAttributeDao settingAttributeDao;
   @Inject private CEMetadataRecordDao ceMetadataRecordDao;
   @Inject private RemoteObserverInformer remoteObserverInformer;
