@@ -26,9 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class AppManifestSettingAttributePTaskManager implements SettingAttributeObserver {
   @Inject private FeatureFlagService featureFlagService;
-  @Inject ApplicationManifestService applicationManifestService;
-  @Inject AppManifestPTaskHelper appManifestPTaskHelper;
-  @Inject HelmChartService helmChartService;
+  @Inject private ApplicationManifestService applicationManifestService;
+  @Inject private AppManifestPTaskHelper appManifestPTaskHelper;
+  @Inject private HelmChartService helmChartService;
 
   @Override
   public void onSaved(SettingAttribute settingAttribute) {
