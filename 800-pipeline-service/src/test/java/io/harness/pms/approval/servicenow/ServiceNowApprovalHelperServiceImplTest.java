@@ -1,10 +1,14 @@
-package io.harness.pms.approval.jira;
+package io.harness.pms.approval.servicenow;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.rule.OwnerRule.BRIJESH;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.rule.OwnerRule.PRABU;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -18,13 +22,15 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
+import io.harness.delegate.TaskDetails;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
-import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
+import io.harness.delegate.beans.connector.servicenow.ServiceNowConnectorDTO;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
-import io.harness.exception.HarnessJiraException;
+import io.harness.exception.ServiceNowException;
 import io.harness.logstreaming.ILogStreamingStepClient;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.remote.client.NGRestUtils;
@@ -35,8 +41,11 @@ import io.harness.steps.StepUtils;
 import io.harness.steps.approval.step.beans.ApprovalType;
 import io.harness.steps.approval.step.beans.CriteriaSpecWrapperDTO;
 import io.harness.steps.approval.step.beans.KeyValuesCriteriaSpecDTO;
-import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
+import io.harness.steps.approval.step.servicenow.ServiceNowApprovalHelperService;
+import io.harness.steps.approval.step.servicenow.entities.ServiceNowApprovalInstance;
 import io.harness.waiter.WaitNotifyEngine;
+
+import software.wings.beans.TaskType;
 
 import java.util.Collections;
 import java.util.List;
@@ -45,15 +54,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@OwnedBy(PIPELINE)
+@OwnedBy(CDC)
 @PrepareForTest({NGRestUtils.class, StepUtils.class})
-public class JiraApprovalHelperServiceImplTest extends CategoryTest {
+public class ServiceNowApprovalHelperServiceImplTest extends CategoryTest {
   @Mock private NgDelegate2TaskExecutor ngDelegate2TaskExecutor;
   @Mock private ConnectorResourceClient connectorResourceClient;
   @Mock private KryoSerializer kryoSerializer;
@@ -62,7 +72,7 @@ public class JiraApprovalHelperServiceImplTest extends CategoryTest {
   @Mock private LogStreamingStepClientFactory logStreamingStepClientFactory;
   private String publisherName = "publisherName";
   @Mock private PmsGitSyncHelper pmsGitSyncHelper;
-  JiraApprovalHelperServiceImpl jiraApprovalHelperService;
+  ServiceNowApprovalHelperService serviceNowApprovalHelperService;
   @Mock ILogStreamingStepClient iLogStreamingStepClient;
   private static String accountId = "accountId";
   private static String orgIdentifier = "orgIdentifier";
@@ -71,13 +81,13 @@ public class JiraApprovalHelperServiceImplTest extends CategoryTest {
 
   @Before
   public void setUp() {
-    jiraApprovalHelperService = spy(new JiraApprovalHelperServiceImpl(ngDelegate2TaskExecutor, connectorResourceClient,
-        kryoSerializer, secretManagerClient, waitNotifyEngine, logStreamingStepClientFactory, publisherName,
-        pmsGitSyncHelper, null));
+    serviceNowApprovalHelperService = spy(new ServiceNowApprovalHelperServiceImpl(connectorResourceClient,
+        pmsGitSyncHelper, logStreamingStepClientFactory, secretManagerClient, ngDelegate2TaskExecutor, kryoSerializer,
+        publisherName, waitNotifyEngine));
   }
 
   @Test
-  @Owner(developers = BRIJESH)
+  @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void testHandlePollingEvent() {
     PowerMockito.mockStatic(NGRestUtils.class);
@@ -90,47 +100,59 @@ public class JiraApprovalHelperServiceImplTest extends CategoryTest {
                             .build();
     doReturn(iLogStreamingStepClient).when(logStreamingStepClientFactory).getLogStreamingStepClient(ambiance);
 
-    JiraApprovalInstance instance = getJiraApprovalInstance(ambiance);
+    ServiceNowApprovalInstance instance = getServiceNowApprovalInstance(ambiance);
     when(NGRestUtils.getResponse(any())).thenReturn(Collections.EMPTY_LIST);
-    doReturn(JiraConnectorDTO.builder().build())
-        .when(jiraApprovalHelperService)
-        .getJiraConnector(eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any());
+    doReturn(ServiceNowConnectorDTO.builder().build())
+        .when(serviceNowApprovalHelperService)
+        .getServiceNowConnector(eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any());
+    when(kryoSerializer.asDeflatedBytes(any())).thenReturn("task".getBytes());
 
-    jiraApprovalHelperService.handlePollingEvent(instance);
+    ArgumentCaptor<TaskDetails> taskDetailsArgumentCaptor = ArgumentCaptor.forClass(TaskDetails.class);
+    when(StepUtils.prepareTaskRequest(
+             any(), taskDetailsArgumentCaptor.capture(), anyList(), anyList(), anyString(), anyBoolean()))
+        .thenReturn(null);
 
-    verify(ngDelegate2TaskExecutor, times(1)).queueTask(any(), any(), any());
+    serviceNowApprovalHelperService.handlePollingEvent(instance);
+
+    ArgumentCaptor<TaskRequest> captor = ArgumentCaptor.forClass(TaskRequest.class);
+    verify(ngDelegate2TaskExecutor, times(1)).queueTask(any(), captor.capture(), any());
+    assertThat(taskDetailsArgumentCaptor.getValue().getType().getType())
+        .isEqualTo(TaskType.SERVICENOW_TASK_NG.toString());
+    assertThat(taskDetailsArgumentCaptor.getValue().getKryoParameters()).isNotEmpty();
   }
 
   @Test
-  @Owner(developers = BRIJESH)
+  @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void testGetConnector() {
     PowerMockito.mockStatic(NGRestUtils.class);
 
     Optional<ConnectorDTO> connectorDTO = Optional.of(
         ConnectorDTO.builder()
-            .connectorInfo(ConnectorInfoDTO.builder().connectorConfig(JiraConnectorDTO.builder().build()).build())
+            .connectorInfo(ConnectorInfoDTO.builder().connectorConfig(ServiceNowConnectorDTO.builder().build()).build())
             .build());
     Optional<ConnectorDTO> connectorDTO1 = Optional.of(
         ConnectorDTO.builder()
             .connectorInfo(ConnectorInfoDTO.builder().connectorConfig(AwsConnectorDTO.builder().build()).build())
             .build());
     when(NGRestUtils.getResponse(any())).thenReturn(connectorDTO);
-    jiraApprovalHelperService.getJiraConnector(accountId, orgIdentifier, projectIdentifier, "connectorRef");
+    serviceNowApprovalHelperService.getServiceNowConnector(accountId, orgIdentifier, projectIdentifier, "connectorRef");
     when(NGRestUtils.getResponse(any())).thenReturn(connectorDTO1);
-    assertThatThrownBy(
-        () -> jiraApprovalHelperService.getJiraConnector(accountId, orgIdentifier, projectIdentifier, "connectorRef"))
-        .isInstanceOf(HarnessJiraException.class);
+    assertThatThrownBy(()
+                           -> serviceNowApprovalHelperService.getServiceNowConnector(
+                               accountId, orgIdentifier, projectIdentifier, "connectorRef"))
+        .isInstanceOf(ServiceNowException.class);
     when(NGRestUtils.getResponse(null)).thenReturn(Optional.empty());
-    assertThatThrownBy(
-        () -> jiraApprovalHelperService.getJiraConnector(accountId, orgIdentifier, projectIdentifier, "connectorRef"))
-        .isInstanceOf(HarnessJiraException.class);
+    assertThatThrownBy(()
+                           -> serviceNowApprovalHelperService.getServiceNowConnector(
+                               accountId, orgIdentifier, projectIdentifier, "connectorRef"))
+        .isInstanceOf(ServiceNowException.class);
   }
 
-  private JiraApprovalInstance getJiraApprovalInstance(Ambiance ambiance) {
-    JiraApprovalInstance instance =
-        JiraApprovalInstance.builder()
-            .issueKey("issueKey")
+  private ServiceNowApprovalInstance getServiceNowApprovalInstance(Ambiance ambiance) {
+    ServiceNowApprovalInstance instance =
+        ServiceNowApprovalInstance.builder()
+            .ticketNumber("ticketNumber")
             .delegateSelectors(ParameterField.<List<String>>builder().build())
             .connectorRef("connectorRed")
             .approvalCriteria(
@@ -138,7 +160,7 @@ public class JiraApprovalHelperServiceImplTest extends CategoryTest {
             .build();
     instance.setAmbiance(ambiance);
     instance.setId("id");
-    instance.setType(ApprovalType.JIRA_APPROVAL);
+    instance.setType(ApprovalType.SERVICENOW_APPROVAL);
     return instance;
   }
 }

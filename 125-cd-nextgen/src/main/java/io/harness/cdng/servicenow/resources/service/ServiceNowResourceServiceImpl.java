@@ -56,7 +56,7 @@ public class ServiceNowResourceServiceImpl implements ServiceNowResourceService 
       IdentifierRef serviceNowConnectorRef, String orgId, String projectId, String ticketType) {
     ServiceNowTaskNGParametersBuilder parametersBuilder = ServiceNowTaskNGParameters.builder()
                                                               .action(ServiceNowActionNG.GET_TICKET_CREATE_METADATA)
-                                                              .issueType(ticketType);
+                                                              .ticketType(ticketType);
     return obtainServiceNowTaskNGResponse(serviceNowConnectorRef, orgId, projectId, parametersBuilder)
         .getServiceNowFieldNGList();
   }

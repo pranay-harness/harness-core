@@ -2,6 +2,8 @@ package io.harness.pms.approval.servicenow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import static software.wings.beans.TaskType.SERVICENOW_TASK_NG;
+
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -191,8 +193,8 @@ public class ServiceNowApprovalHelperServiceImpl implements ServiceNowApprovalHe
         .action(ServiceNowActionNG.GET_TICKET)
         .encryptionDetails(encryptionDataDetails)
         .serviceNowConnectorDTO(serviceNowConnector)
-        .issueKey(ticketNumber)
-        .issueType(ticketType)
+        .ticketNumber(ticketNumber)
+        .ticketType(ticketType)
         .delegateSelectors(StepUtils.getDelegateSelectorList(delegateSelectors))
         .build();
   }
@@ -217,7 +219,7 @@ public class ServiceNowApprovalHelperServiceImpl implements ServiceNowApprovalHe
             .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(20).build())
             .setMode(TaskMode.ASYNC)
             .setParked(false)
-            .setType(TaskType.newBuilder().setType(software.wings.beans.TaskType.SERVICENOW_TASK_NG.name()).build())
+            .setType(TaskType.newBuilder().setType(SERVICENOW_TASK_NG.name()).build())
             .build();
 
     List<TaskSelector> selectors = serviceNowTaskNGParameters.getDelegateSelectors()
