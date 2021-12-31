@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.security.encryption.EncryptionType.LOCAL;
 
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.expression.SecretManagerFunctorInterface.obtainConfigFileExpression;
@@ -22,6 +23,7 @@ import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.ff.FeatureFlagService;
+import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
@@ -50,7 +52,7 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
   private FeatureFlagService featureFlagService;
   private ManagerDecryptionService managerDecryptionService;
   private SecretManager secretManager;
-  private Cache<String, String> secretsCache;
+  private Cache<String, EncryptedRecordData> secretsCache;
   private String accountId;
   private String appId;
   private String envId;
@@ -157,10 +159,22 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
             .collect(Collectors.toList());
 
     if (isNotEmpty(localEncryptedDetails)) {
-      String value = secretsCache.get(encryptedData.getUuid(), key -> {
+      EncryptedRecordData locallyEncryptedData = secretsCache.get(encryptedData.getUuid(), key -> {
         managerDecryptionService.decrypt(serviceVariable, localEncryptedDetails);
-        return new String(serviceVariable.getValue());
+        String randomEncryptionKey = generateUuid();
+        char[] reEncryptedValue = new SimpleEncryption(randomEncryptionKey).encryptChars(serviceVariable.getValue());
+        return EncryptedRecordData.builder()
+            .uuid(encryptedData.getUuid())
+            .name(encryptedData.getName())
+            .encryptionType(LOCAL)
+            .encryptionKey(randomEncryptionKey)
+            .encryptedValue(reEncryptedValue)
+            .base64Encoded(encryptedData.isBase64Encoded())
+            .build();
       });
+
+      String value = new String(new SimpleEncryption(locallyEncryptedData.getEncryptionKey())
+                                    .decryptChars(locallyEncryptedData.getEncryptedValue()));
       evaluatedSecrets.put(secretName, value);
       return returnSecretValue(secretName, value);
     }
