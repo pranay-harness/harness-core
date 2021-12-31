@@ -1,0 +1,24 @@
+Var servicesUrl = concat(Env:baseUrl, "api/v2/entities")
+Var params = {}
+Var:params.put("fields", Env:fields)
+Var:params.put("entitySelector", Env:entitySelector)
+Var servicesResponse = sync-call(url=Var:servicesUrl, header=Env:commonHeaders, options=Var:params)
+
+Var nullObject = null
+Var entities = extract(Var:servicesResponse, $.entities)
+Var lengthOfEntities = Var:entities.length()
+Var emptyListCount = 0
+if Var:lengthOfEntities != Var:emptyListCount {
+   Var entity = Var:entities[0]
+   Var serviceMap = {}
+   Var entityId = extract(Var:entity, $.entityId)
+   Var displayName = extract(Var:entity, $.displayName)
+   Var serviceMethodIds = extract(Var:entity, $.isServiceMethodOfService)
+   Var:serviceMap.put("entityId", Var:entityId)
+   Var:serviceMap.put("displayName", Var:displayName)
+   Var:serviceMap.put("serviceMethodIds", Var:serviceMethodIds)
+   Var:responseList.append(Var:serviceMap)
+   return serviceMap
+  }
+
+return null

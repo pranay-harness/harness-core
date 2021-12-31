@@ -3,12 +3,20 @@ Var params = {}
 Var:params.put("fields", Env:fields)
 Var:params.put("pageSize", Env:pageSize)
 Var:params.put("entitySelector", Env:entitySelector)
-Var servicesResponse = sync-call(url=Var:dashboardUrl, header=Env:commonHeaders, options=Var:params)
+Var servicesResponse = sync-call(url=Var:servicesUrl, header=Env:commonHeaders, options=Var:params)
 
 Var responseList = []
 
-foreach service in Var:servicesResponse {
+Var entities = extract(Var:servicesResponse, $.entities)
+foreach entity in Var:entities {
+    Var serviceMap = {}
+    Var entityId = extract(Var:entity, $.entityId)
+    Var displayName = extract(Var:entity, $.displayName)
+    Var:serviceMap.put("entityId", Var:entityId)
+    Var:serviceMap.put("displayName", Var:displayName)
+
+    Var:responseList.append(Var:serviceMap)
 
 }
 
-return Var:servicesResponse
+return Var:responseList

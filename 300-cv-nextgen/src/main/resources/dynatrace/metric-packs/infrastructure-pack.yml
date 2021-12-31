@@ -1,0 +1,24 @@
+identifier: Infrastructure
+category: Infrastructure
+metrics:
+  - name: CPU per request
+    type: INFRA
+    path: builtin:service.keyRequest.cpu.perRequest
+    validationPath: builtin:service.keyRequest.cpu.perRequest
+    responseJsonPath: TBD
+    validationResponseJsonPath: TBD
+    included: true
+  - name: IO time
+    type: INFRA
+    path: builtin:service.keyRequest.ioTime
+    validationPath: builtin:service.keyRequest.ioTime
+    responseJsonPath: TBD
+    validationResponseJsonPath: TBD
+    included: true
+  - name: Time spent in DB calls
+    type: INFRA
+    path: builtin:service.keyRequest.dbChildCallTime
+    validationPath: builtin:service.keyRequest.dbChildCallTime
+    responseJsonPath: TBD
+    validationResponseJsonPath: TBD
+    included: true

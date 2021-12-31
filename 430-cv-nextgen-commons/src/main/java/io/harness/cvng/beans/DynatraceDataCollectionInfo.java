@@ -2,44 +2,66 @@ package io.harness.cvng.beans;
 
 import io.harness.delegate.beans.connector.dynatrace.DynatraceConnectorDTO;
 import io.harness.delegate.beans.cvng.dynatrace.DynatraceUtils;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class DynatraceDataCollectionInfo extends TimeSeriesDataCollectionInfo<DynatraceConnectorDTO> {
+  private static final String METRIC_NAME_PARAM = "metricName";
+  private static final String QUERY_SELECTOR_PARAM = "querySelector";
 
-    private List<Object> metricDefinitions;
+  private String groupName;
+  private String serviceId;
+  private List<MetricCollectionInfo> customMetrics;
+  private MetricPackDTO metricPack;
 
-    @Override
-    public Map<String, Object> getDslEnvVariables(DynatraceConnectorDTO connectorConfigDTO) {
-        return null;
-    }
+  @Override
+  public Map<String, Object> getDslEnvVariables(DynatraceConnectorDTO connectorConfigDTO) {
+    Map<String, Object> dslEnvVariables = new HashMap<>();
+    dslEnvVariables.put("entityId", serviceId);
 
-    @Override
-    public String getBaseUrl(DynatraceConnectorDTO dynatraceConnectorDTO) {
-        return dynatraceConnectorDTO.getUrl();
-    }
+    List<Map<String, String>> queryData = metricPack.getMetrics()
+            .stream().map(metricDefinitionDTO -> {
+              Map<String, String> metricMap = new HashMap<>();
+              metricMap.put(METRIC_NAME_PARAM, metricDefinitionDTO.getName());
+              metricMap.put(QUERY_SELECTOR_PARAM, metricDefinitionDTO.getPath());
+              return metricMap;
+            }).collect(Collectors.toList());
 
-    @Override
-    public Map<String, String> collectionHeaders(DynatraceConnectorDTO dynatraceConnectorDTO) {
-        return DynatraceUtils.collectionHeaders(dynatraceConnectorDTO);
-    }
+    dslEnvVariables.put("queries", queryData);
 
-    @Override
-    public Map<String, String> collectionParams(DynatraceConnectorDTO dynatraceConnectorDTO) {
-        return Collections.emptyMap();
-    }
+    return dslEnvVariables;
+  }
 
-    @Data
-    @Builder
-    public static class MetricCollectionInfo {
-        private String entityId;
-    }
+  @Override
+  public String getBaseUrl(DynatraceConnectorDTO dynatraceConnectorDTO) {
+    return dynatraceConnectorDTO.getUrl();
+  }
+
+  @Override
+  public Map<String, String> collectionHeaders(DynatraceConnectorDTO dynatraceConnectorDTO) {
+    return DynatraceUtils.collectionHeaders(dynatraceConnectorDTO);
+  }
+
+  @Override
+  public Map<String, String> collectionParams(DynatraceConnectorDTO dynatraceConnectorDTO) {
+    return Collections.emptyMap();
+  }
+
+  @Data
+  @Builder
+  public static class MetricCollectionInfo {
+    String identifier;
+    String metricName;
+    String query;
+  }
 }

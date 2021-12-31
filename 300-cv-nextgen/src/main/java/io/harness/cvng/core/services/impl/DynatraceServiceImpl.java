@@ -2,6 +2,7 @@ package io.harness.cvng.core.services.impl;
 
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
+import io.harness.cvng.beans.dynatrace.DynatraceServiceDetailsRequest;
 import io.harness.cvng.beans.dynatrace.DynatraceServiceListRequest;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
@@ -35,7 +36,10 @@ public class DynatraceServiceImpl implements DynatraceService {
   public DynatraceServiceDTO getServiceDetails(
       ProjectParams projectParams, String connectorIdentifier, String serviceEntityId, String tracingId) {
     DataCollectionRequest<DynatraceConnectorDTO> request =
-        DynatraceServiceListRequest.builder().type(DataCollectionRequestType.DYNATRACE_SERVICE_DETAILS).build();
+        DynatraceServiceDetailsRequest.builder()
+            .serviceId(serviceEntityId)
+            .type(DataCollectionRequestType.DYNATRACE_SERVICE_DETAILS)
+            .build();
 
     Type type = new TypeToken<DynatraceServiceDTO>() {}.getType();
     return performRequestAndGetDataResult(request, type, projectParams, connectorIdentifier, tracingId);

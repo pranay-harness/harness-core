@@ -1,0 +1,26 @@
+identifier: Performance
+category: Performance
+metrics:
+  - name: Method Response time
+    type: RESP_TIME
+    path: builtin:service.keyRequest.response.time
+    responseJsonPath: TBD
+    validationPath: builtin:service.keyRequest.response.time
+    validationResponseJsonPath: TBD
+    included: true
+  - name: Request Count total
+    type: THROUGHPUT
+    path: builtin:service.keyRequest.count.total
+    validationPath: builtin:service.keyRequest.count.total
+    responseJsonPath: TBD
+    validationResponseJsonPath: TBD
+    included: true
+  - name: Number of server side errors
+    type: ERROR
+    path: builtin:service.keyRequest.errors.server.count
+    validationPath: builtin:service.keyRequest.errors.server.count
+    responseJsonPath: TBD
+    validationResponseJsonPath: TBD
+    included: true
+
+
