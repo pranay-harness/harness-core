@@ -217,8 +217,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
                       .toString())
           .helmChartInfo(helmChartInfo)
           .build();
-    }
-    finally {
+    } finally {
       if (checkIfReleasePurgingNeeded(commandRequest)) {
         logCallback.saveExecutionLog("Deployment failed.");
         deleteAndPurgeHelmRelease(commandRequest, logCallback);
@@ -227,15 +226,18 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     }
   }
 
-  public HelmInstallCmdResponseNG runHelmCommand(HelmInstallCommandRequestNG commandRequest, LogCallback logCallback, HelmCliCommandType commandType) {
+  public HelmInstallCmdResponseNG runHelmCommand(
+      HelmInstallCommandRequestNG commandRequest, LogCallback logCallback, HelmCliCommandType commandType) {
     try {
       switch (commandType) {
         case INSTALL:
-            return HelmCommandResponseMapper.getHelmInstCmdRespNG(helmClient.install(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
+          return HelmCommandResponseMapper.getHelmInstCmdRespNG(
+              helmClient.install(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
         case UPGRADE:
-            return HelmCommandResponseMapper.getHelmInstCmdRespNG(helmClient.upgrade(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
+          return HelmCommandResponseMapper.getHelmInstCmdRespNG(
+              helmClient.upgrade(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
         case ROLLBACK:
-            return null; // TODO: rollback refactor here
+          return null; // TODO: rollback refactor here
         default:
           throw new InvalidRequestException("Unexpected helm request type: " + commandType);
       }
@@ -747,7 +749,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   @VisibleForTesting
-  public List<KubernetesResource> printHelmChartKubernetesResources(HelmInstallCommandRequestNG commandRequest) throws Exception {
+  public List<KubernetesResource> printHelmChartKubernetesResources(HelmInstallCommandRequestNG commandRequest)
+      throws Exception {
     ManifestDelegateConfig manifestDelegateConfig = commandRequest.getManifestDelegateConfig();
 
     Optional<StoreDelegateConfigType> storeTypeOpt =
@@ -784,19 +787,20 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       Thread.currentThread().interrupt();
     } catch (HelmClientException e) {
       String errorMessage = "Failed to run helm command. Command type: " + HelmCliCommandType.RENDER_CHART + ". ";
-      executionLogCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      executionLogCallback.saveExecutionLog(
+          errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       throw new HelmClientRuntimeException(e);
     } catch (Exception e) {
-      String errorMessage = "Failed to run helm command. Command type: " + HelmCliCommandType.RENDER_CHART  + ". ";
-      executionLogCallback.saveExecutionLog(errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      String errorMessage = "Failed to run helm command. Command type: " + HelmCliCommandType.RENDER_CHART + ". ";
+      executionLogCallback.saveExecutionLog(
+          errorMessage + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       throw new HelmClientException(ExceptionUtils.getMessage(e), e, HelmCliCommandType.RENDER_CHART);
     }
     return helmKubernetesResources;
   }
 
-  private List<KubernetesResource> getKubernetesResourcesFromHelmChart(
-      HelmInstallCommandRequestNG commandRequest, String namespace, String workingDir, List<String> valueOverrides)
-      throws Exception {
+  private List<KubernetesResource> getKubernetesResourcesFromHelmChart(HelmInstallCommandRequestNG commandRequest,
+      String namespace, String workingDir, List<String> valueOverrides) throws Exception {
     log.debug("Getting K8S resources from Helm chart, namespace: {}, chartLocation: {}", namespace, workingDir);
 
     HelmCommandResponseNG commandResponse = renderHelmChart(commandRequest, namespace, workingDir, valueOverrides);
@@ -807,9 +811,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   @Override
-  public HelmCommandResponseNG renderHelmChart(
-      HelmCommandRequestNG commandRequest, String namespace, String chartLocation, List<String> valueOverrides)
-      throws Exception {
+  public HelmCommandResponseNG renderHelmChart(HelmCommandRequestNG commandRequest, String namespace,
+      String chartLocation, List<String> valueOverrides) throws Exception {
     LogCallback executionLogCallback = commandRequest.getLogCallback();
 
     log.debug("Rendering Helm chart, namespace: {}, chartLocation: {}", namespace, chartLocation);
@@ -821,8 +824,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
       String msg = format("Failed to render chart location: %s. Reason %s ", chartLocation, cliResponse.getOutput());
       executionLogCallback.saveExecutionLog(msg);
-      throw new HelmClientException(
-              msg + ". " + cliResponse.getOutput(), USER, HelmCliCommandType.RENDER_CHART);
+      throw new HelmClientException(msg + ". " + cliResponse.getOutput(), USER, HelmCliCommandType.RENDER_CHART);
     }
 
     return new HelmCommandResponseNG(cliResponse.getCommandExecutionStatus(), cliResponse.getOutput());
@@ -878,25 +880,25 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     HelmChartInfo helmChartInfo = helmTaskHelperBase.getHelmChartInfoFromChartsYamlFile(
         Paths.get(helmInstallCommandRequestNG.getWorkingDir(), CHARTS_YAML_KEY).toString());
 
-//    try {
-      switch (manifestDelegateConfig.getStoreDelegateConfig().getType()) {
-        case GIT:
-          GitStoreDelegateConfig gitStoreDelegateConfig =
-              (GitStoreDelegateConfig) helmChartManifestDelegateConfig.getStoreDelegateConfig();
-          helmChartInfo.setRepoUrl(gitStoreDelegateConfig.getGitConfigDTO().getUrl());
-          break;
-        case HTTP_HELM:
-        case GCS_HELM:
-        case S3_HELM:
-          helmChartInfo.setRepoUrl(getRepoUrlForHelmRepoConfig(helmChartManifestDelegateConfig));
-          break;
-        default:
-          log.warn("Unsupported store type: " + manifestDelegateConfig.getStoreDelegateConfig().getType());
-      }
+    //    try {
+    switch (manifestDelegateConfig.getStoreDelegateConfig().getType()) {
+      case GIT:
+        GitStoreDelegateConfig gitStoreDelegateConfig =
+            (GitStoreDelegateConfig) helmChartManifestDelegateConfig.getStoreDelegateConfig();
+        helmChartInfo.setRepoUrl(gitStoreDelegateConfig.getGitConfigDTO().getUrl());
+        break;
+      case HTTP_HELM:
+      case GCS_HELM:
+      case S3_HELM:
+        helmChartInfo.setRepoUrl(getRepoUrlForHelmRepoConfig(helmChartManifestDelegateConfig));
+        break;
+      default:
+        log.warn("Unsupported store type: " + manifestDelegateConfig.getStoreDelegateConfig().getType());
+    }
 
-//    } catch (Exception e) {
-//      log.error("Incorrect/Unsupported store type.", e);
-//    }
+    //    } catch (Exception e) {
+    //      log.error("Incorrect/Unsupported store type.", e);
+    //    }
 
     return helmChartInfo;
   }
