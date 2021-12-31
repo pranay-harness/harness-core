@@ -30,6 +30,7 @@ Anubhaw Srivastava anubhaw@harness.io
 Archit Singla archit.singla@harness.io
 Arpit Tiwari arpit.tiwari@harness.io
 Arvind Choudhary arvind.choudhary@harness.io
+Ashish Sanodia ashish.sanodia@harness.io
 Bharat Goel bharat.goel@harness.io
 Bogdan Azaric bogdan.azaric@harness.io
 Bojan Micovic bojan.micovic@harness.io
