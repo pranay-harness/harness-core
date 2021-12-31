@@ -46,7 +46,7 @@ orchestrationVisualizationThreadPoolConfig:
 
 orchestrationPoolConfig:
   corePoolSize: ${ORCHESTRATION_POOL_CORE_SIZE:-20}
-  maxPoolSize: ${ORCHESTRATION_POOL_MAX_SIZE:-100}
+  maxPoolSize: ${ORCHESTRATION_POOL_MAX_SIZE:-50}
   idleTime: ${ORCHESTRATION_POOL_IDLE_TIME:-500}
   timeUnit: ${ORCHESTRATION_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
 

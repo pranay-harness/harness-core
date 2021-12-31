@@ -48,6 +48,7 @@ import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
+import io.harness.pms.pipeline.yaml.BasicPipeline;
 import io.harness.pms.plan.execution.ExecutionHelper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.yaml.YamlUtils;
@@ -147,6 +148,8 @@ public class TriggerExecutionHelper {
               InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
         }
       }
+      // BasicPipeline basicPipeline = YamlUtils.read(pipelineYaml, BasicPipeline.class);
+      executionMetaDataBuilder.setIsNotificationConfigured(false);
       if (pipelineEntityToExecute.get().getTemplateReference() != null
           && pipelineEntityToExecute.get().getTemplateReference()) {
         pipelineYaml = pipelineTemplateHelper

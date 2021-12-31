@@ -17,6 +17,7 @@ message ExecutionMetadata {
   bytes gitSyncBranchContext = 10;
   string moduleType = 11;
   RetryExecutionInfo retryInfo = 12;
+  bool isNotificationConfigured = 13;
 }
 
 message RetryExecutionInfo {

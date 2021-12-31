@@ -38,6 +38,7 @@ import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.pipeline.service.PipelineEnforcementService;
+import io.harness.pms.pipeline.yaml.BasicPipeline;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.plan.execution.beans.ExecArgs;
 import io.harness.pms.plan.execution.beans.StagesExecutionInfo;
@@ -153,14 +154,15 @@ public class ExecutionHelper {
         stagesExecutionInfo, originalExecutionId, retryExecutionParameters, expandedJson);
     pipelineEnforcementService.validateExecutionEnforcementsBasedOnStage(
         pipelineEntity.getAccountId(), YamlUtils.extractPipelineField(planExecutionMetadata.getProcessedYaml()));
-    ExecutionMetadata executionMetadata = buildExecutionMetadata(
-        pipelineEntity.getIdentifier(), moduleType, triggerInfo, pipelineEntity, executionId, retryExecutionInfo);
+    ExecutionMetadata executionMetadata = buildExecutionMetadata(pipelineEntity.getIdentifier(), moduleType,
+        triggerInfo, pipelineEntity, executionId, retryExecutionInfo, planExecutionMetadata.getYaml());
     return ExecArgs.builder().metadata(executionMetadata).planExecutionMetadata(planExecutionMetadata).build();
   }
 
+  @SneakyThrows
   private ExecutionMetadata buildExecutionMetadata(@NotNull String pipelineIdentifier, String moduleType,
       ExecutionTriggerInfo triggerInfo, PipelineEntity pipelineEntity, String executionId,
-      RetryExecutionInfo retryExecutionInfo) {
+      RetryExecutionInfo retryExecutionInfo, String yaml) {
     ExecutionMetadata.Builder builder =
         ExecutionMetadata.newBuilder()
             .setExecutionUuid(executionId)
@@ -172,6 +174,10 @@ public class ExecutionHelper {
             .setPipelineIdentifier(pipelineIdentifier)
             .setRetryInfo(retryExecutionInfo)
             .setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
+
+    // BasicPipeline basicPipeline = YamlUtils.read(yaml, BasicPipeline.class);
+    builder.setIsNotificationConfigured(false);
+
     ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal(pipelineEntity);
     if (gitSyncBranchContext != null) {
       builder.setGitSyncBranchContext(gitSyncBranchContext);

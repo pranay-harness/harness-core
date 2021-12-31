@@ -173,7 +173,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   @Singleton
   @Named("PipelineExecutionStartExecutorService")
   public ExecutorService pipelineExecutionServiceThreadPool() {
-    return ThreadPool.create(5, 20, config.getIdleTimeInSecs(), TimeUnit.SECONDS,
+    return ThreadPool.create(5, 10, config.getIdleTimeInSecs(), TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("PipelineExecutionStartExecutorService-%d").build());
   }
 
@@ -190,7 +190,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   @Named("SdkResponseEventExecutorService")
   public ExecutorService sdkResponseEventExecutorService() {
     return ThreadPool.create(5, 30, config.getIdleTimeInSecs(), TimeUnit.SECONDS,
-        new ThreadFactoryBuilder().setNameFormat("AsyncNodeObserverHandler-%d").build());
+        new ThreadFactoryBuilder().setNameFormat("SdkResponseEventExecutorService-%d").build());
   }
 
   @Provides
