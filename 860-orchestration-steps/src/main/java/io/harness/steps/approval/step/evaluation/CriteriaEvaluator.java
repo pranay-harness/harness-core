@@ -1,4 +1,4 @@
-package io.harness.steps.approval.step.jira.evaluation;
+package io.harness.steps.approval.step.evaluation;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -6,12 +6,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ApprovalStepNGException;
 import io.harness.jira.JiraIssueNG;
+import io.harness.steps.approval.step.beans.ConditionDTO;
+import io.harness.steps.approval.step.beans.CriteriaSpecDTO;
+import io.harness.steps.approval.step.beans.JexlCriteriaSpecDTO;
+import io.harness.steps.approval.step.beans.KeyValuesCriteriaSpecDTO;
+import io.harness.steps.approval.step.beans.Operator;
 import io.harness.steps.approval.step.jira.JiraExpressionEvaluator;
-import io.harness.steps.approval.step.jira.beans.ConditionDTO;
-import io.harness.steps.approval.step.jira.beans.CriteriaSpecDTO;
-import io.harness.steps.approval.step.jira.beans.JexlCriteriaSpecDTO;
-import io.harness.steps.approval.step.jira.beans.KeyValuesCriteriaSpecDTO;
-import io.harness.steps.approval.step.jira.beans.Operator;
 
 import java.util.List;
 import lombok.experimental.UtilityClass;

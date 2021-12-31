@@ -1,4 +1,4 @@
-package io.harness.steps.approval.step.jira.beans;
+package io.harness.steps.approval.step.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
@@ -35,7 +35,7 @@ public class KeyValuesCriteriaSpec implements CriteriaSpec {
   @NotNull private List<Condition> conditions;
 
   @Override
-  public CriteriaSpecType getType() {
+  public io.harness.steps.approval.step.beans.CriteriaSpecType getType() {
     return CriteriaSpecType.KEY_VALUES;
   }
 

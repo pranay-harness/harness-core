@@ -1,7 +1,7 @@
-package io.harness.pms.approval.jira;
+package io.harness.pms.approval.servicenow;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.rule.OwnerRule.BRIJESH;
+import static io.harness.rule.OwnerRule.PRABU;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
@@ -9,29 +9,30 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.task.jira.JiraTaskNGResponse;
+import io.harness.delegate.task.servicenow.ServiceNowTaskNGResponse;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ApprovalStepNGException;
-import io.harness.exception.HarnessJiraException;
-import io.harness.jira.JiraIssueNG;
+import io.harness.exception.ServiceNowException;
 import io.harness.logstreaming.ILogStreamingStepClient;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.servicenow.ServiceNowTicketNG;
 import io.harness.steps.approval.step.ApprovalInstanceService;
+import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.beans.ApprovalType;
 import io.harness.steps.approval.step.beans.CriteriaSpecWrapperDTO;
 import io.harness.steps.approval.step.beans.JexlCriteriaSpecDTO;
-import io.harness.steps.approval.step.beans.KeyValuesCriteriaSpecDTO;
-import io.harness.steps.approval.step.evaluation.CriteriaEvaluator;
-import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
+import io.harness.steps.approval.step.servicenow.entities.ServiceNowApprovalInstance;
+import io.harness.steps.approval.step.servicenow.evaluation.ServiceNowCriteriaEvaluator;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
 
@@ -49,15 +50,15 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @OwnedBy(PIPELINE)
-@PrepareForTest(CriteriaEvaluator.class)
-public class JiraApprovalCallbackTest extends CategoryTest {
+@PrepareForTest(ServiceNowCriteriaEvaluator.class)
+public class ServiceNowApprovalCallbackTest extends CategoryTest {
   @Mock private ApprovalInstanceService approvalInstanceService;
   @Mock private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Mock private KryoSerializer kryoSerializer;
   private static String approvalInstanceId = "approvalInstanceId";
   @Mock ILogStreamingStepClient iLogStreamingStepClient;
   @Mock NGErrorHelper ngErrorHelper;
-  @InjectMocks private JiraApprovalCallback jiraApprovalCallback;
+  @InjectMocks private ServiceNowApprovalCallback serviceNowApprovalCallback;
   private static String accountId = "accountId";
   private static String orgIdentifier = "orgIdentifier";
   private static String projectIdentifier = "projectIdentifier";
@@ -65,70 +66,84 @@ public class JiraApprovalCallbackTest extends CategoryTest {
 
   @Before
   public void setUp() {
-    jiraApprovalCallback = spy(JiraApprovalCallback.builder().build());
-    on(jiraApprovalCallback).set("approvalInstanceService", approvalInstanceService);
-    on(jiraApprovalCallback).set("logStreamingStepClientFactory", logStreamingStepClientFactory);
-    on(jiraApprovalCallback).set("kryoSerializer", kryoSerializer);
-    on(jiraApprovalCallback).set("ngErrorHelper", ngErrorHelper);
+    serviceNowApprovalCallback = spy(ServiceNowApprovalCallback.builder().build());
+    on(serviceNowApprovalCallback).set("approvalInstanceService", approvalInstanceService);
+    on(serviceNowApprovalCallback).set("logStreamingStepClientFactory", logStreamingStepClientFactory);
+    on(serviceNowApprovalCallback).set("kryoSerializer", kryoSerializer);
+    on(serviceNowApprovalCallback).set("ngErrorHelper", ngErrorHelper);
   }
 
   @Test
-  @Owner(developers = BRIJESH)
+  @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void testPush() {
-    PowerMockito.mockStatic(CriteriaEvaluator.class);
-    when(CriteriaEvaluator.evaluateCriteria(any(), any())).thenReturn(true);
-    on(jiraApprovalCallback).set("approvalInstanceId", approvalInstanceId);
+    PowerMockito.mockStatic(ServiceNowCriteriaEvaluator.class);
+    when(ServiceNowCriteriaEvaluator.evaluateCriteria(any(), any())).thenReturn(true);
+    on(serviceNowApprovalCallback).set("approvalInstanceId", approvalInstanceId);
     Ambiance ambiance = Ambiance.newBuilder()
                             .putSetupAbstractions("accountId", accountId)
                             .putSetupAbstractions("orgIdentifier", orgIdentifier)
                             .putSetupAbstractions("projectIdentifier", projectIdentifier)
                             .putSetupAbstractions("pipelineIdentifier", pipelineIdentifier)
                             .build();
-    JiraApprovalInstance instance = getJiraApprovalInstance(ambiance);
+    ServiceNowApprovalInstance instance = getServiceNowApprovalInstance(ambiance);
     Map<String, ResponseData> response = new HashMap<>();
     response.put("data", BinaryResponseData.builder().build());
-    doReturn(JiraTaskNGResponse.builder().issue(new JiraIssueNG()).build())
+    doReturn(ServiceNowTaskNGResponse.builder().ticket(new ServiceNowTicketNG()).build())
         .when(kryoSerializer)
         .asInflatedObject(any());
     doReturn(iLogStreamingStepClient).when(logStreamingStepClientFactory).getLogStreamingStepClient(ambiance);
     doReturn(instance).when(approvalInstanceService).get(approvalInstanceId);
-    jiraApprovalCallback.push(response);
-    when(CriteriaEvaluator.evaluateCriteria(any(), any())).thenReturn(false);
-    jiraApprovalCallback.push(response);
+    serviceNowApprovalCallback.push(response);
+    verify(approvalInstanceService).finalizeStatus(approvalInstanceId, ApprovalStatus.EXPIRED);
+
+    instance.setDeadline(Long.MAX_VALUE);
+    when(ngErrorHelper.getErrorSummary(any()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(ServiceNowCriteriaEvaluator.evaluateCriteria(any(), any())).thenReturn(false);
+    serviceNowApprovalCallback.push(response);
+    verify(approvalInstanceService).finalizeStatus(approvalInstanceId, ApprovalStatus.EXPIRED);
+
     JexlCriteriaSpecDTO rejectionCriteria = JexlCriteriaSpecDTO.builder().build();
     instance.setRejectionCriteria(CriteriaSpecWrapperDTO.builder().criteriaSpecDTO(rejectionCriteria).build());
-    when(CriteriaEvaluator.evaluateCriteria(any(), eq(rejectionCriteria))).thenReturn(true);
-    jiraApprovalCallback.push(response);
-    rejectionCriteria.setExpression("a==a");
-    jiraApprovalCallback.push(response);
+    when(ServiceNowCriteriaEvaluator.evaluateCriteria(any(), eq(rejectionCriteria))).thenReturn(true);
+    serviceNowApprovalCallback.push(response);
+    instance.getApprovalCriteria().setCriteriaSpecDTO(JexlCriteriaSpecDTO.builder().expression("1==2").build());
+    rejectionCriteria.setExpression("b==b");
+    serviceNowApprovalCallback.push(response);
+    verify(approvalInstanceService).finalizeStatus(approvalInstanceId, ApprovalStatus.REJECTED);
 
-    when(CriteriaEvaluator.evaluateCriteria(any(), eq(rejectionCriteria)))
-        .thenThrow(new ApprovalStepNGException("", true));
-    jiraApprovalCallback.push(response);
+    when(ServiceNowCriteriaEvaluator.evaluateCriteria(any(), any()))
+        .thenThrow(new ApprovalStepNGException("error", true));
+    serviceNowApprovalCallback.push(response);
+    verify(approvalInstanceService)
+        .finalizeStatus(
+            approvalInstanceId, ApprovalStatus.FAILED, "Fatal error evaluating approval/rejection criteria: error");
 
     // Testing the case when approval criteria not available
     instance.setApprovalCriteria(null);
-    assertThatThrownBy(() -> jiraApprovalCallback.push(response)).isInstanceOf(HarnessJiraException.class);
+    assertThatThrownBy(() -> serviceNowApprovalCallback.push(response)).isInstanceOf(ServiceNowException.class);
 
-    doReturn(JiraTaskNGResponse.builder().build()).when(kryoSerializer).asInflatedObject(any());
-    jiraApprovalCallback.push(response);
+    doReturn(ServiceNowTaskNGResponse.builder().build()).when(kryoSerializer).asInflatedObject(any());
+    serviceNowApprovalCallback.push(response);
     // To test case of error in kryo serialization
     doReturn(ErrorNotifyResponseData.builder().build()).when(kryoSerializer).asInflatedObject(any());
-    jiraApprovalCallback.push(response);
+    serviceNowApprovalCallback.push(response);
     // To throw exception while casting the response to ResponseData and catch the exception
     doReturn(null).when(kryoSerializer).asInflatedObject(any());
-    jiraApprovalCallback.push(response);
+    serviceNowApprovalCallback.push(response);
   }
 
-  private JiraApprovalInstance getJiraApprovalInstance(Ambiance ambiance) {
-    JiraApprovalInstance instance =
-        JiraApprovalInstance.builder()
-            .approvalCriteria(
-                CriteriaSpecWrapperDTO.builder().criteriaSpecDTO(KeyValuesCriteriaSpecDTO.builder().build()).build())
+  private ServiceNowApprovalInstance getServiceNowApprovalInstance(Ambiance ambiance) {
+    ServiceNowApprovalInstance instance =
+        ServiceNowApprovalInstance.builder()
+            .approvalCriteria(CriteriaSpecWrapperDTO.builder()
+                                  .criteriaSpecDTO(JexlCriteriaSpecDTO.builder().expression("1==1").build())
+                                  .build())
             .build();
     instance.setAmbiance(ambiance);
-    instance.setType(ApprovalType.JIRA_APPROVAL);
+    instance.setType(ApprovalType.SERVICENOW_APPROVAL);
+    instance.setId(approvalInstanceId);
     return instance;
   }
 }

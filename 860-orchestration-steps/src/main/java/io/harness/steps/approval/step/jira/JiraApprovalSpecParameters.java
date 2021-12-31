@@ -6,7 +6,7 @@ import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
+import io.harness.steps.approval.step.beans.CriteriaSpecWrapper;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;

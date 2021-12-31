@@ -1,4 +1,4 @@
-package io.harness.steps.approval.step.jira.beans;
+package io.harness.steps.approval.step.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
@@ -25,7 +25,7 @@ import lombok.experimental.FieldDefaults;
 @Schema(name = "KeyValuesCriteriaSpec", description = "This contains details of Key-Value Criteria specifications")
 public class KeyValuesCriteriaSpecDTO implements CriteriaSpecDTO {
   boolean matchAnyCondition;
-  @NotNull List<ConditionDTO> conditions;
+  @NotNull List<io.harness.steps.approval.step.beans.ConditionDTO> conditions;
 
   @Override
   public boolean isEmpty() {
@@ -40,7 +40,7 @@ public class KeyValuesCriteriaSpecDTO implements CriteriaSpecDTO {
       matchCondition = (boolean) matchConditionValue;
     }
 
-    List<Condition> conditions = keyValuesCriteriaSpec.getConditions();
+    List<io.harness.steps.approval.step.beans.Condition> conditions = keyValuesCriteriaSpec.getConditions();
     if (EmptyPredicate.isEmpty(conditions)) {
       if (skipEmpty) {
         return KeyValuesCriteriaSpecDTO.builder()
@@ -51,7 +51,7 @@ public class KeyValuesCriteriaSpecDTO implements CriteriaSpecDTO {
       throw new InvalidRequestException("At least 1 condition is required in KeyValues criteria");
     }
 
-    List<ConditionDTO> conditionDTOS = new ArrayList<>();
+    List<io.harness.steps.approval.step.beans.ConditionDTO> conditionDTOS = new ArrayList<>();
     for (Condition condition : conditions) {
       conditionDTOS.add(ConditionDTO.fromCondition(condition));
     }

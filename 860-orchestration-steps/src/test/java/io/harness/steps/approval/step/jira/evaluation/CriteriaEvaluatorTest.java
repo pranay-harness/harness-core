@@ -11,10 +11,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.jira.JiraIssueNG;
 import io.harness.rule.Owner;
-import io.harness.steps.approval.step.jira.beans.ConditionDTO;
-import io.harness.steps.approval.step.jira.beans.JexlCriteriaSpecDTO;
-import io.harness.steps.approval.step.jira.beans.KeyValuesCriteriaSpecDTO;
-import io.harness.steps.approval.step.jira.beans.Operator;
+import io.harness.steps.approval.step.beans.ConditionDTO;
+import io.harness.steps.approval.step.beans.JexlCriteriaSpecDTO;
+import io.harness.steps.approval.step.beans.KeyValuesCriteriaSpecDTO;
+import io.harness.steps.approval.step.beans.Operator;
+import io.harness.steps.approval.step.evaluation.CriteriaEvaluator;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -30,31 +31,36 @@ public class CriteriaEvaluatorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testEvaluateJexlCriteria() {
     JiraIssueNG issue = prepareIssue();
-    assertThatThrownBy(
-        () -> CriteriaEvaluator.evaluateCriteria(issue, JexlCriteriaSpecDTO.builder().expression("").build()))
+    assertThatThrownBy(()
+                           -> io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(
+                               issue, JexlCriteriaSpecDTO.builder().expression("").build()))
         .isNotNull();
-    assertThatThrownBy(
-        () -> CriteriaEvaluator.evaluateCriteria(issue, JexlCriteriaSpecDTO.builder().expression(null).build()))
+    assertThatThrownBy(()
+                           -> io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(
+                               issue, JexlCriteriaSpecDTO.builder().expression(null).build()))
         .isNotNull();
-    assertThatThrownBy(
-        () -> CriteriaEvaluator.evaluateCriteria(issue, JexlCriteriaSpecDTO.builder().expression("5").build()))
+    assertThatThrownBy(()
+                           -> io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(
+                               issue, JexlCriteriaSpecDTO.builder().expression("5").build()))
         .isNotNull();
 
-    assertThat(CriteriaEvaluator.evaluateCriteria(issue, JexlCriteriaSpecDTO.builder().expression("true").build()))
+    assertThat(io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(
+                   issue, JexlCriteriaSpecDTO.builder().expression("true").build()))
         .isTrue();
-    assertThat(CriteriaEvaluator.evaluateCriteria(issue, JexlCriteriaSpecDTO.builder().expression("false").build()))
+    assertThat(io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(
+                   issue, JexlCriteriaSpecDTO.builder().expression("false").build()))
         .isFalse();
 
-    assertThat(CriteriaEvaluator.evaluateCriteria(
+    assertThat(io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(
                    issue, JexlCriteriaSpecDTO.builder().expression("<+issue.a> == \"v1\"").build()))
         .isTrue();
-    assertThat(CriteriaEvaluator.evaluateCriteria(
+    assertThat(io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(
                    issue, JexlCriteriaSpecDTO.builder().expression("<+issue.a> == \"v2\"").build()))
         .isFalse();
-    assertThat(CriteriaEvaluator.evaluateCriteria(issue,
+    assertThat(io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(issue,
                    JexlCriteriaSpecDTO.builder().expression("<+issue.a> == \"v1\" || <+issue.b> == \"v3\"").build()))
         .isTrue();
-    assertThat(CriteriaEvaluator.evaluateCriteria(issue,
+    assertThat(io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(issue,
                    JexlCriteriaSpecDTO.builder().expression("<+issue.a> == \"v1\" && <+issue.b> == \"v3\"").build()))
         .isFalse();
   }
@@ -66,11 +72,11 @@ public class CriteriaEvaluatorTest extends CategoryTest {
     JiraIssueNG issue = prepareIssue();
     assertThatThrownBy(
         ()
-            -> CriteriaEvaluator.evaluateCriteria(issue,
+            -> io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(issue,
                 KeyValuesCriteriaSpecDTO.builder().matchAnyCondition(true).conditions(Collections.emptyList()).build()))
         .isNotNull();
     assertThatThrownBy(()
-                           -> CriteriaEvaluator.evaluateCriteria(issue,
+                           -> io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(issue,
                                KeyValuesCriteriaSpecDTO.builder()
                                    .matchAnyCondition(false)
                                    .conditions(Collections.emptyList())
@@ -78,7 +84,7 @@ public class CriteriaEvaluatorTest extends CategoryTest {
         .isNotNull();
 
     assertThat(
-        CriteriaEvaluator.evaluateCriteria(issue,
+        io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(issue,
             KeyValuesCriteriaSpecDTO.builder()
                 .matchAnyCondition(true)
                 .conditions(ImmutableList.of(ConditionDTO.builder().key("a").operator(Operator.EQ).value("v1").build(),
@@ -87,7 +93,7 @@ public class CriteriaEvaluatorTest extends CategoryTest {
         .isTrue();
 
     assertThat(
-        CriteriaEvaluator.evaluateCriteria(issue,
+        io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(issue,
             KeyValuesCriteriaSpecDTO.builder()
                 .matchAnyCondition(true)
                 .conditions(ImmutableList.of(ConditionDTO.builder().key("a").operator(Operator.EQ).value("v1").build(),
@@ -96,7 +102,7 @@ public class CriteriaEvaluatorTest extends CategoryTest {
         .isTrue();
 
     assertThat(
-        CriteriaEvaluator.evaluateCriteria(issue,
+        io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(issue,
             KeyValuesCriteriaSpecDTO.builder()
                 .matchAnyCondition(true)
                 .conditions(ImmutableList.of(ConditionDTO.builder().key("a").operator(Operator.EQ).value("v2").build(),
@@ -105,7 +111,7 @@ public class CriteriaEvaluatorTest extends CategoryTest {
         .isFalse();
 
     assertThat(
-        CriteriaEvaluator.evaluateCriteria(issue,
+        io.harness.steps.approval.step.evaluation.CriteriaEvaluator.evaluateCriteria(issue,
             KeyValuesCriteriaSpecDTO.builder()
                 .matchAnyCondition(false)
                 .conditions(ImmutableList.of(ConditionDTO.builder().key("a").operator(Operator.EQ).value("v1").build(),
