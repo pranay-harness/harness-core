@@ -19,4 +19,6 @@ public interface TemplateEntityConstants {
   String TEMPLATE_CHANGE_SCOPE = "TemplateChangeScope";
   String TEMPLATE_CREATE = "TemplateCreate";
   String OTHERS = "Others";
+  String STEP_ROOT_FIELD = "step";
+  String STAGE_ROOT_FIELD = "stage";
 }
