@@ -241,6 +241,7 @@ public class PipelineServiceModule extends AbstractModule {
             .accountServiceHttpClientConfig(configuration.getManagerClientConfig())
             .accountServiceSecret(configuration.getManagerServiceSecret())
             .useFeatureFlagService(true)
+            .orchestrationRedisEventsConfig(configuration.getOrchestrationRedisEventsConfig())
             .build()));
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance(configuration.getEventsFrameworkConfiguration(),

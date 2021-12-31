@@ -9,6 +9,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.StackdriverLogDataCollectionInfo;
 import io.harness.cvng.beans.stackdriver.StackdriverLogDefinition;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -27,7 +28,7 @@ public class StackdriverLogDataCollectionInfoMapperTest extends CvNextGenTestBas
     stackdriverLogCVConfig.setQuery("query");
     stackdriverLogCVConfig.setQueryName("name");
 
-    StackdriverLogDataCollectionInfo info = mapper.toDataCollectionInfo(stackdriverLogCVConfig);
+    StackdriverLogDataCollectionInfo info = mapper.toDataCollectionInfo(stackdriverLogCVConfig, TaskType.DEPLOYMENT);
 
     assertThat(info).isNotNull();
     assertThat(info.getLogDefinition())

@@ -479,6 +479,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       logCallback = markDoneAndStartNew(commandRequest, logCallback, Rollback);
       HelmInstallCmdResponseNG commandResponse = HelmCommandResponseMapper.getHelmInstCmdRespNG(
           helmClient.rollback(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
+      commandResponse.setPrevReleaseVersion(commandRequest.getPrevReleaseVersion());
+      commandResponse.setReleaseName(commandRequest.getReleaseName());
       logCallback.saveExecutionLog(commandResponse.getOutput());
       if (commandResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
         return commandResponse;

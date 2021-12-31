@@ -108,6 +108,7 @@ public class SLODashboardResourceTest extends CvNextGenTestBase {
                  .type(ServiceLevelIndicatorType.AVAILABILITY)
                  .target(SLOTarget.builder()
                              .type(SLOTargetType.CALENDER)
+                             .sloTargetPercentage(80.0)
                              .spec(CalenderSLOTargetSpec.builder()
                                        .type(SLOCalenderType.WEEKLY)
                                        .spec(WeeklyCalendarSpec.builder().dayOfWeek(DayOfWeek.MONDAY).build())

@@ -433,6 +433,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
           delegateSelectionLogsService.save(batch);
           throw new NoEligibleDelegatesInAccountException();
         }
+        // shuffle the eligible delegates to evenly distribute the load
+        Collections.shuffle(eligibleListOfDelegates);
 
         delegateSelectionLogsService.logEligibleDelegatesToExecuteTask(
             batch, Sets.newHashSet(eligibleListOfDelegates), task.getAccountId());

@@ -35,4 +35,6 @@ public class OrchestrationModuleConfig {
   @Nullable io.harness.remote.client.ServiceHttpClientConfig accountServiceHttpClientConfig;
   @Nullable String accountServiceSecret;
   @Nullable String accountClientId;
+  @Default
+  OrchestrationRedisEventsConfig orchestrationRedisEventsConfig = OrchestrationRedisEventsConfig.builder().build();
 }

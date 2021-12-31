@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core;
+package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
@@ -10,6 +10,6 @@ import lombok.Value;
 @OwnedBy(PIPELINE)
 @Value
 @Builder
-public class PipelineRedisEventConfig {
+public class RedisEventConfig {
   int maxTopicSize;
 }
