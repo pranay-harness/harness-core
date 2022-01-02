@@ -88,9 +88,14 @@ public abstract class CVConfig
   @NotNull private CVMonitoringCategory category;
   private boolean enabled;
   private String productName;
-  @NotNull private String identifier;
+  // Use FullyQualifiedIdentifier(NameSpace+HealthSource)
+  @NotNull @Deprecated private String identifier;
   @NotNull private String monitoringSourceName;
   private boolean isDemo;
+
+  public String getFullyQualifiedIdentifier() {
+    return identifier;
+  }
 
   @FdIndex private Long createNextTaskIteration;
 

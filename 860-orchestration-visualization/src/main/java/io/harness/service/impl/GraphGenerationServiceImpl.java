@@ -25,9 +25,12 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
+import io.harness.pms.plan.execution.service.PmsExecutionSummaryService;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 import io.harness.service.GraphGenerationService;
 import io.harness.skip.service.VertexSkipperService;
+import io.harness.springdata.TransactionHelper;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -38,6 +41,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
@@ -54,6 +58,8 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private GraphStatusUpdateHelper graphStatusUpdateHelper;
   @Inject private PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
   @Inject private StepDetailsUpdateEventHandler stepDetailsUpdateEventHandler;
+  @Inject private TransactionHelper transactionHelper;
+  @Inject private PmsExecutionSummaryService pmsExecutionSummaryService;
 
   @Override
   public void updateGraph(String planExecutionId) {
@@ -65,6 +71,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     }
     List<OrchestrationEventLog> unprocessedEventLogs =
         orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId, lastUpdatedAt);
+    Update executionSummaryUpdate = new Update();
     if (!unprocessedEventLogs.isEmpty()) {
       OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
       if (orchestrationGraph == null) {
@@ -88,13 +95,23 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
             continue;
           }
           processedNodeExecutionIds.add(nodeExecutionId);
-          orchestrationGraph = graphStatusUpdateHelper.handleEvent(
-              planExecutionId, nodeExecutionId, orchestrationEventType, orchestrationGraph);
+          NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+          ExecutionSummaryUpdateUtils.addPipelineUpdateCriteria(executionSummaryUpdate, planExecutionId, nodeExecution);
+          ExecutionSummaryUpdateUtils.addStageUpdateCriteria(executionSummaryUpdate, planExecutionId, nodeExecution);
+          orchestrationGraph = graphStatusUpdateHelper.handleEventV2(
+              planExecutionId, nodeExecution, orchestrationEventType, orchestrationGraph);
         }
         lastUpdatedAt = orchestrationEventLog.getCreatedAt();
       }
       orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
-      cachePartialOrchestrationGraph(orchestrationGraph, lastUpdatedAt);
+
+      long finalLastUpdatedAt = lastUpdatedAt;
+      OrchestrationGraph finalOrchestrationGraph = orchestrationGraph;
+      transactionHelper.performTransaction(() -> {
+        cachePartialOrchestrationGraph(finalOrchestrationGraph, finalLastUpdatedAt);
+        pmsExecutionSummaryService.update(planExecutionId, executionSummaryUpdate);
+        return null;
+      });
       log.info("[PMS_GRAPH] Processing of [{}] orchestration event logs completed in [{}ms]",
           unprocessedEventLogs.size(), System.currentTimeMillis() - startTs);
     }

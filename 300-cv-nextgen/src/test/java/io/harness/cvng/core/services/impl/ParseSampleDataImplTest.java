@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.core.beans.SampleDataDTO;
 import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.services.api.NewRelicServiceImplTest;
 import io.harness.cvng.core.services.api.ParseSampleDataService;
@@ -40,8 +41,16 @@ public class ParseSampleDataImplTest extends CvNextGenTestBase {
     String timestampPath = "$.data.[*].timestamp";
     String timestampFormat = null;
 
-    List<TimeSeriesSampleDTO> sampleData = parseSampleDataService.parseSampleData(
-        builderFactory.getProjectParams(), responseObject, "myNRTxn", metricValuesPath, timestampPath, timestampFormat);
+    SampleDataDTO sampleDataDTO = SampleDataDTO.builder()
+                                      .jsonResponse(responseObject)
+                                      .metricValueJSONPath(metricValuesPath)
+                                      .timestampFormat(timestampFormat)
+                                      .timestampJSONPath(timestampPath)
+                                      .groupName("myNRTxn")
+                                      .build();
+
+    List<TimeSeriesSampleDTO> sampleData =
+        parseSampleDataService.parseSampleData(builderFactory.getProjectParams(), sampleDataDTO);
 
     assertThat(sampleData).isNotEmpty();
     assertThat(sampleData.size()).isEqualTo(15);
@@ -57,8 +66,16 @@ public class ParseSampleDataImplTest extends CvNextGenTestBase {
     String timestampPath = "$.timeSeries.[*].endTimeSeconds";
     String timestampFormat = null;
 
-    List<TimeSeriesSampleDTO> sampleData = parseSampleDataService.parseSampleData(
-        builderFactory.getProjectParams(), responseObject, "myNRTxn", metricValuesPath, timestampPath, timestampFormat);
+    SampleDataDTO sampleDataDTO = SampleDataDTO.builder()
+                                      .jsonResponse(responseObject)
+                                      .metricValueJSONPath(metricValuesPath)
+                                      .timestampFormat(timestampFormat)
+                                      .timestampJSONPath(timestampPath)
+                                      .groupName("myNRTxn")
+                                      .build();
+
+    List<TimeSeriesSampleDTO> sampleData =
+        parseSampleDataService.parseSampleData(builderFactory.getProjectParams(), sampleDataDTO);
 
     assertThat(sampleData).isNotEmpty();
     assertThat(sampleData.size()).isEqualTo(30);
@@ -74,9 +91,15 @@ public class ParseSampleDataImplTest extends CvNextGenTestBase {
     String timestampPath = "$.data.[*].timestamp";
     String timestampFormat = null;
 
-    assertThatThrownBy(()
-                           -> parseSampleDataService.parseSampleData(builderFactory.getProjectParams(), responseObject,
-                               "myNRTxn", metricValuesPath, timestampPath, timestampFormat))
+    SampleDataDTO sampleDataDTO = SampleDataDTO.builder()
+                                      .jsonResponse(responseObject)
+                                      .metricValueJSONPath(metricValuesPath)
+                                      .timestampFormat(timestampFormat)
+                                      .timestampJSONPath(timestampPath)
+                                      .groupName("myNRTxn")
+                                      .build();
+
+    assertThatThrownBy(() -> parseSampleDataService.parseSampleData(builderFactory.getProjectParams(), sampleDataDTO))
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Unable to parse the response object with the given json paths");
   }

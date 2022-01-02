@@ -22,7 +22,6 @@ import io.harness.exception.DuplicateFieldException;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -178,16 +177,11 @@ public class HealthSourceServiceImpl implements HealthSourceService {
                                       .build();
     List<CVConfig> cvConfigList = cvConfigService.list(projectParams, identifiers);
     Map<String, List<CVConfig>> cvConfigMap = cvConfigList.stream().collect(groupingBy(CVConfig::getIdentifier));
-    List<HealthSource> healthSourceList = new ArrayList<>();
     for (Map.Entry<String, List<CVConfig>> cvConfig : cvConfigMap.entrySet()) {
+      Pair<String, String> nameSpaceAndIdentifier =
+          HealthSourceService.getNameSpaceAndIdentifier(cvConfig.getValue().get(0).getFullyQualifiedIdentifier());
       HealthSource healthSource =
           HealthSourceDTO.toHealthSource(cvConfig.getValue(), dataSourceTypeToHealthSourceTransformerMap);
-      healthSource.setIdentifier(cvConfig.getKey());
-      healthSourceList.add(healthSource);
-    }
-    for (HealthSource healthSource : healthSourceList) {
-      Pair<String, String> nameSpaceAndIdentifier =
-          HealthSourceService.getNameSpaceAndIdentifier(healthSource.getIdentifier());
       Set<HealthSource> healthSourceSet =
           healthSourceMap.getOrDefault(nameSpaceAndIdentifier.getKey(), new HashSet<>());
       healthSourceSet.add(healthSource);

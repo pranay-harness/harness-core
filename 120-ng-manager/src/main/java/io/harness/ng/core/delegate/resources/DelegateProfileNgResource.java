@@ -48,7 +48,7 @@ import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Path("/delegate-profiles/ng")
-@Api(value = "delegate-profiles/ng", hidden = true)
+@Api("delegate-profiles/ng")
 @Produces("application/json")
 @AuthRule(permissionType = LOGGED_IN)
 //@Scope(DELEGATE_SCOPE)
@@ -83,7 +83,7 @@ public class DelegateProfileNgResource {
 
   @GET
   @Path("/{delegateProfileId}")
-  @ApiOperation(value = "Gets Delegate Configuration (profile)", nickname = "getDelegateProfileNg", hidden = true)
+  @ApiOperation(value = "Gets Delegate Configuration (profile)", nickname = "getDelegateProfileNg")
   @Timed
   @ExceptionMetered
   @Hidden
@@ -108,7 +108,7 @@ public class DelegateProfileNgResource {
   }
 
   @POST
-  @ApiOperation(value = "Adds a Delegate Configuration (profile)", nickname = "addDelegateProfileNg", hidden = true)
+  @ApiOperation(value = "Adds a Delegate Configuration (profile)", nickname = "addDelegateProfileNg")
   @Hidden
   @Operation(operationId = "createDelegateConfiguration",
       summary = "Creates Delegate Configuration specified by Configuration details in body",
@@ -136,7 +136,7 @@ public class DelegateProfileNgResource {
 
   @PUT
   @Path("/{delegateProfileId}")
-  @ApiOperation(value = "Updates a Delegate profile", nickname = "updateDelegateProfileNg", hidden = true)
+  @ApiOperation(value = "Updates a Delegate profile", nickname = "updateDelegateProfileNg")
   @Timed
   @ExceptionMetered
   @Hidden
@@ -170,8 +170,7 @@ public class DelegateProfileNgResource {
   @Path("/{delegateProfileId}/scoping-rules")
   @Timed
   @ExceptionMetered
-  @ApiOperation(
-      value = "Updates the scoping rules inside the Delegate profile", nickname = "updateScopingRulesNg", hidden = true)
+  @ApiOperation(value = "Updates the scoping rules inside the Delegate profile", nickname = "updateScopingRulesNg")
   @Hidden
   @Operation(operationId = "updateScopingRules",
       summary = "Updates Scoping Rules for the Delegate Configuration specified by Id",
@@ -198,8 +197,7 @@ public class DelegateProfileNgResource {
 
   @DELETE
   @Path("/{delegateProfileId}")
-  @ApiOperation(
-      value = "Deletes a Delegate Configuration (profile)", nickname = "deleteDelegateProfileNg", hidden = true)
+  @ApiOperation(value = "Deletes a Delegate Configuration (profile)", nickname = "deleteDelegateProfileNg")
   @Timed
   @ExceptionMetered
   @Hidden
@@ -225,8 +223,7 @@ public class DelegateProfileNgResource {
   }
 
   @GET
-  @ApiOperation(
-      value = "Lists the Delegate Configurations (profiles)", nickname = "listDelegateProfilesNg", hidden = true)
+  @ApiOperation(value = "Lists the Delegate Configurations (profiles)", nickname = "listDelegateProfilesNg")
   @Timed
   @ExceptionMetered
   @Hidden
@@ -250,8 +247,7 @@ public class DelegateProfileNgResource {
 
   @PUT
   @Path("/{delegateProfileId}/selectors")
-  @ApiOperation(
-      value = "Updates the selectors inside the Delegate profile", nickname = "updateSelectorsNg", hidden = true)
+  @ApiOperation(value = "Updates the selectors inside the Delegate profile", nickname = "updateSelectorsNg")
   @Timed
   @ExceptionMetered
   @Hidden

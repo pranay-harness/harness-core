@@ -5,8 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.ParameterFieldBooleanValueHelper;
-import io.harness.cdng.TimeOutHelper;
+import io.harness.cdng.CDStepHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.K8sApplyBaseStepInfo.K8sApplyBaseStepInfoKeys;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
@@ -103,10 +102,10 @@ public class K8sApplyStep extends TaskChainExecutableWithRollbackAndRbac impleme
     InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
     String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
     K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepElementParameters.getSpec();
-    boolean skipDryRun = ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(
+    boolean skipDryRun = CDStepHelper.getParameterFieldBooleanValue(
         k8sApplyStepParameters.getSkipDryRun(), K8sApplyBaseStepInfoKeys.skipDryRun, stepElementParameters);
     boolean skipSteadyStateCheck =
-        ParameterFieldBooleanValueHelper.getParameterFieldBooleanValue(k8sApplyStepParameters.getSkipSteadyStateCheck(),
+        CDStepHelper.getParameterFieldBooleanValue(k8sApplyStepParameters.getSkipSteadyStateCheck(),
             K8sApplyBaseStepInfoKeys.skipSteadyStateCheck, stepElementParameters);
 
     final String accountId = AmbianceUtils.getAccountId(ambiance);
@@ -116,7 +115,7 @@ public class K8sApplyStep extends TaskChainExecutableWithRollbackAndRbac impleme
             .releaseName(releaseName)
             .commandName(K8S_APPLY_COMMAND_NAME)
             .taskType(K8sTaskType.APPLY)
-            .timeoutIntervalInMin(TimeOutHelper.getTimeoutInMin(stepElementParameters))
+            .timeoutIntervalInMin(CDStepHelper.getTimeoutInMin(stepElementParameters))
             .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, manifestOverrideContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .kustomizePatchesList(k8sStepHelper.renderPatches(k8sManifestOutcome, ambiance, manifestOverrideContents))

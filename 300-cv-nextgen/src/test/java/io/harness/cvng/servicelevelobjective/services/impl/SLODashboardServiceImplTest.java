@@ -115,6 +115,8 @@ public class SLODashboardServiceImplTest extends CvNextGenTestBase {
     assertThat(sloDashboardWidget.getTimeRemainingDays()).isEqualTo(0);
     assertThat(sloDashboardWidget.getServiceIdentifier()).isEqualTo(monitoredServiceDTO.getServiceRef());
     assertThat(sloDashboardWidget.getEnvironmentIdentifier()).isEqualTo(monitoredServiceDTO.getEnvironmentRef());
+    assertThat(sloDashboardWidget.getServiceName()).isEqualTo("Mocked service name");
+    assertThat(sloDashboardWidget.getEnvironmentName()).isEqualTo("Mocked env name");
   }
 
   @Test
@@ -170,6 +172,8 @@ public class SLODashboardServiceImplTest extends CvNextGenTestBase {
     assertThat(sloDashboardWidget.getTimeRemainingDays()).isEqualTo(0);
     assertThat(sloDashboardWidget.getServiceIdentifier()).isEqualTo(monitoredServiceDTO.getServiceRef());
     assertThat(sloDashboardWidget.getEnvironmentIdentifier()).isEqualTo(monitoredServiceDTO.getEnvironmentRef());
+    assertThat(sloDashboardWidget.getServiceName()).isEqualTo("Mocked service name");
+    assertThat(sloDashboardWidget.getEnvironmentName()).isEqualTo("Mocked env name");
   }
 
   private void createData(Instant startTime, List<SLIRecord.SLIState> sliStates, String sliId) {

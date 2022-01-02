@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.servicenow.ServiceNowTicketKeyNG;
 import io.harness.steps.approval.step.beans.ApprovalInstanceDetailsDTO;
-import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapperDTO;
+import io.harness.steps.approval.step.beans.CriteriaSpecWrapperDTO;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.v3.oas.annotations.media.Schema;

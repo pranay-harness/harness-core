@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.TimeOutHelper;
+import io.harness.cdng.CDStepHelper;
 import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.instance.outcome.DeploymentInfoOutcome;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
@@ -84,7 +84,7 @@ public class K8sBlueGreenStepTest extends AbstractK8sStepExecutorTestBase {
 
     K8sBGDeployRequest request = executeTask(stepElementParameters, K8sBGDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(TimeOutHelper.getTimeoutInMin(stepElementParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(CDStepHelper.getTimeoutInMin(stepElementParameters));
     assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 

@@ -62,8 +62,6 @@ public class HelmRollbackStep extends TaskExecutableWithRollbackAndRbac<HelmCmdE
   @Inject private StepHelper stepHelper;
   @Inject CDFeatureFlagHelper cdFeatureFlagHelper;
 
-  NativeHelmRollbackOutcomeBuilder nativeHelmRollbackOutcomeBuilder = NativeHelmRollbackOutcome.builder();
-
   @Override
   public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
     // No validation
@@ -98,8 +96,15 @@ public class HelmRollbackStep extends TaskExecutableWithRollbackAndRbac<HelmCmdE
     } else {
       final HelmInstallCmdResponseNG response = (HelmInstallCmdResponseNG) executionResponse.getHelmCommandResponse();
       List<ContainerInfo> containerInfoList = response.getContainerInfoList();
+
+      NativeHelmRollbackOutcomeBuilder nativeHelmRollbackOutcomeBuilder = NativeHelmRollbackOutcome.builder();
+      int rollbackVersion = response.getPrevReleaseVersion();
+      nativeHelmRollbackOutcomeBuilder.rollbackVersion(rollbackVersion);
+      nativeHelmRollbackOutcomeBuilder.releaseName(response.getReleaseName());
+      nativeHelmRollbackOutcomeBuilder.newReleaseVersion(2 + rollbackVersion);
       nativeHelmRollbackOutcomeBuilder.containerInfoList(containerInfoList);
       NativeHelmRollbackOutcome nativeHelmRollbackOutcome = nativeHelmRollbackOutcomeBuilder.build();
+
       executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.HELM_ROLLBACK_OUTCOME,
           nativeHelmRollbackOutcome, StepOutcomeGroup.STEP.name());
       stepResponse = stepResponseBuilder.status(Status.SUCCEEDED)
@@ -144,11 +149,6 @@ public class HelmRollbackStep extends TaskExecutableWithRollbackAndRbac<HelmCmdE
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     String releaseName = nativeHelmStepHelper.getReleaseName(ambiance, infrastructure);
     int rollbackVersion = nativeHelmDeployOutcome.getPrevReleaseVersion();
-    int newReleaseVersion = 1 + nativeHelmDeployOutcome.getNewReleaseVersion();
-
-    nativeHelmRollbackOutcomeBuilder.releaseName(releaseName);
-    nativeHelmRollbackOutcomeBuilder.rollbackVersion(rollbackVersion);
-    nativeHelmRollbackOutcomeBuilder.newReleaseVersion(newReleaseVersion);
 
     rollbackCommandRequestNGBuilder.accountId(AmbianceUtils.getAccountId(ambiance))
         .commandName(HELM_COMMAND_NAME)

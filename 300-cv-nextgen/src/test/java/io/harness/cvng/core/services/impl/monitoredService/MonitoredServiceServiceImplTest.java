@@ -1117,12 +1117,12 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(monitoredServiceWithHealthSourcesList.get(0).getHealthSources().size()).isEqualTo(1);
     assertThat(
         monitoredServiceWithHealthSourcesList.get(0).getHealthSources().stream().findFirst().get().getIdentifier())
-        .isEqualTo("monitoredService1/healthSourceIdentifier");
+        .isEqualTo("healthSourceIdentifier");
     assertThat(monitoredServiceWithHealthSourcesList.get(1).getIdentifier()).isEqualTo(identifier2);
     assertThat(monitoredServiceWithHealthSourcesList.get(1).getHealthSources().size()).isEqualTo(1);
     assertThat(
         monitoredServiceWithHealthSourcesList.get(1).getHealthSources().stream().findFirst().get().getIdentifier())
-        .isEqualTo("monitoredService2/healthSourceIdentifier");
+        .isEqualTo("healthSourceIdentifier");
   }
 
   @Test
@@ -1461,7 +1461,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(monitoredServiceListItemDTO.getSloHealthIndicators().size()).isEqualTo(1);
     MonitoredServiceListItemDTO.SloHealthIndicatorDTO sloHealthIndicatorResponse =
         monitoredServiceListItemDTO.getSloHealthIndicators().get(0);
-    assertThat(sloHealthIndicatorResponse.getErrorBudgetRisk()).isEqualTo(ErrorBudgetRisk.NEED_ATTENTION);
+    assertThat(sloHealthIndicatorResponse.getErrorBudgetRisk()).isEqualTo(ErrorBudgetRisk.OBSERVE);
     assertThat(sloHealthIndicatorResponse.getErrorBudgetRemainingPercentage()).isEqualTo(70.0);
     assertThat(sloHealthIndicatorResponse.getServiceLevelObjectiveIdentifier()).isEqualTo("sloIdentifier");
   }
@@ -1499,7 +1499,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(monitoredServiceListItemDTO.getSloHealthIndicators().size()).isEqualTo(1);
     MonitoredServiceListItemDTO.SloHealthIndicatorDTO sloHealthIndicatorResponse =
         monitoredServiceListItemDTO.getSloHealthIndicators().get(0);
-    assertThat(sloHealthIndicatorResponse.getErrorBudgetRisk()).isEqualTo(ErrorBudgetRisk.NEED_ATTENTION);
+    assertThat(sloHealthIndicatorResponse.getErrorBudgetRisk()).isEqualTo(ErrorBudgetRisk.OBSERVE);
     assertThat(sloHealthIndicatorResponse.getErrorBudgetRemainingPercentage()).isEqualTo(70.0);
     assertThat(sloHealthIndicatorResponse.getServiceLevelObjectiveIdentifier()).isEqualTo("sloIdentifier");
   }

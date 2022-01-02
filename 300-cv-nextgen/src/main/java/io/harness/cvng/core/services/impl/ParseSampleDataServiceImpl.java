@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
+import io.harness.cvng.core.beans.SampleDataDTO;
 import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.ParseSampleDataService;
@@ -24,11 +25,10 @@ import org.json.JSONObject;
 @Slf4j
 public class ParseSampleDataServiceImpl implements ParseSampleDataService {
   @Override
-  public List<TimeSeriesSampleDTO> parseSampleData(ProjectParams projectParams, String jsonResponse, String groupName,
-      String metricValueJsonPath, String timestampJsonPath, String timestampFormat) {
+  public List<TimeSeriesSampleDTO> parseSampleData(ProjectParams projectParams, SampleDataDTO sampleDataDTO) {
     try {
-      List metricValueArr = compute(jsonResponse, metricValueJsonPath);
-      List timestampArr = compute(jsonResponse, timestampJsonPath);
+      List metricValueArr = compute(sampleDataDTO.getJsonResponse(), sampleDataDTO.getMetricValueJSONPath());
+      List timestampArr = compute(sampleDataDTO.getJsonResponse(), sampleDataDTO.getTimestampJSONPath());
 
       Preconditions.checkState(metricValueArr.size() == timestampArr.size(),
           "List of metric values does not match the list of timestamps in the response.");
@@ -36,20 +36,21 @@ public class ParseSampleDataServiceImpl implements ParseSampleDataService {
       int lengthOfValues = metricValueArr.size();
 
       for (int i = 0; i < lengthOfValues; i++) {
-        Long timestamp = parseTimestamp(timestampArr.get(i), timestampFormat);
+        Long timestamp = parseTimestamp(timestampArr.get(i), sampleDataDTO.getTimestampFormat());
 
         parsedResponseList.add(
             TimeSeriesSampleDTO.builder()
                 .metricValue(metricValueArr.get(i) == null ? null : Double.valueOf(metricValueArr.get(i).toString()))
                 .timestamp(timestamp)
-                .txnName(groupName)
+                .txnName(sampleDataDTO.getGroupName())
                 .build());
       }
 
       return parsedResponseList;
     } catch (Exception ex) {
-      log.error("Exception while parsing jsonObject {} and metricPath {} and timestampPath {}", jsonResponse,
-          metricValueJsonPath, timestampJsonPath);
+      log.error("Exception while parsing jsonObject {} and metricPath {} and timestampPath {}",
+          sampleDataDTO.getJsonResponse(), sampleDataDTO.getMetricValueJSONPath(),
+          sampleDataDTO.getTimestampJSONPath());
       throw new RuntimeException("Unable to parse the response object with the given json paths", ex);
     }
   }

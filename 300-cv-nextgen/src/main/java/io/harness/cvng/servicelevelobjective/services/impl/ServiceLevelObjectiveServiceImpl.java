@@ -63,7 +63,9 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
   public ServiceLevelObjectiveResponse create(
       ProjectParams projectParams, ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
     validate(serviceLevelObjectiveDTO, projectParams);
-    saveServiceLevelObjectiveEntity(projectParams, serviceLevelObjectiveDTO);
+    ServiceLevelObjective serviceLevelObjective =
+        saveServiceLevelObjectiveEntity(projectParams, serviceLevelObjectiveDTO);
+    sloHealthIndicatorService.upsert(serviceLevelObjective);
     return getSLOResponse(serviceLevelObjectiveDTO.getIdentifier(), projectParams);
   }
 
@@ -81,7 +83,8 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
           projectParams.getOrgIdentifier(), projectParams.getProjectIdentifier()));
     }
     validate(serviceLevelObjectiveDTO, projectParams);
-    updateSLOEntity(projectParams, serviceLevelObjective, serviceLevelObjectiveDTO);
+    serviceLevelObjective = updateSLOEntity(projectParams, serviceLevelObjective, serviceLevelObjectiveDTO);
+    sloHealthIndicatorService.upsert(serviceLevelObjective);
     return getSLOResponse(serviceLevelObjectiveDTO.getIdentifier(), projectParams);
   }
 
@@ -245,8 +248,8 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
         .get();
   }
 
-  private void updateSLOEntity(ProjectParams projectParams, ServiceLevelObjective serviceLevelObjective,
-      ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
+  private ServiceLevelObjective updateSLOEntity(ProjectParams projectParams,
+      ServiceLevelObjective serviceLevelObjective, ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
     prePersistenceCleanup(serviceLevelObjectiveDTO);
     UpdateOperations<ServiceLevelObjective> updateOperations =
         hPersistence.createUpdateOperations(ServiceLevelObjective.class);
@@ -274,6 +277,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
     updateOperations.set(
         ServiceLevelObjectiveKeys.sloTargetPercentage, serviceLevelObjectiveDTO.getTarget().getSloTargetPercentage());
     hPersistence.update(serviceLevelObjective, updateOperations);
+    return serviceLevelObjective;
   }
 
   private ServiceLevelObjectiveResponse getSLOResponse(String identifier, ProjectParams projectParams) {
@@ -315,7 +319,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
         .build();
   }
 
-  private void saveServiceLevelObjectiveEntity(
+  private ServiceLevelObjective saveServiceLevelObjectiveEntity(
       ProjectParams projectParams, ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
     prePersistenceCleanup(serviceLevelObjectiveDTO);
     ServiceLevelObjective serviceLevelObjective =
@@ -338,8 +342,8 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
             .sloTargetPercentage(serviceLevelObjectiveDTO.getTarget().getSloTargetPercentage())
             .userJourneyIdentifier(serviceLevelObjectiveDTO.getUserJourneyRef())
             .build();
-
     hPersistence.save(serviceLevelObjective);
+    return serviceLevelObjective;
   }
 
   private void prePersistenceCleanup(ServiceLevelObjectiveDTO sloCreateDTO) {

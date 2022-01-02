@@ -38,9 +38,17 @@ public class GraphStatusUpdateHelper {
     if (isEmpty(nodeExecutionId)) {
       return orchestrationGraph;
     }
-    try {
-      NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    return handleEventV2(planExecutionId, nodeExecution, eventType, orchestrationGraph);
+  }
 
+  public OrchestrationGraph handleEventV2(String planExecutionId, NodeExecution nodeExecution,
+      OrchestrationEventType eventType, OrchestrationGraph orchestrationGraph) {
+    if (nodeExecution == null) {
+      return orchestrationGraph;
+    }
+    String nodeExecutionId = nodeExecution.getUuid();
+    try {
       if (orchestrationGraph.getRootNodeIds().isEmpty()) {
         log.info("[PMS_GRAPH]  Setting rootNodeId: [{}] for plan [{}]", nodeExecutionId, planExecutionId);
         orchestrationGraph.getRootNodeIds().add(nodeExecutionId);

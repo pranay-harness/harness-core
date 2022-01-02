@@ -17,6 +17,7 @@ import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
+import io.harness.ng.core.service.services.ServiceEntityManagementService;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ng.core.utils.CoreCriteriaUtils;
 import io.harness.rule.Owner;
@@ -39,6 +40,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class ServiceResourceTest extends CategoryTest {
   private ServiceResource serviceResource;
   private ServiceEntityService serviceEntityService;
+  private ServiceEntityManagementService serviceEntityManagementService;
 
   ServiceRequestDTO serviceRequestDTO;
   ServiceResponseDTO serviceResponseDTO;
@@ -48,7 +50,8 @@ public class ServiceResourceTest extends CategoryTest {
   @Before
   public void setUp() {
     serviceEntityService = mock(ServiceEntityService.class);
-    serviceResource = new ServiceResource(serviceEntityService);
+    serviceEntityManagementService = mock(ServiceEntityManagementService.class);
+    serviceResource = new ServiceResource(serviceEntityService, serviceEntityManagementService);
     tags = Arrays.asList(NGTag.builder().key("k1").value("v1").build());
     serviceRequestDTO = ServiceRequestDTO.builder()
                             .identifier("IDENTIFIER")
@@ -110,8 +113,8 @@ public class ServiceResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testDelete() {
     doReturn(true)
-        .when(serviceEntityService)
-        .delete("ACCOUNT_ID", serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier(),
+        .when(serviceEntityManagementService)
+        .deleteService("ACCOUNT_ID", serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier(),
             serviceRequestDTO.getIdentifier(), null);
 
     Boolean data = serviceResource.delete(null, "IDENTIFIER", "ACCOUNT_ID", "ORG_ID", "PROJECT_ID").getData();

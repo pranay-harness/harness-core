@@ -76,7 +76,7 @@ public class RedisNodeResumeEventPublisherTest extends OrchestrationTestBase {
             .interruptHistories(new ArrayList<>())
             .startTs(System.currentTimeMillis())
             .build();
-    resumeEventPublisher.publishEvent(nodeExecution, new HashMap<>(), false);
+    resumeEventPublisher.publishEvent(ResumeMetadata.fromNodeExecution(nodeExecution), new HashMap<>(), false);
     PlanNode planNode = nodeExecution.getNode();
     NodeResumeEvent nodeResumeEvent = NodeResumeEvent.newBuilder()
                                           .setAmbiance(nodeExecution.getAmbiance())
