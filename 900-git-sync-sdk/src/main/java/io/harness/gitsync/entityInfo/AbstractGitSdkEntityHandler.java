@@ -61,7 +61,7 @@ public abstract class AbstractGitSdkEntityHandler<B extends GitSyncableEntity, Y
     }
   }
 
-  private GitSyncBranchContext createGitEntityInfo(FullSyncChangeSet fullSyncChangeSet) {
+  public GitSyncBranchContext createGitEntityInfo(FullSyncChangeSet fullSyncChangeSet) {
     return GitSyncBranchContext.builder()
         .gitBranchInfo(GitEntityInfo.builder()
                            .branch(fullSyncChangeSet.getBranchName())

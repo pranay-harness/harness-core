@@ -12,9 +12,10 @@ import lombok.Value;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SetupVmRequest {
+  @JsonProperty("id") String id;
   @JsonProperty("correlation_id") String correlationID;
   @JsonProperty("pool_id") String poolID;
-  @JsonProperty("id") String id;
+  @JsonProperty("log_key") String logKey;
   @JsonProperty("setup_request") Config config;
 
   @Data

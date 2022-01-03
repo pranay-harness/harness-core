@@ -14,6 +14,7 @@ import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.beans.PrometheusMetricDefinition.PrometheusFilter;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator;
 import io.harness.rule.Owner;
@@ -51,7 +52,7 @@ public class PrometheusDataCollectionInfoMapperTest extends CvNextGenTestBase {
             .build();
 
     cvConfig.setMetricInfoList(Arrays.asList(metricInfo));
-    PrometheusDataCollectionInfo dataCollectionInfo = mapper.toDataCollectionInfo(cvConfig);
+    PrometheusDataCollectionInfo dataCollectionInfo = mapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
     assertThat(dataCollectionInfo.getGroupName()).isEqualTo("mygroupName");
     assertThat(dataCollectionInfo.getMetricCollectionInfoList()).isNotEmpty();
     assertThat(dataCollectionInfo.getDataCollectionDsl()).isEqualTo("metric-pack-dsl");

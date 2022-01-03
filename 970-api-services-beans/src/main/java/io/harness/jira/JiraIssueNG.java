@@ -8,6 +8,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.jira.deserializer.JiraIssueDeserializer;
 import io.harness.serializer.JsonUtils;
+import io.harness.servicenow.TicketNG;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -39,7 +40,7 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = JiraIssueDeserializer.class)
-public class JiraIssueNG {
+public class JiraIssueNG implements TicketNG {
   String url;
   @NotNull String restUrl;
   @NotNull String id;

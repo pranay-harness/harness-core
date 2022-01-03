@@ -245,7 +245,7 @@ public class AuthenticationSettingsResource {
       })
   public RestResponse<SSOConfig>
   uploadSamlMetaData(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam("accountId") String accountId,
-      @Parameter(description = "Saml Metadata input file") @FormDataParam("Inputfile") InputStream uploadedInputStream,
+      @Parameter(description = "Saml Metadata input file") @FormDataParam("file") InputStream uploadedInputStream,
       @Parameter(description = "Input file metadata") @FormDataParam(
           "fileMetadata") FormDataContentDisposition fileDetail,
       @Parameter(description = "Display Name of the SAML") @FormDataParam("displayName") String displayName,
@@ -282,7 +282,7 @@ public class AuthenticationSettingsResource {
       })
   public RestResponse<SSOConfig>
   updateSamlMetaData(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") @NotNull String accountId,
-      @Parameter(description = "SAML Metadata input file") @FormDataParam("Inputfile") InputStream uploadedInputStream,
+      @Parameter(description = "SAML Metadata input file") @FormDataParam("file") InputStream uploadedInputStream,
       @Parameter(description = "Input file metadata") @FormDataParam(
           "fileMetadata") FormDataContentDisposition fileDetail,
       @Parameter(description = "Display Name of the SAML") @FormDataParam("displayName") String displayName,

@@ -122,8 +122,9 @@ public class TerraformPlanTaskHandler extends TerraformAbstractTaskHandler {
 
       String planName = terraformBaseHelper.getPlanName(taskParameters.getTerraformCommand());
 
-      EncryptedRecordData encryptedTfPlan = terraformBaseHelper.encryptPlan(
-          Files.readAllBytes(Paths.get(scriptDirectory, planName)), planName, taskParameters.getEncryptionConfig());
+      EncryptedRecordData encryptedTfPlan =
+          terraformBaseHelper.encryptPlan(Files.readAllBytes(Paths.get(scriptDirectory, planName)),
+              taskParameters.getPlanName(), taskParameters.getEncryptionConfig());
 
       logCallback.saveExecutionLog("\nDone executing scripts.\n", INFO, CommandExecutionStatus.RUNNING);
 

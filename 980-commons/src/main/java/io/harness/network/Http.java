@@ -51,7 +51,7 @@ import org.apache.http.HttpHost;
 public class Http {
   private static UrlValidator urlValidator =
       new UrlValidator(new String[] {"http", "https"}, UrlValidator.ALLOW_LOCAL_URLS);
-  private static ConnectionPool connectionPool = new ConnectionPool(0, 5, TimeUnit.MINUTES);
+  public static ConnectionPool connectionPool = new ConnectionPool(0, 5, TimeUnit.MINUTES);
 
   private static TrustManager[] trustAllCerts = getTrustManagers();
   private static final SSLContext sc = createSslContext();

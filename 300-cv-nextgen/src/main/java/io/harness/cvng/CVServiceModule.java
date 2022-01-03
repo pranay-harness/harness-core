@@ -83,6 +83,8 @@ import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDCurrentGenChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
+import io.harness.cvng.core.handler.monitoredService.BaseMonitoredServiceHandler;
+import io.harness.cvng.core.handler.monitoredService.MonitoredServiceSLIMetricUpdateHandler;
 import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
@@ -123,6 +125,7 @@ import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.core.services.api.demo.CVNGDemoDataIndexService;
 import io.harness.cvng.core.services.api.demo.CVNGDemoPerpetualTaskService;
 import io.harness.cvng.core.services.api.demo.ChangeSourceDemoDataGenerator;
+import io.harness.cvng.core.services.api.demo.ChiDemoService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
@@ -169,7 +172,9 @@ import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
 import io.harness.cvng.core.services.impl.WebhookServiceImpl;
 import io.harness.cvng.core.services.impl.demo.CVNGDemoDataIndexServiceImpl;
 import io.harness.cvng.core.services.impl.demo.CVNGDemoPerpetualTaskServiceImpl;
+import io.harness.cvng.core.services.impl.demo.ChiDemoServiceImpl;
 import io.harness.cvng.core.services.impl.demo.changesource.CDNGChangeSourceDemoDataGenerator;
+import io.harness.cvng.core.services.impl.demo.changesource.KubernetesChangeSourceDemoDataGenerator;
 import io.harness.cvng.core.services.impl.demo.changesource.PagerdutyChangeSourceDemoDataGenerator;
 import io.harness.cvng.core.services.impl.monitoredService.ChangeSourceServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.DatadogLogDataCollectionInfoMapper;
@@ -219,6 +224,7 @@ import io.harness.cvng.servicelevelobjective.services.api.SLIAnalyserService;
 import io.harness.cvng.servicelevelobjective.services.api.SLIDataProcessorService;
 import io.harness.cvng.servicelevelobjective.services.api.SLIRecordService;
 import io.harness.cvng.servicelevelobjective.services.api.SLODashboardService;
+import io.harness.cvng.servicelevelobjective.services.api.SLOHealthIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.cvng.servicelevelobjective.services.api.UserJourneyService;
@@ -226,6 +232,7 @@ import io.harness.cvng.servicelevelobjective.services.impl.RatioAnalyserServiceI
 import io.harness.cvng.servicelevelobjective.services.impl.SLIDataProcessorServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.SLIRecordServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.SLODashboardServiceImpl;
+import io.harness.cvng.servicelevelobjective.services.impl.SLOHealthIndicatorServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelIndicatorServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelObjectiveServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.ThresholdAnalyserServiceImpl;
@@ -298,6 +305,7 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.dropwizard.jackson.Jackson;
@@ -525,6 +533,7 @@ public class CVServiceModule extends AbstractModule {
     bind(WebhookService.class).to(WebhookServiceImpl.class);
     bind(CVNGDemoPerpetualTaskService.class).to(CVNGDemoPerpetualTaskServiceImpl.class);
     bind(CVNGDemoDataIndexService.class).to(CVNGDemoDataIndexServiceImpl.class);
+    bind(ChiDemoService.class).to(ChiDemoServiceImpl.class);
     bindChangeSourceUpdatedEntity();
     bindChangeSourceDemoHandler();
     bind(ChangeSourceService.class).to(ChangeSourceServiceImpl.class);
@@ -532,6 +541,7 @@ public class CVServiceModule extends AbstractModule {
     bind(SLIRecordService.class).to(SLIRecordServiceImpl.class);
     bind(SLODashboardService.class).to(SLODashboardServiceImpl.class);
     bind(SLIDataProcessorService.class).to(SLIDataProcessorServiceImpl.class);
+    bind(SLOHealthIndicatorService.class).to(SLOHealthIndicatorServiceImpl.class);
     MapBinder<ChangeSourceType, ChangeSourceSpecTransformer> changeSourceTypeChangeSourceSpecTransformerMapBinder =
         MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSourceSpecTransformer.class);
     changeSourceTypeChangeSourceSpecTransformerMapBinder.addBinding(ChangeSourceType.HARNESS_CD)
@@ -544,6 +554,10 @@ public class CVServiceModule extends AbstractModule {
         .to(HarnessCDCurrentGenChangeSourceSpecTransformer.class);
 
     bindAnalysisStateExecutor();
+
+    Multibinder<BaseMonitoredServiceHandler> monitoredServiceHandlerMultibinder =
+        Multibinder.newSetBinder(binder(), BaseMonitoredServiceHandler.class);
+    monitoredServiceHandlerMultibinder.addBinding().to(MonitoredServiceSLIMetricUpdateHandler.class);
 
     MapBinder<ActivityType, ActivityUpdatableEntity> activityTypeActivityUpdatableEntityMapBinder =
         MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdatableEntity.class);
@@ -631,10 +645,7 @@ public class CVServiceModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSourceDemoDataGenerator.class);
     changeTypeSourceMapBinder.addBinding(ChangeSourceType.PAGER_DUTY).to(PagerdutyChangeSourceDemoDataGenerator.class);
     changeTypeSourceMapBinder.addBinding(HARNESS_CD).to(CDNGChangeSourceDemoDataGenerator.class);
-    /*changeTypeSourceMapBinder.addBinding(ChangeSourceType.KUBERNETES)
-        .to(KubernetesChangeSource.UpdatableKubernetesChangeSourceEntity.class);
-    changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CD_CURRENT_GEN)
-        .to(HarnessCDCurrentGenChangeSource.UpdatableHarnessCDCurrentGenChangeSourceEntity.class);*/
+    changeTypeSourceMapBinder.addBinding(ChangeSourceType.KUBERNETES).to(KubernetesChangeSourceDemoDataGenerator.class);
   }
 
   private void bindRetryOnExceptionInterceptor() {

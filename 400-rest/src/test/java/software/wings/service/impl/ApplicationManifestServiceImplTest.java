@@ -979,6 +979,49 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     verify(gitFileConfigHelperService, times(1)).validateEcsGitfileConfig(gitFileConfig);
   }
 
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldSetPollForChangesFromEnableCollection() {
+    enableFeatureFlag();
+    when(appService.getAccountIdByAppId(anyString())).thenReturn(ACCOUNT_ID);
+    ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
+
+    applicationManifest.setEnableCollection(null);
+
+    when(serviceResourceService.get(any(), anyString(), eq(false)))
+        .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(true).build());
+
+    // savedAppManifest -> False, applicationManifest -> True
+    ApplicationManifest appManifest = applicationManifestServiceImpl.create(applicationManifest);
+    assertThat(appManifest.getPollForChanges()).isTrue();
+    assertThat(appManifest.getEnableCollection()).isTrue();
+
+    applicationManifest.setEnableCollection(true);
+
+    ApplicationManifest appManifest2 = applicationManifestServiceImpl.update(applicationManifest);
+    assertThat(appManifest2.getPollForChanges()).isTrue();
+    verify(applicationManifestServiceImpl, times(2)).createPerpetualTask(applicationManifest);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldSetPollForChangesFromEnableCollectionFalse() {
+    enableFeatureFlag();
+    when(appService.getAccountIdByAppId(anyString())).thenReturn(ACCOUNT_ID);
+    ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
+
+    applicationManifest.setEnableCollection(false);
+    when(serviceResourceService.get(any(), anyString(), eq(false)))
+        .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(true).build());
+
+    // savedAppManifest -> False, applicationManifest -> True
+    ApplicationManifest appManifest = applicationManifestServiceImpl.create(applicationManifest);
+    assertThat(appManifest.getPollForChanges()).isFalse();
+    verify(applicationManifestServiceImpl, never()).createPerpetualTask(applicationManifest);
+  }
+
   @NotNull
   private ApplicationManifest buildApplicationManifest() {
     ApplicationManifest applicationManifest =

@@ -47,9 +47,9 @@ import software.wings.helpers.ext.k8s.request.K8sTrafficSplitTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 
-import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.collect.ImmutableList;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -157,7 +157,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
-  public void printDestinationWeights() {
+  public void printDestinationWeights() throws IOException {
     K8sTrafficSplitTaskParameters k8sTrafficSplitTaskParams =
         K8sTrafficSplitTaskParameters.builder()
             .virtualServiceName(K8sExpressions.virtualServiceNameExpression)
@@ -203,7 +203,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
-  public void testInitBasedOnDefaultVirtualServiceName() throws YamlException {
+  public void testInitBasedOnDefaultVirtualServiceName() throws IOException {
     K8sTrafficSplitTaskParameters k8sTrafficSplitTaskParams =
         K8sTrafficSplitTaskParameters.builder()
             .releaseName(RELEASE_NAME)
@@ -243,7 +243,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
-  public void testInitMoreThanOneVirtualServiceFound() throws YamlException {
+  public void testInitMoreThanOneVirtualServiceFound() throws IOException {
     K8sTrafficSplitTaskParameters k8sTrafficSplitTaskParams =
         K8sTrafficSplitTaskParameters.builder()
             .releaseName(RELEASE_NAME)

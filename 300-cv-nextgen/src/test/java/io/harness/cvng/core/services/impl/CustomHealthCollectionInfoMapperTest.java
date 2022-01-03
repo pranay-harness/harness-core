@@ -14,6 +14,7 @@ import io.harness.cvng.core.beans.RiskProfile;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.MetricResponseMapping;
 import io.harness.cvng.core.entities.CustomHealthCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthMethod;
 import io.harness.rule.Owner;
 
@@ -67,7 +68,7 @@ public class CustomHealthCollectionInfoMapperTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testToDataCollectionInfo() {
     CustomHealthDataCollectionInfo customHealthDataCollectionInfo =
-        customHealthMapper.toDataCollectionInfo(customHealthCVConfig);
+        customHealthMapper.toDataCollectionInfo(customHealthCVConfig, TaskType.DEPLOYMENT);
     assertThat(customHealthDataCollectionInfo.getGroupName()).isEqualTo(groupName);
     List<CustomHealthDataCollectionInfo.CustomHealthMetricInfo> customHealthMetricInfo =
         customHealthDataCollectionInfo.getMetricInfoList();

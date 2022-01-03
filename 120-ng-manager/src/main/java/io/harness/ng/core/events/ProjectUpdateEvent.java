@@ -7,10 +7,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.Event;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
+import io.harness.ng.core.ResourceConstants;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.dto.ProjectDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -38,7 +41,9 @@ public class ProjectUpdateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(oldProject.getIdentifier()).type(PROJECT).build();
+    Map<String, String> labels = new HashMap<>();
+    labels.put(ResourceConstants.LABEL_KEY_RESOURCE_NAME, newProject.getName());
+    return Resource.builder().identifier(oldProject.getIdentifier()).type(PROJECT).labels(labels).build();
   }
 
   @JsonIgnore

@@ -38,7 +38,7 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   }
 
   @Override
-  public K8sTaskExecutionResponse executeTaskInternal(CIExecuteStepTaskParams ciExecuteStepTaskParams) {
+  public K8sTaskExecutionResponse executeTaskInternal(CIExecuteStepTaskParams ciExecuteStepTaskParams, String taskId) {
     CIK8ExecuteStepTaskParams cik8ExecuteStepTaskParams = (CIK8ExecuteStepTaskParams) ciExecuteStepTaskParams;
 
     ExecuteStepRequest executeStepRequest;

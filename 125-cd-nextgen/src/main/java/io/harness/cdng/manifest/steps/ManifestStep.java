@@ -12,6 +12,7 @@ import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.service.steps.ServiceStepsHelper;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.connector.utils.ConnectorUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -124,5 +125,6 @@ public class ManifestStep implements SyncExecutable<ManifestStepParameters> {
       throw new InvalidRequestException(
           String.format("Connector not found for identifier : [%s]", connectorIdentifierRef));
     }
+    ConnectorUtils.checkForConnectorValidityOrThrow(connectorDTO.get());
   }
 }

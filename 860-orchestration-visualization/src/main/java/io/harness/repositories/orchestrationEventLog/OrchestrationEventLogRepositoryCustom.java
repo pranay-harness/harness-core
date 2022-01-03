@@ -12,8 +12,5 @@ import java.util.List;
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface OrchestrationEventLogRepositoryCustom {
   List<OrchestrationEventLog> findUnprocessedEvents(String planExecutionId, long lastUpdatedAt);
-
-  void updateTtlForProcessedEvents(List<OrchestrationEventLog> eventLogs);
-
-  void schemaMigrationForOldEvenLog();
+  void deleteLogsForGivenPlanExecutionId(String planExecutionId);
 }

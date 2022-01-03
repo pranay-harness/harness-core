@@ -232,10 +232,10 @@ def ingest_data_to_awscur(jsonData):
     DELETE FROM `%s` WHERE DATE(usagestartdate) >= '%s' AND DATE(usagestartdate) <= '%s' and usageaccountid IN (%s);
     INSERT INTO `%s` (resourceid, usagestartdate, productname, productfamily, servicecode, blendedrate, blendedcost, 
                     unblendedrate, unblendedcost, region, availabilityzone, usageaccountid, instancetype, usagetype, 
-                    lineitemtype, effectivecost, billingentity, tags) 
+                    lineitemtype, effectivecost, billingentity, instanceFamily, marketOption, tags) 
     SELECT resourceid, usagestartdate, productname, productfamily, servicecode, blendedrate, blendedcost, 
                     unblendedrate, unblendedcost, region, availabilityzone, usageaccountid, instancetype, usagetype, 
-                    lineitemtype, effectivecost, billingentity, 
+                    lineitemtype, effectivecost, billingentity, instanceFamily, marketOption, 
                     ( SELECT ARRAY_AGG(STRUCT( regexp_replace(REGEXP_EXTRACT(unpivotedData, '[^"]*'), 'TAG_' , '') AS key , 
                          regexp_replace(REGEXP_EXTRACT(unpivotedData, r':\"[^"]*'), ':"', '') AS value )) 
                          FROM UNNEST(( SELECT REGEXP_EXTRACT_ALL(json, 'TAG_' || r'[^:]+:\"[^"]+\"') FROM (SELECT TO_JSON_STRING(table) json))) unpivotedData) 
@@ -402,7 +402,9 @@ def alter_awscur_table(jsonData):
     print_("Altering awscur Table")
     ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
     query = "ALTER TABLE `%s.awscur_%s` \
-        ADD COLUMN IF NOT EXISTS billingEntity STRING;" % (ds, jsonData["awsCurTableSuffix"])
+        ADD COLUMN IF NOT EXISTS billingEntity STRING, \
+        ADD COLUMN IF NOT EXISTS instanceFamily STRING, \
+        ADD COLUMN IF NOT EXISTS marketOption STRING;" % (ds, jsonData["awsCurTableSuffix"])
 
     try:
         print_(query)

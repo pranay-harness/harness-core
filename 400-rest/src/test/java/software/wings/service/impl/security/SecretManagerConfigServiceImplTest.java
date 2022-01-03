@@ -107,7 +107,7 @@ public class SecretManagerConfigServiceImplTest extends WingsBaseTest {
   public void test_getSecretManagerConfig_NotFoundException() {
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
     SecretManagerConfig secretManagerConfig =
-            new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials, null);
+        new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials, null);
     secretManagerConfig.setAccountId(accountId);
     secretManagerConfigService.save(secretManagerConfig);
     secretManagerConfigService.getSecretManager(accountId, "test-configId");

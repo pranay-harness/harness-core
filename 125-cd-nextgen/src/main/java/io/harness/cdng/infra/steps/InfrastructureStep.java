@@ -21,6 +21,7 @@ import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.connector.utils.ConnectorUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -180,6 +181,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
     if (!connectorDTO.isPresent()) {
       throw new InvalidRequestException(String.format("Connector not found for identifier : [%s]", connectorRefValue));
     }
+    ConnectorUtils.checkForConnectorValidityOrThrow(connectorDTO.get());
 
     return connectorDTO.get().getConnector();
   }

@@ -14,9 +14,9 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Schema(name = "GitBranchList", description = "This contains the details of branches and the default branch")
+@Schema(name = "GitBranchList", description = "This contains details of the default and other branch")
 @OwnedBy(DX)
 public class GitBranchListDTO {
-  GitBranchDTO defaultBranch;
-  PageResponse<GitBranchDTO> branches;
+  @Schema(description = "This contains details of the default branch") GitBranchDTO defaultBranch;
+  @Schema(description = "This contains details of all the branches of given repo") PageResponse<GitBranchDTO> branches;
 }

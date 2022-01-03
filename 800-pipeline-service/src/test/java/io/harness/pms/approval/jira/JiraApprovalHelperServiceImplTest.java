@@ -33,8 +33,8 @@ import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepUtils;
 import io.harness.steps.approval.step.beans.ApprovalType;
-import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapperDTO;
-import io.harness.steps.approval.step.jira.beans.KeyValuesCriteriaSpecDTO;
+import io.harness.steps.approval.step.beans.CriteriaSpecWrapperDTO;
+import io.harness.steps.approval.step.beans.KeyValuesCriteriaSpecDTO;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
 import io.harness.waiter.WaitNotifyEngine;
 

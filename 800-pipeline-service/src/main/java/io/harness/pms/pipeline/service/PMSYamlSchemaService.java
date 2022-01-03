@@ -1,5 +1,6 @@
 package io.harness.pms.pipeline.service;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
@@ -16,4 +17,6 @@ public interface PMSYamlSchemaService {
   void validateUniqueFqn(String yaml) throws IOException;
 
   void invalidateAllCache();
+
+  JsonNode getStepYamlSchema(String accountId, EntityType entityType);
 }

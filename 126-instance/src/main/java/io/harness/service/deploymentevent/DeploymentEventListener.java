@@ -116,7 +116,7 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
       InfrastructureOutcome infrastructureOutcome, InfrastructureMappingDTO infrastructureMappingDTO,
       List<ServerInstanceInfo> serverInstanceInfoList) {
     AbstractInstanceSyncHandler abstractInstanceSyncHandler =
-        instanceSyncHandlerFactoryService.getInstanceSyncHandler(infrastructureOutcome.getKind());
+        instanceSyncHandlerFactoryService.getInstanceSyncHandler(serviceOutcome.getType());
     DeploymentInfoDTO deploymentInfoDTO =
         abstractInstanceSyncHandler.getDeploymentInfo(infrastructureOutcome, serverInstanceInfoList);
 

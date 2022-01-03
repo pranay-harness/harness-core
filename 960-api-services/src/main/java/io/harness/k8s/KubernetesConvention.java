@@ -25,6 +25,7 @@ public class KubernetesConvention {
   public static final String DASH = "-";
 
   public static final String ReleaseHistoryKeyName = "releaseHistory";
+  public static final String CompressedReleaseHistoryFlag = "isReleaseHistoryCompressed";
 
   private static final String VOLUME_PREFIX = "vol-";
   private static final String VOLUME_SUFFIX = "-vol";

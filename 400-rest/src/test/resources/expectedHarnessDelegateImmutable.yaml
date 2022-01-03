@@ -44,6 +44,7 @@ metadata:
   name: harness-delegate-accoun
   namespace: harness-delegate
 spec:
+  revisionHistoryLimit: 3
   replicas: 1
   selector:
     matchLabels:
@@ -66,23 +67,23 @@ spec:
             cpu: "1.0"
             memory: "8Gi"
         readinessProbe:
-          exec:
-            command:
-              - echo
-              - 'Its ready'
+          httpGet:
+            path: /api/health
+            port: 3460
+            scheme: HTTP
           initialDelaySeconds: 20
           periodSeconds: 10
         livenessProbe:
-          exec:
-            command:
-              - echo
-              - 'Its alive'
+          httpGet:
+            path: /api/health
+            port: 3460
+            scheme: HTTP
           initialDelaySeconds: 240
           periodSeconds: 10
           failureThreshold: 2
         env:
         - name: JAVA_OPTS
-          value: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=2 -Xms64M"
+          value: "-Xms64M"
         - name: ACCOUNT_ID
           value: ACCOUNT_ID
         - name: ACCOUNT_SECRET
@@ -146,7 +147,10 @@ metadata:
 rules:
   - apiGroups: ["batch", "apps", "extensions"]
     resources: ["cronjobs"]
-    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["extensions", "apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
 
 ---
 
@@ -182,7 +186,7 @@ metadata:
   name: harness-delegate-upgrader-job
   namespace: harness-delegate
 spec:
-  schedule: "*/3 * * * *"
+  schedule: "0 */1 * * *"
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 20
   jobTemplate:

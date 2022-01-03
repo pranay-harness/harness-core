@@ -13,7 +13,7 @@ metadata:
   name: ${delegateName}-upgrader-job
   namespace: ${delegateNamespace}
 spec:
-  schedule: "*/3 * * * *"
+  schedule: "0 */1 * * *"
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 20
   jobTemplate:

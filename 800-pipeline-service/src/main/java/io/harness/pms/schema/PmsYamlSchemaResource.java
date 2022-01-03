@@ -9,6 +9,7 @@ import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.EntityType;
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -75,5 +76,13 @@ public class PmsYamlSchemaResource implements YamlSchemaResource {
   public ResponseDTO<Boolean> invalidateYamlSchemaCache() {
     pmsYamlSchemaService.invalidateAllCache();
     return ResponseDTO.newResponse(true);
+  }
+
+  @GET
+  @Path("/step")
+  @ApiOperation(value = "Get step YAML schema", nickname = "getStepYamlSchema")
+  public ResponseDTO<JsonNode> getStepYamlSchema(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType stepEntityType) {
+    return ResponseDTO.newResponse(pmsYamlSchemaService.getStepYamlSchema(accountIdentifier, stepEntityType));
   }
 }

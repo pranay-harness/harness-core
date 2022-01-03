@@ -2,6 +2,7 @@ package io.harness.yaml.schema.client;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
@@ -9,6 +10,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.YamlSchemaDetailsWrapper;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -31,4 +33,9 @@ public interface YamlSchemaClient {
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Query("scope") Scope scope,
       @Body YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper);
+  @GET("partial-yaml-schema/step")
+  Call<ResponseDTO<JsonNode>> getStepSchema(@Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Query("scope") Scope scope,
+      @Query(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType);
 }

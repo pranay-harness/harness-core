@@ -2,6 +2,7 @@ package io.harness.app.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
+import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.intfc.CIYamlSchemaService;
@@ -17,6 +18,7 @@ import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.YamlSchemaDetailsWrapper;
 import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -109,5 +111,14 @@ public class CIYamlSchemaResource implements YamlSchemaResource {
     PartialSchemaDTO schema = ciYamlSchemaService.getMergedIntegrationStageYamlSchema(
         projectIdentifier, orgIdentifier, scope, yamlSchemaDetailsWrapper.getYamlSchemaWithDetailsList());
     return ResponseDTO.newResponse(schema);
+  }
+
+  @GET
+  @Path("/step")
+  @ApiOperation(value = "Get step YAML schema", nickname = "getStepYamlSchema")
+  public ResponseDTO<JsonNode> getStepYamlSchema(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType) {
+    return ResponseDTO.newResponse(ciYamlSchemaService.getStepYamlSchema(entityType));
   }
 }

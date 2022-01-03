@@ -10,12 +10,14 @@ import io.harness.cf.pipeline.FeatureFlagStageConfig;
 import io.harness.encryption.Scope;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.pipeline.service.yamlschema.PmsYamlSchemaHelper;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -25,6 +27,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
@@ -35,6 +38,7 @@ public class FeatureFlagYamlServiceImpl implements FeatureFlagYamlService {
   @Inject private YamlSchemaProvider yamlSchemaProvider;
   @Inject private PmsYamlSchemaHelper pmsYamlSchemaHelper;
   @Inject private YamlSchemaGenerator yamlSchemaGenerator;
+  @Inject private List<YamlSchemaRootClass> yamlSchemaRootClasses;
 
   @Override
   public PartialSchemaDTO getFeatureFlagYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
@@ -52,6 +56,11 @@ public class FeatureFlagYamlServiceImpl implements FeatureFlagYamlService {
     }
 
     pmsYamlSchemaHelper.removeUnwantedNodes(definitions, ImmutableSet.of(YAMLFieldNameConstants.ROLLBACK_STEPS));
+    yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier, scope, (ObjectNode) definitions,
+        YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()));
+
+    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(featureFlagStageSchema.get(DEFINITIONS_NODE),
+        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), "");
 
     yamlSchemaGenerator.modifyRefsNamespace(featureFlagStageSchema, FEATURE_FLAG_NAMESPACE);
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();

@@ -4,6 +4,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.annotations.dev.HarnessTeam;
@@ -19,6 +22,7 @@ import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.plan.TriggeredBy;
+import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 import io.harness.testlib.RealMongo;
@@ -47,8 +51,10 @@ public class OrchestrationEndEventHandlerTest extends OrchestrationVisualization
   @Before
   public void setUp() {
     ExecutorService executorService = Mockito.mock(ExecutorService.class);
-    orchestrationEndEventHandler =
-        new OrchestrationEndGraphHandler(executorService, planExecutionService, graphGenerationService);
+    OrchestrationEventLogRepository orchestrationEventLogRepository = mock(OrchestrationEventLogRepository.class);
+    doNothing().when(orchestrationEventLogRepository).deleteLogsForGivenPlanExecutionId(any());
+    orchestrationEndEventHandler = new OrchestrationEndGraphHandler(
+        executorService, planExecutionService, graphGenerationService, orchestrationEventLogRepository);
   }
 
   private static final ExecutionMetadata metadata =

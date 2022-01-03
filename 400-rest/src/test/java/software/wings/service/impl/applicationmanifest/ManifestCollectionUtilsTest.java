@@ -186,8 +186,8 @@ public class ManifestCollectionUtilsTest extends WingsBaseTest {
         .when(secretManager)
         .getEncryptionDetails(any(EncryptableSetting.class), anyString(), anyString());
 
-    ManifestCollectionParams collectionParams =
-        manifestCollectionUtils.prepareCollectTaskParamsWithChartVersion(MANIFEST_ID, APP_ID, "1");
+    ManifestCollectionParams collectionParams = manifestCollectionUtils.prepareCollectTaskParamsWithChartVersion(
+        MANIFEST_ID, APP_ID, HelmChartCollectionParams.HelmChartCollectionType.SPECIFIC_VERSION, "1");
     HelmChartCollectionParams helmChartCollectionParams = (HelmChartCollectionParams) collectionParams;
     assertThat(helmChartCollectionParams.getHelmChartConfigParams()).isNotNull();
     assertThat(helmChartCollectionParams.isUseRepoFlags()).isFalse();

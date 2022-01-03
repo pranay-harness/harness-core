@@ -1694,5 +1694,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SetupStatus.class, 400130);
     kryo.register(Type.class, 400131);
     kryo.register(OSType.class, 400132);
+    kryo.register(HelmChartCollectionParams.HelmChartCollectionType.class, 400134);
   }
 }

@@ -337,6 +337,17 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
+  public List<CVConfig> list(ProjectParams projectParams, List<String> identifiers) {
+    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
+        .filter(CVConfigKeys.accountId, projectParams.getAccountIdentifier())
+        .filter(CVConfigKeys.orgIdentifier, projectParams.getOrgIdentifier())
+        .filter(CVConfigKeys.projectIdentifier, projectParams.getProjectIdentifier())
+        .field(CVConfigKeys.identifier)
+        .in(identifiers)
+        .asList();
+  }
+
+  @Override
   public Map<String, DataSourceType> getDataSourceTypeForCVConfigs(
       ServiceEnvironmentParams serviceEnvironmentParams, List<String> cvConfigIds) {
     Map<String, DataSourceType> cvConfigIdDataSourceTypeMap = new HashMap<>();

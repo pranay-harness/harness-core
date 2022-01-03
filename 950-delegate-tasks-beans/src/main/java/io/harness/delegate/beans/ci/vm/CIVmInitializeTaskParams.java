@@ -28,6 +28,7 @@ public class CIVmInitializeTaskParams
   @NotNull private String poolID;
   @NotNull private String workingDir;
 
+  @NotNull private String logKey;
   @NotNull private String logStreamUrl;
   @NotNull private String logSvcToken;
   @NotNull private boolean logSvcIndirectUpload;

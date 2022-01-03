@@ -33,6 +33,7 @@ public class DatadogMetricHealthSourceSpecTransformer
               .metricName(metricInfo.getMetricName())
               .identifier(metricInfo.getIdentifier())
               .metric(metricInfo.getMetric())
+              .metricPath(metricInfo.getMetricPath())
               .serviceInstanceIdentifierTag(metricInfo.getServiceInstanceIdentifierTag())
               .query(metricInfo.getQuery())
               .groupingQuery(metricInfo.getGroupingQuery())
