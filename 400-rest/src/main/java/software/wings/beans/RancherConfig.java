@@ -59,7 +59,7 @@ public class RancherConfig extends SettingValue implements EncryptableSetting, C
   }
 
   public RancherConfig(
-          String rancherUrl, char[] bearerToken, String encryptedBearerToken, String accountId, CCMConfig ccmConfig) {
+      String rancherUrl, char[] bearerToken, String encryptedBearerToken, String accountId, CCMConfig ccmConfig) {
     this();
     this.rancherUrl = rancherUrl;
     this.bearerToken = bearerToken == null ? null : bearerToken.clone();
@@ -70,7 +70,8 @@ public class RancherConfig extends SettingValue implements EncryptableSetting, C
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return new ArrayList<>();
+    return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        rancherUrl, maskingEvaluator));
   }
 
   @Override
@@ -92,7 +93,7 @@ public class RancherConfig extends SettingValue implements EncryptableSetting, C
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String rancherUrl, String bearerToken,
-                UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.rancherUrl = rancherUrl;
       this.bearerToken = bearerToken;
