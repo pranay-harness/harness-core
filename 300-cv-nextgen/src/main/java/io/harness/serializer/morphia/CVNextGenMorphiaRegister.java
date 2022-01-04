@@ -10,8 +10,6 @@ import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity;
 import io.harness.cvng.activity.entities.PagerDutyActivity;
-import io.harness.cvng.alert.entities.AlertRule;
-import io.harness.cvng.alert.entities.AlertRuleAnomaly;
 import io.harness.cvng.analysis.entities.CanaryLogAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.entities.ClusteredLog;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
@@ -139,7 +137,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(TestLogAnalysisLearningEngineTask.class);
     set.add(TimeSeriesLoadTestLearningEngineTask.class);
     set.add(MetricCVConfig.class);
-    set.add(AlertRuleAnomaly.class);
     set.add(HostRecord.class);
     set.add(HealthVerificationJob.class);
     set.add(SplunkCVConfig.class);
@@ -154,7 +151,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(LogAnalysisResult.class);
     set.add(KubernetesActivitySource.class);
     set.add(LogAnalysisRecord.class);
-    set.add(AlertRule.class);
     set.add(CanaryVerificationJob.class);
     set.add(CanaryBlueGreenVerificationJob.class);
     set.add(DeploymentActivity.class);

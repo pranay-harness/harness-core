@@ -4,7 +4,7 @@ import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.security.ServiceTokenGenerator;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
+import com.google.inject.Scopes;
 
 public class NextGenClientModule extends AbstractModule {
   private NGManagerServiceConfig ngManagerServiceConfig;
@@ -17,6 +17,6 @@ public class NextGenClientModule extends AbstractModule {
   protected void configure() {
     bind(NextGenClient.class)
         .toProvider(new NextGenClientFactory(ngManagerServiceConfig, new ServiceTokenGenerator()))
-        .in(Singleton.class);
+        .in(Scopes.SINGLETON);
   }
 }
