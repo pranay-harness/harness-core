@@ -23,6 +23,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UsageRestrictionException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
@@ -41,6 +42,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.restrictions.AppRestrictionsSummary;
 import software.wings.beans.security.restrictions.RestrictionsSummary;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.AppFilter;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.EnvFilter;
@@ -443,8 +445,32 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     return user != null && user.getUserRequestContext() != null;
   }
 
+  private GenericEntityFilter convertToGenericEntityFilter(String accountId, AppFilter appFilter) {
+    if (appFilter == null) {
+      throw new InvalidRequestException("App Filter cannot be null");
+    }
+    switch (appFilter.getFilterType()) {
+      case AppFilter.FilterType.ALL:
+        return GenericEntityFilter.builder().filterType(GenericEntityFilter.FilterType.ALL).build();
+      case AppFilter.FilterType.SELECTED:
+        return GenericEntityFilter.builder()
+            .filterType(GenericEntityFilter.FilterType.SELECTED)
+            .ids(appFilter.getIds())
+            .build();
+      case AppFilter.FilterType.EXCLUDE_SELECTED:
+        Set<String> allAppIds = Sets.newHashSet(appService.getAppIdsByAccountId(accountId));
+        return GenericEntityFilter.builder()
+            .filterType(GenericEntityFilter.FilterType.SELECTED)
+            .ids(new HashSet<>(Sets.difference(allAppIds, appFilter.getIds())))
+            .build();
+      default:
+        throw new InvalidRequestException("Unknown app filter type: " + appFilter.getFilterType());
+    }
+  }
+
   @Override
-  public UsageRestrictions getUsageRestrictionsFromUserPermissions(Action action, List<UserGroup> userGroupList) {
+  public UsageRestrictions getUsageRestrictionsFromUserPermissions(
+      String accountId, Action action, List<UserGroup> userGroupList) {
     Set<AppEnvRestriction> appEnvRestrictions = Sets.newHashSet();
 
     userGroupList.forEach(userGroup -> {
@@ -461,7 +487,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
           return;
         }
 
-        GenericEntityFilter appFilter = appPermission.getAppFilter();
+        GenericEntityFilter appFilter = convertToGenericEntityFilter(accountId, appPermission.getAppFilter());
         if (permissionType == PermissionType.ALL_APP_ENTITIES) {
           EnvFilter prodEntityFilter = EnvFilter.builder().filterTypes(Sets.newHashSet(FilterType.PROD)).build();
           AppEnvRestriction prodAppEnvRestriction =
@@ -523,7 +549,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
           return;
         }
 
-        GenericEntityFilter appFilter = appPermission.getAppFilter();
+        AppFilter appFilter = appPermission.getAppFilter();
         Set<String> appIdsByFilter = authHandler.getAppIdsByFilter(accountId, appFilter);
         if (isEmpty(appIdsByFilter)) {
           return;

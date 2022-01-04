@@ -68,11 +68,10 @@ import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.GenericDbCache;
 import software.wings.logcontext.UserLogContext;
 import software.wings.security.AccountPermissionSummary;
+import software.wings.security.AppFilter;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.AppPermissionSummaryForUI;
-import software.wings.security.GenericEntityFilter;
-import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -711,13 +710,13 @@ public class AuthServiceImpl implements AuthService {
     userRestrictionInfoBuilder.appEnvMapForUpdateAction(
         usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, UPDATE));
     userRestrictionInfoBuilder.usageRestrictionsForUpdateAction(
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(UPDATE, userGroupList));
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(accountId, UPDATE, userGroupList));
 
     // Restrictions for read permissions
     userRestrictionInfoBuilder.appEnvMapForReadAction(
         usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, READ));
     userRestrictionInfoBuilder.usageRestrictionsForReadAction(
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(READ, userGroupList));
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(accountId, READ, userGroupList));
 
     return userRestrictionInfoBuilder.build();
   }
@@ -735,7 +734,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     AppPermission appPermission = AppPermission.builder()
-                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .appFilter(AppFilter.builder().filterType(AppFilter.FilterType.ALL).build())
                                       .permissionType(PermissionType.ALL_APP_ENTITIES)
                                       .actions(Sets.newHashSet(READ, UPDATE, DELETE, CREATE, EXECUTE_PIPELINE,
                                           EXECUTE_WORKFLOW, EXECUTE_WORKFLOW_ROLLBACK))
