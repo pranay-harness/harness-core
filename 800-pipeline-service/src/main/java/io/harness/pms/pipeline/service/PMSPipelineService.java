@@ -41,6 +41,8 @@ public interface PMSPipelineService {
   int incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean b);
 
+  int incrementRunSequence(PipelineEntity entity);
+
   boolean markEntityInvalid(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml);
 

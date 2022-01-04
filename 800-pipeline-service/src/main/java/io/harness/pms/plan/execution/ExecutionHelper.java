@@ -166,9 +166,7 @@ public class ExecutionHelper {
             .setExecutionUuid(executionId)
             .setTriggerInfo(triggerInfo)
             .setModuleType(moduleType)
-            .setRunSequence(pmsPipelineService.incrementRunSequence(pipelineEntity.getAccountId(),
-                pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(),
-                pipelineEntity.getIdentifier(), false))
+            .setRunSequence(pmsPipelineService.incrementRunSequence(pipelineEntity))
             .setPipelineIdentifier(pipelineIdentifier)
             .setRetryInfo(retryExecutionInfo)
             .setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
