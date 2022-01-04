@@ -6,10 +6,10 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.terraform.TerraformPlanParam;
 import io.harness.encryptors.clients.AwsKmsEncryptor;
 import io.harness.security.encryption.EncryptedRecordData;
 
-import software.wings.api.TerraformPlanParam;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -39,8 +39,7 @@ public class TerraformPlanHelper {
                                    .build());
   }
 
-  @VisibleForTesting
-  EncryptedRecordData getEncryptedTfPlanFromSweepingOutput(ExecutionContext context, String planName) {
+  public EncryptedRecordData getEncryptedTfPlanFromSweepingOutput(ExecutionContext context, String planName) {
     SweepingOutputInstance sweepingOutputInstance =
         sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(planName).build());
 

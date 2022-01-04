@@ -33,6 +33,7 @@ public class TerraformExecuteStepRequest {
   EncryptionConfig encryptionConfig;
   @Builder.Default boolean isSkipRefreshBeforeApplyingPlan = true;
   boolean isSaveTerraformJson;
+  boolean useOptimizedTfPlan;
   @Nonnull LogCallback logCallback;
   @Nonnull PlanJsonLogOutputStream planJsonLogOutputStream;
   long timeoutInMillis;

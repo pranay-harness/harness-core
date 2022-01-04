@@ -2,15 +2,19 @@ package io.harness.delegate.task.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT_NAME;
+import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_JSON_FILE_NAME;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -20,6 +24,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.cli.CliResponse;
 import io.harness.connector.service.git.NGGitService;
 import io.harness.connector.task.shell.SshSessionConfigMapper;
+import io.harness.delegate.beans.DelegateFile;
+import io.harness.delegate.beans.DelegateFileManagerBase;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
@@ -47,7 +54,9 @@ import io.harness.terraform.request.TerraformRefreshCommandRequest;
 
 import com.google.inject.Inject;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,6 +67,7 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -77,6 +87,7 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
   @Mock SecretDecryptionService secretDecryptionService;
   @Mock GitClientV2 gitClient;
   @Mock private EncryptDecryptHelper encryptDecryptHelper;
+  @Mock private DelegateFileManagerBase delegateFileManager;
 
   private final EncryptedRecordData encryptedPlanContent =
       EncryptedRecordData.builder().name("planName").encryptedValue("encryptedPlan".toCharArray()).build();
@@ -261,6 +272,33 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
     assertThat(varFilePaths.get(0))
         .isEqualTo(Paths.get(tfvarDir).toAbsolutePath() + "/"
             + "filepath1");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testUploadTfPlanJson() throws IOException {
+    final String fileId = "fileId";
+    final String tfPlanJsonContent = "plan-json-content";
+    final File tfPlanJsonFile = File.createTempFile("testFile", "tfPlanJson");
+
+    try (FileWriter fileWriter = new FileWriter(tfPlanJsonFile)) {
+      fileWriter.write(tfPlanJsonContent);
+    }
+
+    terraformBaseHelper.uploadTfPlanJson(
+        "accountId", "delegateId", "taskId", "entityId", "planName", tfPlanJsonFile.getAbsolutePath());
+
+    ArgumentCaptor<DelegateFile> delegateFileCaptor = ArgumentCaptor.forClass(DelegateFile.class);
+    verify(delegateFileManager, times(1)).upload(delegateFileCaptor.capture(), any(InputStream.class));
+    DelegateFile delegateFile = delegateFileCaptor.getValue();
+    assertThat(delegateFile.getDelegateId()).isEqualTo("delegateId");
+    assertThat(delegateFile.getAccountId()).isEqualTo("accountId");
+    assertThat(delegateFile.getTaskId()).isEqualTo("taskId");
+    assertThat(delegateFile.getBucket()).isEqualTo(FileBucket.TERRAFORM_PLAN_JSON);
+    assertThat(delegateFile.getFileName()).isEqualTo(format(TERRAFORM_PLAN_JSON_FILE_NAME, "planName"));
+
+    FileIo.deleteFileIfExists(tfPlanJsonFile.getAbsolutePath());
   }
 
   private List<TerraformVarFileInfo> getTerraformFileInfoList() {
