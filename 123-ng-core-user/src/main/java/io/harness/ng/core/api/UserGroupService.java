@@ -37,7 +37,8 @@ public interface UserGroupService {
 
   List<UserGroup> getExternallyManagedGroups(String accountIdentifier);
 
-  boolean isExternallyManaged(String accountIdentifier, String groupIdentifier);
+  boolean isExternallyManaged(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String groupIdentifier);
 
   UserGroup update(UserGroupDTO userGroupDTO);
 
