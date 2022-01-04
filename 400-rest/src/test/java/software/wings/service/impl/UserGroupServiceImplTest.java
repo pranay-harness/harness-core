@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.NIKOLA;
@@ -43,6 +44,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.USER_PE
 import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.service.impl.UserServiceImpl.ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME;
 import static software.wings.service.impl.UserServiceImpl.INVITE_EMAIL_TEMPLATE_NAME;
+import static software.wings.utils.WingsTestConstants.ACCOUNT1_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -51,6 +53,8 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.UUID;
+import static software.wings.utils.WingsTestConstants.UUID1;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import static java.util.Arrays.asList;
@@ -825,6 +829,59 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     assertThat(getIds(userGroupService.listByAccountId(ACCOUNT_ID, user, true)))
         .isEqualTo(Arrays.asList(defaultUserGroup.getUuid(), nonDefaultUserGroup.getUuid()));
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testFilter() {
+    UserGroup userGroupAccountId =
+        builder().accountId(ACCOUNT_ID).name(userGroupName).memberIds(singletonList(user.getUuid())).build();
+    UserGroup userGroupAccountId1 =
+        builder().accountId(ACCOUNT1_ID).name(userGroupName2).memberIds(singletonList(user.getUuid())).build();
+    persistence.save(userGroupAccountId);
+    persistence.save(userGroupAccountId1);
+
+    List<UserGroup> userGroups = userGroupService.filter(ACCOUNT_ID, null);
+    assertThat(userGroups.size()).isEqualTo(1);
+    assertThat(userGroups.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testFilterByUserGroupId() {
+    UserGroup userGroupUuid = builder().uuid(UUID).accountId(ACCOUNT_ID).name(userGroupName).build();
+    UserGroup userGroupUuid1 = builder().uuid(UUID1).accountId(ACCOUNT_ID).name(userGroupName2).build();
+    persistence.save(userGroupUuid);
+    persistence.save(userGroupUuid1);
+
+    List<UserGroup> userGroups = userGroupService.filter(ACCOUNT_ID, singletonList(UUID));
+    assertThat(userGroups.size()).isEqualTo(1);
+    assertThat(userGroups.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(userGroups.get(0).getUuid()).isEqualTo(UUID);
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testFilterWithJustNameInResponse() {
+    UserGroup userGroupUuid =
+        builder().uuid(UUID).accountId(ACCOUNT_ID).name(userGroupName).memberIds(singletonList(user.getUuid())).build();
+    UserGroup userGroupUuid1 = builder()
+                                   .uuid(UUID1)
+                                   .accountId(ACCOUNT1_ID)
+                                   .name(userGroupName2)
+                                   .memberIds(singletonList(user.getUuid()))
+                                   .build();
+    persistence.save(userGroupUuid);
+    persistence.save(userGroupUuid1);
+
+    List<UserGroup> userGroups = userGroupService.filter(ACCOUNT_ID, null, singletonList("name"));
+    assertThat(userGroups.size()).isEqualTo(1);
+    assertThat(userGroups.get(0).getAccountId()).isNull();
+    assertThat(userGroups.get(0).getMemberIds()).isNull();
+    assertThat(userGroups.get(0).getName()).isEqualTo(userGroupName);
   }
 
   @Test
