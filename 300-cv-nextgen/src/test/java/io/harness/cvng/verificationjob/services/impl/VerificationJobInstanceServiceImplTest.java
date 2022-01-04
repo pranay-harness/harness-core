@@ -22,13 +22,11 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
-import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.CanaryAdditionalInfo;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
-import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -109,9 +107,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private HPersistence hPersistence;
   @Mock private NextGenService nextGenService;
-  @Mock private AlertRuleService alertRuleService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private VerificationJobInstanceAnalysisService verificationJobInstanceAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
@@ -163,7 +159,6 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     cvConfig = newCVConfig();
     FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
     FieldUtils.writeField(verificationJobInstanceService, "nextGenService", nextGenService, true);
-    FieldUtils.writeField(verificationJobInstanceService, "alertRuleService", alertRuleService, true);
     when(verificationManagerService.createDataCollectionTask(any(), any(), any(), any())).thenReturn(perpetualTaskId);
 
     when(nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, "dev"))
