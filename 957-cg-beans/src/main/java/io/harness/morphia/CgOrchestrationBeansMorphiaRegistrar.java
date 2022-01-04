@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutput;
+import io.harness.beans.terraform.TerraformPlanParam;
 
 import software.wings.beans.Log;
 import software.wings.beans.TerraGroupProvisioners;
@@ -35,5 +36,6 @@ public class CgOrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     w.put("metrics.TimeSeriesMetricDefinition", TimeSeriesMetricDefinition.class);
+    w.put("api.TerraformPlanParam", TerraformPlanParam.class);
   }
 }
