@@ -6,6 +6,7 @@ import io.harness.ng.core.models.SSHConfig;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -18,8 +19,11 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("SSH")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(name = "SSHConfig", description = "This is the SSH configuration details defined in Harness.")
 public class SSHConfigDTO extends BaseSSHSpecDTO {
-  @NotNull SSHCredentialType credentialType;
+  @Schema(description = "This specifies SSH credential type as Password, KeyPath or KeyReference")
+  @NotNull
+  SSHCredentialType credentialType;
 
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "credentialType",
       visible = true)
