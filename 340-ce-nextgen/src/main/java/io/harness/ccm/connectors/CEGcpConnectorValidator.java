@@ -8,6 +8,8 @@
 package io.harness.ccm.connectors;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eraro.ErrorCode.CONNECTOR_VALIDATION_EXCEPTION;
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -18,6 +20,8 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
+import io.harness.exception.WingsException;
+import io.harness.exception.runtime.CCMConnectorRuntimeException;
 import io.harness.ng.core.dto.ErrorDetail;
 
 import com.google.api.gax.paging.Page;
@@ -39,6 +43,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -71,7 +76,8 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
       ConnectorValidationResult connectorValidationResult =
           validateAccessToBillingReport(projectId, datasetId, gcpTableName, impersonatedServiceAccount);
       if (connectorValidationResult != null) {
-        return connectorValidationResult;
+        throw new CCMConnectorRuntimeException(connectorValidationResult.getErrorSummary(),
+            CONNECTOR_VALIDATION_EXCEPTION, EnumSet.of(WingsException.ReportTarget.REST_API));
       } else {
         // 4. Check for data at destination only when 24 hrs have elapsed since connector last modified at
         long now = Instant.now().toEpochMilli() - 24 * 60 * 60 * 1000;
@@ -89,10 +95,11 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
     } catch (Exception ex) {
       // 5. Generic Error
       log.error(GENERIC_LOGGING_ERROR, accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, ex);
-      return ConnectorValidationResult.builder()
-          .errorSummary("Unknown error occurred")
-          .status(ConnectivityStatus.FAILURE)
-          .build();
+      throw ex;
+      // return ConnectorValidationResult.builder()
+      //   .errorSummary("Unknown error occurred")
+      //  .status(ConnectivityStatus.FAILURE)
+      // .build();
     }
     log.info("Validation successful for connector {}", connectorIdentifier);
     return ConnectorValidationResult.builder()

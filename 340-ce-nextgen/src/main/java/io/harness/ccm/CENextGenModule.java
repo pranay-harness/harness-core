@@ -33,6 +33,7 @@ import io.harness.ccm.commons.service.intf.ClusterRecordService;
 import io.harness.ccm.commons.service.intf.EntityMetadataService;
 import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
+import io.harness.ccm.exceptionhandler.handler.CCMConnectorExceptionHandler;
 import io.harness.ccm.graphql.core.budget.BudgetCostService;
 import io.harness.ccm.graphql.core.budget.BudgetCostServiceImpl;
 import io.harness.ccm.graphql.core.budget.BudgetService;
@@ -74,6 +75,8 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.enforcement.client.EnforcementClientModule;
+import io.harness.exception.exceptionmanager.ExceptionModule;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.govern.ProviderMethodInterceptor;
 import io.harness.govern.ProviderModule;
@@ -115,7 +118,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.util.List;
@@ -238,6 +243,7 @@ public class CENextGenModule extends AbstractModule {
     install(FeatureFlagModule.getInstance());
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
     install(JooqModule.getInstance());
+    install(ExceptionModule.getInstance());
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(CENextGenConfiguration.class).toInstance(configuration);
     bind(SQLConverter.class).to(SQLConverterImpl.class);
@@ -266,6 +272,8 @@ public class CENextGenModule extends AbstractModule {
     bindAccountLogContextInterceptor();
 
     registerDelegateTaskService();
+
+    bindExceptionHandlers();
   }
 
   private void bindAccountLogContextInterceptor() {
@@ -354,5 +362,12 @@ public class CENextGenModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(CONNECTOR_ENTITY + ENTITY_CRUD))
         .to(ConnectorEntityCRUDStreamListener.class);
+  }
+
+  private void bindExceptionHandlers() {
+    MapBinder<Class<? extends Exception>, ExceptionHandler> exceptionHandlerMapBinder = MapBinder.newMapBinder(
+        binder(), new TypeLiteral<Class<? extends Exception>>() {}, new TypeLiteral<ExceptionHandler>() {});
+    CCMConnectorExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(CCMConnectorExceptionHandler.class));
   }
 }

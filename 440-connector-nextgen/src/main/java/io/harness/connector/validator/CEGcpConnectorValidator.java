@@ -12,6 +12,7 @@ import static io.harness.connector.ConnectivityStatus.FAILURE;
 import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.RestCallToCENGClientUtils;
 import io.harness.ccm.manager.CENextGenResourceClient;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
@@ -21,7 +22,6 @@ import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.dto.ErrorDetail;
-import io.harness.utils.RestCallToNGManagerClientUtils;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -45,10 +45,11 @@ public class CEGcpConnectorValidator extends AbstractConnectorValidator {
       String orgIdentifier, String projectIdentifier, String identifier) {
     log.info("Calling ce-nextgen for connector {}", connectorResponseDTO);
     try {
-      return RestCallToNGManagerClientUtils.execute(
+      return RestCallToCENGClientUtils.execute(
           ceNextGenResourceClient.testConnection(accountIdentifier, connectorResponseDTO));
-    } catch (InvalidRequestException | UnexpectedException ex) {
+    } /*catch (InvalidRequestException | UnexpectedException ex) {
       log.info("Error could be in CENG microservice or in connecting to it");
+
       List<ErrorDetail> errorDetails = Collections.singletonList(ngErrorHelper.getGenericErrorDetail());
       return ConnectorValidationResult.builder()
           .errors(errorDetails)
@@ -56,6 +57,10 @@ public class CEGcpConnectorValidator extends AbstractConnectorValidator {
           .testedAt(System.currentTimeMillis())
           .status(FAILURE)
           .build();
+
+    }*/ catch (Exception ex) {
+      log.error("caught exception", ex);
+      throw ex;
     }
   }
 

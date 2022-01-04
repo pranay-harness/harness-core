@@ -157,10 +157,12 @@ public class ExceptionManager {
     }
 
     WingsException kryoSerializedException = handleExceptionIfNotKryoRegistered(exception);
+
     try {
       setExceptionCause(kryoSerializedException, ensureExceptionIsKryoSerializable((Exception) exception.getCause()));
     } catch (IllegalAccessException ignored) {
     }
+
 
     return kryoSerializedException;
   }

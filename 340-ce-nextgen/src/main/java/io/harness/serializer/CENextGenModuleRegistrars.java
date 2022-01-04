@@ -22,6 +22,7 @@ public class CENextGenModuleRegistrars {
           .addAll(SecretManagerClientRegistrars.kryoRegistrars)
           // required due to 'KryoException: Encountered unregistered class ID: 7180'
           .addAll(SMCoreRegistrars.kryoRegistrars)
+
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
