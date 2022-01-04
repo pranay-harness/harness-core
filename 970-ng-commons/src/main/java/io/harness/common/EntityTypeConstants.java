@@ -36,5 +36,6 @@ public interface EntityTypeConstants {
   String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
   String K8S_APPLY = "K8sApply";
   String K8S_BLUE_GREEN_DEPLOY = "K8sBlueGreenDeploy";
+  String K8S_ROLLING_DEPLOY = "K8sRollingDeploy";
   String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }
