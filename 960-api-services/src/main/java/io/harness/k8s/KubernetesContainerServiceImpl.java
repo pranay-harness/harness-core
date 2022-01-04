@@ -1865,14 +1865,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       throws IOException {
     V1ConfigMap configMap = getConfigMap(kubernetesConfig, releaseName);
     if (configMap != null && configMap.getData() != null && configMap.getData().containsKey(ReleaseHistoryKeyName)) {
-      Map<String, String> configMapData = configMap.getData();
-      String releaseHistory = configMapData.get(ReleaseHistoryKeyName);
-
-      if (configMapData.containsKey(CompressedReleaseHistoryFlag)
-          && Boolean.parseBoolean(configMapData.get(CompressedReleaseHistoryFlag))) {
-        return deCompressString(decodeBase64(releaseHistory));
-      }
-      return releaseHistory;
+      return fetchReleaseHistoryValue(configMap);
     }
 
     return EMPTY;
@@ -1883,17 +1876,33 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       throws IOException {
     V1Secret secret = getSecret(kubernetesConfig, releaseName);
     if (secret != null && secret.getData() != null && secret.getData().containsKey(ReleaseHistoryKeyName)) {
-      Map<String, byte[]> secretData = secret.getData();
-      byte[] releaseHistory = secretData.get(ReleaseHistoryKeyName);
-
-      if (secretData.containsKey(CompressedReleaseHistoryFlag)
-          && secretData.get(CompressedReleaseHistoryFlag)[0] == 1) {
-        return deCompressString(decodeBase64(releaseHistory));
-      }
-      return new String(releaseHistory, Charsets.UTF_8);
+      return fetchReleaseHistoryValue(secret);
     }
 
     return EMPTY;
+  }
+
+  @Override
+  public String fetchReleaseHistoryValue(V1ConfigMap configMap) throws IOException {
+    Map<String, String> configMapData = configMap.getData();
+    String releaseHistory = configMapData.get(ReleaseHistoryKeyName);
+
+    if (configMapData.containsKey(CompressedReleaseHistoryFlag)
+        && Boolean.parseBoolean(configMapData.get(CompressedReleaseHistoryFlag))) {
+      return deCompressString(decodeBase64(releaseHistory));
+    }
+    return releaseHistory;
+  }
+
+  @Override
+  public String fetchReleaseHistoryValue(V1Secret secret) throws IOException {
+    Map<String, byte[]> secretData = secret.getData();
+    byte[] releaseHistory = secretData.get(ReleaseHistoryKeyName);
+
+    if (secretData.containsKey(CompressedReleaseHistoryFlag) && secretData.get(CompressedReleaseHistoryFlag)[0] == 1) {
+      return deCompressString(decodeBase64(releaseHistory));
+    }
+    return new String(releaseHistory, Charsets.UTF_8);
   }
 
   @Override
