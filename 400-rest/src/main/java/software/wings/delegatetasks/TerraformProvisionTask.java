@@ -7,6 +7,7 @@ import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 import static io.harness.delegate.task.terraform.TerraformCommand.APPLY;
 import static io.harness.delegate.task.terraform.TerraformCommand.DESTROY;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
+import static io.harness.helpers.EncryptDecryptHelperImpl.ON_FILE_STORAGE;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
@@ -29,6 +30,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.validation.terraform.TerraformTaskUtils.fetchAllTfVarFilesArgument;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
+import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
@@ -508,8 +510,24 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         byte[] terraformPlanFile = getTerraformPlanFile(scriptDirectory, parameters);
         saveExecutionLog(color("\nEncrypting terraform plan \n", LogColor.Yellow, LogWeight.Bold),
             CommandExecutionStatus.RUNNING, INFO, logCallback);
-        encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptContent(
-            terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig());
+
+        if (parameters.isUseOptimizedTfPlanJson()) {
+          DelegateFile planDelegateFile =
+              aDelegateFile()
+                  .withAccountId(parameters.getAccountId())
+                  .withDelegateId(getDelegateId())
+                  .withTaskId(getTaskId())
+                  .withEntityId(parameters.getEntityId())
+                  .withBucket(FileBucket.TERRAFORM_PLAN)
+                  .withFileName(format(TERRAFORM_PLAN_FILE_OUTPUT_NAME, getPlanName(parameters)))
+                  .build();
+          encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptContentOptimized(
+              terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig(), planDelegateFile);
+
+        } else {
+          encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptContent(
+              terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig());
+        }
       }
 
       final TerraformExecutionDataBuilder terraformExecutionDataBuilder =
@@ -872,10 +890,16 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   public void saveTerraformPlanContentToFile(TerraformProvisionParameters parameters, String scriptDirectory)
       throws IOException {
     File tfPlanFile = Paths.get(scriptDirectory, getPlanName(parameters)).toFile();
-
-    byte[] decryptedTerraformPlan = planEncryptDecryptHelper.getDecryptedContent(
-        parameters.getSecretManagerConfig(), parameters.getEncryptedTfPlan());
-
+    EncryptedRecordData encryptedRecordData = parameters.getEncryptedTfPlan();
+    byte[] decryptedTerraformPlan;
+    if (encryptedRecordData.getAdditionalMetadata() != null
+        && encryptedRecordData.getAdditionalMetadata().getValues().get(ON_FILE_STORAGE).equals(TRUE)) {
+      decryptedTerraformPlan = planEncryptDecryptHelper.getDecryptedContentOptimized(
+          parameters.getSecretManagerConfig(), encryptedRecordData, parameters.getAccountId());
+    } else {
+      decryptedTerraformPlan =
+          planEncryptDecryptHelper.getDecryptedContent(parameters.getSecretManagerConfig(), encryptedRecordData);
+    }
     FileUtils.copyInputStreamToFile(new ByteArrayInputStream(decryptedTerraformPlan), tfPlanFile);
   }
 
