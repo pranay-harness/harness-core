@@ -1,0 +1,9 @@
+name: Delegate
+identifier: delegate
+labels:
+  - accountId
+  - delegateId
+  - lastHeartbeat
+  - ng
+  - status
+  - version
