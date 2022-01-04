@@ -10,6 +10,8 @@ package software.wings.beans.appmanifest;
 import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import static java.lang.String.join;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -22,6 +24,7 @@ import io.harness.persistence.AccountAccess;
 import software.wings.beans.Base;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
+import software.wings.beans.HelmChartConfig.HelmChartConfigKeys;
 import software.wings.beans.HelmCommandFlagConfig;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.yaml.BaseEntityYaml;
@@ -55,7 +58,12 @@ public class ApplicationManifest extends Base implements AccountAccess {
                  .field(ApplicationManifestKeys.envId)
                  .field(ApplicationManifestKeys.serviceId)
                  .field(ApplicationManifestKeys.kind)
-                 .build())
+                 .build(),
+            CompoundMongoIndex.builder()
+                .name("accountId_connectorId")
+                .field(ApplicationManifestKeys.accountId)
+                .field(join(".", ApplicationManifestKeys.helmChartConfig, HelmChartConfigKeys.connectorId))
+                .build())
         .build();
   }
 
