@@ -125,8 +125,7 @@ public class TriggerExecutionHelper {
           ExecutionMetadata.newBuilder()
               .setExecutionUuid(executionId)
               .setTriggerInfo(triggerInfo)
-              .setRunSequence(pmsPipelineService.incrementRunSequence(ngTriggerEntity.getAccountId(),
-                  ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), targetIdentifier, false))
+              .setRunSequence(pmsPipelineService.incrementRunSequence(pipelineEntityToExecute.get()))
               .setPipelineIdentifier(pipelineEntityToExecute.get().getIdentifier());
 
       PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
