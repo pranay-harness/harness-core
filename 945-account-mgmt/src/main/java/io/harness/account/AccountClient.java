@@ -60,6 +60,9 @@ public interface AccountClient {
   @GET(ACCOUNT_API + "/{accountId}/nextgen-enabled")
   Call<RestResponse<Boolean>> isNextGenEnabled(@Path("accountId") String accountId);
 
+  @GET(ACCOUNT_API + "/{accountId}/builtin-sm-disabled")
+  Call<RestResponse<Boolean>> isBuiltInSMDisabled(@Path("accountId") String accountId);
+
   @GET(ACCOUNT_BASEURL_API) Call<RestResponse<String>> getBaseUrl(@Query("accountId") String accountId);
 
   @GET(ACCOUNT_GATEWAYBASEURL_API) Call<RestResponse<String>> getGatewayBaseUrl(@Query("accountId") String accountId);

@@ -67,6 +67,8 @@ public interface AccountService {
 
   Boolean updateNextGenEnabled(String accountId, boolean enabled);
 
+  boolean isBuiltInSMDisabled(String accountId);
+
   AccountDetails getAccountDetails(String accountId);
 
   List<Account> getAccounts(List<String> identifiers);

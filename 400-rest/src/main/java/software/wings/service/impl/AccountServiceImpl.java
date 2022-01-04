@@ -564,6 +564,12 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public boolean isBuiltInSMDisabled(String accountId) {
+    Account account = getFromCacheWithFallback(accountId);
+    return account != null && account.isBuiltInSMDisabled();
+  }
+
+  @Override
   public AccountDetails getAccountDetails(String accountId) {
     Account account = wingsPersistence.get(Account.class, accountId);
     if (account == null) {

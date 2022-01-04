@@ -177,6 +177,8 @@ public class Account extends Base implements PersistentRegularIterable {
    */
   private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
 
+  @Getter(value = AccessLevel.PRIVATE) @Setter private Boolean builtInSMDisabled = Boolean.FALSE;
+
   public Map<String, String> getDefaults() {
     return defaults;
   }
@@ -213,6 +215,10 @@ public class Account extends Base implements PersistentRegularIterable {
 
   public boolean isNextGenEnabled() {
     return Boolean.TRUE.equals(nextGenEnabled);
+  }
+
+  public boolean isBuiltInSMDisabled() {
+    return Boolean.TRUE.equals(builtInSMDisabled);
   }
 
   /**

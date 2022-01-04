@@ -118,6 +118,12 @@ public class AccountResourceNG {
   }
 
   @GET
+  @Path("/{accountId}/builtin-sm-disabled")
+  public RestResponse<Boolean> isBuiltInSMDisabled(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.isBuiltInSMDisabled(accountId));
+  }
+
+  @GET
   @Path("/baseUrl")
   public RestResponse<String> getBaseUrl(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(subdomainUrlHelper.getPortalBaseUrl(accountId));
