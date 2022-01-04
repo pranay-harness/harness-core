@@ -1352,6 +1352,8 @@ public class UserServiceImpl implements UserService {
 
     auditServiceHelper.reportForAuditingUsingAccountId(
         accountId, null, user, createNewUser ? Type.CREATE : Type.UPDATE);
+    userGroups.forEach(userGroupAdded
+        -> auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userGroupAdded, Type.ADD));
     eventPublishHelper.publishUserInviteFromAccountEvent(accountId, userInvite.getEmail());
 
     return USER_INVITED_SUCCESSFULLY;
