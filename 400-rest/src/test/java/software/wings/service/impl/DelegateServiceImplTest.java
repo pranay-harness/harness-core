@@ -77,6 +77,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logstreaming.LogStreamingServiceConfig;
+import io.harness.metrics.intfc.DelegateMetricsService;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
 import io.harness.observer.Subject;
@@ -189,6 +190,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private SubdomainUrlHelper subdomainUrlHelper;
   @Mock private InfraDownloadService infraDownloadService;
   @Mock private DelegateNgTokenService delegateNgTokenService;
+  @Mock private DelegateMetricsService delegateMetricsService;
   @Inject @Spy private MainConfiguration mainConfiguration;
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
   @InjectMocks @Inject private DelegateTaskServiceClassicImpl delegateTaskServiceClassic;

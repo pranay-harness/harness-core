@@ -2612,7 +2612,11 @@ public class DelegateServiceTest extends WingsBaseTest {
         JenkinsExecutionResponse.builder().delegateMetaInfo(delegateMetaInfo).build();
 
     delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
-        DelegateTaskResponse.builder().accountId(ACCOUNT_ID).response(jenkinsExecutionResponse).build());
+        DelegateTaskResponse.builder()
+            .accountId(ACCOUNT_ID)
+            .responseCode(DelegateTaskResponse.ResponseCode.OK)
+            .response(jenkinsExecutionResponse)
+            .build());
     DelegateTaskNotifyResponseData delegateTaskNotifyResponseData = jenkinsExecutionResponse;
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName()).isEqualTo(HOST_NAME);
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
@@ -2621,7 +2625,11 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateTaskNotifyResponseData = jenkinsExecutionResponse;
     persistence.save(delegateTask);
     delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
-        DelegateTaskResponse.builder().accountId(ACCOUNT_ID).response(jenkinsExecutionResponse).build());
+        DelegateTaskResponse.builder()
+            .accountId(ACCOUNT_ID)
+            .responseCode(DelegateTaskResponse.ResponseCode.OK)
+            .response(jenkinsExecutionResponse)
+            .build());
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
   }
 

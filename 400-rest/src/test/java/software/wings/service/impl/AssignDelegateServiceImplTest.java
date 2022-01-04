@@ -1667,6 +1667,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     String delegateId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
+                                    .status(DelegateTask.Status.QUEUED)
                                     .data(TaskData.builder().taskType(TaskType.HTTP.name()).build())
                                     .executionCapabilities(emptyList())
                                     .build();
@@ -1716,8 +1717,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     TaskData taskData = TaskData.builder().taskType(TaskType.SCRIPT.name()).build();
     String accountId = generateUuid();
     String delegateId = generateUuid();
-    DelegateTask delegateTask =
-        DelegateTask.builder().accountId(accountId).data(taskData).executionCapabilities(emptyList()).build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(accountId)
+                                    .status(DelegateTask.Status.QUEUED)
+                                    .data(taskData)
+                                    .executionCapabilities(emptyList())
+                                    .build();
     Delegate delegate = Delegate.builder()
                             .accountId(accountId)
                             .uuid(delegateId)
@@ -1858,17 +1863,20 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateCache.get("accountId", delegateId2, false)).thenReturn(delegate2);
     DelegateTask asyncTask = DelegateTask.builder()
                                  .uuid(generateUuid())
+                                 .status(DelegateTask.Status.QUEUED)
                                  .accountId("accountId")
                                  .data(TaskData.builder().async(true).taskType(TaskType.SCRIPT.name()).build())
                                  .build();
     DelegateTask syncTask = DelegateTask.builder()
                                 .uuid(generateUuid())
                                 .accountId("accountId")
+                                .status(DelegateTask.Status.QUEUED)
                                 .data(TaskData.builder().async(false).taskType(TaskType.HTTP.name()).build())
                                 .build();
     DelegateTask wrongAsyncTask =
         DelegateTask.builder()
             .uuid(generateUuid())
+            .status(DelegateTask.Status.QUEUED)
             .accountId("accountId")
             .data(TaskData.builder().async(true).taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build())
             .build();
@@ -1876,6 +1884,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     DelegateTask wrongSyncTask =
         DelegateTask.builder()
             .uuid(generateUuid())
+            .status(DelegateTask.Status.QUEUED)
             .accountId("accountId")
             .data(TaskData.builder().async(false).taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build())
             .build();
