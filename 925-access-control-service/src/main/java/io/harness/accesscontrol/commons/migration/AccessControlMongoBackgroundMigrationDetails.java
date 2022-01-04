@@ -11,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.migration.MigrationDetails;
 import io.harness.migration.NGMigration;
 import io.harness.migration.beans.MigrationType;
+import io.harness.migration.utils.NoopMigration;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -36,7 +37,8 @@ public class AccessControlMongoBackgroundMigrationDetails implements MigrationDe
         .add(Pair.of(3, RoleAssignmentScopeAdditionMigration.class))
         .add(Pair.of(5, PrivilegedRoleAssignmentMigration.class))
         .add(Pair.of(6, MultipleManagedResourceGroupMigration.class))
-        .add(Pair.of(7, RoleAssignmentResourceGroupMigration.class))
+        .add(Pair.of(7, NoopMigration.class))
+        .add(Pair.of(8, RoleAssignmentResourceGroupMigration.class))
         .build();
   }
 }
