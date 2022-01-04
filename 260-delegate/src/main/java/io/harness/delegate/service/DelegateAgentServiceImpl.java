@@ -606,7 +606,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                 handleClose(o);
               }
             });
-
+        log.error("socket Open", new Exception());
         socket.open(requestBuilder.build());
 
         startHeartbeat(builder, socket);
@@ -820,6 +820,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     log.info("Event:{}, message:[{}]", Event.CLOSE.name(), o.toString());
     // TODO(brett): Disabling the fallback to poll for tasks as it can cause too much traffic to ingress controller
     // pollingForTasks.set(true);
+    log.error("Closing socket {} , {}", closingSocket.get(), reconnectingSocket.get(), new Exception());
     if (!closingSocket.get() && reconnectingSocket.compareAndSet(false, true)) {
       try {
         trySocketReconnect();
@@ -836,6 +837,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         if (e instanceof SSLException || e instanceof TransportNotSupported) {
           log.warn("Reopening connection to manager because of exception", e);
           try {
+            log.error("Closing socket", new Exception());
             socket.close();
           } catch (final Exception ex) {
             log.error("Failed closing the socket!", ex);
@@ -857,6 +859,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           restartNeeded.set(true);
         }
       } finally {
+        log.error("socket values {}, {}", closingSocket.get(), reconnectingSocket.get(), new Exception());
         reconnectingSocket.set(false);
       }
     }
@@ -866,6 +869,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     try {
       FibonacciBackOff.executeForEver(() -> {
         RequestBuilder requestBuilder = prepareRequestBuilder();
+        log.error("Opening socket", new Exception());
         return socket.open(requestBuilder.build());
       });
     } catch (IOException ex) {
@@ -874,6 +878,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void finalizeSocket() {
+    log.error("Closing socket", new Exception());
     closingSocket.set(true);
     socket.close();
   }
@@ -1001,6 +1006,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       if (!delegateConfiguration.isPollForTasks()) {
         FibonacciBackOff.executeForEver(() -> {
           RequestBuilder requestBuilder = prepareRequestBuilder();
+          log.error("Opening socket", new Exception());
           return socket.open(requestBuilder.build());
         });
       }
