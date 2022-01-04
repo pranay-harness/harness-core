@@ -399,6 +399,7 @@ public class AuthenticationManager {
         List<String> accountIds = user.getAccountIds();
         User loggedInUser = authService.generateBearerTokenForUser(user);
         authService.auditLogin(accountIds, loggedInUser);
+        authService.auditLoginToNg(accountIds, loggedInUser);
         return loggedInUser;
       }
 
@@ -408,6 +409,7 @@ public class AuthenticationManager {
       if (Objects.nonNull(user)) {
         String accountId = user.getDefaultAccountId();
         authService.auditUnsuccessfulLogin(accountId, user);
+        authService.auditUnsuccessfulLoginToNg(accountId, user);
       }
       throw we;
     } catch (Exception e) {
@@ -416,6 +418,7 @@ public class AuthenticationManager {
       if (Objects.nonNull(user)) {
         String accountId = user.getDefaultAccountId();
         authService.auditUnsuccessfulLogin(accountId, user);
+        authService.auditUnsuccessfulLoginToNg(accountId, user);
       }
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
@@ -468,6 +471,7 @@ public class AuthenticationManager {
 
         User loggedInUser = authService.generateBearerTokenForUser(user);
         authService.auditLogin(accountIds, loggedInUser);
+        authService.auditLoginToNg(accountIds, loggedInUser);
         return loggedInUser;
       }
     } catch (Exception e) {

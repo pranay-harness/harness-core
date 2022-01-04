@@ -163,4 +163,10 @@ public interface AuthService {
   void auditLogin2FA(List<String> accountIds, User loggedInUser);
 
   void auditUnsuccessfulLogin(String accountIds, User user);
+
+  void auditLoginToNg(List<String> accountIds, User loggedInUser);
+
+  void auditLogin2FAToNg(List<String> accountIds, User loggedInUser);
+
+  void auditUnsuccessfulLoginToNg(String accountId, User user);
 }
