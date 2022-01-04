@@ -17,6 +17,9 @@ import io.harness.pms.events.PipelineDeleteEvent;
 import io.harness.pms.events.PipelineUpdateEvent;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.pipeline.PipelineMetadata;
+import io.harness.pms.pipeline.service.PipelineMetadataService;
+import io.harness.springdata.TransactionHelper;
 
 import com.google.inject.Inject;
 import java.time.Duration;
@@ -47,6 +50,8 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   private final MongoTemplate mongoTemplate;
   private final GitAwarePersistence gitAwarePersistence;
   private final GitSyncSdkService gitSyncSdkService;
+  private final TransactionHelper transactionHelper;
+  private final PipelineMetadataService pipelineMetadataService;
   OutboxService outboxService;
 
   @Override
@@ -82,8 +87,27 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
     Supplier<OutboxEvent> supplier = ()
         -> outboxService.save(new PipelineCreateEvent(pipelineToSave.getAccountIdentifier(),
             pipelineToSave.getOrgIdentifier(), pipelineToSave.getProjectIdentifier(), pipelineToSave));
-    return gitAwarePersistence.save(
-        pipelineToSave, pipelineToSave.getYaml(), ChangeType.ADD, PipelineEntity.class, supplier);
+    return transactionHelper.performTransaction(() -> {
+      PipelineEntity savedEntity = gitAwarePersistence.save(
+          pipelineToSave, pipelineToSave.getYaml(), ChangeType.ADD, PipelineEntity.class, supplier);
+      PipelineMetadata metadata = PipelineMetadata.builder()
+                                      .accountIdentifier(savedEntity.getAccountIdentifier())
+                                      .orgIdentifier(savedEntity.getOrgIdentifier())
+                                      .projectIdentifier(savedEntity.getProjectIdentifier())
+                                      .executionSummaryInfo(savedEntity.getExecutionSummaryInfo())
+                                      .runSequence(0)
+                                      .identifier(savedEntity.getIdentifier())
+                                      .branch(savedEntity.getBranch())
+                                      .filePath(savedEntity.getFilePath())
+                                      .rootFolder(savedEntity.getRootFolder())
+                                      .isEntityInvalid(savedEntity.isEntityInvalid())
+                                      .isFromDefaultBranch(savedEntity.getIsFromDefaultBranch())
+                                      .objectIdOfYaml(savedEntity.getObjectIdOfYaml())
+                                      .yamlGitConfigRef(savedEntity.getYamlGitConfigRef())
+                                      .build();
+      pipelineMetadataService.save(metadata);
+      return savedEntity;
+    });
   }
 
   @Override
