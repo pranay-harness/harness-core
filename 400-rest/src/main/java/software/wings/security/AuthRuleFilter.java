@@ -107,14 +107,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       "harness-api-keys",
       "users/set-default-account",
       "account/new",
-      "/setup/delegates/ng/v2",
   };
   private static final String[] NO_FILTERING_URIS_SUFFIXES = new String[] {"/logout"};
   private static final String[] EXEMPTED_URI_PREFIXES = new String[] {"limits/configure", "account/license",
       "account/export", "account/import", "account/delete/", "account/disable", "account/enable", "users/reset-cache",
       "executions/workflow-variables", "executions/nodeSubGraphs", "executions/deployment-metadata",
       "setup-as-code/yaml/internal/template-yaml-sync", "infrastructure-definitions/list",
-      "usageRestrictions/references"};
+      "usageRestrictions/references", "setup/delegates/ng/v2"};
   private static final String[] EXEMPTED_URI_SUFFIXES = new String[] {"sales-contacts", "addSubdomainUrl"};
   private static final String USER_NOT_AUTHORIZED = "User not authorized";
   private static final String X_FORWARDED_FOR = "X-Forwarded-For";
