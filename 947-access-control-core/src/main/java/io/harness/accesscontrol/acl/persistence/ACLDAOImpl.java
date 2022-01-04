@@ -54,6 +54,25 @@ public class ACLDAOImpl implements ACLDAO {
         .concat(ALL_RESOURCES_IDENTIFIER);
   }
 
+  private boolean isValidPermissionCheckForSameScopeLevel(PermissionCheck permissionCheck) {
+    String resourceType = permissionCheck.getResourceType();
+    String resourceIdentifier = permissionCheck.getResourceIdentifier();
+    if (!scopeResourceTypes.contains(resourceType)) {
+      return true;
+    }
+    if (createScopePermissions.contains(permissionCheck.getPermission())) {
+      return true;
+    }
+    if (permissionCheck.getResourceScope() == null) {
+      return true;
+    }
+    if (resourceType.equalsIgnoreCase(permissionCheck.getResourceScope().getLevel().toString())) {
+      return resourceIdentifier == null
+          || resourceIdentifier.equals(permissionCheck.getResourceScope().getInstanceId());
+    }
+    return false;
+  }
+
   private Set<String> getQueryStrings(PermissionCheck permissionCheck, Principal principal) {
     String scope =
         Optional.ofNullable(permissionCheck.getResourceScope()).flatMap(rs -> Optional.of(rs.toString())).orElse("");
@@ -67,8 +86,7 @@ public class ACLDAOImpl implements ACLDAO {
           principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
     }
 
-    if (!scopeResourceTypes.contains(resourceType)
-        || createScopePermissions.contains(permissionCheck.getPermission())) {
+    if (isValidPermissionCheckForSameScopeLevel(permissionCheck)) {
       // query for resource=/RESOURCE_TYPE/* in given scope
       queryStrings.add(getAclQueryString(scope, getResourceSelector(resourceType, ALL_RESOURCES_IDENTIFIER),
           principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
