@@ -32,10 +32,13 @@ public interface UsageRestrictionsService {
 
   /**
    * Derive the user restrictions from user permissions.
+   *
+   * @param accountId
    * @param action
    * @return Usage restrictions
    */
-  UsageRestrictions getUsageRestrictionsFromUserPermissions(Action action, List<UserGroup> userGroupList);
+  UsageRestrictions getUsageRestrictionsFromUserPermissions(
+      String accountId, Action action, List<UserGroup> userGroupList);
 
   /**
    * Check if the user has access to an entity from the given context.

@@ -63,6 +63,7 @@ import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AccountPermissionSummary;
+import software.wings.security.AppFilter;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.AppPermissionSummaryForUI;
@@ -182,7 +183,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     pageResponse = aPageResponse().withResponse(userGroups).build();
     when(userGroupService.listByAccountId(anyString(), any(User.class), anyBoolean())).thenReturn(userGroups);
     when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(pageResponse);
-    when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(appIds));
+    when(authHandler.getAppIdsByFilter(anyString(), any(AppFilter.class))).thenReturn(newHashSet(appIds));
     return userGroups;
   }
 
@@ -194,7 +195,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       AppPermission appPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(appIds)).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(appIds)).build())
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(envIds)).build())
               .build();
@@ -301,19 +302,19 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
       AppPermission allAppPermissions = AppPermission.builder()
                                             .permissionType(ALL_APP_ENTITIES)
-                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                             .actions(newHashSet(allActions))
                                             .build();
       AppPermission prodAppPermission = AppPermission.builder()
                                             .permissionType(ENV)
-                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                             .actions(newHashSet(allActions))
                                             .entityFilter(EnvFilter.builder().filterTypes(newHashSet(PROD)).build())
                                             .build();
       AppPermission nonProdAppPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
               .build();
@@ -389,19 +390,19 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
       AppPermission allAppPermissions = AppPermission.builder()
                                             .permissionType(ALL_APP_ENTITIES)
-                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                             .actions(newHashSet(allActions))
                                             .build();
       AppPermission prodAppPermission = AppPermission.builder()
                                             .permissionType(ENV)
-                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                             .actions(newHashSet(allActions))
                                             .entityFilter(EnvFilter.builder().filterTypes(newHashSet(PROD)).build())
                                             .build();
       AppPermission nonProdAppPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
               .build();
@@ -429,19 +430,19 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
       AppPermission allAppPermissions = AppPermission.builder()
                                             .permissionType(ALL_APP_ENTITIES)
-                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                             .actions(newHashSet(allActions))
                                             .build();
       AppPermission prodAppPermission = AppPermission.builder()
                                             .permissionType(ENV)
-                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                             .actions(newHashSet(allActions))
                                             .entityFilter(EnvFilter.builder().filterTypes(newHashSet(PROD)).build())
                                             .build();
       AppPermission nonProdAppPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
               .build();
@@ -479,8 +480,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       AppPermission appPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(
-                  GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
               .actions(newHashSet(updateAndReadAction))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
               .build();
@@ -587,8 +587,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       AppPermission appPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(
-                  GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
               .build();
@@ -641,8 +640,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       AppPermission appPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(
-                  GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
               .build();
@@ -693,7 +691,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       List<String> appIds = asList(APP_ID_1, APP_ID_2, APP_ID_3);
       AppPermission appPermission = AppPermission.builder()
                                         .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                        .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                         .actions(allActions)
                                         .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
                                         .build();
@@ -744,7 +742,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       List<String> appIds = asList(APP_ID_1, APP_ID_2, APP_ID_3);
       AppPermission appPermission = AppPermission.builder()
                                         .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                        .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                         .actions(allActions)
                                         .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
                                         .build();
@@ -777,7 +775,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       AppPermission appPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
               .actions(allActions)
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(PROD, NON_PROD)).build())
               .build();
@@ -808,7 +806,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       List<String> appIds = asList(APP_ID_1, APP_ID_2, APP_ID_3);
       AppPermission appPermission = AppPermission.builder()
                                         .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                        .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                         .actions(allActions)
                                         .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
                                         .build();
@@ -841,7 +839,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       AppPermission appPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
               .actions(allActions)
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(PROD, NON_PROD)).build())
               .build();
@@ -873,7 +871,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       List<String> appIds = asList(APP_ID_1, APP_ID_2);
       AppPermission appPermission = AppPermission.builder()
                                         .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                        .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                         .actions(allActions)
                                         .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
                                         .build();
@@ -903,7 +901,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       List<String> appIds = asList(APP_ID_1, APP_ID_2);
       AppPermission appPermission = AppPermission.builder()
                                         .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                        .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                         .actions(allActions)
                                         .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
                                         .build();
@@ -944,7 +942,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       List<String> appIds = asList(APP_ID_1, APP_ID_2);
       AppPermission appPermission = AppPermission.builder()
                                         .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                        .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                         .actions(allActions)
                                         .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
                                         .build();
@@ -984,7 +982,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       List<String> appIds = asList(APP_ID_1, APP_ID_2);
       AppPermission appPermission = AppPermission.builder()
                                         .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                        .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                         .actions(allActions)
                                         .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
                                         .build();
@@ -1034,8 +1032,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       AppPermission appPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(
-                  GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID_1)).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID_1)).build())
               .actions(allActions)
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
               .build();
@@ -1068,8 +1065,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       AppPermission appPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(
-                  GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
               .actions(newHashSet(readAction))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
               .build();
@@ -1285,8 +1281,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       AppPermission appPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(
-                  GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
               .build();
@@ -1338,7 +1333,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       AppPermission appPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(PROD, NON_PROD)).build())
               .build();
@@ -1486,8 +1481,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       AppPermission appPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(
-                  GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
+              .appFilter(AppFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
               .build();
@@ -1721,11 +1715,11 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     }
 
     UsageRestrictions restrictionsFromUserPermissionsForUpdate =
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(Action.UPDATE, userGroupList);
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(ACCOUNT_ID, Action.UPDATE, userGroupList);
     restrictionInfoBuilder.usageRestrictionsForUpdateAction(restrictionsFromUserPermissionsForUpdate);
 
     UsageRestrictions restrictionsFromUserPermissionsForRead =
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(Action.READ, userGroupList);
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(ACCOUNT_ID, Action.READ, userGroupList);
     restrictionInfoBuilder.usageRestrictionsForReadAction(restrictionsFromUserPermissionsForRead);
 
     Map<String, Set<String>> appEnvMapForUpdate =

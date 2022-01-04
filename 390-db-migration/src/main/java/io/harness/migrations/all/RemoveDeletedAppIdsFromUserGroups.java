@@ -13,7 +13,7 @@ import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.GenericEntityFilter;
+import software.wings.security.AppFilter;
 import software.wings.service.intfc.UserGroupService;
 
 import com.google.inject.Inject;
@@ -75,7 +75,7 @@ public class RemoveDeletedAppIdsFromUserGroups implements Migration {
     }
 
     for (AppPermission permission : groupAppPermissions) {
-      GenericEntityFilter filter = permission.getAppFilter();
+      AppFilter filter = permission.getAppFilter();
       Set<String> ids = filter.getIds();
       if (isEmpty(ids)) {
         continue;

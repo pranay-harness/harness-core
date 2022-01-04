@@ -91,6 +91,7 @@ import software.wings.graphql.schema.type.permissions.QLTemplatePermissions;
 import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
 import software.wings.graphql.schema.type.permissions.QLWorkflowFilterType;
 import software.wings.graphql.schema.type.permissions.QLWorkflowPermissions;
+import software.wings.security.AppFilter;
 import software.wings.security.EnvFilter;
 import software.wings.security.Filter;
 import software.wings.security.GenericEntityFilter;
@@ -404,7 +405,7 @@ public class UserGroupPermissionsController {
     QLPermissionType permissionType = permission.getPermissionType();
     PermissionType appPermissionType = mapToApplicationPermission(permissionType);
     // Create the applicationFilter for the permissions
-    GenericEntityFilter appFilter = appFilterController.createGenericEntityFilter(permission.getApplications());
+    AppFilter appFilter = appFilterController.createAppFilter(permission.getApplications());
     Filter entityFilter;
     String filterType;
     switch (permissionType) {
