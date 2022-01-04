@@ -15,6 +15,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
@@ -25,10 +27,12 @@ import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
+import io.harness.grpc.utils.StringValueUtils;
 import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.governance.ExpansionRequestMetadata;
 import io.harness.pms.contracts.governance.ExpansionResponseBatch;
 import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.governance.ExpansionRequest;
 import io.harness.pms.governance.ExpansionRequestsExtractor;
@@ -186,6 +190,25 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                                     .withTemplateReference(pipelineEntity.getTemplateReference());
 
     return makePipelineUpdateCall(tempEntity, entityToUpdate, changeType);
+  }
+
+  @Override
+  public PipelineEntity syncPipelineEntityWithGit(EntityDetailProtoDTO entityDetail) {
+    IdentifierRefProtoDTO identifierRef = entityDetail.getIdentifierRef();
+    String accountId = StringValueUtils.getStringFromStringValue(identifierRef.getAccountIdentifier());
+    String orgId = StringValueUtils.getStringFromStringValue(identifierRef.getOrgIdentifier());
+    String projectId = StringValueUtils.getStringFromStringValue(identifierRef.getProjectIdentifier());
+    String pipelineId = StringValueUtils.getStringFromStringValue(identifierRef.getIdentifier());
+
+    Optional<PipelineEntity> optionalPipelineEntity;
+    try (PmsGitSyncBranchContextGuard ignored = new PmsGitSyncBranchContextGuard(null, false)) {
+      optionalPipelineEntity = get(accountId, orgId, projectId, pipelineId, false);
+    }
+    if (!optionalPipelineEntity.isPresent()) {
+      throw new InvalidRequestException(
+          PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(orgId, projectId, pipelineId));
+    }
+    return makePipelineUpdateCall(optionalPipelineEntity.get(), optionalPipelineEntity.get(), ChangeType.ADD);
   }
 
   private PipelineEntity makePipelineUpdateCall(
