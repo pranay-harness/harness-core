@@ -1896,8 +1896,8 @@ public class K8sTaskHelperBase {
     }
 
     String releaseHistoryDataString = releaseHistoryPresent(releaseSecret)
-        ? new String(releaseSecret.getData().get(ReleaseHistoryKeyName), UTF_8)
-        : releaseConfigMap.getData().get(ReleaseHistoryKeyName);
+        ? kubernetesContainerService.fetchReleaseHistoryValue(releaseSecret)
+        : kubernetesContainerService.fetchReleaseHistoryValue(releaseConfigMap);
     ReleaseHistory releaseHistory = ReleaseHistory.createFromData(releaseHistoryDataString);
 
     if (isEmpty(releaseHistory.getReleases())) {
