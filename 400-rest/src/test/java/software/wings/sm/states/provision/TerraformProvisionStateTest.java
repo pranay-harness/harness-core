@@ -1110,6 +1110,46 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(terraformOutputInfoElement.paramMap(executionContext)).containsKeys("terraform");
   }
 
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void handleAsyncResponseInternalRegularDeleteJsonPlanFile() {
+    TerraformProvisionState applyStateSpy = spy(state);
+    applyStateSpy.setProvisionerId(PROVISIONER_ID);
+    doReturn(APP_ID).when(executionContext).getAppId();
+    doReturn(ACCOUNT_ID).when(executionContext).getAccountId();
+
+    doReturn(TerraformOutputInfoElement.builder().build())
+        .when(executionContext)
+        .getContextElement(ContextElementType.TERRAFORM_PROVISION);
+    doReturn(
+        Arrays.asList(
+            TerraformProvisionInheritPlanElement.builder().provisionerId(PROVISIONER_ID).tfPlanJsonFileId(null).build(),
+            TerraformProvisionInheritPlanElement.builder().provisionerId("random1245").build(),
+            TerraformProvisionInheritPlanElement.builder()
+                .tfPlanJsonFileId("tfPlanJsonFileId")
+                .provisionerId(PROVISIONER_ID)
+                .build()))
+        .when(executionContext)
+        .getContextElementList(TERRAFORM_INHERIT_PLAN);
+
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().appId(APP_ID).build();
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.OPTIMIZED_TF_PLAN, ACCOUNT_ID);
+
+    TerraformExecutionData terraformExecutionData = TerraformExecutionData.builder()
+                                                        .workspace("workspace")
+                                                        .executionStatus(ExecutionStatus.SUCCESS)
+                                                        .activityId(ACTIVITY_ID)
+                                                        .build();
+
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", terraformExecutionData);
+
+    applyStateSpy.handleAsyncResponse(executionContext, response);
+    verify(fileService, times(1)).deleteFile("tfPlanJsonFileId", FileBucket.TERRAFORM_PLAN_JSON);
+  }
+
   private void assertParametersVariables(TerraformProvisionParameters parameters) {
     assertThat(parameters.getVariables().keySet()).containsExactlyInAnyOrder("region", "vpc_id");
     assertThat(parameters.getVariables().values()).containsExactlyInAnyOrder("us-east", "vpc-id");

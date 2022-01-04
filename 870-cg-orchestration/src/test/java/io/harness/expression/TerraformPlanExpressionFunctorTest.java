@@ -9,15 +9,22 @@ import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.terraform.TerraformPlanParam;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.FileBucket;
+import io.harness.delegate.beans.FileMetadata;
+import io.harness.exception.FunctorException;
 import io.harness.rule.Owner;
 import io.harness.terraform.expression.TerraformPlanExpressionInterface;
 
+import software.wings.service.intfc.FileService;
+
 import java.util.function.Function;
+import org.assertj.core.api.ThrowableAssert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -28,6 +35,7 @@ import org.mockito.MockitoAnnotations;
 public class TerraformPlanExpressionFunctorTest extends CategoryTest {
   private static final int FUNCTOR_TOKEN = 1234567890;
   @Mock private Function<String, TerraformPlanParam> obtainTfPlanFunction;
+  @Mock private FileService fileService;
 
   private TerraformPlanExpressionFunctor expressionFunctor;
 
@@ -37,6 +45,7 @@ public class TerraformPlanExpressionFunctorTest extends CategoryTest {
     this.expressionFunctor = TerraformPlanExpressionFunctor.builder()
                                  .obtainTfPlanFunction(this.obtainTfPlanFunction)
                                  .expressionFunctorToken(FUNCTOR_TOKEN)
+                                 .fileService(fileService)
                                  .build();
   }
 
@@ -44,11 +53,8 @@ public class TerraformPlanExpressionFunctorTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testJsonFilePath() {
-    TerraformPlanParam tfPlanApply = TerraformPlanParam.builder().tfPlanJsonFileId("applyFileId").build();
-    TerraformPlanParam tfPlanDestroy = TerraformPlanParam.builder().tfPlanJsonFileId("destroyFileId").build();
-
-    doReturn(tfPlanApply).when(obtainTfPlanFunction).apply(TF_APPLY_VAR_NAME);
-    doReturn(tfPlanDestroy).when(obtainTfPlanFunction).apply(TF_DESTROY_VAR_NAME);
+    preparePlanFileForTest("applyFileId", TF_APPLY_VAR_NAME);
+    preparePlanFileForTest("destroyFileId", TF_DESTROY_VAR_NAME);
 
     assertThat(expressionFunctor.jsonFilePath())
         .isEqualTo(
@@ -62,22 +68,14 @@ public class TerraformPlanExpressionFunctorTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testReuseCachedValue() {
-    doReturn(TerraformPlanParam.builder().tfPlanJsonFileId("applyFileIdOriginal").build())
-        .when(obtainTfPlanFunction)
-        .apply(TF_APPLY_VAR_NAME);
-    doReturn(TerraformPlanParam.builder().tfPlanJsonFileId("destroyFileIdOriginal").build())
-        .when(obtainTfPlanFunction)
-        .apply(TF_DESTROY_VAR_NAME);
+    preparePlanFileForTest("applyFileIdOriginal", TF_APPLY_VAR_NAME);
+    preparePlanFileForTest("destroyFileIdOriginal", TF_DESTROY_VAR_NAME);
+
     expressionFunctor.jsonFilePath();
     expressionFunctor.destroy.jsonFilePath();
 
-    doReturn(TerraformPlanParam.builder().tfPlanJsonFileId("applyFileIdUpdated").build())
-        .when(obtainTfPlanFunction)
-        .apply(TF_APPLY_VAR_NAME);
-
-    doReturn(TerraformPlanParam.builder().tfPlanJsonFileId("destroyFileIdUpdated").build())
-        .when(obtainTfPlanFunction)
-        .apply(TF_DESTROY_VAR_NAME);
+    preparePlanFileForTest("applyFileIdUpdated", TF_APPLY_VAR_NAME);
+    preparePlanFileForTest("destroyFileIdUpdated", TF_DESTROY_VAR_NAME);
 
     assertThat(expressionFunctor.jsonFilePath())
         .isEqualTo(format(TerraformPlanExpressionInterface.DELEGATE_EXPRESSION, "applyFileIdOriginal", FUNCTOR_TOKEN,
@@ -91,9 +89,12 @@ public class TerraformPlanExpressionFunctorTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testJsonFilePathNoPlan() {
-    assertThatThrownBy(() -> expressionFunctor.jsonFilePath()).hasMessageContaining("EXPRESSION_EVALUATION_FAILED");
-    assertThatThrownBy(() -> expressionFunctor.destroy.jsonFilePath())
-        .hasMessageContaining("EXPRESSION_EVALUATION_FAILED");
+    assertExceptionMessage(()
+                               -> expressionFunctor.jsonFilePath(),
+        "Terraform plan 'terraformApply' is not available in current context. Terraform plan is available only after terraform step with run plan only option");
+    assertExceptionMessage(()
+                               -> expressionFunctor.destroy.jsonFilePath(),
+        "Terraform plan 'terraformDestroy' is not available in current context. Terraform plan is available only after terraform step with run plan only option");
   }
 
   @Test
@@ -103,8 +104,69 @@ public class TerraformPlanExpressionFunctorTest extends CategoryTest {
     doReturn(TerraformPlanParam.builder().build()).when(obtainTfPlanFunction).apply(TF_APPLY_VAR_NAME);
     doReturn(TerraformPlanParam.builder().build()).when(obtainTfPlanFunction).apply(TF_DESTROY_VAR_NAME);
 
-    assertThatThrownBy(() -> expressionFunctor.jsonFilePath()).hasMessageContaining("EXPRESSION_EVALUATION_FAILED");
-    assertThatThrownBy(() -> expressionFunctor.destroy.jsonFilePath())
-        .hasMessageContaining("EXPRESSION_EVALUATION_FAILED");
+    assertExceptionMessage(()
+                               -> expressionFunctor.jsonFilePath(),
+        "Invalid usage of terraform plan functor. Missing tfPlanJsonFileId in terraform plan param 'terraformApply'");
+    assertExceptionMessage(()
+                               -> expressionFunctor.destroy.jsonFilePath(),
+        "Invalid usage of terraform plan functor. Missing tfPlanJsonFileId in terraform plan param 'terraformDestroy'");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testJsonFilePathNoFileExists() {
+    doReturn(TerraformPlanParam.builder().tfPlanJsonFileId("applyFileId").build())
+        .when(obtainTfPlanFunction)
+        .apply(TF_APPLY_VAR_NAME);
+    doReturn(TerraformPlanParam.builder().tfPlanJsonFileId("destroyFileId").build())
+        .when(obtainTfPlanFunction)
+        .apply(TF_DESTROY_VAR_NAME);
+    assertExceptionMessage(()
+                               -> expressionFunctor.jsonFilePath(),
+        "File with id 'applyFileId' doesn't exist. Json representation of terraform plan isn't available after it was applied");
+    assertExceptionMessage(()
+                               -> expressionFunctor.destroy.jsonFilePath(),
+        "File with id 'destroyFileId' doesn't exist. Json representation of terraform plan isn't available after it was applied");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testJsonFilePathNoFileExistsException() {
+    doReturn(TerraformPlanParam.builder().tfPlanJsonFileId("applyFileId").build())
+        .when(obtainTfPlanFunction)
+        .apply(TF_APPLY_VAR_NAME);
+    doReturn(TerraformPlanParam.builder().tfPlanJsonFileId("destroyFileId").build())
+        .when(obtainTfPlanFunction)
+        .apply(TF_DESTROY_VAR_NAME);
+    doThrow(new RuntimeException("No file found"))
+        .when(fileService)
+        .getFileMetadata("applyFileId", FileBucket.TERRAFORM_PLAN_JSON);
+    doThrow(new RuntimeException("No file found"))
+        .when(fileService)
+        .getFileMetadata("destroyFileId", FileBucket.TERRAFORM_PLAN_JSON);
+    assertExceptionMessage(()
+                               -> expressionFunctor.jsonFilePath(),
+        "File with id 'applyFileId' doesn't exist. Json representation of terraform plan isn't available after it was applied");
+    assertExceptionMessage(()
+                               -> expressionFunctor.destroy.jsonFilePath(),
+        "File with id 'destroyFileId' doesn't exist. Json representation of terraform plan isn't available after it was applied");
+  }
+
+  private void preparePlanFileForTest(String filedId, String planName) {
+    TerraformPlanParam tfPlan = TerraformPlanParam.builder().tfPlanJsonFileId(filedId).build();
+    FileMetadata fileMetadata = FileMetadata.builder().build();
+
+    doReturn(tfPlan).when(obtainTfPlanFunction).apply(planName);
+    doReturn(fileMetadata).when(fileService).getFileMetadata(filedId, FileBucket.TERRAFORM_PLAN_JSON);
+  }
+
+  private void assertExceptionMessage(ThrowableAssert.ThrowingCallable callable, String expectedMessage) {
+    assertThatThrownBy(callable).matches(exception -> {
+      assertThat(exception).isInstanceOf(FunctorException.class);
+      assertThat(((FunctorException) exception).getReason()).contains(expectedMessage);
+      return true;
+    });
   }
 }

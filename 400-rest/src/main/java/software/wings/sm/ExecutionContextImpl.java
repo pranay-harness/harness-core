@@ -121,6 +121,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -201,6 +202,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient KryoSerializer kryoSerializer;
   @Inject private transient CustomDeploymentTypeService customDeploymentTypeService;
   @Inject private transient HelmChartService helmChartService;
+  @Inject private transient FileService fileService;
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
@@ -937,6 +939,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
                   -> sweepingOutputService.findSweepingOutput(
                       prepareSweepingOutputInquiryBuilder().name(planName).build()))
               .expressionFunctorToken(stateExecutionContext.getExpressionFunctorToken())
+              .fileService(fileService)
               .build());
     }
 

@@ -309,6 +309,7 @@ public abstract class TerraformProvisionState extends State {
             // We're ending in storing 3 times, since the encryptedValue for KMS secret manager will be the value itself
             // it will reduce the max encrypted plan size to 5mb. Will use sweeping output for getting encrypted tf plan
             .encryptedTfPlan(useOptimizedTfPlan ? null : terraformExecutionData.getEncryptedTfPlan())
+            .tfPlanJsonFileId(terraformExecutionData.getTfPlanJsonFiledId())
             .build();
 
     return ExecutionResponse.builder()
@@ -393,6 +394,17 @@ public abstract class TerraformProvisionState extends State {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     if (!(this instanceof DestroyTerraformProvisionState)) {
       markApplyExecutionCompleted(context);
+    }
+
+    if (featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId())) {
+      context.getContextElementList(TERRAFORM_INHERIT_PLAN)
+          .stream()
+          .map(TerraformProvisionInheritPlanElement.class ::cast)
+          .filter(element -> element.getProvisionerId().equals(provisionerId))
+          .filter(element -> isNotEmpty(element.getTfPlanJsonFileId()))
+          .findFirst()
+          .map(TerraformProvisionInheritPlanElement::getTfPlanJsonFileId)
+          .ifPresent(tfPlanJsonFileId -> fileService.deleteFile(tfPlanJsonFileId, FileBucket.TERRAFORM_PLAN_JSON));
     }
 
     if (terraformExecutionData.getExecutionStatus() == FAILED) {
