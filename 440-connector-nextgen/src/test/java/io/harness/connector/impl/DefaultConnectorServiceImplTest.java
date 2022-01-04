@@ -41,6 +41,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.clients.YamlGitConfigClient;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.repositories.ConnectorRepository;
@@ -77,6 +78,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Mock SecretRefInputValidationHelper secretRefInputValidationHelper;
   @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   @Mock GitSyncSdkService gitSyncSdkService;
+  @Mock YamlGitConfigClient yamlGitConfigClient;
   @Inject @InjectMocks DefaultConnectorServiceImpl connectorService;
 
   String userName = "userName";
