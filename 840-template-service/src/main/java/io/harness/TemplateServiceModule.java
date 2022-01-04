@@ -98,7 +98,7 @@ public class TemplateServiceModule extends AbstractModule {
       }
     });
     install(ExceptionModule.getInstance());
-    install(TemplateServiceGrpcClientModule.getInstance());
+    install(TemplateServiceGrpcClientModule.getInstance(templateServiceConfiguration));
     install(new AbstractWaiterModule() {
       @Override
       public WaiterConfiguration waiterConfiguration() {
