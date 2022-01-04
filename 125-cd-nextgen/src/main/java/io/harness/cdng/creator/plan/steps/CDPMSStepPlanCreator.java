@@ -26,8 +26,8 @@ import java.util.stream.Collectors;
 public class CDPMSStepPlanCreator extends GenericStepPMSPlanCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet("K8sScale", "K8sBlueGreenDeploy", "K8sDelete", "TerraformApply", "TerraformPlan",
-        "TerraformDestroy", StepSpecTypeConstants.TERRAFORM_ROLLBACK, StepSpecTypeConstants.HELM_DEPLOY);
+    return Sets.newHashSet("K8sScale", "K8sDelete", "TerraformApply", "TerraformPlan", "TerraformDestroy",
+        StepSpecTypeConstants.TERRAFORM_ROLLBACK, StepSpecTypeConstants.HELM_DEPLOY);
   }
 
   @Override

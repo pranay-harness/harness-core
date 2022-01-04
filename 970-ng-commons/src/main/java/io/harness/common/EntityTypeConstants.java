@@ -35,5 +35,6 @@ public interface EntityTypeConstants {
   String SHELL_SCRIPT = "ShellScript";
   String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
   String K8S_APPLY = "K8sApply";
+  String K8S_BLUE_GREEN_DEPLOY = "K8sBlueGreenDeploy";
   String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }

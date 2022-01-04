@@ -45,5 +45,6 @@ public class EntityYamlRootNames {
   public static String SHELL_SCRIPT = "ShellScript";
   public static String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
   public static String K8S_APPLY = "K8sApply";
+  public static String K8S_BLUE_GREEN_DEPLOY = "K8sBlueGreenDeploy";
   public static String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }

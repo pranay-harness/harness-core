@@ -38,6 +38,7 @@ public class YamlSchemaTransientHelper {
       add(EntityType.TEMPLATE);
       add(EntityType.SERVICENOW_APPROVAL_STEP);
       add(EntityType.K8S_APPLY_STEP);
+      add(EntityType.K8S_BLUE_GREEN_DEPLOY_STEP);
     }
   };
 

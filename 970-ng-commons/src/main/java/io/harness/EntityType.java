@@ -43,6 +43,9 @@ public enum EntityType {
       ModuleType.CD, EntityTypeConstants.K8S_CANARY_DEPLOY, IdentifierRef.class, EntityYamlRootNames.K8S_CANARY_DEPLOY),
   @JsonProperty(EntityTypeConstants.K8S_APPLY)
   K8S_APPLY_STEP(ModuleType.CD, EntityTypeConstants.K8S_APPLY, IdentifierRef.class, EntityYamlRootNames.K8S_APPLY),
+  @JsonProperty(EntityTypeConstants.K8S_BLUE_GREEN_DEPLOY)
+  K8S_BLUE_GREEN_DEPLOY_STEP(ModuleType.CD, EntityTypeConstants.K8S_BLUE_GREEN_DEPLOY, IdentifierRef.class,
+      EntityYamlRootNames.K8S_BLUE_GREEN_DEPLOY),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
   CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, IdentifierRef.class, EntityYamlRootNames.CONNECTOR),
   @JsonProperty(EntityTypeConstants.SECRETS)

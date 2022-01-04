@@ -52,6 +52,7 @@ import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
 import io.harness.cdng.k8s.K8sApplyStepNode;
+import io.harness.cdng.k8s.K8sBlueGreenStepNode;
 import io.harness.cdng.k8s.K8sCanaryStepNode;
 import io.harness.connector.ConnectorModule;
 import io.harness.connector.ConnectorResourceClientModule;
@@ -271,6 +272,7 @@ public class NextGenModule extends AbstractModule {
     {
       add(K8sCanaryStepNode.class);
       add(K8sApplyStepNode.class);
+      add(K8sBlueGreenStepNode.class);
     }
   };
   private final NextGenConfiguration appConfig;
