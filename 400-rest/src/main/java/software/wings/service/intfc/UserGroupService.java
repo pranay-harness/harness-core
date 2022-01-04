@@ -60,6 +60,10 @@ public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
 
   List<UserGroup> getUserGroupSummary(List<UserGroup> userGroupList);
 
+  List<UserGroup> filter(String accountId, List<String> userGroupIds);
+
+  List<UserGroup> filter(String accountId, List<String> userGroupIds, List<String> fieldsNeededInResponse);
+
   /**
    * Find by uuid.
    *
