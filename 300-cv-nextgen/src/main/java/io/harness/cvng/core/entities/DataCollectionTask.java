@@ -6,6 +6,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionInfo;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -21,6 +22,7 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.time.Instant;
@@ -46,7 +48,7 @@ import org.mongodb.morphia.annotations.PrePersist;
 @HarnessEntity(exportable = false)
 @StoreIn(DbAliases.CVNG)
 public abstract class DataCollectionTask
-    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -55,6 +57,13 @@ public abstract class DataCollectionTask
                  .field(DataCollectionTaskKeys.accountId)
                  .field(DataCollectionTaskKeys.verificationTaskId)
                  .field(DataCollectionTaskKeys.startTime)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("worker_status_idx")
+                 .field(DataCollectionTaskKeys.status)
+                 .field(DataCollectionTaskKeys.lastUpdatedAt)
+                 .field(DataCollectionTaskKeys.validAfter)
+                 .field(DataCollectionTaskKeys.workerStatusIteration)
                  .build())
         .add(SortCompoundMongoIndex.builder()
                  .name("verificationTaskIdQueryIdx")
@@ -85,6 +94,25 @@ public abstract class DataCollectionTask
   private Instant startTime;
   private Instant endTime;
 
+  @FdIndex private Long workerStatusIteration;
+
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    if (fieldName.equals(DataCollectionTaskKeys.workerStatusIteration)) {
+      this.workerStatusIteration = nextIteration;
+      return;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    if (fieldName.equals(DataCollectionTaskKeys.workerStatusIteration)) {
+      return workerStatusIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
   public boolean shouldQueueAnalysis() {
     return queueAnalysis;
   }
@@ -111,10 +139,14 @@ public abstract class DataCollectionTask
     return Duration.between(validAfter, currentTime);
   }
   public Duration runningTime(Instant currentTime) {
+    Preconditions.checkNotNull(lastPickedAt,
+        "Last picked up needs to be not null for running time calculation for dataCollectionTaskId: " + uuid);
     return Duration.between(lastPickedAt, currentTime);
   }
 
   public Duration waitTime() {
+    Preconditions.checkNotNull(lastPickedAt,
+        "Last picked up needs to be not null for wait time calculation for dataCollectionTaskId: " + uuid);
     return Duration.between(validAfter, lastPickedAt);
   }
 }

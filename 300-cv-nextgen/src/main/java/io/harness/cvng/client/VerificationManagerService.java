@@ -1,5 +1,6 @@
 package io.harness.cvng.client;
 
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.change.HarnessCDCurrentGenEventMetadata;
@@ -28,4 +29,6 @@ public interface VerificationManagerService {
 
   List<HarnessCDCurrentGenEventMetadata> getCurrentGenEvents(String accountId, String harnessApplicationId,
       String harnessEnvironmentId, String harnessServiceId, Instant startTime, Instant endTime);
+
+  CVNGPerpetualTaskDTO getPerpetualTaskStatus(String perpetualTaskId);
 }

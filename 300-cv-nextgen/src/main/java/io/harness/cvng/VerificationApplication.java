@@ -26,6 +26,7 @@ import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.jobs.ActivityStatusJob;
 import io.harness.cvng.activity.jobs.HarnessCDCurrentGenEventsHandler;
+import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.cdng.jobs.CVNGStepTaskHandler;
@@ -37,6 +38,8 @@ import io.harness.cvng.client.NextGenClientModule;
 import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
+import io.harness.cvng.core.entities.DataCollectionTask;
+import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig.DeletedCVConfigKeys;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
@@ -49,6 +52,7 @@ import io.harness.cvng.core.entities.demo.CVNGDemoPerpetualTask.CVNGDemoPerpetua
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.CVNGDemoPerpetualTaskHandler;
 import io.harness.cvng.core.jobs.ChangeSourceDemoHandler;
+import io.harness.cvng.core.jobs.DataCollectionTasksPerpetualTaskStatusUpdateHandler;
 import io.harness.cvng.core.jobs.DeploymentChangeEventConsumer;
 import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
 import io.harness.cvng.core.jobs.MonitoringSourcePerpetualTaskHandler;
@@ -165,6 +169,8 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.security.SecureRandom;
+import java.time.Clock;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -388,6 +394,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerCreateNextSLIDataCollectionTaskIterator(injector);
     registerCreateNextDataCollectionTaskIterator(injector);
     registerCVNGDemoPerpetualTaskIterator(injector);
+    registerDataCollectionTasksPerpetualTaskStatusUpdateIterator(injector);
     injector.getInstance(CVNGStepTaskHandler.class).registerIterator();
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
     registerExceptionMappers(environment.jersey());
@@ -706,6 +713,48 @@ public class VerificationApplication extends Application<VerificationConfigurati
     injector.injectMembers(cvngDemoPerpetualTaskIterator);
     cvngDemoPerpetualTaskExecutor.scheduleWithFixedDelay(
         () -> cvngDemoPerpetualTaskIterator.process(), 0, 1, TimeUnit.MINUTES);
+  }
+
+  private void registerDataCollectionTasksPerpetualTaskStatusUpdateIterator(Injector injector) {
+    ScheduledThreadPoolExecutor dataCollectionTasksPerpetualTaskStatusUpdateExecutor =
+        new ScheduledThreadPoolExecutor(3,
+            new ThreadFactoryBuilder()
+                .setNameFormat("create-data-collection-tasks-perpetual-task-status-update-iterator")
+                .build());
+
+    DataCollectionTasksPerpetualTaskStatusUpdateHandler dataCollectionTasksPerpetualTaskStatusUpdateHandler =
+        injector.getInstance(DataCollectionTasksPerpetualTaskStatusUpdateHandler.class);
+
+    PersistenceIterator dataCollectionTasksPerpetualTaskStatusUpdateIterator =
+        MongoPersistenceIterator.<DataCollectionTask, MorphiaFilterExpander<DataCollectionTask>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(DataCollectionTask.class)
+            .fieldName(DataCollectionTaskKeys.workerStatusIteration)
+            .targetInterval(ofMinutes(1))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(dataCollectionTasksPerpetualTaskStatusUpdateExecutor)
+            .semaphore(new Semaphore(3))
+            .handler(dataCollectionTasksPerpetualTaskStatusUpdateHandler)
+            .schedulingType(REGULAR)
+            .filterExpander(query
+                -> query.and(
+                    query.or(query.criteria(DataCollectionTaskKeys.status).equal(DataCollectionExecutionStatus.QUEUED),
+                        query.and(
+                            query.criteria(DataCollectionTaskKeys.status).equal(DataCollectionExecutionStatus.RUNNING),
+                            query.criteria(DataCollectionTaskKeys.lastUpdatedAt)
+                                .lessThan(injector.getInstance(Clock.class)
+                                              .instant()
+                                              .minus(5, ChronoUnit.MINUTES)
+                                              .toEpochMilli()))),
+                    query.criteria(DataCollectionTaskKeys.validAfter)
+                        .lessThan(injector.getInstance(Clock.class).instant().minus(3, ChronoUnit.MINUTES))))
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+
+    injector.injectMembers(dataCollectionTasksPerpetualTaskStatusUpdateIterator);
+    dataCollectionTasksPerpetualTaskStatusUpdateExecutor.scheduleWithFixedDelay(
+        () -> dataCollectionTasksPerpetualTaskStatusUpdateIterator.process(), 0, 3, TimeUnit.MINUTES);
   }
 
   private void registerVerificationJobInstanceDataCollectionTaskIterator(Injector injector) {

@@ -16,7 +16,9 @@ import com.google.inject.Inject;
 import java.io.IOException;
 import java.time.Clock;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class CVNGDemoPerpetualTaskServiceImpl implements CVNGDemoPerpetualTaskService {
   @Inject HPersistence hPersistence;
   @Inject Clock clock;
@@ -32,7 +34,7 @@ public class CVNGDemoPerpetualTaskServiceImpl implements CVNGDemoPerpetualTaskSe
   }
 
   @Override
-  public void execute(CVNGDemoPerpetualTask cvngDemoPerpetualTask) {
+  public void execute(CVNGDemoPerpetualTask cvngDemoPerpetualTask) throws Exception {
     Optional<DataCollectionTask> dataCollectionTask = dataCollectionTaskService.getNextTask(
         cvngDemoPerpetualTask.getAccountId(), cvngDemoPerpetualTask.getDataCollectionWorkerId());
     if (dataCollectionTask.isPresent()) {
@@ -45,8 +47,14 @@ public class CVNGDemoPerpetualTaskServiceImpl implements CVNGDemoPerpetualTaskSe
         dataCollectionTaskResultBuilder.status(DataCollectionExecutionStatus.FAILED)
             .stacktrace(e.getStackTrace().toString())
             .exception(e.getMessage());
+        log.warn("Demo data perpetual task failed for verificationTaskId"
+            + dataCollectionTask.get().getVerificationTaskId() + "  for time frame: "
+            + dataCollectionTask.get().getStartTime() + " to " + dataCollectionTask.get().getEndTime()
+            + " with exception: " + e.getMessage() + ": stacktrace:" + e.getStackTrace());
+        throw e;
+      } finally {
+        dataCollectionTaskService.updateTaskStatus(dataCollectionTaskResultBuilder.build());
       }
-      dataCollectionTaskService.updateTaskStatus(dataCollectionTaskResultBuilder.build());
     }
   }
 
