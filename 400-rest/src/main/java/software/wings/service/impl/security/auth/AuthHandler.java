@@ -91,6 +91,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AccountPermissionSummary.AccountPermissionSummaryBuilder;
+import software.wings.security.AppFilter;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.AppPermissionSummaryForUI;
@@ -912,20 +913,26 @@ public class AuthHandler {
     return permissionTypeAppIdSetMap;
   }
 
-  private Set<String> getAppIdsByFilter(Set<String> allAppIds, GenericEntityFilter appFilter) {
-    if (appFilter == null || FilterType.ALL.equals(appFilter.getFilterType())) {
+  private Set<String> getAppIdsByFilter(Set<String> allAppIds, AppFilter appFilter) {
+    if (appFilter == null) {
       return new HashSet<>(allAppIds);
     }
 
-    if (FilterType.SELECTED.equals(appFilter.getFilterType())) {
-      SetView<String> intersection = Sets.intersection(appFilter.getIds(), allAppIds);
-      return new HashSet<>(intersection);
-    } else {
-      throw new InvalidRequestException("Unknown app filter type: " + appFilter.getFilterType());
+    switch (appFilter.getFilterType()) {
+      case AppFilter.FilterType.ALL:
+        return new HashSet<>(allAppIds);
+      case AppFilter.FilterType.SELECTED:
+        return appFilter.getIds() == null ? new HashSet<>()
+                                          : new HashSet<>(Sets.intersection(allAppIds, appFilter.getIds()));
+      case AppFilter.FilterType.EXCLUDE_SELECTED:
+        return appFilter.getIds() == null ? new HashSet<>(allAppIds)
+                                          : new HashSet<>(Sets.difference(allAppIds, appFilter.getIds()));
+      default:
+        throw new InvalidRequestException("Unknown app filter type: " + appFilter.getFilterType());
     }
   }
 
-  public Set<String> getAppIdsByFilter(String accountId, GenericEntityFilter appFilter) {
+  public Set<String> getAppIdsByFilter(String accountId, AppFilter appFilter) {
     List<String> appIdsByAccountId = appService.getAppIdsByAccountId(accountId);
     return getAppIdsByFilter(Sets.newHashSet(appIdsByAccountId), appFilter);
   }
@@ -1691,7 +1698,7 @@ public class AuthHandler {
     Set<AppPermission> appPermissions = Sets.newHashSet();
     AppPermission appPermission = AppPermission.builder()
                                       .actions(getAllActions())
-                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .appFilter(AppFilter.builder().filterType(AppFilter.FilterType.ALL).build())
                                       .permissionType(PermissionType.ALL_APP_ENTITIES)
                                       .build();
     appPermissions.add(appPermission);
@@ -1719,7 +1726,7 @@ public class AuthHandler {
     Set<AppPermission> appPermissions = Sets.newHashSet();
     AppPermission appPermission = AppPermission.builder()
                                       .actions(Sets.newHashSet(Action.READ))
-                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .appFilter(AppFilter.builder().filterType(AppFilter.FilterType.ALL).build())
                                       .permissionType(PermissionType.ALL_APP_ENTITIES)
                                       .build();
     appPermissions.add(appPermission);
@@ -1750,7 +1757,7 @@ public class AuthHandler {
     Set<AppPermission> appPermissions = Sets.newHashSet();
     AppPermission svcPermission = AppPermission.builder()
                                       .actions(actions)
-                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .appFilter(AppFilter.builder().filterType(AppFilter.FilterType.ALL).build())
                                       .entityFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
                                       .permissionType(PermissionType.SERVICE)
                                       .build();
@@ -1759,7 +1766,7 @@ public class AuthHandler {
     AppPermission provisionerPermission =
         AppPermission.builder()
             .actions(actions)
-            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .appFilter(AppFilter.builder().filterType(AppFilter.FilterType.ALL).build())
             .entityFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
             .permissionType(PermissionType.PROVISIONER)
             .build();
@@ -1767,7 +1774,7 @@ public class AuthHandler {
 
     AppPermission envPermission = AppPermission.builder()
                                       .actions(actions)
-                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .appFilter(AppFilter.builder().filterType(AppFilter.FilterType.ALL).build())
                                       .entityFilter(new EnvFilter(null, Sets.newHashSet(envFilterType)))
                                       .permissionType(PermissionType.ENV)
                                       .build();
@@ -1776,7 +1783,7 @@ public class AuthHandler {
     AppPermission workflowPermission =
         AppPermission.builder()
             .actions(actions)
-            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .appFilter(AppFilter.builder().filterType(AppFilter.FilterType.ALL).build())
             .entityFilter(new WorkflowFilter(null, Sets.newHashSet(envFilterType, WorkflowFilter.FilterType.TEMPLATES)))
             .permissionType(PermissionType.WORKFLOW)
             .build();
@@ -1786,7 +1793,7 @@ public class AuthHandler {
         AppPermission.builder()
             .actions(Sets.newHashSet(
                 Action.READ, Action.EXECUTE_WORKFLOW, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW_ROLLBACK))
-            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .appFilter(AppFilter.builder().filterType(AppFilter.FilterType.ALL).build())
             .entityFilter(new EnvFilter(null, Sets.newHashSet(envFilterType)))
             .permissionType(PermissionType.DEPLOYMENT)
             .build();
@@ -1794,7 +1801,7 @@ public class AuthHandler {
 
     AppPermission pipelinePermission = AppPermission.builder()
                                            .actions(actions)
-                                           .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                           .appFilter(AppFilter.builder().filterType(AppFilter.FilterType.ALL).build())
                                            .entityFilter(new EnvFilter(null, Sets.newHashSet(envFilterType)))
                                            .permissionType(PermissionType.PIPELINE)
                                            .build();
@@ -1803,7 +1810,7 @@ public class AuthHandler {
     AppPermission templatePermission =
         AppPermission.builder()
             .actions(actions)
-            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .appFilter(AppFilter.builder().filterType(AppFilter.FilterType.ALL).build())
             .entityFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
             .permissionType(APP_TEMPLATE)
             .build();

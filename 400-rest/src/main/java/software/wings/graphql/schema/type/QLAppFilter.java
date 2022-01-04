@@ -13,6 +13,6 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "QLAppFilterKeys")
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLAppFilter {
-  private QLGenericFilterType filterType;
+  private QLAppFilterType filterType;
   private Set<String> appIds;
 }
