@@ -4,6 +4,7 @@ import io.harness.ng.core.models.SecretSpec;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Optional;
 
 @JsonTypeInfo(
@@ -14,6 +15,7 @@ import java.util.Optional;
       , @JsonSubTypes.Type(value = SecretFileSpecDTO.class, name = "SecretFile"),
           @JsonSubTypes.Type(value = SSHKeySpecDTO.class, name = "SSHKey"),
     })
+@Schema(name = "SecretSpec", description = "This has details of the Secret defined in Harness.")
 public abstract class SecretSpecDTO {
   public abstract Optional<String> getErrorMessageForInvalidYaml();
 
