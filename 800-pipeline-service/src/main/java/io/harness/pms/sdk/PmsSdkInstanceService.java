@@ -4,7 +4,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.core.query.Update.update;
 
-import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -84,8 +83,9 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
       }
       saveSdkInstance(request);
 
-      schemaFetcher.invalidateCache(ModuleType.fromString(request.getName()));
+      schemaFetcher.invalidateAllCache();
     }
+    // TODO: ADD ERROR HANDLING
     responseObserver.onNext(InitializeSdkResponse.newBuilder().build());
     responseObserver.onCompleted();
   }

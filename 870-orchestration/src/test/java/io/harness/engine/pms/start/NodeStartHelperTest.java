@@ -28,6 +28,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
@@ -133,12 +134,10 @@ public class NodeStartHelperTest extends OrchestrationTestBase {
 
     when(interruptService.checkInterruptsPreInvocation(planExecutionId, nodeExecutionId))
         .thenReturn(ExecutionCheck.builder().proceed(true).build());
-
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withAmbianceAndNode))
+        .thenReturn(builder.build());
     when(nodeExecutionService.updateStatusWithOps(
-             eq(nodeExecutionId), eq(Status.RUNNING), eq(null), eq(EnumSet.noneOf(Status.class))))
-        .thenReturn(builder.status(Status.RUNNING).build());
-
-    when(nodeExecutionService.update(eq(nodeExecutionId), any()))
+             eq(nodeExecutionId), eq(Status.RUNNING), any(), eq(EnumSet.noneOf(Status.class))))
         .thenReturn(
             builder.status(Status.RUNNING).timeoutInstanceIds(Collections.singletonList(generateUuid())).build());
 

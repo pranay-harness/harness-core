@@ -84,6 +84,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
@@ -471,33 +472,50 @@ public class HelmTaskHelper {
     if (useRepoFlags) {
       tempDir = Files.createTempDirectory("charts").toAbsolutePath().toString();
     }
-    removeRepo(helmChartConfigParams.getRepoName(), workingDirectory, helmChartConfigParams.getHelmVersion(),
-        timeoutInMillis, useRepoFlags, tempDir);
-    addRepo(helmChartConfigParams.getRepoName(), helmChartConfigParams.getRepoDisplayName(),
-        httpHelmRepoConfig.getChartRepoUrl(), httpHelmRepoConfig.getUsername(), httpHelmRepoConfig.getPassword(),
-        destinationDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis, useRepoFlags, tempDir);
+    String commandOutput;
 
-    String command = fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(),
-        helmChartConfigParams.getChartName(), helmChartConfigParams.getRepoName(), destinationDirectory);
-    if (useRepoFlags) {
-      environment.putIfAbsent(HELM_CACHE_HOME,
-          HELM_CACHE_HOME_PATH.replace(REPO_NAME, helmChartConfigParams.getRepoName())
-              .replace(HELM_CACHE_HOME_PLACEHOLDER, tempDir));
-      command = fetchHelmChartVersionsCommandWithRepoFlags(helmChartConfigParams.getHelmVersion(),
-          helmChartConfigParams.getChartName(), helmChartConfigParams.getRepoName(), destinationDirectory, tempDir);
-    }
-    if (isNotEmpty(helmChartConfigParams.getChartVersion())) {
-      command =
-          command + HELM_CHART_VERSION_FLAG.replace(CHART_VERSION, helmChartConfigParams.getChartVersion().trim());
-    }
-    String commandOutput = executeCommandWithLogOutput(environment, command, workingDirectory,
-        "Helm chart fetch versions command failed ", HelmCliCommandType.FETCH_ALL_VERSIONS);
-    if (log.isDebugEnabled()) {
-      log.debug("Result of the helm repo search command: {}, chart name: {}", commandOutput,
-          helmChartCollectionParams.getHelmChartConfigParams().getChartName());
+    try {
+      removeRepo(helmChartConfigParams.getRepoName(), workingDirectory, helmChartConfigParams.getHelmVersion(),
+          timeoutInMillis, useRepoFlags, tempDir);
+      addRepo(helmChartConfigParams.getRepoName(), helmChartConfigParams.getRepoDisplayName(),
+          httpHelmRepoConfig.getChartRepoUrl(), httpHelmRepoConfig.getUsername(), httpHelmRepoConfig.getPassword(),
+          destinationDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis, useRepoFlags, tempDir);
+
+      String command = fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(),
+          helmChartConfigParams.getChartName(), helmChartConfigParams.getRepoName(), destinationDirectory);
+      if (useRepoFlags) {
+        environment.putIfAbsent(HELM_CACHE_HOME,
+            HELM_CACHE_HOME_PATH.replace(REPO_NAME, helmChartConfigParams.getRepoName())
+                .replace(HELM_CACHE_HOME_PLACEHOLDER, tempDir));
+        command = fetchHelmChartVersionsCommandWithRepoFlags(helmChartConfigParams.getHelmVersion(),
+            helmChartConfigParams.getChartName(), helmChartConfigParams.getRepoName(), destinationDirectory, tempDir);
+      }
+      if (isNotEmpty(helmChartConfigParams.getChartVersion())) {
+        command =
+            command + HELM_CHART_VERSION_FLAG.replace(CHART_VERSION, helmChartConfigParams.getChartVersion().trim());
+      }
+      commandOutput = executeCommandWithLogOutput(environment, command, workingDirectory,
+          "Helm chart fetch versions command failed ", HelmCliCommandType.FETCH_ALL_VERSIONS);
+      if (log.isDebugEnabled()) {
+        log.debug("Result of the helm repo search command: {}, chart name: {}", commandOutput,
+            helmChartCollectionParams.getHelmChartConfigParams().getChartName());
+      }
+    } finally {
+      // We do remove repo only when the useFlags FF is on.
+      if (useRepoFlags) {
+        deleteQuietlyWithErrorLog(tempDir);
+      }
     }
 
     return parseHelmVersionFetchOutput(commandOutput, helmChartCollectionParams);
+  }
+
+  private void deleteQuietlyWithErrorLog(String tempDir) {
+    try {
+      FileUtils.forceDelete(new File(tempDir));
+    } catch (IOException ie) {
+      log.error("Deletion of charts folder failed due to : {}", ie.getMessage());
+    }
   }
 
   private List<HelmChart> parseHelmVersionFetchOutput(

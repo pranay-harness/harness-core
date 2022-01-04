@@ -103,7 +103,6 @@ public class K8sInstanceSyncHandler extends AbstractInstanceSyncHandler {
   private LinkedHashSet<String> getNamespaces(@NotNull List<ServerInstanceInfo> serverInstanceInfoList) {
     return serverInstanceInfoList.stream()
         .map(K8sServerInstanceInfo.class ::cast)
-        .map(K8sServerInstanceInfo.class ::cast)
         .map(K8sServerInstanceInfo::getNamespace)
         .collect(Collectors.toCollection(LinkedHashSet::new));
   }

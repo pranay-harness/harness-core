@@ -49,7 +49,7 @@ public class InstanceMetaDataUtilsTest extends BatchProcessingTestBase {
   public void testPopulateNodePoolNameFromLabel() throws Exception {
     assertTrue(isNodePoolNameCorrect(ImmutableMap.of(K8sCCMConstants.GKE_NODE_POOL_KEY, NODE_POOL_NAME)));
     assertTrue(isNodePoolNameCorrect(ImmutableMap.of(K8sCCMConstants.AKS_NODE_POOL_KEY, NODE_POOL_NAME)));
-    assertTrue(isNodePoolNameCorrect(ImmutableMap.of(K8sCCMConstants.EKS_NODE_POOL_KEY, NODE_POOL_NAME)));
+    assertTrue(isNodePoolNameCorrect(ImmutableMap.of(K8sCCMConstants.EKSCTL_NODE_POOL_KEY, NODE_POOL_NAME)));
   }
 
   private static boolean isNodePoolNameCorrect(Map<String, String> labelsMap) {

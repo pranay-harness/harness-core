@@ -10,7 +10,7 @@ import java.util.Set;
 
 public interface WorkloadRepository {
   void savePodWorkload(String accountId, PodInfo podInfo);
-  List<K8sWorkload> getWorkload(String accountId, String clusterId, Set<String> workloadName);
+  List<K8sWorkload> getWorkload(String accountId, String clusterId, String namespace, Set<String> workloadName);
   Optional<K8sWorkload> getWorkload(String accountId, String clusterId, String uid);
   Optional<K8sWorkload> getWorkload(ResourceId workloadId);
 }

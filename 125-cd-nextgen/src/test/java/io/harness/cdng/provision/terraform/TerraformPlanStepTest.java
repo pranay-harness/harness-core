@@ -224,6 +224,7 @@ public class TerraformPlanStepTest extends CategoryTest {
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     doReturn("test-account/test-org/test-project/id").when(terraformStepHelper).generateFullIdentifier(any(), any());
     doReturn("fileId").when(terraformStepHelper).getLatestFileId(any());
+    doReturn("planName").when(terraformStepHelper).getTerraformPlanName(any(), any());
     doReturn(gitFetchFilesConfig).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
     doReturn(varFileInfo).when(terraformStepHelper).toTerraformVarFileInfo(any(), any());
     doReturn(EnvironmentType.NON_PROD).when(stepHelper).getEnvironmentType(any());
@@ -244,6 +245,7 @@ public class TerraformPlanStepTest extends CategoryTest {
     TerraformTaskNGParameters taskParameters =
         (TerraformTaskNGParameters) taskDataArgumentCaptor.getValue().getParameters()[0];
     assertThat(taskParameters.getTaskType()).isEqualTo(TFTaskType.PLAN);
+    assertThat(taskParameters.getPlanName()).isEqualTo("planName");
   }
 
   @Test

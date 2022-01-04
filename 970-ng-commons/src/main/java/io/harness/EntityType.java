@@ -31,13 +31,13 @@ public enum EntityType {
   PIPELINE_STEPS(
       ModuleType.CD, EntityTypeConstants.PIPELINE_STEPS, IdentifierRef.class, EntityYamlRootNames.PIPELINE_STEP),
   @JsonProperty(EntityTypeConstants.HTTP)
-  HTTP_STEP(ModuleType.CD, EntityTypeConstants.HTTP, IdentifierRef.class, EntityYamlRootNames.HTTP),
+  HTTP_STEP(ModuleType.PMS, EntityTypeConstants.HTTP, IdentifierRef.class, EntityYamlRootNames.HTTP),
   @JsonProperty(EntityTypeConstants.JIRA_CREATE)
   JIRA_CREATE_STEP(
-      ModuleType.CD, EntityTypeConstants.JIRA_CREATE, IdentifierRef.class, EntityYamlRootNames.JIRA_CREATE),
+      ModuleType.PMS, EntityTypeConstants.JIRA_CREATE, IdentifierRef.class, EntityYamlRootNames.JIRA_CREATE),
   @JsonProperty(EntityTypeConstants.SHELL_SCRIPT)
   SHELL_SCRIPT_STEP(
-      ModuleType.CD, EntityTypeConstants.SHELL_SCRIPT, IdentifierRef.class, EntityYamlRootNames.SHELL_SCRIPT),
+      ModuleType.PMS, EntityTypeConstants.SHELL_SCRIPT, IdentifierRef.class, EntityYamlRootNames.SHELL_SCRIPT),
   @JsonProperty(EntityTypeConstants.K8S_CANARY_DEPLOY)
   K8S_CANARY_DEPLOY_STEP(
       ModuleType.CD, EntityTypeConstants.K8S_CANARY_DEPLOY, IdentifierRef.class, EntityYamlRootNames.K8S_CANARY_DEPLOY),

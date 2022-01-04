@@ -22,7 +22,7 @@ public class HandleStepResponseRequestProcessor implements SdkResponseProcessor 
   public void handleEvent(SdkResponseEventProto event) {
     HandleStepResponseRequest request = event.getHandleStepResponseRequest();
     if (request.hasExecutableResponse()) {
-      nodeExecutionService.update(AmbianceUtils.obtainCurrentRuntimeId(event.getAmbiance()),
+      nodeExecutionService.updateV2(AmbianceUtils.obtainCurrentRuntimeId(event.getAmbiance()),
           ops -> ops.addToSet(NodeExecutionKeys.executableResponses, request.getExecutableResponse()));
     }
     engine.processStepResponse(event.getAmbiance(), request.getStepResponse());

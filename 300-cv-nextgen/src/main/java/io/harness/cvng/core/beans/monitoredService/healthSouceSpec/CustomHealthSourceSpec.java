@@ -11,6 +11,7 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CustomHealthCVConfig;
 import io.harness.cvng.core.entities.CustomHealthCVConfig.MetricDefinition;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.validators.UniqueIdentifierCheck;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Sets;
@@ -24,17 +25,24 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.jetbrains.annotations.NotNull;
 
 @Data
 @SuperBuilder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CustomHealthSourceSpec extends HealthSourceSpec {
-  List<CustomHealthMetricDefinition> metricDefinitions = new ArrayList<>();
+public class CustomHealthSourceSpec extends MetricHealthSourceSpec {
+  @UniqueIdentifierCheck List<CustomHealthMetricDefinition> metricDefinitions = new ArrayList<>();
+
+  @Data
+  @Builder
+  public static class Key {
+    String groupName;
+    String category;
+  }
 
   @Override
   public DataSourceType getType() {
@@ -46,16 +54,16 @@ public class CustomHealthSourceSpec extends HealthSourceSpec {
       String projectIdentifier, String environmentRef, String serviceRef, String identifier, String name,
       List<CVConfig> existingCVConfigs, MetricPackService metricPackService) {
     List<CustomHealthCVConfig> existingDBCVConfigs = (List<CustomHealthCVConfig>) (List<?>) existingCVConfigs;
-    Map<CustomHealthSourceSpec.Key, CustomHealthCVConfig> existingConfigs = new HashMap<>();
-    existingDBCVConfigs.forEach(config
-        -> existingConfigs.put(
-            Key.builder().groupName(config.getGroupName()).category(config.getCategory()).build(), config));
+    Map<String, CustomHealthCVConfig> existingConfigs = new HashMap<>();
+    existingDBCVConfigs.forEach(
+        config -> existingConfigs.put(getKey(config.getGroupName(), config.getCategory()), config));
 
-    Map<CustomHealthSourceSpec.Key, CustomHealthCVConfig> currentCVConfigs = getCVConfigs();
+    Map<String, CustomHealthCVConfig> currentCVConfigs =
+        getCVConfigs(accountId, orgIdentifier, projectIdentifier, environmentRef, serviceRef, identifier, name);
 
-    Set<CustomHealthSourceSpec.Key> deleted = Sets.difference(existingConfigs.keySet(), currentCVConfigs.keySet());
-    Set<CustomHealthSourceSpec.Key> added = Sets.difference(currentCVConfigs.keySet(), existingConfigs.keySet());
-    Set<CustomHealthSourceSpec.Key> updated = Sets.intersection(existingConfigs.keySet(), currentCVConfigs.keySet());
+    Set<String> deleted = Sets.difference(existingConfigs.keySet(), currentCVConfigs.keySet());
+    Set<String> added = Sets.difference(currentCVConfigs.keySet(), existingConfigs.keySet());
+    Set<String> updated = Sets.intersection(existingConfigs.keySet(), currentCVConfigs.keySet());
 
     List<CVConfig> updatedConfigs = updated.stream().map(currentCVConfigs::get).collect(Collectors.toList());
     List<CVConfig> updatedConfigWithUuid = updated.stream().map(existingConfigs::get).collect(Collectors.toList());
@@ -69,8 +77,9 @@ public class CustomHealthSourceSpec extends HealthSourceSpec {
         .build();
   }
 
-  public Map<CustomHealthSourceSpec.Key, CustomHealthCVConfig> getCVConfigs() {
-    Map<CustomHealthSourceSpec.Key, CustomHealthCVConfig> cvConfigMap = new HashMap<>();
+  public Map<String, CustomHealthCVConfig> getCVConfigs(String accountId, String orgIdentifier,
+      String projectIdentifier, String environmentRef, String serviceRef, String identifier, String name) {
+    Map<String, CustomHealthCVConfig> cvConfigMap = new HashMap<>();
     metricDefinitions.forEach(metricDefinition -> {
       String groupName = metricDefinition.getGroupName();
       RiskProfile riskProfile = metricDefinition.getRiskProfile();
@@ -79,40 +88,55 @@ public class CustomHealthSourceSpec extends HealthSourceSpec {
         return;
       }
 
-      Key cvConfigKey = Key.builder().groupName(groupName).category(riskProfile.getCategory()).build();
+      String cvConfigKey = getKey(groupName, riskProfile.getCategory());
       CustomHealthCVConfig existingCvConfig = cvConfigMap.get(cvConfigKey);
       List<MetricDefinition> cvConfigMetricDefinitions =
           existingCvConfig != null && isNotEmpty(existingCvConfig.getMetricDefinitions())
           ? existingCvConfig.getMetricDefinitions()
           : new ArrayList<>();
 
+      MetricResponseMapping metricResponseMapping = metricDefinition.getMetricResponseMapping();
       cvConfigMetricDefinitions.add(MetricDefinition.builder()
                                         .metricName(metricDefinition.getMetricName())
                                         .method(metricDefinition.getMethod())
                                         .queryType(metricDefinition.getQueryType())
-                                        .metricValueFieldPathString(metricDefinition.getMetricValueFieldPathString())
+                                        .metricResponseMapping(metricResponseMapping)
                                         .requestBody(metricDefinition.getRequestBody())
-                                        .timestampFormat(metricDefinition.getTimestampFormat())
+                                        .startTime(metricDefinition.getStartTime())
+                                        .endTime(metricDefinition.getEndTime())
                                         .urlPath(metricDefinition.getUrlPath())
                                         .riskProfile(metricDefinition.getRiskProfile())
                                         .analysis(metricDefinition.getAnalysis())
                                         .sli(metricDefinition.getSli())
-                                        .timestampFieldPathString(metricDefinition.getTimestampFieldPathString())
-                                        .serviceInstance(metricDefinition.getServiceInstance())
                                         .build());
 
-      CustomHealthCVConfig mappedCVConfig =
-          CustomHealthCVConfig.builder().groupName(groupName).metricDefinitions(cvConfigMetricDefinitions).build();
+      CustomHealthCVConfig mappedCVConfig = CustomHealthCVConfig.builder()
+                                                .groupName(groupName)
+                                                .metricDefinitions(cvConfigMetricDefinitions)
+                                                .accountId(accountId)
+                                                .orgIdentifier(orgIdentifier)
+                                                .projectIdentifier(projectIdentifier)
+                                                .identifier(identifier)
+                                                .serviceIdentifier(serviceRef)
+                                                .category(riskProfile.getCategory())
+                                                .envIdentifier(environmentRef)
+                                                .connectorIdentifier(getConnectorRef())
+                                                .monitoringSourceName(name)
+                                                .build();
+      mappedCVConfig.setMetricPack(
+          mappedCVConfig.generateMetricPack(metricDefinition.getMetricName(), metricDefinition.getRiskProfile()));
+
       cvConfigMap.put(cvConfigKey, mappedCVConfig);
     });
 
     return cvConfigMap;
   }
 
-  @Value
-  @Builder
-  public static class Key {
-    String groupName;
-    CVMonitoringCategory category;
+  public List<CustomHealthMetricDefinition> getMetricDefinitions() {
+    return metricDefinitions;
+  }
+
+  public String getKey(String groupName, @NotNull CVMonitoringCategory category) {
+    return String.format("%s%s", groupName, category);
   }
 }

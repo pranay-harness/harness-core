@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionService {
+  private static final String STALE_COMMIT_ID = "0000000000000000000000000000000000000000";
   @Inject YamlGitConfigService yamlGitConfigService;
   @Inject YamlChangeSetService yamlChangeSetService;
   @Inject GitBranchService gitBranchService;
@@ -39,6 +40,10 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
       ParseWebhookResponse scmParsedWebhookResponse = webhookDTO.getParsedResponse();
       if (scmParsedWebhookResponse == null || scmParsedWebhookResponse.getPush() == null) {
         log.error("{} : Error while consuming webhook Parsed response : {}", GIT_PUSH_EVENT, webhookDTO);
+        return;
+      }
+
+      if (isStalePushEvent(scmParsedWebhookResponse)) {
         return;
       }
 
@@ -117,6 +122,14 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
                                          .headCommitId(commitId)
                                          .build())
         .build();
+  }
+
+  private boolean isStalePushEvent(ParseWebhookResponse scmParsedWebhookResponse) {
+    // In case of deleted branch
+    if (STALE_COMMIT_ID.equals(scmParsedWebhookResponse.getPush().getAfter())) {
+      return true;
+    }
+    return false;
   }
 
   @VisibleForTesting

@@ -11,7 +11,6 @@ import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.VerificationType;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
-import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.demo.CVNGDemoPerpetualTaskService;
 import io.harness.encryption.Scope;
@@ -32,7 +31,6 @@ public class MonitoringSourcePerpetualTaskServiceImpl
   @Inject private HPersistence hPersistence;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private CVNGDemoPerpetualTaskService cvngDemoPerpetualTaskService;
-  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public void createPerpetualTask(MonitoringSourcePerpetualTask monitoringSourcePerpetualTask) {

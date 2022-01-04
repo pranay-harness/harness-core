@@ -3,6 +3,7 @@ package io.harness.engine.pms.execution.strategy.identity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.resume.publisher.NodeResumeEventPublisher;
+import io.harness.engine.pms.resume.publisher.ResumeMetadata;
 import io.harness.execution.NodeExecution;
 
 import com.google.inject.Inject;
@@ -15,6 +16,7 @@ public class IdentityNodeResumeHelper {
 
   public void resume(
       NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError, String serviceName) {
-    nodeResumeEventPublisher.publishEventForIdentityNode(nodeExecution, responseMap, isError, serviceName);
+    ResumeMetadata resumeMetadata = ResumeMetadata.fromNodeExecution(nodeExecution);
+    nodeResumeEventPublisher.publishEventForIdentityNode(resumeMetadata, responseMap, isError, serviceName);
   }
 }

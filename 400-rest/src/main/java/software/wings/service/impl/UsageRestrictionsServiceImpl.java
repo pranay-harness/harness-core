@@ -1225,11 +1225,13 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
       for (SettingAttribute settingAttribute : iterator) {
         UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
-        count += purgeDanglingAppEnvReferenceInternal(usageRestrictions, existingAppIds, existingEnvIds);
-
+        int settingAttributeCount =
+            purgeDanglingAppEnvReferenceInternal(usageRestrictions, existingAppIds, existingEnvIds);
+        count += settingAttributeCount;
         // Dangling reference to App/Env has been cleared in the usage restrictions. Then update with the updated usage
         // restrictions.
-        if (count > 0) {
+        if (settingAttributeCount > 0) {
+          log.info("Updating usage restrictions of setting attribute with id {}", settingAttribute.getUuid());
           settingsService.updateUsageRestrictionsInternal(settingAttribute.getUuid(), usageRestrictions);
         }
       }
@@ -1238,13 +1240,29 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     try (HIterator<EncryptedData> iterator = getEncryptedDataWithUsageRestrictionsIterator(accountId)) {
       for (EncryptedData encryptedData : iterator) {
         UsageRestrictions usageRestrictions = encryptedData.getUsageRestrictions();
-        count += purgeDanglingAppEnvReferenceInternal(usageRestrictions, existingAppIds, existingEnvIds);
-
+        int encryptedDataCount =
+            purgeDanglingAppEnvReferenceInternal(usageRestrictions, existingAppIds, existingEnvIds);
+        count += encryptedDataCount;
         // Dangling reference to App/Env has been cleared in the usage restrictions. Then update with the updated usage
         // restrictions.
-        if (count > 0) {
+        if (encryptedDataCount > 0) {
+          log.info("Updating usage restrictions of encrypted data with id {}", encryptedData.getUuid());
           secretManager.updateUsageRestrictionsForSecretOrFile(
               accountId, encryptedData.getUuid(), usageRestrictions, false, false);
+        }
+      }
+    }
+
+    try (HIterator<SecretManagerConfig> iterator = getSecretManagerConfigWithUsageRestrictionsIterator(accountId)) {
+      for (SecretManagerConfig secretManagerConfig : iterator) {
+        UsageRestrictions usageRestrictions = secretManagerConfig.getUsageRestrictions();
+        int secretManagerConfigCount =
+            purgeDanglingAppEnvReferenceInternal(usageRestrictions, existingAppIds, existingEnvIds);
+        count += secretManagerConfigCount;
+        if (secretManagerConfigCount > 0) {
+          log.info("Updating usage restrictions of secret manager with id {}", secretManagerConfig.getUuid());
+          secretManager.updateUsageRestrictionsForSecretManagerConfig(
+              accountId, secretManagerConfig.getUuid(), usageRestrictions);
         }
       }
     }

@@ -6,6 +6,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.account.ProvisionStep;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.beans.AuthenticationInfo;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -238,4 +239,6 @@ public interface AccountService {
   boolean isAutoInviteAcceptanceEnabled(String accountId);
 
   Void setDefaultExperience(String accountId, DefaultExperience defaultExperience);
+
+  AuthenticationInfo getAuthenticationInfo(String accountId);
 }

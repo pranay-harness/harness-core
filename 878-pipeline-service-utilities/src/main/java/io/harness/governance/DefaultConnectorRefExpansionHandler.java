@@ -23,7 +23,6 @@ import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import java.util.Optional;
 
-// todo(@NamanVerma): Add test
 @OwnedBy(PIPELINE)
 @Singleton
 public class DefaultConnectorRefExpansionHandler implements JsonExpansionHandler {

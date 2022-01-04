@@ -12,6 +12,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.DuplicateFieldException;
@@ -24,6 +25,7 @@ import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
+import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.governance.ExpansionRequestMetadata;
 import io.harness.pms.contracts.governance.ExpansionResponseBatch;
 import io.harness.pms.contracts.steps.StepInfo;
@@ -84,6 +86,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private JsonExpander jsonExpander;
   @Inject private ExpansionRequestsExtractor expansionRequestsExtractor;
   @Inject private PmsGitSyncHelper gitSyncHelper;
+  @Inject private PmsFeatureFlagService pmsFeatureFlagService;
   public static String PIPELINE_SAVE = "pipeline_save";
   public static String PIPELINE_SAVE_ACTION_TYPE = "action";
   public static String CREATING_PIPELINE = "creating new pipeline";
@@ -179,7 +182,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                                     .withName(pipelineEntity.getName())
                                     .withDescription(pipelineEntity.getDescription())
                                     .withTags(pipelineEntity.getTags())
-                                    .withIsEntityInvalid(false);
+                                    .withIsEntityInvalid(false)
+                                    .withTemplateReference(pipelineEntity.getTemplateReference());
 
     return makePipelineUpdateCall(tempEntity, entityToUpdate, changeType);
   }
@@ -456,7 +460,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         PIPELINE_SAVE, properties, Collections.singletonMap(AMPLITUDE, true), io.harness.telemetry.Category.GLOBAL);
   }
 
-  // todo(@Naman Verma): add test for this method
   @Override
   public String fetchExpandedPipelineJSON(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
@@ -467,22 +470,38 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
           orgIdentifier, projectIdentifier, pipelineIdentifier));
     }
 
+    return fetchExpandedPipelineJSONFromYaml(
+        accountId, orgIdentifier, projectIdentifier, pipelineEntityOptional.get().getYaml());
+  }
+
+  @Override
+  public String fetchExpandedPipelineJSONFromYaml(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineYaml) {
+    if (!pmsFeatureFlagService.isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE)) {
+      return pipelineYaml;
+    }
     ExpansionRequestMetadata expansionRequestMetadata = getRequestMetadata(accountId, orgIdentifier, projectIdentifier);
 
-    Set<ExpansionRequest> expansionRequests =
-        expansionRequestsExtractor.fetchExpansionRequests(pipelineEntityOptional.get().getYaml());
+    Set<ExpansionRequest> expansionRequests = expansionRequestsExtractor.fetchExpansionRequests(pipelineYaml);
     Set<ExpansionResponseBatch> expansionResponseBatches =
         jsonExpander.fetchExpansionResponses(expansionRequests, expansionRequestMetadata);
-    return ExpansionsMerger.mergeExpansions(pipelineEntityOptional.get().getYaml(), expansionResponseBatches);
+    return ExpansionsMerger.mergeExpansions(pipelineYaml, expansionResponseBatches);
   }
 
   ExpansionRequestMetadata getRequestMetadata(String accountId, String orgIdentifier, String projectIdentifier) {
     ByteString gitSyncBranchContextBytes = gitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
+    if (gitSyncBranchContextBytes != null) {
+      return ExpansionRequestMetadata.newBuilder()
+          .setAccountId(accountId)
+          .setOrgId(orgIdentifier)
+          .setProjectId(projectIdentifier)
+          .setGitSyncBranchContext(gitSyncBranchContextBytes)
+          .build();
+    }
     return ExpansionRequestMetadata.newBuilder()
         .setAccountId(accountId)
         .setOrgId(orgIdentifier)
         .setProjectId(projectIdentifier)
-        .setGitSyncBranchContext(gitSyncBranchContextBytes)
         .build();
   }
 }

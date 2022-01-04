@@ -48,6 +48,7 @@ import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
@@ -204,7 +205,8 @@ public class PlanNodeExecutionStrategyTest extends OrchestrationTestBase {
     NodeExecution nodeExecution =
         NodeExecution.builder().uuid(nodeExecutionId).ambiance(ambiance).status(Status.RUNNING).build();
     Map<String, ByteString> responseMap = ImmutableMap.of(generateUuid(), ByteString.copyFromUtf8(generateUuid()));
-    when(nodeExecutionService.get(eq(nodeExecutionId))).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(eq(nodeExecutionId), eq(NodeProjectionUtils.fieldsForResume)))
+        .thenReturn(nodeExecution);
     executionStrategy.resumeNodeExecution(ambiance, responseMap, false);
     verify(resumeHelper).resume(eq(nodeExecution), eq(responseMap), eq(false));
   }
@@ -304,7 +306,8 @@ public class PlanNodeExecutionStrategyTest extends OrchestrationTestBase {
                                                     .status(Status.INTERVENTION_WAITING)
                                                     .mode(ExecutionMode.ASYNC);
 
-    when(nodeExecutionService.get(eq(nodeExecutionId))).thenReturn(nodeExecutionBuilder.build());
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndNode))
+        .thenReturn(nodeExecutionBuilder.build());
     when(nodeExecutionService.updateStatusWithOps(eq(nodeExecutionId), any(), any(), any()))
         .thenReturn(nodeExecutionBuilder.status(Status.FAILED).build());
     doNothing().when(executionStrategy).endNodeExecution(ambiance);
@@ -341,7 +344,8 @@ public class PlanNodeExecutionStrategyTest extends OrchestrationTestBase {
                                                     .status(Status.INTERVENTION_WAITING)
                                                     .mode(ExecutionMode.ASYNC);
 
-    when(nodeExecutionService.get(eq(nodeExecutionId))).thenReturn(nodeExecutionBuilder.build());
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndNode))
+        .thenReturn(nodeExecutionBuilder.build());
     NodeExecution updated = nodeExecutionBuilder.status(Status.FAILED).endTs(System.currentTimeMillis()).build();
     when(nodeExecutionService.updateStatusWithOps(eq(nodeExecutionId), eq(Status.FAILED), any(), any()))
         .thenReturn(updated);

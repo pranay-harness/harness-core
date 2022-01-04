@@ -8,6 +8,7 @@ import io.harness.validation.Update;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
@@ -22,6 +23,8 @@ import org.springframework.data.annotation.TypeAlias;
 @RecasterAlias("io.harness.beans.sweepingoutputs.VmStageInfraDetails")
 public class VmStageInfraDetails implements StageInfraDetails {
   String poolId;
+  String workDir;
+  Map<String, String> volToMountPathMap; // host volume name to mount path mapping
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   @Builder.Default @NotNull private Type type = Type.VM;

@@ -186,11 +186,11 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
     String savedConfigId =
         awsSecretsManagerService.saveAwsSecretsManagerConfig(accountId, kryoSerializer.clone(awsSecretManagerConfig));
 
-    assertNotNull(secretManager.getSecretManager(accountId, savedConfigId));
+    assertNotNull(awsSecretsManagerService.getAwsSecretsManagerConfig(accountId, savedConfigId));
 
     awsSecretsManagerService.deleteAwsSecretsManagerConfig(accountId, savedConfigId);
 
-    assertNull(secretManager.getSecretManager(accountId, savedConfigId));
+    assertNull(awsSecretsManagerService.getAwsSecretsManagerConfig(accountId, savedConfigId));
   }
 
   @Test

@@ -198,11 +198,11 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
     List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node1");
-    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.OBSERVE);
+    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.UNHEALTHY);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(0);
     assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(2);
     assertThat(canaryHosts.get(1).getHostName()).isEqualTo("node2");
-    assertThat(canaryHosts.get(1).getRisk()).isEqualTo(Risk.NEED_ATTENTION);
+    assertThat(canaryHosts.get(1).getRisk()).isEqualTo(Risk.UNHEALTHY);
     assertThat(canaryHosts.get(1).getAnomalousMetricsCount()).isEqualTo(2);
     assertThat(canaryHosts.get(1).getAnomalousLogClustersCount()).isEqualTo(3);
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
@@ -285,7 +285,7 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(1);
     List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node2");
-    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.NEED_ATTENTION);
+    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.UNHEALTHY);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(2);
     assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(0);
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
@@ -326,11 +326,11 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
     List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node1");
-    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.OBSERVE);
+    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.UNHEALTHY);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(0);
     assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(2);
     assertThat(canaryHosts.get(1).getHostName()).isEqualTo("node2");
-    assertThat(canaryHosts.get(1).getRisk()).isEqualTo(Risk.NEED_ATTENTION);
+    assertThat(canaryHosts.get(1).getRisk()).isEqualTo(Risk.UNHEALTHY);
     assertThat(canaryHosts.get(1).getAnomalousMetricsCount()).isEqualTo(0);
     assertThat(canaryHosts.get(1).getAnomalousLogClustersCount()).isEqualTo(3);
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
@@ -434,7 +434,7 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
     assertThat(canaryBlueGreenAdditionalInfo.getPrimary()).isEqualTo(canaryBlueGreenAdditionalInfo.getCanary());
     canaryBlueGreenAdditionalInfo.getCanary().forEach(
-        node -> assertThat(node.getRisk()).isEqualByComparingTo(Risk.NEED_ATTENTION));
+        node -> assertThat(node.getRisk()).isEqualByComparingTo(Risk.UNHEALTHY));
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
   }
 
@@ -494,7 +494,7 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(1);
     List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node2");
-    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.NEED_ATTENTION);
+    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.UNHEALTHY);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(2);
     assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(0);
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
@@ -542,7 +542,7 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
     assertThat(canaryBlueGreenAdditionalInfo.getPrimary()).isEqualTo(canaryBlueGreenAdditionalInfo.getCanary());
     canaryBlueGreenAdditionalInfo.getCanary().forEach(
-        node -> assertThat(node.getRisk()).isEqualByComparingTo(Risk.NEED_ATTENTION));
+        node -> assertThat(node.getRisk()).isEqualByComparingTo(Risk.UNHEALTHY));
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
   }
 

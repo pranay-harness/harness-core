@@ -2209,11 +2209,12 @@ public class K8sTaskHelperBase {
     };
   }
 
-  public String getReleaseHistoryData(KubernetesConfig kubernetesConfig, String releaseName) {
+  public String getReleaseHistoryData(KubernetesConfig kubernetesConfig, String releaseName) throws IOException {
     return getReleaseHistoryDataK8sClient(kubernetesConfig, releaseName);
   }
 
-  private String getReleaseHistoryDataK8sClient(KubernetesConfig kubernetesConfig, String releaseName) {
+  private String getReleaseHistoryDataK8sClient(KubernetesConfig kubernetesConfig, String releaseName)
+      throws IOException {
     String releaseHistoryData = null;
     try {
       releaseHistoryData = kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
@@ -2228,21 +2229,22 @@ public class K8sTaskHelperBase {
     return releaseHistoryData;
   }
 
-  public String getReleaseHistoryDataFromConfigMap(KubernetesConfig kubernetesConfig, String releaseName) {
+  public String getReleaseHistoryDataFromConfigMap(KubernetesConfig kubernetesConfig, String releaseName)
+      throws IOException {
     return kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, releaseName);
   }
 
   public void saveReleaseHistoryInConfigMap(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistoryAsYaml) {
-    kubernetesContainerService.saveReleaseHistoryInConfigMap(kubernetesConfig, releaseName, releaseHistoryAsYaml);
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistoryAsYaml) throws IOException {
+    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, releaseName, releaseHistoryAsYaml, false);
   }
 
-  public void saveReleaseHistory(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets) {
+  public void saveReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory,
+      boolean storeInSecrets) throws IOException {
     kubernetesContainerService.saveReleaseHistory(kubernetesConfig, releaseName, releaseHistory, storeInSecrets);
   }
 
-  public String getReleaseHistoryFromSecret(KubernetesConfig kubernetesConfig, String releaseName) {
+  public String getReleaseHistoryFromSecret(KubernetesConfig kubernetesConfig, String releaseName) throws IOException {
     return kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
   }
 
@@ -2549,14 +2551,6 @@ public class K8sTaskHelperBase {
                                            .build())
                                 .collect(toList()));
         errorSummary += "few of the visibility permissions are missing, ";
-      }
-
-      if (featuresEnabled.contains(CEFeatures.OPTIMIZATION)) {
-        errorDetails.addAll(this.validateLightwingResourceExists(kubernetesConfig));
-
-        errorDetails.addAll(this.validateLightwingResourcePermissions(kubernetesConfig));
-
-        errorSummary += "few of the optimization permissions are missing, ";
       }
 
       if (!errorDetails.isEmpty()) {

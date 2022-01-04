@@ -25,6 +25,7 @@ import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.repositories.InterruptRepository;
 
@@ -95,7 +96,8 @@ public class InterruptServiceImpl implements InterruptService {
         return ExecutionCheck.builder().proceed(true).reason("[InterruptCheck] RESUME_ALL interrupt found").build();
       case ABORT_ALL:
       case EXPIRE_ALL:
-        NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+        NodeExecution nodeExecution =
+            nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndMode);
         if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
           if (interrupt.getType() == InterruptType.ABORT_ALL) {
             abortInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
@@ -117,7 +119,8 @@ public class InterruptServiceImpl implements InterruptService {
   }
 
   private boolean pauseRequired(Interrupt interrupt, String nodeExecutionId) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution =
+        nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndMode);
 
     // Only Pausing leaf steps, It makes sense to let the execution flow to a leaf step and pause there
     // There is no pint pausing on parent (wrapper) steps (like stages/stage). More aesthetic for the execution graph
@@ -135,7 +138,8 @@ public class InterruptServiceImpl implements InterruptService {
 
     // Lets first check if stage is already in final state
     // (ex. interrupt was fired for the last node in the stage)
-    NodeExecution interruptNodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
+    NodeExecution interruptNodeExecution = nodeExecutionService.getWithFieldsIncluded(
+        interrupt.getNodeExecutionId(), NodeProjectionUtils.withAmbianceAndStatus);
     if (StatusUtils.isFinalStatus(interruptNodeExecution.getStatus())) {
       updatePlanStatus(interruptNodeExecution.getAmbiance().getPlanExecutionId(), nodeExecutionId);
       updateInterruptState(interrupt.getUuid(), PROCESSED_SUCCESSFULLY);

@@ -9,6 +9,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DatadogLogDataCollectionInfo;
 import io.harness.cvng.beans.datadog.DatadogLogDefinition;
 import io.harness.cvng.core.entities.DatadogLogCVConfig;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.impl.monitoredService.DatadogLogDataCollectionInfoMapper;
 import io.harness.rule.Owner;
 
@@ -44,7 +45,8 @@ public class DatadogLogDataCollectionInfoMapperTest extends CvNextGenTestBase {
                                                                .serviceInstanceIdentifier(MOCKED_INSTANCE_IDENTIFIER)
                                                                .build();
 
-    DatadogLogDataCollectionInfo collectionInfoResult = classUnderTest.toDataCollectionInfo(datadogLogCVConfig);
+    DatadogLogDataCollectionInfo collectionInfoResult =
+        classUnderTest.toDataCollectionInfo(datadogLogCVConfig, TaskType.DEPLOYMENT);
 
     assertThat(collectionInfoResult).isNotNull();
     assertThat(collectionInfoResult.getLogDefinition()).isEqualTo(expectedDataLogDefinition);

@@ -144,8 +144,13 @@ public class ExecutionHelper {
       pipelineYaml = StagesExpressionExtractor.replaceExpressions(pipelineYaml, expressionValues);
       stagesExecutionInfo = StagesExecutionHelper.getStagesExecutionInfo(pipelineYaml, stagesToRun, expressionValues);
     }
-    PlanExecutionMetadata planExecutionMetadata = obtainPlanExecutionMetadata(
-        mergedRuntimeInputYaml, executionId, stagesExecutionInfo, originalExecutionId, retryExecutionParameters);
+
+    String expandedJson = pmsPipelineService.fetchExpandedPipelineJSONFromYaml(pipelineEntity.getAccountId(),
+        pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(),
+        stagesExecutionInfo.getPipelineYamlToRun());
+
+    PlanExecutionMetadata planExecutionMetadata = obtainPlanExecutionMetadata(mergedRuntimeInputYaml, executionId,
+        stagesExecutionInfo, originalExecutionId, retryExecutionParameters, expandedJson);
     pipelineEnforcementService.validateExecutionEnforcementsBasedOnStage(
         pipelineEntity.getAccountId(), YamlUtils.extractPipelineField(planExecutionMetadata.getProcessedYaml()));
     ExecutionMetadata executionMetadata = buildExecutionMetadata(
@@ -212,7 +217,7 @@ public class ExecutionHelper {
 
   private PlanExecutionMetadata obtainPlanExecutionMetadata(String mergedRuntimeInputYaml, String executionId,
       StagesExecutionInfo stagesExecutionInfo, String originalExecutionId,
-      RetryExecutionParameters retryExecutionParameters) {
+      RetryExecutionParameters retryExecutionParameters, String expandedPipelineJson) {
     boolean isRetry = retryExecutionParameters.isRetry();
     String pipelineYaml = stagesExecutionInfo.getPipelineYamlToRun();
     PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
@@ -220,6 +225,7 @@ public class ExecutionHelper {
             .planExecutionId(executionId)
             .inputSetYaml(mergedRuntimeInputYaml)
             .yaml(pipelineYaml)
+            .expandedPipelineJson(expandedPipelineJson)
             .stagesExecutionMetadata(stagesExecutionInfo.toStagesExecutionMetadata());
     String currentProcessedYaml;
     try {

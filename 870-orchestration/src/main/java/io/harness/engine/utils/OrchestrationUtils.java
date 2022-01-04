@@ -25,6 +25,15 @@ public class OrchestrationUtils {
     return StatusUtils.calculateStatus(statuses, planExecutionId);
   }
 
+  public Status calculateStatusForPlanExecution(List<NodeExecution> nodeExecutions, String planExecutionId) {
+    List<Status> statuses = nodeExecutions.stream().map(NodeExecution::getStatus).collect(Collectors.toList());
+    Status calculatedStatus = StatusUtils.calculateStatus(statuses, planExecutionId);
+    if (Status.QUEUED == calculatedStatus) {
+      return Status.RUNNING;
+    }
+    return calculatedStatus;
+  }
+
   public static boolean isStageNode(NodeExecution nodeExecution) {
     return nodeExecution.getNode().getStepCategory() == StepCategory.STAGE;
   }

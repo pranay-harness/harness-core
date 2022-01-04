@@ -43,7 +43,7 @@ public class UserGroupMapper {
               .name(userGroup.getName())
               .ssoGroupId(userGroup.getSsoGroupId())
               .ssoGroupName(userGroup.getSsoGroupName())
-              .externallyManaged(userGroup.getExternallyManaged())
+              .externallyManaged(userGroup.isExternallyManaged())
               .linkedSsoDisplayName(userGroup.getLinkedSsoDisplayName())
               .linkedSsoId(userGroup.getLinkedSsoId())
               .isSsoLinked(TRUE.equals(userGroup.getIsSsoLinked()))

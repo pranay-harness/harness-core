@@ -2,6 +2,7 @@ package io.harness.cvng.core.entities;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
+import io.harness.cvng.CVConstants;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -69,7 +70,7 @@ public final class TimeSeriesRecord
   @SchemaIgnore
   @Default
   @FdTtlIndex
-  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(180).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plus(CVConstants.MAX_DATA_RETENTION_DURATION).toInstant());
 
   @Override
   public int compareTo(@NotNull TimeSeriesRecord o) {

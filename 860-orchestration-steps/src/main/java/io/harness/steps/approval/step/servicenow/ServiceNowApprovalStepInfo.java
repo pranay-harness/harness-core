@@ -14,7 +14,7 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.approval.ApprovalFacilitator;
-import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
+import io.harness.steps.approval.step.beans.CriteriaSpecWrapper;
 import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;

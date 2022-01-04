@@ -11,7 +11,6 @@ import io.harness.plancreator.stages.parallel.ParallelStageElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
-import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaTransientHelper;
@@ -118,8 +117,6 @@ public class PmsYamlSchemaHelper {
         partialSchemaDTO.getNodeName(), (ObjectNode) partialSchemaDTO.getSchema(), partialSchemaDTO.getNamespace());
 
     mergePipelineStepsIntoStage(stageDefinitionsNode, pipelineSteps, partialSchemaDTO);
-    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(stageDefinitionsNode.get(partialSchemaDTO.getNamespace()),
-        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), "");
     mergeStageElementConfig(stageElementConfig, subtypeClassMap);
 
     pipelineDefinitions.set(partialSchemaDTO.getNamespace(), stageDefinitionsNode.get(partialSchemaDTO.getNamespace()));

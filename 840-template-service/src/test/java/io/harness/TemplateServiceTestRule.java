@@ -25,6 +25,7 @@ import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.oas.OASModule;
 import io.harness.outbox.api.OutboxService;
 import io.harness.outbox.api.impl.OutboxDaoImpl;
 import io.harness.outbox.api.impl.OutboxServiceImpl;
@@ -59,6 +60,7 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -87,6 +89,12 @@ public class TemplateServiceTestRule implements InjectorRuleMixin, MethodRule, M
 
     List<Module> modules = new ArrayList<>();
     modules.add(KryoModule.getInstance());
+    modules.add(new OASModule() {
+      @Override
+      public Collection<Class<?>> getResourceClasses() {
+        return TemplateServiceConfiguration.getResourceClasses();
+      }
+    });
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

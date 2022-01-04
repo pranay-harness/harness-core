@@ -19,6 +19,7 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
@@ -46,7 +47,8 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
       throw new InvalidRequestException("NodeExecutionId Cannot be empty for MARK_SUCCESS interrupt");
     }
 
-    NodeExecution nodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
+    NodeExecution nodeExecution =
+        nodeExecutionService.getWithFieldsIncluded(interrupt.getNodeExecutionId(), NodeProjectionUtils.withStatus);
     if (!StatusUtils.brokeStatuses().contains(nodeExecution.getStatus())
         && nodeExecution.getStatus() != INTERVENTION_WAITING) {
       throw new InvalidRequestException(

@@ -279,6 +279,30 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
+  public List<UserGroup> filter(String accountId, List<String> userGroupIds) {
+    return getQuery(accountId, userGroupIds).asList();
+  }
+
+  @Override
+  public List<UserGroup> filter(String accountId, List<String> userGroupIds, List<String> fieldsNeededInResponse) {
+    if (isEmpty(fieldsNeededInResponse)) {
+      return filter(accountId, userGroupIds);
+    }
+    Query<UserGroup> userGroupQuery = getQuery(accountId, userGroupIds);
+    fieldsNeededInResponse.forEach(field -> userGroupQuery.project(field, true));
+    return userGroupQuery.asList();
+  }
+
+  private Query<UserGroup> getQuery(String accountId, List<String> userGroupIds) {
+    Query<UserGroup> userGroupQuery =
+        wingsPersistence.createQuery(UserGroup.class).filter(UserGroupKeys.accountId, accountId);
+    if (isNotEmpty(userGroupIds)) {
+      userGroupQuery.field("_id").in(userGroupIds);
+    }
+    return userGroupQuery;
+  }
+
+  @Override
   public void deleteByAccountId(String accountId) {
     List<UserGroup> userGroups =
         wingsPersistence.createQuery(UserGroup.class).filter(UserGroupKeys.accountId, accountId).asList();

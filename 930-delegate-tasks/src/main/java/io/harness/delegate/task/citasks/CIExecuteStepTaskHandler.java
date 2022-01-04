@@ -8,5 +8,5 @@ public interface CIExecuteStepTaskHandler {
 
   CIExecuteStepTaskHandler.Type getType();
 
-  CITaskExecutionResponse executeTaskInternal(CIExecuteStepTaskParams ciExecuteStepTaskParams);
+  CITaskExecutionResponse executeTaskInternal(CIExecuteStepTaskParams ciExecuteStepTaskParams, String taskId);
 }

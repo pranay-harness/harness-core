@@ -30,6 +30,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.concurrent.HTimeLimiter;
+import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.service.git.NGGitService;
 import io.harness.connector.task.git.GitDecryptionHelper;
 import io.harness.container.ContainerInfo;
@@ -44,6 +45,7 @@ import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfigType;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
+import io.harness.delegate.task.git.ScmFetchFilesHelperNG;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -75,11 +77,11 @@ import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.shell.SshSessionConfig;
 
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 
-import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -122,6 +124,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   @Inject private NGGitService ngGitService;
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+  @Inject private ScmFetchFilesHelperNG scmFetchFilesHelper;
+  @Inject private SecretDecryptionService secretDecryptionService;
   private ILogStreamingTaskClient logStreamingTaskClient;
   @Inject private TimeLimiter timeLimiter;
   public static final String TIMED_OUT_IN_STEADY_STATE = "Timed out waiting for controller to reach in steady state";
@@ -150,8 +154,18 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
       HelmCliResponse helmCliResponse =
           helmClient.releaseHistory(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest));
-      logCallback.saveExecutionLog(
-          preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
+
+      // helm hist fails due to any reason other than 'release not found' -- then we fail deployment
+      // (for first time deployment, release history cmd fails with release not found)
+      if (helmCliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE
+          && !(helmCliResponse.getOutput().contains("not found") && helmCliResponse.getOutput().contains("release"))) {
+        return HelmReleaseHistoryCmdResponseNG.builder()
+            .commandExecutionStatus(helmCliResponse.getCommandExecutionStatus())
+            .output(helmCliResponse.getOutput())
+            .build();
+      }
+
+      logCallback.saveExecutionLog(helmCliResponse.getOutput());
 
       prevVersion = getPrevReleaseVersion(helmCliResponse);
 
@@ -214,7 +228,11 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
       List<ContainerInfo> containerInfos = getContainerInfos(
           commandRequest, workloads, useSteadyStateCheck, logCallback, commandRequest.getTimeoutInMillis());
+      if (!useSteadyStateCheck) {
+        setReleaseNameForContainers(containerInfos, commandRequest.getReleaseName(), commandRequest.getNamespace());
+      }
       commandResponse.setContainerInfoList(containerInfos);
+      commandResponse.setHelmVersion(commandRequest.getHelmVersion());
 
       logCallback = markDoneAndStartNew(commandRequest, logCallback, WrapUp);
       return commandResponse;
@@ -233,6 +251,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
                       .append(" ]")
                       .toString())
           .helmChartInfo(helmChartInfo)
+          .helmVersion(commandRequest.getHelmVersion())
           .build();
     } catch (WingsException e) {
       String exceptionMessage = ExceptionUtils.getMessage(e);
@@ -244,6 +263,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .output(msg)
           .helmChartInfo(helmChartInfo)
+          .helmVersion(commandRequest.getHelmVersion())
           .build();
       // throw e;
     } catch (Exception e) {
@@ -256,6 +276,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .output(msg)
           .helmChartInfo(helmChartInfo)
+          .helmVersion(commandRequest.getHelmVersion())
           .build();
     } finally {
       if (checkIfReleasePurgingNeeded(commandRequest)) {
@@ -263,6 +284,18 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
         deleteAndPurgeHelmRelease(commandRequest, logCallback);
       }
       cleanUpWorkingDirectory(commandRequest.getWorkingDir());
+    }
+  }
+
+  private void setReleaseNameForContainers(List<ContainerInfo> containerInfos, String releaseName, String namespace) {
+    // if Fabric8() to get containerInfos then setReleaseName and Namespace
+    for (ContainerInfo containerInfo : containerInfos) {
+      if (containerInfo.getReleaseName() == null) {
+        containerInfo.setReleaseName(releaseName);
+      }
+      if (containerInfo.getNamespace() == null) {
+        containerInfo.setNamespace(namespace);
+      }
     }
   }
 
@@ -380,7 +413,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   private void saveReleaseHistory(HelmCommandRequestNG commandRequest, HelmCommandResponseNG commandResponse,
-      ReleaseHistory releaseHistory) throws YamlException {
+      ReleaseHistory releaseHistory) throws IOException {
     Release.Status releaseStatus = CommandExecutionStatus.SUCCESS == commandResponse.getCommandExecutionStatus()
         ? Release.Status.Succeeded
         : Release.Status.Failed;
@@ -446,6 +479,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       logCallback = markDoneAndStartNew(commandRequest, logCallback, Rollback);
       HelmInstallCmdResponseNG commandResponse = HelmCommandResponseMapper.getHelmInstCmdRespNG(
           helmClient.rollback(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
+      commandResponse.setPrevReleaseVersion(commandRequest.getPrevReleaseVersion());
+      commandResponse.setReleaseName(commandRequest.getReleaseName());
       logCallback.saveExecutionLog(commandResponse.getOutput());
       if (commandResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
         return commandResponse;
@@ -462,6 +497,9 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
       List<ContainerInfo> containerInfos = getContainerInfos(
           commandRequest, rollbackWorkloads, useSteadyStateCheck, logCallback, commandRequest.getTimeoutInMillis());
+      if (!useSteadyStateCheck) {
+        setReleaseNameForContainers(containerInfos, commandRequest.getReleaseName(), commandRequest.getNamespace());
+      }
       commandResponse.setContainerInfoList(containerInfos);
 
       logCallback.saveExecutionLog("\nDone", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
@@ -578,14 +616,6 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
                                                              : ensureHelmCliAndTillerInstalled(commandRequest);
   }
 
-  private String preProcessReleaseHistoryCommandOutput(HelmCliResponse helmCliResponse, String releaseName) {
-    if (helmCliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
-      return "Release: \"" + releaseName + "\" not found\n";
-    }
-
-    return helmCliResponse.getOutput();
-  }
-
   @VisibleForTesting
   void prepareRepoAndCharts(HelmCommandRequestNG commandRequest, long timeoutInMillis) {
     ManifestDelegateConfig manifestDelegateConfig = commandRequest.getManifestDelegateConfig();
@@ -624,14 +654,21 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
       printGitConfigInExecutionLogs(gitStoreDelegateConfig, commandRequest.getLogCallback());
 
-      GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
-
-      gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
-      SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
-          gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
-
-      ngGitService.downloadFiles(gitStoreDelegateConfig, manifestFilesDirectory, commandRequest.getAccountId(),
-          sshSessionConfig, gitConfigDTO);
+      if (gitStoreDelegateConfig.isOptimizedFilesFetch()) {
+        commandRequest.getLogCallback().saveExecutionLog("Using optimized file fetch");
+        secretDecryptionService.decrypt(
+            GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(gitStoreDelegateConfig.getGitConfigDTO()),
+            gitStoreDelegateConfig.getApiAuthEncryptedDataDetails());
+        scmFetchFilesHelper.downloadFilesUsingScm(
+            manifestFilesDirectory, gitStoreDelegateConfig, commandRequest.getLogCallback());
+      } else {
+        GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+        gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
+        SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
+            gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
+        ngGitService.downloadFiles(gitStoreDelegateConfig, manifestFilesDirectory, commandRequest.getAccountId(),
+            sshSessionConfig, gitConfigDTO);
+      }
 
       commandRequest.setWorkingDir(manifestFilesDirectory);
       commandRequest.getLogCallback().saveExecutionLog(color("Successfully fetched following files:", White, Bold));

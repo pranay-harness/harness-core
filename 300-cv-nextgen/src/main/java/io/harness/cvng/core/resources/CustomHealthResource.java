@@ -15,7 +15,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -41,7 +40,7 @@ public class CustomHealthResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get sample data", nickname = "fetchSampleData")
-  public ResponseDTO<Map<String, Object>> getSampleData(@NotNull @QueryParam("accountId") String accountId,
+  public ResponseDTO<Object> getSampleData(@NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,

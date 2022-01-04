@@ -16,6 +16,11 @@ public class ReferenceK8sPodInfoDTO extends DeploymentInfoDTO {
   String podName;
 
   @Override
+  public String getType() {
+    return null;
+  }
+
+  @Override
   public String prepareInstanceSyncHandlerKey() {
     return podName;
   }

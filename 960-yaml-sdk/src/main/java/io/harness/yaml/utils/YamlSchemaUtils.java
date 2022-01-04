@@ -10,6 +10,7 @@ import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.STEP_NODE;
 
 import io.harness.EntityType;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.packages.HarnessPackages;
@@ -17,6 +18,7 @@ import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -297,6 +299,38 @@ public class YamlSchemaUtils {
           "#/definitions/" + nameSpaceString + clazz.getSimpleName()));
     }
     ((ObjectNode) stepsNode).set(ONE_OF_NODE, oneOfNode);
+  }
+
+  public void addOneOfInExecutionWrapperConfig(
+      JsonNode pipelineSchema, List<YamlSchemaWithDetails> stepSchemaWithDetails, ModuleType moduleType) {
+    JsonNode executionWrapperConfigProperties = pipelineSchema.get(EXECUTION_WRAPPER_CONFIG_NODE).get(PROPERTIES_NODE);
+    ArrayNode oneOfNode = getOneOfNode(executionWrapperConfigProperties);
+    JsonNode stepsNode = executionWrapperConfigProperties.get(STEP_NODE);
+
+    for (YamlSchemaWithDetails schemaWithDetails : stepSchemaWithDetails) {
+      String nameSpaceString = getNamespaceFromModuleType(schemaWithDetails.getModuleType());
+      if (schemaWithDetails.getYamlSchemaMetadata() != null
+          && schemaWithDetails.getYamlSchemaMetadata().getModulesSupported() != null
+          && schemaWithDetails.getYamlSchemaMetadata().getModulesSupported().contains(moduleType)) {
+        oneOfNode.add(JsonNodeUtils.upsertPropertyInObjectNode(new ObjectNode(JsonNodeFactory.instance), REF_NODE,
+            "#/definitions/" + nameSpaceString + schemaWithDetails.getSchemaClassName()));
+      }
+    }
+
+    ((ObjectNode) stepsNode).set(ONE_OF_NODE, oneOfNode);
+  }
+
+  private String getNamespaceFromModuleType(ModuleType moduleType) {
+    if (moduleType == ModuleType.CD) {
+      return "cd/";
+    } else if (moduleType == ModuleType.CI) {
+      return "ci/";
+    } else if (moduleType == ModuleType.CE) {
+      return "ce/";
+    } else if (moduleType == ModuleType.CF) {
+      return "cf/";
+    }
+    return "";
   }
 
   private ArrayNode getOneOfNode(JsonNode executionWrapperConfig) {

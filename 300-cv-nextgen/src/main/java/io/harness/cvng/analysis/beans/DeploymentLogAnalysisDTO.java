@@ -60,7 +60,7 @@ public class DeploymentLogAnalysisDTO {
     ClusterType clusterType;
     int risk;
     public Risk getRiskLevel() {
-      return Risk.valueOf(risk);
+      return Risk.valueOfRiskForDeploymentLogAnalysis(risk);
     }
     double score;
     int count;
@@ -86,7 +86,7 @@ public class DeploymentLogAnalysisDTO {
   public static class ResultSummary {
     int risk;
     public Risk getRiskLevel() {
-      return Risk.valueOf(risk);
+      return Risk.valueOfRiskForDeploymentLogAnalysis(risk);
     }
     double score;
     List<ControlClusterSummary> controlClusterSummaries;

@@ -185,7 +185,7 @@ import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
+import software.wings.sm.states.JenkinsExecutionResponse;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableList;
@@ -3816,7 +3816,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     }
 
     final DelegateTask delegateTask = delegateTaskBuilder.build();
-    delegateService.saveDelegateTask(delegateTask, status);
+    delegateTaskServiceClassic.processDelegateTask(delegateTask, status);
     return delegateTask;
   }
 

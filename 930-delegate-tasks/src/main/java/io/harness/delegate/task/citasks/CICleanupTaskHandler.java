@@ -8,5 +8,5 @@ public interface CICleanupTaskHandler {
 
   CICleanupTaskHandler.Type getType();
 
-  CITaskExecutionResponse executeTaskInternal(CICleanupTaskParams ciCleanupTaskParams);
+  CITaskExecutionResponse executeTaskInternal(CICleanupTaskParams ciCleanupTaskParams, String taskId);
 }

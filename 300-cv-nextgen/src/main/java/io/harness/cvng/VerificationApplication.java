@@ -571,7 +571,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .mode(PersistenceIterator.ProcessMode.PUMP)
             .clazz(ChangeSource.class)
             .fieldName(ChangeSourceKeys.demoDataGenerationIteration)
-            .targetInterval(ofMinutes(1))
+            .targetInterval(ofMinutes(10))
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(dataCollectionExecutor)
             .semaphore(new Semaphore(2))
@@ -838,7 +838,14 @@ public class VerificationApplication extends Application<VerificationConfigurati
         throw new IllegalStateException("Resource classes should be in resources package." + resource);
       }
       if (Resource.isAcceptable(resource)) {
-        environment.jersey().register(injector.getInstance(resource));
+        long startTime = System.currentTimeMillis();
+        Object resourceClass = injector.getInstance(resource);
+        log.info("Time to get instance: " + (System.currentTimeMillis() - startTime) + " ms"
+            + resourceClass.getClass().getSimpleName());
+        startTime = System.currentTimeMillis();
+        environment.jersey().register(resourceClass);
+        log.info("Time to register resource: " + (System.currentTimeMillis() - startTime) + " ms"
+            + resourceClass.getClass().getSimpleName());
       }
     });
     environment.jersey().register(injector.getInstance(VersionInfoResource.class));

@@ -111,7 +111,8 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     } else if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())
         || artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.npm.name())) {
       return nexusService.getVersions(artifactStreamAttributes.getRepositoryFormat(), nexusRequest,
-          artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName());
+          artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName(),
+          artifactStreamAttributes.getSavedBuildDetailsKeys());
     } else {
       return nexusService.getVersions(nexusRequest, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),

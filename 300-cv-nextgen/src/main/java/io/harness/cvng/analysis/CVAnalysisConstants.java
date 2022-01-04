@@ -9,14 +9,12 @@ public interface CVAnalysisConstants {
   String LOG_CLUSTER_RESOURCE = "log-cluster";
 
   String LOG_ANALYSIS_RESOURCE = "log-analysis";
-  String CD_10_MAPPING_RESOURCE = "cd10-mapping";
   String MARK_FAILURE_PATH = "mark-failure";
   String LOG_ANALYSIS_SAVE_PATH = "serviceguard-save-analysis";
   String DEPLOYMENT_LOG_ANALYSIS_SAVE_PATH = "deployment-save-analysis";
   String PREVIOUS_LOG_ANALYSIS_PATH = "serviceguard-shortterm-history";
   String PREVIOUS_ANALYSIS_URL = "previous-analysis";
   String TEST_DATA_PATH = "test-data";
-  int ML_RECORDS_TTL_MONTHS = 6;
   String TIMESERIES_SAVE_ANALYSIS_PATH = "/timeseries-serviceguard-save-analysis";
   String TIMESERIES_VERIFICATION_TASK_SAVE_ANALYSIS_PATH = "/timeseries-verification-task-save-analysis";
   String CUMULATIVE_SUMS_URL = "timeseries-serviceguard-cumulative-sums";

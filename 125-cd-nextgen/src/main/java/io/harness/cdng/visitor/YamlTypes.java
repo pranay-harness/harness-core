@@ -18,6 +18,7 @@ public interface YamlTypes {
   String ENVIRONMENT_YAML = "environment";
   String ENVIRONMENT_REF = "environmentRef";
   String INFRASTRUCTURE_DEF = "infrastructureDefinition";
+  String INFRASTRUCTURE_STEP_PARAMETERS = "infrastructureStepParameters";
   String INFRA_USE_FROM_STAGE = "useFromStage";
   String INFRA_USE_FROM_STAGE_OVERRIDES = "overrides";
   String OVERRIDE_SET = "overrideSet";

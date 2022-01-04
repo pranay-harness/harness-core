@@ -7,7 +7,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
+import io.harness.cvng.CVConstants;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -18,7 +20,9 @@ import io.harness.serializer.JsonUtils;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +53,9 @@ public final class TimeSeriesShortTermHistory implements PersistentEntity, UuidA
   @NotEmpty @FdIndex private String verificationTaskId;
   List<TransactionMetricHistory> transactionMetricHistories;
   private byte[] compressedMetricHistories;
-
+  @Builder.Default
+  @FdTtlIndex
+  private Date validUntil = Date.from(OffsetDateTime.now().plus(CVConstants.MAX_DATA_RETENTION_DURATION).toInstant());
   public byte[] getCompressedMetricHistories() {
     if (isEmpty(compressedMetricHistories)) {
       return new byte[0];

@@ -2,8 +2,10 @@ package io.harness.service.instancesync;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.service.beans.ServiceSpecType;
 import io.harness.delegate.beans.instancesync.InstanceSyncPerpetualTaskResponse;
 import io.harness.delegate.beans.instancesync.ServerInstanceInfo;
+import io.harness.delegate.beans.instancesync.info.K8sServerInstanceInfo;
 import io.harness.dtos.DeploymentSummaryDTO;
 import io.harness.dtos.InfrastructureMappingDTO;
 import io.harness.dtos.InstanceDTO;
@@ -84,7 +86,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
                  InstanceSyncConstants.INSTANCE_SYNC_LOCK_TIMEOUT, InstanceSyncConstants.INSTANCE_SYNC_WAIT_TIMEOUT)) {
           AbstractInstanceSyncHandler abstractInstanceSyncHandler =
               instanceSyncHandlerFactoryService.getInstanceSyncHandler(
-                  infrastructureMappingDTO.getInfrastructureKind());
+                  deploymentSummaryDTO.getDeploymentInfoDTO().getType());
           // check if existing instance sync perpetual task info record exists or not for incoming infrastructure
           // mapping
           Optional<InstanceSyncPerpetualTaskInfoDTO> instanceSyncPerpetualTaskInfoDTOOptional =
@@ -217,8 +219,8 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
       InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO,
       InfrastructureMappingDTO infrastructureMappingDTO, List<ServerInstanceInfo> serverInstanceInfoList,
       boolean isNewDeploymentSync) {
-    AbstractInstanceSyncHandler instanceSyncHandler =
-        instanceSyncHandlerFactoryService.getInstanceSyncHandler(infrastructureMappingDTO.getInfrastructureKind());
+    AbstractInstanceSyncHandler instanceSyncHandler = instanceSyncHandlerFactoryService.getInstanceSyncHandler(
+        getServerInstanceInfoType(serverInstanceInfoList.get(0)));
     List<InstanceDTO> instancesInDB = instanceService.getActiveInstancesByInfrastructureMappingId(
         infrastructureMappingDTO.getAccountIdentifier(), infrastructureMappingDTO.getOrgIdentifier(),
         infrastructureMappingDTO.getProjectIdentifier(), infrastructureMappingDTO.getId(), System.currentTimeMillis());
@@ -581,5 +583,13 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     serverInstanceInfoList.forEach(
         serverInstanceInfo -> stringBuilder.append(serverInstanceInfo.toString()).append(" :: "));
     log.info("Server Instances in the perpetual task response : {}", stringBuilder.toString());
+  }
+
+  private String getServerInstanceInfoType(ServerInstanceInfo serverInstanceInfo) {
+    if (serverInstanceInfo instanceof K8sServerInstanceInfo) {
+      return ServiceSpecType.KUBERNETES;
+    }
+
+    return ServiceSpecType.NATIVE_HELM; // as of now only 2 types K8s and Native Helm
   }
 }

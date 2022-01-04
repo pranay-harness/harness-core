@@ -38,7 +38,6 @@ import io.harness.logging.LogCallback;
 
 import software.wings.beans.LogColor;
 
-import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -187,7 +186,7 @@ public class K8sCanaryBaseHandler {
   }
 
   public void failAndSaveKubernetesRelease(K8sCanaryHandlerConfig canaryHandlerConfig, String releaseName)
-      throws YamlException {
+      throws IOException {
     ReleaseHistory releaseHistory = canaryHandlerConfig.getReleaseHistory();
     releaseHistory.setReleaseStatus(Release.Status.Failed);
     k8sTaskHelperBase.saveReleaseHistoryInConfigMap(

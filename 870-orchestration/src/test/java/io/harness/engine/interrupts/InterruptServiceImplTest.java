@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +32,7 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -153,7 +153,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
                                       .mode(ExecutionMode.CHILD)
                                       .version(1L)
                                       .build();
-    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeProjectionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
     ExecutionCheck executionCheck =
         interruptService.checkInterruptsPreInvocation(planExecutionId, nodeExecution.getUuid());
     assertThat(executionCheck).isNotNull();
@@ -176,7 +177,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
                                       .mode(ExecutionMode.TASK)
                                       .version(1L)
                                       .build();
-    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeProjectionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
     when(abortInterruptHandler.handleInterruptForNodeExecution(any(), eq(nodeExecution.getUuid())))
         .thenReturn(abortAllInterrupt);
     ExecutionCheck executionCheck =
@@ -205,7 +207,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
                                       .mode(ExecutionMode.TASK)
                                       .version(1L)
                                       .build();
-    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeProjectionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
     when(markExpiredInterruptHandler.handleInterruptForNodeExecution(any(), eq(nodeExecution.getUuid())))
         .thenReturn(expireAllInterrupt);
     ExecutionCheck executionCheck =
@@ -232,7 +235,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
                                       .version(1L)
                                       .build();
 
-    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeProjectionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
 
     ExecutionCheck executionCheck =
         interruptService.checkInterruptsPreInvocation(planExecutionId, nodeExecution.getUuid());
@@ -240,7 +244,7 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
     assertThat(executionCheck.isProceed()).isTrue();
     assertThat(executionCheck.getReason()).isEqualTo("[InterruptCheck] No Interrupts Found");
 
-    verify(nodeExecutionService).get(nodeExecution.getUuid());
+    verify(nodeExecutionService).getWithFieldsIncluded(nodeExecution.getUuid(), NodeProjectionUtils.withStatusAndMode);
   }
 
   @Test
@@ -261,7 +265,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
                                       .version(1L)
                                       .build();
 
-    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeProjectionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
     when(pauseAllInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecution.getUuid()))
         .thenReturn(interrupt);
 
@@ -271,7 +276,7 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
     assertThat(executionCheck.isProceed()).isFalse();
     assertThat(executionCheck.getReason()).isEqualTo("[InterruptCheck] PAUSE_ALL interrupt found");
 
-    verify(nodeExecutionService).get(nodeExecution.getUuid());
+    verify(nodeExecutionService).getWithFieldsIncluded(nodeExecution.getUuid(), NodeProjectionUtils.withStatusAndMode);
     verify(pauseAllInterruptHandler).handleInterruptForNodeExecution(any(), eq(nodeExecution.getUuid()));
   }
 
@@ -297,7 +302,11 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
                                       .version(1L)
                                       .build();
 
-    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeProjectionUtils.withAmbianceAndStatus))
+        .thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecution.getUuid(), NodeProjectionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
+
     when(planExecutionService.calculateStatusExcluding(any(), any())).thenReturn(Status.PAUSING);
 
     ExecutionCheck executionCheck =
@@ -306,7 +315,10 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
     assertThat(executionCheck.isProceed()).isTrue();
     assertThat(executionCheck.getReason()).isEqualTo("[InterruptCheck] No Interrupts Found");
 
-    verify(nodeExecutionService, times(2)).get(nodeExecution.getUuid());
+    verify(nodeExecutionService)
+        .getWithFieldsIncluded(nodeExecution.getUuid(), NodeProjectionUtils.withAmbianceAndStatus);
+    verify(nodeExecutionService).getWithFieldsIncluded(nodeExecution.getUuid(), NodeProjectionUtils.withStatusAndMode);
+
     verify(planExecutionService).calculateStatusExcluding(any(), any());
   }
 

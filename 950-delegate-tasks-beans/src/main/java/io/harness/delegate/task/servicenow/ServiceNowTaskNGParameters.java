@@ -29,9 +29,8 @@ public class ServiceNowTaskNGParameters implements TaskParameters, ExecutionCapa
   List<EncryptedDataDetail> encryptionDetails;
 
   ServiceNowActionNG action;
-  String projectKey;
-  String issueType;
-  String issueKey;
+  String ticketType;
+  String ticketNumber;
 
   List<String> delegateSelectors;
 

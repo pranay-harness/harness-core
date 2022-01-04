@@ -226,7 +226,7 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
             .getTaskId();
     assertThat(taskId3).isNotNull();
     assertThat(taskId3.getId()).isNotBlank();
-    verify(delegateService).saveDelegateTask(any(DelegateTask.class), eq(Status.PARKED));
+    verify(delegateTaskServiceClassic).processDelegateTask(any(DelegateTask.class), eq(Status.PARKED));
 
     doThrow(InvalidRequestException.class).when(delegateService).scheduleSyncTask(any(DelegateTask.class));
     assertThatThrownBy(

@@ -42,14 +42,13 @@ import lombok.extern.slf4j.Slf4j;
 public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
   @VisibleForTesting
   static final Collection<? extends Class<? extends PersistentEntity>> ENTITIES_DELETE_BLACKLIST_BY_VERIFICATION_ID =
-      Arrays.asList();
+      Arrays.asList(SLIRecord.class, DeploymentLogAnalysis.class, DeploymentTimeSeriesAnalysis.class);
   @VisibleForTesting
   static final List<Class<? extends PersistentEntity>> ENTITIES_TO_DELETE_BY_VERIFICATION_ID = Arrays.asList(
       ClusteredLog.class, TimeSeriesShortTermHistory.class, TimeSeriesRecord.class, AnalysisOrchestrator.class,
       AnalysisStateMachine.class, LearningEngineTask.class, LogRecord.class, HostRecord.class, LogAnalysisRecord.class,
-      LogAnalysisResult.class, LogAnalysisCluster.class, DeploymentTimeSeriesAnalysis.class,
-      DeploymentLogAnalysis.class, TimeSeriesRiskSummary.class, TimeSeriesAnomalousPatterns.class,
-      DataCollectionTask.class, TimeSeriesCumulativeSums.class, CVNGDemoDataIndex.class, SLIRecord.class);
+      LogAnalysisResult.class, LogAnalysisCluster.class, TimeSeriesRiskSummary.class, TimeSeriesAnomalousPatterns.class,
+      DataCollectionTask.class, TimeSeriesCumulativeSums.class, CVNGDemoDataIndex.class);
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
@@ -70,13 +69,13 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
 
   @Override
   public void triggerCleanup(DeletedCVConfig deletedCVConfig) {
-    List<String> verificationTaskIds =
-        verificationTaskService.getVerificationTaskIds(deletedCVConfig.getCvConfig().getUuid());
+    List<String> verificationTaskIds = verificationTaskService.getServiceGuardVerificationTaskIds(
+        deletedCVConfig.getAccountId(), deletedCVConfig.getCvConfig().getUuid());
     verificationTaskIds.forEach(verificationTaskId
         -> ENTITIES_TO_DELETE_BY_VERIFICATION_ID.forEach(entity
             -> hPersistence.delete(hPersistence.createQuery(entity).filter(
                 VerificationTask.VERIFICATION_TASK_ID_KEY, verificationTaskId))));
-    verificationTaskService.removeCVConfigMappings(
+    verificationTaskService.removeLiveMonitoringMappings(
         deletedCVConfig.getCvConfig().getAccountId(), deletedCVConfig.getCvConfig().getUuid());
     monitoringSourcePerpetualTaskService.deleteTask(deletedCVConfig.getCvConfig().getAccountId(),
         deletedCVConfig.getCvConfig().getOrgIdentifier(), deletedCVConfig.getCvConfig().getProjectIdentifier(),

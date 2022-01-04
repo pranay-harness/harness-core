@@ -2097,10 +2097,6 @@ public class TriggerServiceImpl implements TriggerService {
     if (trigger.getCondition().getConditionType() == SCHEDULED) {
       trigger.recalculateNextIterations(TriggerKeys.nextIterations, true, 0);
       List<Long> nextIterations = trigger.getNextIterations();
-      // It automatically adds current timestamp when list is empty. This is not desired.
-      if (EmptyPredicate.isNotEmpty(nextIterations)) {
-        trigger.setNextIterations(nextIterations.subList(1, nextIterations.size()));
-      }
       if (!trigger.isDisabled() && EmptyPredicate.isEmpty(trigger.getNextIterations())) {
         throw new InvalidRequestException(
             "Given cron expression doesn't evaluate to a valid time. Please check the expression provided");

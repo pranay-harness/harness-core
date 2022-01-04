@@ -61,6 +61,7 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Clock;
@@ -474,7 +475,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     }
   }
 
-  private ActivityVerificationStatus getDeploymentVerificationStatus(VerificationJobInstance verificationJobInstance) {
+  @VisibleForTesting
+  ActivityVerificationStatus getDeploymentVerificationStatus(VerificationJobInstance verificationJobInstance) {
     switch (verificationJobInstance.getExecutionStatus()) {
       case QUEUED:
         return ActivityVerificationStatus.NOT_STARTED;
@@ -683,7 +685,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           dataSourceTypeDataCollectionInfoMapperMap.get(cvConfig.getType());
 
       if (preDeploymentTimeRange.isPresent()) {
-        DataCollectionInfo preDeploymentDataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
+        DataCollectionInfo preDeploymentDataCollectionInfo =
+            dataCollectionInfoMapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
         preDeploymentDataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
         preDeploymentDataCollectionInfo.setCollectHostData(verificationJob.collectHostData());
         dataCollectionTasks.add(DeploymentDataCollectionTask.builder()
@@ -703,7 +706,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       }
 
       timeRanges.forEach(timeRange -> {
-        DataCollectionInfo dataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
+        DataCollectionInfo dataCollectionInfo =
+            dataCollectionInfoMapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
         // TODO: For Now the DSL is same for both. We need to see how this evolves when implementation other provider.
         // Keeping this simple for now.
         dataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());

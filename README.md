@@ -14,9 +14,8 @@ NOTE: Brew will download and install latest version of OpenJDK/JRE, its recommen
 
 Download OpenJDK 1.8-242 (jdk8u242-b08) JRE Installer from [Java archive downloads](https://adoptopenjdk.net/archive.html), unzip it, then set `JAVA_HOME` and `PATH` accordingly.
 
-3. Install maven and bazel:
+3. Install bazel:
 ```
-brew install maven
 brew install bazelisk
 
 ```
@@ -229,15 +228,15 @@ cd to `portal` directory
 
 3. Start Delegate
 
-   * `java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar 260-delegate/target/delegate-capsule.jar 260-delegate/config-delegate.yml &`
+   * `java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar ~/.bazel-dirs/bin/260-delegate/module_deploy.jar 260-delegate/config-delegate.yml &`
 
 4. Start Verification service (Optional)
 
-   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 270-verification/target/verification-capsule.jar server 79-verification/verification-config.yml > verification.log &`
+   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar ~/.bazel-dirs/bin/270-verification/module_deploy.jar server 79-verification/verification-config.yml > verification.log &`
 
 5. Start Command Library Service (Optional)
 
-   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 210-command-library-server/target/command-library-app-capsule.jar 210-command-library-server/command-library-server-config.yml > command_library_service.log &`
+   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar ~/.bazel-dirs/bin/210-command-library-server/module_deploy.jar 210-command-library-server/command-library-server-config.yml > command_library_service.log &`
 
 6. Start UI (Optional)
 
@@ -363,9 +362,9 @@ Alternatively, use Fish shell: `brew install fish` then set iterms command to `/
 1. Make sure your mongodb is running first.
 
 2. Run API Server (WingsApplication): [Run > Run... > WingsApplication]
-    * If you get ALPN processor missing at start of WingsApp execute following maven command
+    * If you get ALPN processor missing at start of WingsApp execute following curl command
 
-        `mvn dependency:get -Dartifact=org.mortbay.jetty.alpn:alpn-boot:8.1.13.v20181017`
+        `curl https://storage.googleapis.com/harness-prod-public/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar --output alpn-boot-8.1.13.v20181017.jar`
 
 3. Run DataGenApp: [Run > Run... > DataGenApp]. Add HARNESS_GENERATION_PASSPHRASE environment variable to DataGenApp config in intellij.
 
@@ -387,7 +386,7 @@ The admin username and password are in BaseIntegrationTest.java.
     * If you have `jsse.jar` but still getting that error, then make sure the default JDK for your maven module is set correctly in IntelliJ. Right Click Module in left sidebar > Open Module Settings > Platform Settings > SDKs)
 * If you go to https://localhost:8000/#/login and don't see content, go to https://localhost:8181/#/login to enable the certificate then try again.
 * If still face not able to login then got to https://localhost:9090/api/version and enable certificate and try again.
-* If you get ALPN processor missing at start of WingsApp execute following maven command
+* If you get ALPN processor missing at start of WingsApp execute following curl command
 
     `curl https://storage.googleapis.com/harness-prod-public/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar --output alpn-boot-8.1.13.v20181017.jar`
 

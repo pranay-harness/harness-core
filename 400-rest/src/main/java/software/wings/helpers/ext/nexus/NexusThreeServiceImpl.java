@@ -41,6 +41,7 @@ import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelp
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.RepositoryFormat;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -58,6 +59,7 @@ import java.util.stream.Collectors;
 import javax.net.ssl.HttpsURLConnection;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import retrofit2.Response;
@@ -69,6 +71,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Slf4j
 public class NexusThreeServiceImpl {
   private static final int MAX_PAGES = 10;
+  private static final List<String> IGNORE_EXTENSIONS = Lists.newArrayList("pom", "sha1", "sha256", "sha512", "md5");
 
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
   @Inject private CGNexusHelper nexusHelper;
@@ -293,7 +296,7 @@ public class NexusThreeServiceImpl {
         } else {
           artifactName = artifactUrl.substring(artifactUrl.lastIndexOf('/') + 1);
         }
-        if (artifactName.endsWith("pom") || artifactName.endsWith("md5") || artifactName.endsWith("sha1")) {
+        if (IGNORE_EXTENSIONS.stream().anyMatch(artifactName::endsWith)) {
           continue;
         }
         artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactName).url(artifactUrl).build());
@@ -383,7 +386,7 @@ public class NexusThreeServiceImpl {
               response.body().getItems().forEach(item -> {
                 String url = item.getDownloadUrl();
                 String artifactName = url.substring(url.lastIndexOf('/') + 1);
-                if (artifactName.endsWith("pom") || artifactName.endsWith("md5") || artifactName.endsWith("sha1")) {
+                if (IGNORE_EXTENSIONS.stream().anyMatch(artifactName::endsWith)) {
                   return;
                 }
                 downloadArtifactByUrl(
@@ -418,8 +421,7 @@ public class NexusThreeServiceImpl {
               response.body().getItems().forEach(item -> {
                 String url = item.getDownloadUrl();
                 String artifactFileName = url.substring(url.lastIndexOf('/') + 1);
-                if (artifactFileName.endsWith("pom") || artifactFileName.endsWith("md5")
-                    || artifactFileName.endsWith("sha1")) {
+                if (IGNORE_EXTENSIONS.stream().anyMatch(artifactName::endsWith)) {
                   return;
                 }
                 downloadArtifactByUrl(
@@ -565,7 +567,7 @@ public class NexusThreeServiceImpl {
               List<ArtifactFileMetadata> artifactFileMetadata = getArtifactMetadata(component.getAssets(), repoId);
 
               if (isNotEmpty(artifactFileMetadata)) {
-                versionToArtifactUrls.put(version, artifactFileMetadata.get(0).getUrl());
+                versionToArtifactUrls.put(version, getArtifactDownloadUrl(artifactFileMetadata, extension, classifier));
               }
               versionToArtifactDownloadUrls.put(version, artifactFileMetadata);
             }
@@ -585,6 +587,20 @@ public class NexusThreeServiceImpl {
         versionToArtifactDownloadUrls, extension, classifier);
   }
 
+  private String getArtifactDownloadUrl(
+      List<ArtifactFileMetadata> artifactFileMetadata, String extension, String classifier) {
+    String defaultUrl = artifactFileMetadata.get(0).getUrl();
+    String url = null;
+    if (StringUtils.isNoneBlank(extension, classifier)) {
+      url = artifactFileMetadata.stream()
+                .filter(meta -> meta.getFileName().endsWith(extension) && meta.getFileName().contains(classifier))
+                .map(ArtifactFileMetadata::getUrl)
+                .findFirst()
+                .orElse(null);
+    }
+    return StringUtils.isNotBlank(url) ? url : defaultUrl;
+  }
+
   private List<ArtifactFileMetadata> getArtifactMetadata(List<Asset> assets, String repoId) {
     List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
     if (isEmpty(assets)) {
@@ -593,7 +609,7 @@ public class NexusThreeServiceImpl {
     for (Asset item : assets) {
       String url = item.getDownloadUrl();
       String artifactFileName = url.substring(url.lastIndexOf('/') + 1);
-      if (artifactFileName.endsWith("pom") || artifactFileName.endsWith("md5") || artifactFileName.endsWith("sha1")) {
+      if (IGNORE_EXTENSIONS.stream().anyMatch(artifactFileName::endsWith)) {
         continue;
       }
       if (!item.getRepository().equals(repoId)) {

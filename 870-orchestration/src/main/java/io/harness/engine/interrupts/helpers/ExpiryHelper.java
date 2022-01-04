@@ -45,7 +45,7 @@ public class ExpiryHelper {
       }
 
       List<UnitProgress> unitProgressList = InterruptHelper.evaluateUnitProgresses(nodeExecution, EXPIRED);
-      nodeExecutionService.update(nodeExecution.getUuid(),
+      nodeExecutionService.updateV2(nodeExecution.getUuid(),
           ops
           -> ops.addToSet(NodeExecutionKeys.interruptHistories,
               InterruptEffect.builder()

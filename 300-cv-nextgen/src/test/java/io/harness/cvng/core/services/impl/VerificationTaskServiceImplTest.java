@@ -15,12 +15,15 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.CVConstants;
+import io.harness.cvng.VerificationApplication;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.VerificationTask.VerificationTaskKeys;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Sets;
@@ -28,6 +31,7 @@ import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
@@ -37,6 +41,7 @@ import org.apache.groovy.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.reflections.Reflections;
 
 public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationTaskService verificationTaskService;
@@ -235,7 +240,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
         .isEqualTo(verificationTaskId2);
     assertThat(verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
         .isEqualTo(Sets.newHashSet(verificationTaskId1));
-    verificationTaskService.removeCVConfigMappings(accountId, cvConfigId);
+    verificationTaskService.removeLiveMonitoringMappings(accountId, cvConfigId);
     assertThatThrownBy(() -> verificationTaskService.getServiceGuardVerificationTaskId(accountId, cvConfigId))
         .isInstanceOf(NullPointerException.class)
         .hasMessage(
@@ -257,7 +262,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
         .isEqualTo(verificationTaskId2);
     assertThat(verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
         .isEqualTo(Sets.newHashSet(verificationTaskId1));
-    verificationTaskService.removeCVConfigMappings(accountId, cvConfigId);
+    verificationTaskService.removeLiveMonitoringMappings(accountId, cvConfigId);
     assertThatThrownBy(() -> verificationTaskService.getServiceGuardVerificationTaskId(accountId, cvConfigId))
         .isInstanceOf(NullPointerException.class)
         .hasMessage(
@@ -385,6 +390,30 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
     assertThat(result).isEmpty();
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testEnticesForExpiresAt_entitiesList() {
+    // If any of the collection has a valid reason to not add validUntil, please add it to BLACKLIST with the reason.
+    Set<Class<? extends PersistentEntity>> BLACKLIST = new HashSet<>();
+    Set<Class<?>> withoutTTL = new HashSet<>();
+    Reflections reflections = new Reflections(VerificationApplication.class.getPackage().getName());
+    reflections.getSubTypesOf(PersistentEntity.class).forEach(entity -> {
+      if (doesClassContainField(entity, VerificationTask.VERIFICATION_TASK_ID_KEY)) {
+        if (!doesClassContainField(entity, VerificationTaskKeys.validUntil)) {
+          withoutTTL.add(entity);
+        }
+      }
+    });
+    assertThat(withoutTTL)
+        .isEqualTo(BLACKLIST)
+        .withFailMessage(
+            "Entities with verificationTaskId does not have TTL set %s", Sets.difference(withoutTTL, BLACKLIST));
+  }
+
+  private boolean doesClassContainField(Class<?> clazz, String fieldName) {
+    return Arrays.stream(clazz.getDeclaredFields()).anyMatch(f -> f.getName().equals(fieldName));
+  }
   private String createOldVerificationTaskForBackwardCompatibilityTest(
       String accountId, String cvConfigId, String verificationJobInstanceId, DataSourceType dataSourceType) {
     VerificationTask verificationTask =

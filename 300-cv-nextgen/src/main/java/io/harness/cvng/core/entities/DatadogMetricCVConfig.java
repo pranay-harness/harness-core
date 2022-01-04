@@ -60,6 +60,7 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
               .metricName(definition.getMetricName())
               .identifier(definition.getIdentifier())
               .metric(definition.getMetric())
+              .metricPath(definition.getMetricPath())
               .query(definition.getQuery())
               .groupingQuery(definition.getGroupingQuery())
               .metricType(metricType)
@@ -90,6 +91,7 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
   @FieldNameConstants(innerTypeName = "MetricInfoKeys")
   public static class MetricInfo extends AnalysisInfo {
     private String metricName;
+    private String metricPath;
     private String metric;
     private String query;
     private String groupingQuery;
