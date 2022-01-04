@@ -153,7 +153,7 @@ public class UserGroupResource {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, userGroupDTO.getIdentifier()), MANAGE_USERGROUP_PERMISSION);
     validateScopes(accountIdentifier, orgIdentifier, projectIdentifier, userGroupDTO);
-    checkExternallyManaged(accountIdentifier, userGroupDTO.getIdentifier());
+    checkExternallyManaged(accountIdentifier, orgIdentifier, projectIdentifier, userGroupDTO.getIdentifier());
     userGroupDTO.setAccountIdentifier(accountIdentifier);
     userGroupDTO.setOrgIdentifier(orgIdentifier);
     userGroupDTO.setProjectIdentifier(projectIdentifier);
@@ -228,7 +228,7 @@ public class UserGroupResource {
                       .orgIdentifier(orgIdentifier)
                       .projectIdentifier(projectIdentifier)
                       .build();
-    checkExternallyManaged(accountIdentifier, identifier);
+    checkExternallyManaged(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     UserGroup userGroup = userGroupService.delete(scope, identifier);
     return ResponseDTO.newResponse(Long.toString(userGroup.getVersion()), toDTO(userGroup));
   }
@@ -362,7 +362,7 @@ public class UserGroupResource {
           "userIdentifier") String userIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, identifier), MANAGE_USERGROUP_PERMISSION);
-    checkExternallyManaged(accountIdentifier, identifier);
+    checkExternallyManaged(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     UserGroup userGroup =
         userGroupService.addMember(accountIdentifier, orgIdentifier, projectIdentifier, identifier, userIdentifier);
     return ResponseDTO.newResponse(Long.toString(userGroup.getVersion()), toDTO(userGroup));
@@ -394,7 +394,7 @@ public class UserGroupResource {
                       .orgIdentifier(orgIdentifier)
                       .projectIdentifier(projectIdentifier)
                       .build();
-    checkExternallyManaged(accountIdentifier, identifier);
+    checkExternallyManaged(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     UserGroup userGroup = userGroupService.removeMember(scope, identifier, userIdentifier);
     return ResponseDTO.newResponse(Long.toString(userGroup.getVersion()), toDTO(userGroup));
   }
@@ -429,7 +429,7 @@ public class UserGroupResource {
           NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, userGroupId), MANAGE_USERGROUP_PERMISSION);
-    checkExternallyManaged(accountIdentifier, userGroupId);
+    checkExternallyManaged(accountIdentifier, orgIdentifier, projectIdentifier, userGroupId);
     return new RestResponse<>(userGroupService.unlinkSsoGroup(
         accountIdentifier, orgIdentifier, projectIdentifier, userGroupId, retainMembers));
   }
@@ -457,13 +457,14 @@ public class UserGroupResource {
           NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, userGroupId), MANAGE_USERGROUP_PERMISSION);
-    checkExternallyManaged(accountIdentifier, userGroupId);
+    checkExternallyManaged(accountIdentifier, orgIdentifier, projectIdentifier, userGroupId);
     return new RestResponse<>(userGroupService.linkToSsoGroup(accountIdentifier, orgIdentifier, projectIdentifier,
         userGroupId, SSOType.SAML, samlId, groupRequest.getSamlGroupName(), groupRequest.getSamlGroupName()));
   }
 
-  private void checkExternallyManaged(String accountIdentifier, String identifier) {
-    if (userGroupService.isExternallyManaged(accountIdentifier, identifier)) {
+  private void checkExternallyManaged(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    if (userGroupService.isExternallyManaged(accountIdentifier, orgIdentifier, projectIdentifier, identifier)) {
       throw new InvalidRequestException("This API call is not supported for externally managed group" + identifier);
     }
   }
