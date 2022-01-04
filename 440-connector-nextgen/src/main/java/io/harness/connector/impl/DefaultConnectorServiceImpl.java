@@ -19,6 +19,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.EntityType;
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
@@ -88,6 +89,7 @@ import io.harness.ng.core.services.ProjectService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxService;
 import io.harness.perpetualtask.PerpetualTaskId;
+import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.PageUtils;
@@ -95,6 +97,7 @@ import io.harness.utils.PageUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +110,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
@@ -133,6 +137,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   GitSyncSdkService gitSyncSdkService;
   OutboxService outboxService;
+  private final AccountClient accountClient;
 
   @Override
   public Optional<ConnectorResponseDTO> get(
@@ -189,6 +194,13 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     } else {
       connectors = connectorRepository.findAll(criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier);
     }
+    boolean builtInSMDisabled = isBuiltInSMDisabled(accountIdentifier);
+    if (builtInSMDisabled) {
+      log.info("Built in SM disabled is: " + builtInSMDisabled + ". Removing Builtin Secret manager from results.");
+      List<Connector> connectorList = new ArrayList<>(connectors.getContent());
+      connectorList.removeIf(connector -> HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getIdentifier()));
+      connectors = new PageImpl<>(connectorList, pageable, connectorList.size());
+    }
     return connectors.map(connectorMapper::writeDTO);
   }
 
@@ -206,6 +218,13 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             .build());
     Page<Connector> connectors =
         connectorRepository.findAll(criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier);
+    boolean builtInSMDisabled = isBuiltInSMDisabled(accountIdentifier);
+    if (builtInSMDisabled) {
+      log.info("Built in SM disabled is: " + builtInSMDisabled + ". Removing Builtin Secret manager from results");
+      List<Connector> connectorList = new ArrayList<>(connectors.getContent());
+      connectorList.removeIf(connector -> HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getIdentifier()));
+      connectors = new PageImpl<>(connectorList, pageable, connectorList.size());
+    }
     return connectors.map(connector -> connectorMapper.writeDTO(connector));
   }
 
@@ -867,5 +886,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       }
     }
     return Boolean.TRUE;
+  }
+
+  private boolean isBuiltInSMDisabled(String accountIdentifier) {
+    return RestClientUtils.getResponse(accountClient.isBuiltInSMDisabled(accountIdentifier));
   }
 }
