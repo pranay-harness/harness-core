@@ -47,6 +47,7 @@ appContainers {"name": "appId_1", "background": true} {"appId": 1}
 appContainers {"name": "createdAt_1", "background": true} {"createdAt": 1}
 appContainers {"name": "unique_yaml", "unique": true} {"accountId": 1, "name": 1}
 applicationManifests {"name": "accountId_1", "background": true} {"accountId": 1}
+applicationManifests {"name": "accountId_connectorId", "background": true} {"accountId": 1, "helmChartConfig.connectorId": 1}
 applicationManifests {"name": "appId_1", "background": true} {"appId": 1}
 applicationManifests {"name": "appManifestIdx2", "background": true} {"appId": 1, "envId": 1, "serviceId": 1, "kind": 1}
 applicationManifests {"name": "createdAt_1", "background": true} {"createdAt": 1}
