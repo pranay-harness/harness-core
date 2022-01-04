@@ -343,6 +343,9 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         asList(Release.builder().status(Release.Status.Succeeded).resources(kubernetesResourceIdList).build()));
 
     String releaseHistoryString = releaseHistory.getAsYaml();
+    doReturn(releaseHistoryString)
+        .when(mockKubernetesContainerService)
+        .fetchReleaseHistoryValue(any(V1ConfigMap.class));
     data.put(ReleaseHistoryKeyName, releaseHistoryString);
     kubernetesResourceIds = k8sTaskHelperBase.fetchAllResourcesForRelease(
         releaseName, KubernetesConfig.builder().namespace("default").build(), executionLogCallback);
@@ -413,6 +416,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
                                                 .build()));
 
     String releaseHistoryString = releaseHistorySecret.getAsYaml();
+    doReturn(releaseHistoryString).when(mockKubernetesContainerService).fetchReleaseHistoryValue(any(V1Secret.class));
     secret.getData().put(ReleaseHistoryKeyName, releaseHistoryString.getBytes());
 
     ReleaseHistory releaseHistoryConfigMap = ReleaseHistory.createNew();
@@ -477,6 +481,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         asList(Release.builder().status(Release.Status.Succeeded).resources(kubernetesResourceIdList).build()));
 
     String releaseHistoryString = releaseHistory.getAsYaml();
+    doReturn(releaseHistoryString).when(mockKubernetesContainerService).fetchReleaseHistoryValue(any(V1Secret.class));
     secret.getData().put(ReleaseHistoryKeyName, releaseHistoryString.getBytes());
     kubernetesResourceIds = k8sTaskHelperBase.fetchAllResourcesForRelease(
         releaseName, KubernetesConfig.builder().namespace("default").build(), executionLogCallback);

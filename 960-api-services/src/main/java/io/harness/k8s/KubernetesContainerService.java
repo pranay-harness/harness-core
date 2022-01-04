@@ -150,6 +150,10 @@ public interface KubernetesContainerService {
 
   String fetchReleaseHistoryFromSecrets(KubernetesConfig kubernetesConfig, String infraMappingId) throws IOException;
 
+  String fetchReleaseHistoryValue(V1ConfigMap configMap) throws IOException;
+
+  String fetchReleaseHistoryValue(V1Secret secret) throws IOException;
+
   V1ObjectMeta saveReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory,
       boolean storeInSecrets) throws IOException;
 
