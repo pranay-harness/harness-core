@@ -6,11 +6,13 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.SneakyThrows;
 
 @Singleton
 public class CVNGDemoPerpetualTaskHandler implements MongoPersistenceIterator.Handler<CVNGDemoPerpetualTask> {
   @Inject private CVNGDemoPerpetualTaskService cvngDemoPerpetualTaskService;
 
+  @SneakyThrows
   @Override
   public void handle(CVNGDemoPerpetualTask cvngDemoPerpetualTask) {
     cvngDemoPerpetualTaskService.execute(cvngDemoPerpetualTask);
