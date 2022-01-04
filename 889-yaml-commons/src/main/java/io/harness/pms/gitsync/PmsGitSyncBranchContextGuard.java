@@ -12,9 +12,8 @@ public class PmsGitSyncBranchContextGuard implements AutoCloseable {
   private final GlobalContextGuard guard;
 
   public PmsGitSyncBranchContextGuard(GitSyncBranchContext gitSyncBranchContext, boolean findDefaultFromOtherBranches) {
+    this.guard = GlobalContextManager.initGlobalContextGuard(GlobalContextManager.obtainGlobalContextCopy());
     if (gitSyncBranchContext != null && gitSyncBranchContext.getGitBranchInfo() != null) {
-      this.guard = GlobalContextManager.initGlobalContextGuard(GlobalContextManager.obtainGlobalContextCopy());
-
       // Set findDefaultFromOtherBranches if it's not already true. This is done so that we can fetch entities used by
       // steps (like connectors) from default branch of other repos also.
       if (findDefaultFromOtherBranches && !gitSyncBranchContext.getGitBranchInfo().isFindDefaultFromOtherRepos()) {
@@ -23,7 +22,7 @@ public class PmsGitSyncBranchContextGuard implements AutoCloseable {
       }
       GlobalContextManager.upsertGlobalContextRecord(gitSyncBranchContext);
     } else {
-      this.guard = null;
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().build());
     }
   }
 

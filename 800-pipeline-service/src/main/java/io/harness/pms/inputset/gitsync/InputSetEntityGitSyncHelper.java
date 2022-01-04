@@ -29,6 +29,7 @@ import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -168,7 +169,7 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
 
   @Override
   public List<FileChange> listAllEntities(ScopeDetails scopeDetails) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override

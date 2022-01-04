@@ -3,10 +3,8 @@ package io.harness.pms.pipeline.gitsync;
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.IdentifierRef;
 import io.harness.common.EntityReference;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.encryption.ScopeHelper;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
@@ -15,12 +13,14 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileChange;
+import io.harness.gitsync.FullSyncChangeSet;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.grpc.utils.StringValueUtils;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.plancreator.pipeline.PipelineConfig;
@@ -32,6 +32,8 @@ import io.harness.pms.pipeline.mappers.PipelineYamlDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
+import io.harness.pms.pipeline.service.PipelineCRUDErrorResponse;
+import io.harness.pms.pipeline.service.PipelineFullGitSyncHandler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -49,13 +51,16 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   private final PMSPipelineService pmsPipelineService;
   private final PMSPipelineTemplateHelper pipelineTemplateHelper;
   private final PMSYamlSchemaService pmsYamlSchemaService;
+  private final PipelineFullGitSyncHandler pipelineFullGitSyncHandler;
 
   @Inject
   public PipelineEntityGitSyncHelper(PMSPipelineService pmsPipelineService,
-      PMSPipelineTemplateHelper pipelineTemplateHelper, PMSYamlSchemaService pmsYamlSchemaService) {
+      PMSPipelineTemplateHelper pipelineTemplateHelper, PMSYamlSchemaService pmsYamlSchemaService,
+      PipelineFullGitSyncHandler pipelineFullGitSyncHandler) {
     this.pmsPipelineService = pmsPipelineService;
     this.pipelineTemplateHelper = pipelineTemplateHelper;
     this.pmsYamlSchemaService = pmsYamlSchemaService;
+    this.pipelineFullGitSyncHandler = pipelineFullGitSyncHandler;
   }
 
   @Override
@@ -75,18 +80,7 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
 
   @Override
   public EntityDetail getEntityDetail(PipelineEntity entity) {
-    return EntityDetail.builder()
-        .name(entity.getName())
-        .type(EntityType.PIPELINES)
-        .entityRef(IdentifierRef.builder()
-                       .accountIdentifier(entity.getAccountIdentifier())
-                       .orgIdentifier(entity.getOrgIdentifier())
-                       .projectIdentifier(entity.getProjectIdentifier())
-                       .scope(ScopeHelper.getScope(
-                           entity.getAccountIdentifier(), entity.getOrgIdentifier(), entity.getProjectIdentifier()))
-                       .identifier(entity.getIdentifier())
-                       .build())
-        .build();
+    return PMSPipelineDtoMapper.toEntityDetail(entity);
   }
 
   @Override
@@ -162,7 +156,15 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
 
   @Override
   public List<FileChange> listAllEntities(ScopeDetails scopeDetails) {
-    return null;
+    return pipelineFullGitSyncHandler.getFileChangesForFullSync(scopeDetails);
+  }
+
+  @Override
+  public PipelineConfig fullSyncEntity(FullSyncChangeSet fullSyncChangeSet) {
+    try (GlobalContextManager.GlobalContextGuard ignore = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(createGitEntityInfo(fullSyncChangeSet));
+      return pipelineFullGitSyncHandler.syncEntity(fullSyncChangeSet.getEntityDetail());
+    }
   }
 
   @Override
@@ -172,7 +174,7 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
     final Optional<PipelineEntity> pipelineEntity =
         pmsPipelineService.get(accountIdentifier, pipelineInfoConfig.getOrgIdentifier(),
             pipelineInfoConfig.getProjectIdentifier(), pipelineInfoConfig.getIdentifier(), false);
-    return pipelineEntity.map(entity -> EntityGitDetailsMapper.mapEntityGitDetails(entity));
+    return pipelineEntity.map(EntityGitDetailsMapper::mapEntityGitDetails);
   }
 
   @Override
@@ -188,6 +190,12 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
             StringValueUtils.getStringFromStringValue(identifierRef.getOrgIdentifier()),
             StringValueUtils.getStringFromStringValue(identifierRef.getProjectIdentifier()),
             StringValueUtils.getStringFromStringValue(identifierRef.getIdentifier()), false);
+    if (!pipelineEntity.isPresent()) {
+      throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+          StringValueUtils.getStringFromStringValue(identifierRef.getOrgIdentifier()),
+          StringValueUtils.getStringFromStringValue(identifierRef.getProjectIdentifier()),
+          StringValueUtils.getStringFromStringValue(identifierRef.getIdentifier())));
+    }
     return pipelineEntity.get().getYaml();
   }
 }
