@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -23,9 +24,12 @@ import lombok.NoArgsConstructor;
 @JsonTypeName("Kerberos")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
+@Schema(name = "KerberosConfig", description = "This is the Kerberos configuration details, defined in Harness.")
 public class KerberosConfigDTO extends BaseSSHSpecDTO {
-  @NotNull private String principal;
-  @NotNull private String realm;
+  @Schema(description = "This is the authorization role, the user/service has in the realm.")
+  @NotNull
+  private String principal;
+  @Schema(description = "Name of the Realm.") @NotNull private String realm;
   @JsonTypeId private TGTGenerationMethod tgtGenerationMethod;
 
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
