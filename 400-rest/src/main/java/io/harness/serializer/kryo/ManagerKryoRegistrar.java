@@ -96,7 +96,6 @@ import software.wings.api.TemplatizedSecretManagerStateExecutionData;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
-import software.wings.api.TerraformPlanParam;
 import software.wings.api.WaitStateExecutionData;
 import software.wings.api.WingsTimestamp;
 import software.wings.api.WorkflowElement;
@@ -1522,7 +1521,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(io.harness.dashboard.Action.class, 7453);
 
     kryo.register(TemplatizedSecretManagerStateExecutionData.class, 7457);
-    kryo.register(TerraformPlanParam.class, 7458);
     kryo.register(AzureVMSSCommandRequest.class, 8035);
     kryo.register(CeLicenseInfo.class, 7465);
     kryo.register(CeLicenseType.class, 7466);

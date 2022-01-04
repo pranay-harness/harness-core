@@ -2,6 +2,8 @@ package software.wings.delegatetasks;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT_NAME;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TMACARI;
@@ -70,6 +72,7 @@ import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -103,6 +106,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
 
   private static final String GIT_BRANCH = "test/git_branch";
   private static final String GIT_REPO_DIRECTORY = "repository/terraformTest";
+  private static final String TASK_ID = "taskId";
 
   private GitConfig gitConfig;
   private Map<String, EncryptedDataDetail> encryptedBackendConfigs;
@@ -116,23 +120,26 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   TerraformProvisionTask terraformProvisionTask =
       new TerraformProvisionTask(DelegateTaskPackage.builder()
                                      .delegateId(WingsTestConstants.DELEGATE_ID)
+                                     .delegateTaskId(TASK_ID)
                                      .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                      .build(),
           null, delegateTaskResponse -> {}, () -> true);
 
   private TerraformProvisionTask terraformProvisionTaskSpy;
+  private TerraformBaseHelperImpl spyTerraformBaseHelperImpl;
 
   @Before
   public void setUp() throws Exception {
     initMocks(this);
+    spyTerraformBaseHelperImpl = spy(terraformBaseHelper);
     on(terraformProvisionTask).set("encryptionService", mockEncryptionService);
     on(terraformProvisionTask).set("gitClient", gitClient);
     on(terraformProvisionTask).set("logService", logService);
     on(terraformProvisionTask).set("gitClientHelper", gitClientHelper);
     on(terraformProvisionTask).set("delegateFileManager", delegateFileManager);
     on(terraformProvisionTask).set("planEncryptDecryptHelper", planEncryptDecryptHelper);
-    on(terraformProvisionTask).set("terraformBaseHelper", terraformBaseHelper);
     on(terraformProvisionTask).set("awsHelperService", awsHelperService);
+    on(terraformProvisionTask).set("terraformBaseHelper", spyTerraformBaseHelperImpl);
 
     gitConfig = GitConfig.builder().branch(GIT_BRANCH).build();
     gitConfig.setReference(COMMIT_REFERENCE);
@@ -242,7 +249,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     // regular apply
     TerraformProvisionParametersBuilder terraformProvisionParametersBuilder =
         getTerraformProvisionParametersBuilder(false, false, null, TerraformCommandUnit.Apply, TerraformCommand.APPLY,
-            false, false, backendConfigs, variables, environmentVariables, tfVarFiles)
+            false, false, backendConfigs, variables, environmentVariables, tfVarFiles, false)
             .awsConfigId("awsConfigId")
             .awsRoleArn("awsRoleArn")
             .awsConfig(awsConfig)
@@ -285,7 +292,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     // regular apply
     TerraformProvisionParametersBuilder terraformProvisionParametersBuilder =
         getTerraformProvisionParametersBuilder(false, false, null, TerraformCommandUnit.Apply, TerraformCommand.APPLY,
-            false, false, backendConfigs, variables, environmentVariables, tfVarFiles)
+            false, false, backendConfigs, variables, environmentVariables, tfVarFiles, false)
             .awsConfigId("awsConfigId")
             .awsRoleArn("awsRoleArn")
             .awsConfig(awsConfig)
@@ -335,7 +342,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     // regular apply
     TerraformProvisionParametersBuilder terraformProvisionParametersBuilder =
         getTerraformProvisionParametersBuilder(false, false, null, TerraformCommandUnit.Apply, TerraformCommand.APPLY,
-            false, false, backendConfigs, variables, environmentVariables, tfVarFiles)
+            false, false, backendConfigs, variables, environmentVariables, tfVarFiles, false)
             .awsConfigId("awsConfigId")
             .awsConfig(awsConfig)
             .awsRegion("awsRegion")
@@ -594,6 +601,39 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         "terraform init", "terraform workspace", "terraform refresh", "terraform plan", "terraform show");
   }
 
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testSavePlanJsonFileToFileService() throws Exception {
+    setupForApply();
+    // run plan only and execute terraform show command
+    final String delegatePlanJsonFileId = "fileId";
+    byte[] terraformPlan = "terraformPlan".getBytes();
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
+        true, true, null, TerraformCommandUnit.Apply, TerraformCommand.APPLY, true, false, true);
+
+    doReturn(terraformPlan)
+        .when(terraformProvisionTaskSpy)
+        .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
+    doReturn(delegatePlanJsonFileId)
+        .when(spyTerraformBaseHelperImpl)
+        .uploadTfPlanJson(eq(ACCOUNT_ID), eq(WingsTestConstants.DELEGATE_ID), eq(TASK_ID), eq(ENTITY_ID),
+            eq(TERRAFORM_PLAN_FILE_OUTPUT_NAME), anyString());
+
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+
+    ArgumentCaptor<String> jsonPlanLocalFilePathCaptor = ArgumentCaptor.forClass(String.class);
+    Mockito.verify(spyTerraformBaseHelperImpl, times(1))
+        .uploadTfPlanJson(eq(ACCOUNT_ID), eq(WingsTestConstants.DELEGATE_ID), eq(TASK_ID), eq(ENTITY_ID),
+            eq(TERRAFORM_PLAN_FILE_OUTPUT_NAME), jsonPlanLocalFilePathCaptor.capture());
+    verify(terraformExecutionData, TerraformCommand.APPLY);
+    verifyCommandExecuted(
+        "terraform init", "terraform workspace", "terraform refresh", "terraform plan", "terraform show");
+    assertThat(terraformExecutionData.getTfPlanJsonFiledId()).isEqualTo(delegatePlanJsonFileId);
+    // check for file cleanup
+    assertThat(new File(jsonPlanLocalFilePathCaptor.getValue())).doesNotExist();
+  }
+
   private void verifyCommandExecuted(String... commands) throws IOException, InterruptedException, TimeoutException {
     ArgumentCaptor<String> listCaptor = ArgumentCaptor.forClass(String.class);
     Mockito.verify(terraformProvisionTaskSpy, atLeastOnce())
@@ -623,6 +663,13 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   private TerraformProvisionParameters createTerraformProvisionParameters(boolean runPlanOnly,
       boolean exportPlanToApplyStep, EncryptedRecordData encryptedTfPlan, TerraformCommandUnit commandUnit,
       TerraformCommand command, boolean saveTerraformJson, boolean skipRefresh) {
+    return createTerraformProvisionParameters(runPlanOnly, exportPlanToApplyStep, encryptedTfPlan, commandUnit, command,
+        saveTerraformJson, skipRefresh, false);
+  }
+
+  private TerraformProvisionParameters createTerraformProvisionParameters(boolean runPlanOnly,
+      boolean exportPlanToApplyStep, EncryptedRecordData encryptedTfPlan, TerraformCommandUnit commandUnit,
+      TerraformCommand command, boolean saveTerraformJson, boolean skipRefresh, boolean useOptimizedTfPlan) {
     Map<String, String> backendConfigs = new HashMap<>();
     backendConfigs.put("var1", "value1");
 
@@ -635,14 +682,16 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     List<String> tfVarFiles = Arrays.asList("tfVarFile");
 
     return getTerraformProvisionParametersBuilder(runPlanOnly, exportPlanToApplyStep, encryptedTfPlan, commandUnit,
-        command, saveTerraformJson, skipRefresh, backendConfigs, variables, environmentVariables, tfVarFiles)
+        command, saveTerraformJson, skipRefresh, backendConfigs, variables, environmentVariables, tfVarFiles,
+        useOptimizedTfPlan)
         .build();
   }
 
   private TerraformProvisionParametersBuilder getTerraformProvisionParametersBuilder(boolean runPlanOnly,
       boolean exportPlanToApplyStep, EncryptedRecordData encryptedTfPlan, TerraformCommandUnit commandUnit,
       TerraformCommand command, boolean saveTerraformJson, boolean skipRefresh, Map<String, String> backendConfigs,
-      Map<String, String> variables, Map<String, String> environmentVariables, List<String> tfVarFiles) {
+      Map<String, String> variables, Map<String, String> environmentVariables, List<String> tfVarFiles,
+      boolean useOptimizedTfPlan) {
     return TerraformProvisionParameters.builder()
         .sourceRepo(gitConfig)
         .sourceRepoSettingId(SOURCE_REPO_SETTINGS_ID)
@@ -663,6 +712,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         .encryptedEnvironmentVariables(encryptedEnvironmentVariables)
         .tfVarFiles(tfVarFiles)
         .saveTerraformJson(saveTerraformJson)
+        .useOptimizedTfPlanJson(useOptimizedTfPlan)
         .skipRefreshBeforeApplyingPlan(skipRefresh)
         .secretManagerConfig(KmsConfig.builder().name("config").uuid("uuid").build());
   }

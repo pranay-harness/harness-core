@@ -2063,11 +2063,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Pair<String, Set<String>> activitySecrets = obtainActivitySecrets(delegateTaskPackage);
     Optional<LogSanitizer> sanitizer = getLogSanitizer(activitySecrets);
     ILogStreamingTaskClient logStreamingTaskClient = getLogStreamingTaskClient(activitySecrets, delegateTaskPackage);
+    // At the moment used to download and render terraform json plan file and keep track of the download tf plans
+    // so we can clean up at the end of the task. Expected mainly to be used in Shell Script Task
+    // but not limited to usage in other tasks
+    DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator(
+        injector, delegateTaskPackage.getAccountId(), delegateTaskPackage.getData().getExpressionFunctorToken());
+    applyDelegateExpressionEvaluator(delegateTaskPackage, delegateExpressionEvaluator);
 
     DelegateRunnableTask delegateRunnableTask = delegateTaskFactory.getDelegateRunnableTask(
         TaskType.valueOf(taskData.getTaskType()), delegateTaskPackage, logStreamingTaskClient,
-        getPostExecutionFunction(
-            delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null), logStreamingTaskClient),
+        getPostExecutionFunction(delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null),
+            logStreamingTaskClient, delegateExpressionEvaluator),
         getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null), logStreamingTaskClient));
     if (delegateRunnableTask instanceof AbstractDelegateRunnableTask) {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
@@ -2279,8 +2285,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     counter.updateAndGet(value -> Math.max(value, current));
   }
 
-  private Consumer<DelegateTaskResponse> getPostExecutionFunction(
-      String taskId, LogSanitizer sanitizer, ILogStreamingTaskClient logStreamingTaskClient) {
+  private Consumer<DelegateTaskResponse> getPostExecutionFunction(String taskId, LogSanitizer sanitizer,
+      ILogStreamingTaskClient logStreamingTaskClient, DelegateExpressionEvaluator delegateExpressionEvaluator) {
     return taskResponse -> {
       if (logStreamingTaskClient != null) {
         try {
@@ -2316,6 +2322,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       } finally {
         if (sanitizer != null) {
           delegateLogService.unregisterLogSanitizer(sanitizer);
+        }
+
+        if (delegateExpressionEvaluator != null) {
+          delegateExpressionEvaluator.cleanup();
         }
         currentlyExecutingTasks.remove(taskId);
         if (currentlyExecutingFutures.remove(taskId) != null) {
@@ -2621,6 +2631,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     DelegateExpressionEvaluator delegateExpressionEvaluator =
         new DelegateExpressionEvaluator(secretUuidToValues, delegateTaskPackage.getData().getExpressionFunctorToken());
+    applyDelegateExpressionEvaluator(delegateTaskPackage, delegateExpressionEvaluator);
+  }
+
+  private void applyDelegateExpressionEvaluator(
+      DelegateTaskPackage delegateTaskPackage, DelegateExpressionEvaluator delegateExpressionEvaluator) {
     TaskData taskData = delegateTaskPackage.getData();
     if (taskData.getParameters() != null && taskData.getParameters().length == 1
         && taskData.getParameters()[0] instanceof TaskParameters) {
