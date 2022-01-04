@@ -1258,7 +1258,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     log.info("Initializing delegate service scheduled jobs ...");
     // delegate task broadcasting schedule job
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), random.nextInt(5), 5L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), random.nextInt(5), 1L, TimeUnit.SECONDS);
 
     delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring task progress updates",
                                                 injector.getInstance(ProgressUpdateService.class)),

@@ -169,7 +169,7 @@ public class WaitNotifyEngine {
 
       if (notifyQueuePublisher == null) {
         // There is nothing smart that we can do.
-        // If there is no publisher we should let people evaluate and handle the problem.
+        // If there is no publisher we should let people evaluate and handlesoftware.wings.app.WingsApplication#registerQueueListeners the problem.
         log.error("Unknown publisher {}", publisher);
         return;
       }

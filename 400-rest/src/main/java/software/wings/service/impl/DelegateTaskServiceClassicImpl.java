@@ -355,8 +355,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     if (task.getUuid() == null) {
       task.setUuid(generateUuid());
     }
-    log.info("Queueing async task {} of type {} ", task.getUuid(), task.getData().getTaskType());
 
+    log.info("Queueing async task at: {} for task type: {} id: {} ", currentTimeMillis(), task.getData().getTaskType(), task.getUuid());
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
@@ -789,9 +789,9 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         return null;
       }
     } finally {
-      if (log.isDebugEnabled()) {
-        log.debug("Done with acquire delegate task method");
-      }
+
+        log.info("Done with acquire delegate task method");
+
     }
   }
 
