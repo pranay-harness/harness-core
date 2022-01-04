@@ -12,11 +12,12 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class CDCreatorUtils {
   public Set<String> getSupportedSteps() {
-    return Sets.newHashSet("K8sRollingRollback", "K8sScale", "K8sBGSwapServices", "K8sDelete", "K8sCanaryDelete",
-        "TerraformApply", "TerraformPlan", "TerraformDestroy", StepSpecTypeConstants.TERRAFORM_ROLLBACK,
+    return Sets.newHashSet("K8sScale", "K8sBGSwapServices", "K8sDelete", "K8sCanaryDelete", "TerraformApply",
+        "TerraformPlan", "TerraformDestroy", StepSpecTypeConstants.TERRAFORM_ROLLBACK,
         StepSpecTypeConstants.HELM_DEPLOY, StepSpecTypeConstants.HELM_ROLLBACK);
   }
   public Set<String> getSupportedStepsV2() {
-    return Sets.newHashSet("K8sCanaryDeploy", "K8sApply", "K8sBlueGreenDeploy", "K8sRollingDeploy");
+    return Sets.newHashSet(
+        "K8sCanaryDeploy", "K8sApply", "K8sBlueGreenDeploy", "K8sRollingDeploy", "K8sRollingRollback");
   }
 }

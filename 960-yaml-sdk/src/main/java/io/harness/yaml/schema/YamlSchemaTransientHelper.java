@@ -40,6 +40,7 @@ public class YamlSchemaTransientHelper {
       add(EntityType.K8S_APPLY_STEP);
       add(EntityType.K8S_BLUE_GREEN_DEPLOY_STEP);
       add(EntityType.K8S_ROLLING_DEPLOY_STEP);
+      add(EntityType.K8S_ROLLING_ROLLBACK_STEP);
     }
   };
 

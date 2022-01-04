@@ -18,6 +18,7 @@ import io.harness.cdng.creator.plan.steps.K8sCanaryDeletePMSStepPlanCreator;
 import io.harness.cdng.creator.plan.steps.K8sCanaryStepPlanCreator;
 import io.harness.cdng.creator.plan.steps.K8sRollingDeployPMSStepPlanCreator;
 import io.harness.cdng.creator.plan.steps.K8sRollingRollbackPMSStepPlanCreator;
+import io.harness.cdng.creator.plan.steps.K8sRollingRollbackStepPlanCreator;
 import io.harness.cdng.creator.plan.steps.K8sRollingStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
 import io.harness.cdng.creator.variables.HelmStepVariableCreator;
@@ -57,6 +58,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     planCreators.add(new K8sApplyStepPlanCreator());
     planCreators.add(new K8sBlueGreenStepPlanCreator());
     planCreators.add(new K8sRollingStepPlanCreator());
+    planCreators.add(new K8sRollingRollbackStepPlanCreator());
     planCreators.add(new K8sRollingRollbackPMSStepPlanCreator());
     planCreators.add(new K8sCanaryDeletePMSStepPlanCreator());
     planCreators.add(new K8sRollingDeployPMSStepPlanCreator());

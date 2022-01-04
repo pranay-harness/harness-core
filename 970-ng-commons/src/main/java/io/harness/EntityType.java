@@ -49,6 +49,9 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.K8S_ROLLING_DEPLOY)
   K8S_ROLLING_DEPLOY_STEP(ModuleType.CD, EntityTypeConstants.K8S_ROLLING_DEPLOY, IdentifierRef.class,
       EntityYamlRootNames.K8S_ROLLING_DEPLOY),
+  @JsonProperty(EntityTypeConstants.K8S_ROLLING_ROLLBACK)
+  K8S_ROLLING_ROLLBACK_STEP(ModuleType.CD, EntityTypeConstants.K8S_ROLLING_ROLLBACK, IdentifierRef.class,
+      EntityYamlRootNames.K8S_ROLLING_ROLLBACK),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
   CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, IdentifierRef.class, EntityYamlRootNames.CONNECTOR),
   @JsonProperty(EntityTypeConstants.SECRETS)

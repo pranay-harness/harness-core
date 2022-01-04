@@ -9,6 +9,7 @@ import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.k8s.K8sApplyStepNode;
 import io.harness.cdng.k8s.K8sBlueGreenStepNode;
 import io.harness.cdng.k8s.K8sCanaryStepNode;
+import io.harness.cdng.k8s.K8sRollingRollbackStepNode;
 import io.harness.cdng.k8s.K8sRollingStepNode;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.morphia.MorphiaRegistrar;
@@ -117,6 +118,17 @@ public class CDNGRegistrars {
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
                    .clazz(K8sRollingStepNode.class)
+                   .yamlSchemaMetadata(YamlSchemaMetadata.builder()
+                                           .modulesSupported(Collections.singletonList(ModuleType.CD))
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
+                                           .build())
+                   .build())
+          .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.K8S_ROLLING_ROLLBACK_STEP)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(K8sRollingRollbackStepNode.class)
                    .yamlSchemaMetadata(YamlSchemaMetadata.builder()
                                            .modulesSupported(Collections.singletonList(ModuleType.CD))
                                            .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
