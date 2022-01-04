@@ -76,6 +76,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     doReturn(awsConfig).when(ceNextGenConfiguration).getAwsConfig();
     doReturn(null).when(connectorValidator).getCredentialProvider(any());
     when(ceConnectorsHelper.isDataSyncCheck(any(), any(), any(), any())).thenReturn(true);
+    doReturn(Collections.emptyList()).when(connectorValidator).validateIfBucketIsPresent(any(), any(), any());
     doReturn(Collections.singletonList(new EvaluationResult().withEvalDecision("allowed")))
         .when(awsClient)
         .simulatePrincipalPolicy(any(), any(), any(), any());
@@ -146,7 +147,6 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
 
     doReturn(Optional.of(report)).when(awsClient).getReportDefinition(any(), any());
     doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
-
     ConnectorValidationResult result = connectorValidator.validate(ceawsConnectorResponseDTO, null);
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
     assertThat(result.getErrors()).isNullOrEmpty();
