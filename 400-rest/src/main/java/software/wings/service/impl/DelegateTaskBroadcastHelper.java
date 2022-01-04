@@ -8,6 +8,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
+import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -67,7 +68,9 @@ public class DelegateTaskBroadcastHelper {
                                                       .build();
 
     Broadcaster broadcaster = broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true);
+    long startTime = currentTimeMillis();
     broadcaster.broadcast(delegateTaskBroadcast);
+    log.info("broadcasting task id: {} took: {} ", delegateTaskBroadcast.getTaskId(), currentTimeMillis() - startTime);
   }
 
   public int getMaxBroadcastCount(DelegateTask delegateTask) {

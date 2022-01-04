@@ -110,7 +110,7 @@ public class DelegateApplication {
   }
 
   private void run(DelegateConfiguration configuration, String watcherProcess) {
-    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(10, 400, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("sync-task-%d").setPriority(Thread.NORM_PRIORITY).build()));
 
     log.info("versionCheckDisabled " + configuration.isVersionCheckDisabled());
