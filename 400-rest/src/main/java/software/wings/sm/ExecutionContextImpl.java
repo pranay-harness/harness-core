@@ -1036,6 +1036,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       map.put(normalizeStateName(getStateExecutionInstance().getDisplayName()), stateExecutionData);
       if (isNotEmpty(stateExecutionData.getTemplateVariable())) {
         map = copyIfNeeded(map);
+        final Map<String, Object> currMap = map;
+        Map<String, Object> templateVars = stateExecutionData.getTemplateVariable();
+        templateVars.replaceAll(
+            (k, v) -> v.getClass().equals(String.class) ? renderExpression((String) v, currMap) : v);
         map.putAll(stateExecutionData.getTemplateVariable());
       }
     }
