@@ -107,7 +107,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
 
       long finalLastUpdatedAt = lastUpdatedAt;
       OrchestrationGraph finalOrchestrationGraph = orchestrationGraph;
-      transactionHelper.performTransaction(() -> {
+      transactionHelper.performTransactionWithNoRetry(() -> {
         cachePartialOrchestrationGraph(finalOrchestrationGraph, finalLastUpdatedAt);
         pmsExecutionSummaryService.update(planExecutionId, executionSummaryUpdate);
         return null;

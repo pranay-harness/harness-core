@@ -32,6 +32,9 @@ public class TransactionHelper {
         .get(() -> transactionTemplate.execute(t -> transactionFunction.execute()));
   }
 
+  public <T> T performTransactionWithNoRetry(TransactionFunction<T> transactionFunction) {
+    return transactionTemplate.execute(t -> transactionFunction.execute());
+  }
   public interface TransactionFunction<R> {
     R execute();
   }
