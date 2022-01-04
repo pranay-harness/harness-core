@@ -20,8 +20,6 @@ import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClu
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment.ServiceEnvironmentKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.ActivityUpdateHandler;
-import io.harness.cvng.alert.services.api.AlertRuleService;
-import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
@@ -90,7 +88,6 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private VerificationJobService verificationJobService;
   @Inject private NextGenService nextGenService;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
-  @Inject private AlertRuleService alertRuleService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private Map<DataSourceType, CVConfigToHealthSourceTransformer> dataSourceTypeToHealthSourceTransformerMap;
@@ -161,14 +158,6 @@ public class ActivityServiceImpl implements ActivityService {
               .set(ActivityKeys.verificationSummary, summary);
       hPersistence.update(activityQuery, activityUpdateOperations);
       log.info("Updated the status of activity {} to {}", activity.getUuid(), summary.getAggregatedStatus());
-    }
-
-    if (ActivityVerificationStatus.getFinalStates().contains(summary.getAggregatedStatus())) {
-      DeploymentActivity deploymentActivity = (DeploymentActivity) activity;
-      alertRuleService.processDeploymentVerification(activity.getAccountId(), activity.getOrgIdentifier(),
-          activity.getProjectIdentifier(), activity.getServiceIdentifier(), activity.getEnvironmentIdentifier(),
-          activity.getType(), VerificationStatus.getVerificationStatus(summary.getAggregatedStatus()),
-          summary.getStartTime(), summary.getDurationMs(), deploymentActivity.getDeploymentTag());
     }
   }
 
