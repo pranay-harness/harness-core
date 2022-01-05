@@ -80,7 +80,8 @@ public class CloudProviderConnectionDataFetcher
       qlCloudProviders.add(populateCloudProvider(settingAttribute).build());
     }
 
-    QLPageInfo pageInfo = pageInfoBuilder.total(total).limit(limit).offset(offset).hasMore(total > offset).build();
+    QLPageInfo pageInfo =
+        pageInfoBuilder.total(total).limit(limit).offset(offset).hasMore(total > offset + limit).build();
     qlCloudProviderConnectionBuilder.pageInfo(pageInfo).nodes(qlCloudProviders);
 
     return qlCloudProviderConnectionBuilder.build();
