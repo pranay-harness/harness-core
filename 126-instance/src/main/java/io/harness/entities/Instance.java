@@ -95,6 +95,20 @@ public class Instance {
                  .field(InstanceKeysAdditional.instanceInfoPodName)
                  .sortField(InstanceKeys.createdAt)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_lastDeployedAt_idx")
+                 .field(InstanceKeys.accountIdentifier)
+                 .field(InstanceKeys.lastDeployedAt)
+                 .sortField(InstanceKeys.lastDeployedAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_lastDeployedAt_idx")
+                 .field(InstanceKeys.accountIdentifier)
+                 .field(InstanceKeys.orgIdentifier)
+                 .field(InstanceKeys.projectIdentifier)
+                 .field(InstanceKeys.lastDeployedAt)
+                 .sortField(InstanceKeys.lastDeployedAt)
+                 .build())
         .build();
   }
 
