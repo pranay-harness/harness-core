@@ -8,28 +8,40 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.yaml.extended.reports.JUnitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReportType;
 import io.harness.ci.serializer.SerializerUtils;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.vm.steps.VmJunitTestReport;
 import io.harness.delegate.beans.ci.vm.steps.VmRunStep;
 import io.harness.delegate.beans.ci.vm.steps.VmRunStep.VmRunStepBuilder;
+import io.harness.ng.core.NGAccess;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.core.variables.OutputNGVariable;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 
-@UtilityClass
+@Singleton
 public class VmRunStepSerializer {
-  public VmRunStep serialize(
-      RunStepInfo runStepInfo, String identifier, ParameterField<Timeout> parameterFieldTimeout, String stepName) {
+  @Inject ConnectorUtils connectorUtils;
+
+  public VmRunStep serialize(RunStepInfo runStepInfo, Ambiance ambiance, String identifier,
+      ParameterField<Timeout> parameterFieldTimeout, String stepName) {
     String command =
         RunTimeInputHandler.resolveStringParameter("Command", "Run", identifier, runStepInfo.getCommand(), true);
     String image =
         RunTimeInputHandler.resolveStringParameter("Image", "Run", identifier, runStepInfo.getImage(), false);
+    String connectorIdentifier = RunTimeInputHandler.resolveStringParameter(
+        "connectorRef", "Run", identifier, runStepInfo.getConnectorRef(), false);
+
     long timeout = TimeoutUtils.getTimeoutInSeconds(parameterFieldTimeout, runStepInfo.getDefaultTimeout());
     Map<String, String> envVars =
         resolveMapParameter("envVariables", "Run", identifier, runStepInfo.getEnvVariables(), false);
@@ -49,6 +61,13 @@ public class VmRunStepSerializer {
                                           .outputVariables(outputVarNames)
                                           .envVariables(envVars)
                                           .timeoutSecs(timeout);
+
+    ConnectorDetails connectorDetails;
+    if (!StringUtils.isEmpty(image) && !StringUtils.isEmpty(connectorIdentifier)) {
+      NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
+      connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorIdentifier);
+      runStepBuilder.imageConnector(connectorDetails);
+    }
 
     if (runStepInfo.getReports() != null) {
       if (runStepInfo.getReports().getType() == UnitTestReportType.JUNIT) {

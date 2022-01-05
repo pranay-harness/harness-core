@@ -37,6 +37,7 @@ public class YamlNode implements Visitable {
   public static final String TYPE_FIELD_NAME = "type";
   public static final String NAME_FIELD_NAME = "name";
   public static final String KEY_FIELD_NAME = "key";
+  public static final String TEMPLATE_FIELD_NAME = "template";
 
   public static final String PATH_SEP = "/";
 
@@ -340,6 +341,10 @@ public class YamlNode implements Visitable {
 
   public String getKey() {
     return getStringValue(KEY_FIELD_NAME);
+  }
+
+  public JsonNode getTemplate() {
+    return getValueInternal(TEMPLATE_FIELD_NAME);
   }
 
   public String getNameOrIdentifier() {

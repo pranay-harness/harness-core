@@ -40,6 +40,7 @@ public class ExecuteStepRequest {
     @JsonProperty("privileged") boolean privileged;
     @JsonProperty("user") String user;
     @JsonProperty("volumes") List<VolumeMount> volumeMounts;
+    @JsonProperty("auth") ImageAuth imageAuth;
   }
 
   @Data

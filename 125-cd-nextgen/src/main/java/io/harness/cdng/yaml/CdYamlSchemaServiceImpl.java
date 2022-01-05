@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,8 +85,9 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   }
 
   @Override
-  public PartialSchemaDTO getDeploymentStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
-    return getDeploymentStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, null);
+  public List<PartialSchemaDTO> getDeploymentStageYamlSchema(
+      String projectIdentifier, String orgIdentifier, Scope scope) {
+    return Collections.singletonList(getDeploymentStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, null));
   }
 
   public PartialSchemaDTO getDeploymentStageYamlSchemaUtil(

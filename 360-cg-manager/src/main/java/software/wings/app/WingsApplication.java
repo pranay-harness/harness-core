@@ -872,7 +872,6 @@ public class WingsApplication extends Application<MainConfiguration> {
                       }
                     }))
                     .build());
-
     modules.add(new ValidationModule(validatorFactory) {
       @Override
       protected void configureAop(ValidationMethodInterceptor interceptor) {

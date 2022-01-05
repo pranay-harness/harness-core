@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,6 +21,9 @@ import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
+import io.harness.cdng.manifest.steps.ManifestsOutcome;
+import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -94,6 +98,10 @@ public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
     K8sApplyStepParameters stepParameters = new K8sApplyStepParameters();
     stepParameters.setFilePaths(ParameterField.createValueField(Arrays.asList("file1.yaml", "file2.yaml")));
 
+    ManifestsOutcome manifestsOutcomes = new ManifestsOutcome();
+    doReturn(manifestsOutcomes).when(k8sStepHelper).resolveManifestsOutcome(ambiance);
+    doReturn(K8sManifestOutcome.builder().build()).when(k8sStepHelper).getK8sSupportedManifestOutcome(any());
+
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.ofNull()).build();
     k8sApplyStep.startChainLink(ambiance, stepElementParameters, StepInputPackage.builder().build());
@@ -132,6 +140,29 @@ public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
             .build();
 
     assertFilePathsValidation(stepElementParametersWithNullFilePaths);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldValidateManifestType() {
+    K8sApplyStepParameters stepParameters = new K8sApplyStepParameters();
+    stepParameters.setFilePaths(ParameterField.createValueField(Arrays.asList("file1.yaml", "file2.yaml")));
+
+    ManifestsOutcome manifestsOutcomes = new ManifestsOutcome();
+    doReturn(manifestsOutcomes).when(k8sStepHelper).resolveManifestsOutcome(ambiance);
+    doReturn(OpenshiftManifestOutcome.builder().build()).when(k8sStepHelper).getK8sSupportedManifestOutcome(any());
+
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.ofNull()).build();
+
+    try {
+      k8sApplyStep.startChainLink(ambiance, stepElementParameters, StepInputPackage.builder().build());
+      fail("Should throw unsupported operation exception");
+    } catch (Exception ex) {
+      assertThat(ex).isInstanceOf(UnsupportedOperationException.class);
+      assertThat(ex.getMessage()).isEqualTo("Unsupported Manifest type: [OpenshiftTemplate]");
+    }
   }
 
   @Test

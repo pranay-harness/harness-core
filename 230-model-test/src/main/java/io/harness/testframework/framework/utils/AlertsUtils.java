@@ -38,10 +38,6 @@ public class AlertsUtils {
   public static List<AlertType> getSetupAlertTypes() {
     List<AlertType> alertTypeList = new ArrayList<>();
     alertTypeList.add(AlertType.DelegatesDown);
-    alertTypeList.add(AlertType.DelegatesScalingGroupDownAlert);
-    alertTypeList.add(AlertType.NoActiveDelegates);
-    alertTypeList.add(AlertType.DelegateProfileError);
-    alertTypeList.add(AlertType.NoEligibleDelegates);
     alertTypeList.add(AlertType.INSTANCE_USAGE_APPROACHING_LIMIT);
     alertTypeList.add(AlertType.InvalidKMS);
     alertTypeList.add(AlertType.GitSyncError);
