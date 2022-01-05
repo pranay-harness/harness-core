@@ -7,7 +7,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, visible = true, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = StaticResourceSelector.class, name = "StaticResourceSelector")
-  , @JsonSubTypes.Type(value = DynamicResourceSelector.class, name = "DynamicResourceSelector")
+  , @JsonSubTypes.Type(value = DynamicResourceSelector.class, name = "DynamicResourceSelector"),
+      @JsonSubTypes.Type(value = ResourceSelectorByScope.class, name = "ResourceSelectorByScope")
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public interface ResourceSelector {}

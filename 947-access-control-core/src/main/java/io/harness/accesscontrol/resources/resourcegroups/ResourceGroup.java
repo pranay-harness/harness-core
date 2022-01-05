@@ -24,6 +24,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode
 public class ResourceGroup {
   public static final String ALL_RESOURCES_IDENTIFIER = "*";
+  public static final String INCLUDE_CHILD_SCOPES_IDENTIFIER = "**";
 
   final String scopeIdentifier;
   @NotEmpty final String identifier;
