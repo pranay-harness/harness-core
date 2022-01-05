@@ -20,6 +20,8 @@ import java.util.Set;
 public class VmStepSerializer {
   @Inject VmPluginCompatibleStepSerializer vmPluginCompatibleStepSerializer;
   @Inject VmPluginStepSerializer vmPluginStepSerializer;
+  @Inject VmRunStepSerializer vmRunStepSerializer;
+  @Inject VmRunTestStepSerializer vmRunTestStepSerializer;
 
   public Set<String> getStepSecrets(VmStepInfo vmStepInfo, Ambiance ambiance) {
     CIVmSecretEvaluator ciVmSecretEvaluator = CIVmSecretEvaluator.builder().build();
@@ -32,12 +34,14 @@ public class VmStepSerializer {
     String stepName = stepInfo.getNonYamlInfo().getStepInfoType().getDisplayName();
     switch (stepInfo.getNonYamlInfo().getStepInfoType()) {
       case RUN:
-        return VmRunStepSerializer.serialize((RunStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName);
+        return vmRunStepSerializer.serialize(
+            (RunStepInfo) stepInfo, ambiance, identifier, parameterFieldTimeout, stepName);
       case RUN_TESTS:
-        return VmRunTestStepSerializer.serialize(
-            (RunTestsStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName);
+        return vmRunTestStepSerializer.serialize(
+            (RunTestsStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName, ambiance);
       case PLUGIN:
-        return vmPluginStepSerializer.serialize((PluginStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName);
+        return vmPluginStepSerializer.serialize(
+            (PluginStepInfo) stepInfo, identifier, parameterFieldTimeout, stepName, ambiance);
       case GCR:
       case DOCKER:
       case ECR:
