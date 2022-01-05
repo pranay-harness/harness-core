@@ -557,7 +557,7 @@ public class K8sStepHelper extends CDStepHelper {
     }
   }
 
-  private ManifestsOutcome resolveManifestsOutcome(Ambiance ambiance) {
+  public ManifestsOutcome resolveManifestsOutcome(Ambiance ambiance) {
     OptionalOutcome manifestsOutcome = outcomeService.resolveOptional(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
 
