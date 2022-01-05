@@ -11,11 +11,14 @@ import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.SecretParams;
 import io.harness.delegate.beans.ci.vm.CIVmExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
 import io.harness.delegate.beans.ci.vm.runner.ExecuteStepRequest;
 import io.harness.delegate.beans.ci.vm.runner.ExecuteStepRequest.Config.ConfigBuilder;
+import io.harness.delegate.beans.ci.vm.runner.ExecuteStepRequest.ImageAuth;
 import io.harness.delegate.beans.ci.vm.runner.ExecuteStepRequest.JunitReport;
 import io.harness.delegate.beans.ci.vm.runner.ExecuteStepRequest.TestReport;
 import io.harness.delegate.beans.ci.vm.runner.ExecuteStepResponse;
@@ -26,29 +29,35 @@ import io.harness.delegate.beans.ci.vm.steps.VmRunTestStep;
 import io.harness.delegate.beans.ci.vm.steps.VmStepInfo;
 import io.harness.delegate.beans.ci.vm.steps.VmUnitTestReport;
 import io.harness.delegate.task.citasks.CIExecuteStepTaskHandler;
+import io.harness.delegate.task.citasks.cik8handler.ImageCredentials;
+import io.harness.delegate.task.citasks.cik8handler.ImageSecretBuilder;
 import io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder;
+import io.harness.delegate.task.citasks.vm.helper.CIVMConstants;
 import io.harness.delegate.task.citasks.vm.helper.HttpHelper;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import retrofit2.Response;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
 public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
+  public static final String IMAGE_PATH_SPLIT_REGEX = ":";
+  @Inject private ImageSecretBuilder imageSecretBuilder;
   @Inject private HttpHelper httpHelper;
   @Inject private SecretSpecBuilder secretSpecBuilder;
   @NotNull private Type type = Type.VM;
 
-  private static final String DOCKER_REGISTRY_V2 = "https://index.docker.io/v2/";
-  private static final String DOCKER_REGISTRY_V1 = "https://index.docker.io/v1/";
   private static final String DOCKER_REGISTRY_ENV = "PLUGIN_REGISTRY";
 
   @Override
@@ -132,6 +141,12 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   }
 
   private void setRunConfig(VmRunStep runStep, ConfigBuilder configBuilder) {
+    List<String> secrets = new ArrayList<>();
+    ImageAuth imageAuth = getImageAuth(runStep.getImage(), runStep.getImageConnector());
+    if (imageAuth != null) {
+      configBuilder.imageAuth(imageAuth);
+      secrets.add(imageAuth.getPassword());
+    }
     configBuilder.kind(RUN_STEP_KIND)
         .runConfig(ExecuteStepRequest.RunConfig.builder()
                        .command(Collections.singletonList(runStep.getCommand()))
@@ -144,7 +159,41 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
         .privileged(runStep.isPrivileged())
         .outputVars(runStep.getOutputVariables())
         .testReport(convertTestReport(runStep.getUnitTestReport()))
+        .secrets(secrets)
         .timeout(runStep.getTimeoutSecs());
+  }
+
+  private ImageAuth getImageAuth(String image, ConnectorDetails imageConnector) {
+    if (!StringUtils.isEmpty(image)) {
+      ImageDetails imageInfo = getImageInfo(image);
+      ImageDetailsWithConnector.builder().imageDetails(imageInfo).imageConnectorDetails(imageConnector).build();
+      ImageCredentials imageCredentials = imageSecretBuilder.getImageCredentials(
+          ImageDetailsWithConnector.builder().imageConnectorDetails(imageConnector).imageDetails(imageInfo).build());
+      if (imageCredentials != null) {
+        return ImageAuth.builder()
+            .address(imageCredentials.getRegistryUrl())
+            .password(imageCredentials.getPassword())
+            .username(imageCredentials.getUserName())
+            .build();
+      }
+    }
+    return null;
+  }
+
+  private ImageDetails getImageInfo(String image) {
+    String tag = "";
+    String name = image;
+
+    if (image.contains(IMAGE_PATH_SPLIT_REGEX)) {
+      String[] subTokens = image.split(IMAGE_PATH_SPLIT_REGEX);
+      if (subTokens.length > 1) {
+        tag = subTokens[subTokens.length - 1];
+        String[] nameparts = Arrays.copyOf(subTokens, subTokens.length - 1);
+        name = String.join(IMAGE_PATH_SPLIT_REGEX, nameparts);
+      }
+    }
+
+    return ImageDetails.builder().name(name).tag(tag).build();
   }
 
   private void setPluginConfig(VmPluginStep pluginStep, ConfigBuilder configBuilder) {
@@ -161,12 +210,18 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
         String key = entry.getKey();
 
         // Drone docker plugin does not work with v2 registry
-        if (key.equals(DOCKER_REGISTRY_ENV) && secret.equals(DOCKER_REGISTRY_V2)) {
-          secret = DOCKER_REGISTRY_V1;
+        if (key.equals(DOCKER_REGISTRY_ENV) && secret.equals(CIVMConstants.DOCKER_REGISTRY_V2)) {
+          secret = CIVMConstants.DOCKER_REGISTRY_V1;
         }
         env.put(entry.getKey(), secret);
         secrets.add(secret);
       }
+    }
+
+    ImageAuth imageAuth = getImageAuth(pluginStep.getImage(), pluginStep.getImageConnector());
+    if (imageAuth != null) {
+      configBuilder.imageAuth(imageAuth);
+      secrets.add(imageAuth.getPassword());
     }
     configBuilder.kind(RUN_STEP_KIND)
         .runConfig(ExecuteStepRequest.RunConfig.builder().build())
@@ -181,6 +236,12 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   }
 
   private void setRunTestConfig(VmRunTestStep runTestStep, ConfigBuilder configBuilder) {
+    List<String> secrets = new ArrayList<>();
+    ImageAuth imageAuth = getImageAuth(runTestStep.getImage(), runTestStep.getConnector());
+    if (imageAuth != null) {
+      secrets.add(imageAuth.getPassword());
+      configBuilder.imageAuth(imageAuth);
+    }
     configBuilder.kind(RUNTEST_STEP_KIND)
         .runTestConfig(ExecuteStepRequest.RunTestConfig.builder()
                            .args(runTestStep.getArgs())
@@ -200,6 +261,7 @@ public class CIVMExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
         .privileged(runTestStep.isPrivileged())
         .outputVars(runTestStep.getOutputVariables())
         .testReport(convertTestReport(runTestStep.getUnitTestReport()))
+        .secrets(secrets)
         .timeout(runTestStep.getTimeoutSecs());
   }
 
