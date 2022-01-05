@@ -65,6 +65,8 @@ public class YamlField {
     return node.getYamlPath();
   }
 
+  // Todo: Remove its usages
+  @Deprecated
   public static YamlField fromYamlPath(String yaml, String path) throws IOException {
     YamlNode node = YamlNode.fromYamlPath(yaml, path);
     return node == null ? null : new YamlField(node);

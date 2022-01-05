@@ -17,6 +17,7 @@ import io.harness.pms.contracts.execution.Status;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.EnumSet;
+import java.util.HashSet;
 
 @OwnedBy(CDC)
 public class NextStepHandler implements AdviserResponseHandler {
@@ -28,8 +29,8 @@ public class NextStepHandler implements AdviserResponseHandler {
   public void handleAdvise(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
     NextStepAdvise advise = adviserResponse.getNextStepAdvise();
     if (advise.getToStatus() != Status.NO_OP) {
-      nodeExecutionService.updateStatusWithOps(
-          nodeExecution.getUuid(), advise.getToStatus(), null, EnumSet.noneOf(Status.class));
+      nodeExecutionService.updateStatusWithOpsV2(
+          nodeExecution.getUuid(), advise.getToStatus(), null, EnumSet.noneOf(Status.class), new HashSet<>());
     }
     if (EmptyPredicate.isNotEmpty(advise.getNextNodeId())) {
       Node nextNode = Preconditions.checkNotNull(

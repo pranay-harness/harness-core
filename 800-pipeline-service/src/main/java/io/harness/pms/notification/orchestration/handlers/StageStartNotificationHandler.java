@@ -22,7 +22,8 @@ public class StageStartNotificationHandler implements AsyncInformObserver, NodeE
   @Override
   public void onNodeStart(NodeStartInfo nodeStartInfo) {
     NodeExecution nodeExecution = nodeStartInfo.getNodeExecution();
-    if (OrchestrationUtils.isStageNode(nodeExecution)) {
+    if (OrchestrationUtils.isStageNode(nodeExecution)
+        && nodeExecution.getAmbiance().getMetadata().getIsNotificationConfigured()) {
       notificationHelper.sendNotification(
           nodeExecution.getAmbiance(), PipelineEventType.STAGE_START, nodeExecution, nodeStartInfo.getUpdatedTs());
     }

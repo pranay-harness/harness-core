@@ -21,6 +21,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TriggerException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
@@ -48,6 +49,7 @@ import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
+import io.harness.pms.pipeline.yaml.BasicPipeline;
 import io.harness.pms.plan.execution.ExecutionHelper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.yaml.YamlUtils;
@@ -61,6 +63,7 @@ import io.harness.serializer.ProtoUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -145,6 +148,12 @@ public class TriggerExecutionHelper {
           pipelineYaml =
               InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
         }
+      }
+      try {
+        BasicPipeline basicPipeline = YamlUtils.read(pipelineYaml, BasicPipeline.class);
+        executionMetaDataBuilder.setIsNotificationConfigured(!basicPipeline.getNotificationRules().isEmpty());
+      } catch (IOException exception) {
+        throw new InvalidRequestException("Could not parse pipeline yaml. Please ensure that it is correct.");
       }
       if (pipelineEntityToExecute.get().getTemplateReference() != null
           && pipelineEntityToExecute.get().getTemplateReference()) {

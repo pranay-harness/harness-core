@@ -22,7 +22,8 @@ public class SdkResponseEventMessageListener
     extends PmsAbstractMessageListener<SdkResponseEventProto, SdkResponseHandler> {
   @Inject
   public SdkResponseEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
-      SdkResponseHandler sdkResponseHandler, @Named("EngineExecutorService") ExecutorService executorService) {
+      SdkResponseHandler sdkResponseHandler,
+      @Named("SdkResponseEventExecutorService") ExecutorService executorService) {
     super(serviceName, SdkResponseEventProto.class, sdkResponseHandler, executorService);
   }
 
