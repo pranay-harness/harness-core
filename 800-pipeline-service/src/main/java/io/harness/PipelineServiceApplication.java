@@ -352,7 +352,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerPmsSdk(appConfig, injector);
     registerMigrations(injector);
 
-
     log.info("PipelineServiceApplication DEPLOY_VERSION = " + System.getenv().get(DEPLOY_VERSION));
     if (DeployVariant.isCommunity(System.getenv().get(DEPLOY_VERSION))) {
       initializePipelineMonitoring(appConfig, injector);

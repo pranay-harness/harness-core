@@ -1,16 +1,16 @@
 package io.harness.telemetry;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import io.harness.cdng.pipeline.helpers.CDPipelineInstrumentationHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dtos.InstanceDTO;
 import io.harness.service.instance.InstanceService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.query.Criteria;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @Slf4j
 @Singleton
@@ -38,14 +38,17 @@ public class NGTelemetryPublisher {
       String accountId = getAccountId();
 
       if (EmptyPredicate.isNotEmpty(accountId)) {
-
-        List<InstanceDTO> serviceInstancesInAMonth = cdPipelineInstrumentationHelper.getServiceInstancesInInterval(accountId, CURRENT_TIMESTAMP - MILLISECONDS_IN_A_MONTH, CURRENT_TIMESTAMP);
+        List<InstanceDTO> serviceInstancesInAMonth = cdPipelineInstrumentationHelper.getServiceInstancesInInterval(
+            accountId, CURRENT_TIMESTAMP - MILLISECONDS_IN_A_MONTH, CURRENT_TIMESTAMP);
         totalNumberOfServiceInstancesInAMonth = (long) serviceInstancesInAMonth.size();
-        totalDistinctActiveServicesInAMonth = cdPipelineInstrumentationHelper.getTotalNumberOfActiveServices(serviceInstancesInAMonth);
+        totalDistinctActiveServicesInAMonth =
+            cdPipelineInstrumentationHelper.getTotalNumberOfActiveServices(serviceInstancesInAMonth);
 
-        List<InstanceDTO> serviceInstancesInADay = cdPipelineInstrumentationHelper.getServiceInstancesInInterval(accountId, CURRENT_TIMESTAMP - MILLISECONDS_IN_A_DAY, CURRENT_TIMESTAMP);
+        List<InstanceDTO> serviceInstancesInADay = cdPipelineInstrumentationHelper.getServiceInstancesInInterval(
+            accountId, CURRENT_TIMESTAMP - MILLISECONDS_IN_A_DAY, CURRENT_TIMESTAMP);
         totalNumberOfServiceInstancesInADay = (long) serviceInstancesInADay.size();
-        totalDistinctActiveServicesInADay = cdPipelineInstrumentationHelper.getTotalNumberOfActiveServices(serviceInstancesInADay);
+        totalDistinctActiveServicesInADay =
+            cdPipelineInstrumentationHelper.getTotalNumberOfActiveServices(serviceInstancesInADay);
 
         HashMap<String, Object> map = new HashMap<>();
         map.put(TOTAL_DISTINCT_ACTIVE_SERVICES_IN_A_DAY, totalDistinctActiveServicesInADay);
@@ -53,12 +56,12 @@ public class NGTelemetryPublisher {
         map.put(TOTAL_NUMBER_OF_SERVICE_INSTANCES_IN_A_DAY, totalNumberOfServiceInstancesInADay);
         map.put(TOTAL_NUMBER_OF_SERVICE_INSTANCES_IN_A_MONTH, totalNumberOfServiceInstancesInAMonth);
         telemetryReporter.sendGroupEvent(
-                accountId, null, map, null, TelemetryOption.builder().sendForCommunity(true).build());
+            accountId, null, map, null, TelemetryOption.builder().sendForCommunity(true).build());
         log.info("Scheduled NGTelemetryPublisher event sent!");
       } else {
         log.info("There is no Account found!. Can not send scheduled NGTelemetryPublisher event.");
       }
-    } catch(Exception e) {
+    } catch (Exception e) {
       log.error("NGTelemetryPublisher recordTelemetry execute failed.", e);
     } finally {
       log.info("NGTelemetryPublisher recordTelemetry execute finished.");

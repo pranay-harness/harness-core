@@ -40,14 +40,14 @@ public class PipelineTelemetryPublisher {
 
       if (EmptyPredicate.isNotEmpty(accountId)) {
         Criteria criteria =
-                Criteria.where(PipelineEntityKeys.createdAt).gt(System.currentTimeMillis() - MILLISECONDS_IN_A_DAY);
+            Criteria.where(PipelineEntityKeys.createdAt).gt(System.currentTimeMillis() - MILLISECONDS_IN_A_DAY);
         pipelinesCreatedInADay = pmsPipelineService.countAllPipelines(criteria);
 
         Criteria noCriteria = new Criteria();
         totalNumberOfPipelines = pmsPipelineService.countAllPipelines(noCriteria);
 
         Criteria criteriaExecutions =
-                Criteria.where(PlanExecutionSummaryKeys.createdAt).gt(System.currentTimeMillis() - MILLISECONDS_IN_A_DAY);
+            Criteria.where(PlanExecutionSummaryKeys.createdAt).gt(System.currentTimeMillis() - MILLISECONDS_IN_A_DAY);
         pipelinesExecutedInADay = pmsExecutionService.getCountOfExecutions(criteriaExecutions);
 
         Criteria noCriteriaExecutions = new Criteria();
@@ -59,12 +59,12 @@ public class PipelineTelemetryPublisher {
         map.put(EXECUTIONS_IN_A_DAY, pipelinesExecutedInADay);
         map.put(TOTAL_EXECUTIONS, totalPipelinesExecuted);
         telemetryReporter.sendGroupEvent(
-                accountId, null, map, null, TelemetryOption.builder().sendForCommunity(true).build());
+            accountId, null, map, null, TelemetryOption.builder().sendForCommunity(true).build());
         log.info("Scheduled PipelineTelemetryPublisher event sent!");
       } else {
         log.info("There is no Account found!. Can not send scheduled PipelineTelemetryPublisher event.");
       }
-    } catch(Exception e) {
+    } catch (Exception e) {
       log.error("PipelineTelemetryPublisher recordTelemetry execute failed.", e);
     } finally {
       log.info("PipelineTelemetryPublisher recordTelemetry execute finished.");

@@ -121,8 +121,8 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public List<InstanceDTO> getInstancesDeployedInInterval(
       String accountIdentifier, String organizationId, String projectId, long startTimestamp, long endTimeStamp) {
-    return InstanceMapper.toDTO(
-        instanceRepository.getInstancesDeployedInInterval(accountIdentifier, organizationId, projectId, startTimestamp, endTimeStamp));
+    return InstanceMapper.toDTO(instanceRepository.getInstancesDeployedInInterval(
+        accountIdentifier, organizationId, projectId, startTimestamp, endTimeStamp));
   }
 
   @Override

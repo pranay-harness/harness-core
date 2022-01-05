@@ -25,5 +25,4 @@ public final class ServiceInstrumentationConstants {
   public static String SERVICE_INSTANCES_PROJECT_ID = "projectId";
   public static String SERVICE_INSTANCES_ORG_ID = "organizationId";
   public static String SERVICE_INSTANCES_PIPELINE_ID = "pipelineId";
-
 }

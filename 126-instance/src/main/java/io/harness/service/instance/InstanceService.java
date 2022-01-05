@@ -32,7 +32,8 @@ public interface InstanceService {
 
   List<InstanceDTO> getInstancesDeployedInInterval(String accountIdentifier, long startTimestamp, long endTimeStamp);
 
-  List<InstanceDTO> getInstancesDeployedInInterval(String accountIdentifier, String organizationId, String projectId, long startTimestamp, long endTimeStamp);
+  List<InstanceDTO> getInstancesDeployedInInterval(
+      String accountIdentifier, String organizationId, String projectId, long startTimestamp, long endTimeStamp);
 
   List<InstanceDTO> getInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId);
@@ -59,5 +60,5 @@ public interface InstanceService {
   AggregationResults<CountByServiceIdAndEnvType> getActiveServiceInstanceCountBreakdown(String accountIdentifier,
       String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs);
 
-    InstanceDTO findFirstInstance(Criteria criteria);
+  InstanceDTO findFirstInstance(Criteria criteria);
 }
