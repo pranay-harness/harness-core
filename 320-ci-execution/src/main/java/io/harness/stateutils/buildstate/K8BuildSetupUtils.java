@@ -68,7 +68,6 @@ import io.harness.delegate.beans.ci.pod.ContainerSecrets;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
-import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ff.CIFeatureFlagService;
@@ -197,7 +196,7 @@ public class K8BuildSetupUtils {
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) initializeStepInfo.getBuildJobEnvInfo());
     ConnectorDetails harnessInternalImageConnector = null;
     if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
-      harnessInternalImageConnector = getDefaultInternalConnector(ngAccess);
+      harnessInternalImageConnector = connectorUtils.getDefaultInternalConnector(ngAccess);
     }
 
     ConnectorDetails gitConnector = codebaseUtils.getGitConnector(ngAccess, ciCodebase, skipGitClone);
@@ -619,19 +618,5 @@ public class K8BuildSetupUtils {
         .withMaxAttempts(MAX_ATTEMPTS)
         .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
         .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
-  }
-
-  private ConnectorDetails getDefaultInternalConnector(NGAccess ngAccess) {
-    ConnectorDetails connectorDetails = null;
-    if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
-      try {
-        connectorDetails =
-            connectorUtils.getConnectorDetails(ngAccess, ciExecutionServiceConfig.getDefaultInternalImageConnector());
-      } catch (ConnectorNotFoundException e) {
-        log.info("Default harness image connector does not exist: {}", e.getMessage());
-        connectorDetails = null;
-      }
-    }
-    return connectorDetails;
   }
 }
