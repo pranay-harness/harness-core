@@ -23,9 +23,9 @@ import lombok.NoArgsConstructor;
 public class UnsuccessfulLoginEvent implements Event {
   public static final String UNSUCCESSFUL_LOGIN = "UnsuccessfulLogin";
   private String accountIdentifier;
-  String userId;
-  String email;
-  String userName;
+  private String userId;
+  private String email;
+  private String userName;
 
   public UnsuccessfulLoginEvent(String accountIdentifier, String userId, String email, String userName) {
     this.accountIdentifier = accountIdentifier;

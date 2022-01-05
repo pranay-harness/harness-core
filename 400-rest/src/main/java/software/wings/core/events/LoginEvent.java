@@ -23,9 +23,9 @@ import lombok.NoArgsConstructor;
 public class LoginEvent implements Event {
   public static final String LOGIN = "Login";
   private String accountIdentifier;
-  String userId;
-  String email;
-  String userName;
+  private String userId;
+  private String email;
+  private String userName;
 
   public LoginEvent(String accountIdentifier, String userId, String email, String userName) {
     this.accountIdentifier = accountIdentifier;

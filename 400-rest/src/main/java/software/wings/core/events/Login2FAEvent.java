@@ -23,9 +23,9 @@ import lombok.NoArgsConstructor;
 public class Login2FAEvent implements Event {
   public static final String LOGIN2FA = "Login2FA";
   private String accountIdentifier;
-  String userId;
-  String email;
-  String userName;
+  private String userId;
+  private String email;
+  private String userName;
   public Login2FAEvent(String accountIdentifier, String userId, String email, String userName) {
     this.accountIdentifier = accountIdentifier;
     this.userId = userId;
