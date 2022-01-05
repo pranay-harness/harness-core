@@ -70,6 +70,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
+import io.harness.beans.terraform.TerraformPlanParam;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.FileMetadata;
@@ -85,7 +86,6 @@ import io.harness.serializer.JsonUtils;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ScriptStateExecutionData;
-import software.wings.api.TerraformPlanParam;
 import software.wings.api.terraform.TfVarGitSource;
 import software.wings.api.terragrunt.TerragruntExecutionData;
 import software.wings.api.terragrunt.TerragruntProvisionInheritPlanElement;
