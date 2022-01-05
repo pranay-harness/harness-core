@@ -19,7 +19,6 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.delegation.ShellScriptParameters.CommandUnit;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
