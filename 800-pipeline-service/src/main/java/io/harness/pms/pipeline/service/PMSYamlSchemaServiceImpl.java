@@ -48,16 +48,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -164,10 +163,10 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     PmsYamlSchemaHelper.flattenParallelElementConfig(pipelineDefinitions);
 
     List<ModuleType> enabledModules = obtainEnabledModules(projectIdentifier, accountIdentifier, orgIdentifier);
-
+    enabledModules.add(ModuleType.PMS);
     List<YamlSchemaWithDetails> stepsSchemaWithDetails =
         fetchSchemaWithDetailsFromModules(accountIdentifier, enabledModules);
-    CompletableFutures<PartialSchemaDTO> completableFutures = new CompletableFutures<>(executor);
+    CompletableFutures<List<PartialSchemaDTO>> completableFutures = new CompletableFutures<>(executor);
     for (ModuleType enabledModule : enabledModules) {
       List<YamlSchemaWithDetails> moduleYamlSchemaDetails = new ArrayList<>();
       for (YamlSchemaWithDetails yamlSchemaWithDetails : stepsSchemaWithDetails) {
@@ -184,25 +183,23 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     }
 
     try {
-      List<PartialSchemaDTO> partialSchemaDTOS = completableFutures.allOf().get(2, TimeUnit.MINUTES);
-      Map<ModuleType, PartialSchemaDTO> partialSchemaDtoMap =
-          partialSchemaDTOS.stream()
-              .filter(Objects::nonNull)
-              .collect(Collectors.toMap(PartialSchemaDTO::getModuleType, Function.identity()));
+      List<List<PartialSchemaDTO>> partialSchemaDTOList = completableFutures.allOf().get(2, TimeUnit.MINUTES);
+      Map<ModuleType, List<PartialSchemaDTO>> partialSchemaDtoMap = new HashMap<>();
+
+      for (List<PartialSchemaDTO> partialSchemaDTOList1 : partialSchemaDTOList) {
+        if (partialSchemaDTOList1 != null) {
+          partialSchemaDtoMap.put(partialSchemaDTOList1.get(0).getModuleType(), partialSchemaDTOList1);
+        }
+      }
       mergeCVIntoCDIfPresent(partialSchemaDtoMap);
 
-      partialSchemaDtoMap.values().forEach(partialSchemaDTO
-          -> pmsYamlSchemaHelper.processPartialStageSchema(
-              finalMergedDefinitions, pipelineStepsDefinitions, stageElementConfig, partialSchemaDTO));
+      partialSchemaDtoMap.values().forEach(partialSchemaDTOList1
+          -> partialSchemaDTOList1.forEach(partialSchemaDTO
+              -> pmsYamlSchemaHelper.processPartialStageSchema(
+                  finalMergedDefinitions, pipelineStepsDefinitions, stageElementConfig, partialSchemaDTO)));
     } catch (Exception e) {
       log.error(format("[PMS] Exception while merging yaml schema: %s", e.getMessage()), e);
     }
-
-    pmsYamlSchemaHelper.processPartialStageSchema(mergedDefinitions, pipelineStepsDefinitions, stageElementConfig,
-        approvalYamlSchemaService.getApprovalYamlSchema(projectIdentifier, orgIdentifier, scope));
-
-    pmsYamlSchemaHelper.processPartialStageSchema(mergedDefinitions, pipelineStepsDefinitions, stageElementConfig,
-        featureFlagYamlService.getFeatureFlagYamlSchema(projectIdentifier, orgIdentifier, scope));
 
     // Remove duplicate if then statements from stage element config. Keep references only to new ones we added above.
     removeDuplicateIfThenFromStageElementConfig(stageElementConfig);
@@ -230,14 +227,15 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     }
   }
 
-  private void mergeCVIntoCDIfPresent(Map<ModuleType, PartialSchemaDTO> partialSchemaDTOMap) {
+  private void mergeCVIntoCDIfPresent(Map<ModuleType, List<PartialSchemaDTO>> partialSchemaDTOMap) {
     if (!partialSchemaDTOMap.containsKey(ModuleType.CD) || !partialSchemaDTOMap.containsKey(ModuleType.CV)) {
       partialSchemaDTOMap.remove(ModuleType.CV);
       return;
     }
 
-    PartialSchemaDTO cdPartialSchemaDTO = partialSchemaDTOMap.get(ModuleType.CD);
-    PartialSchemaDTO cvPartialSchemaDTO = partialSchemaDTOMap.get(ModuleType.CV);
+    // Adding index 0. This complete method will be removed after moving cv step onto new schema.
+    PartialSchemaDTO cdPartialSchemaDTO = partialSchemaDTOMap.get(ModuleType.CD).get(0);
+    PartialSchemaDTO cvPartialSchemaDTO = partialSchemaDTOMap.get(ModuleType.CV).get(0);
 
     JsonNode cvDefinitions =
         cvPartialSchemaDTO.getSchema().get(DEFINITIONS_NODE).get(cvPartialSchemaDTO.getNamespace());
@@ -314,10 +312,9 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     }
   }
 
-  public List<YamlSchemaWithDetails> fetchSchemaWithDetailsFromModules(
+  protected List<YamlSchemaWithDetails> fetchSchemaWithDetailsFromModules(
       String accountIdentifier, List<ModuleType> moduleTypes) {
-    List<YamlSchemaWithDetails> yamlSchemaWithDetailsList = yamlSchemaProvider.getCrossFunctionalStepsSchemaDetails(
-        null, null, null, pmsYamlSchemaHelper.getNodeEntityTypesByYamlGroup(StepCategory.STEP.name()), ModuleType.PMS);
+    List<YamlSchemaWithDetails> yamlSchemaWithDetailsList = new ArrayList<>();
     for (ModuleType moduleType : moduleTypes) {
       try {
         yamlSchemaWithDetailsList.addAll(
@@ -331,9 +328,6 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
   @Override
   public JsonNode getStepYamlSchema(String accountId, EntityType entityType) {
-    if (entityType.getEntityProduct() == ModuleType.PMS) {
-      return yamlSchemaProvider.getYamlSchema(entityType, null, null, null);
-    }
     return schemaFetcher.fetchStepYamlSchema(accountId, entityType);
   }
 }
