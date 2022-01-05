@@ -91,7 +91,7 @@ public class GovernanceServiceImpl implements GovernanceService {
               projectIdentifier, action, entityString, entityMetadata, context));
     } catch (Exception ex) {
       log.error("Exception while evaluating OPA rules", ex);
-      throw new InvalidRequestException(ex.getMessage());
+      throw new InvalidRequestException("Exception while evaluating OPA rules: " + ex.getMessage(), ex);
     }
 
     return mapResponseToMetadata(response);
@@ -106,7 +106,7 @@ public class GovernanceServiceImpl implements GovernanceService {
   }
 
   private String getEntityMetadataString(String accountId, String orgIdentifier, String projectIdentifier,
-      String pipelineIdentifier, String pipelineName, String planExecutionId) {
+      String pipelineIdentifier, String pipelineName, String planExecutionId) throws UnsupportedEncodingException {
     Map<String, String> metadataMap = ImmutableMap.<String, String>builder()
                                           .put("accountIdentifier", accountId)
                                           .put("orgIdentifier", orgIdentifier)
@@ -115,7 +115,7 @@ public class GovernanceServiceImpl implements GovernanceService {
                                           .put("pipelineName", pipelineName)
                                           .put("executionIdentifier", planExecutionId)
                                           .build();
-    return JsonUtils.asJson(metadataMap);
+    return URLEncoder.encode(JsonUtils.asJson(metadataMap), StandardCharsets.UTF_8.toString());
   }
 
   private GovernanceMetadata mapResponseToMetadata(OpaEvaluationResponseHolder response) {
