@@ -48,6 +48,8 @@ public class WorkflowPausePropagator implements WorkflowStatusPropagator {
       if (WorkflowType.PIPELINE.equals(updatedExecution.getWorkflowType())) {
         propagatorHelper.refreshPipelineExecution(updatedExecution);
         workflowExecutionUpdate.publish(updatedExecution, updateInfo, EventType.PIPELINE_PAUSE);
+      } else {
+        workflowExecutionUpdate.publish(updatedExecution, updateInfo, EventType.WORKFLOW_PAUSE);
       }
     }
 
