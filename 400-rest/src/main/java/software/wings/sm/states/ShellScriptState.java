@@ -587,7 +587,11 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Override
   @SchemaIgnore
   public List<String> getPatternsForRequiredContextElementType() {
-    return asList(scriptString, host);
+    List<String> patterns =
+        templateVariables.stream().map(variable -> variable.getValue()).collect(Collectors.toList());
+    patterns.add(scriptString);
+    patterns.add(host);
+    return patterns;
   }
 
   public WinRmConnectionAttributes setupWinrmCredentials(String connectionAttributes, ExecutionContext context) {
