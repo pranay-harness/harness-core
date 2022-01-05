@@ -11,5 +11,7 @@ public class YamlSchemaKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(YamlSchemaDetailsWrapper.class, 800100);
+    kryo.register(YamlSchemaMetadata.class, 800101);
+    kryo.register(YamlGroup.class, 800102);
   }
 }
