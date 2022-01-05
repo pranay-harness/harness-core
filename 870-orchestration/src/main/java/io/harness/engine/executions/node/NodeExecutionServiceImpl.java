@@ -177,6 +177,19 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
+  public List<NodeExecution> fetchChildrenNodeExecutions(
+      String planExecutionId, String parentId, Set<String> fieldsToBeIncluded) {
+    fieldsToBeIncluded.addAll(DEFAULT_FIELDS);
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.parentId).is(parentId))
+                      .with(Sort.by(Direction.DESC, NodeExecutionKeys.createdAt));
+    for (String field : fieldsToBeIncluded) {
+      query.fields().include(field);
+    }
+    return mongoTemplate.find(query, NodeExecution.class);
+  }
+
+  @Override
   public List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, Status status) {
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(NodeExecutionKeys.status).is(status));

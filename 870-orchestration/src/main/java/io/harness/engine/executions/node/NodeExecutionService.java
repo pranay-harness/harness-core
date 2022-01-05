@@ -35,6 +35,9 @@ public interface NodeExecutionService {
 
   List<NodeExecution> fetchChildrenNodeExecutions(String planExecutionId, String parentId);
 
+  List<NodeExecution> fetchChildrenNodeExecutions(
+      String planExecutionId, String parentId, Set<String> fieldsToBeIncluded);
+
   List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, Status status);
 
   NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops);
