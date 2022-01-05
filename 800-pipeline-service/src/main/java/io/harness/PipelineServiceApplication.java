@@ -351,8 +351,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     initializeGrpcServer(injector);
     registerPmsSdk(appConfig, injector);
     registerMigrations(injector);
+
+    log.info("PipelineServiceApplication DEPLOY_VERSION = " + System.getenv().get(DEPLOY_VERSION));
     if (DeployVariant.isCommunity(System.getenv().get(DEPLOY_VERSION))) {
       initializePipelineMonitoring(appConfig, injector);
+    } else {
+      log.info("PipelineServiceApplication DEPLOY_VERSION is not COMMUNITY");
     }
 
     MaintenanceController.forceMaintenance(false);
@@ -363,6 +367,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void initializePipelineMonitoring(PipelineServiceConfiguration appConfig, Injector injector) {
+    log.info("Initializing PipelineMonitoring");
     injector.getInstance(PipelineTelemetryRecordsJob.class).scheduleTasks();
   }
 

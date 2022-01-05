@@ -265,6 +265,10 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     return pmsExecutionSummaryRespository.findAll(criteria, pageable);
   }
 
+  public PipelineExecutionSummaryEntity findFirst(Criteria criteria) {
+    return pmsExecutionSummaryRespository.findFirst(criteria);
+  }
+
   @Override
   public OrchestrationGraphDTO getOrchestrationGraph(String stageNodeId, String planExecutionId) {
     if (EmptyPredicate.isEmpty(stageNodeId)) {
