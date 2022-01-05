@@ -56,6 +56,9 @@ public enum EntityType {
   K8S_SCALE_STEP(ModuleType.CD, EntityTypeConstants.K8S_SCALE, IdentifierRef.class, EntityYamlRootNames.K8S_SCALE),
   @JsonProperty(EntityTypeConstants.K8S_DELETE)
   K8S_DELETE_STEP(ModuleType.CD, EntityTypeConstants.K8S_DELETE, IdentifierRef.class, EntityYamlRootNames.K8S_DELETE),
+  @JsonProperty(EntityTypeConstants.K8S_BG_SWAP_SERVICES)
+  K8S_BG_SWAP_SERVICES_STEP(ModuleType.CD, EntityTypeConstants.K8S_BG_SWAP_SERVICES, IdentifierRef.class,
+      EntityYamlRootNames.K8S_SWAP_SERVICES),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
   CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, IdentifierRef.class, EntityYamlRootNames.CONNECTOR),
   @JsonProperty(EntityTypeConstants.SECRETS)

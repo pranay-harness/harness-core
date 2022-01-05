@@ -52,6 +52,7 @@ import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
 import io.harness.cdng.k8s.K8sApplyStepNode;
+import io.harness.cdng.k8s.K8sBGSwapServicesStepNode;
 import io.harness.cdng.k8s.K8sBlueGreenStepNode;
 import io.harness.cdng.k8s.K8sCanaryStepNode;
 import io.harness.cdng.k8s.K8sDeleteStepNode;
@@ -281,6 +282,7 @@ public class NextGenModule extends AbstractModule {
       add(K8sRollingRollbackStepNode.class);
       add(K8sScaleStepNode.class);
       add(K8sDeleteStepNode.class);
+      add(K8sBGSwapServicesStepNode.class);
     }
   };
   private final NextGenConfiguration appConfig;
