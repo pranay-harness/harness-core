@@ -508,8 +508,24 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         byte[] terraformPlanFile = getTerraformPlanFile(scriptDirectory, parameters);
         saveExecutionLog(color("\nEncrypting terraform plan \n", LogColor.Yellow, LogWeight.Bold),
             CommandExecutionStatus.RUNNING, INFO, logCallback);
-        encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptContent(
-            terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig());
+
+        if (parameters.isUseOptimizedTfPlanJson()) {
+          DelegateFile planDelegateFile =
+              aDelegateFile()
+                  .withAccountId(parameters.getAccountId())
+                  .withDelegateId(getDelegateId())
+                  .withTaskId(getTaskId())
+                  .withEntityId(parameters.getEntityId())
+                  .withBucket(FileBucket.TERRAFORM_PLAN)
+                  .withFileName(format(TERRAFORM_PLAN_FILE_OUTPUT_NAME, getPlanName(parameters)))
+                  .build();
+          encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptFile(
+              terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig(), planDelegateFile);
+
+        } else {
+          encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptContent(
+              terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig());
+        }
       }
 
       final TerraformExecutionDataBuilder terraformExecutionDataBuilder =
@@ -636,6 +652,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             .logCallback(logCallback)
             .planJsonLogOutputStream(planJsonLogOutputStream)
             .timeoutInMillis(parameters.getTimeoutInMillis())
+            .accountId(parameters.getAccountId())
             .build();
     switch (parameters.getCommand()) {
       case APPLY: {
@@ -872,10 +889,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   public void saveTerraformPlanContentToFile(TerraformProvisionParameters parameters, String scriptDirectory)
       throws IOException {
     File tfPlanFile = Paths.get(scriptDirectory, getPlanName(parameters)).toFile();
-
+    EncryptedRecordData encryptedRecordData = parameters.getEncryptedTfPlan();
     byte[] decryptedTerraformPlan = planEncryptDecryptHelper.getDecryptedContent(
-        parameters.getSecretManagerConfig(), parameters.getEncryptedTfPlan());
-
+        parameters.getSecretManagerConfig(), encryptedRecordData, parameters.getAccountId());
     FileUtils.copyInputStreamToFile(new ByteArrayInputStream(decryptedTerraformPlan), tfPlanFile);
   }
 

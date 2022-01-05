@@ -171,7 +171,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         .when(terraformProvisionTaskSpy)
         .getWorkspacesList(anyString(), any(), anyLong(), any(), any());
     doReturn(new char[] {'v', 'a', 'l', '2'}).when(mockEncryptionService).getDecryptedValue(encryptedDataDetail, false);
-    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedContent(any(), any());
+    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedContent(any(), any(), any());
     doReturn(true).when(planEncryptDecryptHelper).deleteEncryptedRecord(any(), any());
 
     when(delegateFileManager.upload(any(DelegateFile.class), any(InputStream.class))).thenReturn(new DelegateFile());
@@ -463,7 +463,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
                                                                     .command(TerraformCommand.APPLY)
                                                                     .secretManagerConfig(KmsConfig.builder().build())
                                                                     .build();
-    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedContent(any(), any());
+    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedContent(any(), any(), any());
 
     terraformProvisionTask.saveTerraformPlanContentToFile(terraformProvisionParameters, scriptDirectory);
     List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);
@@ -472,7 +472,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
 
     byte[] retrievedTerraformPlanContent =
         terraformProvisionTask.getTerraformPlanFile(scriptDirectory, terraformProvisionParameters);
-    Mockito.verify(planEncryptDecryptHelper).getDecryptedContent(any(), any());
+    Mockito.verify(planEncryptDecryptHelper).getDecryptedContent(any(), any(), any());
     assertThat(retrievedTerraformPlanContent).isEqualTo(planContent);
 
     FileIo.deleteDirectoryAndItsContentIfExists(scriptDirectory);
@@ -608,7 +608,9 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     setupForApply();
     // run plan only and execute terraform show command
     final String delegatePlanJsonFileId = "fileId";
+    final String delegatePlanFileId = "fileId";
     byte[] terraformPlan = "terraformPlan".getBytes();
+    EncryptedRecordData encryptedRecordData = EncryptedRecordData.builder().build();
     TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
         true, true, null, TerraformCommandUnit.Apply, TerraformCommand.APPLY, true, false, true);
 
@@ -619,6 +621,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         .when(spyTerraformBaseHelperImpl)
         .uploadTfPlanJson(eq(ACCOUNT_ID), eq(WingsTestConstants.DELEGATE_ID), eq(TASK_ID), eq(ENTITY_ID),
             eq(TERRAFORM_PLAN_FILE_OUTPUT_NAME), anyString());
+    doReturn(encryptedRecordData).when(planEncryptDecryptHelper).encryptFile(any(), any(), any(), any());
 
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
 
@@ -724,11 +727,13 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     String scriptDirectory = "repository/testSaveAndGetTerraformPlanFileWorkspaceEmpty";
     FileIo.createDirectoryIfDoesNotExist(scriptDirectory);
     byte[] planContent = "terraformPlanContent".getBytes();
-    TerraformProvisionParameters terraformProvisionParameters = TerraformProvisionParameters.builder()
-                                                                    .command(TerraformCommand.APPLY)
-                                                                    .secretManagerConfig(KmsConfig.builder().build())
-                                                                    .build();
-    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedContent(any(), any());
+    TerraformProvisionParameters terraformProvisionParameters =
+        TerraformProvisionParameters.builder()
+            .command(TerraformCommand.APPLY)
+            .secretManagerConfig(KmsConfig.builder().build())
+            .encryptedTfPlan(EncryptedRecordData.builder().build())
+            .build();
+    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedContent(any(), any(), any());
 
     terraformProvisionTask.saveTerraformPlanContentToFile(terraformProvisionParameters, scriptDirectory);
     List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);
@@ -745,18 +750,50 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testSaveAndGetTerraformPlanFileFromFileStorageWorkspaceEmpty() throws IOException {
+    String scriptDirectory = "repository/testSaveAndGetTerraformPlanFileWorkspaceEmpty";
+    FileIo.createDirectoryIfDoesNotExist(scriptDirectory);
+    byte[] planContent = "terraformPlanContent".getBytes();
+    TerraformProvisionParameters terraformProvisionParameters =
+        TerraformProvisionParameters.builder()
+            .command(TerraformCommand.APPLY)
+            .secretManagerConfig(KmsConfig.builder().build())
+            .encryptedTfPlan(EncryptedRecordData.builder().encryptedValue("fileId".toCharArray()).build())
+            .build();
+    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedContent(any(), any(), any());
+
+    terraformProvisionTask.saveTerraformPlanContentToFile(terraformProvisionParameters, scriptDirectory);
+    List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);
+    assertThat(fileDataList.size()).isEqualTo(1);
+    assertThat(fileDataList.get(0).getFileBytes()).isEqualTo(planContent);
+
+    TerraformProvisionParameters provisionParameters =
+        TerraformProvisionParameters.builder().command(TerraformCommand.APPLY).build();
+    byte[] retrievedTerraformPlanContent =
+        terraformProvisionTask.getTerraformPlanFile(scriptDirectory, provisionParameters);
+    assertThat(retrievedTerraformPlanContent).isEqualTo(planContent);
+    Mockito.verify(planEncryptDecryptHelper).getDecryptedContent(any(), any(), any());
+    assertThat(terraformProvisionParameters.getEncryptedTfPlan().getEncryptedValue()).isEqualTo("fileId".toCharArray());
+    FileIo.deleteDirectoryAndItsContentIfExists(scriptDirectory);
+  }
+
+  @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testSaveAndGetTerraformPlanFileWorkspaceSet() throws IOException {
     String scriptDirectory = "repository/testSaveAndGetTerraformPlanFileWorkspaceSet";
     FileIo.createDirectoryIfDoesNotExist(scriptDirectory);
     byte[] planContent = "terraformPlanContent".getBytes();
-    TerraformProvisionParameters terraformProvisionParameters = TerraformProvisionParameters.builder()
-                                                                    .command(TerraformCommand.APPLY)
-                                                                    .workspace("workspace")
-                                                                    .secretManagerConfig(KmsConfig.builder().build())
-                                                                    .build();
-    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedContent(any(), any());
+    TerraformProvisionParameters terraformProvisionParameters =
+        TerraformProvisionParameters.builder()
+            .command(TerraformCommand.APPLY)
+            .workspace("workspace")
+            .encryptedTfPlan(EncryptedRecordData.builder().build())
+            .secretManagerConfig(KmsConfig.builder().build())
+            .build();
+    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedContent(any(), any(), any());
 
     terraformProvisionTask.saveTerraformPlanContentToFile(terraformProvisionParameters, scriptDirectory);
     List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);

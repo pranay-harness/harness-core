@@ -38,4 +38,5 @@ public class TerraformExecuteStepRequest {
   @Nonnull PlanJsonLogOutputStream planJsonLogOutputStream;
   long timeoutInMillis;
   boolean isTfPlanDestroy;
+  String accountId;
 }
