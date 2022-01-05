@@ -15,4 +15,6 @@ public class CIVMConstants {
   public static final String DRONE_TARGET_BRANCH = "DRONE_TARGET_BRANCH";
   public static final String DRONE_COMMIT_BRANCH = "DRONE_COMMIT_BRANCH";
   public static final String DRONE_COMMIT_LINK = "DRONE_COMMIT_LINK";
+  public static final String DOCKER_REGISTRY_V2 = "https://index.docker.io/v2/";
+  public static final String DOCKER_REGISTRY_V1 = "https://index.docker.io/v1/";
 }

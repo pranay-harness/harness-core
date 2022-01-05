@@ -143,6 +143,9 @@ import io.harness.logstreaming.LogStreamingServiceClientFactory;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.marketplace.gcp.procurement.CDProductHandler;
 import io.harness.marketplace.gcp.procurement.GcpProductHandler;
+import io.harness.metrics.impl.DelegateTaskMetricsPublisher;
+import io.harness.metrics.modules.MetricsModule;
+import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.notifications.AlertNotificationRuleChecker;
@@ -751,6 +754,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
@@ -1401,6 +1405,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new CVCommonsServiceModule());
     bind(CDChangeSourceIntegrationService.class).to(CDChangeSourceIntegrationServiceImpl.class);
     bind(FeatureFlagHelperService.class).to(CGFeatureFlagHelperServiceImpl.class);
+
+    install(new MetricsModule());
+    bind(MetricsPublisher.class).to(DelegateTaskMetricsPublisher.class).in(Scopes.SINGLETON);
   }
 
   private void bindFeatures() {

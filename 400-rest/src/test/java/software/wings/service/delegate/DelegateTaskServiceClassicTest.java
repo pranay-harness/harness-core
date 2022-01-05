@@ -422,6 +422,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
+            .responseCode(ResponseCode.OK)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
@@ -436,6 +437,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
+            .responseCode(ResponseCode.OK)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     delegateTask = persistence.get(DelegateTask.class, delegateTask.getUuid());

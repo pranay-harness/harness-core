@@ -1,5 +1,6 @@
 package io.harness.pricing.client;
 
+import io.harness.pricing.dto.cloudinfo.ProductDetailResponse;
 import io.harness.pricing.dto.cloudinfo.ProductDetailsResponse;
 
 import retrofit2.Call;
@@ -12,4 +13,8 @@ public interface CloudInfoPricingClient {
   @GET("api/v1/providers/{providers}/services/{services}/regions/{regions}/products")
   Call<ProductDetailsResponse> getPricingInfo(
       @Path("providers") String providers, @Path("services") String services, @Path("regions") String regions);
+
+  @GET("api/v1/providers/{providers}/services/{services}/regions/{regions}/product/{product}")
+  Call<ProductDetailResponse> getPricingInfo(@Path("providers") String providers, @Path("services") String services,
+      @Path("regions") String regions, @Path("product") String product);
 }

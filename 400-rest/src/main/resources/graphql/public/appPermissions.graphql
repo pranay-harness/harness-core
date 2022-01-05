@@ -39,13 +39,19 @@ enum FilterType {
   ALL
 }
 
+enum FilterAppType {
+  ALL
+  SELECTED
+  EXCLUDE_SELECTED
+}
+
 input AppFilterInput {
-  filterType: FilterType
+  filterType: FilterAppType
   appIds: [String!]
 }
 
 type AppFilter {
-  filterType: FilterType
+  filterType: FilterAppType
   appIds: [String]
 }
 

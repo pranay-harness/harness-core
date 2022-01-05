@@ -94,6 +94,8 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
               if (!vaultConfig.isReadOnly()) {
                 validationResult = vaultEncryptorsRegistry.getVaultEncryptor(VAULT).validateSecretManagerConfiguration(
                     accountIdentifier, vaultConfig);
+              } else {
+                validationResult = true;
               }
             }
             break;

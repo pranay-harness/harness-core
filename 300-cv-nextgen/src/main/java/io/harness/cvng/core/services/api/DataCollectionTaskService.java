@@ -30,4 +30,6 @@ public interface DataCollectionTaskService {
   void populateMetricPack(CVConfig cvConfig);
 
   void validateIfAlreadyExists(DataCollectionTask dataCollectionTask);
+
+  void updatePerpetualTaskStatus(DataCollectionTask dataCollectionTask);
 }

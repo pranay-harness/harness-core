@@ -158,11 +158,14 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public boolean isExternallyManaged(String accountIdentifier, String userGroupIdentifier) {
-    Optional<UserGroup> userGroupOptional = get(accountIdentifier, null, null, userGroupIdentifier);
+  public boolean isExternallyManaged(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String userGroupIdentifier) {
+    Optional<UserGroup> userGroupOptional =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
     if (!userGroupOptional.isPresent()) {
-      throw new InvalidRequestException(
-          "The user group does not exist: " + userGroupIdentifier, ErrorCode.USER_GROUP_ERROR, GROUP);
+      throw new InvalidRequestException(String.format("Usergroup with Identifier: {} does not exist at Scope: {}/{}/{}",
+                                            userGroupIdentifier, accountIdentifier, orgIdentifier, projectIdentifier),
+          ErrorCode.USER_GROUP_ERROR, GROUP);
     }
     return userGroupOptional.get().isExternallyManaged();
   }

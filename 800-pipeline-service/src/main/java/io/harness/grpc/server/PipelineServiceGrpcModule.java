@@ -16,6 +16,7 @@ import io.harness.pms.plan.execution.data.service.outputs.SweepingOutputServiceI
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.sdk.service.execution.PmsExecutionGrpcService;
 import io.harness.pms.template.EntityReferenceService;
+import io.harness.pms.template.VariablesServiceImpl;
 
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -171,7 +172,7 @@ public class PipelineServiceGrpcModule extends AbstractModule {
       PmsSdkInstanceService pmsSdkInstanceService, PmsExecutionGrpcService pmsExecutionGrpcService,
       SweepingOutputServiceImpl sweepingOutputService, OutcomeServiceGrpcServerImpl outcomeServiceGrpcServer,
       EngineExpressionGrpcServiceImpl engineExpressionGrpcService, InterruptGrpcService interruptGrpcService,
-      EntityReferenceService entityReferenceService) {
+      EntityReferenceService entityReferenceService, VariablesServiceImpl variablesService) {
     Set<BindableService> services = new HashSet<>();
     services.add(healthStatusManager.getHealthService());
     services.add(pmsSdkInstanceService);
@@ -181,6 +182,7 @@ public class PipelineServiceGrpcModule extends AbstractModule {
     services.add(engineExpressionGrpcService);
     services.add(interruptGrpcService);
     services.add(entityReferenceService);
+    services.add(variablesService);
     return services;
   }
 }

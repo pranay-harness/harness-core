@@ -8,7 +8,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -61,7 +60,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -82,8 +80,6 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Inject private CVConfigService cvConfigService;
   @Inject private Clock clock;
   @Inject private AnalysisService analysisService;
-  @Inject private AlertRuleService alertRuleService;
-  @Inject private ExecutorService defaultExecutorService;
   @Inject private CVNGParallelExecutor cvngParallelExecutor;
   @Inject private NextGenService nextGenService;
 
@@ -114,11 +110,7 @@ public class HeatMapServiceImpl implements HeatMapService {
         return null;
       });
     }
-
     cvngParallelExecutor.executeParallel(callables);
-    defaultExecutorService.execute(()
-                                       -> alertRuleService.processRiskScore(accountId, orgIdentifier, projectIdentifier,
-                                           serviceIdentifier, envIdentifier, category, timeStamp, riskScore));
   }
 
   private void updateRiskScore(CVMonitoringCategory category, String accountId, String orgIdentifier,

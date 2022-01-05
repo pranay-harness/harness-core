@@ -4,8 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.commons.entities.CCMConnectorDetails;
 import io.harness.ccm.connectors.AbstractCEConnectorValidator;
 import io.harness.ccm.connectors.CEConnectorValidatorFactory;
+import io.harness.ccm.service.intf.CCMConnectorDetailsService;
 import io.harness.ccm.utils.LogAccountIdentifier;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
@@ -19,6 +21,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -36,6 +39,7 @@ import org.springframework.stereotype.Service;
 @OwnedBy(CE)
 public class CCMConnectorValidationResource {
   @Inject CEConnectorValidatorFactory ceConnectorValidatorFactory;
+  @Inject CCMConnectorDetailsService connectorDetailsService;
 
   @POST
   @Timed
@@ -50,6 +54,22 @@ public class CCMConnectorValidationResource {
     if (ceConnectorValidator != null) {
       log.info("Connector response dto {}", connectorResponseDTO);
       return ResponseDTO.newResponse(ceConnectorValidator.validate(connectorResponseDTO, accountId));
+    } else {
+      return ResponseDTO.newResponse();
+    }
+  }
+
+  @GET
+  @Path("firstConnector")
+  @Timed
+  @ExceptionMetered
+  @LogAccountIdentifier
+  @ApiOperation(value = "Get connector details", nickname = "get connector details")
+  public ResponseDTO<CCMConnectorDetails> getConnectorDetails(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
+    CCMConnectorDetails firstConnectorDetails = connectorDetailsService.getFirstConnectorDetails(accountId);
+    if (firstConnectorDetails != null) {
+      return ResponseDTO.newResponse(firstConnectorDetails);
     } else {
       return ResponseDTO.newResponse();
     }

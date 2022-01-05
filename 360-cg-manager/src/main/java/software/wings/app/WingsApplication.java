@@ -92,6 +92,8 @@ import io.harness.manifest.ManifestCollectionPTaskServiceClient;
 import io.harness.marketplace.gcp.GcpMarketplaceSubscriberService;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.jobs.RecordMetricsJob;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.migrations.MigrationModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.QuartzCleaner;
@@ -760,6 +762,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     initializeGrpcServer(injector);
 
+    initMetrics(injector);
+
     log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
   }
@@ -868,7 +872,6 @@ public class WingsApplication extends Application<MainConfiguration> {
                       }
                     }))
                     .build());
-
     modules.add(new ValidationModule(validatorFactory) {
       @Override
       protected void configureAop(ValidationMethodInterceptor interceptor) {
@@ -1525,5 +1528,10 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void runMigrations(Injector injector) {
     injector.getInstance(MigrationService.class).runMigrations();
+  }
+
+  private void initMetrics(Injector injector) {
+    injector.getInstance(MetricService.class).initializeMetrics();
+    injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 }

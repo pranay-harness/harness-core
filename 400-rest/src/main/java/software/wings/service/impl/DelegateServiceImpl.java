@@ -24,6 +24,8 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_REGISTRATION;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_REGISTRATION_FAILED;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -136,6 +138,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.Misc;
 import io.harness.manage.GlobalContextManager;
+import io.harness.metrics.intfc.DelegateMetricsService;
 import io.harness.network.Http;
 import io.harness.ng.core.utils.NGUtils;
 import io.harness.observer.RemoteObserverInformer;
@@ -389,6 +392,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private TelemetryReporter telemetryReporter;
   @Inject private DelegateNgTokenService delegateNgTokenService;
   @Inject private RemoteObserverInformer remoteObserverInformer;
+  @Inject private DelegateMetricsService delegateMetricsService;
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -1330,10 +1334,6 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateSize", templateParameters.getDelegateSize());
       }
 
-      if (templateParameters.getDelegateTaskLimit() != 0) {
-        params.put("delegateTaskLimit", String.valueOf(templateParameters.getDelegateTaskLimit()));
-      }
-
       if (templateParameters.getDelegateReplicas() != 0) {
         params.put("delegateReplicas", String.valueOf(templateParameters.getDelegateReplicas()));
       }
@@ -2268,6 +2268,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (licenseService.isAccountDeleted(delegate.getAccountId())) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
       log.warn("Sending self destruct command from register delegate because the account is deleted.");
+      delegateMetricsService.recordDelegateMetrics(delegate, DELEGATE_REGISTRATION_FAILED);
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
     }
 
@@ -2276,6 +2277,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       if (delegateGroup == null || DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
         log.warn("Sending self destruct command from register delegate because the delegate group is deleted.");
+        delegateMetricsService.recordDelegateMetrics(delegate, DELEGATE_REGISTRATION_FAILED);
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
       }
     }
@@ -2316,6 +2318,7 @@ public class DelegateServiceImpl implements DelegateService {
           .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
       log.warn(
           "Sending self destruct command from register delegate because the existing delegate has status deleted.");
+      delegateMetricsService.recordDelegateMetrics(delegate, DELEGATE_REGISTRATION_FAILED);
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
     }
 
@@ -2470,6 +2473,7 @@ public class DelegateServiceImpl implements DelegateService {
                                   .ceEnabled(delegateParams.isCeEnabled())
                                   .delegateTokenName(delegateTokenName)
                                   .build();
+
     if (ECS.equals(delegateParams.getDelegateType())) {
       DelegateRegisterResponse delegateRegisterResponse =
           registerResponseFromDelegate(handleEcsDelegateRequest(delegate));
@@ -2573,6 +2577,8 @@ public class DelegateServiceImpl implements DelegateService {
     if (delegate == null) {
       return null;
     }
+
+    delegateMetricsService.recordDelegateMetrics(delegate, DELEGATE_REGISTRATION);
 
     return DelegateRegisterResponse.builder()
         .delegateId(delegate.getUuid())
@@ -3888,7 +3894,6 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateProjectIdentifier(delegateSetupDetails.getProjectIdentifier())
               .delegateDescription(delegateSetupDetails.getDescription())
               .delegateSize(sizeDetails.getSize().name())
-              .delegateTaskLimit(sizeDetails.getTaskLimit() / sizeDetails.getReplicas())
               .delegateReplicas(sizeDetails.getReplicas())
               .delegateRam(sizeDetails.getRam() / sizeDetails.getReplicas())
               .delegateCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
@@ -3961,7 +3966,6 @@ public class DelegateServiceImpl implements DelegateService {
                     : EMPTY)
             .delegateXmx(String.valueOf(sizeDetails.getRam()))
             .delegateCpu(sizeDetails.getCpu())
-            .delegateTaskLimit(sizeDetails.getTaskLimit())
             .accountId(accountId)
             .version(version)
             .managerHost(managerHost)

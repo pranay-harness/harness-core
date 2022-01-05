@@ -9,25 +9,34 @@ import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.yaml.extended.reports.JUnitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReportType;
 import io.harness.ci.serializer.SerializerUtils;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.vm.steps.VmJunitTestReport;
 import io.harness.delegate.beans.ci.vm.steps.VmRunTestStep;
 import io.harness.delegate.beans.ci.vm.steps.VmRunTestStep.VmRunTestStepBuilder;
 import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.ng.core.NGAccess;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.core.variables.OutputNGVariable;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 
-@UtilityClass
+@Singleton
 public class VmRunTestStepSerializer {
+  @Inject ConnectorUtils connectorUtils;
+
   public VmRunTestStep serialize(RunTestsStepInfo runTestsStepInfo, String identifier,
-      ParameterField<Timeout> parameterFieldTimeout, String stepName) {
+      ParameterField<Timeout> parameterFieldTimeout, String stepName, Ambiance ambiance) {
     String buildTool = RunTimeInputHandler.resolveBuildTool(runTestsStepInfo.getBuildTool());
     if (buildTool == null) {
       throw new CIStageExecutionException("Build tool cannot be null");
@@ -41,6 +50,8 @@ public class VmRunTestStepSerializer {
       outputVarNames =
           runTestsStepInfo.getOutputVariables().stream().map(OutputNGVariable::getName).collect(Collectors.toList());
     }
+    String connectorIdentifier = RunTimeInputHandler.resolveStringParameter(
+        "connectorRef", "RunTest", identifier, runTestsStepInfo.getConnectorRef(), false);
 
     String preCommand = RunTimeInputHandler.resolveStringParameter(
         "PreCommand", stepName, identifier, runTestsStepInfo.getPreCommand(), false);
@@ -79,6 +90,13 @@ public class VmRunTestStepSerializer {
             .envVariables(envVars)
             .outputVariables(outputVarNames)
             .timeoutSecs(timeout);
+
+    ConnectorDetails connectorDetails;
+    if (!StringUtils.isEmpty(image) && !StringUtils.isEmpty(connectorIdentifier)) {
+      NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
+      connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorIdentifier);
+      runTestStepBuilder.connector(connectorDetails);
+    }
 
     if (runTestsStepInfo.getReports() != null) {
       if (runTestsStepInfo.getReports().getType() == UnitTestReportType.JUNIT) {

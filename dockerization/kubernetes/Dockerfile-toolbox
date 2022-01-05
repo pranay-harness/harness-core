@@ -5,6 +5,8 @@ RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add 
 COPY apt-source-list /etc/apt/sources.list.d/kubernetes.list
 RUN apt-get update && apt-get install -y kubectl
 
+ENV PATH ${PATH}:/opt/gsutil
+
 #
 # mongo
 #
@@ -15,6 +17,8 @@ RUN dpkg -i mongodb-enterprise-shell_4.0.4_amd64.deb
 # gsutil
 #
 RUN pip install pyasn1 --upgrade
-RUN pip install gsutil
+RUN curl -o gsutil.tar.gz https://storage.googleapis.com/pub/gsutil.tar.gz \
+    && tar -xzf gsutil.tar.gz -C /opt
+# RUN pip install gsutil
 
 CMD bash -c 'while true; do sleep 10; done'

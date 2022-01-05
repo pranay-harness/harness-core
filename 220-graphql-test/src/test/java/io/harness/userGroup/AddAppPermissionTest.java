@@ -23,6 +23,7 @@ import io.harness.testframework.graphql.QLTestObject;
 
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
+import software.wings.security.AppFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.service.intfc.UserGroupService;
@@ -90,9 +91,10 @@ public class AddAppPermissionTest extends GraphQLTest {
   @Category({GraphQLTests.class, UnitTests.class})
   public void testAddingAppPermissionToUserGroup() {
     UserGroup userGroup = userGroupHelper.createUserGroup(getAccountId(), "harnessUserGroup", "sample user group");
+    AppFilter appFilter = AppFilter.builder().filterType(ALL).build();
     GenericEntityFilter entityFilter = GenericEntityFilter.builder().filterType(ALL).build();
     AppPermission appPermissionOriginal1 = AppPermission.builder()
-                                               .appFilter(entityFilter)
+                                               .appFilter(appFilter)
                                                .permissionType(ALL_APP_ENTITIES)
                                                .actions(createAllActionSet())
                                                .build();
@@ -115,7 +117,7 @@ public class AddAppPermissionTest extends GraphQLTest {
 
     // The case when we are adding one more application permission to the usergroup
     AppPermission appPermissionOriginal2 = AppPermission.builder()
-                                               .appFilter(entityFilter)
+                                               .appFilter(appFilter)
                                                .permissionType(SERVICE)
                                                .entityFilter(entityFilter)
                                                .actions(createAllActionSet())

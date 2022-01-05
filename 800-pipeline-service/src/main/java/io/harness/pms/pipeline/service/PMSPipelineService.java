@@ -3,6 +3,7 @@ package io.harness.pms.pipeline.service;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -29,6 +30,8 @@ public interface PMSPipelineService {
 
   PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity, ChangeType changeType);
 
+  PipelineEntity syncPipelineEntityWithGit(EntityDetailProtoDTO entityDetail);
+
   PipelineEntity updatePipelineMetadata(
       String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update updateOperations);
 
@@ -37,6 +40,8 @@ public interface PMSPipelineService {
 
   int incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean b);
+
+  int incrementRunSequence(PipelineEntity entity);
 
   boolean markEntityInvalid(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml);

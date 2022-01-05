@@ -2612,7 +2612,11 @@ public class DelegateServiceTest extends WingsBaseTest {
         JenkinsExecutionResponse.builder().delegateMetaInfo(delegateMetaInfo).build();
 
     delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
-        DelegateTaskResponse.builder().accountId(ACCOUNT_ID).response(jenkinsExecutionResponse).build());
+        DelegateTaskResponse.builder()
+            .accountId(ACCOUNT_ID)
+            .responseCode(DelegateTaskResponse.ResponseCode.OK)
+            .response(jenkinsExecutionResponse)
+            .build());
     DelegateTaskNotifyResponseData delegateTaskNotifyResponseData = jenkinsExecutionResponse;
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName()).isEqualTo(HOST_NAME);
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
@@ -2621,7 +2625,11 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateTaskNotifyResponseData = jenkinsExecutionResponse;
     persistence.save(delegateTask);
     delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
-        DelegateTaskResponse.builder().accountId(ACCOUNT_ID).response(jenkinsExecutionResponse).build());
+        DelegateTaskResponse.builder()
+            .accountId(ACCOUNT_ID)
+            .responseCode(DelegateTaskResponse.ResponseCode.OK)
+            .response(jenkinsExecutionResponse)
+            .build());
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
   }
 
@@ -3196,23 +3204,14 @@ public class DelegateServiceTest extends WingsBaseTest {
         .containsExactlyInAnyOrder(DelegateSizeDetails.builder()
                                        .size(DelegateSize.LAPTOP)
                                        .label("Laptop")
-                                       .taskLimit(50)
                                        .replicas(1)
                                        .ram(2048)
                                        .cpu(0.5)
                                        .build(),
-            DelegateSizeDetails.builder()
-                .size(DelegateSize.SMALL)
-                .label("Small")
-                .taskLimit(100)
-                .replicas(2)
-                .ram(4096)
-                .cpu(1)
-                .build(),
+            DelegateSizeDetails.builder().size(DelegateSize.SMALL).label("Small").replicas(2).ram(4096).cpu(1).build(),
             DelegateSizeDetails.builder()
                 .size(DelegateSize.MEDIUM)
                 .label("Medium")
-                .taskLimit(200)
                 .replicas(4)
                 .ram(8192)
                 .cpu(2)
@@ -3220,7 +3219,6 @@ public class DelegateServiceTest extends WingsBaseTest {
             DelegateSizeDetails.builder()
                 .size(DelegateSize.LARGE)
                 .label("Large")
-                .taskLimit(400)
                 .replicas(8)
                 .ram(16384)
                 .cpu(4)

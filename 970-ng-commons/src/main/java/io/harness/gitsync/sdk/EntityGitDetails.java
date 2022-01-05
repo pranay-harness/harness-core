@@ -9,12 +9,12 @@ import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
-@Value
+@Data
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Schema(name = "EntityGitDetails", description = "This contains Git Details of the Entity")
 @OwnedBy(DX)
 public class EntityGitDetails {
@@ -23,6 +23,7 @@ public class EntityGitDetails {
   @Schema(description = "Git Sync Config Id") String repoIdentifier;
   @Schema(description = "Root Folder Path of the Entity") String rootFolder;
   @Schema(description = "File Path of the Entity") String filePath;
+  @Schema(description = "Name of the repo") String repoName;
 
   public GitSyncBranchContext toGitSyncBranchContext() {
     GitEntityInfo gitEntityInfo = GitEntityInfo.builder()

@@ -122,6 +122,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.AppFilter;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
@@ -1113,7 +1114,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
       UsageRestrictions usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       settingAttribute1.setUsageRestrictions(usageRestrictions);
-      when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class)))
+      when(authHandler.getAppIdsByFilter(anyString(), any(AppFilter.class)))
           .thenReturn(newHashSet(APP_ID, APP_ID_1, APP_ID_2, APP_ID_3));
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
           .thenReturn(newHashSet(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3));
@@ -1132,7 +1133,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       settingAttribute1.setUsageRestrictions(usageRestrictions);
-      when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class)))
+      when(authHandler.getAppIdsByFilter(anyString(), any(AppFilter.class)))
           .thenReturn(newHashSet(APP_ID, APP_ID_1, APP_ID_2, APP_ID_3));
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
           .thenReturn(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3));
@@ -1153,7 +1154,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       settingAttribute1.setUsageRestrictions(usageRestrictions);
-      when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class)))
+      when(authHandler.getAppIdsByFilter(anyString(), any(AppFilter.class)))
           .thenReturn(newHashSet(APP_ID_1, APP_ID_2, APP_ID_3));
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
           .thenReturn(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3));
@@ -1171,7 +1172,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       settingAttribute1.setUsageRestrictions(usageRestrictions);
-      when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID_1));
+      when(authHandler.getAppIdsByFilter(anyString(), any(AppFilter.class))).thenReturn(newHashSet(APP_ID_1));
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
           .thenReturn(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
@@ -1183,7 +1184,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
       // Scenario 6: With usage restrictions set on settingAttribute1, but no appId and envId was passed
       // and common usage restrictions and user permissions.
-      when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID_1));
+      when(authHandler.getAppIdsByFilter(anyString(), any(AppFilter.class))).thenReturn(newHashSet(APP_ID_1));
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class))).thenReturn(newHashSet(ENV_ID_1));
 
       List<Action> allActions = asList(
@@ -1197,34 +1198,31 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
       AppPermission envPermission = AppPermission.builder()
                                         .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                        .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                         .entityFilter(envFilter1)
                                         .actions(new HashSet(allActions))
                                         .build();
 
-      AppPermission workflowPermission =
-          AppPermission.builder()
-              .permissionType(WORKFLOW)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-              .entityFilter(workflowFilter)
-              .actions(new HashSet(allActions))
-              .build();
+      AppPermission workflowPermission = AppPermission.builder()
+                                             .permissionType(WORKFLOW)
+                                             .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
+                                             .entityFilter(workflowFilter)
+                                             .actions(new HashSet(allActions))
+                                             .build();
 
-      AppPermission pipelinePermission =
-          AppPermission.builder()
-              .permissionType(PIPELINE)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-              .entityFilter(envFilter)
-              .actions(new HashSet(allActions))
-              .build();
+      AppPermission pipelinePermission = AppPermission.builder()
+                                             .permissionType(PIPELINE)
+                                             .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
+                                             .entityFilter(envFilter)
+                                             .actions(new HashSet(allActions))
+                                             .build();
 
-      AppPermission deploymentPermission =
-          AppPermission.builder()
-              .permissionType(DEPLOYMENT)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-              .entityFilter(envFilter)
-              .actions(new HashSet(allActions))
-              .build();
+      AppPermission deploymentPermission = AppPermission.builder()
+                                               .permissionType(DEPLOYMENT)
+                                               .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
+                                               .entityFilter(envFilter)
+                                               .actions(new HashSet(allActions))
+                                               .build();
 
       UserGroup userGroup =
           UserGroup.builder()

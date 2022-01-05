@@ -79,6 +79,8 @@ import io.harness.pms.pipeline.service.PipelineDashboardService;
 import io.harness.pms.pipeline.service.PipelineDashboardServiceImpl;
 import io.harness.pms.pipeline.service.PipelineEnforcementService;
 import io.harness.pms.pipeline.service.PipelineEnforcementServiceImpl;
+import io.harness.pms.pipeline.service.PipelineMetadataService;
+import io.harness.pms.pipeline.service.PipelineMetadataServiceImpl;
 import io.harness.pms.pipeline.service.yamlschema.PartialSchemaValue;
 import io.harness.pms.pipeline.service.yamlschema.approval.ApprovalYamlSchemaService;
 import io.harness.pms.pipeline.service.yamlschema.approval.ApprovalYamlSchemaServiceImpl;
@@ -302,6 +304,8 @@ public class PipelineServiceModule extends AbstractModule {
     });
     bind(OutboxEventHandler.class).to(PipelineOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);
+    bind(PipelineMetadataService.class).to(PipelineMetadataServiceImpl.class);
+
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
     bind(PmsExecutionSummaryService.class).to(PmsExecutionSummaryServiceImpl.class);
 

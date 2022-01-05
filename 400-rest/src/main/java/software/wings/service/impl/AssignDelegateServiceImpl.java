@@ -181,24 +181,24 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (!canAssignTaskToDelegate) {
       log.debug("Delegate {} does not support task {} which is of type {}", delegateId, task.getUuid(),
           task.getData().getTaskType());
-      return canAssignTaskToDelegate;
+      return false;
     }
 
     boolean canAssignCgNg = canAssignCgNg(delegate, task.getSetupAbstractions());
     if (!canAssignCgNg) {
       log.debug("can not assign canAssignCgNg {}", canAssignCgNg);
-      return canAssignCgNg;
+      return false;
     }
     boolean canAssignOwner = canAssignOwner(batch, delegate, task.getSetupAbstractions());
     if (!canAssignOwner) {
       log.debug("can not assign canAssignOwner {}", canAssignOwner);
-      return canAssignOwner;
+      return false;
     }
 
     boolean canAssignDelegateScopes = canAssignDelegateScopes(batch, delegate, task);
     if (!canAssignDelegateScopes) {
       log.debug("can not assign canAssignDelegateScopes {}", canAssignDelegateScopes);
-      return canAssignDelegateScopes;
+      return false;
     }
 
     boolean canAssignDelegateProfileScopes =
@@ -206,13 +206,13 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
     if (!canAssignDelegateProfileScopes) {
       log.debug("can not assign canAssignDelegateProfileScopes {}", canAssignDelegateProfileScopes);
-      return canAssignDelegateProfileScopes;
+      return false;
     }
 
     boolean canAssignSelectors = canAssignSelectors(batch, delegate, task.getExecutionCapabilities());
     if (!canAssignSelectors) {
       log.debug("can not assign canAssignSelectors {}", canAssignSelectors);
-      return canAssignSelectors;
+      return false;
     }
     return true;
   }

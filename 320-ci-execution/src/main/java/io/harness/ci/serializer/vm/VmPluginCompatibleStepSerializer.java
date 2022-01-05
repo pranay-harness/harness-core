@@ -1,5 +1,7 @@
 package io.harness.ci.serializer.vm;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoUtils;
 import io.harness.beans.sweepingoutputs.StageInfraDetails.Type;
@@ -39,11 +41,16 @@ public class VmPluginCompatibleStepSerializer {
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorRef);
     connectorDetails.setEnvToSecretsMap(connectorSecretEnvMap);
 
+    ConnectorDetails imageConnector = null;
+    if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
+      imageConnector = connectorUtils.getDefaultInternalConnector(ngAccess);
+    }
     return VmPluginStep.builder()
         .image(image)
         .connector(connectorDetails)
         .envVariables(envVars)
         .timeoutSecs(timeout)
+        .imageConnector(imageConnector)
         .build();
   }
 }

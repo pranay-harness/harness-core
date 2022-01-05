@@ -28,6 +28,7 @@ import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
+import io.harness.metrics.modules.MetricsModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.observer.NoOpRemoteObserverInformerImpl;
@@ -134,6 +135,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
         return new ThreadLocalUserProvider();
       }
     });
+    modules.add(new MetricsModule());
     modules.add(new SpringPersistenceModule());
     modules.add(new ProviderModule() {
       @Provides

@@ -11,11 +11,10 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(HarnessTeam.PL)
-@Schema(name = "ApiKeyAggregate", description = "This is the view of the ApiKeyAggregate entity defined in Harness")
+@Schema(name = "ApiKeyAggregate", description = "This has API Key details and metadata.")
 public class ApiKeyAggregateDTO {
   @NotNull private ApiKeyDTO apiKey;
-  @NotNull private Long createdAt;
-  @NotNull private Long lastModifiedAt;
-
-  private int tokensCount;
+  @NotNull @Schema(description = "This is the time at which API Key was created.") private Long createdAt;
+  @NotNull @Schema(description = "This is the time at which API Key was last modified.") private Long lastModifiedAt;
+  @Schema(description = "The number of tokens within an API Key.") private int tokensCount;
 }

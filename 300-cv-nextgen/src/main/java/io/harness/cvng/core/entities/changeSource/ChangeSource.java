@@ -116,11 +116,13 @@ public abstract class ChangeSource
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (ChangeSourceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       this.dataCollectionTaskIteration = nextIteration;
+      return;
     } else if (ChangeSourceKeys.demoDataGenerationIteration.equals(fieldName)) {
       this.demoDataGenerationIteration = nextIteration;
       return;
+    } else {
+      throw new IllegalArgumentException("Invalid fieldName " + fieldName);
     }
-    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
   @Override
