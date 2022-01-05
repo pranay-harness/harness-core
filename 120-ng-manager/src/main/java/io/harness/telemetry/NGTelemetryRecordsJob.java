@@ -1,4 +1,4 @@
-package io.harness.metrics;
+package io.harness.telemetry;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -11,23 +11,23 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class PipelineTelemetryRecordsJob {
+public class NGTelemetryRecordsJob {
   public static final int METRICS_RECORD_PERIOD_HOURS = 24;
 
   @Inject private Injector injector;
-  @Inject @Named("telemetryPublisherExecutor") protected ScheduledExecutorService executorService;
-  @Inject PipelineTelemetryPublisher publisher;
+  @Inject @Named("ngTelemetryPublisherExecutor") protected ScheduledExecutorService executorService;
+  @Inject NGTelemetryPublisher publisher;
 
   public void scheduleTasks() {
     long initialDelay = new SecureRandom().nextInt(1);
 
     try {
-      log.info("PipelineTelemetryRecordsJob scheduler starting");
+      log.info("NGTelemetryRecordsJob scheduler starting");
       executorService.scheduleAtFixedRate(
           () -> publisher.recordTelemetry(), initialDelay, METRICS_RECORD_PERIOD_HOURS, TimeUnit.HOURS);
-      log.info("PipelineTelemetryRecordsJob scheduler started");
+      log.info("NGTelemetryRecordsJob scheduler started");
     } catch (Exception e) {
-      log.error("Exception while creating the scheduled job to track pipelines", e);
+      log.error("Exception while creating the scheduled job", e);
     }
   }
 }

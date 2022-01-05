@@ -22,6 +22,9 @@ public interface InstanceRepositoryCustom {
 
   List<Instance> getInstancesDeployedInInterval(String accountIdentifier, long startTimestamp, long endTimeStamp);
 
+  List<Instance> getInstancesDeployedInInterval(
+      String accountIdentifier, String organizationId, String projectId, long startTimestamp, long endTimeStamp);
+
   List<Instance> getInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId);
 
@@ -46,4 +49,6 @@ public interface InstanceRepositoryCustom {
 
   AggregationResults<CountByServiceIdAndEnvType> getActiveServiceInstanceCountBreakdown(String accountIdentifier,
       String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs);
+
+  Instance findFirstInstance(Criteria criteria);
 }
