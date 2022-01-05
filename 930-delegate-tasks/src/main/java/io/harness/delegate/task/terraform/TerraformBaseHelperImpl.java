@@ -211,7 +211,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
           CommandExecutionStatus.RUNNING);
       saveTerraformPlanContentToFile(terraformExecuteStepRequest.getEncryptionConfig(),
           terraformExecuteStepRequest.getEncryptedTfPlan(), terraformExecuteStepRequest.getScriptDirectory(),
-          TERRAFORM_PLAN_FILE_OUTPUT_NAME);
+          terraformExecuteStepRequest.getAccountId(), TERRAFORM_PLAN_FILE_OUTPUT_NAME);
       terraformExecuteStepRequest.getLogCallback().saveExecutionLog(
           color("\nUsing approved terraform plan \n", LogColor.Yellow, LogWeight.Bold), INFO,
           CommandExecutionStatus.RUNNING);
@@ -343,7 +343,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
       } else {
         saveTerraformPlanContentToFile(terraformExecuteStepRequest.getEncryptionConfig(),
             terraformExecuteStepRequest.getEncryptedTfPlan(), terraformExecuteStepRequest.getScriptDirectory(),
-            TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME);
+            terraformExecuteStepRequest.getAccountId(), TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME);
         TerraformApplyCommandRequest terraformApplyCommandRequest =
             TerraformApplyCommandRequest.builder().planName(TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME).build();
         response = terraformClient.apply(terraformApplyCommandRequest, terraformExecuteStepRequest.getTimeoutInMillis(),
@@ -376,11 +376,10 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
 
   @VisibleForTesting
   public void saveTerraformPlanContentToFile(EncryptionConfig encryptionConfig, EncryptedRecordData encryptedTfPlan,
-      String scriptDirectory, String terraformOutputFileName) throws IOException {
+      String scriptDirectory, String accountId, String terraformOutputFileName) throws IOException {
     File tfPlanFile = Paths.get(scriptDirectory, terraformOutputFileName).toFile();
-
-    byte[] decryptedTerraformPlan = encryptDecryptHelper.getDecryptedContent(encryptionConfig, encryptedTfPlan);
-
+    byte[] decryptedTerraformPlan =
+        encryptDecryptHelper.getDecryptedContent(encryptionConfig, encryptedTfPlan, accountId);
     FileUtils.copyInputStreamToFile(new ByteArrayInputStream(decryptedTerraformPlan), tfPlanFile);
   }
 
