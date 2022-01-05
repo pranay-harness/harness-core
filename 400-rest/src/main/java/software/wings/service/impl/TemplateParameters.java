@@ -24,7 +24,6 @@ public class TemplateParameters {
   private final String delegateProjectIdentifier;
   private final String delegateDescription;
   private final String delegateSize;
-  private final int delegateTaskLimit;
   private final int delegateReplicas;
   private final int delegateRam;
   private final double delegateCpu;

@@ -10,7 +10,6 @@ import lombok.Value;
 public class DelegateSizeDetails {
   private DelegateSize size;
   private String label;
-  private int taskLimit;
   private int replicas;
 
   /**
