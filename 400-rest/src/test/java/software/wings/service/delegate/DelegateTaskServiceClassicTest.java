@@ -19,7 +19,6 @@ import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.service.impl.DelegateTaskServiceClassicImpl.TASK_CATEGORY_MAP;
 import static software.wings.service.impl.DelegateTaskServiceClassicImpl.TASK_SELECTORS;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -47,7 +46,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -113,7 +111,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.TaskType;
-import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.cdn.CdnConfig;
 import software.wings.delegatetasks.cv.RateLimitExceededException;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -555,8 +552,6 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), null))
         .isNull();
-    verify(alertService, times(0))
-        .openAlert(eq(ACCOUNT_ID), anyString(), eq(NoEligibleDelegates), any(NoEligibleDelegatesAlert.class));
   }
 
   @Cache
