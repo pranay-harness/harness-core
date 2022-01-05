@@ -1,19 +1,14 @@
 package software.wings.infra;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.expression.Expression.DISALLOW_SECRETS;
-import static io.harness.validation.Validator.ensureType;
-
-import static software.wings.beans.InfrastructureType.RANCHER_KUBERNETES;
-import static software.wings.beans.RancherKubernetesInfrastructureMapping.Builder.aRancherKubernetesInfrastructureMapping;
-import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
-
-import static java.lang.String.format;
-
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.ImmutableSet;
 import io.harness.data.validator.Trimmed;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.Expression;
-
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
@@ -21,16 +16,17 @@ import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.RancherKubernetesInfrastructureMapping;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.ImmutableSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.FieldNameConstants;
+
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.expression.Expression.DISALLOW_SECRETS;
+import static io.harness.validation.Validator.ensureType;
+import static java.lang.String.format;
+import static software.wings.beans.InfrastructureType.RANCHER_KUBERNETES;
+import static software.wings.beans.RancherKubernetesInfrastructureMapping.Builder.aRancherKubernetesInfrastructureMapping;
+import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
 
 @JsonTypeName("RANCHER_KUBERNETES")
 @Data
@@ -39,7 +35,7 @@ import lombok.experimental.FieldNameConstants;
 public class RancherKubernetesInfrastructure
     implements InfraMappingInfrastructureProvider, KubernetesInfrastructure, FieldKeyValMapProvider, ProvisionerAware {
   private String cloudProviderId;
-  @IncludeFieldMap private String clusterName;
+  @IncludeFieldMap private String clusterName; //todo: why cluster name field is here.?
   @IncludeFieldMap @Expression(DISALLOW_SECRETS) private String namespace;
   @Trimmed private String releaseName;
   private List<ClusterSelectionCriteriaEntry> clusterSelectionCriteria;

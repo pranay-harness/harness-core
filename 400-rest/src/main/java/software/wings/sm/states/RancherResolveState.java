@@ -8,14 +8,12 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.expression.ExpressionReflectionUtils;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PhaseElement;
 import software.wings.api.RancherClusterElement;
@@ -24,7 +22,6 @@ import software.wings.beans.RancherKubernetesInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.common.RancherK8sClusterProcessor;
-import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.RancherResolveClustersTaskParameters;
 import software.wings.helpers.ext.k8s.response.RancherResolveClustersResponse;
 import software.wings.infra.InfrastructureDefinition;
@@ -37,11 +34,10 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
-import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.states.rancher.RancherStateHelper;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -81,8 +77,6 @@ public class RancherResolveState extends State {
     private ExecutionResponse executeInternal(ExecutionContext context) {
         RancherKubernetesInfrastructureMapping rancherKubernetesInfrastructureMapping = rancherStateHelper.fetchRancherKubernetesInfrastructureMapping(context);
 
-        RancherResolveClustersTaskParameters.RancherResolveClustersTaskParametersBuilder builder = RancherResolveClustersTaskParameters.builder();
-
         InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.getInfraDefById(context.getAccountId(), rancherKubernetesInfrastructureMapping.getInfrastructureDefinitionId());
         SettingAttribute settingAttribute = settingsService.get(rancherKubernetesInfrastructureMapping.getComputeProviderSettingId());
         RancherConfig rancherConfig = (RancherConfig) settingAttribute.getValue();
@@ -91,14 +85,13 @@ public class RancherResolveState extends State {
                 secretManager.getEncryptionDetails(rancherConfig, context.getAppId(), context.getWorkflowExecutionId());
 
         RancherResolveClustersTaskParameters rancherResolveClustersTaskParameters =
-                        builder.rancherConfig(rancherConfig)
-                                .encryptedDataDetails(encryptedDataDetails)
-                                .clusterSelectionCriteria(((RancherKubernetesInfrastructure)infrastructureDefinition.getInfrastructure()).getClusterSelectionCriteria())
+                RancherResolveClustersTaskParameters.builder()
+                        .rancherConfig(rancherConfig)
+                        .encryptedDataDetails(encryptedDataDetails)
+                        .clusterSelectionCriteria(((RancherKubernetesInfrastructure) infrastructureDefinition.getInfrastructure()).getClusterSelectionCriteria())
                         .build();
 
-
         String waitId = generateUuid();
-
         DelegateTask delegateTask =
                 DelegateTask.builder()
                         .accountId(context.getApp().getAccountId())
@@ -121,7 +114,7 @@ public class RancherResolveState extends State {
 
         return ExecutionResponse.builder()
                 .async(true)
-                .correlationIds(Arrays.asList(waitId))
+                .correlationIds(Collections.singletonList(waitId))
                 .stateExecutionData(executionData)
                 .build();
     }
@@ -137,18 +130,22 @@ public class RancherResolveState extends State {
 
         sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
                 .name(RancherK8sClusterProcessor.RancherClusterElementList.SWEEPING_OUTPUT_NAME +
-                        ((PhaseElement)context.getContextElement(ContextElementType.PARAM,
-                                PhaseElement.PHASE_PARAM))
-                                .getPhaseName().trim())
+                        getPhaseParamName(context))
                 .value(new RancherK8sClusterProcessor.RancherClusterElementList(clusterElements))
                 .build());
 
         return ExecutionResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build();
     }
 
+    @NotNull
+    private String getPhaseParamName(ExecutionContext context) {
+        return ((PhaseElement) context.getContextElement(ContextElementType.PARAM,
+                PhaseElement.PHASE_PARAM))
+                .getPhaseName().trim();
+    }
+
     @Override
     public void handleAbortEvent(ExecutionContext context) {
         // NoOp
     }
-
 }
