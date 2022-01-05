@@ -133,8 +133,6 @@ spec:
           value: ""
         - name: DELEGATE_TAGS
           value: ""
-        - name: DELEGATE_TASK_LIMIT
-          value: "50"
         - name: DELEGATE_ORG_IDENTIFIER
           value: ""
         - name: DELEGATE_PROJECT_IDENTIFIER

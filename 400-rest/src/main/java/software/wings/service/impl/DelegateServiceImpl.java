@@ -1334,10 +1334,6 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateSize", templateParameters.getDelegateSize());
       }
 
-      if (templateParameters.getDelegateTaskLimit() != 0) {
-        params.put("delegateTaskLimit", String.valueOf(templateParameters.getDelegateTaskLimit()));
-      }
-
       if (templateParameters.getDelegateReplicas() != 0) {
         params.put("delegateReplicas", String.valueOf(templateParameters.getDelegateReplicas()));
       }
@@ -3898,7 +3894,6 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateProjectIdentifier(delegateSetupDetails.getProjectIdentifier())
               .delegateDescription(delegateSetupDetails.getDescription())
               .delegateSize(sizeDetails.getSize().name())
-              .delegateTaskLimit(sizeDetails.getTaskLimit() / sizeDetails.getReplicas())
               .delegateReplicas(sizeDetails.getReplicas())
               .delegateRam(sizeDetails.getRam() / sizeDetails.getReplicas())
               .delegateCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
@@ -3971,7 +3966,6 @@ public class DelegateServiceImpl implements DelegateService {
                     : EMPTY)
             .delegateXmx(String.valueOf(sizeDetails.getRam()))
             .delegateCpu(sizeDetails.getCpu())
-            .delegateTaskLimit(sizeDetails.getTaskLimit())
             .accountId(accountId)
             .version(version)
             .managerHost(managerHost)
