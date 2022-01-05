@@ -22,7 +22,8 @@ public class ManagerExecutorModule extends AbstractModule {
         .toInstance(new ManagedScheduledExecutorService("NotifyResponseCleaner"));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("delegateTaskNotifier"))
-        .toInstance(new ManagedScheduledExecutorService("DelegateTaskNotifier"));
+        .toInstance(new ScheduledThreadPoolExecutor(
+                5, new ThreadFactoryBuilder().setNameFormat("DelegateTaskNotifier").build()));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("gitChangeSet"))
         .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));
