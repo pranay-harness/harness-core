@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.MARKOM;
 import static io.harness.rule.OwnerRule.NICOLAS;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.UTSAV;
@@ -102,6 +103,7 @@ import io.harness.version.VersionInfoManager;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
 import software.wings.app.UrlConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.CEDelegateStatus;
@@ -225,6 +227,56 @@ public class DelegateServiceImplTest extends WingsBaseTest {
         .version(VERSION)
         .status(DelegateInstanceStatus.ENABLED)
         .lastHeartBeat(System.currentTimeMillis());
+  }
+
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void whenNoDelegateImageProvidedThanDefault() {
+    final PortalConfig portal = mock(PortalConfig.class);
+    when(mainConfiguration.getPortal()).thenReturn(portal);
+    when(portal.getDelegateDockerImage()).thenReturn(null);
+
+    final String actual = delegateService.getDelegateDockerImage();
+    assertThat(actual).isEqualTo("harness/delegate:latest");
+  }
+
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void whenNoUpgraderImageProvidedThanDefault() {
+    final PortalConfig portal = mock(PortalConfig.class);
+    when(mainConfiguration.getPortal()).thenReturn(portal);
+    when(portal.getUpgraderDockerImage()).thenReturn(null);
+
+    final String actual = delegateService.getUpgraderDockerImage();
+    assertThat(actual).isEqualTo("harness/upgrader:latest");
+  }
+
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void whenDelegateImageProvidedThanReturnIt() {
+    final String delegateImage = "harness/delegate:myimage";
+    final PortalConfig portal = mock(PortalConfig.class);
+    when(mainConfiguration.getPortal()).thenReturn(portal);
+    when(portal.getDelegateDockerImage()).thenReturn(delegateImage);
+
+    final String actual = delegateService.getDelegateDockerImage();
+    assertThat(actual).isEqualTo(delegateImage);
+  }
+
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void whenNoUpgraderImageProvidedThanReturnIt() {
+    final String upgraderImage = "harness/upgrader:myimage";
+    final PortalConfig portal = mock(PortalConfig.class);
+    when(mainConfiguration.getPortal()).thenReturn(portal);
+    when(portal.getUpgraderDockerImage()).thenReturn(upgraderImage);
+
+    final String actual = delegateService.getUpgraderDockerImage();
+    assertThat(actual).isEqualTo(upgraderImage);
   }
 
   @Test
