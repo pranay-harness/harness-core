@@ -45,6 +45,7 @@ import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -234,6 +235,10 @@ public class DelegateQueueTask implements Runnable {
     // Re-broadcast queued tasks not picked up by any Delegate and not in process of validation
     long now = clock.millis();
 
+    final Stopwatch globalStopwatch = Stopwatch.createStarted();
+    long loopStartTime = 0;
+    final Stopwatch stopwatch = Stopwatch.createStarted();
+    long queryStartTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
     Query<DelegateTask> unassignedTasksQuery =
         persistence.createQuery(DelegateTask.class, excludeAuthority)
             .filter(DelegateTaskKeys.status, QUEUED)
@@ -245,6 +250,10 @@ public class DelegateQueueTask implements Runnable {
             .field(DelegateTaskKeys.delegateId)
             .doesNotExist();
 
+    long queryEndTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+    long queryTime = queryEndTime - queryStartTime;
+    loopStartTime = globalStopwatch.elapsed(TimeUnit.MILLISECONDS);
+    long queryTimeForUpdate = 0;
     try (HIterator<DelegateTask> iterator = new HIterator<>(unassignedTasksQuery.fetch())) {
       int count = 0;
       while (iterator.hasNext()) {
@@ -270,6 +279,7 @@ public class DelegateQueueTask implements Runnable {
           eligibleDelegatesList.addLast(delegateId);
         }
 
+        long queryStartTimeForUpdate = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         UpdateOperations<DelegateTask> updateOperations =
             persistence.createUpdateOperations(DelegateTask.class)
                 .set(DelegateTaskKeys.lastBroadcastAt, now)
@@ -277,6 +287,8 @@ public class DelegateQueueTask implements Runnable {
                 .set(DelegateTaskKeys.eligibleToExecuteDelegateIds, eligibleDelegatesList)
                 .set(DelegateTaskKeys.nextBroadcast, now + TimeUnit.SECONDS.toMillis(5));
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
+        long queryEndTimeForUpdate = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+        queryTimeForUpdate = queryEndTimeForUpdate - queryStartTimeForUpdate;
         // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {
           log.info("Cannot find delegate task {}, update failed on broadcast", delegateTask.getUuid());
@@ -306,6 +318,12 @@ public class DelegateQueueTask implements Runnable {
           count++;
         }
       }
+
+      long loopProcessingTime = Math.max((globalStopwatch.elapsed(TimeUnit.MILLISECONDS) - loopStartTime), 0l);
+      log.info(
+          "DB task fetch processing time {}, DB task update operation processing time {}, loop processing time {} ",
+          queryTime, queryTimeForUpdate, Math.max(loopProcessingTime, 0l));
+
       log.info("{} tasks were rebroadcast", count);
     }
   }
