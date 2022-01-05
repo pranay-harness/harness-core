@@ -78,7 +78,10 @@ public abstract class BaseCreatorService<R extends CreatorResponse, M> {
       R response = processNodeInternal(metadata, yamlField);
 
       if (response == null) {
-        finalResponse.addDependency(currentYaml, yamlField.getNode().getUuid(), yamlPath);
+        // do not add template yaml fields as dependency.
+        if (yamlField.getNode().getTemplate() == null) {
+          finalResponse.addDependency(currentYaml, yamlField.getNode().getUuid(), yamlPath);
+        }
         continue;
       }
       mergeResponses(finalResponse, response);
