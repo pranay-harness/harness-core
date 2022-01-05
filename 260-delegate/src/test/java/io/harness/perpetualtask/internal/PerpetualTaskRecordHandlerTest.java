@@ -28,8 +28,6 @@ import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.rule.Owner;
 
-import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.PerpetualTaskAlert;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 
@@ -88,12 +86,6 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
     when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
     perpetualTaskRecordHandler.assign(record);
     verify(perpetualTaskService).appointDelegate(eq(accountId), anyString(), eq(delegateId), anyLong());
-    verify(alertService, times(1))
-        .closeAlert(eq(accountId), eq(null), eq(AlertType.PerpetualTaskAlert),
-            eq(PerpetualTaskAlert.builder()
-                    .accountId(accountId)
-                    .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                    .build()));
   }
 
   @Test
