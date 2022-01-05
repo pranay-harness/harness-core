@@ -3,6 +3,7 @@ package io.harness.delegate.exceptionhandler.handler;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.CONFIG_FILE_PATH_NOT_EXIST;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.ERROR_INSPECTING_STATE_IN_BACKEND;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.FAILED_TO_GET_EXISTING_WORKSPACES;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.FAILED_TO_READ_MODULE_DIRECTORY;
@@ -12,6 +13,7 @@ import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hin
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_FIE;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_LOCATION;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_LOCATION_ARGUMENT;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CONFIG_FILE_PATH_NOT_EXIST;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_ERROR_INSPECTING_STATE_IN_BACKEND;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_FAILED_TO_GET_EXISTING_WORKSPACES;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_INVALID_CREDENTIALS_AWS;
@@ -63,6 +65,8 @@ public class TerraformRuntimeExceptionHandler implements ExceptionHandler {
     Set<String> hints = new HashSet<>();
     Set<String> structuredErrors = new HashSet<>();
 
+    handleConfigDirectoryNotExistError(cliRuntimeException, structuredErrors, hints);
+
     for (String error : allErrors) {
       if (error.contains(FAILED_TO_READ_MODULE_DIRECTORY)) {
         continue;
@@ -98,10 +102,19 @@ public class TerraformRuntimeExceptionHandler implements ExceptionHandler {
     }
 
     if (hints.isEmpty() && explanations.isEmpty()) {
-      return new TerraformCommandExecutionException(cliRuntimeException.getCliError(), WingsException.USER_SRE);
+      return new TerraformCommandExecutionException(
+          cleanError(cliRuntimeException.getCliError()), WingsException.USER_SRE);
     }
 
     return getFinalException(explanations, hints, structuredErrors, cliRuntimeException);
+  }
+
+  private void handleConfigDirectoryNotExistError(
+      TerraformCliRuntimeException cliRuntimeException, Set<String> structuredErrors, Set<String> hints) {
+    if (cliRuntimeException.getCliError().contains(CONFIG_FILE_PATH_NOT_EXIST)) {
+      hints.add(HINT_CONFIG_FILE_PATH_NOT_EXIST);
+      structuredErrors.add(cliRuntimeException.getCliError());
+    }
   }
 
   private void handleUnknownError(String err, Set<String> hints, Set<String> explanations, Set<String> errorMessages) {

@@ -20,12 +20,14 @@ import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
 import io.harness.exception.TerraformCommandExecutionException;
 import io.harness.exception.WingsException;
+import io.harness.exception.runtime.JGitRuntimeException;
 import io.harness.exception.runtime.TerraformCliRuntimeException;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -44,7 +46,11 @@ public class TerraformRuntimeExceptionHandlerTest {
 
   private static final String TEST_ERROR_INVALID_REGION_TF13 =
       "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1mInvalid AWS Region: random\u001B[0m  \u001B[0m  on config.tf line 15, in provider \"aws\":   15: provider \"aws\" \u001B[4m{\u001B[0m \u001B[0m \u001B[0m\u001B[0m";
+
+  private static final String noDirExistErrorMsg =
+      "Could not find provided terraform config folder terraform-dir/module1";
   TerraformRuntimeExceptionHandler handler = new TerraformRuntimeExceptionHandler();
+  JGitExceptionHandler jGitExceptionHandler = new JGitExceptionHandler();
 
   @Test
   @Owner(developers = ABOSII)
@@ -91,6 +97,19 @@ public class TerraformRuntimeExceptionHandlerTest {
     assertSingleErrorMessage(handler.handleException(cliRuntimeException),
         format(HINT_CHECK_TERRAFORM_CONFIG_LOCATION, "config.tf", "15", "provider \"aws\""), null,
         "terraform refresh failed with: Invalid AWS Region: random");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testHandleConfigDirNotExistError() {
+    TerraformCliRuntimeException cliRuntimeException = new TerraformCliRuntimeException(
+        format("Failed to execute terraform Command %s : Reason: %s", "terraform init", noDirExistErrorMsg),
+        "terraform init", noDirExistErrorMsg);
+
+    assertSingleErrorMessage(handler.handleException(cliRuntimeException),
+        "Please check your inputs for Configuration File Repository", null,
+        format("terraform init failed with: %s", noDirExistErrorMsg));
   }
 
   @Test

@@ -23,6 +23,8 @@ public final class TerraformExceptionConstants {
         "Please check your terraform backend configuration";
     public static final String HINT_FAILED_TO_GET_EXISTING_WORKSPACES =
         "Please check your terraform backend configuration";
+    public static final String HINT_CONFIG_FILE_PATH_NOT_EXIST =
+        "Please check your inputs for Configuration File Repository";
   }
 
   public static final class Explanation {
@@ -42,5 +44,6 @@ public final class TerraformExceptionConstants {
         "InvalidClientTokenId: The security token included in the request is invalid";
     public static final String ERROR_INSPECTING_STATE_IN_BACKEND = "Error inspecting states in the";
     public static final String FAILED_TO_GET_EXISTING_WORKSPACES = "Failed to get existing workspaces";
+    public static final String CONFIG_FILE_PATH_NOT_EXIST = "Could not find provided terraform config folder";
   }
 }
