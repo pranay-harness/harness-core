@@ -45,4 +45,7 @@ public final class EventsFrameworkMetadataConstants {
   public static final String API_KEY_ENTITY = "apiKey";
   public static final String TOKEN_ENTITY = "token";
   public static final String TEMPLATE_ENTITY = "template";
+
+  // Metric Constants
+  public static final String ACCOUNT_IDENTIFIER_METRICS_KEY = "accountId";
 }

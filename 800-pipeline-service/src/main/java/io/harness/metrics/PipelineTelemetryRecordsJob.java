@@ -22,8 +22,10 @@ public class PipelineTelemetryRecordsJob {
     long initialDelay = new SecureRandom().nextInt(1);
 
     try {
+      log.info("PipelineTelemetryRecordsJob scheduler starting");
       executorService.scheduleAtFixedRate(
           () -> publisher.recordTelemetry(), initialDelay, METRICS_RECORD_PERIOD_HOURS, TimeUnit.HOURS);
+      log.info("PipelineTelemetryRecordsJob scheduler started");
     } catch (Exception e) {
       log.error("Exception while creating the scheduled job to track pipelines", e);
     }

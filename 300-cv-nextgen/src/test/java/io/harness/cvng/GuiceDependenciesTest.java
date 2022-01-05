@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -31,6 +32,7 @@ public class GuiceDependenciesTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  @Ignore("Enable once ti team figures out how to run this every time")
   public void testGuiceGraph() throws IllegalAccessException {
     // This is a experimental tests for now so just including only few classes. If this is helpful we will include all
     // the injected classes

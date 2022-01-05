@@ -228,10 +228,10 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
     FileIo.createDirectoryIfDoesNotExist(scriptDirectory);
     byte[] planContent = "terraformPlanContent".getBytes();
 
-    doReturn(planContent).when(encryptDecryptHelper).getDecryptedContent(any(), any());
+    doReturn(planContent).when(encryptDecryptHelper).getDecryptedContent(any(), any(), any());
 
     terraformBaseHelper.saveTerraformPlanContentToFile(
-        encryptionConfig, encryptedPlanContent, scriptDirectory, TERRAFORM_PLAN_FILE_OUTPUT_NAME);
+        encryptionConfig, encryptedPlanContent, scriptDirectory, "accountId", TERRAFORM_PLAN_FILE_OUTPUT_NAME);
     List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);
     assertThat(fileDataList.size()).isEqualTo(1);
     assertThat(fileDataList.get(0).getFileBytes()).isEqualTo(planContent);

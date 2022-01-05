@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 
 public interface CIYamlSchemaService {
-  PartialSchemaDTO getIntegrationStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope);
+  List<PartialSchemaDTO> getIntegrationStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope);
   PartialSchemaDTO getMergedIntegrationStageYamlSchema(
       String projectIdentifier, String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails);
   List<YamlSchemaWithDetails> getIntegrationStageYamlSchemaWithDetails(

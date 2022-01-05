@@ -28,6 +28,7 @@ import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.modules.MetricsModule;
 import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
@@ -174,6 +175,7 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
     modules.add(TemplateServiceModule.getInstance(templateServiceConfiguration));
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(NGMigrationSdkModule.getInstance());
+    modules.add(new MetricsModule());
     CacheModule cacheModule = new CacheModule(templateServiceConfiguration.getCacheConfig());
     modules.add(cacheModule);
     if (templateServiceConfiguration.isShouldDeployWithGitSync()) {

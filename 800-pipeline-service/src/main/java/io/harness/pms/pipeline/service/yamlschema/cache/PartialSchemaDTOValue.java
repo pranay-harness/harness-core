@@ -1,4 +1,4 @@
-package io.harness.pms.pipeline.service.yamlschema;
+package io.harness.pms.pipeline.service.yamlschema.cache;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
@@ -10,7 +10,7 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.PIPELINE)
-public class PartialSchemaValue {
+public class PartialSchemaDTOValue {
   String schema;
   String nodeType;
   String nodeName;

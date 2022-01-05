@@ -46,7 +46,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("resourceGroup")
 @StoreIn(DbAliases.RESOURCEGROUP)
 public class ResourceGroup implements PersistentRegularIterable, PersistentEntity {
-  public static final String ALL_RESOURCES_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   public static final String DEFAULT_COLOR = "#0063F7";
 
   public static List<MongoIndex> mongoIndexes() {
