@@ -46,6 +46,8 @@ public class WorkflowResumePropagator implements WorkflowStatusPropagator {
       if (WorkflowType.PIPELINE.equals(updatedExecution.getWorkflowType())) {
         propagatorHelper.refreshPipelineExecution(updatedExecution);
         workflowExecutionUpdate.publish(updatedExecution, updateInfo, EventType.PIPELINE_CONTINUE);
+      } else {
+        workflowExecutionUpdate.publish(updatedExecution, updateInfo, EventType.WORKFLOW_CONTINUE);
       }
     }
 
