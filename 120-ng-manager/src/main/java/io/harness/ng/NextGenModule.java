@@ -56,6 +56,7 @@ import io.harness.cdng.k8s.K8sBlueGreenStepNode;
 import io.harness.cdng.k8s.K8sCanaryStepNode;
 import io.harness.cdng.k8s.K8sRollingRollbackStepNode;
 import io.harness.cdng.k8s.K8sRollingStepNode;
+import io.harness.cdng.k8s.K8sScaleStepNode;
 import io.harness.connector.ConnectorModule;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.connector.events.ConnectorEventHandler;
@@ -277,6 +278,7 @@ public class NextGenModule extends AbstractModule {
       add(K8sBlueGreenStepNode.class);
       add(K8sRollingStepNode.class);
       add(K8sRollingRollbackStepNode.class);
+      add(K8sScaleStepNode.class);
     }
   };
   private final NextGenConfiguration appConfig;
