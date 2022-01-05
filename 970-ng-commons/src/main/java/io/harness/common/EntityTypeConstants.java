@@ -39,5 +39,6 @@ public interface EntityTypeConstants {
   String K8S_ROLLING_DEPLOY = "K8sRollingDeploy";
   String K8S_ROLLING_ROLLBACK = "K8sRollingRollback";
   String K8S_SCALE = "K8sScale";
+  String K8S_DELETE = "K8sDelete";
   String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }

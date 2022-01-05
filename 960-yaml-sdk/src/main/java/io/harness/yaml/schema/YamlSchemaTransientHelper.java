@@ -42,6 +42,7 @@ public class YamlSchemaTransientHelper {
       add(EntityType.K8S_ROLLING_DEPLOY_STEP);
       add(EntityType.K8S_ROLLING_ROLLBACK_STEP);
       add(EntityType.K8S_SCALE_STEP);
+      add(EntityType.K8S_DELETE_STEP);
     }
   };
 

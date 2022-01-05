@@ -49,5 +49,6 @@ public class EntityYamlRootNames {
   public static String K8S_ROLLING_DEPLOY = "K8sRollingDeploy";
   public static String K8S_ROLLING_ROLLBACK = "K8sRollingRollback";
   public static String K8S_SCALE = "K8sScale";
+  public static String K8S_DELETE = "K8sDelete";
   public static String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }
