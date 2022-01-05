@@ -31,9 +31,8 @@ public class CgWorkflowResumePayload extends CgWorkflowExecutionPayload {
       PipelineEventData pipeline, ExecutionArgsEventData executionArgs, EmbeddedUser triggeredBy,
       CreatedByType triggeredByType, long startedAt, List<ServiceEntity> services, List<EnvironmentEntity> environments,
       List<InfraDefinitionEntity> infraDefinitions, WorkflowExecData workflowExecution,
-      PipelineExecData pipelineExecution, List<WorkflowStepInfo> steps) {
+      PipelineExecData pipelineExecution) {
     super(application, workflow, pipeline, executionArgs, triggeredBy, triggeredByType, startedAt, services,
         environments, infraDefinitions, workflowExecution, pipelineExecution);
-    this.steps = steps;
   }
 }
