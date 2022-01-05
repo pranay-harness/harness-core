@@ -23,6 +23,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PlanCreatorUtils {
   public final String ANY_TYPE = "__any__";
+  public final String TEMPLATE_TYPE = "__template__";
 
   public boolean supportsField(Map<String, Set<String>> supportedTypes, YamlField field) {
     if (EmptyPredicate.isEmpty(supportedTypes)) {
@@ -37,7 +38,11 @@ public class PlanCreatorUtils {
 
     String fieldType = field.getNode().getType();
     if (EmptyPredicate.isEmpty(fieldType)) {
-      fieldType = ANY_TYPE;
+      if (field.getNode().getTemplate() == null) {
+        fieldType = ANY_TYPE;
+      } else {
+        fieldType = TEMPLATE_TYPE;
+      }
     }
     return types.contains(fieldType);
   }
