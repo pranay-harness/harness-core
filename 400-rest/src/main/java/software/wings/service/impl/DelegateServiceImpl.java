@@ -1421,15 +1421,17 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private String getDelegateDockerImage() {
-    if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES_ONPREM) {
+  @VisibleForTesting
+  protected String getDelegateDockerImage() {
+    if (isNotBlank(mainConfiguration.getPortal().getDelegateDockerImage())) {
       return mainConfiguration.getPortal().getDelegateDockerImage();
     }
     return "harness/delegate:latest";
   }
 
-  private String getUpgraderDockerImage() {
-    if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES_ONPREM) {
+  @VisibleForTesting
+  protected String getUpgraderDockerImage() {
+    if (isNotBlank(mainConfiguration.getPortal().getUpgraderDockerImage())) {
       return mainConfiguration.getPortal().getUpgraderDockerImage();
     }
     return "harness/upgrader:latest";
