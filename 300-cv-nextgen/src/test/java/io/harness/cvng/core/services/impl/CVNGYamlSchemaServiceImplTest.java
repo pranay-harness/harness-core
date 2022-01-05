@@ -20,6 +20,7 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.io.IOException;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,7 +43,7 @@ public class CVNGYamlSchemaServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetDeploymentStageYamlSchema() throws IOException {
-    PartialSchemaDTO partialSchemaDTO =
+    List<PartialSchemaDTO> partialSchemaDTO =
         cvngYamlSchemaService.getDeploymentStageYamlSchema(generateUuid(), generateUuid(), Scope.PROJECT);
     // https://harness.atlassian.net/browse/CDNG-7666
     // Currently the schema has details of all the steps that are visible to CVNG module.
@@ -51,6 +52,6 @@ public class CVNGYamlSchemaServiceImplTest extends CvNextGenTestBase {
         CVNGYamlSchemaServiceImplTest.class.getResource("/schema/DeploymentSteps/partialSchemaDTO.json"),
         Charsets.UTF_8);
     // String s = JsonUtils.asPrettyJson(partialSchemaDTO); // s -- string to be pasted in the .json file
-    assertThat(partialSchemaDTO).isEqualTo(JsonUtils.asObject(partialSchemaJson, PartialSchemaDTO.class));
+    assertThat(partialSchemaDTO.get(0)).isEqualTo(JsonUtils.asObject(partialSchemaJson, PartialSchemaDTO.class));
   }
 }

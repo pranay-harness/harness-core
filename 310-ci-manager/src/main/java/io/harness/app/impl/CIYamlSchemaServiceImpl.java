@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -83,8 +84,9 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
   }
 
   @Override
-  public PartialSchemaDTO getIntegrationStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
-    return getIntegrationStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, null);
+  public List<PartialSchemaDTO> getIntegrationStageYamlSchema(
+      String projectIdentifier, String orgIdentifier, Scope scope) {
+    return Collections.singletonList(getIntegrationStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, null));
   }
 
   public PartialSchemaDTO getIntegrationStageYamlSchemaUtil(

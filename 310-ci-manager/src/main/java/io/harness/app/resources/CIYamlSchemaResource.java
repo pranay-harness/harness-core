@@ -51,11 +51,11 @@ public class CIYamlSchemaResource implements YamlSchemaResource {
 
   @GET
   @ApiOperation(value = "Get Partial Yaml Schema", nickname = "getPartialYamlSchema")
-  public ResponseDTO<PartialSchemaDTO> getYamlSchema(
+  public ResponseDTO<List<PartialSchemaDTO>> getYamlSchema(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
-    PartialSchemaDTO schema =
+    List<PartialSchemaDTO> schema =
         ciYamlSchemaService.getIntegrationStageYamlSchema(orgIdentifier, projectIdentifier, scope);
     return ResponseDTO.newResponse(schema);
   }
