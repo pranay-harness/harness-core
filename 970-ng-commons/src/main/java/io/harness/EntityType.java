@@ -59,6 +59,9 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.K8S_BG_SWAP_SERVICES)
   K8S_BG_SWAP_SERVICES_STEP(ModuleType.CD, EntityTypeConstants.K8S_BG_SWAP_SERVICES, IdentifierRef.class,
       EntityYamlRootNames.K8S_SWAP_SERVICES),
+  @JsonProperty(EntityTypeConstants.K8S_CANARY_DELETE)
+  K8S_CANARY_DELETE_STEP(
+      ModuleType.CD, EntityTypeConstants.K8S_CANARY_DELETE, IdentifierRef.class, EntityYamlRootNames.K8S_CANARY_DELETE),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
   CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, IdentifierRef.class, EntityYamlRootNames.CONNECTOR),
   @JsonProperty(EntityTypeConstants.SECRETS)

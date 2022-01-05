@@ -51,5 +51,6 @@ public class EntityYamlRootNames {
   public static String K8S_SCALE = "K8sScale";
   public static String K8S_DELETE = "K8sDelete";
   public static String K8S_SWAP_SERVICES = "K8sBGSwapServices";
+  public static String K8S_CANARY_DELETE = "K8sCanaryDelete";
   public static String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }
