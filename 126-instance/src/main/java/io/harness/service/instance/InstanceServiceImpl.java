@@ -119,6 +119,13 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
+  public List<InstanceDTO> getInstancesDeployedInInterval(
+      String accountIdentifier, String organizationId, String projectId, long startTimestamp, long endTimeStamp) {
+    return InstanceMapper.toDTO(instanceRepository.getInstancesDeployedInInterval(
+        accountIdentifier, organizationId, projectId, startTimestamp, endTimeStamp));
+  }
+
+  @Override
   public List<InstanceDTO> getInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId) {
     return InstanceMapper.toDTO(
@@ -189,6 +196,11 @@ public class InstanceServiceImpl implements InstanceService {
       String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs) {
     return instanceRepository.getActiveServiceInstanceCountBreakdown(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
+  }
+
+  @Override
+  public InstanceDTO findFirstInstance(Criteria criteria) {
+    return InstanceMapper.toDTO(instanceRepository.findFirstInstance(criteria));
   }
 
   // ----------------------------------- PRIVATE METHODS -------------------------------------
