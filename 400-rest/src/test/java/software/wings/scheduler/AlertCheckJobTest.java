@@ -1,15 +1,11 @@
 package software.wings.scheduler;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static io.harness.rule.OwnerRule.VUK;
 
-import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -19,7 +15,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -34,9 +29,6 @@ import software.wings.utils.EmailHelperUtils;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
@@ -124,32 +116,5 @@ public class AlertCheckJobTest extends WingsBaseTest {
     verify(alertService).openAlert(any(), any(), captor.capture(), any());
     AlertType alertType = captor.getValue();
     assertThat(alertType).isEqualTo(AlertType.INVALID_SMTP_CONFIGURATION);
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldCloseAlertWhenDelegateWithGroupIsActive() {
-    String delegateGroupName = generateUuid();
-
-    long lastHeartbeatConnected = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2);
-    Delegate delegate = Delegate.builder()
-                            .uuid(generateUuid())
-                            .accountId(ACCOUNT_ID)
-                            .hostName("host1")
-                            .delegateGroupName(delegateGroupName)
-                            .lastHeartBeat(lastHeartbeatConnected)
-                            .build();
-    persistence.save(delegate);
-
-    List<Delegate> delegates = Arrays.asList(delegate);
-    Set<String> primaryConnections = new HashSet();
-    primaryConnections.add(delegate.getUuid());
-
-    alertCheckJob.processDelegateWhichBelongsToGroup(ACCOUNT_ID, delegates, primaryConnections);
-
-    verify(alertService, times(1))
-        .closeAlert(eq(ACCOUNT_ID), eq(GLOBAL_APP_ID), eq(AlertType.DelegatesScalingGroupDownAlert),
-            eq(DelegatesScalingGroupDownAlert.builder().accountId(ACCOUNT_ID).groupName(delegateGroupName).build()));
   }
 }
