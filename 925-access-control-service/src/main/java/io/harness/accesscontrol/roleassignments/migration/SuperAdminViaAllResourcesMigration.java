@@ -13,12 +13,14 @@ import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeLevel;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migration.NGMigration;
+import io.harness.utils.CryptoUtils;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -47,7 +49,7 @@ public class SuperAdminViaAllResourcesMigration implements NGMigration {
     Criteria criteria = Criteria.where(RoleAssignmentDBOKeys.scopeLevel)
                             .is(scopeLevel.toString())
                             .and(RoleAssignmentDBOKeys.roleIdentifier)
-                            .is(getRoleIdentifiers(scopeLevel))
+                            .in(getRoleIdentifiers(scopeLevel))
                             .and(RoleAssignmentDBOKeys.resourceGroupIdentifier)
                             .is(getResourceGroupIdentifier(scopeLevel));
     do {
@@ -56,7 +58,11 @@ public class SuperAdminViaAllResourcesMigration implements NGMigration {
         return;
       }
       for (RoleAssignmentDBO roleAssignment : roleAssignmentList) {
-        roleAssignmentRepository.save(buildRoleAssignmentDBO(roleAssignment));
+        try {
+          roleAssignmentRepository.save(buildRoleAssignmentDBO(roleAssignment));
+        } catch (DuplicateKeyException exception) {
+          log.info("[SuperAdminViaAllResourcesMigration] RoleAssignment already exists.", exception);
+        }
         roleAssignmentRepository.deleteById(roleAssignment.getId());
       }
     } while (true);
@@ -64,7 +70,7 @@ public class SuperAdminViaAllResourcesMigration implements NGMigration {
 
   private RoleAssignmentDBO buildRoleAssignmentDBO(RoleAssignmentDBO roleAssignmentDBO) {
     return RoleAssignmentDBO.builder()
-        .identifier(roleAssignmentDBO.getIdentifier())
+        .identifier("role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20)))
         .scopeIdentifier(roleAssignmentDBO.getScopeIdentifier())
         .scopeLevel(roleAssignmentDBO.getScopeLevel())
         .disabled(roleAssignmentDBO.isDisabled())
