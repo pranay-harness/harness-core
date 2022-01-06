@@ -863,6 +863,7 @@ public class SettingsServiceImpl implements SettingsService {
 
     syncCEInfra(settingAttribute);
     artifactStreamSubject.fireInform(SettingAttributeObxxxxxxxx:onSaved, newSettingAttribute);
+    appManifestSubject.fireInform(SettingAttributeObxxxxxxxx:onSaved, newSettingAttribute);
     remoteObserverInformer.sendEvent(
         ReflectionUtils.getMethod(SettingAttributeObserver.class, "onSaved", SettingAttribute.class),
         SettingsServiceImpl.class, newSettingAttribute);
@@ -1248,6 +1249,7 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     artifactStreamSubject.fireInform(SettingAttributeObxxxxxxxx:onUpdated, prevSettingAttribute, settingAttribute);
+    appManifestSubject.fireInform(SettingAttributeObxxxxxxxx:onUpdated, prevSettingAttribute, settingAttribute);
     remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(SettingAttributeObserver.class, "onUpdated",
                                          SettingAttribute.class, SettingAttribute.class),
         SettingsServiceImpl.class, prevSettingAttribute, settingAttribute);
@@ -1361,6 +1363,7 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     artifactStreamSubject.fireInform(SettingAttributeObxxxxxxxx:onDeleted, settingAttribute);
+    appManifestSubject.fireInform(SettingAttributeObxxxxxxxx:onDeleted, settingAttribute);
     remoteObserverInformer.sendEvent(
         ReflectionUtils.getMethod(SettingAttributeObserver.class, "onDeleted", SettingAttribute.class),
         SettingsServiceImpl.class, settingAttribute);
