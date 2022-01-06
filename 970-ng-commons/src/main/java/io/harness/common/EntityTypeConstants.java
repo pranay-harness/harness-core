@@ -45,5 +45,6 @@ public interface EntityTypeConstants {
   String TERRAFORM_APPLY = "TerraformApply";
   String TERRAFORM_PLAN = "TerraformPlan";
   String TERRAFORM_DESTROY = "TerraformDestroy";
+  String TERRAFORM_ROLLBACK = "TerraformRollback";
   String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }
