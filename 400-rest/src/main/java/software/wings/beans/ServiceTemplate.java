@@ -335,7 +335,7 @@ public class ServiceTemplate extends Base {
         .add("ocParamsOverrideAppManifest", ocParamsOverrideAppManifest)
         .add("ocParamsOverrideFile", ocParamsOverrideFile)
         .add("kustomizePatchesOverrideAppManifest", kustomizePatchesOverrideAppManifest)
-        .add("kustomizePatchesOverrideFile", kustomizePatchesOverrideManifestFile)
+        .add("kustomizePatchesOverrideManifestFile", kustomizePatchesOverrideManifestFile)
         .toString();
   }
 
