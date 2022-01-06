@@ -74,7 +74,7 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
   public <T extends ResponseData> T waitForTask(String taskId, String description, Duration timeout) {
     DelegateSyncTaskResponse taskResponse = null;
     try {
-      log.info("Start executing sync task {}", taskId);
+      log.info("Start wait sync task {}", taskId);
       AtomicLong endAt =
           syncTaskWaitMap.computeIfAbsent(taskId, k -> new AtomicLong(currentTimeMillis() + timeout.toMillis()));
       synchronized (endAt) {

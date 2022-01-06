@@ -312,6 +312,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
             .build();
     delegateTaskServiceClassic.queueTask(delegateTask);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(delegateTask);
     verify(assignDelegateService, never()).getAccountDelegates(delegateTask.getAccountId());
@@ -352,6 +353,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     delegateTaskServiceClassic.queueTask(delegateTask);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(delegateTask);
   }
@@ -704,6 +706,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of(DELEGATE_ID), QUEUED);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     when(assignDelegateService.connectedWhitelistedDelegates(delegateTask)).thenReturn(emptyList());
 
     delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), true);
@@ -722,6 +725,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     DelegateTask delegateTask = saveDelegateTask(false, ImmutableSet.of(DELEGATE_ID), QUEUED);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     when(assignDelegateService.connectedWhitelistedDelegates(delegateTask)).thenReturn(emptyList());
     delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, "", delegateTask.getUuid(), true);
     verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
@@ -771,6 +775,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of("delegate2"), QUEUED);
     delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), true);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     assertThat(persistence.createQuery(DelegateTask.class).get()).isEqualTo(delegateTask);
   }
 
@@ -783,10 +788,12 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of(DELEGATE_ID), QUEUED);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     when(assignDelegateService.connectedWhitelistedDelegates(delegateTask)).thenReturn(singletonList("delegate2"));
     delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), true);
     verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     assertThat(persistence.createQuery(DelegateTask.class).get()).isEqualTo(delegateTask);
   }
 
