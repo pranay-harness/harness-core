@@ -92,6 +92,12 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.TERRAFORM_ROLLBACK)
   TERRAFORM_ROLLBACK_STEP(ModuleType.CD, EntityTypeConstants.TERRAFORM_ROLLBACK, IdentifierRef.class,
       EntityYamlRootNames.TERRAFORM_ROLLBACK),
+  @JsonProperty(EntityTypeConstants.HELM_DEPLOY)
+  HELM_DEPLOY_STEP(
+      ModuleType.CD, EntityTypeConstants.HELM_DEPLOY, IdentifierRef.class, EntityYamlRootNames.HELM_DEPLOY),
+  @JsonProperty(EntityTypeConstants.HELM_ROLLBACK)
+  HELM_ROLLBACK_STEP(
+      ModuleType.CD, EntityTypeConstants.HELM_ROLLBACK, IdentifierRef.class, EntityYamlRootNames.HELM_ROLLBACK),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
   CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, IdentifierRef.class, EntityYamlRootNames.CONNECTOR),
   @JsonProperty(EntityTypeConstants.SECRETS)

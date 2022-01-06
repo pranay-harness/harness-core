@@ -184,6 +184,8 @@ io.harness.cdng.provision.terraform.TerraformApplyStepNode
 io.harness.cdng.provision.terraform.TerraformPlanStepNode
 io.harness.cdng.provision.terraform.TerraformDestroyStepNode
 io.harness.cdng.provision.terraform.TerraformRollbackStepNode
+io.harness.cdng.helm.HelmDeployStepNode
+io.harness.cdng.helm.HelmRollbackStepNode
 io.harness.steps.template.TemplateStepNode
 io.harness.cdng.manifest.yaml.GcsStoreConfig
 io.harness.ngpipeline.artifact.bean.EcrArtifactOutcome

@@ -20,6 +20,8 @@ import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepFilterJsonCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepFilterJsonCreatorV2;
 import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
+import io.harness.cdng.creator.plan.steps.HelmDeployStepPlanCreatorV2;
+import io.harness.cdng.creator.plan.steps.HelmRollbackStepPlanCreatorV2;
 import io.harness.cdng.creator.plan.steps.K8sApplyStepPlanCreator;
 import io.harness.cdng.creator.plan.steps.K8sBGSwapServicesPMSStepPlanCreator;
 import io.harness.cdng.creator.plan.steps.K8sBGSwapServicesStepPlanCreator;
@@ -88,6 +90,8 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     planCreators.add(new TerraformPlanStepPlanCreator());
     planCreators.add(new TerraformDestroyStepPlanCreator());
     planCreators.add(new TerraformRollbackStepPlanCreator());
+    planCreators.add(new HelmDeployStepPlanCreatorV2());
+    planCreators.add(new HelmRollbackStepPlanCreatorV2());
     planCreators.add(new HelmRollbackStepPlanCreator());
     planCreators.add(new CDExecutionPMSPlanCreator());
     planCreators.add(new ExecutionStepsRollbackPMSPlanCreator());

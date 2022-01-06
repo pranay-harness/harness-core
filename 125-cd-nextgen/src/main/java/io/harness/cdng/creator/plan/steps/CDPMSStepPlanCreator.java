@@ -26,6 +26,7 @@ import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
 
 import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
 public class CDPMSStepPlanCreator extends GenericStepPMSPlanCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet(StepSpecTypeConstants.HELM_DEPLOY);
+    return Collections.emptySet();
   }
 
   @Override

@@ -58,6 +58,8 @@ import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
+import io.harness.cdng.helm.HelmDeployStepNode;
+import io.harness.cdng.helm.HelmRollbackStepNode;
 import io.harness.cdng.k8s.K8sApplyStepNode;
 import io.harness.cdng.k8s.K8sBGSwapServicesStepNode;
 import io.harness.cdng.k8s.K8sBlueGreenStepNode;
@@ -302,6 +304,8 @@ public class NextGenModule extends AbstractModule {
       add(TerraformPlanStepNode.class);
       add(TerraformDestroyStepNode.class);
       add(TerraformRollbackStepNode.class);
+      add(HelmDeployStepNode.class);
+      add(HelmRollbackStepNode.class);
     }
   };
   private final NextGenConfiguration appConfig;

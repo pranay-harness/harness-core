@@ -60,6 +60,8 @@ public class YamlSchemaTransientHelper {
       add(EntityType.TERRAFORM_PLAN_STEP);
       add(EntityType.TERRAFORM_DESTROY_STEP);
       add(EntityType.TERRAFORM_ROLLBACK_STEP);
+      add(EntityType.HELM_DEPLOY_STEP);
+      add(EntityType.HELM_ROLLBACK_STEP);
     }
   };
 
