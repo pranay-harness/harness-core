@@ -2,10 +2,8 @@ package io.harness.gitsync.core.impl;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.UnexpectedException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest.GitToHarnessFileProcessingRequestBuilder;
@@ -62,7 +60,6 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
   private final GitToHarnessProgressHelper gitToHarnessProgressHelper;
   private final GitBranchSyncService gitBranchSyncService;
   private final GitSyncErrorService gitSyncErrorService;
-  private final FeatureFlagService featureFlagService;
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
@@ -199,10 +196,8 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
   }
 
   private void recordConnectivityErrors(YamlChangeSetDTO yamlChangeSetDTO, String errorMessage) {
-    if (featureFlagService.isEnabled(FeatureName.NG_GIT_ERROR_EXPERIENCE, yamlChangeSetDTO.getAccountId())) {
-      gitSyncErrorService.recordConnectivityError(
-          yamlChangeSetDTO.getAccountId(), yamlChangeSetDTO.getRepoUrl(), errorMessage);
-    }
+    gitSyncErrorService.recordConnectivityError(
+        yamlChangeSetDTO.getAccountId(), yamlChangeSetDTO.getRepoUrl(), errorMessage);
   }
 
   private GitToHarnessProcessMsvcStepResponse performBranchSync(GitToHarnessGetFilesStepRequest request) {
