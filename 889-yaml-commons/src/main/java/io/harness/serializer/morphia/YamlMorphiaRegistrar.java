@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.yaml.core.variables.NumberNGVariable;
+import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
 
 import java.util.Set;
@@ -19,5 +20,6 @@ public class YamlMorphiaRegistrar implements MorphiaRegistrar {
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("yaml.core.variables.StringNGVariable", StringNGVariable.class);
     h.put("yaml.core.variables.NumberNGVariable", NumberNGVariable.class);
+    h.put("yaml.core.variables.SecretNGVariable", SecretNGVariable.class);
   }
 }
