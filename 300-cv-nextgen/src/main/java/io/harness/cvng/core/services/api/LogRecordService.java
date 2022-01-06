@@ -16,5 +16,5 @@ public interface LogRecordService {
   List<LogRecord> getLogRecords(String verificationTaskId, Instant startTime, Instant endTime);
 
   void createDemoAnalysisData(String accountId, String verificationTaskId, String dataCollectionWorkerId,
-      Instant startTime, Instant endTime) throws IOException;
+      String demoTemplateIdentifier, Instant startTime, Instant endTime) throws IOException;
 }

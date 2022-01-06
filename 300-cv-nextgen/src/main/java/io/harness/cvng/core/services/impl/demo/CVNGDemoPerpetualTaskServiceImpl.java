@@ -1,30 +1,38 @@
 package io.harness.cvng.core.services.impl.demo;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult.DataCollectionTaskResultBuilder;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
+import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.demo.CVNGDemoPerpetualTask;
+import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.demo.CVNGDemoPerpetualTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import java.io.IOException;
-import java.time.Clock;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CVNGDemoPerpetualTaskServiceImpl implements CVNGDemoPerpetualTaskService {
   @Inject HPersistence hPersistence;
-  @Inject Clock clock;
   @Inject DataCollectionTaskService dataCollectionTaskService;
   @Inject TimeSeriesRecordService timeSeriesRecordService;
   @Inject LogRecordService logRecordService;
+  @Inject private VerificationTaskService verificationTaskService;
+  @Inject private CVConfigService cvConfigService;
 
   @Override
   public String createCVNGDemoPerpetualTask(String accountId, String dataCollectionWorkerId) {
@@ -35,9 +43,12 @@ public class CVNGDemoPerpetualTaskServiceImpl implements CVNGDemoPerpetualTaskSe
 
   @Override
   public void execute(CVNGDemoPerpetualTask cvngDemoPerpetualTask) throws Exception {
-    Optional<DataCollectionTask> dataCollectionTask = dataCollectionTaskService.getNextTask(
-        cvngDemoPerpetualTask.getAccountId(), cvngDemoPerpetualTask.getDataCollectionWorkerId());
-    if (dataCollectionTask.isPresent()) {
+    while (true) {
+      Optional<DataCollectionTask> dataCollectionTask = dataCollectionTaskService.getNextTask(
+          cvngDemoPerpetualTask.getAccountId(), cvngDemoPerpetualTask.getDataCollectionWorkerId());
+      if (!dataCollectionTask.isPresent()) {
+        break;
+      }
       DataCollectionTaskResultBuilder dataCollectionTaskResultBuilder =
           DataCollectionTaskResult.builder().dataCollectionTaskId(dataCollectionTask.get().getUuid());
       try {
@@ -64,14 +75,34 @@ public class CVNGDemoPerpetualTaskServiceImpl implements CVNGDemoPerpetualTaskSe
   }
 
   private void saveResults(DataCollectionTask dataCollectionTask) throws IOException {
+    String demoTemplateIdentifier = getTemplateIdentifier(dataCollectionTask.getVerificationTaskId());
     if (dataCollectionTask.getDataCollectionInfo().getVerificationType().equals(VerificationType.TIME_SERIES)) {
       timeSeriesRecordService.createDemoAnalysisData(dataCollectionTask.getAccountId(),
           dataCollectionTask.getVerificationTaskId(), dataCollectionTask.getDataCollectionWorkerId(),
-          dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime());
+          demoTemplateIdentifier, dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime());
     } else {
       logRecordService.createDemoAnalysisData(dataCollectionTask.getAccountId(),
           dataCollectionTask.getVerificationTaskId(), dataCollectionTask.getDataCollectionWorkerId(),
-          dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime());
+          demoTemplateIdentifier, dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime());
     }
+  }
+
+  private String getTemplateIdentifier(String verificationTaskId) {
+    VerificationTask verificationTask = verificationTaskService.get(verificationTaskId);
+    String template = "default";
+    if (verificationTask.getTaskInfo().getTaskType() == VerificationTask.TaskType.LIVE_MONITORING) {
+      CVConfig cvConfig =
+          cvConfigService.get(((VerificationTask.LiveMonitoringInfo) verificationTask.getTaskInfo()).getCvConfigId());
+      // appd_template_demo_dev
+      Pattern identifierTemplatePattern = Pattern.compile(".*_template_(.*)_dev");
+      Matcher matcher = identifierTemplatePattern.matcher(cvConfig.getFullyQualifiedIdentifier());
+      if (matcher.matches()) {
+        String templateSubstring = matcher.group(1);
+        if (isNotEmpty(templateSubstring)) {
+          template = templateSubstring;
+        }
+      }
+    }
+    return template;
   }
 }

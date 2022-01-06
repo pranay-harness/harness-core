@@ -46,7 +46,6 @@ import org.mongodb.morphia.query.Query;
 public class VerificationTaskServiceImpl implements VerificationTaskService {
   @Inject private HPersistence hPersistence;
   @Inject private Clock clock;
-
   // TODO: optimize this and add caching support. Since this collection is immutable
   @Override
   public String createLiveMonitoringVerificationTask(String accountId, String cvConfigId, DataSourceType provider) {
