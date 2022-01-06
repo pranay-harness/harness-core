@@ -1,9 +1,0 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
-
-go_library(
-    name = "db",
-    srcs = ["db.go"],
-    importpath = "github.com/wings-software/portal/product/ci/ti-service/db",
-    visibility = ["//visibility:public"],
-    deps = ["//product/ci/ti-service/types"],
-)
