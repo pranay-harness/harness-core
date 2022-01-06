@@ -576,11 +576,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     context.resetPreparedCache();
     if (task.getData().getParameters().length == 1 && task.getData().getParameters()[0] instanceof TaskParameters) {
       task.setWorkflowExecutionId(context.getWorkflowExecutionId());
-      // Resolving script, host
-      ExpressionReflectionUtils.applyExpression(task.getData().getParameters()[0],
-          (secretMode, value) -> context.renderExpression(value, stateExecutionContext));
-      // This is to resolve the template Variables
-      ExpressionReflectionUtils.applyExpression(task.getData().getParameters()[0],
+      ExpressionReflectionUtils.applyExpression((task.getData().getParameters()[0]),
           (secretMode, value) -> context.renderExpression(value, stateExecutionContext));
     }
 
