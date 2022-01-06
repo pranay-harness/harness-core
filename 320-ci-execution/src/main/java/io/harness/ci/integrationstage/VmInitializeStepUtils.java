@@ -1,29 +1,42 @@
 package io.harness.ci.integrationstage;
 
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
+import static io.harness.common.CIExecutionConstants.SHARED_VOLUME_PREFIX;
+import static io.harness.common.CIExecutionConstants.STEP_MOUNT_PATH;
+import static io.harness.common.CIExecutionConstants.STEP_VOLUME;
 import static io.harness.common.CIExecutionConstants.STEP_WORK_DIR;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.VmBuildJobInfo;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
+import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.ff.CIFeatureFlagService;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.yaml.ParameterField;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -31,13 +44,15 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
 public class VmInitializeStepUtils {
+  @Inject CIFeatureFlagService featureFlagService;
+
   public BuildJobEnvInfo getInitializeStepInfoBuilder(StageElementConfig stageElementConfig,
       CIExecutionArgs ciExecutionArgs, List<ExecutionWrapperConfig> steps, String accountId) {
     ArrayList<String> connectorIdentifiers = new ArrayList<>();
     for (ExecutionWrapperConfig executionWrapper : steps) {
       if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
         StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
-        validateConfig(stepElementConfig);
+        validateStepConfig(stepElementConfig);
         String identifier = getConnectorIdentifier(stepElementConfig);
         if (identifier != null) {
           connectorIdentifiers.add(identifier);
@@ -52,7 +67,7 @@ public class VmInitializeStepUtils {
             }
             StepElementConfig stepElementConfig =
                 IntegrationStageUtils.getStepElementConfig(executionWrapperInParallel);
-            validateConfig(stepElementConfig);
+            validateStepConfig(stepElementConfig);
             String identifier = getConnectorIdentifier(stepElementConfig);
             if (identifier != null) {
               connectorIdentifiers.add(identifier);
@@ -61,15 +76,26 @@ public class VmInitializeStepUtils {
         }
       }
     }
+    IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
+    validateStageConfig(integrationStageConfig, accountId);
+
+    Map<String, String> volumeToMountPath = getVolumeToMountPath(integrationStageConfig.getSharedPaths());
     return VmBuildJobInfo.builder()
         .ciExecutionArgs(ciExecutionArgs)
         .workDir(STEP_WORK_DIR)
         .connectorRefs(connectorIdentifiers)
         .stageVars(stageElementConfig.getVariables())
+        .volToMountPath(volumeToMountPath)
         .build();
   }
 
-  private void validateConfig(StepElementConfig stepElementConfig) {
+  private void validateStageConfig(IntegrationStageConfig integrationStageConfig, String accountId) {
+    if (!featureFlagService.isEnabled(FeatureName.CI_VM_INFRASTRUCTURE, accountId)) {
+      throw new CIStageExecutionException("infrastructure VM is not allowed");
+    }
+  }
+
+  private void validateStepConfig(StepElementConfig stepElementConfig) {
     if (stepElementConfig.getStepSpecType() instanceof CIStepInfo) {
       CIStepInfo ciStepInfo = (CIStepInfo) stepElementConfig.getStepSpecType();
       switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
@@ -142,5 +168,33 @@ public class VmInitializeStepUtils {
       }
     }
     return null;
+  }
+
+  private Map<String, String> getVolumeToMountPath(ParameterField<List<String>> parameterSharedPaths) {
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(STEP_VOLUME, STEP_MOUNT_PATH);
+    if (parameterSharedPaths == null) {
+      return volumeToMountPath;
+    }
+
+    List<String> sharedPaths = (List<String>) parameterSharedPaths.fetchFinalValue();
+    if (isEmpty(sharedPaths)) {
+      return volumeToMountPath;
+    }
+
+    int index = 0;
+    for (String path : sharedPaths) {
+      if (isEmpty(path)) {
+        continue;
+      }
+
+      String volumeName = format("%s%d", SHARED_VOLUME_PREFIX, index);
+      if (path.equals(STEP_MOUNT_PATH)) {
+        throw new InvalidRequestException(format("Shared path: %s is a reserved keyword ", path));
+      }
+      volumeToMountPath.put(volumeName, path);
+      index++;
+    }
+    return volumeToMountPath;
   }
 }

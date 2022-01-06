@@ -83,7 +83,7 @@ public class AppDynamicsHealthSourceSpec extends MetricHealthSourceSpec {
   private List<AppDynamicsCVConfig> toCVConfigs(String accountId, String orgIdentifier, String projectIdentifier,
       String environmentRef, String serviceRef, String identifier, String name, MetricPackService metricPackService) {
     List<AppDynamicsCVConfig> cvConfigs = new ArrayList<>();
-    metricPacks.forEach(metricPack -> {
+    CollectionUtils.emptyIfNull(metricPacks).forEach(metricPack -> {
       MetricPack metricPackFromDb =
           metricPack.toMetricPack(accountId, orgIdentifier, projectIdentifier, getType(), metricPackService);
       AppDynamicsCVConfig appDynamicsCVConfig = AppDynamicsCVConfig.builder()

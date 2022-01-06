@@ -86,6 +86,7 @@ import io.harness.migrations.MigrationModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.QuartzCleaner;
 import io.harness.mongo.QueryFactory;
+import io.harness.mongo.iterator.IteratorConfig;
 import io.harness.mongo.tracing.TraceMode;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
@@ -1129,12 +1130,14 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
     injector.getInstance(DeploymentFreezeDeactivationHandler.class).registerIterators();
     injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
     injector.getInstance(DeleteAccountHandler.class).registerIterators();
-    injector.getInstance(TimeoutEngine.class).registerIterators();
     injector.getInstance(DeletedEntityHandler.class).registerIterators();
     injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
     injector.getInstance(AccessRequestHandler.class).registerIterators();
     injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
     injector.getInstance(LdapGroupScheduledHandler.class).registerIterators();
+    injector.getInstance(TimeoutEngine.class)
+        .registerIterators(
+            IteratorConfig.builder().enabled(true).targetIntervalInSeconds(10).threadPoolCount(5).build());
   }
 
   private void registerCronJobs(Injector injector) {

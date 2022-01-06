@@ -309,31 +309,6 @@ if [[ "" != "$ATMOSPHERE_BACKEND" ]]; then
   yq write -i $CONFIG_FILE atmosphereBroadcaster "$ATMOSPHERE_BACKEND"
 fi
 
-if [[ "" != "$SEGMENT_ENABLED" ]]; then
-  yq write -i $CONFIG_FILE segmentConfig.enabled "$SEGMENT_ENABLED"
-fi
-
-if [[ "" != "$SEGMENT_URL" ]]; then
-  yq write -i $CONFIG_FILE segmentConfig.url "$SEGMENT_URL"
-fi
-
-if [[ "" != "$SEGMENT_APIKEY" ]]; then
-  yq write -i $CONFIG_FILE segmentConfig.apiKey "$SEGMENT_APIKEY"
-fi
-
-#segmentConfiguration is for telemetry framework
-if [[ "" != "$SEGMENT_ENABLED_NG" ]]; then
-  yq write -i $CONFIG_FILE segmentConfiguration.enabled "$SEGMENT_ENABLED_NG"
-fi
-
-if [[ "" != "$SEGMENT_URL_NG" ]]; then
-  yq write -i $CONFIG_FILE segmentConfiguration.url "$SEGMENT_URL_NG"
-fi
-
-if [[ "" != "$SEGMENT_APIKEY_NG" ]]; then
-  yq write -i $CONFIG_FILE segmentConfiguration.apiKey "$SEGMENT_APIKEY_NG"
-fi
-
 yq delete -i $REDISSON_CACHE_FILE codec
 
 if [[ "" != "$REDIS_URL" ]]; then
@@ -505,4 +480,27 @@ if [[ "" != "$OPENJDK_JRE_TAR_PATH" ]]; then
   yq write -i $CONFIG_FILE jreConfigs.openjdk8u242.jreTarPath "$OPENJDK_JRE_TAR_PATH"
 fi
 
+if [[ "" != "$SEGMENT_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE segmentConfig.enabled "$SEGMENT_ENABLED"
+fi
 
+if [[ "" != "$SEGMENT_URL" ]]; then
+  yq write -i $CONFIG_FILE segmentConfig.url "$SEGMENT_URL"
+fi
+
+if [[ "" != "$SEGMENT_APIKEY" ]]; then
+  yq write -i $CONFIG_FILE segmentConfig.apiKey "$SEGMENT_APIKEY"
+fi
+
+#segmentConfiguration is for telemetry framework
+if [[ "" != "$SEGMENT_ENABLED_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.enabled "$SEGMENT_ENABLED_NG"
+fi
+
+if [[ "" != "$SEGMENT_URL_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.url "$SEGMENT_URL_NG"
+fi
+
+if [[ "" != "$SEGMENT_APIKEY_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.apiKey "$SEGMENT_APIKEY_NG"
+fi

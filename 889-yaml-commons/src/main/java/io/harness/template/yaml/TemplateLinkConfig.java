@@ -3,7 +3,6 @@ package io.harness.template.yaml;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.validator.NGRegexValidatorConstants;
 
@@ -32,7 +31,7 @@ public class TemplateLinkConfig {
   @ApiModelProperty(hidden = true)
   String uuid;
 
-  @NotNull @EntityIdentifier @Pattern(regexp = NGRegexValidatorConstants.IDENTIFIER_PATTERN) String templateRef;
+  @NotNull String templateRef;
   @Pattern(regexp = NGRegexValidatorConstants.VERSION_LABEL_PATTERN) String versionLabel;
   JsonNode templateInputs;
 }

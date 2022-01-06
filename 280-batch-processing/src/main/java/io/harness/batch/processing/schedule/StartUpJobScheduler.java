@@ -48,7 +48,6 @@ public class StartUpJobScheduler {
 
   @Scheduled(fixedRate = 60L * 1000, initialDelay = 60L * 1000)
   public void recordMetrics() {
-    log.info("Recording metrics");
     metricsPublisher.recordMetrics();
   }
 }

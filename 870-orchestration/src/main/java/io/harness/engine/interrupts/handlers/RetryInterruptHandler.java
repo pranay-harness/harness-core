@@ -16,6 +16,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
@@ -38,7 +39,8 @@ public class RetryInterruptHandler implements InterruptHandler {
     if (isEmpty(interrupt.getNodeExecutionId())) {
       throw new InvalidRequestException("NodeExecutionId Cannot be empty for RETRY interrupt");
     }
-    NodeExecution nodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
+    NodeExecution nodeExecution = nodeExecutionService.getWithFieldsIncluded(
+        interrupt.getNodeExecutionId(), NodeProjectionUtils.fieldsForRetryInterruptHandler);
     if (!StatusUtils.retryableStatuses().contains(nodeExecution.getStatus())) {
       throw new InvalidRequestException(
           "NodeExecution is not in a retryable status. Current Status: " + nodeExecution.getStatus());

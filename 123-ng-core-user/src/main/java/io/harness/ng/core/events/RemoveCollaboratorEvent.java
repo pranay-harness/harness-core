@@ -3,6 +3,7 @@ package io.harness.ng.core.events;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.ResourceTypeConstants.USER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
@@ -11,10 +12,13 @@ import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.OrgScope;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
+import io.harness.ng.core.ResourceConstants;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -26,14 +30,16 @@ public class RemoveCollaboratorEvent implements Event {
   Scope scope;
   String email;
   String userId;
+  String userName;
   UserMembershipUpdateSource source;
 
-  public RemoveCollaboratorEvent(
-      String accountIdentifier, Scope scope, String email, String userId, UserMembershipUpdateSource source) {
+  public RemoveCollaboratorEvent(String accountIdentifier, Scope scope, String email, String userId, String userName,
+      UserMembershipUpdateSource source) {
     this.scope = scope;
     this.accountIdentifier = accountIdentifier;
     this.email = email;
     this.userId = userId;
+    this.userName = userName;
     this.source = source;
   }
 
@@ -51,6 +57,11 @@ public class RemoveCollaboratorEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
+    Map<String, String> labels = new HashMap<>();
+    if (isNotEmpty(userName)) {
+      labels.put(ResourceConstants.LABEL_KEY_RESOURCE_NAME, userName);
+    }
+    labels.put(ResourceConstants.LABEL_KEY_USER_ID, userId);
     return Resource.builder().identifier(email).type(USER).build();
   }
 

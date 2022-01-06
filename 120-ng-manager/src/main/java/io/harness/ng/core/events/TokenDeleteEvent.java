@@ -7,11 +7,14 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.event.Event;
 import io.harness.ng.core.Resource;
+import io.harness.ng.core.ResourceConstants;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.dto.TokenDTO;
 import io.harness.ng.core.mapper.ResourceScopeMapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -36,7 +39,9 @@ public class TokenDeleteEvent implements Event {
   @Override
   @JsonIgnore
   public Resource getResource() {
-    return Resource.builder().identifier(token.getIdentifier()).type(TOKEN).build();
+    Map<String, String> labels = new HashMap<>();
+    labels.put(ResourceConstants.LABEL_KEY_RESOURCE_NAME, token.getName());
+    return Resource.builder().identifier(token.getIdentifier()).type(TOKEN).labels(labels).build();
   }
 
   @Override

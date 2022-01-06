@@ -221,7 +221,7 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
         stepResponseBuilder.failureInfo(
             FailureInfo.newBuilder().setErrorMessage(vmTaskExecutionResponse.getErrorMessage()).build());
       }
-      return StepResponse.builder().status(Status.FAILED).build();
+      return stepResponseBuilder.build();
     }
   }
 

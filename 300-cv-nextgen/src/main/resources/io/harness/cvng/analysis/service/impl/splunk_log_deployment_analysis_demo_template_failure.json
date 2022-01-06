@@ -88,7 +88,7 @@
     }
   ],
   "resultSummary" : {
-    "risk" : 2,
+    "risk" : 1,
     "score" : 0.8,
     "controlClusterLabels" : [
       0,
@@ -145,7 +145,7 @@
       {
         "label" : 12,
         "clusterType" : "UNKNOWN_EVENT",
-        "risk" : 2,
+        "risk" : 1,
         "score" : 1.0,
         "count" : 14,
         "testFrequencyData" : [
@@ -450,7 +450,7 @@
           {
             "label" : 12,
             "clusterType" : "UNKNOWN_EVENT",
-            "risk" : 2,
+            "risk" : 1,
             "score" : 1.0,
             "count" : 14,
             "testFrequencyData" : [

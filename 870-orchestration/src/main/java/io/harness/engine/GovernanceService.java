@@ -6,5 +6,6 @@ import io.harness.pms.contracts.governance.GovernanceMetadata;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public interface GovernanceService {
-  GovernanceMetadata evaluateGovernancePolicies(String yaml, String accountId, String action, String planExecutionId);
+  GovernanceMetadata evaluateGovernancePolicies(String expandedJson, String accountId, String orgIdentifier,
+      String projectIdentifier, String action, String planExecutionId);
 }

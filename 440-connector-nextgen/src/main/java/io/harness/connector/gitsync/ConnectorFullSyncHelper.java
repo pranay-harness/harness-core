@@ -69,7 +69,10 @@ public class ConnectorFullSyncHelper {
     final Page<ConnectorResponseDTO> connectorResponseDtos = connectorService.list(0, 1000, entityScope.getAccountId(),
         excludeSecretManagerConnectorForFullSyncInFilter(), getStringFromStringValue(entityScope.getOrgId()),
         getStringFromStringValue(entityScope.getProjectId()), null, null, false, false);
-    return connectorResponseDtos.get().map(ConnectorResponseDTO::getConnector).collect(Collectors.toList());
+    return connectorResponseDtos.get()
+        .filter(connectorResponseDTO -> connectorResponseDTO.getGitDetails().getFilePath() == null)
+        .map(ConnectorResponseDTO::getConnector)
+        .collect(Collectors.toList());
   }
 
   private ConnectorFilterPropertiesDTO excludeSecretManagerConnectorForFullSyncInFilter() {

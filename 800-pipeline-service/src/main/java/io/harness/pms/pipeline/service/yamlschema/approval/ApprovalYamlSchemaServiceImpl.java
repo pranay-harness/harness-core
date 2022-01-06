@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.pipeline.service.yamlschema.PmsYamlSchemaHelper;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.approval.stage.ApprovalStageConfig;
@@ -16,6 +17,7 @@ import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -24,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
+import java.util.List;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class ApprovalYamlSchemaServiceImpl implements ApprovalYamlSchemaService {
@@ -33,6 +36,7 @@ public class ApprovalYamlSchemaServiceImpl implements ApprovalYamlSchemaService 
   @Inject private YamlSchemaProvider yamlSchemaProvider;
   @Inject private PmsYamlSchemaHelper pmsYamlSchemaHelper;
   @Inject private YamlSchemaGenerator yamlSchemaGenerator;
+  @Inject private List<YamlSchemaRootClass> yamlSchemaRootClasses;
 
   @Override
   public PartialSchemaDTO getApprovalYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
@@ -50,6 +54,11 @@ public class ApprovalYamlSchemaServiceImpl implements ApprovalYamlSchemaService 
     }
 
     pmsYamlSchemaHelper.removeUnwantedNodes(definitions, ImmutableSet.of(YAMLFieldNameConstants.ROLLBACK_STEPS));
+    yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier, scope, (ObjectNode) definitions,
+        YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()));
+
+    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(approvalStageSchema.get(DEFINITIONS_NODE),
+        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), "");
 
     yamlSchemaGenerator.modifyRefsNamespace(approvalStageSchema, APPROVAL_NAMESPACE);
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();

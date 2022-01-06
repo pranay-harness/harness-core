@@ -117,7 +117,7 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
   List<String> timeoutInstanceIds;
   TimeoutDetails timeoutDetails;
 
-  @Singular List<UnitProgress> unitProgresses;
+  @Singular @Deprecated List<UnitProgress> unitProgresses;
 
   Map<String, Object> progressData;
 

@@ -39,13 +39,17 @@ public class ConnectorRefExtractorHelper implements EntityReferenceExtractor {
       ParameterField<String> connectorRef = withConnectorRef.extractConnectorRefs().get(key);
 
       if (ParameterField.isNull(connectorRef)) {
-        return result;
+        continue;
       }
-      String fullQualifiedDomainName =
-          VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + key;
-      result.add(FilterCreatorHelper.convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier, projectIdentifier,
-          fullQualifiedDomainName, connectorRef, EntityTypeProtoEnum.CONNECTORS));
+
+      if (!connectorRef.isExpression()) {
+        String fullQualifiedDomainName =
+            VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + key;
+        result.add(FilterCreatorHelper.convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier,
+            projectIdentifier, fullQualifiedDomainName, connectorRef, EntityTypeProtoEnum.CONNECTORS));
+      }
     }
+
     return result;
   }
 }

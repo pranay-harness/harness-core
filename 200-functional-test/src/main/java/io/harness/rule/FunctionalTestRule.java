@@ -422,8 +422,12 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
                                            .build());
     configuration.setLdapSyncJobConfig(
         LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
-    configuration.setSegmentConfiguration(
-        SegmentConfiguration.builder().enabled(false).apiKey("dummy_api_key").url("dummy_url").build());
+    configuration.setSegmentConfiguration(SegmentConfiguration.builder()
+                                              .enabled(false)
+                                              .apiKey("dummy_api_key")
+                                              .url("dummy_url")
+                                              .certValidationRequired(false)
+                                              .build());
     return configuration;
   }
 

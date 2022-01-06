@@ -148,6 +148,7 @@ java_library(
         "//960-persistence:supporter-test",
         "//960-yaml-sdk:module",
         "//980-commons:module",
+        "//980-commons:tests",
         "//990-commons-test:module",
         "@maven//:io_grpc_grpc_testing",
         "@maven//:io_swagger_core_v3_swagger_annotations",

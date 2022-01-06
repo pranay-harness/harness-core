@@ -11,6 +11,7 @@ import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.REQUIRED_NODE;
 
 import io.harness.EntityType;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
@@ -22,6 +23,7 @@ import com.fasterxml.jackson.databind.node.ValueNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import lombok.AccessLevel;
@@ -37,8 +39,23 @@ import lombok.extern.slf4j.Slf4j;
 public class YamlSchemaProvider {
   YamlSchemaHelper yamlSchemaHelper;
 
+  public YamlSchemaWithDetails getSchemaWithDetails(
+      EntityType entityType, String orgIdentifier, String projectIdentifier, Scope scope, ModuleType moduleType) {
+    YamlSchemaWithDetails schemaDetailsForEntityType = yamlSchemaHelper.getSchemaDetailsForEntityType(entityType);
+    ObjectNode schema = getYamlSchemaUtil(orgIdentifier, projectIdentifier, scope, schemaDetailsForEntityType);
+
+    schemaDetailsForEntityType.setSchema(schema);
+    schemaDetailsForEntityType.setModuleType(moduleType);
+    return schemaDetailsForEntityType;
+  }
+
   public JsonNode getYamlSchema(EntityType entityType, String orgIdentifier, String projectIdentifier, Scope scope) {
     final YamlSchemaWithDetails schemaDetailsForEntityType = yamlSchemaHelper.getSchemaDetailsForEntityType(entityType);
+    return getYamlSchemaUtil(orgIdentifier, projectIdentifier, scope, schemaDetailsForEntityType);
+  }
+
+  public ObjectNode getYamlSchemaUtil(
+      String orgIdentifier, String projectIdentifier, Scope scope, YamlSchemaWithDetails schemaDetailsForEntityType) {
     final ObjectNode schema = schemaDetailsForEntityType.getSchema().deepCopy();
 
     try {
@@ -132,5 +149,22 @@ public class YamlSchemaProvider {
       JsonNodeUtils.merge(definitions, step.get(DEFINITIONS_NODE));
     }
     return definitions;
+  }
+
+  public List<YamlSchemaWithDetails> getCrossFunctionalStepsSchemaDetails(String projectIdentifier,
+      String orgIdentifier, Scope scope, List<EntityType> v2StepEntityTypes, ModuleType moduleType) {
+    List<YamlSchemaWithDetails> yamlSchemaWithDetailsList = new ArrayList<>();
+    for (EntityType entityType : v2StepEntityTypes) {
+      YamlSchemaWithDetails yamlSchemaWithDetails =
+          getSchemaWithDetails(entityType, orgIdentifier, projectIdentifier, scope, moduleType);
+      if (yamlSchemaWithDetails.getYamlSchemaMetadata() != null
+          && yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported() != null
+          && (yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported().size() > 1
+              || yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported().size() == 1
+                  && yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported().get(0) != moduleType)) {
+        yamlSchemaWithDetailsList.add(yamlSchemaWithDetails);
+      }
+    }
+    return yamlSchemaWithDetailsList;
   }
 }

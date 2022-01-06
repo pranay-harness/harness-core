@@ -15,10 +15,9 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "GitSyncErrorCountDTOKeys")
-@Schema(name = "GitSyncErrorCount",
-    description = "This contains the count of all Git To Harness errors and connectivity errors")
+@Schema(name = "GitSyncErrorCount", description = "This is the total number of Git sync and connectivity errors")
 @OwnedBy(PL)
 public class GitSyncErrorCountDTO {
-  long gitToHarnessErrorCount;
-  long connectivityErrorCount;
+  @Schema(description = "This is the number of Git to Harness errors") long gitToHarnessErrorCount;
+  @Schema(description = "This is the number of connectivity errors") long connectivityErrorCount;
 }

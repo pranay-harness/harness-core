@@ -399,8 +399,12 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
             .incorrectAttemptsUntilSecOpsNotified(50)
             .limit(TotpLimit.builder().count(10).duration(3).durationUnit(TimeUnit.MINUTES).build())
             .build());
-    SegmentConfiguration segmentConfiguration =
-        SegmentConfiguration.builder().enabled(false).url("dummy_url").apiKey("dummy_key").build();
+    SegmentConfiguration segmentConfiguration = SegmentConfiguration.builder()
+                                                    .enabled(false)
+                                                    .url("dummy_url")
+                                                    .apiKey("dummy_key")
+                                                    .certValidationRequired(false)
+                                                    .build();
     configuration.setSegmentConfiguration(segmentConfiguration);
     return configuration;
   }

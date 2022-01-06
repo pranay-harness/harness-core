@@ -21,6 +21,9 @@ public interface PlanExecutionService extends NodeStatusUpdateObserver {
 
   PlanExecution updateStatus(@NonNull String planExecutionId, @NonNull Status status, Consumer<Update> ops);
 
+  PlanExecution updateStatusForceful(
+      @NonNull String planExecutionId, @NonNull Status status, Consumer<Update> ops, boolean forced);
+
   PlanExecution get(String planExecutionId);
 
   PlanExecution save(PlanExecution planExecution);

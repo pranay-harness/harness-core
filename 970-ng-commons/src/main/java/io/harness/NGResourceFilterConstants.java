@@ -12,6 +12,7 @@ public class NGResourceFilterConstants {
   public static final String SEARCH_TERM_KEY = "searchTerm";
   public static final String FILTER_QUERY_KEY = "filterQuery";
   public static final String MODULE_TYPE_KEY = "moduleType";
+  public static final String HAS_MODULE_KEY = "hasModule";
   public static final String TYPE_KEY = "type";
   public static final String PAGE_KEY = "pageIndex";
   public static final String SIZE_KEY = "pageSize";

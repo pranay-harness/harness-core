@@ -52,7 +52,8 @@ public class CIInitializeTaskTest extends CategoryTest {
   public void runWithTaskParams() {
     CIInitializeTaskParams params = CIK8InitializeTaskParams.builder().build();
     K8sTaskExecutionResponse response = mock(K8sTaskExecutionResponse.class);
-    when(ciK8InitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient)).thenReturn(response);
+    when(ciK8InitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient, task.getTaskId()))
+        .thenReturn(response);
     assertEquals(task.run(params), response);
   }
 

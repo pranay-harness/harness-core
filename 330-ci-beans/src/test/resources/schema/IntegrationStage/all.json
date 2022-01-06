@@ -3318,7 +3318,8 @@
                 "Maven",
                 "Bazel",
                 "Gradle",
-                "Dotnet"
+                "Dotnet",
+                "Nunitconsole"
               ]
             },
             "connectorRef": {
@@ -4839,6 +4840,12 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/NGVariable"
+              }
+            },
+            "volToMountPath": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
               }
             },
             "workDir": {

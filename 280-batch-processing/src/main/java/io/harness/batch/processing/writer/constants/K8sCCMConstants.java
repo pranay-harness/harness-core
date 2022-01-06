@@ -16,7 +16,8 @@ public class K8sCCMConstants {
   public static final String INSTANCE_FAMILY = "beta.kubernetes.io/instance-type";
   public static final String GKE_NODE_POOL_KEY = "cloud.google.com/gke-nodepool";
   public static final String AKS_NODE_POOL_KEY = "agentpool";
-  public static final String EKS_NODE_POOL_KEY = "alpha.eksctl.io/nodegroup-name";
+  public static final String EKSCTL_NODE_POOL_KEY = "alpha.eksctl.io/nodegroup-name";
+  public static final String EKS_NODE_POOL_KEY = "eks.amazonaws.com/nodegroup";
   public static final String COMPUTE_TYPE = "eks.amazonaws.com/compute-type";
   public static final String UNALLOCATED = "Unallocated";
   public static final String DEFAULT_DEPLOYMENT_TYPE = "Pod";

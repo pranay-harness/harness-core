@@ -144,7 +144,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       DelegateTask task = taskBuilder.build();
 
       if (task.getData().isParked()) {
-        delegateService.saveDelegateTask(task, DelegateTask.Status.PARKED);
+        delegateTaskServiceClassic.processDelegateTask(task, DelegateTask.Status.PARKED);
       } else {
         if (task.getData().isAsync()) {
           delegateService.queueTask(task);

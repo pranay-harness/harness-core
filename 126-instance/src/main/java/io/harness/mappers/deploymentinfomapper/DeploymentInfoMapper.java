@@ -4,9 +4,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.deploymentinfo.DeploymentInfoDTO;
 import io.harness.dtos.deploymentinfo.K8sDeploymentInfoDTO;
+import io.harness.dtos.deploymentinfo.NativeHelmDeploymentInfoDTO;
 import io.harness.dtos.deploymentinfo.ReferenceK8sPodInfoDTO;
 import io.harness.entities.deploymentinfo.DeploymentInfo;
 import io.harness.entities.deploymentinfo.K8sDeploymentInfo;
+import io.harness.entities.deploymentinfo.NativeHelmDeploymentInfo;
 import io.harness.entities.deploymentinfo.ReferenceK8sPodInfo;
 import io.harness.exception.InvalidRequestException;
 
@@ -20,6 +22,8 @@ public class DeploymentInfoMapper {
       return ReferenceK8sPodInfoMapper.toDTO((ReferenceK8sPodInfo) deploymentInfo);
     } else if (deploymentInfo instanceof K8sDeploymentInfo) {
       return K8sDeploymentInfoMapper.toDTO((K8sDeploymentInfo) deploymentInfo);
+    } else if (deploymentInfo instanceof NativeHelmDeploymentInfo) {
+      return NativeHelmDeploymentInfoMapper.toDTO((NativeHelmDeploymentInfo) deploymentInfo);
     }
     throw new InvalidRequestException("No DeploymentInfoMapper toDTO found for deploymentInfo : {}" + deploymentInfo);
   }
@@ -29,6 +33,8 @@ public class DeploymentInfoMapper {
       return ReferenceK8sPodInfoMapper.toEntity((ReferenceK8sPodInfoDTO) deploymentInfoDTO);
     } else if (deploymentInfoDTO instanceof K8sDeploymentInfoDTO) {
       return K8sDeploymentInfoMapper.toEntity((K8sDeploymentInfoDTO) deploymentInfoDTO);
+    } else if (deploymentInfoDTO instanceof NativeHelmDeploymentInfoDTO) {
+      return NativeHelmDeploymentInfoMapper.toEntity((NativeHelmDeploymentInfoDTO) deploymentInfoDTO);
     }
     throw new InvalidRequestException(
         "No DeploymentInfoMapper toEntity found for deploymentInfo : {}" + deploymentInfoDTO);

@@ -443,10 +443,13 @@ import io.harness.serializer.KryoRegistrar;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CodeDeployParams;
+import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.beans.s3.S3FileRequest;
 import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
@@ -471,6 +474,7 @@ import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
+import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
@@ -495,6 +499,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricData.NewRelicMetricSlice;
 import software.wings.service.impl.newrelic.NewRelicMetricData.NewRelicMetricTimeSlice;
 import software.wings.settings.validation.ConnectivityValidationAttributes;
+import software.wings.sm.states.JenkinsExecutionResponse;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -509,9 +514,13 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   public void register(Kryo kryo) {
     kryo.register(SettingAttribute.class, 5008);
     kryo.register(AwsConfig.class, 5013);
+    kryo.register(JenkinsConfig.class, 5012);
     kryo.register(YamlGitConfig.class, 5547);
     kryo.register(YamlGitConfig.SyncMode.class, 5548);
     kryo.register(SettingAttribute.SettingCategory.class, 5069);
+    kryo.register(BuildDetails.class, 5120);
+    kryo.register(JenkinsExecutionResponse.class, 5146);
+
     kryo.register(software.wings.beans.yaml.GitCommand.GitCommandType.class, 5190);
     kryo.register(GitConfig.class, 5191);
     kryo.register(software.wings.beans.yaml.GitCommandExecutionResponse.class, 5192);
@@ -529,12 +538,15 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GitDiffResult.class, 5208);
     kryo.register(GitPushResult.class, 5210);
     kryo.register(GitPushResult.RefUpdate.class, 5215);
+    kryo.register(JenkinsTaskParams.class, 5234);
     kryo.register(GitFetchFilesRequest.class, 5470);
     kryo.register(GitFetchFilesResult.class, 5471);
+    kryo.register(JenkinsSubTaskType.class, 5515);
     kryo.register(GitFilesBetweenCommitsRequest.class, 5558);
     kryo.register(ConnectivityValidationAttributes.class, 5567);
     kryo.register(AwsElbListener.class, 5600);
     kryo.register(ShellScriptProvisionParameters.class, 7151);
+    kryo.register(BuildDetails.BuildStatus.class, 7174);
     kryo.register(CCMConfig.class, 7248);
     kryo.register(GitConfig.UrlType.class, 7460);
     kryo.register(GitConfig.ProviderType.class, 40022);

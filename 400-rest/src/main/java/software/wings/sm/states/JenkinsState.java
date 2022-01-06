@@ -26,9 +26,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.serializer.KryoSerializer;
@@ -76,12 +74,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
@@ -373,7 +366,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
   public ExecutionResponse startJenkinsPollTask(ExecutionContext context, Map<String, ResponseData> response) {
     JenkinsExecutionResponse jenkinsExecutionResponse = (JenkinsExecutionResponse) response.values().iterator().next();
     String resolvedJenkinsConfigTemplate = null;
-    if (isEmpty(jenkinsExecutionResponse.queuedBuildUrl)) {
+    if (isEmpty(jenkinsExecutionResponse.getQueuedBuildUrl())) {
       return ExecutionResponse.builder().async(true).executionStatus(FAILED).build();
     }
     if (!isEmpty(getTemplateExpressions())) {
@@ -413,12 +406,12 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
                                               .jenkinsConfig(jenkinsConfig)
                                               .encryptedDataDetails(secretManager.getEncryptionDetails(
                                                   jenkinsConfig, context.getAppId(), context.getWorkflowExecutionId()))
-                                              .activityId(jenkinsExecutionResponse.activityId)
+                                              .activityId(jenkinsExecutionResponse.getActivityId())
                                               .unitName(COMMAND_UNIT_NAME)
                                               .unstableSuccess(unstableSuccess)
                                               .injectEnvVars(injectEnvVars)
                                               .subTaskType(JenkinsSubTaskType.POLL_TASK)
-                                              .queuedBuildUrl(jenkinsExecutionResponse.queuedBuildUrl)
+                                              .queuedBuildUrl(jenkinsExecutionResponse.getQueuedBuildUrl())
                                               .appId(appId)
                                               .build();
 
@@ -433,7 +426,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
     JenkinsExecutionData jenkinsExecutionData = (JenkinsExecutionData) context.getStateExecutionData();
-    jenkinsExecutionData.setActivityId(jenkinsExecutionResponse.activityId);
+    jenkinsExecutionData.setActivityId(jenkinsExecutionResponse.getActivityId());
     jenkinsExecutionData.setJobStatus(jenkinsExecutionResponse.getJenkinsResult());
     jenkinsExecutionData.setBuildUrl(jenkinsExecutionResponse.getJobUrl());
     jenkinsExecutionData.setBuildNumber(jenkinsExecutionResponse.getBuildNumber());
@@ -610,30 +603,5 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
   @Override
   public boolean isSelectionLogsTrackingForTasksEnabled() {
     return true;
-  }
-
-  @Data
-  @Builder
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = false)
-  public static final class JenkinsExecutionResponse implements DelegateTaskNotifyResponseData {
-    private DelegateMetaInfo delegateMetaInfo;
-    private ExecutionStatus executionStatus;
-    private String jenkinsResult;
-    private String errorMessage;
-    private String jobUrl;
-    private List<FilePathAssertionEntry> filePathAssertionMap = Lists.newArrayList();
-    private String buildNumber;
-    private Map<String, String> metadata;
-    private Map<String, String> jobParameters;
-    private Map<String, String> envVars;
-    private String description;
-    private String buildDisplayName;
-    private String buildFullDisplayName;
-    private String queuedBuildUrl;
-    private JenkinsSubTaskType subTaskType;
-    private String activityId;
-    private Long timeElapsed; // time taken for task completion
   }
 }

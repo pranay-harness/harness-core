@@ -1,10 +1,12 @@
 package io.harness.cvng.servicelevelobjective.services.impl;
 
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.utils.DateTimeUtils;
+import io.harness.cvng.servicelevelobjective.SLORiskCountResponse;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardApiFilter;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
@@ -37,6 +39,7 @@ public class SLODashboardServiceImpl implements SLODashboardService {
   @Inject private SLIRecordService sliRecordService;
   @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Inject private Clock clock;
+  @Inject private NextGenService nextGenService;
   @Override
   public PageResponse<SLODashboardWidget> getSloDashboardWidgets(
       ProjectParams projectParams, SLODashboardApiFilter filter, PageParams pageParams) {
@@ -62,6 +65,12 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .pageItemCount(sloPageResponse.getPageItemCount())
         .content(sloDashboardWidgets)
         .build();
+  }
+
+  @Override
+  public SLORiskCountResponse getRiskCount(
+      ProjectParams projectParams, SLODashboardApiFilter serviceLevelObjectiveFilter) {
+    return serviceLevelObjectiveService.getRiskCount(projectParams, serviceLevelObjectiveFilter);
   }
 
   private SLODashboardWidget getSloDashboardWidget(ProjectParams projectParams,
@@ -94,6 +103,17 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .sloTargetPercentage(serviceLevelObjective.getSloTargetPercentage())
         .monitoredServiceIdentifier(slo.getMonitoredServiceRef())
         .monitoredServiceName(monitoredService.getName())
+        .environmentIdentifier(monitoredService.getEnvironmentRef())
+        .environmentName(
+            nextGenService
+                .getEnvironment(serviceLevelObjective.getAccountId(), serviceLevelObjective.getOrgIdentifier(),
+                    serviceLevelObjective.getProjectIdentifier(), monitoredService.getEnvironmentRef())
+                .getName())
+        .serviceName(nextGenService
+                         .getService(serviceLevelObjective.getAccountId(), serviceLevelObjective.getOrgIdentifier(),
+                             serviceLevelObjective.getProjectIdentifier(), monitoredService.getServiceRef())
+                         .getName())
+        .serviceIdentifier(monitoredService.getServiceRef())
         .healthSourceIdentifier(slo.getHealthSourceRef())
         .healthSourceName(getHealthSourceName(monitoredService, slo.getHealthSourceRef()))
         .tags(slo.getTags())

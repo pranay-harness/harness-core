@@ -230,6 +230,8 @@ if [[ "" != "$RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS" ]]; then
   yq write -i $CONFIG_FILE resourceGroupServiceConfig.mongo.hosts[0].port ${RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS##*:}
 fi
 
+replace_key_value ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
+
 replace_key_value resourceGroupServiceConfig.mongo.username "$RESOURCE_GROUP_MONGO_USERNAME"
 replace_key_value resourceGroupServiceConfig.mongo.password "$RESOURCE_GROUP_MONGO_PASSWORD"
 

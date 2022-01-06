@@ -624,8 +624,9 @@ public class NgUserServiceImpl implements NgUserService {
         //  This is benign. Move on.
       }
       if (userMembership != null) {
+        String userName = userMetadata.map(UserMetadata::getName).orElse(null);
         outboxService.save(
-            new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
+            new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, userName, source));
       }
       return userMembership;
     });
@@ -697,12 +698,13 @@ public class NgUserServiceImpl implements NgUserService {
 
       Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
       String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
+      String userName = userMetadata.map(UserMetadata::getName).orElse(null);
 
       userMemberships.forEach(
           userMembership -> Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
             userMembershipRepository.delete(userMembership);
-            outboxService.save(
-                new RemoveCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
+            outboxService.save(new RemoveCollaboratorEvent(
+                scope.getAccountIdentifier(), scope, publicIdentifier, userId, userName, source));
             return userMembership;
           })));
     }
@@ -717,12 +719,13 @@ public class NgUserServiceImpl implements NgUserService {
 
       Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
       String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
+      String userName = userMetadata.map(UserMetadata::getName).orElse(null);
 
       userMemberships.forEach(
           userMembership -> Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
             userMembershipRepository.delete(userMembership);
             outboxService.save(new RemoveCollaboratorEvent(userMembership.getScope().getAccountIdentifier(),
-                userMembership.getScope(), publicIdentifier, userId, source));
+                userMembership.getScope(), publicIdentifier, userId, userName, source));
             return userMembership;
           })));
     }

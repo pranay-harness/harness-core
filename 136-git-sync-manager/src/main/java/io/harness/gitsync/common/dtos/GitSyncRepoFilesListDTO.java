@@ -18,9 +18,10 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @ApiModel("GitSyncRepoFilesList")
 @FieldNameConstants(innerTypeName = "GitSyncConfigFilesListDTOKeys")
-@Schema(name = "GitSyncRepoFilesList", description = "This contains a list of Repo Files with a specific ModuleType")
+@Schema(name = "GitSyncRepoFilesList", description = "This contains a list of repo files with a specific Module Type")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GitSyncRepoFilesListDTO {
-  private ModuleType moduleType;
+  @Schema(description = "Module Type") private ModuleType moduleType;
+  @Schema(description = "List of all the repo files specific to the given Module Type")
   private List<GitSyncRepoFilesDTO> gitSyncRepoFilesList;
 }

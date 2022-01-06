@@ -5,6 +5,12 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetFormatYamlToOriginYaml;
 import static io.harness.pms.yaml.validation.RuntimeInputValuesValidator.validateStaticValues;
+import static io.harness.template.beans.NGTemplateConstants.DUMMY_NODE;
+import static io.harness.template.beans.NGTemplateConstants.SPEC;
+import static io.harness.template.beans.NGTemplateConstants.TEMPLATE;
+import static io.harness.template.beans.NGTemplateConstants.TEMPLATE_INPUTS;
+import static io.harness.template.beans.NGTemplateConstants.TEMPLATE_REF;
+import static io.harness.template.beans.NGTemplateConstants.TEMPLATE_VERSION_LABEL;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -53,13 +59,6 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class TemplateMergeHelper {
-  private static final String TEMPLATE = "template";
-  private static final String TEMPLATE_REF = "templateRef";
-  private static final String TEMPLATE_VERSION_LABEL = "versionLabel";
-  private static final String TEMPLATE_INPUTS = "templateInputs";
-  private static final String DUMMY_NODE = "dummy";
-  private static final String SPEC = "spec";
-
   private NGTemplateService templateService;
 
   public String getTemplateInputs(String accountId, String orgIdentifier, String projectIdentifier,

@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
 import io.harness.cvng.models.VerificationType;
 
@@ -17,6 +18,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
+import org.apache.commons.lang3.tuple.Pair;
 
 @Data
 @Value
@@ -40,14 +42,15 @@ public class HealthSourceDTO {
   public static HealthSource toHealthSource(List<CVConfig> cvConfigs,
       Map<DataSourceType, CVConfigToHealthSourceTransformer> dataSourceTypeToHealthSourceTransformerMap) {
     Preconditions.checkState(isNotEmpty(cvConfigs), "Cannot convert to HealthSource if cvConfig list is empty");
-
+    CVConfig baseCVConfig = cvConfigs.get(0);
     CVConfigToHealthSourceTransformer<CVConfig, HealthSourceSpec> cvConfigToHealthSourceTransformer =
-        dataSourceTypeToHealthSourceTransformerMap.get(cvConfigs.get(0).getType());
-
+        dataSourceTypeToHealthSourceTransformerMap.get(baseCVConfig.getType());
+    Pair<String, String> nameSpaceAndIdentifier =
+        HealthSourceService.getNameSpaceAndIdentifier(baseCVConfig.getFullyQualifiedIdentifier());
     return HealthSource.builder()
-        .name(cvConfigs.get(0).getMonitoringSourceName())
-        .type(dataSourceTypeMonitoredServiceDataSourceTypeMap.get(cvConfigs.get(0).getType()))
-        .identifier(cvConfigs.get(0).getIdentifier())
+        .name(baseCVConfig.getMonitoringSourceName())
+        .type(dataSourceTypeMonitoredServiceDataSourceTypeMap.get(baseCVConfig.getType()))
+        .identifier(nameSpaceAndIdentifier.getValue())
         .spec(cvConfigToHealthSourceTransformer.transform(cvConfigs))
         .build();
   }

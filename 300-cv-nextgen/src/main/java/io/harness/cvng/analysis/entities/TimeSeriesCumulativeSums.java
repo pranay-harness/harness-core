@@ -5,7 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
+import io.harness.cvng.CVConstants;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
@@ -14,8 +16,10 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +61,9 @@ public final class TimeSeriesCumulativeSums implements PersistentEntity, UuidAwa
   @NotEmpty private Instant analysisEndTime;
 
   private List<TransactionMetricSums> transactionMetricSums;
-
+  @Builder.Default
+  @FdTtlIndex
+  private Date validUntil = Date.from(OffsetDateTime.now().plus(CVConstants.MAX_DATA_RETENTION_DURATION).toInstant());
   @Data
   @Builder
   @FieldNameConstants(innerTypeName = "TransactionMetricSumsKeys")

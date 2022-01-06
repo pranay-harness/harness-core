@@ -44,7 +44,7 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
   }
 
   @Override
-  public K8sTaskExecutionResponse executeTaskInternal(CICleanupTaskParams ciCleanupTaskParams) {
+  public K8sTaskExecutionResponse executeTaskInternal(CICleanupTaskParams ciCleanupTaskParams, String taskId) {
     CIK8CleanupTaskParams taskParams = (CIK8CleanupTaskParams) ciCleanupTaskParams;
     String namespace = taskParams.getNamespace();
 

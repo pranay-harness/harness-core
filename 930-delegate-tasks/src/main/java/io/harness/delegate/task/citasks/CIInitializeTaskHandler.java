@@ -10,5 +10,5 @@ public interface CIInitializeTaskHandler {
   CIInitializeTaskHandler.Type getType();
 
   CITaskExecutionResponse executeTaskInternal(
-      CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient);
+      CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient, String taskId);
 }

@@ -3,6 +3,7 @@ package io.harness.dtos.deploymentinfo;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.service.beans.ServiceSpecType;
 import io.harness.util.InstanceSyncKey;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -21,6 +22,11 @@ public class K8sDeploymentInfoDTO extends DeploymentInfoDTO {
   @NotNull private LinkedHashSet<String> namespaces;
   @NotNull private String releaseName;
   private String blueGreenStageColor;
+
+  @Override
+  public String getType() {
+    return ServiceSpecType.KUBERNETES;
+  }
 
   @Override
   public String prepareInstanceSyncHandlerKey() {

@@ -32,7 +32,7 @@ public class SkipPreFacilitationChecker extends ExpressionEvalPreFacilitationChe
     if (EmptyPredicate.isNotEmpty(skipCondition)) {
       try {
         boolean skipConditionValue = (Boolean) engineExpressionService.evaluateExpression(ambiance, skipCondition);
-        nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
+        nodeExecutionService.updateV2(nodeExecution.getUuid(), ops -> {
           ops.set(NodeExecutionKeys.skipInfo,
               SkipInfo.newBuilder().setEvaluatedCondition(skipConditionValue).setSkipCondition(skipCondition).build());
         });
