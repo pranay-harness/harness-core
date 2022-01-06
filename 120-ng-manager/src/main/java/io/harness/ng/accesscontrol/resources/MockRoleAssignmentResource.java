@@ -52,7 +52,8 @@ public class MockRoleAssignmentResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Body RoleAssignmentFilterDTO roleAssignmentFilter) {
-    PageResponse<RoleAssignmentResponseDTO> pageResponse = PageResponse.<RoleAssignmentResponseDTO>builder().build();
+    PageResponse<RoleAssignmentResponseDTO> pageResponse =
+        PageResponse.<RoleAssignmentResponseDTO>builder().content(new ArrayList<>()).empty(true).build();
     return ResponseDTO.newResponse(pageResponse);
   }
 
