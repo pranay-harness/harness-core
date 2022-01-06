@@ -55,6 +55,7 @@ spec:
         harness.io/account: ${kubernetesAccountLabel}
         harness.io/name: ${delegateName}
     spec:
+      terminationGracePeriodSeconds: 600
       containers:
       - image: ${delegateDockerImage}
         imagePullPolicy: Always
