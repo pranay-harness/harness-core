@@ -56,5 +56,7 @@ public class EntityYamlRootNames {
   public static String TERRAFORM_PLAN = "TerraformPlan";
   public static String TERRAFORM_DESTROY = "TerraformDestroy";
   public static String TERRAFORM_ROLLBACK = "TerraformRollback";
+  public static String HELM_DEPLOY = "HelmDeploy";
+  public static String HELM_ROLLBACK = "HelmRollback";
   public static String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }
