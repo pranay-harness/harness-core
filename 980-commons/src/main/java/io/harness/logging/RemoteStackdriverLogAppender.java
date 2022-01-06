@@ -319,8 +319,6 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   private Map<String, String> getLogLabels() {
     String delegateId = getDelegateId();
     if (isEmpty(logLabels) || !StringUtils.equals(delegateId, logLabels.get("delegateId"))) {
-      // Stackdriver has a problem with label containing 'https://' ( ':' seems to be a special character so we should
-      // remove it - '/' confirmed to work )
       ImmutableMap.Builder<String, String> labelsBuilder =
           ImmutableMap.<String, String>builder()
               .put("source", localhostName)
@@ -328,7 +326,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
               .put("version", versionInfoManager.getFullVersion())
               .put("app", getAppName())
               .put("accountId", getAccountId())
-              .put("managerHost", substringAfter(getManagerHost(), "://"));
+              .put("managerHost", getManagerHost());
 
       if (isNotBlank(delegateId)) {
         labelsBuilder.put("delegateId", delegateId);
