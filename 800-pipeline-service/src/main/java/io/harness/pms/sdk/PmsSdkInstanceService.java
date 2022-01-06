@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.cache.Cache;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -54,7 +55,7 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
   private final SchemaFetcher schemaFetcher;
   Cache<String, PmsSdkInstance> instanceCache;
   TransactionHelper transactionHelper;
-  boolean shouldUseInstanceCache;
+  @Setter boolean shouldUseInstanceCache;
 
   @Inject
   public PmsSdkInstanceService(PmsSdkInstanceRepository pmsSdkInstanceRepository, MongoTemplate mongoTemplate,
@@ -125,9 +126,14 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
       PmsSdkInstance instance = mongoTemplate.findAndModify(
           query, update, new FindAndModifyOptions().upsert(true).returnNew(true), PmsSdkInstance.class);
       if (instance != null) {
+        log.info("Updating sdkInstanceCache for module {}", request.getName());
         instanceCache.put(request.getName(), instance);
+        log.info("Updated sdkInstanceCache for module {}", request.getName());
+      } else {
+        log.warn("Found instance as null for module {} . Fallback to database", request.getName());
+        shouldUseInstanceCache = false;
       }
-      return null;
+      return instance;
     });
   }
 
@@ -198,5 +204,9 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
 
   public List<PmsSdkInstance> getActiveInstances() {
     return new ArrayList<>(getSdkInstanceCacheValue().values());
+  }
+
+  public List<PmsSdkInstance> getActiveInstancesFromDB() {
+    return new ArrayList<>(pmsSdkInstanceRepository.findByActive(true));
   }
 }

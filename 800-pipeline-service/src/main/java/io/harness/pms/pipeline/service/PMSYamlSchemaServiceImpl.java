@@ -303,6 +303,11 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
                                                  .map(ModuleType::fromString)
                                                  .collect(Collectors.toList());
 
+      if (instanceModuleTypes.size() != projectModuleTypes.size()) {
+        log.warn(
+            "There is a mismatch of instanceModuleTypes and projectModuleTypes. Please investigate if the sdk is registered or not");
+      }
+
       return (List<ModuleType>) CollectionUtils.intersection(projectModuleTypes, instanceModuleTypes);
     } catch (Exception e) {
       log.warn(
