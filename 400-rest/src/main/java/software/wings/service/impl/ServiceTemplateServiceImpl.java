@@ -21,6 +21,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.ff.FeatureFlagService;
@@ -422,6 +423,21 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       if (ocParamsOverrideAppManifest != null) {
         serviceTemplate.setOcParamsOverrideFile(applicationManifestService.getManifestFileByFileName(
             ocParamsOverrideAppManifest.getUuid(), AppManifestKind.OC_PARAMS.getDefaultFileName()));
+      }
+      populateKustomizePatches(serviceTemplate);
+    }
+  }
+
+  private void populateKustomizePatches(ServiceTemplate serviceTemplate) {
+    if (featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, serviceTemplate.getAccountId())) {
+      ApplicationManifest kustomizePatchesManifest =
+          applicationManifestService.getAppManifest(serviceTemplate.getAppId(), serviceTemplate.getEnvId(),
+              serviceTemplate.getServiceId(), AppManifestKind.KUSTOMIZE_PATCHES);
+      serviceTemplate.setKustomizePatchesOverrideAppManifest(kustomizePatchesManifest);
+
+      if (kustomizePatchesManifest != null) {
+        serviceTemplate.setKustomizePatchesOverrideManifestFile(applicationManifestService.getManifestFileByFileName(
+            kustomizePatchesManifest.getUuid(), AppManifestKind.KUSTOMIZE_PATCHES.getDefaultFileName()));
       }
     }
   }
