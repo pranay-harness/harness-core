@@ -1,5 +1,9 @@
 package software.wings.core.outbox;
 
+import static io.harness.ng.core.ResourceConstants.LABEL_KEY_RESOURCE_NAME;
+import static io.harness.ng.core.ResourceConstants.LABEL_KEY_USER_EMAIL;
+import static io.harness.ng.core.ResourceConstants.LABEL_KEY_USER_ID;
+
 import static software.wings.core.events.Login2FAEvent.LOGIN2FA;
 import static software.wings.core.events.LoginEvent.LOGIN;
 import static software.wings.core.events.UnsuccessfulLoginEvent.UNSUCCESSFUL_LOGIN;
@@ -7,13 +11,16 @@ import static software.wings.core.events.UnsuccessfulLoginEvent.UNSUCCESSFUL_LOG
 import io.harness.ModuleType;
 import io.harness.audit.Action;
 import io.harness.audit.beans.AuditEntry;
+import io.harness.audit.beans.AuthenticationInfoDTO;
 import io.harness.audit.beans.ResourceDTO;
 import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.context.GlobalContext;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.ng.core.AccountScope;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.security.dto.UserPrincipal;
 
 import com.google.inject.Inject;
 
@@ -45,6 +52,7 @@ public class UserEventHandler implements OutboxEventHandler {
 
   private boolean handleLoginEvent(OutboxEvent outboxEvent) {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
+    String accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.LOGIN)
                                 .module(ModuleType.CORE)
@@ -53,11 +61,13 @@ public class UserEventHandler implements OutboxEventHandler {
                                 .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
                                 .insertId(outboxEvent.getId())
                                 .build();
-    return auditClientService.publishAudit(auditEntry, globalContext);
+    AuthenticationInfoDTO authenticationInfoDTO = getAuthenticationInfoForLoginEvent(accountIdentifier, auditEntry);
+    return auditClientService.publishAudit(auditEntry, authenticationInfoDTO, globalContext);
   }
 
   private boolean handleLogin2faEvent(OutboxEvent outboxEvent) {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
+    String accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.LOGIN2FA)
                                 .module(ModuleType.CORE)
@@ -66,11 +76,13 @@ public class UserEventHandler implements OutboxEventHandler {
                                 .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
                                 .insertId(outboxEvent.getId())
                                 .build();
-    return auditClientService.publishAudit(auditEntry, globalContext);
+    AuthenticationInfoDTO authenticationInfoDTO = getAuthenticationInfoForLoginEvent(accountIdentifier, auditEntry);
+    return auditClientService.publishAudit(auditEntry, authenticationInfoDTO, globalContext);
   }
 
   private boolean handleUnsuccessfulLoginEvent(OutboxEvent outboxEvent) {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
+    String accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.UNSUCCESSFUL_LOGIN)
                                 .module(ModuleType.CORE)
@@ -79,6 +91,16 @@ public class UserEventHandler implements OutboxEventHandler {
                                 .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
                                 .insertId(outboxEvent.getId())
                                 .build();
-    return auditClientService.publishAudit(auditEntry, globalContext);
+    AuthenticationInfoDTO authenticationInfoDTO = getAuthenticationInfoForLoginEvent(accountIdentifier, auditEntry);
+    return auditClientService.publishAudit(auditEntry, authenticationInfoDTO, globalContext);
+  }
+
+  private AuthenticationInfoDTO getAuthenticationInfoForLoginEvent(String accountIdentifier, AuditEntry auditEntry) {
+    ResourceDTO resource = auditEntry.getResource();
+    String userId = resource.getIdentifier();
+    String email = resource.getLabels().get(LABEL_KEY_USER_EMAIL);
+    String useName = resource.getLabels().get(LABEL_KEY_RESOURCE_NAME);
+    UserPrincipal principal = new UserPrincipal(userId, email, useName, accountIdentifier);
+    return AuthenticationInfoDTO.fromSecurityPrincipal(principal);
   }
 }
