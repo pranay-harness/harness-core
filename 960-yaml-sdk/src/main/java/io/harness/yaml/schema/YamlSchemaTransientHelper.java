@@ -46,6 +46,7 @@ public class YamlSchemaTransientHelper {
       add(EntityType.K8S_BG_SWAP_SERVICES_STEP);
       add(EntityType.K8S_CANARY_DELETE_STEP);
       add(EntityType.TERRAFORM_APPLY_STEP);
+      add(EntityType.TERRAFORM_PLAN_STEP);
     }
   };
 

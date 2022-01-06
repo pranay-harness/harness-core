@@ -53,5 +53,6 @@ public class EntityYamlRootNames {
   public static String K8S_SWAP_SERVICES = "K8sBGSwapServices";
   public static String K8S_CANARY_DELETE = "K8sCanaryDelete";
   public static String TERRAFORM_APPLY = "TerraformApply";
+  public static String TERRAFORM_PLAN = "TerraformPlan";
   public static String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }

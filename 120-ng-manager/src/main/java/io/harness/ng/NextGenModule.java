@@ -61,6 +61,7 @@ import io.harness.cdng.k8s.K8sRollingRollbackStepNode;
 import io.harness.cdng.k8s.K8sRollingStepNode;
 import io.harness.cdng.k8s.K8sScaleStepNode;
 import io.harness.cdng.provision.terraform.TerraformApplyStepNode;
+import io.harness.cdng.provision.terraform.TerraformPlanStepNode;
 import io.harness.connector.ConnectorModule;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.connector.events.ConnectorEventHandler;
@@ -287,6 +288,7 @@ public class NextGenModule extends AbstractModule {
       add(K8sBGSwapServicesStepNode.class);
       add(K8sCanaryDeleteStepNode.class);
       add(TerraformApplyStepNode.class);
+      add(TerraformPlanStepNode.class);
     }
   };
   private final NextGenConfiguration appConfig;

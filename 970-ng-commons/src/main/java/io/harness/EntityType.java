@@ -65,6 +65,9 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.TERRAFORM_APPLY)
   TERRAFORM_APPLY_STEP(
       ModuleType.CD, EntityTypeConstants.TERRAFORM_APPLY, IdentifierRef.class, EntityYamlRootNames.TERRAFORM_APPLY),
+  @JsonProperty(EntityTypeConstants.TERRAFORM_PLAN)
+  TERRAFORM_PLAN_STEP(
+      ModuleType.CD, EntityTypeConstants.TERRAFORM_PLAN, IdentifierRef.class, EntityYamlRootNames.TERRAFORM_PLAN),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
   CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, IdentifierRef.class, EntityYamlRootNames.CONNECTOR),
   @JsonProperty(EntityTypeConstants.SECRETS)
