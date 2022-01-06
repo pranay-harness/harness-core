@@ -28,7 +28,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -66,11 +65,6 @@ public class PrivilegedRoleAssignmentServiceImpl implements PrivilegedRoleAssign
     } catch (IOException e) {
       throw new InvalidRequestException("Super Roles file path or format is invalid");
     }
-  }
-
-  @Override
-  public void saveAll(Set<PrivilegedRoleAssignment> privilegedRoleAssignments) {
-    dao.insertAllIgnoringDuplicates(new ArrayList<>(privilegedRoleAssignments));
   }
 
   @Override
@@ -171,10 +165,5 @@ public class PrivilegedRoleAssignmentServiceImpl implements PrivilegedRoleAssign
   @Override
   public void deleteByRoleAssignment(String id) {
     dao.deleteByRoleAssignment(id, ONLY_CUSTOM);
-  }
-
-  @Override
-  public void deleteByUserGroup(String identifier, String scopeIdentifier) {
-    dao.deleteByUserGroup(identifier, scopeIdentifier, ONLY_CUSTOM);
   }
 }
