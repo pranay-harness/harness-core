@@ -90,7 +90,7 @@ public class ImageSecretBuilder {
   }
 
   private ImageCredentials convertV2ConnectorsToV1(ImageCredentials dockerCredentials) {
-    if (dockerCredentials != null || CIVMConstants.DOCKER_REGISTRY_V2.equals(dockerCredentials.getRegistryUrl())) {
+    if (dockerCredentials != null && CIVMConstants.DOCKER_REGISTRY_V2.equals(dockerCredentials.getRegistryUrl())) {
       return ImageCredentials.builder()
           .registryUrl(CIVMConstants.DOCKER_REGISTRY_V1)
           .userName(dockerCredentials.getUserName())
