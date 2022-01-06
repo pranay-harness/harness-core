@@ -25,6 +25,7 @@ public interface BudgetService {
   void incAlertCount(Budget budget, int thresholdIndex);
 
   List<Budget> list(String accountId);
+  List<Budget> listCgBudgets(String accountId);
   List<Budget> list(String accountId, Integer count, Integer startIndex);
   List<Budget> list(String accountId, String viewId);
   int getBudgetCount(String accountId);
