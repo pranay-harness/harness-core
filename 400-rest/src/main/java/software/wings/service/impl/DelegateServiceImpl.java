@@ -2456,7 +2456,7 @@ public class DelegateServiceImpl implements DelegateService {
         accountId, request.getHostName(), request.isNg(), request.getDelegateType(), request.getIpAddress());
 
     if (existingDelegate != null) {
-      log.info("Removing delegate instance {} from delega {}", request.getHostName(), request.getDelegateId());
+      log.info("Removing delegate instance {} from delegate {}", request.getHostName(), request.getDelegateId());
       persistence.delete(existingDelegate);
     } else {
       log.warn("Delegate instance {} doesn't exist for {}, nothing to remove", request.getHostName(),

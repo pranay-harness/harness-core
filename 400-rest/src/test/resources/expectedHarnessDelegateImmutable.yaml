@@ -58,6 +58,7 @@ spec:
         harness.io/account: accoun
         harness.io/name: harness-delegate
     spec:
+      terminationGracePeriodSeconds: 600
       containers:
       - image: harness/delegate:latest
         imagePullPolicy: Always

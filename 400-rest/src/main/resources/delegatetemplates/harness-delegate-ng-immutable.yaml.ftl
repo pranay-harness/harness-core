@@ -53,6 +53,7 @@ spec:
       labels:
         harness.io/name: ${delegateName}
     spec:
+      terminationGracePeriodSeconds: 600
       containers:
       - image: ${delegateDockerImage}
         imagePullPolicy: Always
