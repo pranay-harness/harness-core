@@ -193,7 +193,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     when(kubernetesContainerService.createOrReplaceController(eq(kubernetesConfig), any(ReplicationController.class)))
         .thenReturn(replicationController);
     when(kubernetesContainerService.listControllers(kubernetesConfig)).thenReturn(null);
-    when(kubernetesContainerService.createOrReplaceService(
+    when(kubernetesContainerService.createOrReplaceServiceFabric8(
              eq(kubernetesConfig), any(io.fabric8.kubernetes.api.model.Service.class)))
         .thenReturn(kubernetesService);
     when(kubernetesContainerService.createOrReplaceSecretFabric8(eq(kubernetesConfig), any(Secret.class)))

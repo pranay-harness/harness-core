@@ -142,7 +142,7 @@ public abstract class KubernetesYamlIntegrationTestBase extends CategoryTest {
         + "    app: \"testApp\"\n"
         + "    tier: \"backend\"\n";
     try {
-      kubernetesService.createOrReplaceService(config, KubernetesHelper.loadYaml(yaml, Service.class));
+      kubernetesService.createOrReplaceServiceFabric8(config, KubernetesHelper.loadYaml(yaml, Service.class));
     } catch (IOException e) {
       log.error("", e);
     }
@@ -220,7 +220,7 @@ public abstract class KubernetesYamlIntegrationTestBase extends CategoryTest {
         + "    tier: \"backend\"\n"
         + "  type: \"LoadBalancer\"";
     try {
-      kubernetesService.createOrReplaceService(config, KubernetesHelper.loadYaml(yaml, Service.class));
+      kubernetesService.createOrReplaceServiceFabric8(config, KubernetesHelper.loadYaml(yaml, Service.class));
     } catch (IOException e) {
       log.error("", e);
     }

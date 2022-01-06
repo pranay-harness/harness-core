@@ -26,7 +26,7 @@ import io.harness.logging.LogLevel;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.fabric8.kubernetes.api.model.Service;
+import io.kubernetes.client.openapi.models.V1Service;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,8 +43,8 @@ public class K8sSwapServiceSelectorsBaseHandler {
 
   public boolean swapServiceSelectors(KubernetesConfig kubernetesConfig, String serviceOne, String serviceTwo,
       LogCallback logCallback, boolean isErrorFrameworkSupported) {
-    Service service1 = kubernetesContainerService.getServiceFabric8(kubernetesConfig, serviceOne);
-    Service service2 = kubernetesContainerService.getServiceFabric8(kubernetesConfig, serviceTwo);
+    V1Service service1 = kubernetesContainerService.getService(kubernetesConfig, serviceOne);
+    V1Service service2 = kubernetesContainerService.getService(kubernetesConfig, serviceTwo);
 
     if (service1 == null) {
       return handleServiceNotFound(serviceOne, logCallback, isErrorFrameworkSupported,
@@ -72,9 +72,9 @@ public class K8sSwapServiceSelectorsBaseHandler {
     service1.getSpec().setSelector(serviceTwoSelectors);
     service2.getSpec().setSelector(serviceOneSelectors);
 
-    Service serviceOneUpdated = kubernetesContainerService.createOrReplaceService(kubernetesConfig, service1);
+    V1Service serviceOneUpdated = kubernetesContainerService.createOrReplaceService(kubernetesConfig, service1);
 
-    Service serviceTwoUpdated = kubernetesContainerService.createOrReplaceService(kubernetesConfig, service2);
+    V1Service serviceTwoUpdated = kubernetesContainerService.createOrReplaceService(kubernetesConfig, service2);
 
     logCallback.saveExecutionLog(
         format("%nUpdated Selectors for Service One : [name:%s]%n%s", serviceOneUpdated.getMetadata().getName(),

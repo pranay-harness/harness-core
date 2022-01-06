@@ -92,7 +92,9 @@ public interface KubernetesContainerService {
   Map<String, String> getActiveServiceImages(
       KubernetesConfig kubernetesConfig, String containerServiceName, String imagePrefix);
 
-  Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition);
+  Service createOrReplaceServiceFabric8(KubernetesConfig kubernetesConfig, Service definition);
+
+  V1Service createOrReplaceService(KubernetesConfig kubernetesConfig, V1Service definition);
 
   Service getServiceFabric8(KubernetesConfig kubernetesConfig, String name);
 
