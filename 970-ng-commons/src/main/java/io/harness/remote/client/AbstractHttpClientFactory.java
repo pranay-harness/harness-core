@@ -165,14 +165,18 @@ public abstract class AbstractHttpClientFactory {
       if (globalContextData != null) {
         final GitEntityInfo gitBranchInfo =
             ((GitSyncBranchContext) Objects.requireNonNull(globalContextData)).getGitBranchInfo();
-        HttpUrl url = request.url()
-                          .newBuilder()
-                          .addQueryParameter("repoIdentifier", gitBranchInfo.getYamlGitConfigId())
-                          .addQueryParameter("branch", gitBranchInfo.getBranch())
-                          .addQueryParameter(
-                              "getDefaultFromOtherRepo", String.valueOf(gitBranchInfo.isFindDefaultFromOtherRepos()))
-                          .build();
-        return chain.proceed(request.newBuilder().url(url).build());
+        if (gitBranchInfo != null && gitBranchInfo.getYamlGitConfigId() != null && gitBranchInfo.getBranch() != null) {
+          HttpUrl url = request.url()
+                            .newBuilder()
+                            .addQueryParameter("repoIdentifier", gitBranchInfo.getYamlGitConfigId())
+                            .addQueryParameter("branch", gitBranchInfo.getBranch())
+                            .addQueryParameter(
+                                "getDefaultFromOtherRepo", String.valueOf(gitBranchInfo.isFindDefaultFromOtherRepos()))
+                            .build();
+          return chain.proceed(request.newBuilder().url(url).build());
+        } else {
+          return chain.proceed(request);
+        }
       } else {
         return chain.proceed(request);
       }
