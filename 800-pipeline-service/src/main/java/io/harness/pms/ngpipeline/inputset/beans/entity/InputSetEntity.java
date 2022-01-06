@@ -11,6 +11,7 @@ import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.AccountAccess;
@@ -68,6 +69,16 @@ public class InputSetEntity
                  .field(InputSetEntityKeys.identifier)
                  .field(InputSetEntityKeys.yamlGitConfigRef)
                  .field(InputSetEntityKeys.branch)
+                 .build())
+        // for full sync
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_repo_branch")
+                 .field(InputSetEntityKeys.accountId)
+                 .field(InputSetEntityKeys.orgIdentifier)
+                 .field(InputSetEntityKeys.projectIdentifier)
+                 .field(InputSetEntityKeys.yamlGitConfigRef)
+                 .field(InputSetEntityKeys.branch)
+                 .descRangeField(InputSetEntityKeys.lastUpdatedAt)
                  .build())
         .build();
   }

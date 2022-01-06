@@ -113,6 +113,9 @@ public enum EntityType {
       if (entityTypeEnum.getYamlName().equalsIgnoreCase(entityType)) {
         return entityTypeEnum;
       }
+      if (entityTypeEnum.name().equalsIgnoreCase(entityType)) {
+        return entityTypeEnum;
+      }
     }
     throw new IllegalArgumentException("Invalid value: " + entityType);
   }
