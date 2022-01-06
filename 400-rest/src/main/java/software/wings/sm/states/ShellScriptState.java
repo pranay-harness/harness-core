@@ -107,6 +107,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -576,7 +577,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     context.resetPreparedCache();
     if (task.getData().getParameters().length == 1 && task.getData().getParameters()[0] instanceof TaskParameters) {
       task.setWorkflowExecutionId(context.getWorkflowExecutionId());
-      ExpressionReflectionUtils.applyExpression((task.getData().getParameters()[0]),
+      ExpressionReflectionUtils.applyExpression(task.getData().getParameters()[0],
           (secretMode, value) -> context.renderExpression(value, stateExecutionContext));
     }
 
@@ -586,8 +587,10 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Override
   @SchemaIgnore
   public List<String> getPatternsForRequiredContextElementType() {
-    List<String> patterns =
-        templateVariables.stream().map(variable -> variable.getValue()).collect(Collectors.toList());
+    List<String> patterns = new LinkedList<>();
+    if (templateVariables != null) {
+      templateVariables.stream().map(variable -> variable.getValue()).collect(Collectors.toList());
+    }
     patterns.add(scriptString);
     patterns.add(host);
     return patterns;
