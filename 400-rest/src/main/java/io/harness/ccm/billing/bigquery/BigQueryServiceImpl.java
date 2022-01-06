@@ -7,6 +7,7 @@ import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getImpersonate
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.billing.GcpServiceAccountServiceImpl;
 
 import software.wings.beans.ValidationResult;
 
@@ -61,8 +62,6 @@ public class BigQueryServiceImpl implements BigQueryService, io.harness.ccm.bigQ
 
   @Override
   public ServiceAccountCredentials getCredentials(String googleCredentialPathSystemEnv) {
-    // This method isnt used anywhere in 400-rest. CENG uses the one in 490.
-    // Null implementation is needed because of inheritance.
-    return null;
+    return GcpServiceAccountServiceImpl.getCredentials(googleCredentialPathSystemEnv);
   }
 }
