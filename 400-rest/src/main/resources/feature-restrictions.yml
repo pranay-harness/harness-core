@@ -136,7 +136,7 @@
 
   DELEGATES:
     COMMUNITY:
-      maxDelegatesAllowed: 1
+      maxDelegatesAllowed: 1000000
 
   CUSTOM_DASHBOARD:
     COMMUNITY:
