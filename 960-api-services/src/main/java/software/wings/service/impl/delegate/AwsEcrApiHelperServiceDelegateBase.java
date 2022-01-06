@@ -1,6 +1,7 @@
 package software.wings.service.impl.delegate;
 
 import static io.harness.aws.beans.AwsClientBackoffStrategy.EXPONENTIAL;
+import static io.harness.aws.beans.AwsClientBackoffStrategy.SDK_DEFAULT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.AWS_CLUSTER_NOT_FOUND;
@@ -16,6 +17,7 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.aws.AwsCallTracker;
+import io.harness.aws.beans.AwsClientBackoffStrategy;
 import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
@@ -84,12 +86,6 @@ public class AwsEcrApiHelperServiceDelegateBase {
                                 .withExternalId(crossAccountAttributes.getExternalId())
                                 .build();
     }
-    log.info("Instantiating AWS client: {} with backoff strategy: {},"
-            + (awsConfig.getBackoffStrategy() == EXPONENTIAL
-                    ? " maxErrorRetries: {}, baseDelay: {}, maxBackoffTime: {}, "
-                    : " maxErrorRetries: {}"),
-        builder.getClass(), awsConfig.getBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES,
-        BASE_DELAY_IN_MILLISECONDS, MAX_BACKOFF_TIME_IN_MILLISECONDS);
 
     builder.withCredentials(credentialsProvider);
     ClientConfiguration clientConfiguration = new ClientConfiguration();
@@ -98,13 +94,19 @@ public class AwsEcrApiHelperServiceDelegateBase {
   }
 
   private RetryPolicy getRetryPolicy(AwsInternalConfig config) {
-    return config.getBackoffStrategy() == EXPONENTIAL
-        ? new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
-            new PredefinedBackoffStrategies.ExponentialBackoffStrategy(
-                BASE_DELAY_IN_MILLISECONDS, MAX_BACKOFF_TIME_IN_MILLISECONDS),
-            DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false)
-        : new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
-            new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
+    AwsClientBackoffStrategy backoffStrategy = config.getBackoffStrategy();
+    if (backoffStrategy == SDK_DEFAULT) {
+      return new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
+          new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
+    } else if (backoffStrategy == EXPONENTIAL) {
+      return new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
+          new PredefinedBackoffStrategies.ExponentialBackoffStrategy(
+              BASE_DELAY_IN_MILLISECONDS, MAX_BACKOFF_TIME_IN_MILLISECONDS),
+          DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
+    } else {
+      throw new InvalidRequestException(
+          String.format("Invalid backoff strategy provided for AWS SDK client, backoffStrategy: %s", backoffStrategy));
+    }
   }
 
   public void handleAmazonClientException(AmazonClientException amazonClientException) {
