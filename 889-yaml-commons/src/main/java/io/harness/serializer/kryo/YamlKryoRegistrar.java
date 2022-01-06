@@ -7,6 +7,7 @@ import io.harness.async.AsyncResponseCallback;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.NumberNGVariable;
+import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.extended.ci.container.ContainerResource;
@@ -24,5 +25,6 @@ public class YamlKryoRegistrar implements KryoRegistrar {
     kryo.register(ContainerResource.Limits.class, 35014);
     kryo.register(AsyncResponseCallback.class, 88407);
     kryo.register(NGVariableType.class, 88501);
+    kryo.register(SecretNGVariable.class, 88502);
   }
 }
