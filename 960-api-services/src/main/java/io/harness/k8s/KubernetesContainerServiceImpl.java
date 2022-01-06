@@ -5,7 +5,6 @@ import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ACCESS_DENIED;
@@ -1900,7 +1899,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     byte[] releaseHistory = secretData.get(ReleaseHistoryKeyName);
 
     if (secretData.containsKey(CompressedReleaseHistoryFlag) && secretData.get(CompressedReleaseHistoryFlag)[0] == 1) {
-      return deCompressString(decodeBase64(releaseHistory));
+      return deCompressString(releaseHistory);
     }
     return new String(releaseHistory, Charsets.UTF_8);
   }
@@ -1942,8 +1941,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   private V1Secret saveReleaseHistoryInSecrets(
       KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) throws IOException {
     V1Secret secret = getSecret(kubernetesConfig, releaseName);
-    byte[] compressedReleaseHistory =
-        encodeBase64ToByteArray(compressString(releaseHistory, Deflater.BEST_COMPRESSION));
+    byte[] compressedReleaseHistory = compressString(releaseHistory, Deflater.BEST_COMPRESSION);
 
     if (secret == null) {
       secret = new V1SecretBuilder()

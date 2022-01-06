@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.AKRITI;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -28,6 +29,7 @@ import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.AuditPreference;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityYamlRecord;
+import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.yaml.YamlPayload;
@@ -70,6 +72,32 @@ public class AuditServiceImplTest extends WingsBaseTest {
     assertThat(record).isNotNull();
     assertThat(record.getEntityType()).isEqualTo(EntityType.APPLICATION.name());
     assertThat(record.getYamlContent()).isEqualTo(YAML_CONTENT);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testSaveEntityYamlForUserGroupAudit() {
+    RestResponse mockRestResponseUserGroup = mock(RestResponse.class);
+    doReturn(mockRestResponseUserGroup).when(mockYamlResourceService).obtainEntityYamlVersion(anyString(), any());
+    YamlPayload mockResourceUserGroup = mock(YamlPayload.class);
+    doReturn(mockResourceUserGroup).when(mockRestResponseUserGroup).getResource();
+
+    final String YAML_CONTENT = "YamlContent";
+    final String USER_GROUP_NAME = "user_group";
+
+    doReturn(YAML_CONTENT).when(mockResourceUserGroup).getYaml();
+    doReturn(USER_GROUP_NAME + ".yaml").when(mockEntityHelper).getFullYamlPathForEntity(any(), any());
+    auditServiceImpl.saveEntityYamlForAudit(UserGroup.builder().name(USER_GROUP_NAME).accountId(ACCOUNT_ID).build(),
+        EntityAuditRecord.builder().appId(APP_ID).entityId(APP_ID).entityType(EntityType.USER_GROUP.name()).build(),
+        ACCOUNT_ID);
+    ArgumentCaptor<EntityYamlRecord> captor = ArgumentCaptor.forClass(EntityYamlRecord.class);
+    verify(mockWingsPersistence).save(captor.capture());
+    EntityYamlRecord record = captor.getValue();
+    assertThat(record).isNotNull();
+    assertThat(record.getEntityType()).isEqualTo(EntityType.USER_GROUP.name());
+    assertThat(record.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(record.getYamlPath()).isEqualTo(USER_GROUP_NAME + ".yaml");
   }
 
   @Test

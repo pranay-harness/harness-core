@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.beans.IdentifierRef;
 import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorResponseDTO;
@@ -136,9 +135,10 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         entityRef.getOrgIdentifier(), entityRef.getAccountIdentifier(), pushInfo.getYamlGitConfigId());
     // todo(abhinav): Think about what if something happens in middle of operations.
     saveGitEntity(pushInfo, entityDetail, yamlGitConfigDTO);
+    resolveConnectivityErrors(pushInfo, yamlGitConfigDTO);
     if (!pushInfo.getIsSyncFromGit()) {
       saveGitCommit(pushInfo, yamlGitConfigDTO);
-      markResolvedErrors(pushInfo, yamlGitConfigDTO);
+      resolveGitToHarnessErrors(pushInfo, yamlGitConfigDTO);
     }
     shortListTheBranch(
         yamlGitConfigDTO, entityRef.getAccountIdentifier(), pushInfo.getBranchName(), pushInfo.getIsNewBranch());
@@ -153,12 +153,14 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     }
   }
 
-  private void markResolvedErrors(PushInfo pushInfo, YamlGitConfigDTO yamlGitConfigDTO) {
-    if (featureFlagService.isEnabled(FeatureName.NG_GIT_ERROR_EXPERIENCE, pushInfo.getAccountId())) {
-      String completeFilePath = ScmGitUtils.createFilePath(pushInfo.getFolderPath(), pushInfo.getFilePath());
-      gitSyncErrorService.resolveGitToHarnessErrors(pushInfo.getAccountId(), yamlGitConfigDTO.getRepo(),
-          pushInfo.getBranchName(), new HashSet<>(Collections.singleton(completeFilePath)), pushInfo.getCommitId());
-    }
+  private void resolveConnectivityErrors(PushInfo pushInfo, YamlGitConfigDTO yamlGitConfigDTO) {
+    gitSyncErrorService.resolveConnectivityErrors(pushInfo.getAccountId(), yamlGitConfigDTO.getRepo());
+  }
+
+  private void resolveGitToHarnessErrors(PushInfo pushInfo, YamlGitConfigDTO yamlGitConfigDTO) {
+    String completeFilePath = ScmGitUtils.createFilePath(pushInfo.getFolderPath(), pushInfo.getFilePath());
+    gitSyncErrorService.resolveGitToHarnessErrors(pushInfo.getAccountId(), yamlGitConfigDTO.getRepo(),
+        pushInfo.getBranchName(), new HashSet<>(Collections.singleton(completeFilePath)), pushInfo.getCommitId());
   }
 
   private void saveGitEntity(PushInfo pushInfo, EntityDetailProtoDTO entityDetail, YamlGitConfigDTO yamlGitConfigDTO) {

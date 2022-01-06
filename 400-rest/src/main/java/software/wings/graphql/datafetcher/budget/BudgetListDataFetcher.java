@@ -32,7 +32,7 @@ public class BudgetListDataFetcher extends AbstractArrayDataFetcher<QLBudgetTabl
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected List<QLBudgetTableData> fetch(QLBudgetQueryParameters parameters, String accountId) {
     accountChecker.checkIsCeEnabled(accountId);
-    List<Budget> budgets = budgetService.list(accountId);
+    List<Budget> budgets = budgetService.listCgBudgets(accountId);
     List<QLBudgetTableData> budgetTableDataList = new ArrayList<>();
     budgets.forEach(budget -> budgetTableDataList.add(budgetService.getBudgetDetails(budget)));
     budgetTableDataList.sort(Comparator.comparing(QLBudgetTableData::getLastUpdatedAt).reversed());

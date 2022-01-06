@@ -263,11 +263,13 @@ public class BudgetAlertsServiceImpl {
 
   private void updateCGBudget(Budget budget) {
     try {
+      log.info("Updating CG budget {}", budget.toString());
       if (budget.getPeriod() == null) {
         budget.setPeriod(BudgetPeriod.MONTHLY);
         budget.setStartTime(BudgetUtils.getStartOfMonth(false));
         budget.setEndTime(BudgetUtils.getEndTimeForBudget(budget.getStartTime(), budget.getPeriod()));
         budget.setGrowthRate(0D);
+        budget.setNgBudget(false);
         budgetDao.update(budget.getUuid(), budget);
       }
     } catch (Exception e) {

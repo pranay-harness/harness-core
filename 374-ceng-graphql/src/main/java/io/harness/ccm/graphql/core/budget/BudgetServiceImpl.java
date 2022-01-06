@@ -63,6 +63,7 @@ public class BudgetServiceImpl implements BudgetService {
                              .userGroupIds(budget.getUserGroupIds())
                              .emailAddresses(budget.getEmailAddresses())
                              .notifyOnSlack(budget.isNotifyOnSlack())
+                             .isNgBudget(budget.isNgBudget())
                              .startTime(budget.getStartTime())
                              .endTime(budget.getEndTime())
                              .build();

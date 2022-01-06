@@ -53,6 +53,16 @@ public class BudgetDao {
     return query.asList();
   }
 
+  // Lists Current Gen budgets
+  public List<Budget> listCgBudgets(String accountId, Integer count, Integer startIndex) {
+    Query<Budget> query = persistence.createQuery(Budget.class)
+                              .field(BudgetKeys.accountId)
+                              .equal(accountId)
+                              .field(BudgetKeys.isNgBudget)
+                              .equal(false);
+    return query.asList(new FindOptions().skip(startIndex).limit(count));
+  }
+
   public void update(String budgetId, Budget budget) {
     Query query = persistence.createQuery(Budget.class).field(BudgetKeys.uuid).equal(budgetId);
     UpdateOperations<Budget> updateOperations = persistence.createUpdateOperations(Budget.class)

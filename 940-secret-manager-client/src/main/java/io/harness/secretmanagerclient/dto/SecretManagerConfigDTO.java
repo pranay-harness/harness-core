@@ -6,6 +6,7 @@ import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
+import io.harness.secretmanagerclient.dto.awssecretmanager.AwsSMConfigDTO;
 import io.harness.secretmanagerclient.dto.azurekeyvault.AzureKeyVaultConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 
@@ -31,7 +32,8 @@ import lombok.experimental.SuperBuilder;
   @Type(name = "LOCAL", value = LocalConfigDTO.class)
   , @Type(name = "VAULT", value = VaultConfigDTO.class), @Type(name = "GCP_KMS", value = GcpKmsConfigDTO.class),
       @Type(name = "KMS", value = AwsKmsConfigDTO.class),
-      @Type(name = "AZURE_VAULT", value = AzureKeyVaultConfigDTO.class)
+      @Type(name = "AZURE_VAULT", value = AzureKeyVaultConfigDTO.class),
+      @Type(name = "AWS_SECRETS_MANAGER", value = AwsSMConfigDTO.class)
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(
