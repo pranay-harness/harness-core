@@ -10,6 +10,7 @@ import static io.harness.delegate.beans.DelegateProfile.builder;
 import static io.harness.delegate.beans.DelegateRegisterResponse.Action;
 import static io.harness.delegate.beans.DelegateType.DOCKER;
 import static io.harness.delegate.beans.DelegateType.ECS;
+import static io.harness.delegate.beans.DelegateType.KUBERNETES;
 import static io.harness.delegate.beans.DelegateType.SHELL_SCRIPT;
 import static io.harness.delegate.beans.K8sPermissionType.CLUSTER_ADMIN;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -252,6 +253,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   private static final String TOKEN_VALUE = "TOKEN_VALUE";
   private static final String LOCATION = "LOCATION";
   private static final String ANOTHER_LOCATION = "ANOTHER_LOCATION";
+  private static final String UNIQUE_DELEGATE_NAME = "delegateNameUnique";
 
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
@@ -3635,14 +3637,15 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void testDownloadNgDockerDelegateShouldThrowException_nameDuplicate() {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey(TOKEN_VALUE).withUuid(ACCOUNT_ID).build());
-    persistence.save(DelegateGroup.builder().accountId(ACCOUNT_ID).ng(true).name("delegateNameUnique").build());
+    persistence.save(Delegate.builder().accountId(ACCOUNT_ID).ng(true).delegateName(UNIQUE_DELEGATE_NAME).build());
     DelegateSetupDetails setupDetails =
-        DelegateSetupDetails.builder().name("delegateNameUnique").delegateType(DelegateType.DOCKER).build();
+        DelegateSetupDetails.builder().name(UNIQUE_DELEGATE_NAME).delegateType(DelegateType.DOCKER).build();
     assertThatThrownBy(()
                            -> delegateService.downloadNgDocker(
                                "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, setupDetails))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Delegate Name must be unique across account.");
+        .hasMessage(
+            "Delegate with same name exists either in CG or NG. Delegate name must be unique across CG and NG.");
   }
 
   @Test
@@ -3713,12 +3716,13 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void testValidateDockerDelegateDetailsShouldThrowException_nameDuplicate() {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey(TOKEN_VALUE).withUuid(ACCOUNT_ID).build());
-    persistence.save(DelegateGroup.builder().accountId(ACCOUNT_ID).ng(true).name("delegateNameUnique").build());
+    persistence.save(Delegate.builder().accountId(ACCOUNT_ID).ng(true).delegateName(UNIQUE_DELEGATE_NAME).build());
     DelegateSetupDetails setupDetails =
-        DelegateSetupDetails.builder().name("delegateNameUnique").delegateType(DelegateType.DOCKER).build();
+        DelegateSetupDetails.builder().name(UNIQUE_DELEGATE_NAME).delegateType(DelegateType.DOCKER).build();
     assertThatThrownBy(() -> delegateService.validateDelegateSetupDetails(ACCOUNT_ID, setupDetails, DOCKER))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Delegate Name must be unique across account.");
+        .hasMessage(
+            "Delegate with same name exists either in CG or NG. Delegate name must be unique across CG and NG.");
   }
 
   @Test
@@ -3740,6 +3744,106 @@ public class DelegateServiceTest extends WingsBaseTest {
     String id = delegateService.createDelegateGroup(ACCOUNT_ID, setupDetails);
 
     assertThat(id).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testDownloadCgShellDelegateShouldThrowException_nameDuplicate() {
+    persistence.save(Delegate.builder().accountId(ACCOUNT_ID).ng(false).delegateName(UNIQUE_DELEGATE_NAME).build());
+    assertThatThrownBy(()
+                           -> delegateService.downloadScripts("https://localhost:9090", "https://localhost:7070",
+                               ACCOUNT_ID, UNIQUE_DELEGATE_NAME, DELEGATE_PROFILE_ID, TOKEN_NAME))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Delegate with same name exists either in CG or NG. Delegate name must be unique across CG and NG.");
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testDownloadCgDockerDelegateShouldThrowException_nameDuplicate() {
+    persistence.save(Delegate.builder().accountId(ACCOUNT_ID).ng(false).delegateName(UNIQUE_DELEGATE_NAME).build());
+    assertThatThrownBy(()
+                           -> delegateService.downloadDocker("https://localhost:9090", "https://localhost:7070",
+                               ACCOUNT_ID, UNIQUE_DELEGATE_NAME, DELEGATE_PROFILE_ID, TOKEN_NAME))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Delegate with same name exists either in CG or NG. Delegate name must be unique across CG and NG.");
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testDownloadCgKubernetesDelegateShouldThrowException_nameDuplicate() {
+    persistence.save(Delegate.builder().accountId(ACCOUNT_ID).ng(false).delegateName(UNIQUE_DELEGATE_NAME).build());
+    assertThatThrownBy(()
+                           -> delegateService.downloadKubernetes("https://localhost:9090", "https://localhost:7070",
+                               ACCOUNT_ID, UNIQUE_DELEGATE_NAME, DELEGATE_PROFILE_ID, TOKEN_NAME))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Delegate with same name exists either in CG or NG. Delegate name must be unique across CG and NG.");
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testDownloadCeKubernetesDelegateShouldThrowException_nameDuplicate() {
+    persistence.save(Delegate.builder().accountId(ACCOUNT_ID).ng(false).delegateName(UNIQUE_DELEGATE_NAME).build());
+    assertThatThrownBy(
+        ()
+            -> delegateService.downloadCeKubernetesYaml("https://localhost:9090", "https://localhost:7070", ACCOUNT_ID,
+                UNIQUE_DELEGATE_NAME, DELEGATE_PROFILE_ID, TOKEN_NAME))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Delegate with same name exists either in CG or NG. Delegate name must be unique across CG and NG.");
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testDownloadCgECSDelegateShouldThrowException_nameDuplicate() {
+    persistence.save(Delegate.builder().accountId(ACCOUNT_ID).ng(false).delegateName(UNIQUE_DELEGATE_NAME).build());
+    assertThatThrownBy(()
+                           -> delegateService.downloadECSDelegate("https://localhost:9090", "https://localhost:7070",
+                               ACCOUNT_ID, false, HOST_NAME, UNIQUE_DELEGATE_NAME, DELEGATE_PROFILE_ID, TOKEN_NAME))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Delegate with same name exists either in CG or NG. Delegate name must be unique across CG and NG.");
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testDownloadCgHelmDelegateShouldThrowException_nameDuplicate() {
+    persistence.save(Delegate.builder().accountId(ACCOUNT_ID).ng(false).delegateName(UNIQUE_DELEGATE_NAME).build());
+    assertThatThrownBy(
+        ()
+            -> delegateService.downloadDelegateValuesYamlFile("https://localhost:9090", "https://localhost:7070",
+                ACCOUNT_ID, UNIQUE_DELEGATE_NAME, DELEGATE_PROFILE_ID, TOKEN_NAME))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Delegate with same name exists either in CG or NG. Delegate name must be unique across CG and NG.");
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testGenerateKubernetesYamlNgShouldThrowException() {
+    persistence.save(Delegate.builder().accountId(ACCOUNT_ID).ng(true).delegateName(UNIQUE_DELEGATE_NAME).build());
+    K8sConfigDetails k8sConfigDetails = K8sConfigDetails.builder().k8sPermissionType(CLUSTER_ADMIN).build();
+    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
+                                            .name(UNIQUE_DELEGATE_NAME)
+                                            .size(DelegateSize.LAPTOP)
+                                            .delegateType(KUBERNETES)
+                                            .k8sConfigDetails(k8sConfigDetails)
+                                            .build();
+    assertThatThrownBy(()
+                           -> delegateService.generateKubernetesYamlNg(ACCOUNT_ID, setupDetails,
+                               "https://localhost:9090", "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Delegate with same name exists either in CG or NG. Delegate name must be unique across CG and NG.");
   }
 
   private CapabilityRequirement buildCapabilityRequirement() {
