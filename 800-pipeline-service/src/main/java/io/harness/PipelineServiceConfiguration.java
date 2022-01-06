@@ -199,10 +199,10 @@ public class PipelineServiceConfiguration extends Configuration {
     return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }
 
-  public static Set<String> getUniquePackagesContainingOpenApiResources() {
+  public static Set<String> getOpenApiResources() {
     return HARNESS_RESOURCE_CLASSES.stream()
         .filter(x -> x.isAnnotationPresent(Tag.class))
-        .map(aClass -> aClass.getPackage().getName())
+        .map(Class::getName)
         .collect(toSet());
   }
 }

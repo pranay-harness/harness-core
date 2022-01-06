@@ -411,9 +411,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     } catch (MalformedURLException e) {
       log.error("failed to set baseurl for server, {}/{}", appConfig.hostname, appConfig.getBasePathPrefix());
     }
-    Set<String> packages = PipelineServiceConfiguration.getUniquePackagesContainingOpenApiResources();
-    return new SwaggerConfiguration().openAPI(oas).prettyPrint(true).resourcePackages(packages).scannerClass(
-        "io.swagger.v3.jaxrs2.integration.JaxrsAnnotationScanner");
+    Set<String> resourceClasses = PipelineServiceConfiguration.getOpenApiResources();
+    return new SwaggerConfiguration()
+        .openAPI(oas)
+        .prettyPrint(true)
+        .resourceClasses(resourceClasses)
+        .scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsAnnotationScanner");
   }
 
   private static void registerObservers(Injector injector) {
