@@ -1,3 +1,8 @@
+-- Copyright 2020 Harness Inc. All rights reserved.
+-- Use of this source code is governed by the PolyForm Shield 1.0.0 license
+-- that can be found in the licenses directory at the root of this repository, also available at
+-- https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+
 BEGIN;
 DELETE FROM COST_EVENT_DATA;
 CREATE UNIQUE INDEX IF NOT EXISTS COST_EVENT_KUBERNETES_UNIQUE_INDEX ON COST_EVENT_DATA(ACCOUNTID, CLUSTERID, INSTANCEID, COSTEVENTTYPE, STARTTIME DESC);

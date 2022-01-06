@@ -1,3 +1,8 @@
+-- Copyright 2021 Harness Inc. All rights reserved.
+-- Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+-- that can be found in the licenses directory at the root of this repository, also available at
+-- https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 -- This table gives details about files changed in the PR.
 -- It contains paths of the files as well as whether they were modified, added or deleted.
 -- Information in this table is required for the correct merging of the partial call

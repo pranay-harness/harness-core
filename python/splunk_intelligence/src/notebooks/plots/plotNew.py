@@ -1,3 +1,8 @@
+# Copyright 2020 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 import pandas as pd
 import plotly as py
 from plotly import tools
@@ -115,8 +120,3 @@ def plot_AB(traces, subtitle_names):
     fig.append_trace(traces[1], 1, 2)
     fig['layout'].update(showlegend=False)
     py.offline.iplot(fig, filename='123')
-
-
-
-
-

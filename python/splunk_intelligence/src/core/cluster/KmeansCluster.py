@@ -1,3 +1,8 @@
+# Copyright 2020 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 import numpy as np
 from core.distance.JaccardDistance import pairwise_jaccard_similarity
 from core.util.lelogging import get_log
@@ -103,10 +108,3 @@ class KmeansCluster(object):
         :return: the cluster assignments for the test samples
         """
         return self.km.predict(feature_matrix)
-
-
-
-
-
-
-
