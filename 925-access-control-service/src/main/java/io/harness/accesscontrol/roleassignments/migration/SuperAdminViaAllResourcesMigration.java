@@ -51,7 +51,7 @@ public class SuperAdminViaAllResourcesMigration implements NGMigration {
 
   @Override
   public void migrate() {
-    while (isAllResourcesResourceGroupUpdated()) {
+    while (!isAllResourcesResourceGroupUpdated()) {
       harnessResourceGroupService.sync(DEFAULT_RESOURCE_GROUP_IDENTIFIER, null);
       harnessResourceGroupService.sync(DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER, null);
       harnessResourceGroupService.sync(DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER, null);
