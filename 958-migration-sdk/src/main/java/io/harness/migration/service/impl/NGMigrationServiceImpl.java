@@ -174,7 +174,8 @@ public class NGMigrationServiceImpl implements NGMigrationService {
         // There may be some on-prem customers who might not have timescale db available. Hence handling this exception
         // gracefully and skipping rest of the Timescale migration.
         if (isBackground || ex instanceof TimeScaleNotAvailableException) {
-          log.error("[Migration] - {} : Error while running migration {}", serviceName, migration.getSimpleName(), ex);
+          log.warn("[Migration] - {} : Failed to run migration {} because of {}", serviceName,
+              migration.getSimpleName(), ex.getMessage());
           break;
         } else {
           throw new MigrationException(
