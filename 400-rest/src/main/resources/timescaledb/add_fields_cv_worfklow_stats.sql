@@ -1,3 +1,8 @@
+-- Copyright 2020 Harness Inc. All rights reserved.
+-- Use of this source code is governed by the PolyForm Shield 1.0.0 license
+-- that can be found in the licenses directory at the root of this repository, also available at
+-- https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+
 BEGIN;
 
 ALTER TABLE VERIFICATION_WORKFLOW_STATS ADD COLUMN IF NOT EXISTS ENVIRONMENT_TYPE VARCHAR(20) NOT NULL DEFAULT 'PROD';

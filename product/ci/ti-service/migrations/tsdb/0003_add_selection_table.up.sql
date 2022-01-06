@@ -1,3 +1,8 @@
+-- Copyright 2021 Harness Inc. All rights reserved.
+-- Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+-- that can be found in the licenses directory at the root of this repository, also available at
+-- https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 -- This table gives a snapshot of selection stats.
 -- The TI service responds to an API by returning the list of tests to be run after running selection algorithm
 -- It should also populate this table with high level stats for analytics purpose
