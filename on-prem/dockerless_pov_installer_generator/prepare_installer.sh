@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 CURRENT_DIR=$PWD
 PROPERTY_FILE=$PWD/installer.properties
@@ -28,4 +32,3 @@ echo "watcher prepation completed for version : $WATCHER_VERSION "
 echo "Started generating installer............"
 sh generate_installer.sh
 echo "Installer generation successfull"
-

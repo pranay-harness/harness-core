@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 
 declare -a MODULES_SKIPPED=("001-microservice-intfc-tool" "160-model-gen-tool" "190-deployment-functional-tests" "200-functional-test" "220-graphql-test" "230-model-test" "990-commons-test")
