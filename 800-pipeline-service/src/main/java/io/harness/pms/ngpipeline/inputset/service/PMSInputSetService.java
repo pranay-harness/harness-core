@@ -3,6 +3,7 @@ package io.harness.pms.ngpipeline.inputset.service;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -20,6 +21,8 @@ public interface PMSInputSetService {
       String pipelineIdentifier, String identifier, boolean deleted);
 
   InputSetEntity update(InputSetEntity inputSetEntity, ChangeType changeType);
+
+  InputSetEntity syncInputSetWithGit(EntityDetailProtoDTO entityDetail);
 
   boolean switchValidationFlag(InputSetEntity entity, boolean isInvalid);
 
