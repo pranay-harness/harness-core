@@ -68,6 +68,9 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.TERRAFORM_PLAN)
   TERRAFORM_PLAN_STEP(
       ModuleType.CD, EntityTypeConstants.TERRAFORM_PLAN, IdentifierRef.class, EntityYamlRootNames.TERRAFORM_PLAN),
+  @JsonProperty(EntityTypeConstants.TERRAFORM_DESTROY)
+  TERRAFORM_DESTROY_STEP(
+      ModuleType.CD, EntityTypeConstants.TERRAFORM_DESTROY, IdentifierRef.class, EntityYamlRootNames.TERRAFORM_DESTROY),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
   CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, IdentifierRef.class, EntityYamlRootNames.CONNECTOR),
   @JsonProperty(EntityTypeConstants.SECRETS)

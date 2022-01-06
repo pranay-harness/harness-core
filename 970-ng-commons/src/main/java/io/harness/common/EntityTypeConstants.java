@@ -44,5 +44,6 @@ public interface EntityTypeConstants {
   String K8S_CANARY_DELETE = "K8sCanaryDelete";
   String TERRAFORM_APPLY = "TerraformApply";
   String TERRAFORM_PLAN = "TerraformPlan";
+  String TERRAFORM_DESTROY = "TerraformDestroy";
   String SERVICENOW_APPROVAL = "ServiceNowApproval";
 }
