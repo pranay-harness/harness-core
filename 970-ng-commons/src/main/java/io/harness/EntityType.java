@@ -80,6 +80,18 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.K8S_CANARY_DELETE)
   K8S_CANARY_DELETE_STEP(
       ModuleType.CD, EntityTypeConstants.K8S_CANARY_DELETE, IdentifierRef.class, EntityYamlRootNames.K8S_CANARY_DELETE),
+  @JsonProperty(EntityTypeConstants.TERRAFORM_APPLY)
+  TERRAFORM_APPLY_STEP(
+      ModuleType.CD, EntityTypeConstants.TERRAFORM_APPLY, IdentifierRef.class, EntityYamlRootNames.TERRAFORM_APPLY),
+  @JsonProperty(EntityTypeConstants.TERRAFORM_PLAN)
+  TERRAFORM_PLAN_STEP(
+      ModuleType.CD, EntityTypeConstants.TERRAFORM_PLAN, IdentifierRef.class, EntityYamlRootNames.TERRAFORM_PLAN),
+  @JsonProperty(EntityTypeConstants.TERRAFORM_DESTROY)
+  TERRAFORM_DESTROY_STEP(
+      ModuleType.CD, EntityTypeConstants.TERRAFORM_DESTROY, IdentifierRef.class, EntityYamlRootNames.TERRAFORM_DESTROY),
+  @JsonProperty(EntityTypeConstants.TERRAFORM_ROLLBACK)
+  TERRAFORM_ROLLBACK_STEP(ModuleType.CD, EntityTypeConstants.TERRAFORM_ROLLBACK, IdentifierRef.class,
+      EntityYamlRootNames.TERRAFORM_ROLLBACK),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
   CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, IdentifierRef.class, EntityYamlRootNames.CONNECTOR),
   @JsonProperty(EntityTypeConstants.SECRETS)

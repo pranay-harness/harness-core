@@ -50,6 +50,10 @@ public interface EntityTypeConstants {
   String K8S_DELETE = "K8sDelete";
   String K8S_BG_SWAP_SERVICES = "K8sBGSwapServices";
   String K8S_CANARY_DELETE = "K8sCanaryDelete";
+  String TERRAFORM_APPLY = "TerraformApply";
+  String TERRAFORM_PLAN = "TerraformPlan";
+  String TERRAFORM_DESTROY = "TerraformDestroy";
+  String TERRAFORM_ROLLBACK = "TerraformRollback";
   String SERVICENOW_APPROVAL = "ServiceNowApproval";
   String JIRA_APPROVAL = "JiraApproval";
   String HARNESS_APPROVAL = "HarnessApproval";

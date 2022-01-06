@@ -180,6 +180,10 @@ io.harness.cdng.k8s.K8sBGSwapServicesStepNode
 io.harness.cdng.k8s.K8sCanaryDeleteStepNode
 io.harness.cdng.k8s.K8sRollingStepNode
 io.harness.cdng.k8s.K8sRollingRollbackStepNode
+io.harness.cdng.provision.terraform.TerraformApplyStepNode
+io.harness.cdng.provision.terraform.TerraformPlanStepNode
+io.harness.cdng.provision.terraform.TerraformDestroyStepNode
+io.harness.cdng.provision.terraform.TerraformRollbackStepNode
 io.harness.steps.template.TemplateStepNode
 io.harness.cdng.manifest.yaml.GcsStoreConfig
 io.harness.ngpipeline.artifact.bean.EcrArtifactOutcome
