@@ -720,7 +720,9 @@ public class DelegateServiceImpl implements DelegateService {
     List<DelegateScalingGroup> scalingGroups = getDelegateScalingGroups(accountId, activeDelegateConnections);
 
     return DelegateStatus.builder()
-        .publishedVersions(delegateVersionListWithoutPatch(delegateConfiguration.getDelegateVersions()))
+        .publishedVersions(DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())
+                ? Lists.newArrayList()
+                : delegateVersionListWithoutPatch(delegateConfiguration.getDelegateVersions()))
         .scalingGroups(scalingGroups)
         .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections, false))
         .build();
