@@ -93,7 +93,9 @@ public class SuperAdminViaAllResourcesMigration implements NGMigration {
         } catch (DuplicateKeyException exception) {
           log.info("[SuperAdminViaAllResourcesMigration] RoleAssignment already exists.", exception);
         }
-        roleAssignmentRepository.deleteById(roleAssignment.getId());
+        if (!"_account_viewer".equals(roleAssignment.getRoleIdentifier())) {
+          roleAssignmentRepository.deleteById(roleAssignment.getId());
+        }
       }
     } while (true);
   }
