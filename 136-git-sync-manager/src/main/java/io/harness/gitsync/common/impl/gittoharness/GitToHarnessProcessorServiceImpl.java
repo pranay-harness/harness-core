@@ -14,10 +14,8 @@ import static java.util.stream.Collectors.toMap;
 import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.beans.Scope;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.ChangeSets;
@@ -94,26 +92,12 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   GitSyncErrorService gitSyncErrorService;
   GitEntityService gitEntityService;
   EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
-  FeatureFlagService featureFlagService;
-
-  private boolean isNGErrorExperienceEnabled(String accountId) {
-    try {
-      return featureFlagService.isEnabledReloadCache(FeatureName.NG_GIT_ERROR_EXPERIENCE, accountId);
-    } catch (Exception exception) {
-      log.error("Error occurred while trying to check NG_GIT_ERROR_EXPERIENCE feature flag for account: {}", accountId,
-          exception);
-      return false;
-    }
-  }
 
   @Override
   public GitToHarnessProgressStatus processFiles(String accountId,
       List<GitToHarnessFileProcessingRequest> fileContentsList, String branchName, String repoUrl, String commitId,
       String gitToHarnessProgressRecordId, String changeSetId, String commitMessage) {
-    boolean ngErrorExperienceEnabled = isNGErrorExperienceEnabled(accountId);
-    if (ngErrorExperienceEnabled) {
-      gitSyncErrorService.resolveConnectivityErrors(accountId, repoUrl);
-    }
+    gitSyncErrorService.resolveConnectivityErrors(accountId, repoUrl);
 
     final List<YamlGitConfigDTO> yamlGitConfigs = yamlGitConfigService.getByAccountAndRepo(accountId, repoUrl);
 
@@ -145,14 +129,12 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
     Map<Microservice, List<ChangeSet>> groupedFilesByMicroservices =
         groupFilesByMicroservices(mapOfEntityTypeAndContent);
 
-    List<GitToHarnessProcessingResponse> gitToHarnessProcessingResponses = processInternal(gitToHarnessProcessingInfo,
-        groupedFilesByMicroservices, gitToHarnessErrors, filePathsHavingError, ngErrorExperienceEnabled);
+    List<GitToHarnessProcessingResponse> gitToHarnessProcessingResponses = processInternal(
+        gitToHarnessProcessingInfo, groupedFilesByMicroservices, gitToHarnessErrors, filePathsHavingError);
     gitToHarnessProcessingResponses.addAll(processNotFoundFiles(changeSetsWithYamlStatus, accountId));
     Set<String> filePathsWithoutError = getFilePathsWithoutError(gitToHarnessProcessingResponses);
 
-    if (ngErrorExperienceEnabled) {
-      gitSyncErrorService.resolveGitToHarnessErrors(accountId, repoUrl, branchName, filePathsWithoutError, commitId);
-    }
+    gitSyncErrorService.resolveGitToHarnessErrors(accountId, repoUrl, branchName, filePathsWithoutError, commitId);
     updateCommit(commitId, accountId, branchName, repoUrl, gitToHarnessProcessingResponses, invalidChangeSets);
     return updateTheGitToHarnessStatus(gitToHarnessProgressRecordId, gitToHarnessProcessingResponses);
   }
@@ -256,7 +238,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
 
   private List<GitToHarnessProcessingResponse> processInternal(GitToHarnessProcessingInfo gitToHarnessProcessingInfo,
       Map<Microservice, List<ChangeSet>> groupedFilesByMicroservices, List<GitSyncErrorDTO> gitToHarnessErrors,
-      Set<String> filePathsHavingError, boolean ngErrorExperienceEnabled) {
+      Set<String> filePathsHavingError) {
     List<GitToHarnessProcessingResponse> gitToHarnessProcessingResponses = new ArrayList<>();
     gitToHarnessProgressService.startNewStep(
         gitToHarnessProcessingInfo.getGitToHarnessProgressRecordId(), PROCESS_FILES_IN_MSVS, IN_PROGRESS);
@@ -293,10 +275,8 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       } catch (Exception ex) {
         // This exception happens in the case when we are not able to connect to the microservice
         log.error("Exception in file processing for the microservice {}", entry.getKey(), ex);
-        if (ngErrorExperienceEnabled) {
-          gitSyncErrorService.recordConnectivityError(gitToHarnessProcessingInfo.getAccountId(),
-              gitToHarnessProcessingInfo.getRepoUrl(), GitConnectivityExceptionHelper.ERROR_MSG_MSVC_DOWN);
-        }
+        gitSyncErrorService.recordConnectivityError(gitToHarnessProcessingInfo.getAccountId(),
+            gitToHarnessProcessingInfo.getRepoUrl(), GitConnectivityExceptionHelper.ERROR_MSG_MSVC_DOWN);
         gitToHarnessProcessingResponseDTO = GitToHarnessProcessingResponseDTO.builder()
                                                 .msvcProcessingFailureStage(MsvcProcessingFailureStage.RECEIVE_STAGE)
                                                 .build();
@@ -315,11 +295,9 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
           gitToHarnessProcessingInfo.getGitToHarnessProgressRecordId(), gitToHarnessResponse);
       log.info("Completed for microservice {}", entry.getKey());
     }
-    if (ngErrorExperienceEnabled) {
-      gitSyncErrorService.overrideGitToHarnessErrors(gitToHarnessProcessingInfo.getAccountId(),
-          gitToHarnessProcessingInfo.getRepoUrl(), gitToHarnessProcessingInfo.getBranchName(), filePathsHavingError);
-      gitSyncErrorService.saveAll(gitToHarnessErrors);
-    }
+    gitSyncErrorService.overrideGitToHarnessErrors(gitToHarnessProcessingInfo.getAccountId(),
+        gitToHarnessProcessingInfo.getRepoUrl(), gitToHarnessProcessingInfo.getBranchName(), filePathsHavingError);
+    gitSyncErrorService.saveAll(gitToHarnessErrors);
     return gitToHarnessProcessingResponses;
   }
 

@@ -15,7 +15,6 @@ import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.gitsync.BranchDetails;
 import io.harness.gitsync.ChangeType;
 import io.harness.gitsync.FileInfo;
@@ -75,7 +74,6 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final GitCommitService gitCommitService;
   private final UserProfileHelper userProfileHelper;
   private final GitSyncErrorService gitSyncErrorService;
-  private final FeatureFlagService featureFlagService;
 
   @Inject
   public HarnessToGitHelperServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
@@ -83,8 +81,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
       YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
       ExecutorService executorService, GitBranchService gitBranchService, EncryptionHelper encryptionHelper,
       ScmOrchestratorService scmOrchestratorService, GitBranchSyncService gitBranchSyncService,
-      GitCommitService gitCommitService, UserProfileHelper userProfileHelper, GitSyncErrorService gitSyncErrorService,
-      FeatureFlagService featureFlagService) {
+      GitCommitService gitCommitService, UserProfileHelper userProfileHelper, GitSyncErrorService gitSyncErrorService) {
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitEntityService = gitEntityService;
@@ -98,7 +95,6 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     this.gitCommitService = gitCommitService;
     this.userProfileHelper = userProfileHelper;
     this.gitSyncErrorService = gitSyncErrorService;
-    this.featureFlagService = featureFlagService;
   }
 
   private Optional<ConnectorResponseDTO> getConnector(

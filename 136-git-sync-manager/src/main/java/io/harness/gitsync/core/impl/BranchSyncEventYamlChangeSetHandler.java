@@ -6,9 +6,7 @@ import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.ff.FeatureFlagService;
 import io.harness.gitsync.common.beans.BranchSyncMetadata;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
@@ -45,7 +43,6 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
   private GitToHarnessProgressService gitToHarnessProgressService;
   private GitToHarnessProgressHelper gitToHarnessProgressHelper;
   private GitSyncErrorService gitSyncErrorService;
-  private FeatureFlagService featureFlagService;
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
@@ -105,7 +102,7 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
       log.error("Error encountered while syncing the branch [{}]", branch, ex);
       String gitConnectivityErrorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
       if (!gitConnectivityErrorMessage.isEmpty()) {
-        recordErrors(accountIdentifier, repoURL, gitConnectivityErrorMessage);
+        recordConnectivityErrors(accountIdentifier, repoURL, gitConnectivityErrorMessage);
       }
       gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);
       // TODO adding it here for safer side as of now. Ideally should be part of step service to mark it
@@ -118,9 +115,7 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
     }
   }
 
-  private void recordErrors(String accountId, String repo, String errorMessage) {
-    if (featureFlagService.isEnabled(FeatureName.NG_GIT_ERROR_EXPERIENCE, accountId)) {
-      gitSyncErrorService.recordConnectivityError(accountId, repo, errorMessage);
-    }
+  private void recordConnectivityErrors(String accountId, String repo, String errorMessage) {
+    gitSyncErrorService.recordConnectivityError(accountId, repo, errorMessage);
   }
 }
