@@ -47,8 +47,8 @@ public class UnsuccessfulLoginEvent implements Event {
     if (isNotEmpty(userName)) {
       labels.put(ResourceConstants.LABEL_KEY_RESOURCE_NAME, userName);
     }
-    labels.put(ResourceConstants.LABEL_KEY_USER_EMAIL, email);
-    return Resource.builder().identifier(userId).type(ResourceTypeConstants.USER).labels(labels).build();
+    labels.put(ResourceConstants.LABEL_KEY_USER_ID, userId);
+    return Resource.builder().identifier(email).type(ResourceTypeConstants.USER).labels(labels).build();
   }
 
   @JsonIgnore

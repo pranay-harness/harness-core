@@ -1,7 +1,6 @@
 package software.wings.core.outbox;
 
 import static io.harness.ng.core.ResourceConstants.LABEL_KEY_RESOURCE_NAME;
-import static io.harness.ng.core.ResourceConstants.LABEL_KEY_USER_EMAIL;
 import static io.harness.ng.core.ResourceConstants.LABEL_KEY_USER_ID;
 
 import static software.wings.core.events.Login2FAEvent.LOGIN2FA;
@@ -97,10 +96,10 @@ public class UserEventHandler implements OutboxEventHandler {
 
   private AuthenticationInfoDTO getAuthenticationInfoForLoginEvent(String accountIdentifier, AuditEntry auditEntry) {
     ResourceDTO resource = auditEntry.getResource();
-    String userId = resource.getIdentifier();
-    String email = resource.getLabels().get(LABEL_KEY_USER_EMAIL);
-    String useName = resource.getLabels().get(LABEL_KEY_RESOURCE_NAME);
-    UserPrincipal principal = new UserPrincipal(userId, email, useName, accountIdentifier);
+    String email = resource.getIdentifier();
+    String userId = resource.getLabels().get(LABEL_KEY_USER_ID);
+    String username = resource.getLabels().get(LABEL_KEY_RESOURCE_NAME);
+    UserPrincipal principal = new UserPrincipal(userId, email, username, accountIdentifier);
     return AuthenticationInfoDTO.fromSecurityPrincipal(principal);
   }
 }
