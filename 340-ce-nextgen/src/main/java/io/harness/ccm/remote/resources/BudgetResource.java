@@ -82,6 +82,7 @@ public class BudgetResource {
            NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @RequestBody(required = true, description = "Budget definition") Budget budget) {
     budget.setAccountId(accountId);
+    budget.setNgBudget(true);
     return ResponseDTO.newResponse(budgetService.create(budget));
   }
 
