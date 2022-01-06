@@ -21,7 +21,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.migration.NGMigration;
 import io.harness.utils.CryptoUtils;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
@@ -79,7 +78,7 @@ public class SuperAdminViaAllResourcesMigration implements NGMigration {
     Criteria criteria = Criteria.where(RoleAssignmentDBOKeys.scopeLevel)
                             .is(scopeLevel.toString())
                             .and(RoleAssignmentDBOKeys.roleIdentifier)
-                            .in(getRoleIdentifiers(scopeLevel))
+                            .is(getRoleIdentifier(scopeLevel))
                             .and(RoleAssignmentDBOKeys.resourceGroupIdentifier)
                             .is(getResourceGroupIdentifier(scopeLevel));
     do {
@@ -122,11 +121,11 @@ public class SuperAdminViaAllResourcesMigration implements NGMigration {
     }
   }
 
-  private List<String> getRoleIdentifiers(ScopeLevel scopeLevel) {
+  private String getRoleIdentifier(ScopeLevel scopeLevel) {
     if (HarnessScopeLevel.ORGANIZATION.equals(scopeLevel)) {
-      return Lists.newArrayList("_organization_admin");
+      return "_organization_admin";
     } else {
-      return Lists.newArrayList("_account_admin", "_account_viewer");
+      return "_account_admin";
     }
   }
 }
