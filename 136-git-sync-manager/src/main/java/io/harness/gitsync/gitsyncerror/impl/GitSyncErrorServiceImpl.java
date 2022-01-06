@@ -438,10 +438,10 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoIdentifier, String branch) {
     Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
                             .is(accountIdentifier)
-                            .and(GitSyncErrorKeys.errorType)
-                            .in(GitSyncErrorType.FULL_SYNC, GitSyncErrorType.CONNECTIVITY_ISSUE)
                             .and(GitSyncErrorKeys.scopes)
-                            .is(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier));
+                            .is(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier))
+                            .and(GitSyncErrorKeys.errorType)
+                            .in(GitSyncErrorType.FULL_SYNC, GitSyncErrorType.CONNECTIVITY_ISSUE);
     Criteria repoBranchCriteria = getRepoBranchCriteria(accountIdentifier, orgIdentifier, projectIdentifier,
         repoIdentifier, branch, GitSyncErrorType.CONNECTIVITY_ISSUE);
 

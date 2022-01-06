@@ -39,8 +39,6 @@ import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.alert.services.api.AlertRuleService;
-import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
@@ -108,7 +106,6 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @Mock private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Mock private NextGenService nextGenService;
-  @Mock private AlertRuleService alertRuleService;
   @Mock private PersistentLocker mockedPersistentLocker;
 
   private String projectIdentifier;
@@ -136,7 +133,6 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(activityService, "verificationJobInstanceService", verificationJobInstanceService, true);
     FieldUtils.writeField(activityService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(activityService, "healthVerificationHeatMapService", healthVerificationHeatMapService, true);
-    FieldUtils.writeField(activityService, "alertRuleService", alertRuleService, true);
     when(nextGenService.getService(any(), any(), any(), any()))
         .thenReturn(ServiceResponseDTO.builder().name("service name").build());
     when(verificationJobInstanceService.getCVConfigsForVerificationJob(any()))
@@ -762,11 +758,6 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
 
     assertThat(activities.get(0).getAnalysisStatus().name()).isEqualTo(ActivityVerificationStatus.NOT_STARTED.name());
     assertThat(activities.get(0).getVerificationSummary()).isNull();
-
-    verify(alertRuleService, times(0))
-        .processDeploymentVerification(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
-            ActivityType.DEPLOYMENT, VerificationStatus.getVerificationStatus(ActivityVerificationStatus.NOT_STARTED),
-            123456L, 123456L, "tag");
   }
 
   @Test

@@ -186,8 +186,12 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
                                            .build());
     configuration.setLdapSyncJobConfig(
         LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
-    SegmentConfiguration segmentConfiguration =
-        SegmentConfiguration.builder().enabled(false).url("dummy_url").apiKey("dummy_key").build();
+    SegmentConfiguration segmentConfiguration = SegmentConfiguration.builder()
+                                                    .enabled(false)
+                                                    .url("dummy_url")
+                                                    .apiKey("dummy_key")
+                                                    .certValidationRequired(false)
+                                                    .build();
     configuration.setSegmentConfiguration(segmentConfiguration);
     return configuration;
   }

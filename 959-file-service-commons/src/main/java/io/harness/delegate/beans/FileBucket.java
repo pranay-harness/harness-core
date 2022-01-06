@@ -18,6 +18,7 @@ public enum FileBucket {
   TERRAFORM_STATE,
   PROFILE_RESULTS,
   TERRAFORM_PLAN,
+  TERRAFORM_PLAN_JSON,
   EXPORT_EXECUTIONS;
 
   private int chunkSize;

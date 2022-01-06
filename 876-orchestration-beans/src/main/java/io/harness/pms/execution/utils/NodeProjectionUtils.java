@@ -24,4 +24,7 @@ public class NodeProjectionUtils {
           NodeExecutionKeys.node, NodeExecutionKeys.endTs, NodeExecutionKeys.oldRetry);
   public static final Set<String> withAmbianceAndNode =
       Sets.newHashSet(NodeExecutionKeys.ambiance, NodeExecutionKeys.planNode, NodeExecutionKeys.node);
+  public static final Set<String> fieldsForResume = Sets.newHashSet(NodeExecutionKeys.status,
+      NodeExecutionKeys.ambiance, NodeExecutionKeys.planNode, NodeExecutionKeys.node,
+      NodeExecutionKeys.executableResponses, NodeExecutionKeys.resolvedStepParameters, NodeExecutionKeys.mode);
 }

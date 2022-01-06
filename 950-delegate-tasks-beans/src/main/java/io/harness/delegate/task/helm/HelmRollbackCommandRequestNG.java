@@ -18,16 +18,16 @@ public class HelmRollbackCommandRequestNG extends HelmCommandRequestNG {
   private Integer rollbackVersion;
 
   @Builder
-  public HelmRollbackCommandRequestNG(boolean skipDryRun, String releaseName, List<String> valuesYamlList,
+  public HelmRollbackCommandRequestNG(String releaseName, List<String> valuesYamlList,
       K8sInfraDelegateConfig k8sInfraDelegateConfig, ManifestDelegateConfig manifestDelegateConfig, String accountId,
       boolean k8SteadyStateCheckEnabled, boolean shouldOpenFetchFilesLogStream,
       CommandUnitsProgress commandUnitsProgress, LogCallback logCallback, String namespace, HelmVersion helmVersion,
       String commandFlags, String repoName, String workingDir, String kubeConfigLocation, String ocPath,
       String commandName, boolean useLatestKubectlVersion, Integer prevReleaseVersion, Integer newReleaseVersion) {
-    super(skipDryRun, releaseName, HelmCommandType.ROLLBACK, valuesYamlList, k8sInfraDelegateConfig,
-        manifestDelegateConfig, accountId, k8SteadyStateCheckEnabled, shouldOpenFetchFilesLogStream,
-        commandUnitsProgress, logCallback, namespace, helmVersion, commandFlags, repoName, workingDir,
-        kubeConfigLocation, ocPath, commandName, useLatestKubectlVersion);
+    super(releaseName, HelmCommandType.ROLLBACK, valuesYamlList, k8sInfraDelegateConfig, manifestDelegateConfig,
+        accountId, k8SteadyStateCheckEnabled, shouldOpenFetchFilesLogStream, commandUnitsProgress, logCallback,
+        namespace, helmVersion, commandFlags, repoName, workingDir, kubeConfigLocation, ocPath, commandName,
+        useLatestKubectlVersion);
     this.prevReleaseVersion = prevReleaseVersion;
     this.newReleaseVersion = newReleaseVersion;
   }

@@ -12,6 +12,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
@@ -64,6 +65,7 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -93,7 +95,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationJobService verificationJobService;
   @Inject private HeatMapService heatMapService;
   @Mock private NextGenService nextGenService;
-  private String verificationJobIdentifier;
+  @Mock Provider<NextGenService> nextGenServiceProvider;
   private Instant instant;
   private String accountId;
   BuilderFactory builderFactory;
@@ -108,7 +110,9 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
     accountId = generateUuid();
     instant = Instant.parse("2020-07-27T10:44:11.000Z");
     verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfigId);
-    FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
+
+    FieldUtils.writeField(cvConfigService, "nextGenServiceProvider", nextGenServiceProvider, true);
     FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
     FieldUtils.writeField(logAnalysisService, "heatMapService", heatMapService, true);
   }
@@ -445,6 +449,26 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
     }
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetPreviousDeploymentAnalysis() {
+    CanaryLogAnalysisLearningEngineTask task =
+        CanaryLogAnalysisLearningEngineTask.builder().controlHosts(Sets.newHashSet("host1", "host2")).build();
+    task.setControlDataUrl("controlData");
+    task.setTestDataUrl("testData");
+    fillCommon(task, LearningEngineTaskType.CANARY_LOG_ANALYSIS);
+    learningEngineTaskService.createLearningEngineTask(task);
+    DeploymentLogAnalysisDTO deploymentLogAnalysisDTO = createDeploymentAnalysisDTO();
+    logAnalysisService.saveAnalysis(task.getUuid(), deploymentLogAnalysisDTO);
+    assertThat(logAnalysisService.getPreviousDeploymentAnalysis(
+                   verificationTaskId, instant.minus(Duration.ofMinutes(10)), instant))
+        .isNull();
+    assertThat(logAnalysisService.getPreviousDeploymentAnalysis(
+                   verificationTaskId, instant.minus(Duration.ofMinutes(9)), instant))
+        .isNotNull();
+  }
+
   private List<ClusteredLog> createClusteredLogRecords(Instant startTime, Instant endTime) {
     List<ClusteredLog> logRecords = new ArrayList<>();
 
@@ -553,7 +577,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
 
   private VerificationJob newTestVerificationJob() {
     TestVerificationJobDTO testVerificationJob = new TestVerificationJobDTO();
-    testVerificationJob.setIdentifier(verificationJobIdentifier);
+    testVerificationJob.setIdentifier(generateUuid());
     testVerificationJob.setJobName(generateUuid());
     testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());

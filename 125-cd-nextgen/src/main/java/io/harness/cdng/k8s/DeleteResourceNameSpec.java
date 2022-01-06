@@ -15,7 +15,9 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDP)
 @Data
@@ -24,6 +26,8 @@ import lombok.Data;
 public class DeleteResourceNameSpec implements DeleteResourcesBaseSpec {
   @YamlSchemaTypes({runtime})
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  @NotNull
+  @NotEmpty
   ParameterField<List<String>> resourceNames;
 
   @Override
@@ -33,7 +37,8 @@ public class DeleteResourceNameSpec implements DeleteResourcesBaseSpec {
 
   @Override
   public String getResourceNamesValue() {
-    List<String> resourceNamesList = resourceNames != null ? resourceNames.getValue() : Collections.emptyList();
+    List<String> resourceNamesList =
+        resourceNames != null && resourceNames.getValue() != null ? resourceNames.getValue() : Collections.emptyList();
     return resourceNamesList.stream().collect(Collectors.joining(","));
   }
 

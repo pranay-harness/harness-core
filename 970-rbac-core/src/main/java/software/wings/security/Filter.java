@@ -22,8 +22,9 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode
 @JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "type")
 @JsonSubTypes({
-  @Type(value = GenericEntityFilter.class, name = "GenericEntityFilter")
-  , @Type(value = EnvFilter.class, name = "EnvFilter"), @Type(value = WorkflowFilter.class, name = "WorkflowFilter")
+  @Type(value = AppFilter.class, name = "AppFilter")
+  , @Type(value = GenericEntityFilter.class, name = "GenericEntityFilter"),
+      @Type(value = EnvFilter.class, name = "EnvFilter"), @Type(value = WorkflowFilter.class, name = "WorkflowFilter")
 })
 public abstract class Filter {
   private Set<String> ids;

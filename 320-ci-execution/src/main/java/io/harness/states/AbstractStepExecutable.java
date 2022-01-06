@@ -76,6 +76,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.product.ci.engine.proto.ExecuteStepRequest;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.steps.StepUtils;
 import io.harness.steps.executable.AsyncExecutableWithRbac;
 import io.harness.tasks.ResponseData;
@@ -109,6 +110,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
   @Inject private CIDelegateTaskExecutor ciDelegateTaskExecutor;
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
   @Inject private VmStepSerializer vmStepSerializer;
+  @Inject private ConnectorUtils connectorUtils;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {

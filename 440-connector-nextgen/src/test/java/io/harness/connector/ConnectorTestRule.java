@@ -19,6 +19,7 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
+import io.harness.gitsync.clients.YamlGitConfigClient;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.persistance.testing.GitSyncablePersistenceTestModule;
@@ -123,6 +124,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
         bind(GitSyncSdkService.class).toInstance(mock(GitSyncSdkService.class));
+        bind(YamlGitConfigClient.class).toInstance(mock(YamlGitConfigClient.class));
       }
     });
     modules.add(mongoTypeModule(annotations));

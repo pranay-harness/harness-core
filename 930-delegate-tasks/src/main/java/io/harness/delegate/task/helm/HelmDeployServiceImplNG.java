@@ -82,7 +82,6 @@ import io.harness.shell.SshSessionConfig;
 
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 
-import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -414,7 +413,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   private void saveReleaseHistory(HelmCommandRequestNG commandRequest, HelmCommandResponseNG commandResponse,
-      ReleaseHistory releaseHistory) throws YamlException {
+      ReleaseHistory releaseHistory) throws IOException {
     Release.Status releaseStatus = CommandExecutionStatus.SUCCESS == commandResponse.getCommandExecutionStatus()
         ? Release.Status.Succeeded
         : Release.Status.Failed;
@@ -480,6 +479,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       logCallback = markDoneAndStartNew(commandRequest, logCallback, Rollback);
       HelmInstallCmdResponseNG commandResponse = HelmCommandResponseMapper.getHelmInstCmdRespNG(
           helmClient.rollback(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest)));
+      commandResponse.setPrevReleaseVersion(commandRequest.getPrevReleaseVersion());
+      commandResponse.setReleaseName(commandRequest.getReleaseName());
       logCallback.saveExecutionLog(commandResponse.getOutput());
       if (commandResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
         return commandResponse;

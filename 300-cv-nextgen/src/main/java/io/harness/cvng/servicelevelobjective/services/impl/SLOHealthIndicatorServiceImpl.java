@@ -14,6 +14,7 @@ import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorS
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Instant;
@@ -30,7 +31,7 @@ public class SLOHealthIndicatorServiceImpl implements SLOHealthIndicatorService 
   @Inject private Clock clock;
 
   @Override
-  public List<SLOHealthIndicator> getFromMonitoredServiceIdentifiers(
+  public List<SLOHealthIndicator> getByMonitoredServiceIdentifiers(
       ProjectParams projectParams, List<String> monitoredServiceIdentifiers) {
     return hPersistence.createQuery(SLOHealthIndicator.class)
         .filter(SLOHealthIndicatorKeys.accountId, projectParams.getAccountIdentifier())
@@ -42,13 +43,25 @@ public class SLOHealthIndicatorServiceImpl implements SLOHealthIndicatorService 
   }
 
   @Override
-  public SLOHealthIndicator get(ProjectParams projectParams, String serviceLevelObjectiveIdentifier) {
+  public SLOHealthIndicator getBySLOIdentifier(ProjectParams projectParams, String serviceLevelObjectiveIdentifier) {
     return hPersistence.createQuery(SLOHealthIndicator.class)
         .filter(SLOHealthIndicatorKeys.accountId, projectParams.getAccountIdentifier())
         .filter(SLOHealthIndicatorKeys.orgIdentifier, projectParams.getOrgIdentifier())
         .filter(SLOHealthIndicatorKeys.projectIdentifier, projectParams.getProjectIdentifier())
         .filter(SLOHealthIndicatorKeys.serviceLevelObjectiveIdentifier, serviceLevelObjectiveIdentifier)
         .get();
+  }
+
+  @Override
+  public List<SLOHealthIndicator> getBySLOIdentifiers(
+      ProjectParams projectParams, List<String> serviceLevelObjectiveIdentifiers) {
+    return hPersistence.createQuery(SLOHealthIndicator.class)
+        .filter(SLOHealthIndicatorKeys.accountId, projectParams.getAccountIdentifier())
+        .filter(SLOHealthIndicatorKeys.orgIdentifier, projectParams.getOrgIdentifier())
+        .filter(SLOHealthIndicatorKeys.projectIdentifier, projectParams.getProjectIdentifier())
+        .field(SLOHealthIndicatorKeys.serviceLevelObjectiveIdentifier)
+        .in(serviceLevelObjectiveIdentifiers)
+        .asList();
   }
 
   @Override
@@ -60,7 +73,26 @@ public class SLOHealthIndicatorServiceImpl implements SLOHealthIndicatorService 
                                       .build();
     ServiceLevelObjective serviceLevelObjective =
         serviceLevelObjectiveService.getFromSLIIdentifier(projectParams, serviceLevelIndicator.getIdentifier());
-    SLOHealthIndicator sloHealthIndicator = get(projectParams, serviceLevelObjective.getIdentifier());
+    upsert(projectParams, serviceLevelObjective, serviceLevelIndicator);
+  }
+
+  @Override
+  public void upsert(ServiceLevelObjective serviceLevelObjective) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(serviceLevelObjective.getAccountId())
+                                      .orgIdentifier(serviceLevelObjective.getOrgIdentifier())
+                                      .projectIdentifier(serviceLevelObjective.getProjectIdentifier())
+                                      .build();
+    Preconditions.checkState(
+        serviceLevelObjective.getServiceLevelIndicators().size() == 1, "Only one service level indicator is supported");
+    ServiceLevelIndicator serviceLevelIndicator = serviceLevelIndicatorService.getServiceLevelIndicator(
+        projectParams, serviceLevelObjective.getServiceLevelIndicators().get(0));
+    upsert(projectParams, serviceLevelObjective, serviceLevelIndicator);
+  }
+
+  private void upsert(ProjectParams projectParams, ServiceLevelObjective serviceLevelObjective,
+      ServiceLevelIndicator serviceLevelIndicator) {
+    SLOHealthIndicator sloHealthIndicator = getBySLOIdentifier(projectParams, serviceLevelObjective.getIdentifier());
     LocalDateTime currentLocalDate = LocalDateTime.ofInstant(clock.instant(), serviceLevelObjective.getZoneOffset());
     int totalErrorBudgetMinutes = serviceLevelObjective.getTotalErrorBudgetMinutes(currentLocalDate);
     ServiceLevelObjective.TimePeriod timePeriod = serviceLevelObjective.getCurrentTimeRange(currentLocalDate);

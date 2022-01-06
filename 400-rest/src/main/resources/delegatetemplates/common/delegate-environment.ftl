@@ -39,8 +39,6 @@
           value: "${delegateDescription}"
         - name: DELEGATE_TAGS
           value: "${delegateTags}"
-        - name: DELEGATE_TASK_LIMIT
-          value: "${delegateTaskLimit}"
         - name: DELEGATE_ORG_IDENTIFIER
           value: "${delegateOrgIdentifier}"
         - name: DELEGATE_PROJECT_IDENTIFIER

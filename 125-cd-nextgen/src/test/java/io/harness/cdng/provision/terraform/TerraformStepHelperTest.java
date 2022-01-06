@@ -4,6 +4,7 @@ import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -108,6 +109,7 @@ public class TerraformStepHelperTest extends CategoryTest {
         .putSetupAbstractions("accountId", "test-account")
         .putSetupAbstractions("projectIdentifier", "test-project")
         .putSetupAbstractions("orgIdentifier", "test-org")
+        .setPlanExecutionId("exec_id")
         .build();
   }
 
@@ -402,6 +404,16 @@ public class TerraformStepHelperTest extends CategoryTest {
         helper.toTerraformVarFileConfig(varFilesMap, terraformTaskNGResponse, ambiance);
     assertThat(terraformVarFileConfig).isEmpty();
   }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTerraformPlanName() {
+    Ambiance ambiance = getAmbiance();
+    String planName = helper.getTerraformPlanName(TerraformPlanCommand.APPLY, ambiance);
+    assertThat(planName).isEqualTo("tfPlan-exec-id");
+  }
+
   @Test
   @Owner(developers = NAMAN_TALAYCHA)
   @Category(UnitTests.class)

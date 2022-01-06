@@ -246,9 +246,9 @@ public class TerraformStepHelper {
     executionSweepingOutputService.consume(ambiance, inheritOutputName, builder.build(), StepOutcomeGroup.STAGE.name());
   }
 
-  private String getTerraformPlanName(TerraformPlanCommand terraformPlanCommand, Ambiance ambiance) {
+  public String getTerraformPlanName(TerraformPlanCommand terraformPlanCommand, Ambiance ambiance) {
     String prefix = TerraformPlanCommand.DESTROY == terraformPlanCommand ? TF_DESTROY_NAME_PREFIX : TF_NAME_PREFIX;
-    return format(prefix, ambiance.getPlanExecutionId());
+    return format(prefix, ambiance.getPlanExecutionId()).replaceAll("_", "-");
   }
 
   public EncryptionConfig getEncryptionConfig(Ambiance ambiance, TerraformPlanStepParameters planStepParameters) {

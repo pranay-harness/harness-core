@@ -35,5 +35,5 @@ public interface TimeSeriesRecordService {
       List<String> verificationTaskIds, Instant startTime, Instant endTime, boolean anomalousOnly);
 
   void createDemoAnalysisData(String accountId, String verificationTaskId, String dataCollectionWorkerId,
-      Instant startTime, Instant endTime) throws IOException;
+      String demoTemplateIdentifier, Instant startTime, Instant endTime) throws IOException;
 }

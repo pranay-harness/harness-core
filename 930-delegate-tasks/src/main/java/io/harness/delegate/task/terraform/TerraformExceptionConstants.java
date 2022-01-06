@@ -23,6 +23,8 @@ public final class TerraformExceptionConstants {
         "Please check your terraform backend configuration";
     public static final String HINT_FAILED_TO_GET_EXISTING_WORKSPACES =
         "Please check your terraform backend configuration";
+    public static final String HINT_INVALID_CRED_FOR_S3_BACKEND =
+        "Please check access_key and secret_key variables values in Backend Configuration Section or AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables";
   }
 
   public static final class Explanation {
@@ -42,5 +44,9 @@ public final class TerraformExceptionConstants {
         "InvalidClientTokenId: The security token included in the request is invalid";
     public static final String ERROR_INSPECTING_STATE_IN_BACKEND = "Error inspecting states in the";
     public static final String FAILED_TO_GET_EXISTING_WORKSPACES = "Failed to get existing workspaces";
+    public static final String ERROR_CONFIGURING_S3_BACKEND = "Error configuring S3 Backend";
+    public static final String NO_VALID_CRED_FOUND_FOR_S3_BACKEND = "No valid credential sources for S3 Backend found";
+    public static final String ERROR_VALIDATING_PROVIDER_CRED = "Error validating provider credentials";
+    public static final String NO_VALID_CRED_FOUND_FOR_AWS = "No valid credential sources found for AWS Provider";
   }
 }

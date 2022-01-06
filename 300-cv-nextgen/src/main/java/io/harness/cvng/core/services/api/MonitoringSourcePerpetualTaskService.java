@@ -1,9 +1,11 @@
 package io.harness.cvng.core.services.api;
 
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.encryption.Scope;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MonitoringSourcePerpetualTaskService extends DeleteEntityByHandler<MonitoringSourcePerpetualTask> {
   void createTask(String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier,
@@ -18,4 +20,6 @@ public interface MonitoringSourcePerpetualTaskService extends DeleteEntityByHand
 
   String getDeploymentWorkerId(String accountId, String orgIdentifier, String projectIdentifier,
       String connectorIdentifier, String monitoringSourceIdentifier);
+
+  Optional<CVNGPerpetualTaskDTO> getPerpetualTaskStatus(String dataCollectionWorkerId);
 }

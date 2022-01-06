@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 
@@ -200,6 +201,15 @@ public class YamlUtils {
   }
 
   /**
+   * Get Qualified Name till the root level
+   * @param yamlNode
+   * @return
+   */
+  public String getFullyQualifiedNameTillRoot(YamlNode yamlNode) {
+    return String.join(".", getQualifiedNameList(yamlNode, "root"));
+  }
+
+  /**
    *
    * Gives the qualified Name till the given field name.
    *
@@ -236,7 +246,10 @@ public class YamlUtils {
   private List<String> getQualifiedNameList(YamlNode yamlNode, String fieldName) {
     if (yamlNode.getParentNode() == null) {
       List<String> qualifiedNameList = new ArrayList<>();
-      qualifiedNameList.add(getQNForNode(yamlNode, null));
+      String qnForNode = getQNForNode(yamlNode, null);
+      if (EmptyPredicate.isNotEmpty(qnForNode)) {
+        qualifiedNameList.add(qnForNode);
+      }
       return qualifiedNameList;
     }
     String qualifiedName = getQNForNode(yamlNode, yamlNode.getParentNode());

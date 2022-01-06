@@ -8,8 +8,8 @@ import io.harness.pms.approval.jira.JiraApprovalCallback;
 import io.harness.pms.approval.servicenow.ServiceNowApprovalCallback;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.PipelineMetadata;
 import io.harness.pms.plan.execution.AccountExecutionMetadata;
-import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.preflight.entity.PreFlightEntity;
 
 import java.util.Set;
@@ -20,9 +20,9 @@ public class PMSPipelineMorphiaRegistrar implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {
     set.add(PipelineEntity.class);
     set.add(InputSetEntity.class);
-    set.add(PipelineExecutionSummaryEntity.class);
     set.add(AccountExecutionMetadata.class);
     set.add(PreFlightEntity.class);
+    set.add(PipelineMetadata.class);
   }
 
   @Override

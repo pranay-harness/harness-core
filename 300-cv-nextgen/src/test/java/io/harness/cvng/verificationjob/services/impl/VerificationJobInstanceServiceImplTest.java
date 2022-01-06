@@ -22,14 +22,13 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
-import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.CanaryAdditionalInfo;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
-import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
+import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
@@ -42,6 +41,10 @@ import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.entities.AnalysisInfo.DeploymentVerification;
+import io.harness.cvng.core.entities.AnalysisInfo.SLI;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig.MetricInfo;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig.MetricInfo.MetricInfoBuilder;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -104,9 +107,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private HPersistence hPersistence;
   @Mock private NextGenService nextGenService;
-  @Mock private AlertRuleService alertRuleService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private VerificationJobInstanceAnalysisService verificationJobInstanceAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
@@ -158,7 +159,6 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     cvConfig = newCVConfig();
     FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
     FieldUtils.writeField(verificationJobInstanceService, "nextGenService", nextGenService, true);
-    FieldUtils.writeField(verificationJobInstanceService, "alertRuleService", alertRuleService, true);
     when(verificationManagerService.createDataCollectionTask(any(), any(), any(), any())).thenReturn(perpetualTaskId);
 
     when(nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, "dev"))
@@ -243,6 +243,42 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     assertThat(firstTask.getStartTime()).isEqualTo(Instant.parse("2020-07-27T10:29:00Z"));
     assertThat(firstTask.getEndTime()).isEqualTo(Instant.parse("2020-07-27T10:44:00Z"));
     assertThat(firstTask.getValidAfter()).isEqualTo(Instant.parse("2020-07-27T10:44:00Z").plus(Duration.ofMinutes(5)));
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void createDataCollectionTasks_validateDataCollectionInfo() {
+    VerificationJob job = verificationJobService.fromDto(newCanaryVerificationJobDTO());
+    job.setAccountId(accountId);
+    job.setIdentifier(verificationJobIdentifier);
+    hPersistence.save(job);
+    CVConfig cvConfig = builderFactory.appDynamicsCVConfigBuilder()
+                            .metricInfos(Arrays.asList(
+                                getAppdMetricInfoBuilder("1")
+                                    .deploymentVerification(DeploymentVerification.builder().enabled(false).build())
+                                    .build(),
+                                getAppdMetricInfoBuilder("2")
+                                    .deploymentVerification(DeploymentVerification.builder().enabled(true).build())
+                                    .build()))
+                            .build();
+    cvConfig.setAccountId(accountId);
+    cvConfig.setConnectorIdentifier(connectorId);
+    cvConfig.setServiceIdentifier(serviceIdentifier);
+    cvConfig.setEnvIdentifier(builderFactory.getContext().getEnvIdentifier());
+    cvConfig.setProjectIdentifier(projectIdentifier);
+    cvConfig.setOrgIdentifier(orgIdentifier);
+    cvConfig.setIdentifier(monitoringSourceIdentifier);
+    cvConfigService.save(cvConfig);
+    String verificationJobInstanceId = verificationJobInstanceService.create(newVerificationJobInstance());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    verificationJobInstance.setResolvedJob(job);
+    verificationJobInstanceService.createDataCollectionTasks(verificationJobInstance);
+    String workerId = getDataCollectionWorkerId(connectorId);
+    DataCollectionTask firstTask = dataCollectionTaskService.getNextTask(accountId, workerId).get();
+    assertThat(firstTask).isNotNull();
+    assertThat(((AppDynamicsDataCollectionInfo) firstTask.getDataCollectionInfo()).getCustomMetrics()).hasSize(1);
   }
 
   @Test
@@ -1065,5 +1101,14 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     fillCommonFields(verificationJobIdentifier, envIdentifier, verificationJobDTO);
     verificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     return verificationJobDTO;
+  }
+
+  private MetricInfoBuilder getAppdMetricInfoBuilder(String suffix) {
+    return MetricInfo.builder()
+        .metricName("metricName" + suffix)
+        .identifier("metric" + suffix)
+        .metricPath("metricPath" + suffix)
+        .baseFolder("baseFolder" + suffix)
+        .sli(SLI.builder().enabled(true).build());
   }
 }

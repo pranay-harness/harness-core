@@ -7,12 +7,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ApprovalStepNGException;
 import io.harness.servicenow.ServiceNowTicketNG;
-import io.harness.steps.approval.step.jira.beans.ConditionDTO;
-import io.harness.steps.approval.step.jira.beans.CriteriaSpecDTO;
-import io.harness.steps.approval.step.jira.beans.JexlCriteriaSpecDTO;
-import io.harness.steps.approval.step.jira.beans.KeyValuesCriteriaSpecDTO;
-import io.harness.steps.approval.step.jira.beans.Operator;
-import io.harness.steps.approval.step.jira.evaluation.ConditionEvaluator;
+import io.harness.steps.approval.step.beans.ConditionDTO;
+import io.harness.steps.approval.step.beans.CriteriaSpecDTO;
+import io.harness.steps.approval.step.beans.JexlCriteriaSpecDTO;
+import io.harness.steps.approval.step.beans.KeyValuesCriteriaSpecDTO;
+import io.harness.steps.approval.step.beans.Operator;
+import io.harness.steps.approval.step.evaluation.ConditionEvaluator;
 
 import java.util.List;
 import lombok.experimental.UtilityClass;

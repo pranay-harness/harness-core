@@ -3,6 +3,7 @@ package io.harness.gitsync.common.helper;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.DelegateNotAvailableException;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ScmException;
@@ -20,7 +21,8 @@ public class GitConnectivityExceptionHelper {
     if (ex instanceof DelegateServiceDriverException) {
       return CONNECTIVITY_ERROR + ExceptionUtils.getMessage(ex);
     } else if (ex instanceof WingsException) {
-      if (ExceptionUtils.cause(ScmException.class, ex) != null) {
+      if (ExceptionUtils.cause(ScmException.class, ex) != null
+          || ExceptionUtils.cause(DelegateNotAvailableException.class, ex) != null) {
         return CONNECTIVITY_ERROR + ExceptionUtils.getMessage(ex);
       } else {
         return "Error: " + ExceptionUtils.getMessage(ex);

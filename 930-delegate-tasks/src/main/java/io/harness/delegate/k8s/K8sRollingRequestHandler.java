@@ -49,9 +49,9 @@ import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 
-import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -178,7 +178,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     }
   }
 
-  private void saveRelease(K8sRollingDeployRequest k8sRollingDeployRequest, Status status) throws YamlException {
+  private void saveRelease(K8sRollingDeployRequest k8sRollingDeployRequest, Status status) throws IOException {
     releaseHistory.setReleaseStatus(status);
     kubernetesContainerService.saveReleaseHistory(kubernetesConfig, k8sRollingDeployRequest.getReleaseName(),
         releaseHistory.getAsYaml(), !customWorkloads.isEmpty());

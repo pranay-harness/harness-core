@@ -20,6 +20,11 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_ACQUIRE;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_ACQUIRE_FAILED;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_CREATION;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_EXPIRED;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_NO_ELIGIBLE_DELEGATES;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -92,6 +97,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.DelegateDriverLogContext;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
+import io.harness.metrics.intfc.DelegateMetricsService;
 import io.harness.mongo.DelayLogContext;
 import io.harness.network.SafeHttpCall;
 import io.harness.observer.Subject;
@@ -158,6 +164,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -244,8 +251,11 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   @Inject private DelegateInsightsService delegateInsightsService;
   @Inject private DelegateSetupService delegateSetupService;
   @Inject private AuditHelper auditHelper;
+  @Inject private DelegateMetricsService delegateMetricsService;
 
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
+
+  private static final SecureRandom random = new SecureRandom();
 
   private Supplier<Long> taskCountCache = Suppliers.memoizeWithExpiration(this::fetchTaskCount, 1, TimeUnit.MINUTES);
   @Inject @Getter private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
@@ -361,6 +371,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       processDelegateTask(task, QUEUED);
+      broadcastHelper.broadcastNewDelegateTaskAsync(task);
     }
     return task.getUuid();
   }
@@ -377,6 +388,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       log.info("Processing sync task {} of type {}", task.getUuid(), task.getData().getTaskType());
       processDelegateTask(task, QUEUED);
+      broadcastHelper.rebroadcastDelegateTask(task);
     }
   }
 
@@ -425,8 +437,13 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
           addToTaskActivityLog(task, errorMessage);
           delegateSelectionLogsService.logNoEligibleDelegatesToExecuteTask(batch, task.getAccountId());
           delegateSelectionLogsService.save(batch);
+          delegateMetricsService.recordDelegateTaskMetrics(task, DELEGATE_TASK_NO_ELIGIBLE_DELEGATES);
           throw new NoEligibleDelegatesInAccountException();
         }
+        // shuffle the eligible delegates to evenly distribute the load
+        Collections.shuffle(eligibleListOfDelegates);
+        task.setBroadcastToDelegateIds(
+            Lists.newArrayList(getDelegateIdForFirstBroadcast(task, eligibleListOfDelegates)));
 
         delegateSelectionLogsService.logEligibleDelegatesToExecuteTask(
             batch, Sets.newHashSet(eligibleListOfDelegates), task.getAccountId());
@@ -457,8 +474,14 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                                .setupAbstractions(task.getSetupAbstractions())
                                .build());
         }
+
+        // Ensure that broadcast happens at least 5 seconds from current time for async tasks
+        if (task.getData().isAsync()) {
+          task.setNextBroadcast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
+        }
         delegateSelectionLogsService.save(batch);
         persistence.save(task);
+        delegateMetricsService.recordDelegateTaskMetrics(task, DELEGATE_TASK_CREATION);
         log.info("Task {} marked as {} ", task.getUuid(), taskStatus);
         addToTaskActivityLog(task, "Task processing completed");
       } catch (Exception exception) {
@@ -467,6 +490,15 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         handleTaskFailureResponse(task, exception.getMessage());
       }
     }
+  }
+
+  private String getDelegateIdForFirstBroadcast(DelegateTask delegateTask, List<String> eligibleListOfDelegates) {
+    for (String delegateId : eligibleListOfDelegates) {
+      if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
+        return delegateId;
+      }
+    }
+    return eligibleListOfDelegates.get(random.nextInt(eligibleListOfDelegates.size()));
   }
 
   private void handleTaskFailureResponse(DelegateTask task, String errorMessage) {
@@ -773,6 +805,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       if (delegateTask == null) {
         return null;
       }
+      delegateMetricsService.recordDelegateTaskMetrics(delegateTask, DELEGATE_TASK_ACQUIRE);
 
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
@@ -1010,6 +1043,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
             delegateTaskPackageBuilder.logStreamingToken(logStreamingAccountToken);
           }
         } catch (ExecutionException e) {
+          delegateMetricsService.recordDelegateTaskMetrics(delegateTask, DELEGATE_TASK_ACQUIRE_FAILED);
           log.warn("Unable to retrieve the log streaming service account token, while preparing delegate task package");
           throw new InvalidRequestException(e.getMessage() + "\nPlease ensure log service is running.", e);
         }
@@ -1223,6 +1257,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
           errorMessage =
               "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(EXPIRED, delegateTask);
+          delegateMetricsService.recordDelegateTaskMetrics(delegateTask, DELEGATE_TASK_EXPIRED);
           log.info("Marking task as expired: {}", errorMessage);
 
           if (isNotBlank(delegateTask.getWaitId())) {

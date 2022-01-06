@@ -46,6 +46,7 @@ public final class Budget implements PersistentEntity, UuidAware, AccountAccess,
   String[] emailAddresses;
   String[] userGroupIds; // reference
   boolean notifyOnSlack;
+  boolean isNgBudget;
   long startTime;
   long endTime;
   long createdAt;

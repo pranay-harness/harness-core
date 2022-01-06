@@ -403,6 +403,7 @@ public interface WingsTestConstants {
   String WORKSPACE = "WORKSPACE";
   String TERRAFORM_STATE_FILE_ID = "TERRAFORM_STATE_FILE_ID";
   String UUID = "UUID";
+  String UUID1 = "UUID1";
 
   String HELM_CHART_ID = "HELM_CHART_ID";
   String FREEZE_WINDOW_ID = "FREEZE_WINDOW_ID";

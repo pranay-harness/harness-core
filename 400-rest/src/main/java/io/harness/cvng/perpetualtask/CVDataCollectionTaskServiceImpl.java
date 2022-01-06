@@ -12,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO.CVNGPerpetualTaskDTOBuilder;
 import io.harness.cvng.beans.CVNGPerpetualTaskState;
 import io.harness.cvng.beans.CVNGPerpetualTaskUnassignedReason;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
@@ -210,13 +211,18 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
   @Override
   public CVNGPerpetualTaskDTO getCVNGPerpetualTaskDTO(String taskId) {
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
-    return CVNGPerpetualTaskDTO.builder()
-        .delegateId(perpetualTaskRecord.getDelegateId())
-        .accountId(perpetualTaskRecord.getAccountId())
-        .cvngPerpetualTaskUnassignedReason(
-            mapUnassignedReasonFromPerpetualTaskToCVNG(perpetualTaskRecord.getUnassignedReason()))
-        .cvngPerpetualTaskState(mapStateFromPerpetualTaskToCVNG(perpetualTaskRecord.getState()))
-        .build();
+    CVNGPerpetualTaskDTOBuilder cvngPerpetualTaskDTOBuilder = CVNGPerpetualTaskDTO.builder()
+                                                                  .delegateId(perpetualTaskRecord.getDelegateId())
+                                                                  .accountId(perpetualTaskRecord.getAccountId());
+    if (perpetualTaskRecord.getUnassignedReason() != null) {
+      cvngPerpetualTaskDTOBuilder.cvngPerpetualTaskUnassignedReason(
+          mapUnassignedReasonFromPerpetualTaskToCVNG(perpetualTaskRecord.getUnassignedReason()));
+    }
+    if (perpetualTaskRecord.getState() != null) {
+      cvngPerpetualTaskDTOBuilder.cvngPerpetualTaskState(
+          mapStateFromPerpetualTaskToCVNG(perpetualTaskRecord.getState()));
+    }
+    return cvngPerpetualTaskDTOBuilder.build();
   }
 
   private CVNGPerpetualTaskUnassignedReason mapUnassignedReasonFromPerpetualTaskToCVNG(

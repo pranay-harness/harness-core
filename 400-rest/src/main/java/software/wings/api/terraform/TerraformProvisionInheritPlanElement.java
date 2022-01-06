@@ -38,6 +38,7 @@ public class TerraformProvisionInheritPlanElement implements ContextElement {
   private String workspace;
   private String delegateTag;
   private EncryptedRecordData encryptedTfPlan;
+  private String tfPlanJsonFileId;
 
   @Override
   public ContextElementType getElementType() {

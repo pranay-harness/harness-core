@@ -33,6 +33,7 @@ import io.harness.outbox.api.OutboxService;
 import io.harness.outbox.api.impl.OutboxDaoImpl;
 import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.pipeline.service.PipelineMetadataService;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
@@ -167,6 +168,7 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(DelegateSyncService.class).toInstance(mock(DelegateSyncService.class));
+        bind(PipelineMetadataService.class).toInstance(mock(PipelineMetadataService.class));
         bind(DelegateAsyncService.class).toInstance(mock(DelegateAsyncService.class));
         bind(UserClient.class).toInstance(mock(UserClient.class));
         bind(OpaServiceClient.class).toInstance(mock(OpaServiceClient.class));

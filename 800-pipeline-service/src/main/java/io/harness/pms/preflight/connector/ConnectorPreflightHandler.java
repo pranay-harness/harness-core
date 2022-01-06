@@ -116,7 +116,7 @@ public class ConnectorPreflightHandler {
   public List<ConnectorCheckResponse> getConnectorCheckResponse(Map<String, Object> fqnToObjectMapMergedYaml,
       List<ConnectorResponseDTO> connectorResponses, Map<String, String> connectorIdentifierToFqn) {
     List<ConnectorCheckResponse> connectorCheckResponses = new ArrayList<>();
-    connectorResponses.forEach(connectorResponse -> {
+    for (ConnectorResponseDTO connectorResponse : connectorResponses) {
       String connectorIdentifier = connectorResponse.getConnector().getIdentifier();
       String stageIdentifier = YamlUtils.getStageIdentifierFromFqn(connectorIdentifierToFqn.get(connectorIdentifier));
       ConnectorCheckResponseBuilder checkResponse =
@@ -125,6 +125,12 @@ public class ConnectorPreflightHandler {
               .fqn(connectorIdentifierToFqn.get(connectorIdentifier))
               .stageIdentifier(stageIdentifier)
               .stageName(PreflightCommonUtils.getStageName(fqnToObjectMapMergedYaml, stageIdentifier));
+
+      if (!connectorResponse.getEntityValidityDetails().isValid()) {
+        checkResponse.errorInfo(PreflightCommonUtils.getInvalidConnectorInfo()).status(PreFlightStatus.FAILURE);
+        connectorCheckResponses.add(checkResponse.build());
+        continue;
+      }
 
       ConnectorConnectivityDetails connectorConnectivityDetails = connectorResponse.getStatus();
       checkResponse.status(PreflightCommonUtils.getPreFlightStatus(connectorConnectivityDetails.getStatus()));
@@ -143,7 +149,8 @@ public class ConnectorPreflightHandler {
                                     .build());
       }
       connectorCheckResponses.add(checkResponse.build());
-    });
+    }
+
     List<String> availableConnectors =
         connectorResponses.stream().map(c -> c.getConnector().getIdentifier()).collect(Collectors.toList());
     for (String connectorRef : connectorIdentifierToFqn.keySet()) {

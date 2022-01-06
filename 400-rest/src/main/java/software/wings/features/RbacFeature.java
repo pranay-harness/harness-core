@@ -13,8 +13,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.features.api.AbstractUsageLimitedFeature;
 import software.wings.features.api.ComplianceByLimitingUsage;
 import software.wings.features.api.FeatureRestrictions;
-import software.wings.security.GenericEntityFilter;
-import software.wings.security.GenericEntityFilter.FilterType;
+import software.wings.security.AppFilter;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -106,7 +105,7 @@ public class RbacFeature extends AbstractUsageLimitedFeature implements Complian
         AppPermission.builder()
             .actions(Sets.newHashSet(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_PIPELINE,
                 Action.EXECUTE_WORKFLOW, Action.EXECUTE_WORKFLOW_ROLLBACK))
-            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .appFilter(AppFilter.builder().filterType(AppFilter.FilterType.ALL).build())
             .permissionType(PermissionType.ALL_APP_ENTITIES)
             .build();
     appPermissions.add(appPermission);

@@ -18,7 +18,6 @@ import static java.util.stream.Collectors.groupingBy;
 
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
-import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
@@ -99,7 +98,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private Clock clock;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Inject private NextGenService nextGenService;
-  @Inject private AlertRuleService alertRuleService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private MetricService metricService;
 
@@ -376,8 +374,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       Set<String> verificatioTaskIds = verificationTaskService.getVerificationTaskIds(
           verificationJobInstance.getAccountId(), verificationJobInstanceId);
       orchestrationService.markCompleted(verificatioTaskIds);
-
-      alertRuleService.processDeploymentVerificationJobInstanceId(verificationJobInstanceId);
     }
   }
 
@@ -685,7 +681,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           dataSourceTypeDataCollectionInfoMapperMap.get(cvConfig.getType());
 
       if (preDeploymentTimeRange.isPresent()) {
-        DataCollectionInfo preDeploymentDataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
+        DataCollectionInfo preDeploymentDataCollectionInfo =
+            dataCollectionInfoMapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
         preDeploymentDataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
         preDeploymentDataCollectionInfo.setCollectHostData(verificationJob.collectHostData());
         dataCollectionTasks.add(DeploymentDataCollectionTask.builder()
@@ -705,7 +702,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       }
 
       timeRanges.forEach(timeRange -> {
-        DataCollectionInfo dataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
+        DataCollectionInfo dataCollectionInfo =
+            dataCollectionInfoMapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
         // TODO: For Now the DSL is same for both. We need to see how this evolves when implementation other provider.
         // Keeping this simple for now.
         dataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());

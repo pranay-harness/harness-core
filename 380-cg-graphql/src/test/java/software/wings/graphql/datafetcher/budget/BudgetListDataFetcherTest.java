@@ -85,6 +85,7 @@ public class BudgetListDataFetcherTest extends AbstractDataFetcherTestBase {
                         .build();
     queryParameters = new QLBudgetQueryParameters(budgetId);
     when(budgetService.list(accountId)).thenReturn(Arrays.asList(budget));
+    when(budgetService.listCgBudgets(accountId)).thenReturn(Arrays.asList(budget));
     when(budgetService.getBudgetDetails(budget)).thenReturn(budgetDetails);
     doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }

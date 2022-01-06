@@ -372,7 +372,7 @@ public class ExecutionHelperTest extends CategoryTest {
     when(UUIDGenerator.generateUuid()).thenReturn(generatedExecutionId);
 
     doReturn(executionPrincipalInfo).when(principalInfoHelper).getPrincipalInfoFromSecurityContext();
-
+    doReturn(394).when(pmsPipelineService).incrementRunSequence(any());
     doReturn(null).when(pmsGitSyncHelper).getGitSyncBranchContextBytesThreadLocal(pipelineEntity);
     doNothing().when(pmsYamlSchemaService).validateYamlSchema(accountId, orgId, projectId, mergedPipelineYaml);
     doNothing()

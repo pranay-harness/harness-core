@@ -713,7 +713,7 @@ public class CommandState extends State {
                       .async(true)
                       .taskType(TaskType.COMMAND.name())
                       .parameters(new Object[] {commandParameters})
-                      .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(30)))
+                      .timeout(defaultIfNullTimeout(TimeUnit.HOURS.toMillis(4)))
                       .expressionFunctorToken(expressionFunctorToken)
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)

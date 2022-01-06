@@ -9,10 +9,10 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.approval.step.beans.CriteriaSpecWrapperDTO;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.jira.JiraApprovalOutcome;
 import io.harness.steps.approval.step.jira.JiraApprovalSpecParameters;
-import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapperDTO;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;

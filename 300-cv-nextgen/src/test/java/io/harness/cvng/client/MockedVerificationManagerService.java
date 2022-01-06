@@ -3,6 +3,8 @@ package io.harness.cvng.client;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
+import io.harness.cvng.beans.CVNGPerpetualTaskState;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.change.HarnessCDCurrentGenEventMetadata;
@@ -59,5 +61,14 @@ public class MockedVerificationManagerService implements VerificationManagerServ
                                          .getHarnessCDChangeEventDTOBuilder()
                                          .build()
                                          .getMetadata());
+  }
+
+  @Override
+  public CVNGPerpetualTaskDTO getPerpetualTaskStatus(String perpetualTaskId) {
+    return CVNGPerpetualTaskDTO.builder()
+        .accountId("some-accountId")
+        .delegateId("some-delegate-id")
+        .cvngPerpetualTaskState(CVNGPerpetualTaskState.TASK_UNASSIGNED)
+        .build();
   }
 }

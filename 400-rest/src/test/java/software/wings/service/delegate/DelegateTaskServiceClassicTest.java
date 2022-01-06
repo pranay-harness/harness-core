@@ -19,7 +19,6 @@ import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.service.impl.DelegateTaskServiceClassicImpl.TASK_CATEGORY_MAP;
 import static software.wings.service.impl.DelegateTaskServiceClassicImpl.TASK_SELECTORS;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -47,7 +46,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -113,7 +111,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.TaskType;
-import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.cdn.CdnConfig;
 import software.wings.delegatetasks.cv.RateLimitExceededException;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -315,6 +312,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
             .build();
     delegateTaskServiceClassic.queueTask(delegateTask);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(delegateTask);
     verify(assignDelegateService, never()).getAccountDelegates(delegateTask.getAccountId());
@@ -355,6 +353,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     delegateTaskServiceClassic.queueTask(delegateTask);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(delegateTask);
   }
@@ -422,6 +421,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
+            .responseCode(ResponseCode.OK)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
@@ -436,6 +436,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
+            .responseCode(ResponseCode.OK)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     delegateTask = persistence.get(DelegateTask.class, delegateTask.getUuid());
@@ -553,8 +554,6 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), null))
         .isNull();
-    verify(alertService, times(0))
-        .openAlert(eq(ACCOUNT_ID), anyString(), eq(NoEligibleDelegates), any(NoEligibleDelegatesAlert.class));
   }
 
   @Cache
@@ -707,6 +706,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of(DELEGATE_ID), QUEUED);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     when(assignDelegateService.connectedWhitelistedDelegates(delegateTask)).thenReturn(emptyList());
 
     delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), true);
@@ -725,6 +725,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     DelegateTask delegateTask = saveDelegateTask(false, ImmutableSet.of(DELEGATE_ID), QUEUED);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     when(assignDelegateService.connectedWhitelistedDelegates(delegateTask)).thenReturn(emptyList());
     delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, "", delegateTask.getUuid(), true);
     verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
@@ -774,6 +775,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of("delegate2"), QUEUED);
     delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), true);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     assertThat(persistence.createQuery(DelegateTask.class).get()).isEqualTo(delegateTask);
   }
 
@@ -786,10 +788,12 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of(DELEGATE_ID), QUEUED);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     when(assignDelegateService.connectedWhitelistedDelegates(delegateTask)).thenReturn(singletonList("delegate2"));
     delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), true);
     verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
     delegateTask.setTaskActivityLogs(null);
+    delegateTask.setBroadcastToDelegateIds(null);
     assertThat(persistence.createQuery(DelegateTask.class).get()).isEqualTo(delegateTask);
   }
 

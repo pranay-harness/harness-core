@@ -551,11 +551,11 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
 
   @Override
   public void createDemoAnalysisData(String accountId, String verificationTaskId, String dataCollectionWorkerId,
-      Instant startTime, Instant endTime) throws IOException {
+      String demoTemplateIdentifier, Instant startTime, Instant endTime) throws IOException {
     Instant time = startTime;
-    CVConfig cvConfig = cvConfigService.get(verificationTaskId);
-    String demoTemplatePath = getDemoTemplate(cvConfig);
-    Map<String, ArrayList<Long>> metricToRiskScore = getDemoRiskScoreForAllTheMetrics(cvConfig);
+
+    String demoTemplatePath = getDemoTemplate(demoTemplateIdentifier);
+    Map<String, ArrayList<Long>> metricToRiskScore = getDemoRiskScoreForAllTheMetrics(demoTemplateIdentifier);
     // todo: check the metrics have the same size
     int index = cvngDemoDataIndexService.readIndexForDemoData(accountId, dataCollectionWorkerId, verificationTaskId);
     List<TimeSeriesDataCollectionRecord> timeSeriesDataCollectionRecords = new ArrayList<>();
@@ -589,18 +589,15 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
     save(timeSeriesDataCollectionRecords);
   }
 
-  private String getDemoTemplate(CVConfig cvConfig) throws IOException {
-    String path =
-        "/io/harness/cvng/analysis/liveMonitoring/timeSeries/$provider/$category/$provider_time_series_live_monitoring_demo_default_template.json";
-    path = path.replace("$provider", cvConfig.getType().getDemoTemplatePrefix());
-    path = path.replace("$category", cvConfig.getCategory().getDisplayName().toLowerCase());
+  private String getDemoTemplate(String templateIdentifier) throws IOException {
+    String path = "/io/harness/cvng/analysis/liveMonitoring/timeSeries/$template/time_series_metrics_def.json";
+    path = path.replace("$template", templateIdentifier);
     return Resources.toString(this.getClass().getResource(path), Charsets.UTF_8);
   }
 
-  public Map<String, ArrayList<Long>> getDemoRiskScoreForAllTheMetrics(CVConfig cvConfig) throws IOException {
+  public Map<String, ArrayList<Long>> getDemoRiskScoreForAllTheMetrics(String templateIdentifier) throws IOException {
     Map<String, ArrayList<Long>> metricToRiskScore = new HashMap<>();
-    String folder = "io.harness.cvng.analysis.liveMonitoring.timeSeries." + cvConfig.getType().getDemoTemplatePrefix()
-        + "." + cvConfig.getCategory().getDisplayName().toLowerCase() + ".riskScore";
+    String folder = "io.harness.cvng.analysis.liveMonitoring.timeSeries." + templateIdentifier + ".riskScore";
     Reflections reflections = new Reflections(folder, new ResourcesScanner());
     Set<String> riskFileNames = reflections.getResources(Pattern.compile(".*\\.json"));
     for (String file : riskFileNames) {

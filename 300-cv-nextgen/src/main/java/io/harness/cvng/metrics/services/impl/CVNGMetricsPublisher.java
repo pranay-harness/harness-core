@@ -15,7 +15,6 @@ import io.harness.cvng.metrics.beans.AccountMetricContext;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
-import io.harness.cvng.statemachine.services.api.OrchestrationService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
 import io.harness.metrics.AutoMetricContext;
@@ -78,7 +77,6 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
             .name("analysis_state_machine")
             .build());
   }
-  @Inject private OrchestrationService orchestrationService;
   @Inject private MetricService metricService;
   @Inject private HPersistence hPersistence;
 

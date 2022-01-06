@@ -142,7 +142,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       log.error("Error while processing branch push event {}", yamlChangeSetDTO, ex);
       String gitConnectivityErrorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
       if (!gitConnectivityErrorMessage.isEmpty()) {
-        recordErrors(yamlChangeSetDTO, gitConnectivityErrorMessage);
+        recordConnectivityErrors(yamlChangeSetDTO, gitConnectivityErrorMessage);
       }
       // Update the g2h status to ERROR
       gitToHarnessProgressService.updateProgressStatus(
@@ -198,7 +198,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         .build();
   }
 
-  private void recordErrors(YamlChangeSetDTO yamlChangeSetDTO, String errorMessage) {
+  private void recordConnectivityErrors(YamlChangeSetDTO yamlChangeSetDTO, String errorMessage) {
     if (featureFlagService.isEnabled(FeatureName.NG_GIT_ERROR_EXPERIENCE, yamlChangeSetDTO.getAccountId())) {
       gitSyncErrorService.recordConnectivityError(
           yamlChangeSetDTO.getAccountId(), yamlChangeSetDTO.getRepoUrl(), errorMessage);

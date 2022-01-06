@@ -68,15 +68,14 @@ public class ServiceNowTaskNgHelper {
 
   private ServiceNowTaskNGResponse getTicket(ServiceNowTaskNGParameters serviceNowTaskNGParameters) {
     ServiceNowConnectorDTO serviceNowConnectorDTO = serviceNowTaskNGParameters.getServiceNowConnectorDTO();
-    String userName = FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
-        serviceNowConnectorDTO.getUsername(), serviceNowConnectorDTO.getUsernameRef());
+    String userName = getUserName(serviceNowConnectorDTO);
     String password = new String(serviceNowConnectorDTO.getPasswordRef().getDecryptedValue());
     ServiceNowRestClient serviceNowRestClient =
         getServiceNowRestClient(serviceNowConnectorDTO.getServiceNowUrl(), userName, password);
 
     final Call<JsonNode> request = serviceNowRestClient.getIssue(Credentials.basic(userName, password),
-        serviceNowTaskNGParameters.getIssueType().toLowerCase(), "number=" + serviceNowTaskNGParameters.getIssueKey(),
-        "all");
+        serviceNowTaskNGParameters.getTicketType().toLowerCase(),
+        "number=" + serviceNowTaskNGParameters.getTicketNumber(), "all");
     Response<JsonNode> response = null;
 
     try {
@@ -95,15 +94,15 @@ public class ServiceNowTaskNgHelper {
         }
         return ServiceNowTaskNGResponse.builder()
             .ticket(ServiceNowTicketNG.builder()
-                        .number(serviceNowTaskNGParameters.getIssueKey())
+                        .number(serviceNowTaskNGParameters.getTicketNumber())
                         .fields(fieldValues)
                         .url(ServiceNowUtils.prepareTicketUrlFromTicketNumber(serviceNowConnectorDTO.getServiceNowUrl(),
-                            serviceNowTaskNGParameters.getIssueKey(), serviceNowTaskNGParameters.getIssueType()))
+                            serviceNowTaskNGParameters.getTicketNumber(), serviceNowTaskNGParameters.getTicketType()))
                         .build())
             .build();
       } else {
-        throw new ServiceNowException("Failed to fetch additional fields for ticket type "
-                + serviceNowTaskNGParameters.getIssueType() + " response: " + response,
+        throw new ServiceNowException("Failed to fetch ticket for ticket type "
+                + serviceNowTaskNGParameters.getTicketType() + " response: " + response,
             SERVICENOW_ERROR, USER);
       }
     } catch (Exception e) {
@@ -112,16 +111,20 @@ public class ServiceNowTaskNgHelper {
     }
   }
 
+  private String getUserName(ServiceNowConnectorDTO serviceNowConnectorDTO) {
+    return FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
+        serviceNowConnectorDTO.getUsername(), serviceNowConnectorDTO.getUsernameRef());
+  }
+
   private ServiceNowTaskNGResponse getIssueCreateMetaData(ServiceNowTaskNGParameters serviceNowTaskNGParameters) {
     ServiceNowConnectorDTO serviceNowConnectorDTO = serviceNowTaskNGParameters.getServiceNowConnectorDTO();
-    String userName = FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
-        serviceNowConnectorDTO.getUsername(), serviceNowConnectorDTO.getUsernameRef());
+    String userName = getUserName(serviceNowConnectorDTO);
     String password = new String(serviceNowConnectorDTO.getPasswordRef().getDecryptedValue());
     ServiceNowRestClient serviceNowRestClient =
         getServiceNowRestClient(serviceNowConnectorDTO.getServiceNowUrl(), userName, password);
 
     final Call<JsonNode> request = serviceNowRestClient.getAdditionalFields(
-        Credentials.basic(userName, password), serviceNowTaskNGParameters.getIssueType().toLowerCase());
+        Credentials.basic(userName, password), serviceNowTaskNGParameters.getTicketType().toLowerCase());
     Response<JsonNode> response = null;
     try {
       response = request.execute();
@@ -137,8 +140,8 @@ public class ServiceNowTaskNgHelper {
         }
         return ServiceNowTaskNGResponse.builder().serviceNowFieldNGList(fields).build();
       } else {
-        throw new ServiceNowException("Failed to fetch additional fields for ticket type "
-                + serviceNowTaskNGParameters.getIssueType() + " response: " + response,
+        throw new ServiceNowException("Failed to fetch fields for ticket type "
+                + serviceNowTaskNGParameters.getTicketType() + " response: " + response,
             SERVICENOW_ERROR, USER);
       }
     } catch (Exception e) {
@@ -150,8 +153,7 @@ public class ServiceNowTaskNgHelper {
   private ServiceNowTaskNGResponse validateCredentials(ServiceNowTaskNGParameters serviceNowTaskNGParameters) {
     ServiceNowConnectorDTO serviceNowConnectorDTO = serviceNowTaskNGParameters.getServiceNowConnectorDTO();
     String url = serviceNowConnectorDTO.getServiceNowUrl();
-    String userName = FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
-        serviceNowConnectorDTO.getUsername(), serviceNowConnectorDTO.getUsernameRef());
+    String userName = getUserName(serviceNowConnectorDTO);
     String password = new String(serviceNowConnectorDTO.getPasswordRef().getDecryptedValue());
     ServiceNowRestClient serviceNowRestClient = getServiceNowRestClient(url, userName, password);
     final Call<JsonNode> request = serviceNowRestClient.validateConnection(Credentials.basic(userName, password));

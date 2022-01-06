@@ -32,6 +32,8 @@ import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import com.mongodb.BasicDBObject;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -53,7 +55,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Inject private HPersistence hPersistence;
   @Inject private DeletedCVConfigService deletedCVConfigService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private NextGenService nextGenService;
+  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private Map<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder;
 
@@ -182,6 +184,7 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier) {
+    final NextGenService nextGenService = nextGenServiceProvider.get();
     Map<String, Set<String>> envToServicesMap = getEnvToServicesMap(accountId, orgIdentifier, projectIdentifier);
     if (isEmpty(envToServicesMap)) {
       return Collections.emptyList();
@@ -305,6 +308,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   public List<CVConfig> getConfigsOfProductionEnvironments(String accountId, String orgIdentifier,
       String projectIdentifier, String environmentIdentifier, String serviceIdentifier,
       CVMonitoringCategory monitoringCategory) {
+    final NextGenService nextGenService = nextGenServiceProvider.get();
     List<CVConfig> configsForFilter =
         list(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
     if (isEmpty(configsForFilter)) {
@@ -358,7 +362,7 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public boolean isProductionConfig(CVConfig cvConfig) {
-    EnvironmentResponseDTO environment = nextGenService.getEnvironment(cvConfig.getAccountId(),
+    EnvironmentResponseDTO environment = nextGenServiceProvider.get().getEnvironment(cvConfig.getAccountId(),
         cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getEnvIdentifier());
     return EnvironmentType.Production.equals(environment.getType());
   }

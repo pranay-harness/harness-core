@@ -317,7 +317,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     savedResourceGroup.setColor(updatedResourceGroup.getColor());
     savedResourceGroup.setTags(updatedResourceGroup.getTags());
     savedResourceGroup.setDescription(updatedResourceGroup.getDescription());
-    savedResourceGroup.setFullScopeSelected(updatedResourceGroup.getFullScopeSelected());
+    savedResourceGroup.setFullScopeSelected(Boolean.TRUE.equals(updatedResourceGroup.getFullScopeSelected()));
     savedResourceGroup.setResourceSelectors(updatedResourceGroup.getResourceSelectors());
     if (areScopeLevelsUpdated(savedResourceGroup, updatedResourceGroup) && !harnessManaged) {
       throw new InvalidRequestException("Cannot change the scopes at which this resource group can be used.");
