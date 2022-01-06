@@ -10,8 +10,8 @@ import static org.mockito.Mockito.when;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.client.NextGenClient;
-import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.NextGenServiceImpl.EntityKey;
+import io.harness.cvng.client.PrivilegedNextGenServiceImpl;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationResponse;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -39,7 +39,7 @@ import retrofit2.Response;
 public class NextGenServiceImplTest extends CvNextGenTestBase {
   // using NextGenServiceImpl as NextgenService in test env is mocked.
   // Please check - MockedNextGenService
-  @Inject private NextGenServiceImpl nextGenService;
+  @Inject private PrivilegedNextGenServiceImpl nextGenService;
   @Mock private NextGenClient nextGenClient;
   private String accountId;
   private String orgIdentifier;
