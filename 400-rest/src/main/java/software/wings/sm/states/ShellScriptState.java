@@ -578,6 +578,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
       task.setWorkflowExecutionId(context.getWorkflowExecutionId());
       ExpressionReflectionUtils.applyExpression(task.getData().getParameters()[0],
           (secretMode, value) -> context.renderExpression(value, stateExecutionContext));
+      ExpressionReflectionUtils.applyExpression(task.getData().getParameters()[0],
+          (secretMode, value) -> context.renderExpression(value, stateExecutionContext));
     }
 
     return delegateService.queueTask(task);
