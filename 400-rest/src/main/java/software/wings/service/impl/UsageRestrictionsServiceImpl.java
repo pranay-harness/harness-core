@@ -1441,10 +1441,16 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     Set<AppEnvRestriction> filteredAppEnvRestrictions = new LinkedHashSet<>();
     Set<AppEnvRestriction> appEnvRestrictions =
-        usageRestrictions == null ? new HashSet<>() : usageRestrictions.getAppEnvRestrictions();
+        usageRestrictions == null || usageRestrictions.getAppEnvRestrictions() == null
+        ? new HashSet<>()
+        : usageRestrictions.getAppEnvRestrictions();
     for (AppEnvRestriction appEnvRestriction : appEnvRestrictions) {
       GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
       EnvFilter envFilter = appEnvRestriction.getEnvFilter();
+
+      if (appFilter == null || envFilter == null) {
+        continue;
+      }
 
       String appId = null;
       if (GenericEntityFilter.FilterType.SELECTED.equals(appFilter.getFilterType()) && isNotEmpty(appFilter.getIds())) {
