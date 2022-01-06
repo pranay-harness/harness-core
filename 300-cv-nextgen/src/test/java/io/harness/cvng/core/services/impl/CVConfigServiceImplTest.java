@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
+import static io.harness.rule.OwnerRule.KAPIL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.VUK;
 
@@ -25,6 +26,7 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.models.VerificationType;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.environment.beans.EnvironmentType;
@@ -35,6 +37,7 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -51,6 +54,7 @@ import org.mockito.Mock;
 public class CVConfigServiceImplTest extends CvNextGenTestBase {
   @Inject private CVConfigService cvConfigService;
   @Mock private NextGenService nextGenService;
+  @Mock private Provider<NextGenService> nextGenServiceProvider;
 
   @Mock private VerificationManagerService verificationManagerService;
 
@@ -87,6 +91,7 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
                                    .serviceIdentifier(serviceInstanceIdentifier)
                                    .environmentIdentifier(environmentIdentifier)
                                    .build();
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     when(nextGenService.getEnvironment(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
       Object[] args = invocation.getArguments();
       return EnvironmentResponseDTO.builder()
@@ -108,8 +113,20 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
           .name((String) args[3])
           .build();
     });
-    FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(cvConfigService, "nextGenServiceProvider", nextGenServiceProvider, true);
     FieldUtils.writeField(cvConfigService, "verificationManagerService", verificationManagerService, true);
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testGetEnvToServicesList() {
+    List<CVConfig> cvConfigs = createCVConfigs(3);
+    save(cvConfigs);
+    List<EnvToServicesDTO> envToServicesDTOS =
+        cvConfigService.getEnvToServicesList(accountId, orgIdentifier, projectIdentifier);
+    assertThat(envToServicesDTOS).isNotNull();
+    assertThat(envToServicesDTOS).isNotEmpty();
   }
 
   @Test
