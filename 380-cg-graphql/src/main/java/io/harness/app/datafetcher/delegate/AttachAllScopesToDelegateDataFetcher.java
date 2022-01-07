@@ -15,6 +15,7 @@ import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.DelegateScopeService;
+import software.wings.service.intfc.DelegateService;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -25,6 +26,7 @@ public class AttachAllScopesToDelegateDataFetcher
   @Inject DelegateScopeService delegateScopeService;
   @Inject DelegateCache delegateCache;
   @Inject protected WingsPersistence persistence;
+  @Inject DelegateService delegateService;
 
   @Inject
   public AttachAllScopesToDelegateDataFetcher(DelegateScopeService delegateScopeService, DelegateCache delegateCache) {
@@ -35,8 +37,8 @@ public class AttachAllScopesToDelegateDataFetcher
 
   @Override
   @AuthRule(permissionType = MANAGE_DELEGATES)
-  protected QLAttachScopeToDelegatePayload mutateAndFetch(
-      QLAttachAllScopesToDelegateInput parameter, MutationContext mutationContext) {
+  public QLAttachScopeToDelegatePayload mutateAndFetch(
+          QLAttachAllScopesToDelegateInput parameter, MutationContext mutationContext) {
     String delegateId = parameter.getDelegateId();
     String accountId = parameter.getAccountId();
 
@@ -46,14 +48,15 @@ public class AttachAllScopesToDelegateDataFetcher
           .message("Unable to fetch delegate with delegate id " + delegateId)
           .build();
     }
-
     List<DelegateScope> delegateScopes = persistence.createQuery(DelegateScope.class)
                                              .filter(DelegateScope.DelegateScopeKeys.accountId, accountId)
                                              .asList();
 
     delegate.setIncludeScopes(delegateScopes.stream().filter(Objects::nonNull).collect(toList()));
-
-    String responseString = "Included scopes for delegate:  ";
+    delegateService.updateScopes(delegate);
+    StringBuilder st = new StringBuilder();
+    delegateScopes.forEach(scope -> st.append(scope.getName() + ", "));
+    String responseString = "Included scopes for delegate:  " + st;
     return QLAttachScopeToDelegatePayload.builder().message(responseString).build();
   }
 }
