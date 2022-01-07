@@ -80,19 +80,19 @@ public class AppManifestSettingAttributePTaskManager implements SettingAttribute
       AmazonS3HelmRepoConfig currAmazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) currSettingAttribute.getValue();
       AmazonS3HelmRepoConfig prevAmazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) prevSettingAttribute.getValue();
       return !prevAmazonS3HelmRepoConfig.getConnectorId().equals(currAmazonS3HelmRepoConfig.getConnectorId())
-          || prevAmazonS3HelmRepoConfig.getBucketName().equals(currAmazonS3HelmRepoConfig.getBucketName())
+          || !prevAmazonS3HelmRepoConfig.getBucketName().equals(currAmazonS3HelmRepoConfig.getBucketName())
           || !prevAmazonS3HelmRepoConfig.getRegion().equals(currAmazonS3HelmRepoConfig.getRegion());
     } else if (currSettingAttribute.getValue() instanceof GCSHelmRepoConfig) {
-      GCSHelmRepoConfig currAmazonS3HelmRepoConfig = (GCSHelmRepoConfig) currSettingAttribute.getValue();
-      GCSHelmRepoConfig prevAmazonS3HelmRepoConfig = (GCSHelmRepoConfig) prevSettingAttribute.getValue();
-      return !prevAmazonS3HelmRepoConfig.getConnectorId().equals(currAmazonS3HelmRepoConfig.getConnectorId())
-          || prevAmazonS3HelmRepoConfig.getBucketName().equals(currAmazonS3HelmRepoConfig.getBucketName());
+      GCSHelmRepoConfig currGcsHelmRepoConfig = (GCSHelmRepoConfig) currSettingAttribute.getValue();
+      GCSHelmRepoConfig prevGcsHelmRepoConfig = (GCSHelmRepoConfig) prevSettingAttribute.getValue();
+      return !prevGcsHelmRepoConfig.getConnectorId().equals(currGcsHelmRepoConfig.getConnectorId())
+          || !prevGcsHelmRepoConfig.getBucketName().equals(currGcsHelmRepoConfig.getBucketName());
     } else if (currSettingAttribute.getValue() instanceof HttpHelmRepoConfig) {
-      HttpHelmRepoConfig currAmazonS3HelmRepoConfig = (HttpHelmRepoConfig) currSettingAttribute.getValue();
-      HttpHelmRepoConfig prevAmazonS3HelmRepoConfig = (HttpHelmRepoConfig) prevSettingAttribute.getValue();
-      return !prevAmazonS3HelmRepoConfig.getChartRepoUrl().equals(currAmazonS3HelmRepoConfig.getChartRepoUrl())
-          || prevAmazonS3HelmRepoConfig.getUsername().equals(currAmazonS3HelmRepoConfig.getUsername())
-          || !Arrays.equals(prevAmazonS3HelmRepoConfig.getPassword(), currAmazonS3HelmRepoConfig.getPassword());
+      HttpHelmRepoConfig currHttpHelmRepoConfig = (HttpHelmRepoConfig) currSettingAttribute.getValue();
+      HttpHelmRepoConfig prevHttpHelmRepoConfig = (HttpHelmRepoConfig) prevSettingAttribute.getValue();
+      return !prevHttpHelmRepoConfig.getChartRepoUrl().equals(currHttpHelmRepoConfig.getChartRepoUrl())
+          || !prevHttpHelmRepoConfig.getUsername().equals(currHttpHelmRepoConfig.getUsername())
+          || !Arrays.equals(prevHttpHelmRepoConfig.getPassword(), currHttpHelmRepoConfig.getPassword());
     }
     return false;
   }
