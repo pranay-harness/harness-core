@@ -52,10 +52,12 @@ type WebhookHeader {
 }
 
 input EventRuleInput {
-  #Allowed values are ALL, PIPELINE
+  #Allowed values are ALL, PIPELINE and WORKFLOW
   type: RuleType!
   #The Pipeline and Event details. Only applicable when the type is PIPELINE
   pipelineRule: PipelineRuleInput
+  #The Workflow and Event details. Only applicable when the type is WORKFLOW
+  workflowRule: WorkflowRuleInput
 }
 
 type EventRule {
@@ -63,6 +65,8 @@ type EventRule {
   type: RuleType!
   #The Pipeline and Event details
   pipelineRule: PipelineRule
+  #The Workflow and Event details
+  workflowRule: WorkflowRule
 }
 
 enum RuleType {
@@ -70,6 +74,8 @@ enum RuleType {
   ALL
   #Send for specific Pipelines
   PIPELINE
+  #Send for specific Workflows
+  WORKFLOW
 }
 
 enum EventType {
@@ -77,6 +83,8 @@ enum EventType {
   pipeline_end
   pipeline_pause
   pipeline_continue
+  workflow_end
+  workflow_start
 }
 
 type PipelineRule {
@@ -91,9 +99,13 @@ type PipelineRule {
 }
 
 type WorkflowRule {
+  #Receive all current and future Workflow events
   allEvents: Boolean!
+  #Receive the Events for all the Workflows in the application
   allWorkflows: Boolean!
+  #Workflow IDs to receive the events for. Only applicable when allWorkflows is false
   workflowIds: [String]
+  #The specific events which are configured. Only applicable if allEvents is false
   events: [EventType]
 }
 
@@ -109,9 +121,13 @@ input PipelineRuleInput {
 }
 
 input WorkflowRuleInput {
+  #Receive all current and future Workflow events
   allEvents: Boolean!
+  #Receive the Events for all the Workflows in the application
   allWorkflows: Boolean!
+  #Workflow IDs to receive the events for. Only applicable when allWorkflows is false
   workflowIds: [String]
+  #The specific events which are configured. Only applicable if allEvents is false
   events: [EventType]
 }
 
