@@ -10,12 +10,14 @@ package io.harness.repositories.pipeline;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.persistance.GitAwarePersistence;
-import io.harness.pms.pipeline.ExecutionSummaryInfo;
+import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.gitsync.sdk.EntityGitDetails.EntityGitDetailsKeys;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineMetadata;
 import io.harness.pms.pipeline.PipelineMetadata.PipelineMetadataKeys;
 
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -31,10 +33,11 @@ import org.springframework.data.mongodb.core.query.Update;
 @OwnedBy(PIPELINE)
 public class PipelineMetadataRepositoryCustomImpl implements PipelineMetadataRepositoryCustom {
   MongoTemplate mongoTemplate;
-  GitAwarePersistence gitAwarePersistence;
+  PmsGitSyncHelper pmsGitSyncHelper;
 
   @Override
-  public PipelineMetadata incCounter(String accountId, String orgId, String projectIdentifier, String pipelineId) {
+  public PipelineMetadata incCounter(
+      String accountId, String orgId, String projectIdentifier, String pipelineId, ByteString gitSyncBranchContext) {
     Update update = new Update();
     Criteria criteria = Criteria.where(PipelineMetadataKeys.accountIdentifier)
                             .is(accountId)
@@ -44,8 +47,16 @@ public class PipelineMetadataRepositoryCustomImpl implements PipelineMetadataRep
                             .is(projectIdentifier)
                             .and(PipelineMetadataKeys.identifier)
                             .is(pipelineId);
-    Criteria gitSyncCriteria =
-        gitAwarePersistence.getCriteriaWithGitSync(projectIdentifier, orgId, accountId, PipelineMetadata.class);
+    Criteria gitSyncCriteria = null;
+    if (gitSyncBranchContext != null) {
+      EntityGitDetails entityGitDetails = pmsGitSyncHelper.getEntityGitDetailsFromBytes(gitSyncBranchContext);
+      if (entityGitDetails != null) {
+        gitSyncCriteria = Criteria.where(PipelineMetadataKeys.entityGitDetails + "." + EntityGitDetailsKeys.branch)
+                              .is(entityGitDetails.getBranch())
+                              .and(PipelineMetadataKeys.entityGitDetails + "." + EntityGitDetailsKeys.repoIdentifier)
+                              .is(entityGitDetails.getRepoIdentifier());
+      }
+    }
     if (gitSyncCriteria != null) {
       criteria = new Criteria().andOperator(criteria, gitSyncCriteria);
     }
@@ -56,29 +67,8 @@ public class PipelineMetadataRepositoryCustomImpl implements PipelineMetadataRep
   }
 
   @Override
-  public long getRunSequence(String accountId, String orgId, String projectIdentifier, String pipelineId,
-      ExecutionSummaryInfo executionSummaryInfo) {
-    Update update = new Update();
-    update.set(PipelineMetadataKeys.executionSummaryInfo, executionSummaryInfo);
-    Criteria criteria = Criteria.where(PipelineMetadataKeys.accountIdentifier)
-                            .is(accountId)
-                            .and(PipelineMetadataKeys.orgIdentifier)
-                            .is(orgId)
-                            .and(PipelineMetadataKeys.projectIdentifier)
-                            .is(projectIdentifier)
-                            .and(PipelineMetadataKeys.identifier)
-                            .is(pipelineId);
-    PipelineMetadata pipelineMetadata = mongoTemplate.findAndModify(
-        new Query(criteria), update, new FindAndModifyOptions().returnNew(true), PipelineMetadata.class);
-    if (pipelineMetadata != null) {
-      return pipelineMetadata.getRunSequence();
-    }
-    return 0;
-  }
-
-  @Override
   public Optional<PipelineMetadata> getPipelineMetadata(
-      String accountId, String orgId, String projectIdentifier, String identifier) {
+      String accountId, String orgId, String projectIdentifier, String identifier, ByteString gitSyncBranchContext) {
     Criteria criteria = Criteria.where(PipelineMetadataKeys.accountIdentifier)
                             .is(accountId)
                             .and(PipelineMetadataKeys.orgIdentifier)
@@ -87,8 +77,16 @@ public class PipelineMetadataRepositoryCustomImpl implements PipelineMetadataRep
                             .is(projectIdentifier)
                             .and(PipelineMetadataKeys.identifier)
                             .is(identifier);
-    Criteria gitSyncCriteria =
-        gitAwarePersistence.getCriteriaWithGitSync(projectIdentifier, orgId, accountId, PipelineMetadata.class);
+    Criteria gitSyncCriteria = null;
+    if (gitSyncBranchContext != null) {
+      EntityGitDetails entityGitDetails = pmsGitSyncHelper.getEntityGitDetailsFromBytes(gitSyncBranchContext);
+      if (entityGitDetails != null) {
+        gitSyncCriteria = Criteria.where(PipelineMetadataKeys.entityGitDetails + "." + EntityGitDetailsKeys.branch)
+                              .is(entityGitDetails.getBranch())
+                              .and(PipelineMetadataKeys.entityGitDetails + "." + EntityGitDetailsKeys.repoIdentifier)
+                              .is(entityGitDetails.getRepoIdentifier());
+      }
+    }
     if (gitSyncCriteria != null) {
       criteria = new Criteria().andOperator(criteria, gitSyncCriteria);
     }
