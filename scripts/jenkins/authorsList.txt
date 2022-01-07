@@ -218,3 +218,4 @@ Hodaya Gamliel hodaya.gamliel@harness.io
 Amnon Danieli amnon.danieli@harness.io
 Gaurav Jain gaurav.jain@harness.io
 Trunapushpa trunapushpa.surkar@harness.io
+David Warren david.warren@harness.io

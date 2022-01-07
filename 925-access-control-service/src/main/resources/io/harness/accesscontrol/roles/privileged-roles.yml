@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: supportRolesConfiguration
-version: 4
+version: 5
 roles:
   - identifier: _super_account_viewer
     name: Super Account Viewer
@@ -30,6 +30,8 @@ roles:
       - ff_environment_apiKeyView
       - ff_environment_view
       - core_template_view
+      - core_governancePolicy_view
+      - core_governancePolicySets_view
       - chi_monitoredservice_view
       - chi_slo_view
   - identifier: _super_account_admin
@@ -111,6 +113,13 @@ roles:
       - core_template_edit
       - core_template_delete
       - core_template_access
+      - core_governancePolicySets_view
+      - core_governancePolicySets_edit
+      - core_governancePolicySets_delete
+      - core_governancePolicySets_evaluate
+      - core_governancePolicy_view
+      - core_governancePolicy_edit
+      - core_governancePolicy_delete
       - chi_monitoredservice_view
       - chi_monitoredservice_edit
       - chi_monitoredservice_delete
@@ -190,6 +199,13 @@ roles:
       - core_template_edit
       - core_template_delete
       - core_template_access
+      - core_governancePolicySets_view
+      - core_governancePolicySets_edit
+      - core_governancePolicySets_delete
+      - core_governancePolicySets_evaluate
+      - core_governancePolicy_view
+      - core_governancePolicy_edit
+      - core_governancePolicy_delete
       - chi_monitoredservice_view
       - chi_monitoredservice_edit
       - chi_monitoredservice_delete
