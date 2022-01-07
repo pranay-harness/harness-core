@@ -492,9 +492,10 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         log.info("Task {} marked as {} ", task.getUuid(), taskStatus);
         addToTaskActivityLog(task, "Task processing completed");
       } catch (Exception exception) {
-        log.info("Task id {} failed with error {}", task.getUuid(), exception.getMessage());
+        log.info("Task id {} failed with error {}", task.getUuid(), exception);
         printErrorMessageOnTaskFailure(task);
-        handleTaskFailureResponse(task, exception.getMessage());
+        handleTaskFailureResponse(task, ExceptionUtils.getMessage(exception));
+        throw exception;
       }
     }
   }
