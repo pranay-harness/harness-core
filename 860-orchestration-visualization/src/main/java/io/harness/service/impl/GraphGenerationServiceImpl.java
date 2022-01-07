@@ -70,58 +70,60 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
 
   @Override
   public void updateGraph(String planExecutionId) {
-    long startTs = System.currentTimeMillis();
-    Long lastUpdatedAt = mongoStore.getEntityUpdatedAt(
-        OrchestrationGraph.ALGORITHM_ID, OrchestrationGraph.STRUCTURE_HASH, planExecutionId, null);
-    if (lastUpdatedAt == null) {
-      return;
-    }
-    List<OrchestrationEventLog> unprocessedEventLogs =
-        orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId, lastUpdatedAt);
-    Update executionSummaryUpdate = new Update();
-    if (!unprocessedEventLogs.isEmpty()) {
-      OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
-      if (orchestrationGraph == null) {
-        log.warn("[PMS_GRAPH] Graph not yet generated. Passing on to next iteration");
-        return;
+    transactionHelper.performTransactionWithoutRetry(() -> {
+      long startTs = System.currentTimeMillis();
+      Long lastUpdatedAt = mongoStore.getEntityUpdatedAt(
+          OrchestrationGraph.ALGORITHM_ID, OrchestrationGraph.STRUCTURE_HASH, planExecutionId, null);
+      if (lastUpdatedAt == null) {
+        return null;
       }
-      if (unprocessedEventLogs.size() > THRESHOLD_LOG) {
-        log.warn("[PMS_GRAPH] Found [{}] unprocessed event logs", unprocessedEventLogs.size());
-      }
-      Set<String> processedNodeExecutionIds = new HashSet<>();
-      for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
-        OrchestrationEventType orchestrationEventType = orchestrationEventLog.getOrchestrationEventType();
-        if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
-          orchestrationGraph = planExecutionStatusUpdateEventHandler.handleEvent(planExecutionId, orchestrationGraph);
-        } else if (orchestrationEventType == OrchestrationEventType.STEP_DETAILS_UPDATE) {
-          orchestrationGraph = stepDetailsUpdateEventHandler.handleEvent(
-              planExecutionId, orchestrationEventLog.getNodeExecutionId(), orchestrationGraph);
-        } else {
-          String nodeExecutionId = orchestrationEventLog.getNodeExecutionId();
-          if (processedNodeExecutionIds.contains(nodeExecutionId)) {
-            continue;
-          }
-          processedNodeExecutionIds.add(nodeExecutionId);
-          NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-          ExecutionSummaryUpdateUtils.addPipelineUpdateCriteria(executionSummaryUpdate, planExecutionId, nodeExecution);
-          ExecutionSummaryUpdateUtils.addStageUpdateCriteria(executionSummaryUpdate, planExecutionId, nodeExecution);
-          orchestrationGraph = graphStatusUpdateHelper.handleEventV2(
-              planExecutionId, nodeExecution, orchestrationEventType, orchestrationGraph);
+      List<OrchestrationEventLog> unprocessedEventLogs =
+          orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId, lastUpdatedAt);
+      Update executionSummaryUpdate = new Update();
+      if (!unprocessedEventLogs.isEmpty()) {
+        OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
+        if (orchestrationGraph == null) {
+          log.warn("[PMS_GRAPH] Graph not yet generated. Passing on to next iteration");
+          return null;
         }
-        lastUpdatedAt = orchestrationEventLog.getCreatedAt();
-      }
-      orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
+        if (unprocessedEventLogs.size() > THRESHOLD_LOG) {
+          log.warn("[PMS_GRAPH] Found [{}] unprocessed event logs", unprocessedEventLogs.size());
+        }
+        Set<String> processedNodeExecutionIds = new HashSet<>();
+        for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
+          OrchestrationEventType orchestrationEventType = orchestrationEventLog.getOrchestrationEventType();
+          if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
+            orchestrationGraph = planExecutionStatusUpdateEventHandler.handleEvent(planExecutionId, orchestrationGraph);
+          } else if (orchestrationEventType == OrchestrationEventType.STEP_DETAILS_UPDATE) {
+            orchestrationGraph = stepDetailsUpdateEventHandler.handleEvent(
+                planExecutionId, orchestrationEventLog.getNodeExecutionId(), orchestrationGraph);
+          } else {
+            String nodeExecutionId = orchestrationEventLog.getNodeExecutionId();
+            if (processedNodeExecutionIds.contains(nodeExecutionId)) {
+              continue;
+            }
+            processedNodeExecutionIds.add(nodeExecutionId);
+            NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+            ExecutionSummaryUpdateUtils.addPipelineUpdateCriteria(
+                executionSummaryUpdate, planExecutionId, nodeExecution);
+            ExecutionSummaryUpdateUtils.addStageUpdateCriteria(executionSummaryUpdate, planExecutionId, nodeExecution);
+            orchestrationGraph = graphStatusUpdateHelper.handleEventV2(
+                planExecutionId, nodeExecution, orchestrationEventType, orchestrationGraph);
+          }
+          lastUpdatedAt = orchestrationEventLog.getCreatedAt();
+        }
+        orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
 
-      long finalLastUpdatedAt = lastUpdatedAt;
-      OrchestrationGraph finalOrchestrationGraph = orchestrationGraph;
-      transactionHelper.performTransaction(() -> {
+        long finalLastUpdatedAt = lastUpdatedAt;
+        OrchestrationGraph finalOrchestrationGraph = orchestrationGraph;
+
         cachePartialOrchestrationGraph(finalOrchestrationGraph, finalLastUpdatedAt);
         pmsExecutionSummaryService.update(planExecutionId, executionSummaryUpdate);
-        return null;
-      });
-      log.info("[PMS_GRAPH] Processing of [{}] orchestration event logs completed in [{}ms]",
-          unprocessedEventLogs.size(), System.currentTimeMillis() - startTs);
-    }
+        log.info("[PMS_GRAPH] Processing of [{}] orchestration event logs completed in [{}ms]",
+            unprocessedEventLogs.size(), System.currentTimeMillis() - startTs);
+      }
+      return null;
+    });
   }
 
   @Override
