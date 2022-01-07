@@ -39,7 +39,7 @@ public class InviteDTO {
   @ApiModelProperty(required = true) String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
-  @ApiModelProperty(required = true) @NotEmpty List<RoleBinding> roleBindings;
+  List<RoleBinding> roleBindings;
   List<String> userGroups;
   @ApiModelProperty(required = true) @NotNull InviteType inviteType;
   @Builder.Default Boolean approved = false;
