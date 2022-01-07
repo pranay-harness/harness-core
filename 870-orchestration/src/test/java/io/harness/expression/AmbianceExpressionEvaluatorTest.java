@@ -145,7 +145,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
     validateExpression(evaluator, "bVal2.cVal1.strVal", "c21");
     validateExpression(evaluator, "bVal2.cVal2.strVal", "finalC22", true);
     validateExpression(evaluator, "bVal2.strVal1", "finalB21", true);
-    validateSingleExpression(evaluator, "bVal2.strVal2", "<+bVal2.strVal2>", true);
+    validateSingleExpression(evaluator, "bVal2.strVal2", "null", true);
     validateSingleExpression(evaluator,
         "obj."
             + "bVal2.strVal2",

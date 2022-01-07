@@ -376,7 +376,7 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     assertThat(evaluator.evaluateExpression("<+b>")).isEqualTo(null);
 
     assertThat(evaluator.renderExpression("<+a> + <+d>")).isEqualTo("5 + 5");
-    assertThat(evaluator.renderExpression("<+a> + <+b> + <+c> + <+d>")).isEqualTo("5 + <+b> + abc + 5");
+    assertThat(evaluator.renderExpression("<+a> + <+b> + <+c> + <+d>")).isEqualTo("5 + null + abc + 5");
     assertThat(evaluator.renderExpression("<+a> + <+b> + <+c> + <+d>", true)).isEqualTo("5 + <+b> + abc + 5");
   }
 

@@ -295,7 +295,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
                             .build())
             .build());
     assertThat(expressionResponse).isNotNull();
-    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("<+HOME>");
+    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("null");
     assertThat(expressionResponse.getValues(0).getStatusCode()).isEqualTo(SUCCESS);
   }
 
