@@ -37,6 +37,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -66,9 +67,11 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Before
   public void before() throws IllegalAccessException {
     NextGenService nextGenService = Mockito.mock(NextGenService.class);
+    Provider<NextGenService> nextGenServiceProvider = (Provider<NextGenService>) Mockito.mock(Provider.class);
     for (ChangeEventMetaDataTransformer transformer : changeTypeMetaDataTransformerMap.values()) {
-      FieldUtils.writeField(transformer, "nextGenService", nextGenService, true);
+      FieldUtils.writeField(transformer, "nextGenServiceProvider", nextGenServiceProvider, true);
     }
+    Mockito.when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     Mockito.when(nextGenService.getService(any(), any(), any(), any()))
         .thenReturn(ServiceResponseDTO.builder().name("serviceName").build());
     Mockito.when(nextGenService.getEnvironment(any(), any(), any(), any()))

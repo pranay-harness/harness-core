@@ -100,6 +100,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -133,6 +134,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject ServiceDependencyService serviceDependencyService;
   @Inject ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Mock NextGenService nextGenService;
+  @Mock private Provider<NextGenService> nextGenServiceProvider;
   @Mock SetupUsageEventService setupUsageEventService;
   @Mock ChangeSourceService changeSourceServiceMock;
 
@@ -193,8 +195,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
                             .serviceIdentifier(serviceIdentifier)
                             .environmentIdentifier(environmentIdentifier)
                             .build();
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
 
-    FieldUtils.writeField(monitoredServiceService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(monitoredServiceService, "nextGenServiceProvider", nextGenServiceProvider, true);
     FieldUtils.writeField(monitoredServiceService, "setupUsageEventService", setupUsageEventService, true);
     FieldUtils.writeField(changeSourceService, "changeSourceUpdateHandlerMap", new HashMap<>(), true);
     FieldUtils.writeField(monitoredServiceService, "changeSourceService", changeSourceService, true);

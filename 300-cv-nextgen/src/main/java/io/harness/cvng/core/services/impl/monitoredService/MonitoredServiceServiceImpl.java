@@ -71,6 +71,8 @@ import io.harness.utils.PageUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import com.mongodb.DuplicateKeyException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -116,7 +118,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Inject private HealthSourceService healthSourceService;
   @Inject private HPersistence hPersistence;
   @Inject private HeatMapService heatMapService;
-  @Inject private NextGenService nextGenService;
+  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
   @Inject private ServiceDependencyService serviceDependencyService;
   @Inject private SetupUsageEventService setupUsageEventService;
   @Inject private ChangeSourceService changeSourceService;
@@ -744,9 +746,9 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     }
 
     Map<String, String> serviceIdNameMap =
-        nextGenService.getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers));
+        nextGenServiceProvider.get().getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers));
     Map<String, String> environmentIdNameMap =
-        nextGenService.getEnvironmentIdNameMap(projectParams, new ArrayList<>(environmentIdentifiers));
+        nextGenServiceProvider.get().getEnvironmentIdNameMap(projectParams, new ArrayList<>(environmentIdentifiers));
     List<HistoricalTrend> historicalTrendList = heatMapService.getHistoricalTrend(projectParams.getAccountIdentifier(),
         projectParams.getOrgIdentifier(), projectParams.getProjectIdentifier(), serviceEnvironmentIdentifiers, 24);
     Map<String, List<String>> monitoredServiceToDependentServicesMap =
@@ -871,7 +873,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                                               .map(monitoredService -> monitoredService.getEnvironmentIdentifier())
                                               .collect(Collectors.toList());
 
-    return nextGenService.listEnvironment(accountId, orgIdentifier, projectIdentifier, environmentIdentifiers)
+    return nextGenServiceProvider.get()
+        .listEnvironment(accountId, orgIdentifier, projectIdentifier, environmentIdentifiers)
         .stream()
         .distinct()
         .collect(Collectors.toList());
@@ -1132,14 +1135,14 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         getLatestRiskScoreByServiceMap(serviceEnvironmentParams, allMonitoredServices);
 
     String serviceName =
-        nextGenService
+        nextGenServiceProvider.get()
             .listService(serviceEnvironmentParams.getAccountIdentifier(), serviceEnvironmentParams.getOrgIdentifier(),
                 serviceEnvironmentParams.getProjectIdentifier(), Arrays.asList(serviceEnvKey.getServiceIdentifier()))
             .get(0)
             .getService()
             .getName();
     String environmentName =
-        nextGenService
+        nextGenServiceProvider.get()
             .listEnvironment(serviceEnvironmentParams.getAccountIdentifier(),
                 serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
                 Arrays.asList(serviceEnvKey.getEnvIdentifier()))

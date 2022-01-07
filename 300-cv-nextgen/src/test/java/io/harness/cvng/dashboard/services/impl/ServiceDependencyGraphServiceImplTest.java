@@ -13,6 +13,7 @@ import static io.harness.rule.OwnerRule.KAPIL;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
@@ -39,6 +40,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -64,6 +66,7 @@ public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
   @Inject private HeatMapService heatMapService;
   @Inject private HPersistence hPersistence;
   @Mock private NextGenService nextGenService;
+  @Mock private Provider<NextGenService> nextGenServiceProvider;
 
   private BuilderFactory builderFactory;
   private Context context;
@@ -100,10 +103,11 @@ public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
                             .serviceIdentifier(serviceIdentifier)
                             .environmentIdentifier(environmentIdentifier)
                             .build();
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
 
     FieldUtils.writeField(heatMapService, "clock", clock, true);
     FieldUtils.writeField(serviceDependencyGraphService, "heatMapService", heatMapService, true);
-    FieldUtils.writeField(serviceDependencyGraphService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(serviceDependencyGraphService, "nextGenServiceProvider", nextGenServiceProvider, true);
   }
 
   @Test

@@ -49,6 +49,8 @@ import io.harness.persistence.HPersistence;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.model.DBCollectionUpdateOptions;
 import java.time.Clock;
@@ -88,7 +90,7 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Inject private Clock clock;
   @Inject private AnalysisService analysisService;
   @Inject private CVNGParallelExecutor cvngParallelExecutor;
-  @Inject private NextGenService nextGenService;
+  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
 
   @Override
   public void updateRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
@@ -321,7 +323,7 @@ public class HeatMapServiceImpl implements HeatMapService {
       RiskSummaryPopoverDTO.EnvSummary.EnvSummaryBuilder envSummaryBuilder =
           RiskSummaryPopoverDTO.EnvSummary.builder()
               .envIdentifier(envServiceRiskDTO.getEnvIdentifier())
-              .envName(nextGenService
+              .envName(nextGenServiceProvider.get()
                            .getEnvironment(accountId, envServiceRiskDTO.getOrgIdentifier(),
                                envServiceRiskDTO.getProjectIdentifier(), envServiceRiskDTO.getEnvIdentifier())
                            .getName())
@@ -336,7 +338,7 @@ public class HeatMapServiceImpl implements HeatMapService {
                 .serviceIdentifier(serviceRisk.getServiceIdentifier())
                 .analysisRisks(analysisRisk)
                 .serviceName(
-                    nextGenService
+                    nextGenServiceProvider.get()
                         .getService(accountId, orgIdentifier, projectIdentifier, serviceRisk.getServiceIdentifier())
                         .getName())
                 .build());
