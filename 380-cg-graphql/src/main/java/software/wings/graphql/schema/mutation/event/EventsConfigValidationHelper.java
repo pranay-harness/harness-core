@@ -18,6 +18,8 @@ import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
+import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
@@ -52,6 +54,32 @@ public class EventsConfigValidationHelper {
           pipelineIds.stream().filter(id -> !pipelineIdSet.contains(id)).collect(Collectors.toList());
       if (isNotEmpty(invalidIds)) {
         throw new InvalidRequestException("The following pipeline ids are invalid :" + invalidIds.toString());
+      }
+    }
+  }
+  public void validateWorkflowIds(CgEventConfig cgEventConfig, String accountId, String appId) {
+    CgEventRule cgEventRule = cgEventConfig.getRule();
+    if (cgEventRule == null || cgEventRule.getType() == null) {
+      return;
+    }
+    if (cgEventRule.getType().equals(CgEventRule.CgRuleType.WORKFLOW)) {
+      CgEventRule.WorkflowRule workflowRule = cgEventRule.getWorkflowRule();
+      if (workflowRule == null || workflowRule.isAllWorkflows() || isEmpty(workflowRule.getWorkflowIds())) {
+        return;
+      }
+      List<String> workflowIds = workflowRule.getWorkflowIds();
+      Set<String> workflowIdSet = wingsPersistence.createQuery(Workflow.class)
+                                      .filter(WorkflowKeys.accountId, accountId)
+                                      .filter(WorkflowKeys.appId, appId)
+                                      .project(WorkflowKeys.uuid, true)
+                                      .asList()
+                                      .stream()
+                                      .map(workflow -> workflow.getUuid())
+                                      .collect(Collectors.toSet());
+      List<String> invalidIds =
+          workflowIds.stream().filter(id -> !workflowIdSet.contains(id)).collect(Collectors.toList());
+      if (isNotEmpty(invalidIds)) {
+        throw new InvalidRequestException("The following workflow ids are invalid :" + invalidIds.toString());
       }
     }
   }

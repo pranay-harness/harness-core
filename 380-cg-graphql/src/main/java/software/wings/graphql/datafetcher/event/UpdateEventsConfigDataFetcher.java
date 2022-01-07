@@ -66,6 +66,7 @@ public class UpdateEventsConfigDataFetcher
                                     .build();
     eventConfig.setUuid(parameter.getEventsConfigId());
     eventsConfigValidationHelper.validatePipelineIds(eventConfig, accountId, parameter.getAppId());
+    eventsConfigValidationHelper.validateWorkflowIds(eventConfig, accountId, parameter.getAppId());
     CgEventConfig updatedEventsConfig =
         eventConfigService.updateEventsConfig(accountId, parameter.getAppId(), eventConfig);
     return QLUpdateEventsConfigPayload.builder()
