@@ -20,6 +20,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.ModuleType;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
@@ -227,6 +228,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
         bind(OpaServiceClient.class).toInstance(mock(OpaServiceClient.class));
         bind(EntitySetupUsageClient.class).toInstance(mock(EntitySetupUsageClient.class));
         bind(EnforcementClientService.class).toInstance(mock(EnforcementClientService.class));
+        bind(AccountClient.class).toInstance(mock(AccountClient.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {

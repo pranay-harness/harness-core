@@ -21,5 +21,6 @@ import lombok.Data;
 @Builder
 public class YamlSchemaMetadata {
   List<ModuleType> modulesSupported;
+  List<String> featureFlags;
   @NotNull YamlGroup yamlGroup;
 }

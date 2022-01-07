@@ -16,10 +16,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 
 public interface CIYamlSchemaService {
-  List<PartialSchemaDTO> getIntegrationStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope);
-  PartialSchemaDTO getMergedIntegrationStageYamlSchema(
-      String projectIdentifier, String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails);
+  List<PartialSchemaDTO> getIntegrationStageYamlSchema(
+      String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope);
+  PartialSchemaDTO getMergedIntegrationStageYamlSchema(String accountIdentifier, String projectIdentifier,
+      String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails);
   List<YamlSchemaWithDetails> getIntegrationStageYamlSchemaWithDetails(
-      String projectIdentifier, String orgIdentifier, Scope scope);
+      String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope);
   JsonNode getStepYamlSchema(EntityType entityType);
 }
