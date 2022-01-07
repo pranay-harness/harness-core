@@ -43,7 +43,9 @@ public class GcpCloudCostEntityToDTO
 
   private void populateBillingAttributes(
       final GcpCloudCostConnectorDTOBuilder connectorDTOBuilder, final GcpBillingExportDetails billingExportDetails) {
-    connectorDTOBuilder.billingExportSpec(
-        GcpBillingExportSpecDTO.builder().datasetId(billingExportDetails.getDatasetId()).build());
+    connectorDTOBuilder.billingExportSpec(GcpBillingExportSpecDTO.builder()
+                                              .datasetId(billingExportDetails.getDatasetId())
+                                              .tableId(billingExportDetails.getTableId())
+                                              .build());
   }
 }

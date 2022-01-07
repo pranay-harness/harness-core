@@ -48,7 +48,9 @@ public class GcpCloudCostDTOToEntity
               CEFeatures.BILLING.getDescription()));
     }
 
-    configBuilder.billingExportDetails(
-        GcpBillingExportDetails.builder().datasetId(billingExportSpecDTO.getDatasetId()).build());
+    configBuilder.billingExportDetails(GcpBillingExportDetails.builder()
+                                           .datasetId(billingExportSpecDTO.getDatasetId())
+                                           .tableId(billingExportSpecDTO.getTableId())
+                                           .build());
   }
 }

@@ -28,9 +28,11 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(CE)
 public class GcpBillingExportSpecDTO {
   @NotNull String datasetId;
+  @NotNull String tableId;
 
   @Builder
-  public GcpBillingExportSpecDTO(String datasetId) {
+  public GcpBillingExportSpecDTO(String datasetId, String tableId) {
     this.datasetId = datasetId;
+    this.tableId = tableId;
   }
 }

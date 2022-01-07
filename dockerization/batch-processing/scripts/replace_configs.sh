@@ -239,6 +239,8 @@ replace_key_value cfClientConfig.eventUrl "$CF_CLIENT_EVENT_URL"
 replace_key_value cfClientConfig.analyticsEnabled "$CF_CLIENT_ANALYTICS_ENABLED"
 replace_key_value cfClientConfig.connectionTimeout "$CF_CLIENT_CONNECTION_TIMEOUT"
 replace_key_value cfClientConfig.readTimeout "$CF_CLIENT_READ_TIMEOUT"
+replace_key_value cfClientConfig.retries "$CF_CLIENT_RETRIES"
+replace_key_value cfClientConfig.sleepInterval "$CF_CLIENT_SLEEPINTERVAL"
 replace_key_value featureFlagConfig.featureFlagSystem "$FEATURE_FLAG_SYSTEM"
 replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
 

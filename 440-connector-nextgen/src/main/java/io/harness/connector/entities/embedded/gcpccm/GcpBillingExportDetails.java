@@ -27,4 +27,5 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(CE)
 public class GcpBillingExportDetails {
   @NotNull String datasetId;
+  @NotNull String tableId;
 }
