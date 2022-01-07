@@ -50,7 +50,6 @@ import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
-import io.harness.pms.pipeline.PipelineMetadata;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepPalleteFilterWrapper;
 import io.harness.pms.pipeline.StepPalleteInfo;
@@ -99,7 +98,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private ExpansionRequestsExtractor expansionRequestsExtractor;
   @Inject private PmsGitSyncHelper gitSyncHelper;
   @Inject private PmsFeatureFlagService pmsFeatureFlagService;
-  @Inject private PipelineMetadataService pipelineMetadataService;
   public static String PIPELINE_SAVE = "pipeline_save";
   public static String PIPELINE_SAVE_ACTION_TYPE = "action";
   public static String CREATING_PIPELINE = "creating new pipeline";
@@ -272,46 +270,16 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Override
   public int incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean deleted) {
-    return pipelineMetadataService.incrementExecutionCounter(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
-  }
-
-  @Override
-  public int incrementRunSequence(PipelineEntity pipelineEntity) {
-    String accountId = pipelineEntity.getAccountId();
-    String orgIdentifier = pipelineEntity.getOrgIdentifier();
-    String projectIdentifier = pipelineEntity.getProjectIdentifier();
-    Optional<PipelineMetadata> pipelineMetadataOptional = pipelineMetadataService.getMetadata(
-        accountId, orgIdentifier, projectIdentifier, pipelineEntity.getIdentifier());
-    PipelineMetadata pipelineMetadata;
-    if (pipelineMetadataOptional.isPresent()) {
-      return pipelineMetadataService.incrementExecutionCounter(
-          accountId, orgIdentifier, projectIdentifier, pipelineEntity.getIdentifier());
-    } else {
-      try {
-        PipelineMetadata metadata = PipelineMetadata.builder()
-                                        .accountIdentifier(pipelineEntity.getAccountIdentifier())
-                                        .orgIdentifier(orgIdentifier)
-                                        .projectIdentifier(projectIdentifier)
-                                        .executionSummaryInfo(pipelineEntity.getExecutionSummaryInfo())
-                                        .runSequence(pipelineEntity.getRunSequence() + 1)
-                                        .identifier(pipelineEntity.getIdentifier())
-                                        .branch(pipelineEntity.getBranch())
-                                        .filePath(pipelineEntity.getFilePath())
-                                        .rootFolder(pipelineEntity.getRootFolder())
-                                        .isEntityInvalid(pipelineEntity.isEntityInvalid())
-                                        .isFromDefaultBranch(pipelineEntity.getIsFromDefaultBranch())
-                                        .objectIdOfYaml(pipelineEntity.getObjectIdOfYaml())
-                                        .yamlGitConfigRef(pipelineEntity.getYamlGitConfigRef())
-                                        .build();
-        pipelineMetadata = pipelineMetadataService.save(metadata);
-      } catch (DuplicateKeyException exception) {
-        // retry insert if above fails
-        return pipelineMetadataService.incrementExecutionCounter(
-            accountId, orgIdentifier, projectIdentifier, pipelineEntity.getIdentifier());
-      }
+    Criteria criteria = PMSPipelineServiceHelper.getPipelineEqualityCriteria(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, null);
+    Update update = new Update();
+    update.inc(PipelineEntityKeys.runSequence);
+    Optional<PipelineEntity> pipelineEntityOptional =
+        Optional.ofNullable(updatePipelineMetadata(accountId, orgIdentifier, projectIdentifier, criteria, update));
+    if (pipelineEntityOptional.isPresent()) {
+      return pipelineEntityOptional.get().getRunSequence();
     }
-    return pipelineMetadata.getRunSequence();
+    throw new InvalidRequestException("Could not fetch pipeline with the given id: " + pipelineIdentifier);
   }
 
   @Override
