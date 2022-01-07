@@ -49,7 +49,7 @@ public interface AssignDelegateService {
 
   boolean noInstalledDelegates(String accountId);
 
-  List<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch);
+  List<String> getEligibleDelegatesToExecuteTaskAndSetInitialBroadcastList(DelegateTask task, BatchDelegateSelectionLog batch);
 
   List<String> getConnectedDelegateList(List<String> delegates, String accountId, BatchDelegateSelectionLog batch);
 

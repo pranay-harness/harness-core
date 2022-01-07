@@ -19,8 +19,7 @@ import static com.google.common.cache.CacheLoader.InvalidCacheLoadException;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
@@ -71,6 +70,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -80,6 +80,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -854,7 +855,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   }
 
   @Override
-  public List<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch) {
+  public List<String> getEligibleDelegatesToExecuteTaskAndSetInitialBroadcastList(DelegateTask task, BatchDelegateSelectionLog batch) {
     List<String> eligibleDelegateIds = new ArrayList<>();
     try {
       List<Delegate> accountDelegates = getAccountDelegates(task.getAccountId());
@@ -871,18 +872,35 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       }
 
       Map<String, List<String>> nonAssignableDelegates = new HashMap<>();
-      eligibleDelegateIds = delegates.stream()
-                                .filter(delegate
-                                    -> delegate.getStatus() != DelegateInstanceStatus.DELETED
-                                        && canAssignTask(batch, delegate.getUuid(), task, nonAssignableDelegates))
-                                .map(Delegate::getUuid)
-                                .collect(Collectors.toList());
+      Map<Boolean, List<String>> assignableDelegates =
+          delegates.stream()
+              .filter(delegate
+                  -> delegate.getStatus() != DelegateInstanceStatus.DELETED
+                      && canAssignTask(batch, delegate.getUuid(), task, nonAssignableDelegates))
+              .map(Delegate::getUuid)
+              .collect(Collectors.partitioningBy(delegate -> isWhitelisted(task, delegate)));
+      List<String> nonWhiteListedAssignableDelegates = assignableDelegates.get(false);
+      List<String> whiteListedAssignableDelegates = assignableDelegates.get(true);
+      if (assignableDelegates.get(true).isEmpty()) {
+        // shuffle the eligible delegates to evenly distribute the load
+        Collections.shuffle(nonWhiteListedAssignableDelegates);
+        eligibleDelegateIds.addAll(nonWhiteListedAssignableDelegates);
+        String firstBroadCastDelegateId = isNotEmpty(nonWhiteListedAssignableDelegates)
+            ? nonWhiteListedAssignableDelegates.get(random.nextInt(nonWhiteListedAssignableDelegates.size()))
+            : EMPTY;
+        task.setBroadcastToDelegateIds(Lists.newArrayList(firstBroadCastDelegateId));
+      } else {
+        eligibleDelegateIds.addAll(whiteListedAssignableDelegates);
+        eligibleDelegateIds.addAll(nonWhiteListedAssignableDelegates);
+        task.setBroadcastToDelegateIds(Lists.newArrayList(whiteListedAssignableDelegates));
+      }
       List<String> nonAssignables =
           nonAssignableDelegates.keySet()
               .stream()
               .map(errorMessage -> errorMessage + " : " + nonAssignableDelegates.get(errorMessage))
               .collect(Collectors.toList());
       nonAssignables.forEach(message -> delegateTaskServiceClassic.addToTaskActivityLog(task, message));
+
     } catch (Exception e) {
       log.error("Error checking for eligible or whitelisted delegates", e);
     }

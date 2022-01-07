@@ -306,7 +306,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldExecuteTask() {
     Delegate delegate = createDelegateBuilder().build();
     persistence.save(delegate);
-    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+    when(assignDelegateService.getEligibleDelegatesToExecuteTaskAndSetInitialBroadcastList(
              any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
@@ -336,7 +336,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
       new Thread(delegateSyncService).start();
     });
     thread.start();
-    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+    when(assignDelegateService.getEligibleDelegatesToExecuteTaskAndSetInitialBroadcastList(
              any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
 
@@ -376,7 +376,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldSaveDelegateTaskWithoutPreAssignedDelegateIdSetToMustExecuteOn() {
     String delegateId = generateUuid();
     String taskId = generateUuid();
-    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+    when(assignDelegateService.getEligibleDelegatesToExecuteTaskAndSetInitialBroadcastList(
              any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
@@ -385,7 +385,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(false);
     delegateTask.setUuid(taskId);
-    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+    when(assignDelegateService.getEligibleDelegatesToExecuteTaskAndSetInitialBroadcastList(
              any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
 
@@ -431,7 +431,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     doReturn(delegate).when(delegateCache).get(ACCOUNT_ID, delegate.getUuid(), false);
 
-    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+    when(assignDelegateService.getEligibleDelegatesToExecuteTaskAndSetInitialBroadcastList(
              any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
         .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
