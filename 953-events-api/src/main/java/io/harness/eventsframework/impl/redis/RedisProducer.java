@@ -100,7 +100,7 @@ public class RedisProducer extends AbstractProducer {
 
     StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
     redisEventMetricPublisher.sendMetricWithEventContext(
-        RedisEventMetricDTOMapper.prepareRedisEventMetricDTO(message), REDIS_PUSH_EVENT_METRIC);
+        RedisEventMetricDTOMapper.prepareRedisEventMetricDTO(message, getTopicName()), REDIS_PUSH_EVENT_METRIC);
     redisData.remove(REDIS_STREAM_INTERNAL_KEY);
     log.info("Events framework message inserted - messageId: {}, metaData: {}", messageId, redisData);
     return messageId.toString();
