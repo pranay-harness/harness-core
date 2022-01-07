@@ -70,6 +70,8 @@ import io.harness.persistence.HPersistence;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -104,7 +106,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private OrchestrationService orchestrationService;
   @Inject private Clock clock;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
-  @Inject private NextGenService nextGenService;
+  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private MetricService metricService;
 
@@ -661,8 +663,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   private EnvironmentResponseDTO getEnvironment(VerificationJob verificationJob) {
-    return nextGenService.getEnvironment(verificationJob.getAccountId(), verificationJob.getOrgIdentifier(),
-        verificationJob.getProjectIdentifier(), verificationJob.getEnvIdentifier());
+    return nextGenServiceProvider.get().getEnvironment(verificationJob.getAccountId(),
+        verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(), verificationJob.getEnvIdentifier());
   }
 
   private String getDataCollectionWorkerId(

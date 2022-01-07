@@ -11,7 +11,9 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.entities.PagerDutyActivity;
@@ -22,22 +24,26 @@ import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.rule.Owner;
 
+import com.google.inject.Provider;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
-public class PagerdutyChangeEventTransformerTest {
+public class PagerdutyChangeEventTransformerTest extends CvNextGenTestBase {
   PagerDutyChangeEventTransformer pagerDutyChangeEventTransformer;
   BuilderFactory builderFactory;
-  NextGenService nextGenService;
+  @Mock NextGenService nextGenService;
+  @Mock Provider<NextGenService> nextGenServiceProvider;
 
   @Before
   public void setup() throws IllegalAccessException {
     pagerDutyChangeEventTransformer = new PagerDutyChangeEventTransformer();
     nextGenService = Mockito.mock(NextGenService.class);
-    FieldUtils.writeField(pagerDutyChangeEventTransformer, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(pagerDutyChangeEventTransformer, "nextGenServiceProvider", nextGenServiceProvider, true);
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     Mockito.when(nextGenService.getService(any(), any(), any(), any()))
         .thenReturn(ServiceResponseDTO.builder().name("serviceName").build());
     Mockito.when(nextGenService.getEnvironment(any(), any(), any(), any()))

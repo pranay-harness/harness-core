@@ -50,6 +50,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -70,6 +71,7 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
   @Inject private MetricPackService metricPackService;
   @Inject private OnboardingService onboardingService;
   @Mock NextGenService nextGenService;
+  @Mock Provider<NextGenService> nextGenServiceProvider;
   @Mock VerificationManagerService verificationManagerService;
   private String accountId;
   private String connectorIdentifier;
@@ -85,10 +87,11 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
     projectIdentifier = generateUuid();
     orgIdentifier = generateUuid();
     FieldUtils.writeField(appDynamicsService, "onboardingService", onboardingService, true);
-    FieldUtils.writeField(onboardingService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(onboardingService, "nextGenServiceProvider", nextGenServiceProvider, true);
     FieldUtils.writeField(onboardingService, "verificationManagerService", verificationManagerService, true);
     FieldUtils.writeField(appDynamicsService, "clock", builderFactory.getClock(), true);
 
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     when(nextGenService.get(anyString(), anyString(), anyString(), anyString()))
         .then(invocation
             -> Optional.of(
