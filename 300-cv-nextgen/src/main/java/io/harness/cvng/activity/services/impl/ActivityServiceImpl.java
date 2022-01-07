@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.activity.services.impl;
 
 import static io.harness.cvng.activity.CVActivityConstants.HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS;
@@ -59,6 +66,8 @@ import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -86,7 +95,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
-  @Inject private NextGenService nextGenService;
+  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
@@ -303,7 +312,7 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   private String getServiceNameFromActivity(Activity activity) {
-    return nextGenService
+    return nextGenServiceProvider.get()
         .getService(activity.getAccountId(), activity.getOrgIdentifier(), activity.getProjectIdentifier(),
             activity.getServiceIdentifier())
         .getName();

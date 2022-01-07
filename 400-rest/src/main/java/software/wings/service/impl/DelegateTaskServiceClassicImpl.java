@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -164,6 +171,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -253,6 +261,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   @Inject private DelegateMetricsService delegateMetricsService;
 
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
+
+  private static final SecureRandom random = new SecureRandom();
 
   private Supplier<Long> taskCountCache = Suppliers.memoizeWithExpiration(this::fetchTaskCount, 1, TimeUnit.MINUTES);
   @Inject @Getter private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
@@ -368,6 +378,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       processDelegateTask(task, QUEUED);
+      broadcastHelper.broadcastNewDelegateTaskAsync(task);
     }
     return task.getUuid();
   }
@@ -384,6 +395,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       log.info("Processing sync task {} of type {}", task.getUuid(), task.getData().getTaskType());
       processDelegateTask(task, QUEUED);
+      broadcastHelper.rebroadcastDelegateTask(task);
     }
   }
 
@@ -437,6 +449,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         }
         // shuffle the eligible delegates to evenly distribute the load
         Collections.shuffle(eligibleListOfDelegates);
+        task.setBroadcastToDelegateIds(
+            Lists.newArrayList(getDelegateIdForFirstBroadcast(task, eligibleListOfDelegates)));
 
         delegateSelectionLogsService.logEligibleDelegatesToExecuteTask(
             batch, Sets.newHashSet(eligibleListOfDelegates), task.getAccountId());
@@ -467,6 +481,11 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                                .setupAbstractions(task.getSetupAbstractions())
                                .build());
         }
+
+        // Ensure that broadcast happens at least 5 seconds from current time for async tasks
+        if (task.getData().isAsync()) {
+          task.setNextBroadcast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
+        }
         delegateSelectionLogsService.save(batch);
         persistence.save(task);
         delegateMetricsService.recordDelegateTaskMetrics(task, DELEGATE_TASK_CREATION);
@@ -478,6 +497,15 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         handleTaskFailureResponse(task, exception.getMessage());
       }
     }
+  }
+
+  private String getDelegateIdForFirstBroadcast(DelegateTask delegateTask, List<String> eligibleListOfDelegates) {
+    for (String delegateId : eligibleListOfDelegates) {
+      if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
+        return delegateId;
+      }
+    }
+    return eligibleListOfDelegates.get(random.nextInt(eligibleListOfDelegates.size()));
   }
 
   private void handleTaskFailureResponse(DelegateTask task, String errorMessage) {

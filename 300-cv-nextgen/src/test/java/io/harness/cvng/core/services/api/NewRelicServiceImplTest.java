@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.api;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -29,6 +36,7 @@ import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -45,6 +53,7 @@ public class NewRelicServiceImplTest extends CvNextGenTestBase {
   @Inject OnboardingService onboardingService;
   @Mock VerificationManagerClient verificationManagerClient;
   @Mock NextGenService nextGenService;
+  @Mock Provider<NextGenService> nextGenServiceProvider;
   @Mock VerificationManagerService verificationManagerService;
   @Mock private RequestExecutor requestExecutor;
   private String accountId;
@@ -57,9 +66,10 @@ public class NewRelicServiceImplTest extends CvNextGenTestBase {
     connectorIdentifier = generateUuid();
     builderFactory = BuilderFactory.getDefault();
     FieldUtils.writeField(newRelicService, "onboardingService", onboardingService, true);
-    FieldUtils.writeField(onboardingService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(onboardingService, "nextGenServiceProvider", nextGenServiceProvider, true);
     FieldUtils.writeField(onboardingService, "verificationManagerService", verificationManagerService, true);
 
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     when(nextGenService.get(anyString(), anyString(), anyString(), anyString()))
         .then(invocation
             -> Optional.of(ConnectorInfoDTO.builder().connectorConfig(NewRelicConnectorDTO.builder().build()).build()));

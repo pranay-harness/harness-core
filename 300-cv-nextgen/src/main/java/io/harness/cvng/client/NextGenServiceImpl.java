@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.client;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -19,7 +26,6 @@ import io.harness.utils.IdentifierRefHelper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hazelcast.util.Preconditions;
 import java.util.HashMap;
@@ -36,8 +42,13 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @OwnedBy(HarnessTeam.CV)
 public class NextGenServiceImpl implements NextGenService {
-  @Inject private NextGenClient nextGenClient;
-  @Inject private RequestExecutor requestExecutor;
+  private NextGenClient nextGenClient;
+  private RequestExecutor requestExecutor;
+
+  public NextGenServiceImpl(NextGenClient nextGenClient, RequestExecutor requestExecutor) {
+    this.nextGenClient = nextGenClient;
+    this.requestExecutor = requestExecutor;
+  }
 
   private LoadingCache<EntityKey, EnvironmentResponseDTO> environmentCache =
       CacheBuilder.newBuilder()

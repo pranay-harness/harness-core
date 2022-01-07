@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 import base64
 import io
 import json
@@ -267,5 +272,3 @@ def main(event, context):
                                                       disk_to_snapshots_mapping.get(disk)))
 
     insert_data_in_table(client, data, gcp_disks_inventory_temp_table_name)
-
-

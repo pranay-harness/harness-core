@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -38,6 +45,7 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -58,6 +66,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private CVConfigService cvConfigService;
   @Mock private NextGenService nextGenService;
+  @Mock private Provider<NextGenService> nextGenServiceProvider;
 
   private String accountId;
   private String identifier;
@@ -87,7 +96,8 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
                                       .build())
                          .build();
 
-    FieldUtils.writeField(deploymentTimeSeriesAnalysisService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(deploymentTimeSeriesAnalysisService, "nextGenServiceProvider", nextGenServiceProvider, true);
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     when(nextGenService.get(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(Optional.of(ConnectorInfoDTO.builder().name("AppDynamics Connector").build()));
   }

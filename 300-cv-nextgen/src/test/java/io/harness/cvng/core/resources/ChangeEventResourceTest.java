@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.resources;
 
 import static io.harness.rule.OwnerRule.ABHIJITH;
@@ -27,6 +34,7 @@ import io.harness.rule.ResourceTestRule;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Provider;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -57,9 +65,11 @@ public class ChangeEventResourceTest extends CvNextGenTestBase {
   public void setup() {
     injector.injectMembers(changeEventResource);
     NextGenService nextGenService = Mockito.mock(NextGenService.class);
+    Provider<NextGenService> nextGenServiceProvider = (Provider<NextGenService>) Mockito.mock(Provider.class);
     for (ChangeEventMetaDataTransformer transformer : changeTypeMetaDataTransformerMap.values()) {
-      FieldUtils.writeField(transformer, "nextGenService", nextGenService, true);
+      FieldUtils.writeField(transformer, "nextGenServiceProvider", nextGenServiceProvider, true);
     }
+    Mockito.when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     Mockito.when(nextGenService.getService(any(), any(), any(), any()))
         .thenReturn(ServiceResponseDTO.builder().name("serviceName").build());
     Mockito.when(nextGenService.getEnvironment(any(), any(), any(), any()))

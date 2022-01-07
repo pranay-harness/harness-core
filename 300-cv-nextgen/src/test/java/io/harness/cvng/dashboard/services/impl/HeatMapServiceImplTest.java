@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
@@ -54,6 +61,7 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.lang.reflect.Field;
 import java.time.Clock;
 import java.time.Duration;
@@ -95,6 +103,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Mock private CVConfigService cvConfigService;
   @Mock private NextGenService nextGenService;
+  @Mock private Provider<NextGenService> nextGenServiceProvider;
   @Mock private AnalysisService analysisService;
   private Clock clock;
   private BuilderFactory builderFactory;
@@ -112,8 +121,9 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
     FieldUtils.writeField(heatMapService, "clock", clock, true);
-    FieldUtils.writeField(heatMapService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(heatMapService, "nextGenServiceProvider", nextGenServiceProvider, true);
     FieldUtils.writeField(heatMapService, "analysisService", analysisService, true);
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     when(cvConfigService.getAvailableCategories(anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE)));
     when(cvConfigService.isProductionConfig(cvConfig)).thenReturn(true);

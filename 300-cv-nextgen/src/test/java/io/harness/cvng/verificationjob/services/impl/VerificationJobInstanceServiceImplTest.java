@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
@@ -76,6 +83,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.lang.reflect.Field;
 import java.time.Clock;
 import java.time.Duration;
@@ -107,6 +115,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private HPersistence hPersistence;
   @Mock private NextGenService nextGenService;
+  @Mock private Provider<NextGenService> nextGenServiceProvider;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private VerificationJobInstanceAnalysisService verificationJobInstanceAnalysisService;
@@ -158,9 +167,9 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
                          .build();
     cvConfig = newCVConfig();
     FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
-    FieldUtils.writeField(verificationJobInstanceService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(verificationJobInstanceService, "nextGenServiceProvider", nextGenServiceProvider, true);
     when(verificationManagerService.createDataCollectionTask(any(), any(), any(), any())).thenReturn(perpetualTaskId);
-
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     when(nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, "dev"))
         .thenReturn(EnvironmentResponseDTO.builder()
                         .accountId(accountId)

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.servicelevelobjective.services.impl;
 
 import io.harness.cvng.client.NextGenService;
@@ -23,6 +30,8 @@ import io.harness.ng.beans.PageResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -39,7 +48,8 @@ public class SLODashboardServiceImpl implements SLODashboardService {
   @Inject private SLIRecordService sliRecordService;
   @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Inject private Clock clock;
-  @Inject private NextGenService nextGenService;
+  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
+
   @Override
   public PageResponse<SLODashboardWidget> getSloDashboardWidgets(
       ProjectParams projectParams, SLODashboardApiFilter filter, PageParams pageParams) {
@@ -105,11 +115,11 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .monitoredServiceName(monitoredService.getName())
         .environmentIdentifier(monitoredService.getEnvironmentRef())
         .environmentName(
-            nextGenService
+            nextGenServiceProvider.get()
                 .getEnvironment(serviceLevelObjective.getAccountId(), serviceLevelObjective.getOrgIdentifier(),
                     serviceLevelObjective.getProjectIdentifier(), monitoredService.getEnvironmentRef())
                 .getName())
-        .serviceName(nextGenService
+        .serviceName(nextGenServiceProvider.get()
                          .getService(serviceLevelObjective.getAccountId(), serviceLevelObjective.getOrgIdentifier(),
                              serviceLevelObjective.getProjectIdentifier(), monitoredService.getServiceRef())
                          .getName())

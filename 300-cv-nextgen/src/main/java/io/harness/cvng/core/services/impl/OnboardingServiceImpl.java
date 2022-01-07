@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import io.harness.connector.ConnectorInfoDTO;
@@ -12,13 +19,16 @@ import io.harness.serializer.JsonUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OnboardingServiceImpl implements OnboardingService {
   @Inject private VerificationManagerService verificationManagerService;
-  @Inject private NextGenService nextGenService;
+  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
+
   @Inject private Map<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder;
 
   @Override
@@ -56,7 +66,7 @@ public class OnboardingServiceImpl implements OnboardingService {
   private ConnectorInfoDTO getConnectorConfigDTO(
       String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
     Optional<ConnectorInfoDTO> connectorDTO =
-        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
+        nextGenServiceProvider.get().get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
     return connectorDTO.get();
   }

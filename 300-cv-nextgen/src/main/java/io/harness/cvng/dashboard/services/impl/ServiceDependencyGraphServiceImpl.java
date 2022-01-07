@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
@@ -19,6 +26,8 @@ import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.ServiceDependencyGraphService;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraphService {
   @Inject private ServiceDependencyService serviceDependencyService;
   @Inject private MonitoredServiceService monitoredServiceService;
-  @Inject private NextGenService nextGenService;
+  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
   @Inject private HeatMapService heatMapService;
 
   @Override
@@ -61,8 +70,9 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
         projectParams, new ArrayList<>(serviceIdentifiers), new ArrayList<>(environmentIdentifiers));
 
     ServiceDependencyGraphDTO serviceDependencyGraphDTO = constructGraph(monitoredServices, serviceDependencies,
-        latestHealthScores, nextGenService.getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers)),
-        nextGenService.getEnvironmentIdNameMap(projectParams, new ArrayList<>(environmentIdentifiers)));
+        latestHealthScores,
+        nextGenServiceProvider.get().getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers)),
+        nextGenServiceProvider.get().getEnvironmentIdNameMap(projectParams, new ArrayList<>(environmentIdentifiers)));
 
     if (servicesAtRiskFilter) {
       List<ServiceSummaryDetails> unHealthyServiceSummaryDetails =

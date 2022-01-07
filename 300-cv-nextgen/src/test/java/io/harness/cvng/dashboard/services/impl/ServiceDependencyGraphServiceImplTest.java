@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
@@ -6,6 +13,7 @@ import static io.harness.rule.OwnerRule.KAPIL;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
@@ -32,6 +40,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -57,6 +66,7 @@ public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
   @Inject private HeatMapService heatMapService;
   @Inject private HPersistence hPersistence;
   @Mock private NextGenService nextGenService;
+  @Mock private Provider<NextGenService> nextGenServiceProvider;
 
   private BuilderFactory builderFactory;
   private Context context;
@@ -93,10 +103,11 @@ public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
                             .serviceIdentifier(serviceIdentifier)
                             .environmentIdentifier(environmentIdentifier)
                             .build();
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
 
     FieldUtils.writeField(heatMapService, "clock", clock, true);
     FieldUtils.writeField(serviceDependencyGraphService, "heatMapService", heatMapService, true);
-    FieldUtils.writeField(serviceDependencyGraphService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(serviceDependencyGraphService, "nextGenServiceProvider", nextGenServiceProvider, true);
   }
 
   @Test

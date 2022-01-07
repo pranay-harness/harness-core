@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl.monitoredService;
 
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
@@ -93,6 +100,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -126,6 +134,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject ServiceDependencyService serviceDependencyService;
   @Inject ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Mock NextGenService nextGenService;
+  @Mock private Provider<NextGenService> nextGenServiceProvider;
   @Mock SetupUsageEventService setupUsageEventService;
   @Mock ChangeSourceService changeSourceServiceMock;
 
@@ -186,8 +195,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
                             .serviceIdentifier(serviceIdentifier)
                             .environmentIdentifier(environmentIdentifier)
                             .build();
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
 
-    FieldUtils.writeField(monitoredServiceService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(monitoredServiceService, "nextGenServiceProvider", nextGenServiceProvider, true);
     FieldUtils.writeField(monitoredServiceService, "setupUsageEventService", setupUsageEventService, true);
     FieldUtils.writeField(changeSourceService, "changeSourceUpdateHandlerMap", new HashMap<>(), true);
     FieldUtils.writeField(monitoredServiceService, "changeSourceService", changeSourceService, true);

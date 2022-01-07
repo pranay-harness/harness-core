@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_DATA_LENGTH;
@@ -10,6 +17,7 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
@@ -51,6 +59,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -79,6 +88,7 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private HeatMapService heatMapService;
   @Mock private NextGenService nextGenService;
+  @Mock Provider<NextGenService> nextGenServiceProvider;
   private BuilderFactory builderFactory;
 
   @Before
@@ -89,8 +99,9 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTestBase {
     cvConfigService.save(cvConfig);
     cvConfigId = cvConfig.getUuid();
     verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfigId);
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
 
-    FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(cvConfigService, "nextGenServiceProvider", nextGenServiceProvider, true);
     FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
     FieldUtils.writeField(trendAnalysisService, "heatMapService", heatMapService, true);
   }

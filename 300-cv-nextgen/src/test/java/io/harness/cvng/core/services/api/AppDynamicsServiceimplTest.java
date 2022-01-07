@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
@@ -43,6 +50,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -63,6 +71,7 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
   @Inject private MetricPackService metricPackService;
   @Inject private OnboardingService onboardingService;
   @Mock NextGenService nextGenService;
+  @Mock Provider<NextGenService> nextGenServiceProvider;
   @Mock VerificationManagerService verificationManagerService;
   private String accountId;
   private String connectorIdentifier;
@@ -78,10 +87,11 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
     projectIdentifier = generateUuid();
     orgIdentifier = generateUuid();
     FieldUtils.writeField(appDynamicsService, "onboardingService", onboardingService, true);
-    FieldUtils.writeField(onboardingService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(onboardingService, "nextGenServiceProvider", nextGenServiceProvider, true);
     FieldUtils.writeField(onboardingService, "verificationManagerService", verificationManagerService, true);
     FieldUtils.writeField(appDynamicsService, "clock", builderFactory.getClock(), true);
 
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     when(nextGenService.get(anyString(), anyString(), anyString(), anyString()))
         .then(invocation
             -> Optional.of(

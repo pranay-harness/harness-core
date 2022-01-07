@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -35,6 +42,8 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -57,7 +66,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
-  @Inject private NextGenService nextGenService;
+  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
 
   @Override
   public void save(DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis) {
@@ -318,7 +327,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   @Nullable
   private String getConnectorName(CVConfig cvConfig) {
     Preconditions.checkNotNull(cvConfig, "CVConfig should not be null");
-    Optional<ConnectorInfoDTO> connectorInfoDTO = nextGenService.get(cvConfig.getAccountId(),
+    Optional<ConnectorInfoDTO> connectorInfoDTO = nextGenServiceProvider.get().get(cvConfig.getAccountId(),
         cvConfig.getConnectorIdentifier(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier());
     return connectorInfoDTO.isPresent() ? connectorInfoDTO.get().getName() : null;
   }
