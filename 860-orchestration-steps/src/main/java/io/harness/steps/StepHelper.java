@@ -99,7 +99,7 @@ public class StepHelper {
 
           telemetryReporter.sendTrackEvent(TELEMETRY_ROLLBACK_EXECUTION, identity, accountId,
               (HashMap<String, Object>) properties, Collections.singletonMap(AMPLITUDE, true),
-              io.harness.telemetry.Category.GLOBAL, TelemetryOption.builder().sendForCommunity(true).build());
+              io.harness.telemetry.Category.GLOBAL, TelemetryOption.builder().sendForCommunity(false).build());
 
           return properties;
         } else {
