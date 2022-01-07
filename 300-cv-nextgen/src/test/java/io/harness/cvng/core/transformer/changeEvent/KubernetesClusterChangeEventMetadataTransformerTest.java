@@ -11,7 +11,9 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity;
@@ -22,22 +24,26 @@ import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.rule.Owner;
 
+import com.google.inject.Provider;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
-public class KubernetesClusterChangeEventMetadataTransformerTest {
+public class KubernetesClusterChangeEventMetadataTransformerTest extends CvNextGenTestBase {
   KubernetesClusterChangeEventMetadataTransformer transformer;
   BuilderFactory builderFactory;
-  NextGenService nextGenService;
+  @Mock NextGenService nextGenService;
+  @Mock Provider<NextGenService> nextGenServiceProvider;
 
   @Before
   public void setup() throws IllegalAccessException {
     transformer = new KubernetesClusterChangeEventMetadataTransformer();
     nextGenService = Mockito.mock(NextGenService.class);
-    FieldUtils.writeField(transformer, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(transformer, "nextGenServiceProvider", nextGenServiceProvider, true);
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     Mockito.when(nextGenService.getService(any(), any(), any(), any()))
         .thenReturn(ServiceResponseDTO.builder().name("serviceName").build());
     Mockito.when(nextGenService.getEnvironment(any(), any(), any(), any()))

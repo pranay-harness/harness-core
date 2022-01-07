@@ -11,7 +11,9 @@ import static io.harness.rule.OwnerRule.ABHIJITH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.entities.DeploymentActivity;
@@ -22,16 +24,19 @@ import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.rule.Owner;
 
+import com.google.inject.Provider;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
-public class HarnessCDChangeEventTransformerTest {
+public class HarnessCDChangeEventTransformerTest extends CvNextGenTestBase {
   HarnessCDChangeEventTransformer harnessCDChangeEventTransformer;
   BuilderFactory builderFactory;
-  NextGenService nextGenService;
+  @Mock NextGenService nextGenService;
+  @Mock Provider<NextGenService> nextGenServiceProvider;
 
   private String serviceName = "ServiceName";
   private String environmentName = "EnvironmentName";
@@ -40,7 +45,8 @@ public class HarnessCDChangeEventTransformerTest {
   public void setup() throws IllegalAccessException {
     harnessCDChangeEventTransformer = new HarnessCDChangeEventTransformer();
     nextGenService = Mockito.mock(NextGenService.class);
-    FieldUtils.writeField(harnessCDChangeEventTransformer, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(harnessCDChangeEventTransformer, "nextGenServiceProvider", nextGenServiceProvider, true);
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     Mockito.when(nextGenService.getService(any(), any(), any(), any()))
         .thenReturn(ServiceResponseDTO.builder().name(serviceName).build());
     Mockito.when(nextGenService.getEnvironment(any(), any(), any(), any()))

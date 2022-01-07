@@ -36,6 +36,7 @@ import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -52,6 +53,7 @@ public class NewRelicServiceImplTest extends CvNextGenTestBase {
   @Inject OnboardingService onboardingService;
   @Mock VerificationManagerClient verificationManagerClient;
   @Mock NextGenService nextGenService;
+  @Mock Provider<NextGenService> nextGenServiceProvider;
   @Mock VerificationManagerService verificationManagerService;
   @Mock private RequestExecutor requestExecutor;
   private String accountId;
@@ -64,9 +66,10 @@ public class NewRelicServiceImplTest extends CvNextGenTestBase {
     connectorIdentifier = generateUuid();
     builderFactory = BuilderFactory.getDefault();
     FieldUtils.writeField(newRelicService, "onboardingService", onboardingService, true);
-    FieldUtils.writeField(onboardingService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(onboardingService, "nextGenServiceProvider", nextGenServiceProvider, true);
     FieldUtils.writeField(onboardingService, "verificationManagerService", verificationManagerService, true);
 
+    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     when(nextGenService.get(anyString(), anyString(), anyString(), anyString()))
         .then(invocation
             -> Optional.of(ConnectorInfoDTO.builder().connectorConfig(NewRelicConnectorDTO.builder().build()).build()));

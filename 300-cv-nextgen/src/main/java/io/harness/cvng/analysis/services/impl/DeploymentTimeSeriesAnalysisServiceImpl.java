@@ -42,6 +42,8 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -64,7 +66,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
-  @Inject private NextGenService nextGenService;
+  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
 
   @Override
   public void save(DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis) {
@@ -325,7 +327,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   @Nullable
   private String getConnectorName(CVConfig cvConfig) {
     Preconditions.checkNotNull(cvConfig, "CVConfig should not be null");
-    Optional<ConnectorInfoDTO> connectorInfoDTO = nextGenService.get(cvConfig.getAccountId(),
+    Optional<ConnectorInfoDTO> connectorInfoDTO = nextGenServiceProvider.get().get(cvConfig.getAccountId(),
         cvConfig.getConnectorIdentifier(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier());
     return connectorInfoDTO.isPresent() ? connectorInfoDTO.get().getName() : null;
   }
