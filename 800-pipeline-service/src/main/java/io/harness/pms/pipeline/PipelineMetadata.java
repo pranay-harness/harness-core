@@ -13,7 +13,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
-import io.harness.gitsync.persistance.GitSyncableEntity;
+import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.gitsync.sdk.EntityGitDetails.EntityGitDetailsKeys;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -21,14 +22,11 @@ import io.harness.ng.DbAliases;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
-import lombok.experimental.Wither;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Id;
@@ -45,7 +43,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("pipelineMetadata")
 @HarnessEntity(exportable = true)
 @StoreIn(DbAliases.PMS)
-public class PipelineMetadata implements GitSyncableEntity {
+public class PipelineMetadata {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -55,8 +53,8 @@ public class PipelineMetadata implements GitSyncableEntity {
                  .field(PipelineMetadataKeys.orgIdentifier)
                  .field(PipelineMetadataKeys.projectIdentifier)
                  .field(PipelineMetadataKeys.identifier)
-                 .field(PipelineMetadataKeys.yamlGitConfigRef)
-                 .field(PipelineMetadataKeys.branch)
+                 .field(PipelineMetadataKeys.entityGitDetails + "." + EntityGitDetailsKeys.branch)
+                 .field(PipelineMetadataKeys.entityGitDetails + "." + EntityGitDetailsKeys.repoIdentifier)
                  .build())
         .build();
   }
@@ -67,29 +65,7 @@ public class PipelineMetadata implements GitSyncableEntity {
   @Trimmed @NotEmpty String projectIdentifier;
   @NotEmpty String identifier;
 
-  @Wither @Setter @NonFinal String objectIdOfYaml;
-  @Setter @NonFinal Boolean isFromDefaultBranch;
-  @Setter @NonFinal String branch;
-  @Setter @NonFinal String yamlGitConfigRef;
-  @Setter @NonFinal String filePath;
-  @Setter @NonFinal String rootFolder;
-  @Getter(AccessLevel.NONE) @Wither @NonFinal Boolean isEntityInvalid;
-
   ExecutionSummaryInfo executionSummaryInfo;
+  EntityGitDetails entityGitDetails;
   int runSequence;
-
-  @Override
-  public boolean isEntityInvalid() {
-    return Boolean.TRUE.equals(isEntityInvalid);
-  }
-
-  @Override
-  public void setEntityInvalid(boolean isEntityInvalid) {
-    this.isEntityInvalid = isEntityInvalid;
-  }
-
-  @Override
-  public String getInvalidYamlString() {
-    return "";
-  }
 }

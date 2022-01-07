@@ -12,6 +12,7 @@ import io.harness.repositories.pipeline.PipelineMetadataRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import java.util.Optional;
 
 @Singleton
@@ -19,9 +20,10 @@ public class PipelineMetadataServiceImpl implements PipelineMetadataService {
   @Inject private PipelineMetadataRepository pipelineMetadataRepository;
 
   @Override
-  public int incrementExecutionCounter(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
-    return pipelineMetadataRepository.incCounter(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier)
+  public int incrementExecutionCounter(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, ByteString gitSyncBranchContext) {
+    return pipelineMetadataRepository
+        .incCounter(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, gitSyncBranchContext)
         .getRunSequence();
   }
 
@@ -31,8 +33,9 @@ public class PipelineMetadataServiceImpl implements PipelineMetadataService {
   }
 
   @Override
-  public Optional<PipelineMetadata> getMetadata(
-      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
-    return pipelineMetadataRepository.getPipelineMetadata(accountId, orgIdentifier, projectIdentifier, identifier);
+  public Optional<PipelineMetadata> getMetadata(String accountId, String orgIdentifier, String projectIdentifier,
+      String identifier, ByteString gitSyncBranchContext) {
+    return pipelineMetadataRepository.getPipelineMetadata(
+        accountId, orgIdentifier, projectIdentifier, identifier, gitSyncBranchContext);
   }
 }
