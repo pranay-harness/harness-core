@@ -11,7 +11,7 @@ import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.watcher.app.WatcherApplication.getConfiguration;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.substringBetween;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 
 import io.harness.concurrent.HTimeLimiter;
 import io.harness.logging.AccessTokenBean;
@@ -50,7 +50,7 @@ public class WatcherStackdriverLogAppender extends RemoteStackdriverLogAppender 
   @Override
   protected String getManagerHost() {
     if (isBlank(managerHost) && getConfiguration() != null) {
-      managerHost = substringBetween(getConfiguration().getManagerUrl(), "://", "/api/");
+      managerHost = substringBefore(getConfiguration().getManagerUrl(), "/api/");
     }
     return managerHost;
   }
