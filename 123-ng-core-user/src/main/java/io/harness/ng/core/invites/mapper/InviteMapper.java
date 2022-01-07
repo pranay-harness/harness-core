@@ -50,7 +50,7 @@ public class InviteMapper {
         .id(inviteDTO.getId())
         .name(inviteDTO.getName())
         .email(inviteDTO.getEmail())
-        .roleBindings(inviteDTO.getRoleBindings())
+        .roleBindings(inviteDTO.getRoleBindings() == null ? new ArrayList<>() : inviteDTO.getRoleBindings())
         .userGroups(inviteDTO.getUserGroups())
         .inviteType(inviteDTO.getInviteType())
         .accountIdentifier(ngAccess.getAccountIdentifier())
