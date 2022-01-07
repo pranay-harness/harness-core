@@ -278,15 +278,6 @@ public class PluginServiceImpl implements PluginService {
             .withUiSchema(readUiSchema("AWS"))
             .build(),
         anAccountPlugin()
-            .withSettingClass(RancherConfig.class)
-            .withAccountId(accountId)
-            .withIsEnabled(true)
-            .withDisplayName("Rancher")
-            .withType("RANCHER")
-            .withPluginCategories(asList(CloudProvider))
-            .withUiSchema(readUiSchema("RANCHER"))
-            .build(),
-        anAccountPlugin()
             .withSettingClass(GcpConfig.class)
             .withAccountId(accountId)
             .withIsEnabled(true)
@@ -454,6 +445,17 @@ public class PluginServiceImpl implements PluginService {
                        .withPluginCategories(asList(AzureArtifacts))
                        .withUiSchema(readUiSchema(SettingVariableTypes.AZURE_ARTIFACTS_PAT.name()))
                        .build());
+    if (featureFlagService.isEnabled(FeatureName.RANCHER_SUPPORT, accountId)) {
+      pluginList.add(anAccountPlugin()
+              .withSettingClass(RancherConfig.class)
+              .withAccountId(accountId)
+              .withIsEnabled(true)
+              .withDisplayName("Rancher")
+              .withType("RANCHER")
+              .withPluginCategories(asList(CloudProvider))
+              .withUiSchema(readUiSchema("RANCHER"))
+              .build());
+    }
     return pluginList;
   }
 
