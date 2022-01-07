@@ -61,7 +61,6 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import java.lang.reflect.Field;
 import java.time.Clock;
 import java.time.Duration;
@@ -103,7 +102,6 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Mock private CVConfigService cvConfigService;
   @Mock private NextGenService nextGenService;
-  @Mock private Provider<NextGenService> nextGenServiceProvider;
   @Mock private AnalysisService analysisService;
   private Clock clock;
   private BuilderFactory builderFactory;
@@ -121,9 +119,8 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
     FieldUtils.writeField(heatMapService, "clock", clock, true);
-    FieldUtils.writeField(heatMapService, "nextGenServiceProvider", nextGenServiceProvider, true);
+    FieldUtils.writeField(heatMapService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(heatMapService, "analysisService", analysisService, true);
-    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     when(cvConfigService.getAvailableCategories(anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE)));
     when(cvConfigService.isProductionConfig(cvConfig)).thenReturn(true);

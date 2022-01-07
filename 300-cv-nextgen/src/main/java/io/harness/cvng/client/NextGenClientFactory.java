@@ -39,17 +39,16 @@ public class NextGenClientFactory extends AbstractHttpClientFactory implements P
   private ClientMode clientMode;
   private final ObjectMapper objectMapper;
 
-  public NextGenClientFactory(
-      NGManagerServiceConfig ngManagerServiceConfig, ServiceTokenGenerator tokenGenerator, ClientMode clientMode) {
+  public NextGenClientFactory(NGManagerServiceConfig ngManagerServiceConfig, ServiceTokenGenerator tokenGenerator) {
     super(ServiceHttpClientConfig.builder().baseUrl(ngManagerServiceConfig.getNgManagerUrl()).build(),
         ngManagerServiceConfig.getManagerServiceSecret(), tokenGenerator, null,
-        AuthorizationServiceHeader.CV_NEXT_GEN.getServiceId(), true, clientMode);
+        AuthorizationServiceHeader.CV_NEXT_GEN.getServiceId(), true, ClientMode.PRIVILEGED);
     this.ngManagerServiceConfig = ngManagerServiceConfig;
     this.objectMapper = new ObjectMapper();
     NGObjectMapperHelper.configureNGObjectMapper(objectMapper);
     // TODO: this change is for the hotfix. We need to have 2 clients (Previleged and nonprevileged (For client
     // requests))
-    this.clientMode = clientMode;
+    this.clientMode = ClientMode.PRIVILEGED;
   }
 
   @Override

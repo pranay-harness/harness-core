@@ -67,8 +67,7 @@ import io.harness.cvng.cdng.services.impl.CVNGStepServiceImpl;
 import io.harness.cvng.cdng.services.impl.CVNGStepTaskServiceImpl;
 import io.harness.cvng.cdng.services.impl.VerifyStepDemoServiceImpl;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.client.NonPrivilegedNextGenServiceImpl;
-import io.harness.cvng.client.PrivilegedNextGenServiceImpl;
+import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigUpdatableEntity;
@@ -277,7 +276,6 @@ import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.redis.RedisConfig;
-import io.harness.remote.client.ClientMode;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.CvNextGenRegistrars;
 import io.harness.serializer.jackson.HarnessJacksonModule;
@@ -472,13 +470,7 @@ public class CVServiceModule extends AbstractModule {
     bind(ActivityService.class).to(ActivityServiceImpl.class);
     bind(LogDashboardService.class).to(LogDashboardServiceImpl.class);
     bind(DeploymentTimeSeriesAnalysisService.class).to(DeploymentTimeSeriesAnalysisServiceImpl.class);
-    bind(NextGenService.class)
-        .annotatedWith(Names.named(ClientMode.PRIVILEGED.name()))
-        .to(PrivilegedNextGenServiceImpl.class);
-    bind(NextGenService.class)
-        .annotatedWith(Names.named(ClientMode.NON_PRIVILEGED.name()))
-        .to(NonPrivilegedNextGenServiceImpl.class);
-    bind(NextGenService.class).to(NonPrivilegedNextGenServiceImpl.class);
+    bind(NextGenService.class).to(NextGenServiceImpl.class);
     bind(HostRecordService.class).to(HostRecordServiceImpl.class);
     bind(KubernetesActivitySourceService.class).to(KubernetesActivitySourceServiceImpl.class);
     bind(DeploymentLogAnalysisService.class).to(DeploymentLogAnalysisServiceImpl.class);
