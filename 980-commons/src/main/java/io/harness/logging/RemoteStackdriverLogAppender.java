@@ -319,7 +319,12 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   private Map<String, String> getLogLabels() {
     String delegateId = getDelegateId();
     if (isEmpty(logLabels) || !StringUtils.equals(delegateId, logLabels.get("delegateId"))) {
+      log.info("manager host {}", getManagerHost());
       String managerHost = substringBetween(getManagerHost(), "://", "/api/");
+      log.info("manager host {}", managerHost);
+      if (managerHost == null) {
+        managerHost = "";
+      }
       ImmutableMap.Builder<String, String> labelsBuilder =
           ImmutableMap.<String, String>builder()
               .put("source", localhostName)
