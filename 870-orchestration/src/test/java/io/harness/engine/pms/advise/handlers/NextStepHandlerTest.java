@@ -56,7 +56,7 @@ public class NextStepHandlerTest extends OrchestrationTestBase {
 
     nextStepHandler.handleAdvise(NodeExecution.builder().build(), adviserResponse);
 
-    verify(nodeExecutionService).updateStatusWithOps(anyString(), any(), any(), any());
+    verify(nodeExecutionService).updateStatusWithOpsV2(anyString(), any(), any(), any(), any());
     verify(engine).endNodeExecution(any());
   }
 }

@@ -22,6 +22,7 @@ import io.harness.engine.observers.NodeStartInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.notification.PipelineEventType;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
@@ -52,6 +53,9 @@ public class StageStartNotificationHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testOnNodeStart() {
     Ambiance ambiance = Ambiance.getDefaultInstance();
+    ambiance = ambiance.toBuilder()
+                   .setMetadata(ExecutionMetadata.newBuilder().setIsNotificationConfigured(true).build())
+                   .build();
     long ts = System.currentTimeMillis();
     PlanNodeProto planNodeProto = PlanNodeProto.newBuilder()
                                       .setStepType(StepType.newBuilder().setStepCategory(StepCategory.STAGES).build())

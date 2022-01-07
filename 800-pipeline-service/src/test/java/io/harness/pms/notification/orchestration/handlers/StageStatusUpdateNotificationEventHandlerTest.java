@@ -25,7 +25,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.notification.PipelineEventType;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
@@ -54,6 +56,11 @@ public class StageStatusUpdateNotificationEventHandlerTest extends CategoryTest 
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
   public void testOnNodeStatusUpdate() {
+    Ambiance ambiance = Ambiance.getDefaultInstance();
+    ambiance = ambiance.toBuilder()
+                   .setMetadata(ExecutionMetadata.newBuilder().setIsNotificationConfigured(true).build())
+                   .build();
+
     PlanNodeProto stagePlanNodeProto =
         PlanNodeProto.newBuilder()
             .setStepType(StepType.newBuilder().setStepCategory(StepCategory.STAGE).build())
@@ -63,7 +70,8 @@ public class StageStatusUpdateNotificationEventHandlerTest extends CategoryTest 
                                           .setStepType(StepType.newBuilder().setStepCategory(StepCategory.STEP).build())
                                           .setIdentifier("dummyIdentifier")
                                           .build();
-    NodeExecution nodeExecution = NodeExecution.builder().node(stagePlanNodeProto).status(Status.SUCCEEDED).build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder().ambiance(ambiance).node(stagePlanNodeProto).status(Status.SUCCEEDED).build();
     NodeUpdateInfo nodeUpdateInfo = NodeUpdateInfo.builder().nodeExecution(nodeExecution).build();
     when(notificationHelper.getEventTypeForStage(nodeExecution))
         .thenReturn(Optional.of(PipelineEventType.STAGE_SUCCESS));
@@ -77,7 +85,7 @@ public class StageStatusUpdateNotificationEventHandlerTest extends CategoryTest 
     verify(notificationHelper, times(1))
         .sendNotification(any(), pipelineEventTypeArgumentCaptor.capture(), any(), any());
     assertEquals(pipelineEventTypeArgumentCaptor.getValue(), PipelineEventType.STAGE_SUCCESS);
-    nodeExecution = NodeExecution.builder().node(stepPlanNodeProto).status(Status.FAILED).build();
+    nodeExecution = NodeExecution.builder().ambiance(ambiance).node(stepPlanNodeProto).status(Status.FAILED).build();
     nodeUpdateInfo = NodeUpdateInfo.builder().nodeExecution(nodeExecution).build();
     stageStatusUpdateNotificationEventHandler.onNodeStatusUpdate(nodeUpdateInfo);
     verify(notificationHelper, times(2))

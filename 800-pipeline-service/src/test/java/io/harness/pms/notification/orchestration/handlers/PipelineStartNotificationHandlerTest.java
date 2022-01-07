@@ -20,6 +20,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.notification.PipelineEventType;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.notification.NotificationHelper;
 import io.harness.rule.Owner;
 
@@ -47,6 +48,9 @@ public class PipelineStartNotificationHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testOnStart() {
     Ambiance ambiance = Ambiance.getDefaultInstance();
+    ambiance = ambiance.toBuilder()
+                   .setMetadata(ExecutionMetadata.newBuilder().setIsNotificationConfigured(true).build())
+                   .build();
     OrchestrationStartInfo orchestrationStartInfo = OrchestrationStartInfo.builder().ambiance(ambiance).build();
     pipelineStartNotificationHandler.onStart(orchestrationStartInfo);
     verify(notificationHelper, times(1)).sendNotification(ambiance, PipelineEventType.PIPELINE_START, null, null);

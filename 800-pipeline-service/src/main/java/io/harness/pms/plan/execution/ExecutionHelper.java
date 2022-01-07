@@ -181,7 +181,8 @@ public class ExecutionHelper {
 
     try {
       BasicPipeline basicPipeline = YamlUtils.read(yaml, BasicPipeline.class);
-      builder.setIsNotificationConfigured(!basicPipeline.getNotificationRules().isEmpty());
+      builder.setIsNotificationConfigured(
+          basicPipeline.getNotificationRules() != null && !basicPipeline.getNotificationRules().isEmpty());
     } catch (IOException exception) {
       throw new InvalidRequestException("Could not parse pipeline yaml. Please ensure that it is correct.");
     }

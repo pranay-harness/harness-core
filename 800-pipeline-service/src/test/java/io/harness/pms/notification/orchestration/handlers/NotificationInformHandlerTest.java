@@ -20,6 +20,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.notification.PipelineEventType;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.notification.NotificationHelper;
 import io.harness.rule.Owner;
 
@@ -48,6 +49,9 @@ public class NotificationInformHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testAllMethods() {
     Ambiance ambiance = Ambiance.getDefaultInstance();
+    ambiance = ambiance.toBuilder()
+                   .setMetadata(ExecutionMetadata.newBuilder().setIsNotificationConfigured(true).build())
+                   .build();
     ArgumentCaptor<PipelineEventType> argumentCaptor = ArgumentCaptor.forClass(PipelineEventType.class);
     notificationInformHandler.onSuccess(ambiance);
     verify(notificationHelper, times(1)).sendNotification(any(), argumentCaptor.capture(), any(), any());
