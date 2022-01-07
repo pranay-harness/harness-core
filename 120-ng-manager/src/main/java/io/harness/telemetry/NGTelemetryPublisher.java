@@ -7,17 +7,22 @@
 
 package io.harness.telemetry;
 
+import static io.harness.telemetry.Destination.AMPLITUDE;
+
+import io.harness.account.AccountClient;
 import io.harness.cdng.pipeline.helpers.CDPipelineInstrumentationHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dtos.InstanceDTO;
+import io.harness.ng.core.dto.AccountDTO;
+import io.harness.remote.client.RestClientUtils;
 import io.harness.service.instance.InstanceService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 @Slf4j
 @Singleton
@@ -25,6 +30,7 @@ public class NGTelemetryPublisher {
   @Inject TelemetryReporter telemetryReporter;
   @Inject CDPipelineInstrumentationHelper cdPipelineInstrumentationHelper;
   @Inject InstanceService instanceService;
+  @Inject AccountClient accountClient;
 
   String TOTAL_DISTINCT_ACTIVE_SERVICES_IN_A_DAY = "total_distinct_active_services_in_a_day";
   String TOTAL_DISTINCT_ACTIVE_SERVICES_IN_A_MONTH = "total_distinct_active_services_in_a_month";
@@ -58,12 +64,14 @@ public class NGTelemetryPublisher {
             cdPipelineInstrumentationHelper.getTotalNumberOfActiveServices(serviceInstancesInADay);
 
         HashMap<String, Object> map = new HashMap<>();
+        map.put("group_type", "Account");
+        map.put("group_id", accountId);
         map.put(TOTAL_DISTINCT_ACTIVE_SERVICES_IN_A_DAY, totalDistinctActiveServicesInADay);
         map.put(TOTAL_DISTINCT_ACTIVE_SERVICES_IN_A_MONTH, totalDistinctActiveServicesInAMonth);
         map.put(TOTAL_NUMBER_OF_SERVICE_INSTANCES_IN_A_DAY, totalNumberOfServiceInstancesInADay);
         map.put(TOTAL_NUMBER_OF_SERVICE_INSTANCES_IN_A_MONTH, totalNumberOfServiceInstancesInAMonth);
-        telemetryReporter.sendGroupEvent(
-            accountId, null, map, null, TelemetryOption.builder().sendForCommunity(true).build());
+        telemetryReporter.sendGroupEvent(accountId, null, map, Collections.singletonMap(AMPLITUDE, true),
+            TelemetryOption.builder().sendForCommunity(true).build());
         log.info("Scheduled NGTelemetryPublisher event sent!");
       } else {
         log.info("There is no Account found!. Can not send scheduled NGTelemetryPublisher event.");
@@ -76,11 +84,10 @@ public class NGTelemetryPublisher {
   }
 
   private String getAccountId() {
-    Criteria criteria = new Criteria();
-    InstanceDTO instanceDTO = instanceService.findFirstInstance(criteria);
-    if (instanceDTO != null) {
-      return instanceDTO.getAccountIdentifier();
+    List<AccountDTO> accountDTOList = RestClientUtils.getResponse(accountClient.getAllAccounts());
+    if (accountDTOList == null || accountDTOList.size() == 0) {
+      return null;
     }
-    return null;
+    return accountDTOList.get(0).getIdentifier();
   }
 }
