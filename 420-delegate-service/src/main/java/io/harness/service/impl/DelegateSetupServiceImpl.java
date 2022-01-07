@@ -11,6 +11,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.filter.FilterType.DELEGATEPROFILE;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.service.impl.DelegateConnectivityStatus.GROUP_STATUS_CONNECTED;
+import static io.harness.service.impl.DelegateConnectivityStatus.GROUP_STATUS_DISCONNECTED;
+import static io.harness.service.impl.DelegateConnectivityStatus.GROUP_STATUS_PARTIALLY_CONNECTED;
 
 import static java.time.Duration.ofMinutes;
 import static java.util.Collections.emptyList;
@@ -75,9 +78,6 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private FilterService filterService;
   private static final Duration HEARTBEAT_EXPIRY_TIME = ofMinutes(5);
-  private static final String GROUP_STATUS_CONNECTED = "connected";
-  private static final String GROUP_STATUS_DISCONNECTED = "disconnected";
-  private static final String GROUP_STATUS_PARTIALLY_CONNECTED = "partially connected";
 
   @Override
   public long getDelegateGroupCount(
@@ -466,8 +466,8 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
               return buildDelegateGroupDetails(
                   accountId, delegateGroup, delegatesByGroup.get(delegateGroupId), delegateGroupId);
             })
+            .sorted(new DelegateGroupDetailsComparator())
             .collect(toList());
-
     return DelegateGroupListing.builder().delegateGroupDetails(delegateGroupDetails).build();
   }
 
