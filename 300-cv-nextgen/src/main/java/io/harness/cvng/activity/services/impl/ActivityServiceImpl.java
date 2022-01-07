@@ -66,8 +66,6 @@ import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.name.Named;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -95,7 +93,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
-  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
+  @Inject private NextGenService nextGenService;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
@@ -312,7 +310,7 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   private String getServiceNameFromActivity(Activity activity) {
-    return nextGenServiceProvider.get()
+    return nextGenService
         .getService(activity.getAccountId(), activity.getOrgIdentifier(), activity.getProjectIdentifier(),
             activity.getServiceIdentifier())
         .getName();

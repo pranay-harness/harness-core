@@ -17,8 +17,6 @@ import io.harness.cvng.beans.change.HarnessCDCurrentGenEventMetadata;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.name.Named;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -27,8 +25,7 @@ import javax.ws.rs.InternalServerErrorException;
 public class VerificationManagerServiceImpl implements VerificationManagerService {
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private RequestExecutor requestExecutor;
-  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nonPrivilegedNextGenServiceProvider;
-  @Named("PRIVILEGED") @Inject private Provider<NextGenService> privilegedNextGenServiceProvider;
+  @Inject private NextGenService nextGenService;
 
   @Override
   public String createDataCollectionTask(
@@ -37,8 +34,8 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
     Preconditions.checkNotNull(bundle.getConnectorIdentifier());
     Preconditions.checkNotNull(bundle.getSourceIdentifier());
     Preconditions.checkNotNull(bundle.getDataCollectionWorkerId());
-    Optional<ConnectorInfoDTO> connectorDTO = privilegedNextGenServiceProvider.get().get(
-        accountId, bundle.getConnectorIdentifier(), orgIdentifier, projectIdentifier);
+    Optional<ConnectorInfoDTO> connectorDTO =
+        nextGenService.get(accountId, bundle.getConnectorIdentifier(), orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException(
           "Failed to retrieve connector with id: " + bundle.getConnectorIdentifier());
@@ -58,8 +55,8 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
     Preconditions.checkNotNull(bundle.getConnectorIdentifier());
     Preconditions.checkNotNull(bundle.getSourceIdentifier());
     Preconditions.checkNotNull(bundle.getDataCollectionWorkerId());
-    Optional<ConnectorInfoDTO> connectorDTO = privilegedNextGenServiceProvider.get().get(
-        accountId, bundle.getConnectorIdentifier(), orgIdentifier, projectIdentifier);
+    Optional<ConnectorInfoDTO> connectorDTO =
+        nextGenService.get(accountId, bundle.getConnectorIdentifier(), orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException(
           "Failed to retrieve connector with id: " + bundle.getConnectorIdentifier());
@@ -96,7 +93,7 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   public List<String> getKubernetesNamespaces(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String filter) {
     Optional<ConnectorInfoDTO> connectorDTO =
-        nonPrivilegedNextGenServiceProvider.get().get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
     }
@@ -114,7 +111,7 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   public List<String> checkCapabilityToGetKubernetesEvents(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     Optional<ConnectorInfoDTO> connectorDTO =
-        nonPrivilegedNextGenServiceProvider.get().get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
     }
@@ -132,7 +129,7 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   public List<String> getKubernetesWorkloads(String accountId, String orgIdentifier, String projectIdentifier,
       String connectorIdentifier, String namespace, String filter) {
     Optional<ConnectorInfoDTO> connectorDTO =
-        nonPrivilegedNextGenServiceProvider.get().get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
     }

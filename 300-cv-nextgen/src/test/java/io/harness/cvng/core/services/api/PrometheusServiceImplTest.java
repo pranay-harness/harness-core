@@ -28,7 +28,6 @@ import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +42,6 @@ public class PrometheusServiceImplTest extends CvNextGenTestBase {
   @Inject private OnboardingService onboardingService;
   @Mock private VerificationManagerClient verificationManagerClient;
   @Mock private NextGenService nextGenService;
-  @Mock private Provider<NextGenService> nextGenServiceProvider;
   @Mock private VerificationManagerService verificationManagerService;
   @Mock private RequestExecutor requestExecutor;
   private String accountId;
@@ -55,10 +53,9 @@ public class PrometheusServiceImplTest extends CvNextGenTestBase {
     connectorIdentifier = generateUuid();
 
     FieldUtils.writeField(prometheusService, "onboardingService", onboardingService, true);
-    FieldUtils.writeField(onboardingService, "nextGenServiceProvider", nextGenServiceProvider, true);
+    FieldUtils.writeField(onboardingService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(onboardingService, "verificationManagerService", verificationManagerService, true);
 
-    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     when(nextGenService.get(anyString(), anyString(), anyString(), anyString()))
         .then(invocation
             -> Optional.of(

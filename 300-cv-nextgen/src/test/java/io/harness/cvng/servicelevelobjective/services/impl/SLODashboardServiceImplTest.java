@@ -13,13 +13,10 @@ import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
-import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
@@ -38,24 +35,19 @@ import io.harness.cvng.servicelevelobjective.services.api.SLODashboardService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
-import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
 
 public class SLODashboardServiceImplTest extends CvNextGenTestBase {
   @Inject private SLODashboardService sloDashboardService;
@@ -65,21 +57,12 @@ public class SLODashboardServiceImplTest extends CvNextGenTestBase {
   @Inject private SLIRecordService sliRecordService;
   @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Inject private Clock clock;
-  @Mock NextGenService nextGenService;
-  @Mock Provider<NextGenService> nextGenServiceProvider;
   private BuilderFactory builderFactory;
-
   @Before
-  public void setup() throws IllegalAccessException {
+  public void setup() {
     builderFactory = BuilderFactory.getDefault();
     metricPackService.createDefaultMetricPackAndThresholds(builderFactory.getContext().getAccountId(),
         builderFactory.getContext().getOrgIdentifier(), builderFactory.getContext().getProjectIdentifier());
-    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
-    when(nextGenService.getService(any(), any(), any(), any()))
-        .thenReturn(ServiceResponseDTO.builder().name("Mocked service name").build());
-    when(nextGenService.getEnvironment(any(), any(), any(), any()))
-        .thenReturn(EnvironmentResponseDTO.builder().name("Mocked env name").build());
-    FieldUtils.writeField(sloDashboardService, "nextGenServiceProvider", nextGenServiceProvider, true);
   }
 
   @Test

@@ -83,7 +83,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import java.lang.reflect.Field;
 import java.time.Clock;
 import java.time.Duration;
@@ -115,7 +114,6 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private HPersistence hPersistence;
   @Mock private NextGenService nextGenService;
-  @Mock private Provider<NextGenService> nextGenServiceProvider;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private VerificationJobInstanceAnalysisService verificationJobInstanceAnalysisService;
@@ -167,9 +165,9 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
                          .build();
     cvConfig = newCVConfig();
     FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
-    FieldUtils.writeField(verificationJobInstanceService, "nextGenServiceProvider", nextGenServiceProvider, true);
+    FieldUtils.writeField(verificationJobInstanceService, "nextGenService", nextGenService, true);
     when(verificationManagerService.createDataCollectionTask(any(), any(), any(), any())).thenReturn(perpetualTaskId);
-    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
+
     when(nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, "dev"))
         .thenReturn(EnvironmentResponseDTO.builder()
                         .accountId(accountId)
