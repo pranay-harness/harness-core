@@ -8,7 +8,7 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Localhost.getLocalHostName;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static org.apache.commons.lang3.StringUtils.substringBetween;
 
 import io.harness.version.VersionInfoManager;
 
@@ -319,6 +319,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   private Map<String, String> getLogLabels() {
     String delegateId = getDelegateId();
     if (isEmpty(logLabels) || !StringUtils.equals(delegateId, logLabels.get("delegateId"))) {
+      String managerHost = substringBetween(getManagerHost(), "://", "/api/");
       ImmutableMap.Builder<String, String> labelsBuilder =
           ImmutableMap.<String, String>builder()
               .put("source", localhostName)
@@ -326,7 +327,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
               .put("version", versionInfoManager.getFullVersion())
               .put("app", getAppName())
               .put("accountId", getAccountId())
-              .put("managerHost", getManagerHost());
+              .put("managerHost", managerHost);
 
       if (isNotBlank(delegateId)) {
         labelsBuilder.put("delegateId", delegateId);
