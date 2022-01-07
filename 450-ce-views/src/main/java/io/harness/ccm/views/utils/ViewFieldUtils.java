@@ -8,6 +8,7 @@
 package io.harness.ccm.views.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.ccm.commons.constants.ViewFieldConstants.NONE_FIELD;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.graphql.QLCEViewField;
@@ -89,6 +90,7 @@ public class ViewFieldUtils {
   public static List<QLCEViewField> getCommonFields() {
     return ImmutableList.of(QLCEViewField.builder().fieldId("region").fieldName("Region").build(),
         QLCEViewField.builder().fieldId("product").fieldName("Product").build(),
-        QLCEViewField.builder().fieldId("label").fieldName("Label").build());
+        QLCEViewField.builder().fieldId("label").fieldName("Label").build(),
+        QLCEViewField.builder().fieldId("none").fieldName(NONE_FIELD).build());
   }
 }
