@@ -26,8 +26,6 @@ import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.ServiceDependencyGraphService;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraphService {
   @Inject private ServiceDependencyService serviceDependencyService;
   @Inject private MonitoredServiceService monitoredServiceService;
-  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
+  @Inject private NextGenService nextGenService;
   @Inject private HeatMapService heatMapService;
 
   @Override
@@ -70,9 +68,8 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
         projectParams, new ArrayList<>(serviceIdentifiers), new ArrayList<>(environmentIdentifiers));
 
     ServiceDependencyGraphDTO serviceDependencyGraphDTO = constructGraph(monitoredServices, serviceDependencies,
-        latestHealthScores,
-        nextGenServiceProvider.get().getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers)),
-        nextGenServiceProvider.get().getEnvironmentIdNameMap(projectParams, new ArrayList<>(environmentIdentifiers)));
+        latestHealthScores, nextGenService.getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers)),
+        nextGenService.getEnvironmentIdNameMap(projectParams, new ArrayList<>(environmentIdentifiers)));
 
     if (servicesAtRiskFilter) {
       List<ServiceSummaryDetails> unHealthyServiceSummaryDetails =

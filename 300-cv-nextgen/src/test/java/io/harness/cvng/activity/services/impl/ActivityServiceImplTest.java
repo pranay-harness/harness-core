@@ -82,7 +82,6 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -114,7 +113,6 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @Mock private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Mock private NextGenService nextGenService;
-  @Mock private Provider<NextGenService> nextGenServiceProvider;
   @Mock private PersistentLocker mockedPersistentLocker;
 
   private String projectIdentifier;
@@ -140,9 +138,8 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
 
     FieldUtils.writeField(activityService, "verificationJobService", verificationJobService, true);
     FieldUtils.writeField(activityService, "verificationJobInstanceService", verificationJobInstanceService, true);
-    FieldUtils.writeField(activityService, "nextGenServiceProvider", nextGenServiceProvider, true);
+    FieldUtils.writeField(activityService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(activityService, "healthVerificationHeatMapService", healthVerificationHeatMapService, true);
-    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
     when(nextGenService.getService(any(), any(), any(), any()))
         .thenReturn(ServiceResponseDTO.builder().name("service name").build());
     when(verificationJobInstanceService.getCVConfigsForVerificationJob(any()))
@@ -150,7 +147,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     realVerificationJobService.createDefaultVerificationJobs(accountId, orgIdentifier, projectIdentifier);
     FieldUtils.writeField(
         activityService, "deploymentTimeSeriesAnalysisService", deploymentTimeSeriesAnalysisService, true);
-    FieldUtils.writeField(deploymentTimeSeriesAnalysisService, "nextGenServiceProvider", nextGenServiceProvider, true);
+    FieldUtils.writeField(deploymentTimeSeriesAnalysisService, "nextGenService", nextGenService, true);
     when(nextGenService.get(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(Optional.of(ConnectorInfoDTO.builder().name("AppDynamics Connector").build()));
   }

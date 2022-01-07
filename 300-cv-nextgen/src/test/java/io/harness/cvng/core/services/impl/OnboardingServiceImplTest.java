@@ -33,7 +33,6 @@ import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import java.util.Collections;
 import java.util.Optional;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -45,7 +44,6 @@ import org.mockito.Mock;
 public class OnboardingServiceImplTest extends CvNextGenTestBase {
   @Inject private OnboardingService onboardingService;
   @Mock private NextGenService nextGenService;
-  @Mock private Provider<NextGenService> nextGenServiceProvider;
   @Mock private VerificationManagerService verificationManagerService;
 
   private String accountId;
@@ -59,8 +57,7 @@ public class OnboardingServiceImplTest extends CvNextGenTestBase {
     projectIdentifier = generateUuid();
     orgIdentifier = generateUuid();
     connectorIdentifier = generateUuid();
-    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
-    FieldUtils.writeField(onboardingService, "nextGenServiceProvider", nextGenServiceProvider, true);
+    FieldUtils.writeField(onboardingService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(onboardingService, "verificationManagerService", verificationManagerService, true);
   }
 

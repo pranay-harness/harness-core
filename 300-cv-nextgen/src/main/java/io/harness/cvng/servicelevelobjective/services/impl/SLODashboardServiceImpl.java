@@ -30,8 +30,6 @@ import io.harness.ng.beans.PageResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.name.Named;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -48,8 +46,7 @@ public class SLODashboardServiceImpl implements SLODashboardService {
   @Inject private SLIRecordService sliRecordService;
   @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Inject private Clock clock;
-  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
-
+  @Inject private NextGenService nextGenService;
   @Override
   public PageResponse<SLODashboardWidget> getSloDashboardWidgets(
       ProjectParams projectParams, SLODashboardApiFilter filter, PageParams pageParams) {
@@ -115,11 +112,11 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .monitoredServiceName(monitoredService.getName())
         .environmentIdentifier(monitoredService.getEnvironmentRef())
         .environmentName(
-            nextGenServiceProvider.get()
+            nextGenService
                 .getEnvironment(serviceLevelObjective.getAccountId(), serviceLevelObjective.getOrgIdentifier(),
                     serviceLevelObjective.getProjectIdentifier(), monitoredService.getEnvironmentRef())
                 .getName())
-        .serviceName(nextGenServiceProvider.get()
+        .serviceName(nextGenService
                          .getService(serviceLevelObjective.getAccountId(), serviceLevelObjective.getOrgIdentifier(),
                              serviceLevelObjective.getProjectIdentifier(), monitoredService.getServiceRef())
                          .getName())
