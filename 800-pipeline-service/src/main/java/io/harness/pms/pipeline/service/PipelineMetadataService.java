@@ -9,14 +9,15 @@ package io.harness.pms.pipeline.service;
 
 import io.harness.pms.pipeline.PipelineMetadata;
 
+import com.google.protobuf.ByteString;
 import java.util.Optional;
 
 public interface PipelineMetadataService {
-  int incrementExecutionCounter(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
+  int incrementExecutionCounter(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, ByteString gitSyncBranchContext);
 
   PipelineMetadata save(PipelineMetadata metadata);
 
-  Optional<PipelineMetadata> getMetadata(
-      String accountId, String orgIdentifier, String projectIdentifier, String identifier);
+  Optional<PipelineMetadata> getMetadata(String accountId, String orgIdentifier, String projectIdentifier,
+      String identifier, ByteString gitSyncBranchContext);
 }

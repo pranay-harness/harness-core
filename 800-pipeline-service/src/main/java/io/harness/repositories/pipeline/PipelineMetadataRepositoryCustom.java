@@ -9,18 +9,16 @@ package io.harness.repositories.pipeline;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineMetadata;
 
+import com.google.protobuf.ByteString;
 import java.util.Optional;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public interface PipelineMetadataRepositoryCustom {
-  PipelineMetadata incCounter(String accountId, String orgId, String projectIdentifier, String pipelineId);
-
-  long getRunSequence(String accountId, String orgId, String projectIdentifier, String pipelineId,
-      ExecutionSummaryInfo executionSummaryInfo);
+  PipelineMetadata incCounter(
+      String accountId, String orgId, String projectIdentifier, String pipelineId, ByteString gitSyncBranchContext);
 
   Optional<PipelineMetadata> getPipelineMetadata(
-      String accountId, String orgId, String projectIdentifier, String identifier);
+      String accountId, String orgId, String projectIdentifier, String identifier, ByteString gitSyncBranchContext);
 }
