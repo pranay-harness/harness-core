@@ -55,7 +55,6 @@ import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -125,7 +124,6 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
                     .spec(RollingSLOTargetSpec.builder().periodLength("30d").build())
                     .build();
 
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     calendarSloTarget = SLOTarget.builder()
                             .type(SLOTargetType.CALENDER)
                             .sloTargetPercentage(80.0)

@@ -101,7 +101,7 @@ public class CVNGDemoPerpetualTaskServiceImpl implements CVNGDemoPerpetualTaskSe
       CVConfig cvConfig =
           cvConfigService.get(((VerificationTask.LiveMonitoringInfo) verificationTask.getTaskInfo()).getCvConfigId());
       // appd_template_demo_dev
-      Pattern identifierTemplatePattern = Pattern.compile(".*_template_(.*)_dev");
+      Pattern identifierTemplatePattern = Pattern.compile(".*template_(.*)_dev");
       Matcher matcher = identifierTemplatePattern.matcher(cvConfig.getFullyQualifiedIdentifier());
       if (matcher.matches()) {
         String templateSubstring = matcher.group(1);
