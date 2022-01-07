@@ -60,4 +60,13 @@ public class CECloudAccountDao {
         .equal(masterAccountSettingId)
         .asList();
   }
+
+  public List<CECloudAccount> getByInfraAccountId(List<String> accountIds, String harnessAccountId) {
+    return hPersistence.createQuery(CECloudAccount.class)
+        .field(CECloudAccountKeys.accountId)
+        .equal(harnessAccountId)
+        .field(CECloudAccountKeys.infraAccountId)
+        .in(accountIds)
+        .asList();
+  }
 }

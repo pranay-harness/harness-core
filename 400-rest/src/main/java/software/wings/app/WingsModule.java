@@ -41,7 +41,9 @@ import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
+import io.harness.ccm.commons.service.impl.EntityMetadataServiceImpl;
 import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
+import io.harness.ccm.commons.service.intf.EntityMetadataService;
 import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.communication.CECommunicationsService;
 import io.harness.ccm.communication.CECommunicationsServiceImpl;
@@ -1136,6 +1138,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(PreAggregateBillingService.class).to(PreAggregateBillingServiceImpl.class);
     bind(DelegateTokenService.class).to(DelegateTokenServiceImpl.class);
     bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
+    bind(EntityMetadataService.class).to(EntityMetadataServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 

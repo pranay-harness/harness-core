@@ -26,8 +26,10 @@ import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.ccm.commons.dao.recommendation.RecommendationCrudServiceImpl;
 import io.harness.ccm.commons.service.impl.ClusterRecordServiceImpl;
+import io.harness.ccm.commons.service.impl.EntityMetadataServiceImpl;
 import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
 import io.harness.ccm.commons.service.intf.ClusterRecordService;
+import io.harness.ccm.commons.service.intf.EntityMetadataService;
 import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.CESlackWebhookServiceImpl;
@@ -125,6 +127,7 @@ public class BatchProcessingModule extends AbstractModule {
     bind(RecommendationCrudService.class).to(RecommendationCrudServiceImpl.class);
     bind(ClusterHelper.class).to(ClusterHelperImpl.class);
     bind(BudgetCostService.class).to(BudgetCostServiceImpl.class);
+    bind(EntityMetadataService.class).to(EntityMetadataServiceImpl.class);
 
     install(new MetricsModule());
     bind(MetricsPublisher.class).to(BatchProcessingMetricsPublisher.class).in(Scopes.SINGLETON);

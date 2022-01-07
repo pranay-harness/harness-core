@@ -8,6 +8,7 @@
 package io.harness.ccm.graphql.query.perspectives;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.ccm.commons.constants.ViewFieldConstants.AWS_ACCOUNT_FIELD;
 import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -173,13 +174,17 @@ public class PerspectivesQuery {
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     BigQuery bigQuery = bigQueryService.get();
     long timePeriod = perspectiveTimeSeriesHelper.getTimePeriod(groupBy);
+    String conversionField = null;
+    if (viewsBillingService.isDataGroupedByAwsAccount(filters, groupBy)) {
+      conversionField = AWS_ACCOUNT_FIELD;
+    }
     isClusterQuery = isClusterQuery != null && isClusterQuery;
 
     PerspectiveTimeSeriesData data = perspectiveTimeSeriesHelper.fetch(
         viewsBillingService.getTimeSeriesStatsNg(bigQuery, filters, groupBy, aggregateFunction, sortCriteria,
             cloudProviderTableName, includeOthers, limit,
             viewsQueryHelper.buildQueryParams(accountId, true, false, isClusterQuery, false)),
-        timePeriod);
+        timePeriod, conversionField, accountId);
 
     return perspectiveTimeSeriesHelper.postFetch(data, limit, includeOthers);
   }

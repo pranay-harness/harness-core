@@ -14,6 +14,7 @@ import static io.harness.ccm.views.utils.ClusterTableKeys.COST;
 import static io.harness.ccm.views.utils.ClusterTableKeys.CPU_LIMIT;
 import static io.harness.ccm.views.utils.ClusterTableKeys.CPU_REQUEST;
 import static io.harness.ccm.views.utils.ClusterTableKeys.DEFAULT_DOUBLE_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.DEFAULT_GRID_ENTRY_NAME;
 import static io.harness.ccm.views.utils.ClusterTableKeys.DEFAULT_STRING_VALUE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.ID_SEPARATOR;
 import static io.harness.ccm.views.utils.ClusterTableKeys.MAX_CPU_UTILIZATION_VALUE;
@@ -27,6 +28,7 @@ import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY
 import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_REQUEST;
 import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_UTILIZATION_VALUE;
 
+import io.harness.ccm.commons.service.intf.EntityMetadataService;
 import io.harness.ccm.graphql.dto.common.DataPoint;
 import io.harness.ccm.graphql.dto.common.DataPoint.DataPointBuilder;
 import io.harness.ccm.graphql.dto.common.Reference;
@@ -42,25 +44,35 @@ import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.TableResult;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PerspectiveTimeSeriesHelper {
+  @Inject EntityMetadataService entityMetadataService;
   public static final String nullStringValueConstant = "Others";
   public static final String OTHERS = "Others";
   private static final long ONE_DAY_SEC = 86400;
   private static final long ONE_HOUR_SEC = 3600;
 
   public PerspectiveTimeSeriesData fetch(TableResult result, long timePeriod) {
+    return fetch(result, timePeriod, null, null);
+  }
+
+  public PerspectiveTimeSeriesData fetch(
+      TableResult result, long timePeriod, String conversionField, String accountId) {
     Schema schema = result.getSchema();
     FieldList fields = schema.getFields();
+    Set<String> entityNames = new HashSet<>();
 
     Map<Timestamp, List<DataPoint>> costDataPointsMap = new LinkedHashMap();
     Map<Timestamp, List<DataPoint>> cpuLimitDataPointsMap = new LinkedHashMap();
@@ -83,7 +95,7 @@ public class PerspectiveTimeSeriesHelper {
       double maxMemoryUtilizationValue = DEFAULT_DOUBLE_VALUE;
 
       String id = DEFAULT_STRING_VALUE;
-      String stringValue = DEFAULT_STRING_VALUE;
+      String stringValue = DEFAULT_GRID_ENTRY_NAME;
       String type = DEFAULT_STRING_VALUE;
       for (Field field : fields) {
         switch (field.getType().getStandardType()) {
@@ -92,6 +104,7 @@ public class PerspectiveTimeSeriesHelper {
             break;
           case STRING:
             stringValue = fetchStringValue(row, field);
+            entityNames.add(stringValue);
             type = field.getName();
             id = getUpdatedId(id, stringValue);
             break;
@@ -167,6 +180,12 @@ public class PerspectiveTimeSeriesHelper {
       addDataPointToMap(id, "MAX", "UTILIZATION", maxMemoryUtilizationValue, memoryUtilizationValueDataPointsMap,
           startTimeTruncatedTimestamp);
     }
+
+    if (conversionField != null) {
+      costDataPointsMap =
+          getUpdatedDataPointsMap(costDataPointsMap, new ArrayList<>(entityNames), conversionField, accountId);
+    }
+
     return PerspectiveTimeSeriesData.builder()
         .stats(convertTimeSeriesPointsMapToList(costDataPointsMap))
         .cpuLimit(convertTimeSeriesPointsMapToList(cpuLimitDataPointsMap))
@@ -248,6 +267,36 @@ public class PerspectiveTimeSeriesHelper {
         .memoryRequest(data.getMemoryRequest())
         .memoryUtilValues(data.getMemoryUtilValues())
         .build();
+  }
+
+  // If conversion  of entity id to name is required
+  private Map<Timestamp, List<DataPoint>> getUpdatedDataPointsMap(Map<Timestamp, List<DataPoint>> costDataPointsMap,
+      List<String> entityIds, String harnessAccountId, String fieldName) {
+    Map<String, String> entityIdToName =
+        entityMetadataService.getEntityIdToNameMapping(entityIds, harnessAccountId, fieldName);
+    Map<Timestamp, List<DataPoint>> updatedDataPointsMap = new HashMap<>();
+    if (entityIdToName != null) {
+      costDataPointsMap.keySet().forEach(timestamp
+          -> updatedDataPointsMap.put(
+              timestamp, getUpdatedDataPoints(costDataPointsMap.get(timestamp), entityIdToName)));
+      return updatedDataPointsMap;
+    } else {
+      return costDataPointsMap;
+    }
+  }
+
+  private List<DataPoint> getUpdatedDataPoints(List<DataPoint> dataPoints, Map<String, String> entityIdToName) {
+    List<DataPoint> updatedDataPoints = new ArrayList<>();
+
+    dataPoints.forEach(dataPoint
+        -> updatedDataPoints.add(
+            DataPoint.builder()
+                .value(dataPoint.getValue())
+                .key(getReference(dataPoint.getKey().getId(),
+                    entityIdToName.getOrDefault(dataPoint.getKey().getName(), dataPoint.getKey().getName()),
+                    dataPoint.getKey().getType()))
+                .build()));
+    return updatedDataPoints;
   }
 
   private List<TimeSeriesDataPoints> getDataAfterLimit(

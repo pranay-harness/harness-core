@@ -90,6 +90,7 @@ public class ClusterTableKeys {
 
   // Some default constants
   public static final String DEFAULT_STRING_VALUE = "";
+  public static final String DEFAULT_GRID_ENTRY_NAME = "Total";
   public static final double DEFAULT_DOUBLE_VALUE = -1d;
   public static final String ID_SEPARATOR = ":";
 
