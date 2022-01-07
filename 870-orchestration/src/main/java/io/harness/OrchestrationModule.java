@@ -173,7 +173,8 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   @Singleton
   @Named("SdkResponseEventExecutorService")
   public ExecutorService sdkResponseEventExecutorService() {
-    return ThreadPool.create(5, 30, config.getIdleTimeInSecs(), TimeUnit.SECONDS,
+    return ThreadPool.create(config.getSdkResponseCorePoolSize(), config.getSdkResponseMaxPoolSize(),
+        config.getSdkResponseIdleTimeInSecs(), TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("SdkResponseEventExecutorService-%d").build());
   }
 

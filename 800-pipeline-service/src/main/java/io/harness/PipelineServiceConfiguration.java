@@ -76,6 +76,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("pmsSdkExecutionPoolConfig") private ThreadPoolConfig pmsSdkExecutionPoolConfig;
   @JsonProperty("pmsSdkOrchestrationEventPoolConfig") private ThreadPoolConfig pmsSdkOrchestrationEventPoolConfig;
   @JsonProperty("orchestrationPoolConfig") private ThreadPoolConfig orchestrationPoolConfig;
+  @JsonProperty("sdkResponseEventPoolConfig") private ThreadPoolConfig sdkResponseEventPoolConfig;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("grpcClientConfigs") private Map<String, GrpcClientConfig> grpcClientConfigs;
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;

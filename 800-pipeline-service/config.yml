@@ -50,6 +50,12 @@ orchestrationPoolConfig:
   idleTime: ${ORCHESTRATION_POOL_IDLE_TIME:-500}
   timeUnit: ${ORCHESTRATION_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
 
+sdkResponseEventPoolConfig:
+  corePoolSize: ${SDK_RESPONSE_POOL_CORE_SIZE:-10}
+  maxPoolSize: ${SDK_RESPONSE_POOL_MAX_SIZE:-30}
+  idleTime: ${SDK_RESPONSE_POOL_IDLE_TIME:-500}
+  timeUnit: ${SDK_RESPONSE_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
 pmsSdkExecutionPoolConfig:
   corePoolSize: ${PMS_SDK_EXECUTION_POOL_CORE_SIZE:-20}
   maxPoolSize: ${PMS_SDK_EXECUTION_POOL_MAX_SIZE:-100}

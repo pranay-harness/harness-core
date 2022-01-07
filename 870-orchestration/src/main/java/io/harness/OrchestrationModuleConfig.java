@@ -23,6 +23,9 @@ public class OrchestrationModuleConfig {
   @Default int corePoolSize = 1;
   @Default int maxPoolSize = 5;
   @Default long idleTimeInSecs = 10;
+  @Default int sdkResponseCorePoolSize = 1;
+  @Default int sdkResponseMaxPoolSize = 5;
+  @Default long sdkResponseIdleTimeInSecs = 10;
   @Default String publisherName = PMS_ORCHESTRATION;
   @Default
   EventsFrameworkConfiguration eventsFrameworkConfiguration =
