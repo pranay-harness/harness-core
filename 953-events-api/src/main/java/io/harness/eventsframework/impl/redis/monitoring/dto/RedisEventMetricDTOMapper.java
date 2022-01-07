@@ -17,9 +17,10 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(HarnessTeam.PL)
 @UtilityClass
 public class RedisEventMetricDTOMapper {
-  public RedisEventMetricDTO prepareRedisEventMetricDTO(Message message) {
+  public RedisEventMetricDTO prepareRedisEventMetricDTO(Message message, String streamName) {
     return RedisEventMetricDTO.builder()
         .accountId(message.getMetadataMap().get(ACCOUNT_IDENTIFIER_METRICS_KEY))
+        .streamName(streamName)
         .build();
   }
 }

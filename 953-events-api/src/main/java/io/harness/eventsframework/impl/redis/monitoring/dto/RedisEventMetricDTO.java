@@ -18,4 +18,5 @@ import lombok.Data;
 @Builder
 public class RedisEventMetricDTO {
   private String accountId;
+  private String streamName;
 }
