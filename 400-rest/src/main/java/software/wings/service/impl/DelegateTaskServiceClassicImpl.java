@@ -436,6 +436,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         Collections.shuffle(eligibleListOfDelegates);
         task.setBroadcastToDelegateIds(
             Lists.newArrayList(getDelegateIdForFirstBroadcast(task, eligibleListOfDelegates)));
+        log.info("Assignable/eligible delegates to execute task {} are {}.", task.getUuid(),
+            task.getEligibleToExecuteDelegateIds());
 
         delegateSelectionLogsService.logEligibleDelegatesToExecuteTask(
             batch, Sets.newHashSet(eligibleListOfDelegates), task.getAccountId());
@@ -473,7 +475,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         }
         delegateSelectionLogsService.save(batch);
         persistence.save(task);
-        log.info("Task {} marked as {} ", task.getUuid(), taskStatus);
+        log.info("Task {} marked as {} with first attempt broadcast to {}", task.getUuid(), taskStatus,
+            task.getBroadcastToDelegateIds());
         addToTaskActivityLog(task, "Task processing completed");
       } catch (Exception exception) {
         log.info("Task id {} failed with error {}", task.getUuid(), exception.getMessage());
