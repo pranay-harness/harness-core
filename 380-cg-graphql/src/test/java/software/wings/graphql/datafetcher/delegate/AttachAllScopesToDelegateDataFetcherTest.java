@@ -20,6 +20,7 @@ import io.harness.delegate.beans.TaskGroup;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
+import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.type.QLEnvironmentType;
@@ -39,6 +40,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 
+@Slf4j
 public class AttachAllScopesToDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject private HPersistence persistence;
   @Inject
@@ -81,8 +83,7 @@ public class AttachAllScopesToDelegateDataFetcherTest extends AbstractDataFetche
         attachScopeToDelegateInputBuilder.build(), MutationContext.builder().build());
     Assert.notNull(qlAttachScopeToDelegatePayload);
     Assert.notNull(qlAttachScopeToDelegatePayload.getMessage());
-    Assert.isTrue(qlAttachScopeToDelegatePayload.getMessage().equals(
-        "Included scopes for delegate:  [delegateScope22] Excluded scopes for delegate: []"));
+    Assert.isTrue(qlAttachScopeToDelegatePayload.getMessage().startsWith("Included scopes for delegate:  delegateScope22,"));
   }
 
   private Delegate.DelegateBuilder createDelegateBuilder(String accountId, String delegateId) {
