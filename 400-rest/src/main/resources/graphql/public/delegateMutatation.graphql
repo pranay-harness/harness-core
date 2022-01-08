@@ -9,7 +9,7 @@ extend type Mutation {
   # attach scope to delegate
   attachScopeToDelegate(input: AttachScopeToDelegateInput!): AttachScopeToDelegatePayload
     @dataFetcher(name: attachScopeToDelegate)
-  # attach scope to delegate
+  # attach all scopes to delegate
   attachAllScopesToDelegate(input: AttachAllScopesToDelegateInput!): AttachScopeToDelegatePayload
   @dataFetcher(name: attachAllScopesToDelegate)
 
