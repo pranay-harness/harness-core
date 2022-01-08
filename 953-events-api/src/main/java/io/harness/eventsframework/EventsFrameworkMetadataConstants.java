@@ -55,4 +55,5 @@ public final class EventsFrameworkMetadataConstants {
 
   // Metric Constants
   public static final String ACCOUNT_IDENTIFIER_METRICS_KEY = "accountId";
+  public static final String STREAM_NAME_METRICS_KEY = "streamName";
 }
