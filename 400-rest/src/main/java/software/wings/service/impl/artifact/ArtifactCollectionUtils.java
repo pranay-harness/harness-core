@@ -161,7 +161,7 @@ public class ArtifactCollectionUtils {
           .stream()
           .map(Enum::name)
           .collect(Collectors.toList());
-  public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
+  public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(60).toMillis();
 
   static final List<String> metadataOnlyStreams = Collections.unmodifiableList(
       asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(), AMAZON_S3.name(), GCS.name(),
@@ -170,10 +170,10 @@ public class ArtifactCollectionUtils {
   public long getDelegateQueueTimeout(String accountId) {
     long timeout = DELEGATE_QUEUE_TIMEOUT;
     if (featureFlagService.isEnabled(ARTIFACT_STREAM_DELEGATE_TIMEOUT, accountId)) {
-      timeout = Duration.ofSeconds(15).toMillis();
+      timeout = Duration.ofSeconds(60).toMillis();
     }
     if (DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
-      timeout = Duration.ofSeconds(45).toMillis();
+      timeout = Duration.ofSeconds(60).toMillis();
     }
     return System.currentTimeMillis() + timeout;
   }
