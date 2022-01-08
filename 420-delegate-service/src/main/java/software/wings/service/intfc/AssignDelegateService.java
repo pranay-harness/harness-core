@@ -48,4 +48,6 @@ public interface AssignDelegateService {
 
   boolean canAssignTask(BatchDelegateSelectionLog batch, String delegateId, DelegateTask task,
       Map<String, List<String>> nonAssignableDelegates);
+
+  List<Delegate> fetchActiveDelegates(String accountId);
 }

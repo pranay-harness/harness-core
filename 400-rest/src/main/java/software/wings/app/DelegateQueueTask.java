@@ -262,7 +262,7 @@ public class DelegateQueueTask implements Runnable {
         }
         // add connected eligible delegates to broadcast list. Also rotate the eligibleDelegatesList list
         List<String> broadcastToDelegates = Lists.newArrayList();
-        int broadcastLimit = Math.min(eligibleDelegatesList.size(), broadcastHelper.getMaxBroadcastCount(delegateTask));
+        int broadcastLimit = Math.min(eligibleDelegatesList.size(), 10);
         Iterator<String> delegateIdIterator = eligibleDelegatesList.iterator();
 
         while (delegateIdIterator.hasNext() && broadcastLimit > broadcastToDelegates.size()) {
