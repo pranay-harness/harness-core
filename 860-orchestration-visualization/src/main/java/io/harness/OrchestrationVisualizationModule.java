@@ -82,7 +82,7 @@ public class OrchestrationVisualizationModule extends AbstractModule {
   @Singleton
   @Named("OrchestrationVisualizationExecutorService")
   public ExecutorService orchestrationVisualizationExecutorService() {
-    return ThreadPool.create(visualizationThreadPoolConfig.getCorePoolSize(),
+    return ThreadPool.createWithForceQueueWait(visualizationThreadPoolConfig.getCorePoolSize(),
         visualizationThreadPoolConfig.getMaxPoolSize(), visualizationThreadPoolConfig.getIdleTime(),
         visualizationThreadPoolConfig.getTimeUnit(),
         new ThreadFactoryBuilder().setNameFormat("OrchestrationVisualizationExecutorService-%d").build());

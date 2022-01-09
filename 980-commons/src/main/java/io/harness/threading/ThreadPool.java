@@ -57,6 +57,11 @@ public class ThreadPool {
     return create(corePoolSize, maxPoolSize, idleTime, unit, threadFactory, -1, new ForceQueuePolicy());
   }
 
+  public static ThreadPoolExecutor createWithForceQueueWait(
+      int corePoolSize, int maxPoolSize, long idleTime, TimeUnit unit, ThreadFactory threadFactory) {
+    return create(corePoolSize, maxPoolSize, idleTime, unit, threadFactory, -1, new ForceQueueWaitPolicy());
+  }
+
   public static ThreadPoolExecutor create(int corePoolSize, int maxPoolSize, long idleTime, TimeUnit unit,
       ThreadFactory threadFactory, int queueSize, RejectedExecutionHandler rejectedExecutionHandler) {
     ScalingQueue<Runnable> queue = queueSize < 0 ? new ScalingQueue<>() : new ScalingQueue<>(queueSize);
