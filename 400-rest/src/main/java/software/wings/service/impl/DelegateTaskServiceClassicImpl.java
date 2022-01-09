@@ -436,8 +436,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         Collections.shuffle(eligibleListOfDelegates);
         task.setBroadcastToDelegateIds(
             Lists.newArrayList(getDelegateIdForFirstBroadcast(task, eligibleListOfDelegates)));
-        log.info("Assignable/eligible delegates to execute task {} are {}.", task.getUuid(),
-            task.getEligibleToExecuteDelegateIds());
 
         delegateSelectionLogsService.logEligibleDelegatesToExecuteTask(
             batch, Sets.newHashSet(eligibleListOfDelegates), task.getAccountId());
