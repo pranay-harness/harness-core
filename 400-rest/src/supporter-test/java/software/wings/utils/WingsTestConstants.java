@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.utils;
 
 import io.harness.limits.Action;
@@ -403,6 +410,7 @@ public interface WingsTestConstants {
   String WORKSPACE = "WORKSPACE";
   String TERRAFORM_STATE_FILE_ID = "TERRAFORM_STATE_FILE_ID";
   String UUID = "UUID";
+  String UUID1 = "UUID1";
 
   String HELM_CHART_ID = "HELM_CHART_ID";
   String FREEZE_WINDOW_ID = "FREEZE_WINDOW_ID";

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.service.instance;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -119,6 +126,13 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
+  public List<InstanceDTO> getInstancesDeployedInInterval(
+      String accountIdentifier, String organizationId, String projectId, long startTimestamp, long endTimeStamp) {
+    return InstanceMapper.toDTO(instanceRepository.getInstancesDeployedInInterval(
+        accountIdentifier, organizationId, projectId, startTimestamp, endTimeStamp));
+  }
+
+  @Override
   public List<InstanceDTO> getInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId) {
     return InstanceMapper.toDTO(
@@ -189,6 +203,11 @@ public class InstanceServiceImpl implements InstanceService {
       String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs) {
     return instanceRepository.getActiveServiceInstanceCountBreakdown(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
+  }
+
+  @Override
+  public InstanceDTO findFirstInstance(Criteria criteria) {
+    return InstanceMapper.toDTO(instanceRepository.findFirstInstance(criteria));
   }
 
   // ----------------------------------- PRIVATE METHODS -------------------------------------

@@ -1,8 +1,17 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.client;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
+import io.harness.cvng.beans.CVNGPerpetualTaskState;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.change.HarnessCDCurrentGenEventMetadata;
@@ -59,5 +68,14 @@ public class MockedVerificationManagerService implements VerificationManagerServ
                                          .getHarnessCDChangeEventDTOBuilder()
                                          .build()
                                          .getMetadata());
+  }
+
+  @Override
+  public CVNGPerpetualTaskDTO getPerpetualTaskStatus(String perpetualTaskId) {
+    return CVNGPerpetualTaskDTO.builder()
+        .accountId("some-accountId")
+        .delegateId("some-delegate-id")
+        .cvngPerpetualTaskState(CVNGPerpetualTaskState.TASK_UNASSIGNED)
+        .build();
   }
 }

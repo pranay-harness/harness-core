@@ -1,10 +1,16 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
-import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
@@ -17,6 +23,7 @@ import static software.wings.app.ManagerCacheRegistrar.APIKEY_PERMISSION_CACHE;
 import static software.wings.app.ManagerCacheRegistrar.APIKEY_RESTRICTION_CACHE;
 
 import static java.lang.System.currentTimeMillis;
+import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -26,7 +33,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
@@ -53,12 +59,12 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.utils.CryptoUtils;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -181,10 +187,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
       return;
     }
 
-    PageRequest<UserGroup> req =
-        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("_id", "name").build();
-    PageResponse<UserGroup> res = userGroupService.list(accountId, req, false);
-    List<UserGroup> allUserGroupList = res.getResponse();
+    List<UserGroup> allUserGroupList = userGroupService.filter(accountId, emptyList());
     if (isEmpty(allUserGroupList)) {
       return;
     }
@@ -211,16 +214,14 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   private List<UserGroup> getUserGroupsForApiKey(List<String> userGroupIds, String accountId, boolean details) {
     if (isEmpty(userGroupIds)) {
-      return Collections.emptyList();
+      return emptyList();
     }
 
-    PageRequestBuilder pageRequestBuilder =
-        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFilter("_id", IN, userGroupIds.toArray());
     if (!details) {
-      pageRequestBuilder.addFieldsIncluded("_id", "name");
+      return userGroupService.filter(accountId, userGroupIds, Lists.newArrayList("_id", "name"));
     }
 
-    return userGroupService.list(accountId, pageRequestBuilder.build(), false).getResponse();
+    return userGroupService.filter(accountId, userGroupIds);
   }
 
   @Override
@@ -269,9 +270,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         .name(entry.getName())
         .accountId(entry.getAccountId())
         .decryptedKey(decryptedKey)
-        .userGroups(
-            getUserGroupsForApiKey(entry.getUserGroupIds() != null ? entry.getUserGroupIds() : Collections.emptyList(),
-                entry.getAccountId(), details))
+        .userGroups(getUserGroupsForApiKey(
+            entry.getUserGroupIds() != null ? entry.getUserGroupIds() : emptyList(), entry.getAccountId(), details))
         .build();
   }
 

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ccm.connectors;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -8,6 +15,7 @@ import io.harness.ccm.CENextGenConfiguration;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
 import io.harness.ng.core.dto.ErrorDetail;
@@ -21,6 +29,7 @@ import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.TableId;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -30,6 +39,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -54,33 +64,23 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
     String connectorIdentifier = connectorResponseDTO.getConnector().getIdentifier();
     String projectId = gcpCloudCostConnectorDTO.getProjectId(); // Source project id
     String datasetId = gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId();
+    String gcpTableName = gcpCloudCostConnectorDTO.getBillingExportSpec().getTableId();
     String impersonatedServiceAccount = gcpCloudCostConnectorDTO.getServiceAccountEmail();
+    final List<CEFeatures> featuresEnabled = gcpCloudCostConnectorDTO.getFeaturesEnabled();
     try {
       ConnectorValidationResult connectorValidationResult =
-          validateAccessToBillingReport(projectId, datasetId, impersonatedServiceAccount);
+          validateAccessToBillingReport(projectId, datasetId, gcpTableName, impersonatedServiceAccount);
       if (connectorValidationResult != null) {
         return connectorValidationResult;
       } else {
         // 4. Check for data at destination only when 24 hrs have elapsed since connector last modified at
-        long now = Instant.now().toEpochMilli() - 1 * 24 * 60 * 60 * 1000;
+        long now = Instant.now().toEpochMilli() - 24 * 60 * 60 * 1000;
         if (connectorResponseDTO.getLastModifiedAt() < now) {
-          if (!ceConnectorsHelper.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.GCP_CLOUD_COST,
-                  ceConnectorsHelper.JOB_TYPE_CLOUDFUNCTION)) {
-            // Data not available in unified table.
-            // Check if Batch sync job has finished for this
-            /*
-            if (!ceConnectorsUtil.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.GCP_CLOUD_COST,
-            ceConnectorsUtil.JOB_TYPE_BATCH)) {
-              //Generic error message for issue with batch job
-              return ConnectorValidationResult.builder()
-                      .errorSummary("Error with syncing data")
-                      .status(ConnectivityStatus.FAILURE)
-                      .build();
-            }
-            */
-            // Issue with CFs
+          if (featuresEnabled.contains(CEFeatures.BILLING)
+              && !ceConnectorsHelper.isDataSyncCheck(accountIdentifier, connectorIdentifier,
+                  ConnectorType.GCP_CLOUD_COST, ceConnectorsHelper.JOB_TYPE_CLOUDFUNCTION)) {
             return ConnectorValidationResult.builder()
-                .errorSummary("Error with processing data")
+                .errorSummary("Error with processing data. Please contact Harness support")
                 .status(ConnectivityStatus.FAILURE)
                 .build();
           }
@@ -94,7 +94,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
           .status(ConnectivityStatus.FAILURE)
           .build();
     }
-    log.info("Validation successfull");
+    log.info("Validation successful for connector {}", connectorIdentifier);
     return ConnectorValidationResult.builder()
         .status(ConnectivityStatus.SUCCESS)
         .testedAt(Instant.now().toEpochMilli())
@@ -102,7 +102,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
   }
 
   public ConnectorValidationResult validateAccessToBillingReport(
-      String projectId, String datasetId, String impersonatedServiceAccount) {
+      String projectId, String datasetId, String gcpTableName, String impersonatedServiceAccount) {
     boolean isTablePresent = false;
     ServiceAccountCredentials sourceCredentials = getGcpCredentials(GCP_CREDENTIALS_PATH);
     Credentials credentials = getGcpImpersonatedCredentials(sourceCredentials, impersonatedServiceAccount);
@@ -130,22 +130,44 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
       } else {
         // 2. Check presence of table "gcp_billing_export_v1_*"
         log.info("dataset {} is present", datasetId);
-        Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
-        for (Table table : tableList.getValues()) {
-          if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {
-            isTablePresent = true;
-            log.info("table {} is present", table.getTableId().getTable());
+        if (!isEmpty(gcpTableName)) {
+          isTablePresent = true;
+        } else {
+          Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
+          for (Table table : tableList.getValues()) {
+            if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {
+              isTablePresent = true;
+              gcpTableName = table.getTableId().getTable();
+              break;
+            }
           }
         }
         if (!isTablePresent) {
           return ConnectorValidationResult.builder()
               .status(ConnectivityStatus.PARTIAL)
-              .errorSummary("Billing table " + GCP_BILLING_EXPORT_V_1 + "not yet present in"
-                  + " the dataset " + datasetId + " in project " + projectId)
+              .errorSummary("Billing export table is not yet present in"
+                  + " the dataset " + datasetId + " in GCP project " + projectId
+                  + ". Wait for some time for table to show up or check the billing export configuration in your GCP project")
               .testedAt(Instant.now().toEpochMilli())
               .build();
+        } else {
+          log.info("table {} is present", gcpTableName);
+          // Check when this table was last modified on
+          TableId tableIdBq = TableId.of(projectId, datasetId, gcpTableName);
+          Table tableGranularData = bigQuery.getTable(tableIdBq);
+          Long lastModifiedTime = tableGranularData.getLastModifiedTime();
+          lastModifiedTime = lastModifiedTime != null ? lastModifiedTime : tableGranularData.getCreationTime();
+          // Check for data at source only when 24 hrs have elapsed since connector last modified at
+          long now = Instant.now().toEpochMilli() - 24 * 60 * 60 * 1000;
+          if (lastModifiedTime < now) {
+            return ConnectorValidationResult.builder()
+                .status(ConnectivityStatus.FAILURE)
+                .errorSummary("Billing table " + gcpTableName + " is not updated in the last 24 hrs."
+                    + ". Please check billing export settings in your gcp project")
+                .testedAt(Instant.now().toEpochMilli())
+                .build();
+          }
         }
-        return null;
       }
     } catch (BigQueryException be) {
       // 3. Permissions check on the dataset
@@ -158,6 +180,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
           .testedAt(Instant.now().toEpochMilli())
           .build();
     }
+    return null;
   }
 
   public ServiceAccountCredentials getGcpCredentials(String googleCredentialPathSystemEnv) {

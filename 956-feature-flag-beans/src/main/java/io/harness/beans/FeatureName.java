@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.beans;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -30,6 +37,7 @@ public enum FeatureName {
   AUDIT_TRAIL_ENHANCEMENT,
   BIND_FETCH_FILES_TASK_TO_DELEGATE,
   BUSINESS_MAPPING,
+  CCM_ENABLE_STATIC_SCHEDULES,
   CDNG_ENABLED,
   CENG_ENABLED,
   CE_AS_KUBERNETES_ENABLED,
@@ -41,6 +49,7 @@ public enum FeatureName {
   CE_AZURE_SUPPORT,
   CFNG_ENABLED,
   CF_CUSTOM_EXTRACTION,
+  CG_RBAC_EXCLUSION,
   CING_ENABLED,
   CI_INDIRECT_LOG_UPLOAD,
   CLOUD_FORMATION_CREATE_REFACTOR,
@@ -217,7 +226,6 @@ public enum FeatureName {
   CVNG_VERIFY_STEP_TO_SINGLE_ACTIVITY,
   FAIL_TASKS_IF_DELEGATE_DIES,
   SSH_JSCH_LOGS,
-  NG_GIT_ERROR_EXPERIENCE,
   RESOLVE_DEPLOYMENT_TAGS_BEFORE_EXECUTION,
   LDAP_USER_ID_SYNC,
   NEW_KUBECTL_VERSION,
@@ -235,6 +243,10 @@ public enum FeatureName {
   TERRAFORM_AWS_CP_AUTHENTICATION,
   CI_VM_INFRASTRUCTURE,
   SERVICENOW_NG_INTEGRATION,
+<<<<<<< HEAD
+=======
+  OPTIMIZED_TF_PLAN,
+>>>>>>> cb13e407988fad955761971ec212f5b3f5dbfaea
   NG_NATIVE_HELM;
 
   FeatureName() {

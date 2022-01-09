@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 bold=$(tput bold)
 normal=$(tput sgr0)
@@ -51,6 +55,8 @@ if [ ${#errors[@]} -eq 0 ]; then
    echo -e "\n${bold}All checks are successful.${normal}"
 else
     echo "${bold}You have changed files which are being used for delegate task communication. Your change should be backward compatible."
+    echo "To get approval on this PR from code-owners make sure you have put answers to questions mentioned in the doc as part of PR comment."
+    echo -e "https://harness.atlassian.net/wiki/spaces/DEL/pages/21016838831/PR+Codebasehash+Check+merge+checklist\n"
     echo "If you want to generate hash locally run this script: ./scripts/codebase/codebase-hash-check.sh $@"
     echo "Please read the documentation from the link provided below or contact delegate team for backward compatibility check."
     echo -e "https://harness.atlassian.net/wiki/spaces/DEL/pages/2000781671/Backwards+compatibility+for+delegate+task+communication\n"

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.migration.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -174,7 +181,8 @@ public class NGMigrationServiceImpl implements NGMigrationService {
         // There may be some on-prem customers who might not have timescale db available. Hence handling this exception
         // gracefully and skipping rest of the Timescale migration.
         if (isBackground || ex instanceof TimeScaleNotAvailableException) {
-          log.error("[Migration] - {} : Error while running migration {}", serviceName, migration.getSimpleName(), ex);
+          log.warn("[Migration] - {} : Failed to run migration {} because of {}", serviceName,
+              migration.getSimpleName(), ex.getMessage());
           break;
         } else {
           throw new MigrationException(

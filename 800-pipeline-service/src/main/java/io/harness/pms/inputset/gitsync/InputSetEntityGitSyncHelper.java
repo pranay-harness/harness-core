@@ -1,7 +1,16 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.inputset.gitsync;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType.INPUT_SET;
+
+import static java.lang.String.format;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
@@ -13,18 +22,21 @@ import io.harness.eventsframework.schemas.entity.InputSetReferenceProtoDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileChange;
+import io.harness.gitsync.FullSyncChangeSet;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.grpc.utils.StringValueUtils;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetElementMapper;
+import io.harness.pms.ngpipeline.inputset.service.InputSetFullGitSyncHandler;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 
 import com.google.inject.Inject;
@@ -42,12 +54,14 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
     implements GitSdkEntityHandlerInterface<InputSetEntity, InputSetYamlDTO> {
   private final PMSInputSetService pmsInputSetService;
   private final ValidateAndMergeHelper validateAndMergeHelper;
+  private final InputSetFullGitSyncHandler inputSetFullGitSyncHandler;
 
   @Inject
-  public InputSetEntityGitSyncHelper(
-      PMSInputSetService pmsInputSetService, ValidateAndMergeHelper validateAndMergeHelper) {
+  public InputSetEntityGitSyncHelper(PMSInputSetService pmsInputSetService,
+      ValidateAndMergeHelper validateAndMergeHelper, InputSetFullGitSyncHandler inputSetFullGitSyncHandler) {
     this.pmsInputSetService = pmsInputSetService;
     this.validateAndMergeHelper = validateAndMergeHelper;
+    this.inputSetFullGitSyncHandler = inputSetFullGitSyncHandler;
   }
 
   @Override
@@ -67,17 +81,7 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
 
   @Override
   public EntityDetail getEntityDetail(InputSetEntity entity) {
-    return EntityDetail.builder()
-        .name(entity.getName())
-        .type(EntityType.INPUT_SETS)
-        .entityRef(InputSetReference.builder()
-                       .accountIdentifier(entity.getAccountIdentifier())
-                       .orgIdentifier(entity.getOrgIdentifier())
-                       .projectIdentifier(entity.getProjectIdentifier())
-                       .pipelineIdentifier(entity.getPipelineIdentifier())
-                       .identifier(entity.getIdentifier())
-                       .build())
-        .build();
+    return PMSInputSetElementMapper.toEntityDetail(entity);
   }
 
   @Override
@@ -168,7 +172,15 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
 
   @Override
   public List<FileChange> listAllEntities(ScopeDetails scopeDetails) {
-    return null;
+    return inputSetFullGitSyncHandler.getFileChangesForFullSync(scopeDetails);
+  }
+
+  @Override
+  public InputSetYamlDTO fullSyncEntity(FullSyncChangeSet fullSyncChangeSet) {
+    try (GlobalContextManager.GlobalContextGuard ignore = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(createGitEntityInfo(fullSyncChangeSet));
+      return inputSetFullGitSyncHandler.syncEntity(fullSyncChangeSet.getEntityDetail());
+    }
   }
 
   @Override
@@ -186,7 +198,7 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
           overlayInputSetInfo.getProjectIdentifier(), overlayInputSetInfo.getPipelineIdentifier(),
           overlayInputSetInfo.getIdentifier(), false);
     }
-    return inputSetEntity.map(entity -> EntityGitDetailsMapper.mapEntityGitDetails(entity));
+    return inputSetEntity.map(EntityGitDetailsMapper::mapEntityGitDetails);
   }
 
   @Override
@@ -203,6 +215,14 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
             StringValueUtils.getStringFromStringValue(inputSetRef.getProjectIdentifier()),
             StringValueUtils.getStringFromStringValue(inputSetRef.getPipelineIdentifier()),
             StringValueUtils.getStringFromStringValue(inputSetRef.getIdentifier()), false);
+    if (!inputSetEntity.isPresent()) {
+      throw new InvalidRequestException(
+          format("Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] doesn't exist.",
+              StringValueUtils.getStringFromStringValue(inputSetRef.getIdentifier()),
+              StringValueUtils.getStringFromStringValue(inputSetRef.getPipelineIdentifier()),
+              StringValueUtils.getStringFromStringValue(inputSetRef.getProjectIdentifier()),
+              StringValueUtils.getStringFromStringValue(inputSetRef.getOrgIdentifier())));
+    }
     return inputSetEntity.get().getYaml();
   }
 }

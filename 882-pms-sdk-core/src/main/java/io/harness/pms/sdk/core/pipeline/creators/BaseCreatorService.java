@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk.core.pipeline.creators;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -78,7 +85,10 @@ public abstract class BaseCreatorService<R extends CreatorResponse, M> {
       R response = processNodeInternal(metadata, yamlField);
 
       if (response == null) {
-        finalResponse.addDependency(currentYaml, yamlField.getNode().getUuid(), yamlPath);
+        // do not add template yaml fields as dependency.
+        if (yamlField.getNode().getTemplate() == null) {
+          finalResponse.addDependency(currentYaml, yamlField.getNode().getUuid(), yamlPath);
+        }
         continue;
       }
       mergeResponses(finalResponse, response);

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.springdata;
 
 import com.google.inject.Inject;
@@ -32,9 +39,16 @@ public class TransactionHelper {
         .get(() -> transactionTemplate.execute(t -> transactionFunction.execute()));
   }
 
+<<<<<<< HEAD
   public <T> T performTransactionWithNoRetry(TransactionFunction<T> transactionFunction) {
     return transactionTemplate.execute(t -> transactionFunction.execute());
   }
+=======
+  public <T> T performTransactionWithoutRetry(TransactionFunction<T> transactionFunction) {
+    return transactionTemplate.execute(t -> transactionFunction.execute());
+  }
+
+>>>>>>> cb13e407988fad955761971ec212f5b3f5dbfaea
   public interface TransactionFunction<R> {
     R execute();
   }

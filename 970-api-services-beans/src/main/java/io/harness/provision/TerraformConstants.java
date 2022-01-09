@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.provision;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -44,6 +51,7 @@ public final class TerraformConstants {
   public static final String TERRAFORM_APPLY_PLAN_FILE_VAR_NAME = "${terraformApply.tfplan}";
   public static final String TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME = "${terraformDestroy.tfplan}";
   public static final String TERRAFORM_PLAN_FILE_NAME = "terraform.tfplan";
+  public static final String TERRAFORM_PLAN_JSON_FILE_NAME = "%s.json";
   public static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform-%s.tfvars";
   public static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs-%s";
   public static final String TERRAFORM_INTERNAL_FOLDER = ".terraform";

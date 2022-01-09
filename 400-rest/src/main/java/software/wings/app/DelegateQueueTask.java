@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.app;
 
 import static io.harness.beans.DelegateTask.Status.ABORTED;
@@ -10,6 +17,7 @@ import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_EXPIRED;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.lang.System.currentTimeMillis;
@@ -26,16 +34,15 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.exception.WingsException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.metrics.intfc.DelegateMetricsService;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.version.VersionInfoManager;
-import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.beans.TaskType;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -43,7 +50,6 @@ import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -74,7 +80,6 @@ public class DelegateQueueTask implements Runnable {
   private static final SecureRandom random = new SecureRandom();
 
   @Inject private HPersistence persistence;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Clock clock;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private AssignDelegateService assignDelegateService;
@@ -82,9 +87,8 @@ public class DelegateQueueTask implements Runnable {
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject private ConfigurationController configurationController;
   @Inject private DelegateTaskService delegateTaskService;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
-  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  @Inject private DelegateMetricsService delegateMetricsService;
 
   @Override
   public void run() {
@@ -165,6 +169,7 @@ public class DelegateQueueTask implements Runnable {
         if (shouldExpireTask(task)) {
           tasksToExpire.add(task);
           taskIdsToExpire.add(task.getUuid());
+          delegateMetricsService.recordDelegateTaskMetrics(task, DELEGATE_TASK_EXPIRED);
         }
       }
 
@@ -181,6 +186,7 @@ public class DelegateQueueTask implements Runnable {
           if (shouldExpireTask(task)) {
             taskIdsToExpire.add(taskId);
             delegateTasks.put(taskId, task);
+            delegateMetricsService.recordDelegateTaskMetrics(task, DELEGATE_TASK_EXPIRED);
             if (isNotEmpty(task.getWaitId())) {
               taskWaitIds.put(taskId, task.getWaitId());
             }

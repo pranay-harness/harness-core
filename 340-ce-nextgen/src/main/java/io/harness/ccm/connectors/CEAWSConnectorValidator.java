@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ccm.connectors;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -7,7 +14,6 @@ import io.harness.ccm.CENextGenConfiguration;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
-import io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails;
 import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
@@ -25,6 +31,8 @@ import com.amazonaws.services.costandusagereport.model.ReportDefinition;
 import com.amazonaws.services.identitymanagement.model.AmazonIdentityManagementException;
 import com.amazonaws.services.identitymanagement.model.EvaluationResult;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.securitytoken.model.AWSSecurityTokenServiceException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -34,6 +42,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -145,25 +154,18 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
           .build();
     }
     // Check for data at destination only when 24 hrs have elapsed since connector last modified at
-    long now = Instant.now().toEpochMilli() - 1 * 24 * 60 * 60 * 1000;
-    if (connectorResponseDTO.getLastModifiedAt() < now) {
+    long now = Instant.now().toEpochMilli() - 24 * 60 * 60 * 1000;
+    if (featuresEnabled.contains(CEFeatures.BILLING) && connectorResponseDTO.getLastModifiedAt() < now) {
       if (!ceConnectorsHelper.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.CE_AWS,
               ceConnectorsHelper.JOB_TYPE_CLOUDFUNCTION)) {
-        // Data not available in unified table. Possibly an issue with CFs
-        // Check if Batch sync job has finished for this
-        /*
-        if (!ceConnectorsUtil.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.AWS,
-        ceConnectorsUtil.JOB_TYPE_BATCH)) { return ConnectorValidationResult.builder() .errorSummary("Error with syncing
-        data") .status(ConnectivityStatus.FAILURE) .build();
-        }
-        */
         // Issue with CFs
         return ConnectorValidationResult.builder()
-            .errorSummary("Error with processing data")
+            .errorSummary("Error with processing data. Please contact Harness support")
             .status(ConnectivityStatus.FAILURE)
             .build();
       }
     }
+    log.info("Validation successful for connector {}", connectorIdentifier);
     return ConnectorValidationResult.builder()
         .status(ConnectivityStatus.SUCCESS)
         .testedAt(Instant.now().toEpochMilli())
@@ -198,9 +200,6 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
 
   @VisibleForTesting
   public AWSCredentialsProvider getCredentialProvider(CrossAccountAccessDTO crossAccountAccessDTO) {
-    log.info(
-        "awsClient:{}, configuration.getAwsConfig().getAccessKey():{}, configuration.getAwsConfig().getSecretKey():{}",
-        awsClient, configuration.getAwsConfig().getAccessKey(), configuration.getAwsConfig().getSecretKey());
     final AWSCredentialsProvider BasicAwsCredentials = awsClient.constructStaticBasicAwsCredentials(
         configuration.getAwsConfig().getAccessKey(), configuration.getAwsConfig().getSecretKey());
     final AWSCredentialsProvider credentialsProvider = awsClient.getAssumedCredentialsProvider(
@@ -216,18 +215,14 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
     if (!report.isPresent()) {
       return ImmutableList.of(
           ErrorDetail.builder()
-              .message(String.format("Can't access Report: %s", awsCurAttributesDTO.getReportName()))
+              .message(String.format("Can't access cost and usage report: %s", awsCurAttributesDTO.getReportName()))
               .reason("Report Not Present")
               .build());
     }
     validateReport(report.get(), awsCurAttributesDTO.getS3BucketName(), errorList);
-    S3BucketDetails s3BucketDetails = S3BucketDetails.builder()
-                                          .s3BucketName(awsCurAttributesDTO.getS3BucketName())
-                                          .s3Prefix(report.get().getS3Prefix())
-                                          .region(report.get().getS3Region())
-                                          .s3BucketName(awsCurAttributesDTO.getS3BucketName())
-                                          .build();
-    return validateIfBucketIsPresent(credentialsProvider, s3BucketDetails);
+    String s3PathPrefix = report.get().getS3Prefix() + "/" + awsCurAttributesDTO.getReportName() + "/"
+        + ceConnectorsHelper.getReportMonth();
+    return validateIfBucketIsPresent(credentialsProvider, awsCurAttributesDTO.getS3BucketName(), s3PathPrefix);
   }
 
   private void validateReport(
@@ -272,14 +267,37 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
     }
   }
 
-  private Collection<ErrorDetail> validateIfBucketIsPresent(
-      AWSCredentialsProvider credentialsProvider, S3BucketDetails s3BucketDetails) {
+  @VisibleForTesting
+  public Collection<ErrorDetail> validateIfBucketIsPresent(
+      AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3PathPrefix) {
+    Date latestFileLastmodifiedTime = Date.from(Instant.EPOCH);
+    String latestFileName = "";
     try {
-      awsClient.getBucket(credentialsProvider, s3BucketDetails.getS3BucketName(), s3BucketDetails.getS3Prefix());
+      ObjectListing s3BucketObject = awsClient.getBucket(credentialsProvider, s3BucketName, s3PathPrefix);
+      // Caveat: This can be slow for some accounts.
+      for (S3ObjectSummary objectSummary : s3BucketObject.getObjectSummaries()) {
+        if (objectSummary.getKey().endsWith(".csv.gz")) {
+          if (objectSummary.getLastModified().compareTo(latestFileLastmodifiedTime) > 0) {
+            latestFileLastmodifiedTime = objectSummary.getLastModified();
+            latestFileName = objectSummary.getKey();
+          }
+        }
+      }
+      log.info("Latest .csv.gz file in {}/{} latestFileName: {} latestFileLastmodifiedTime: {}", s3BucketName,
+          s3PathPrefix, latestFileName, latestFileLastmodifiedTime);
+      long now = Instant.now().toEpochMilli() - 24 * 60 * 60 * 1000;
+      if (!latestFileName.isEmpty() && latestFileLastmodifiedTime.getTime() < now) {
+        lastErrorSummary = String.format("No CUR file is found in last 24 hrs at %s/%s. "
+                + "Please verify your billing export config in your AWS account and CCM connector. "
+                + "Follow CCM documentation for more information",
+            s3BucketName, s3PathPrefix);
+        return ImmutableList.of(
+            ErrorDetail.builder().message("No CUR file is found in last 24 hrs").reason(lastErrorSummary).build());
+      }
     } catch (AmazonS3Exception ex) {
       lastErrorSummary = String.format(
-          "Either bucket '%s' doesn't exist or, %nthere is a mismatch between bucketName entered in connector and the name present in the role policy.",
-          s3BucketDetails.getS3BucketName());
+          "Either bucket '%s' doesn't exist or there is a mismatch between bucketName entered in connector and the name present in the role policy.",
+          s3BucketName);
       return ImmutableList.of(ErrorDetail.builder().message(ex.getMessage()).reason(lastErrorSummary).build());
     }
     return Collections.emptyList();

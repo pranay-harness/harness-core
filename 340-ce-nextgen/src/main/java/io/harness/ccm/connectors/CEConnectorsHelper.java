@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ccm.connectors;
 
 import io.harness.ccm.CENextGenConfiguration;
@@ -9,6 +16,8 @@ import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
 import com.google.inject.Inject;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +36,12 @@ public class CEConnectorsHelper {
 
   public String modifyStringToComplyRegex(String accountInfo) {
     return accountInfo.toLowerCase().replaceAll("[^a-z0-9]", "_");
+  }
+
+  public String getReportMonth() {
+    // AWS and Azure CUR report S3 paths have same month format 'yyyyMMDD-yyyyMMDD'
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMM");
+    return LocalDate.now().format(formatter) + "01";
   }
 
   public boolean isDataSyncCheck(
@@ -66,6 +81,7 @@ public class CEConnectorsHelper {
     for (FieldValueList row : result.iterateAll()) {
       long count = row.get("count").getLongValue();
       if (count > 0) {
+        log.info("count: {}", count);
         return true;
       }
     }

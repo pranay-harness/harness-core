@@ -1,3 +1,8 @@
+-- Copyright 2021 Harness Inc. All rights reserved.
+-- Use of this source code is governed by the PolyForm Shield 1.0.0 license
+-- that can be found in the licenses directory at the root of this repository, also available at
+-- https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+
 ---------- PIPELINE EXECUTION SUMMARY CI TABLE START ------------
 BEGIN;
  CREATE TABLE IF NOT EXISTS pipeline_execution_summary_ci (
@@ -104,5 +109,3 @@ BEGIN;
 SELECT CREATE_HYPERTABLE('service_infra_info','service_startts', chunk_time_interval => 7 * 86400000, if_not_exists => TRUE, migrate_data => true);
 COMMIT;
 ---------- SERVICE INFRA INFO TABLE END ------------
-
-

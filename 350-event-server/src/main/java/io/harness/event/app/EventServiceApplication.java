@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.event.app;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -17,6 +24,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
+import io.harness.secret.ConfigSecretUtils;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlUtils;
 
@@ -76,6 +84,7 @@ public class EventServiceApplication {
     }
     EventServiceConfig config =
         new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), EventServiceConfig.class);
+    ConfigSecretUtils.resolveSecrets(config.getSecretsConfiguration(), config);
     new EventServiceApplication(config).run();
   }
 

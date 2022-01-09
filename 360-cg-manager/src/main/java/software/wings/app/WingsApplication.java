@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.app;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
@@ -92,6 +99,8 @@ import io.harness.manifest.ManifestCollectionPTaskServiceClient;
 import io.harness.marketplace.gcp.GcpMarketplaceSubscriberService;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.jobs.RecordMetricsJob;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.migrations.MigrationModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.QuartzCleaner;
@@ -760,6 +769,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     initializeGrpcServer(injector);
 
+    initMetrics(injector);
+
     log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
   }
@@ -868,7 +879,6 @@ public class WingsApplication extends Application<MainConfiguration> {
                       }
                     }))
                     .build());
-
     modules.add(new ValidationModule(validatorFactory) {
       @Override
       protected void configureAop(ValidationMethodInterceptor interceptor) {
@@ -1525,5 +1535,10 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void runMigrations(Injector injector) {
     injector.getInstance(MigrationService.class).runMigrations();
+  }
+
+  private void initMetrics(Injector injector) {
+    injector.getInstance(MetricService.class).initializeMetrics();
+    injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 }

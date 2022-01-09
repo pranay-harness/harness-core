@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.testframework.framework.utils;
 
 import io.harness.notifications.beans.Conditions;
@@ -38,10 +45,6 @@ public class AlertsUtils {
   public static List<AlertType> getSetupAlertTypes() {
     List<AlertType> alertTypeList = new ArrayList<>();
     alertTypeList.add(AlertType.DelegatesDown);
-    alertTypeList.add(AlertType.DelegatesScalingGroupDownAlert);
-    alertTypeList.add(AlertType.NoActiveDelegates);
-    alertTypeList.add(AlertType.DelegateProfileError);
-    alertTypeList.add(AlertType.NoEligibleDelegates);
     alertTypeList.add(AlertType.INSTANCE_USAGE_APPROACHING_LIMIT);
     alertTypeList.add(AlertType.InvalidKMS);
     alertTypeList.add(AlertType.GitSyncError);

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
@@ -59,6 +66,10 @@ public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
   UserGroup getUserGroupSummary(UserGroup userGroup);
 
   List<UserGroup> getUserGroupSummary(List<UserGroup> userGroupList);
+
+  List<UserGroup> filter(String accountId, List<String> userGroupIds);
+
+  List<UserGroup> filter(String accountId, List<String> userGroupIds, List<String> fieldsNeededInResponse);
 
   /**
    * Find by uuid.

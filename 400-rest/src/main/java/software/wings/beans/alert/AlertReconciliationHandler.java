@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.beans.alert;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
@@ -15,7 +22,6 @@ import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.alert.Alert.AlertKeys;
-import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation.NoEligibleDelegatesAlertReconciliationKeys;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
@@ -57,34 +63,7 @@ public class AlertReconciliationHandler implements Handler<Alert> {
 
   @Override
   public void handle(Alert alert) {
-    switch (alert.getType()) {
-      case NoEligibleDelegates:
-        handleNoEligibleDelegates(alert);
-        break;
-      default:
-        persistence.update(
-            alert, persistence.createUpdateOperations(Alert.class).unset(AlertKeys.alertReconciliation_needed));
-        break;
-    }
-  }
-
-  public void handleNoEligibleDelegates(Alert alert) {
-    NoEligibleDelegatesAlert data = (NoEligibleDelegatesAlert) alert.getAlertData();
-    NoEligibleDelegatesAlertReconciliation alertReconciliation =
-        (NoEligibleDelegatesAlertReconciliation) alert.getAlertReconciliation();
-
-    boolean canAssign = alertReconciliation.getDelegates().stream().anyMatch(delegateId
-        -> assignDelegateService.canAssign(null, delegateId, alert.getAccountId(), data.getAppId(), data.getEnvId(),
-            data.getInfraMappingId(), data.getTaskGroup(), data.getExecutionCapabilities(), null));
-
-    if (canAssign) {
-      alertService.close(alert);
-      return;
-    }
-
-    persistence.update(alert,
-        persistence.createUpdateOperations(Alert.class)
-            .unset(AlertKeys.alertReconciliation_needed)
-            .unset(AlertKeys.alertReconciliation + "." + NoEligibleDelegatesAlertReconciliationKeys.delegates));
+    persistence.update(
+        alert, persistence.createUpdateOperations(Alert.class).unset(AlertKeys.alertReconciliation_needed));
   }
 }

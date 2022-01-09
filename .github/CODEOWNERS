@@ -9,3 +9,6 @@ DockerFile* diptiman.adak@harness.io udham.singh@harness.io guna.chandrasekaran@
 /870-orchestration/src/test/resources/recaster/alias/alias.txt @prashantpal31
 /260-delegate/module-dependency.hash bojan.micovic@harness.io raghu@harness.io abhinav.singh@harness.io jenny.james@harness.io
 /270-delegate-service-app/module-dependency.hash bojan.micovic@harness.io raghu@harness.io abhinav.singh@harness.io jenny.james@harness.io
+/125-cd-nextgen/src/main/java/io/harness/cdng/creator/CDNGPlanCreatorProvider.java prashant.sharma@harness.io vaibhav.si@harness.io;
+/800-pipeline-service/src/main/java/io/harness/pms/plan/creation/PipelineServiceInternalInfoProvider.java prashant.sharma@harness.io vaibhav.si@harness.io;
+/320-ci-execution/src/main/java/io/harness/ci/plan/creator/CIPipelineServiceInfoProvider.java prashant.sharma@harness.io vaibhav.si@harness.io;

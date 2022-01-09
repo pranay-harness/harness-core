@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.beans.EnvironmentType.NON_PROD;
@@ -1668,6 +1675,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     String delegateId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
+                                    .status(DelegateTask.Status.QUEUED)
                                     .data(TaskData.builder().taskType(TaskType.HTTP.name()).build())
                                     .executionCapabilities(emptyList())
                                     .build();
@@ -1717,8 +1725,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     TaskData taskData = TaskData.builder().taskType(TaskType.SCRIPT.name()).build();
     String accountId = generateUuid();
     String delegateId = generateUuid();
-    DelegateTask delegateTask =
-        DelegateTask.builder().accountId(accountId).data(taskData).executionCapabilities(emptyList()).build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(accountId)
+                                    .status(DelegateTask.Status.QUEUED)
+                                    .data(taskData)
+                                    .executionCapabilities(emptyList())
+                                    .build();
     Delegate delegate = Delegate.builder()
                             .accountId(accountId)
                             .uuid(delegateId)
@@ -1859,17 +1871,20 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateCache.get("accountId", delegateId2, false)).thenReturn(delegate2);
     DelegateTask asyncTask = DelegateTask.builder()
                                  .uuid(generateUuid())
+                                 .status(DelegateTask.Status.QUEUED)
                                  .accountId("accountId")
                                  .data(TaskData.builder().async(true).taskType(TaskType.SCRIPT.name()).build())
                                  .build();
     DelegateTask syncTask = DelegateTask.builder()
                                 .uuid(generateUuid())
                                 .accountId("accountId")
+                                .status(DelegateTask.Status.QUEUED)
                                 .data(TaskData.builder().async(false).taskType(TaskType.HTTP.name()).build())
                                 .build();
     DelegateTask wrongAsyncTask =
         DelegateTask.builder()
             .uuid(generateUuid())
+            .status(DelegateTask.Status.QUEUED)
             .accountId("accountId")
             .data(TaskData.builder().async(true).taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build())
             .build();
@@ -1877,6 +1892,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     DelegateTask wrongSyncTask =
         DelegateTask.builder()
             .uuid(generateUuid())
+            .status(DelegateTask.Status.QUEUED)
             .accountId("accountId")
             .data(TaskData.builder().async(false).taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build())
             .build();
@@ -1998,6 +2014,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     persistence.save(delegate);
     return delegate;
   }
+<<<<<<< HEAD
 
   private List<Delegate> createAccountDelegates() {
     Delegate delegate1 = Delegate.builder()
@@ -2048,3 +2065,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     return Lists.newArrayList(delegate1, delegate2, delegate3, delegate4);
   }
 }
+=======
+}
+>>>>>>> cb13e407988fad955761971ec212f5b3f5dbfaea

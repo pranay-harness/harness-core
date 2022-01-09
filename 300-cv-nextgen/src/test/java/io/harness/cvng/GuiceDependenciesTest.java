@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+=======
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
+>>>>>>> cb13e407988fad955761971ec212f5b3f5dbfaea
 package io.harness.cvng;
 
 import static io.harness.rule.OwnerRule.KAMAL;
@@ -16,6 +26,10 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
+<<<<<<< HEAD
+=======
+import org.junit.Ignore;
+>>>>>>> cb13e407988fad955761971ec212f5b3f5dbfaea
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -31,6 +45,10 @@ public class GuiceDependenciesTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+<<<<<<< HEAD
+=======
+  @Ignore("Enable once ti team figures out how to run this every time")
+>>>>>>> cb13e407988fad955761971ec212f5b3f5dbfaea
   public void testGuiceGraph() throws IllegalAccessException {
     // This is a experimental tests for now so just including only few classes. If this is helpful we will include all
     // the injected classes

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -20,6 +27,11 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_ACQUIRE;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_ACQUIRE_FAILED;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_CREATION;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_EXPIRED;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_NO_ELIGIBLE_DELEGATES;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -92,6 +104,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.DelegateDriverLogContext;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
+import io.harness.metrics.intfc.DelegateMetricsService;
 import io.harness.mongo.DelayLogContext;
 import io.harness.network.SafeHttpCall;
 import io.harness.observer.Subject;
@@ -245,6 +258,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   @Inject private DelegateInsightsService delegateInsightsService;
   @Inject private DelegateSetupService delegateSetupService;
   @Inject private AuditHelper auditHelper;
+  @Inject private DelegateMetricsService delegateMetricsService;
 
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
 
@@ -430,6 +444,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
           addToTaskActivityLog(task, errorMessage);
           delegateSelectionLogsService.logNoEligibleDelegatesToExecuteTask(batch, task.getAccountId());
           delegateSelectionLogsService.save(batch);
+          delegateMetricsService.recordDelegateTaskMetrics(task, DELEGATE_TASK_NO_ELIGIBLE_DELEGATES);
           throw new NoEligibleDelegatesInAccountException();
         }
         // shuffle the eligible delegates to evenly distribute the load
@@ -475,15 +490,30 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         }
         delegateSelectionLogsService.save(batch);
         persistence.save(task);
+<<<<<<< HEAD
         log.info("Task {} marked as {} with first attempt broadcast to {}", task.getUuid(), taskStatus,
             task.getBroadcastToDelegateIds());
+=======
+        delegateMetricsService.recordDelegateTaskMetrics(task, DELEGATE_TASK_CREATION);
+        log.info("Task {} marked as {} ", task.getUuid(), taskStatus);
+>>>>>>> cb13e407988fad955761971ec212f5b3f5dbfaea
         addToTaskActivityLog(task, "Task processing completed");
       } catch (Exception exception) {
-        log.info("Task id {} failed with error {}", task.getUuid(), exception.getMessage());
+        log.info("Task id {} failed with error {}", task.getUuid(), exception);
         printErrorMessageOnTaskFailure(task);
-        handleTaskFailureResponse(task, exception.getMessage());
+        handleTaskFailureResponse(task, ExceptionUtils.getMessage(exception));
+        throw exception;
       }
     }
+  }
+
+  private String getDelegateIdForFirstBroadcast(DelegateTask delegateTask, List<String> eligibleListOfDelegates) {
+    for (String delegateId : eligibleListOfDelegates) {
+      if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
+        return delegateId;
+      }
+    }
+    return eligibleListOfDelegates.get(random.nextInt(eligibleListOfDelegates.size()));
   }
 
   private String getDelegateIdForFirstBroadcast(DelegateTask delegateTask, List<String> eligibleListOfDelegates) {
@@ -799,6 +829,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       if (delegateTask == null) {
         return null;
       }
+      delegateMetricsService.recordDelegateTaskMetrics(delegateTask, DELEGATE_TASK_ACQUIRE);
 
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
@@ -1036,6 +1067,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
             delegateTaskPackageBuilder.logStreamingToken(logStreamingAccountToken);
           }
         } catch (ExecutionException e) {
+          delegateMetricsService.recordDelegateTaskMetrics(delegateTask, DELEGATE_TASK_ACQUIRE_FAILED);
           log.warn("Unable to retrieve the log streaming service account token, while preparing delegate task package");
           throw new InvalidRequestException(e.getMessage() + "\nPlease ensure log service is running.", e);
         }
@@ -1249,6 +1281,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
           errorMessage =
               "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(EXPIRED, delegateTask);
+          delegateMetricsService.recordDelegateTaskMetrics(delegateTask, DELEGATE_TASK_EXPIRED);
           log.info("Marking task as expired: {}", errorMessage);
 
           if (isNotBlank(delegateTask.getWaitId())) {

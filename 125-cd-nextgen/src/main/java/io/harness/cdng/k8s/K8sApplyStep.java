@@ -1,7 +1,16 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.k8s;
 
 import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -12,6 +21,8 @@ import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
+import io.harness.cdng.manifest.ManifestType;
+import io.harness.cdng.manifest.steps.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
@@ -67,7 +78,16 @@ public class K8sApplyStep extends TaskChainExecutableWithRollbackAndRbac impleme
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepElementParameters.getSpec();
     validateFilePaths(k8sApplyStepParameters);
+    validateManifestType(ambiance);
     return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
+  }
+
+  private void validateManifestType(Ambiance ambiance) {
+    ManifestsOutcome manifestsOutcomes = k8sStepHelper.resolveManifestsOutcome(ambiance);
+    ManifestOutcome manifestOutcome = k8sStepHelper.getK8sSupportedManifestOutcome(manifestsOutcomes.values());
+    if (ManifestType.OpenshiftTemplate.equals(manifestOutcome.getType())) {
+      throw new UnsupportedOperationException(format("Unsupported Manifest type: [%s]", manifestOutcome.getType()));
+    }
   }
 
   private void validateFilePaths(K8sApplyStepParameters k8sApplyStepParameters) {

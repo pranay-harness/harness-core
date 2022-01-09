@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ccm.graphql.query.budget;
 
 import static io.harness.ccm.budget.AlertThresholdBase.ACTUAL_COST;
@@ -86,6 +93,31 @@ public class BudgetsQuery {
       @GraphQLEnvironment final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
     return budgetService.getBudgetTimeSeriesStats(budgetDao.get(budgetId, accountId));
+  }
+
+  @GraphQLQuery(name = "budgetSummaryList", description = "List of budget cards for perspectives")
+  public List<BudgetSummary> listBudgetSummaryForPerspective(
+      @GraphQLArgument(name = "perspectiveId") String perspectiveId,
+      @GraphQLEnvironment final ResolutionEnvironment env) {
+    final String accountId = graphQLUtils.getAccountIdentifier(env);
+    List<BudgetSummary> budgetSummaryList = new ArrayList<>();
+    try {
+      List<Budget> perspectiveBudgets = new ArrayList<>();
+      if (perspectiveId != null) {
+        List<Budget> budgets = budgetDao.list(accountId);
+        perspectiveBudgets =
+            budgets.stream()
+                .filter(
+                    perspectiveBudget -> BudgetUtils.isBudgetBasedOnGivenPerspective(perspectiveBudget, perspectiveId))
+                .collect(Collectors.toList());
+      }
+
+      perspectiveBudgets.forEach(budget -> budgetSummaryList.add(buildBudgetSummary(budget)));
+
+    } catch (Exception e) {
+      log.info("Exception while fetching budget summary cards for given perspective: ", e);
+    }
+    return budgetSummaryList;
   }
 
   private BudgetSummary buildBudgetSummary(Budget budget) {
