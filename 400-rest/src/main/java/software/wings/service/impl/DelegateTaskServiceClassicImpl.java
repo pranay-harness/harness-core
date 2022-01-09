@@ -436,13 +436,13 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         Collections.shuffle(eligibleListOfDelegates);
         task.setBroadcastToDelegateIds(
             Lists.newArrayList(getDelegateIdForFirstBroadcast(task, eligibleListOfDelegates)));
-        log.info("Assignable/eligible delegates to execute task {} are {}.", task.getUuid(),
-            task.getEligibleToExecuteDelegateIds());
 
         delegateSelectionLogsService.logEligibleDelegatesToExecuteTask(
             batch, Sets.newHashSet(eligibleListOfDelegates), task.getAccountId());
         // save eligible delegate ids as part of task (will be used for rebroadcasting)
         task.setEligibleToExecuteDelegateIds(new LinkedList<>(eligibleListOfDelegates));
+        log.info("Assignable/eligible delegates to execute task {} are {}.", task.getUuid(),
+            task.getEligibleToExecuteDelegateIds());
 
         // filter only connected ones from list
         List<String> connectedEligibleDelegates =
