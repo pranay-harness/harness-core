@@ -16,8 +16,8 @@ replace_key_value () {
 }
 
 yq delete -i /opt/harness/cv-nextgen-config.yml server.adminConnectors
-yq delete -i /opt/harness/cv-nextgen-config.yml server.applicationConnectors[0]
-yq delete -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0]
+yq delete -i $CONFIG_FILE 'server.applicationConnectors.(type==https)'
+yq delete -i $CONFIG_FILE 'pmsSdkGrpcServerConfig.connectors.(secure==true)'
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
   yq write -i /opt/harness/cv-nextgen-config.yml logging.level "$LOGGING_LEVEL"
@@ -46,10 +46,10 @@ fi
   yq write -i /opt/harness/cv-nextgen-config.yml server.requestLog.appenders[0].target "STDOUT"
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i /opt/harness/cv-nextgen-config.yml logging.appenders[0]
-  yq write -i /opt/harness/cv-nextgen-config.yml logging.appenders[0].stackdriverLogEnabled "true"
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==console)'
+  yq write -i $CONFIG_FILE 'logging.appenders.(type==gke-console).stackdriverLogEnabled' "true"
 else
-  yq delete -i /opt/harness/cv-nextgen-config.yml logging.appenders[1]
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==gke-console)'
 fi
 
 if [[ "" != "$DATA_STORE" ]]; then
@@ -146,7 +146,7 @@ if [[ "" != "$CACHE_CONFIG_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$CACHE_CONFIG_REDIS_SENTINELS"
   INDEX=0
   for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
-    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
+    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[$INDEX] "${REDIS_SENTINEL_URL}"
     INDEX=$(expr $INDEX + 1)
   done
 fi
