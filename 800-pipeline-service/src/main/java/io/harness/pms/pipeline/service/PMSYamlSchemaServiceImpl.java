@@ -175,16 +175,8 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
         fetchSchemaWithDetailsFromModules(accountIdentifier, enabledModules);
     CompletableFutures<List<PartialSchemaDTO>> completableFutures = new CompletableFutures<>(executor);
     for (ModuleType enabledModule : enabledModules) {
-      List<YamlSchemaWithDetails> moduleYamlSchemaDetails = new ArrayList<>();
-      for (YamlSchemaWithDetails yamlSchemaWithDetails : stepsSchemaWithDetails) {
-        if (yamlSchemaWithDetails.getYamlSchemaMetadata() != null
-            && yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported() != null
-            && yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported().contains(enabledModule)
-            // Don't send step to its owner module.
-            && yamlSchemaWithDetails.getModuleType() != enabledModule) {
-          moduleYamlSchemaDetails.add(yamlSchemaWithDetails);
-        }
-      }
+      List<YamlSchemaWithDetails> moduleYamlSchemaDetails =
+          filterYamlSchemaDetailsByModule(stepsSchemaWithDetails, enabledModule);
       completableFutures.supplyAsync(
           () -> schemaFetcher.fetchSchema(accountIdentifier, enabledModule, moduleYamlSchemaDetails));
     }
@@ -285,6 +277,21 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     return null;
   }
 
+  private List<YamlSchemaWithDetails> filterYamlSchemaDetailsByModule(
+      List<YamlSchemaWithDetails> allYamlSchemaWithDetails, ModuleType moduleType) {
+    List<YamlSchemaWithDetails> moduleYamlSchemaDetails = new ArrayList<>();
+    for (YamlSchemaWithDetails yamlSchemaWithDetails : allYamlSchemaWithDetails) {
+      if (yamlSchemaWithDetails.getYamlSchemaMetadata() != null
+          && yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported() != null
+          && yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported().contains(moduleType)
+          // Don't send step to its owner module.
+          && yamlSchemaWithDetails.getModuleType() != moduleType) {
+        moduleYamlSchemaDetails.add(yamlSchemaWithDetails);
+      }
+    }
+    return moduleYamlSchemaDetails;
+  }
+
   @SuppressWarnings("unchecked")
   private List<ModuleType> obtainEnabledModules(
       String projectIdentifier, String accountIdentifier, String orgIdentifier) {
@@ -338,8 +345,19 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     return yamlSchemaWithDetailsList;
   }
 
+  // Introduce cache here.
   @Override
-  public JsonNode getStepYamlSchema(String accountId, EntityType entityType) {
-    return schemaFetcher.fetchStepYamlSchema(accountId, entityType);
+  public JsonNode getIndividualYamlSchema(String accountId, String orgIdentifier, String projectIdentifier, Scope scope,
+      EntityType entityType, String yamlGroup) {
+    if (yamlGroup.equals(StepCategory.PIPELINE.toString())) {
+      return getPipelineYamlSchemaInternal(accountId, projectIdentifier, orgIdentifier, null);
+    }
+    List<YamlSchemaWithDetails> yamlSchemaWithDetailsList = null;
+    if (yamlGroup.equals(StepCategory.STAGE.toString())) {
+      List<ModuleType> enabledModules = obtainEnabledModules(projectIdentifier, accountId, orgIdentifier);
+      yamlSchemaWithDetailsList = fetchSchemaWithDetailsFromModules(accountId, enabledModules);
+    }
+    return schemaFetcher.fetchStepYamlSchema(
+        accountId, projectIdentifier, orgIdentifier, scope, entityType, yamlGroup, yamlSchemaWithDetailsList);
   }
 }

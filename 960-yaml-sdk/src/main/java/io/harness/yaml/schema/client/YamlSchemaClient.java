@@ -18,6 +18,7 @@ import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.YamlSchemaDetailsWrapper;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -26,23 +27,20 @@ import retrofit2.http.Query;
 
 @OwnedBy(DX)
 public interface YamlSchemaClient {
-  @GET("partial-yaml-schema")
-  Call<ResponseDTO<PartialSchemaDTO>> get(@Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Query("scope") Scope scope);
   @GET("partial-yaml-schema/details")
   Call<ResponseDTO<YamlSchemaDetailsWrapper>> getSchemaDetails(
       @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Query("scope") Scope scope);
   @POST("partial-yaml-schema/merged")
-  Call<ResponseDTO<PartialSchemaDTO>> get(@Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+  Call<ResponseDTO<List<PartialSchemaDTO>>> get(@Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Query("scope") Scope scope,
       @Body YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper);
-  @GET("partial-yaml-schema/step")
+  @POST("partial-yaml-schema/get")
   Call<ResponseDTO<JsonNode>> getStepSchema(@Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Query("scope") Scope scope,
-      @Query(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType);
+      @Query(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType, @Query("yamlGroup") String yamlGroup,
+      @Body YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper);
 }

@@ -11,6 +11,7 @@ import static java.lang.String.format;
 
 import io.harness.EntityType;
 import io.harness.ModuleType;
+import io.harness.encryption.Scope;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.pipeline.service.yamlschema.exception.YamlSchemaCacheException;
@@ -23,7 +24,6 @@ import io.harness.yaml.schema.client.YamlSchemaClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -45,12 +45,11 @@ public class RemoteSchemaGetter implements SchemaGetter {
   @Override
   public List<PartialSchemaDTO> getSchema(List<YamlSchemaWithDetails> yamlSchemaWithDetailsList) {
     try {
-      Call<ResponseDTO<PartialSchemaDTO>> call = schemaClient.get(accountIdentifier, null, null, null,
+      Call<ResponseDTO<List<PartialSchemaDTO>>> call = schemaClient.get(accountIdentifier, null, null, null,
           YamlSchemaDetailsWrapper.builder().yamlSchemaWithDetailsList(yamlSchemaWithDetailsList).build());
 
       RetryPolicy<Object> retryPolicy = getRetryPolicy(moduleType);
-      return Collections.singletonList(
-          Failsafe.with(retryPolicy).get(() -> SafeHttpCall.execute(call.clone())).getData());
+      return Failsafe.with(retryPolicy).get(() -> SafeHttpCall.execute(call.clone())).getData();
     } catch (Exception e) {
       log.error(format("[PMS] Unable to get %s schema information", moduleType.name()), e.getCause());
     }
@@ -78,15 +77,18 @@ public class RemoteSchemaGetter implements SchemaGetter {
   }
 
   @Override
-  public JsonNode fetchStepYamlSchema(EntityType entityType) {
+  public JsonNode fetchStepYamlSchema(String orgIdentifier, String projectIdentifier, Scope scope,
+      EntityType entityType, String yamlGroup, List<YamlSchemaWithDetails> yamlSchemaWithDetailsList) {
     try {
-      Call<ResponseDTO<JsonNode>> call = schemaClient.getStepSchema(accountIdentifier, null, null, null, entityType);
+      Call<ResponseDTO<JsonNode>> call =
+          schemaClient.getStepSchema(accountIdentifier, projectIdentifier, orgIdentifier, scope, entityType, yamlGroup,
+              YamlSchemaDetailsWrapper.builder().yamlSchemaWithDetailsList(yamlSchemaWithDetailsList).build());
       RetryPolicy<Object> retryPolicy = getRetryPolicy(entityType.getEntityProduct());
       return Failsafe.with(retryPolicy).get(() -> SafeHttpCall.execute(call.clone())).getData();
 
     } catch (Exception e) {
       throw new YamlSchemaCacheException(
-          format("[PMS] Unable to get %s step schema information", entityType.getYamlName()), e.getCause());
+          format("[PMS] Unable to get %s %s schema information", entityType.getYamlName(), yamlGroup), e.getCause());
     }
   }
 }
