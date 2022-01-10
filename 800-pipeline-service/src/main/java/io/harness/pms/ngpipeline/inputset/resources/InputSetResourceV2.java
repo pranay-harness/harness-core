@@ -96,8 +96,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PIPELINE)
-@Api("/inputSets/V2")
-@Path("/inputSets/V2")
+@Api("V2/inputSets/")
+@Path("V2/inputSets/")
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
