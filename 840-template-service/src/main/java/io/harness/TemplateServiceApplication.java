@@ -51,6 +51,7 @@ import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.serializer.jackson.TemplateServiceJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.template.InspectCommand;
@@ -160,6 +161,7 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
     NGObjectMapperHelper.configureNGObjectMapper(mapper);
+    mapper.registerModule(new TemplateServiceJacksonModule());
   }
 
   @Override

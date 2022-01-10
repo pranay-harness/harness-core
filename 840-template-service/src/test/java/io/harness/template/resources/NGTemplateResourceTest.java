@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
@@ -31,6 +32,12 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateEntityType;
 import io.harness.ng.core.template.TemplateListType;
 import io.harness.ng.core.template.TemplateSummaryResponseDTO;
+import io.harness.pms.contracts.plan.YamlOutputProperties;
+import io.harness.pms.contracts.service.VariableMergeResponseProto;
+import io.harness.pms.contracts.service.VariableResponseMapValueProto;
+import io.harness.pms.contracts.service.VariablesServiceGrpc;
+import io.harness.pms.contracts.service.VariablesServiceGrpc.VariablesServiceBlockingStub;
+import io.harness.pms.contracts.service.VariablesServiceRequest;
 import io.harness.rule.Owner;
 import io.harness.template.beans.PermissionTypes;
 import io.harness.template.beans.TemplateDeleteListRequestDTO;
@@ -39,22 +46,33 @@ import io.harness.template.beans.TemplateWrapperResponseDTO;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.helpers.TemplateMergeHelper;
+import io.harness.template.helpers.TemplateYamlConversionHelper;
 import io.harness.template.services.NGTemplateService;
 import io.harness.template.services.NGTemplateServiceHelper;
 
 import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import io.grpc.ManagedChannel;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.stub.StreamObserver;
+import io.grpc.testing.GrpcCleanupRule;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.AdditionalAnswers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.PageImpl;
@@ -64,11 +82,15 @@ import org.springframework.data.domain.Sort;
 
 @OwnedBy(CDC)
 public class NGTemplateResourceTest extends CategoryTest {
+  @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
+
   NGTemplateResource templateResource;
   @Mock NGTemplateService templateService;
   @Mock NGTemplateServiceHelper templateServiceHelper;
   @Mock AccessControlClient accessControlClient;
   @Mock TemplateMergeHelper templateMergeHelper;
+  @Inject VariablesServiceBlockingStub variablesServiceBlockingStub;
+  @Mock TemplateYamlConversionHelper templateYamlConversionHelper;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -81,11 +103,40 @@ public class NGTemplateResourceTest extends CategoryTest {
   TemplateEntity entity;
   TemplateEntity entityWithMongoVersion;
 
+  private final VariablesServiceGrpc.VariablesServiceImplBase serviceImpl =
+      mock(VariablesServiceGrpc.VariablesServiceImplBase.class,
+          AdditionalAnswers.delegatesTo(new VariablesServiceGrpc.VariablesServiceImplBase() {
+            @Override
+            public void getVariables(
+                VariablesServiceRequest request, StreamObserver<VariableMergeResponseProto> responseObserver) {
+              Map<String, VariableResponseMapValueProto> metadataMap = new HashMap<>();
+              metadataMap.put("v1",
+                  VariableResponseMapValueProto.newBuilder()
+                      .setYamlOutputProperties(YamlOutputProperties.newBuilder().build())
+                      .build());
+              VariableMergeResponseProto variableMergeResponseProto =
+                  VariableMergeResponseProto.newBuilder().setYaml("temp1").putAllMetadataMap(metadataMap).build();
+              responseObserver.onNext(variableMergeResponseProto);
+              responseObserver.onCompleted();
+            }
+          }));
+
   @Before
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
-    templateResource =
-        new NGTemplateResource(templateService, templateServiceHelper, accessControlClient, templateMergeHelper);
+
+    // Generate a unique in-process server name.
+    String serverName = InProcessServerBuilder.generateName();
+    // Create a server, add service, start, and register for automatic graceful shutdown.
+    grpcCleanup.register(
+        InProcessServerBuilder.forName(serverName).directExecutor().addService(serviceImpl).build().start());
+    // Create a client channel and register for automatic graceful shutdown.
+    ManagedChannel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
+    // Create a VariablesStub using the in-process channel;
+    variablesServiceBlockingStub = VariablesServiceGrpc.newBlockingStub(channel);
+
+    templateResource = new NGTemplateResource(templateService, templateServiceHelper, accessControlClient,
+        templateMergeHelper, variablesServiceBlockingStub, templateYamlConversionHelper);
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "template.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);

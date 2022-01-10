@@ -8,6 +8,7 @@
 package io.harness.serializer.json;
 
 import io.harness.logging.UnitProgress;
+import io.harness.pms.serializer.json.serializers.ProtoJsonSerializer;
 
 public class UnitProgressSerializer extends ProtoJsonSerializer<UnitProgress> {
   public UnitProgressSerializer() {
