@@ -66,6 +66,7 @@ import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.Variable;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
@@ -535,13 +536,20 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
 
-    String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask,
-        StateExecutionContext.builder()
-            .stateExecutionData(scriptStateExecutionData)
-            .scriptType(scriptType)
-            .adoptDelegateDecryption(true)
-            .expressionFunctorToken(expressionFunctorToken)
-            .build());
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
+                                                      .stateExecutionData(scriptStateExecutionData)
+                                                      .scriptType(scriptType)
+                                                      .adoptDelegateDecryption(true)
+                                                      .expressionFunctorToken(expressionFunctorToken)
+                                                      .build();
+
+    context.resetPreparedCache();
+    if (isNotEmpty(scriptStateExecutionData.getTemplateVariable())) {
+      scriptStateExecutionData.getTemplateVariable().replaceAll(
+          (k, v) -> context.renderExpression(v.toString(), stateExecutionContext));
+    }
+
+    String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask, stateExecutionContext);
 
     appendDelegateTaskDetails(context, delegateTask);
 
@@ -589,7 +597,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   public List<String> getPatternsForRequiredContextElementType() {
     List<String> patterns = new LinkedList<>();
     if (templateVariables != null) {
-      templateVariables.stream().map(variable -> variable.getValue()).collect(Collectors.toList());
+      patterns = templateVariables.stream().map(variable -> variable.getValue()).collect(Collectors.toList());
     }
     patterns.add(scriptString);
     patterns.add(host);
