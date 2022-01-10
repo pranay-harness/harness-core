@@ -19,6 +19,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "@com_github_blendle_zapdriver//:zapdriver",
+        "@com_github_gofrs_uuid//:uuid",
         "@com_github_golang_mock//gomock",
         "@org_uber_go_zap//:zap",
         "@org_uber_go_zap//zapcore",
