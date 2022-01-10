@@ -94,6 +94,7 @@ import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -571,5 +572,31 @@ public class NGTemplateResource {
     VariableMergeResponseProto variables = variablesServiceBlockingStub.getVariables(request);
     VariableMergeServiceResponse variableMergeServiceResponse = VariablesResponseDtoMapper.toDto(variables);
     return ResponseDTO.newResponse(variableMergeServiceResponse);
+  }
+
+  @GET
+  @Path("validateUniqueIdentifier")
+  @ApiOperation(value = "Validate Identifier is unique", nickname = "validateTheIdentifierIsUnique")
+  @Operation(operationId = "validateTheIdentifierIsUnique",
+      summary =
+          "Validate template identifier is unique by Account Identifier, Organization Identifier, Project Identifier, Template Identifier and Version Label",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "It returns true if the Identifier is unique and false if the Identifier is not unique")
+      })
+  public ResponseDTO<Boolean>
+  validateTheIdentifierIsUnique(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE, required = true)
+                                @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = TEMPLATE_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String templateIdentifier,
+      @Parameter(description = "Version Label") @QueryParam(
+          NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel) {
+    return ResponseDTO.newResponse(templateService.validateIdentifierIsUnique(
+        accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel));
   }
 }

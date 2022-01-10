@@ -20,6 +20,7 @@ public class InvalidRequestException extends WingsException {
 
   public InvalidRequestException(String message, ErrorMetadataDTO metadata) {
     super(message, null, INVALID_REQUEST, Level.ERROR, null, null, metadata);
+    super.param(MESSAGE_ARG, message);
   }
 
   // This method does not create the intended message, needs to be fixed @George
