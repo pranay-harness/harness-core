@@ -57,7 +57,8 @@ public class AppManifestSettingAttributePTaskManager implements SettingAttribute
       return;
     }
 
-    if (!connectorValueChanged(prevSettingAttribute, currSettingAttribute)) {
+    if (!connectorValueChanged(prevSettingAttribute, currSettingAttribute)
+        || !credentialsChanged(prevSettingAttribute, currSettingAttribute)) {
       return;
     }
 
@@ -67,12 +68,24 @@ public class AppManifestSettingAttributePTaskManager implements SettingAttribute
           currSettingAttribute.getAccountId(), currSettingAttribute.getUuid());
 
       applicationManifests.forEach(applicationManifest -> {
-        helmChartService.deleteByAppManifest(applicationManifest.getAppId(), applicationManifest.getUuid());
+        if (connectorValueChanged(prevSettingAttribute, currSettingAttribute)) {
+          helmChartService.deleteByAppManifest(applicationManifest.getAppId(), applicationManifest.getUuid());
+        }
         if (applicationManifest.getPerpetualTaskId() != null) {
           appManifestPTaskHelper.resetPerpetualTask(applicationManifest);
         }
       });
     }
+  }
+
+  private boolean credentialsChanged(SettingAttribute prevSettingAttribute, SettingAttribute currSettingAttribute) {
+    if (currSettingAttribute.getValue() instanceof HttpHelmRepoConfig) {
+      HttpHelmRepoConfig currHttpHelmRepoConfig = (HttpHelmRepoConfig) currSettingAttribute.getValue();
+      HttpHelmRepoConfig prevHttpHelmRepoConfig = (HttpHelmRepoConfig) prevSettingAttribute.getValue();
+      return !prevHttpHelmRepoConfig.getUsername().equals(currHttpHelmRepoConfig.getUsername())
+          || !Arrays.equals(prevHttpHelmRepoConfig.getPassword(), currHttpHelmRepoConfig.getPassword());
+    }
+    return false;
   }
 
   private boolean connectorValueChanged(SettingAttribute prevSettingAttribute, SettingAttribute currSettingAttribute) {
@@ -90,9 +103,7 @@ public class AppManifestSettingAttributePTaskManager implements SettingAttribute
     } else if (currSettingAttribute.getValue() instanceof HttpHelmRepoConfig) {
       HttpHelmRepoConfig currHttpHelmRepoConfig = (HttpHelmRepoConfig) currSettingAttribute.getValue();
       HttpHelmRepoConfig prevHttpHelmRepoConfig = (HttpHelmRepoConfig) prevSettingAttribute.getValue();
-      return !prevHttpHelmRepoConfig.getChartRepoUrl().equals(currHttpHelmRepoConfig.getChartRepoUrl())
-          || !prevHttpHelmRepoConfig.getUsername().equals(currHttpHelmRepoConfig.getUsername())
-          || !Arrays.equals(prevHttpHelmRepoConfig.getPassword(), currHttpHelmRepoConfig.getPassword());
+      return !prevHttpHelmRepoConfig.getChartRepoUrl().equals(currHttpHelmRepoConfig.getChartRepoUrl());
     }
     return false;
   }
