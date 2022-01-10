@@ -24,7 +24,7 @@ func (*MockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {}
 func TestTokenGenerationMiddleware_Success(t *testing.T) {
 	var config config.Config
 	globalToken := "token"
-	config.Secrets.GlobalToken = globalToken
+	config.Auth.GlobalToken = globalToken
 	v := url.Values{}
 	v.Add("accountID", "account")
 	header := http.Header{}
@@ -41,7 +41,7 @@ func TestTokenGenerationMiddleware_Success(t *testing.T) {
 func TestTokenGenerationMiddleware_TokenInURL_Success(t *testing.T) {
 	var config config.Config
 	globalToken := "token"
-	config.Secrets.GlobalToken = globalToken
+	config.Auth.GlobalToken = globalToken
 	v := url.Values{}
 	v.Add("accountID", "account")
 	v.Add(authHeader, globalToken)
@@ -58,7 +58,7 @@ func TestTokenGenerationMiddleware_TokenInURL_Success(t *testing.T) {
 func TestTokenGenerationMiddleware_IncorrectToken(t *testing.T) {
 	var config config.Config
 	globalToken := "token"
-	config.Secrets.GlobalToken = globalToken
+	config.Auth.GlobalToken = globalToken
 	v := url.Values{}
 	v.Add("accountID", "account")
 	header := http.Header{}
@@ -75,7 +75,7 @@ func TestTokenGenerationMiddleware_IncorrectToken(t *testing.T) {
 func TestTokenGenerationMiddleware_AccountIDAbsent(t *testing.T) {
 	var config config.Config
 	globalToken := "token"
-	config.Secrets.GlobalToken = globalToken
+	config.Auth.GlobalToken = globalToken
 	header := http.Header{}
 	header.Add(authHeader, "token")
 	httpReq := &http.Request{Header: header}
@@ -90,7 +90,7 @@ func TestTokenGenerationMiddleware_AccountIDAbsent(t *testing.T) {
 func TestTokenGenerationMiddleware_SkipAccountIDCheck(t *testing.T) {
 	var config config.Config
 	globalToken := "token"
-	config.Secrets.GlobalToken = globalToken
+	config.Auth.GlobalToken = globalToken
 	header := http.Header{}
 	header.Add(authHeader, "token")
 	httpReq := &http.Request{Header: header}
@@ -106,7 +106,7 @@ func TestAuthMiddleware_Success(t *testing.T) {
 	var config config.Config
 	logSecret := "secret"
 	accountID := "account"
-	config.Secrets.LogSecret = logSecret
+	config.Auth.LogSecret = logSecret
 	cookie := authcookie.NewSinceNow(accountID, 1*time.Hour, []byte(logSecret))
 	header := http.Header{}
 	v := url.Values{}
@@ -126,7 +126,7 @@ func TestAuthMiddleware_TokenInURL_Success(t *testing.T) {
 	var config config.Config
 	logSecret := "secret"
 	accountID := "account"
-	config.Secrets.LogSecret = logSecret
+	config.Auth.LogSecret = logSecret
 	cookie := authcookie.NewSinceNow(accountID, 1*time.Hour, []byte(logSecret))
 	header := http.Header{}
 	v := url.Values{}
@@ -147,7 +147,7 @@ func TestAuthMiddleware_IncorrectSecret(t *testing.T) {
 	logSecret := "secret"
 	incorrectLogSecret := "notsecret"
 	accountID := "account"
-	config.Secrets.LogSecret = logSecret
+	config.Auth.LogSecret = logSecret
 	// Generate cookie with a different secret
 	cookie := authcookie.NewSinceNow(accountID, 1*time.Hour, []byte(incorrectLogSecret))
 	header := http.Header{}
@@ -169,7 +169,7 @@ func TestAuthMiddleware_IncorrectAccount(t *testing.T) {
 	logSecret := "secret"
 	incorrectaccountID := "notaccount"
 	accountID := "account"
-	config.Secrets.LogSecret = logSecret
+	config.Auth.LogSecret = logSecret
 	// Generate cookie with a different account
 	cookie := authcookie.NewSinceNow(incorrectaccountID, 1*time.Hour, []byte(logSecret))
 	header := http.Header{}
@@ -191,7 +191,7 @@ func TestAuthMiddleware_NoKeyPresent(t *testing.T) {
 	logSecret := "secret"
 	incorrectaccountID := "notaccount"
 	accountID := "account"
-	config.Secrets.LogSecret = logSecret
+	config.Auth.LogSecret = logSecret
 	// Generate cookie with a different account
 	cookie := authcookie.NewSinceNow(incorrectaccountID, 1*time.Hour, []byte(logSecret))
 	header := http.Header{}
