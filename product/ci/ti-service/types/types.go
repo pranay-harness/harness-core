@@ -10,7 +10,7 @@ type FileStatus string
 type Selection string
 
 const (
-	// StatusPassed represents a passed test.
+	// StatusPassed represents a passed test. 
 	StatusPassed = "passed"
 
 	// StatusSkipped represents a test case that was intentionally skipped.
