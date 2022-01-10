@@ -2,7 +2,7 @@
 CONFIG_FILE=/opt/harness/event-service-config.yml
 
 # Remove the TLS connector (as ingress terminates TLS)
-yq delete -i $CONFIG_FILE connectors[0]
+yq delete -i $CONFIG_FILE 'connectors.(secure==true)'
 
 if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE harness-mongo.uri "$MONGO_URI"
