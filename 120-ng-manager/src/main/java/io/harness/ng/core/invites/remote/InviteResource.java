@@ -174,8 +174,7 @@ public class InviteResource {
                             .is(Boolean.FALSE)
                             .and(InviteKeys.deleted)
                             .is(Boolean.FALSE);
-    PageResponse<InviteDTO> invites =
-        inviteService.getInvites(criteria, pageRequest).map(io.harness.ng.core.invites.mapper.InviteMapper::writeDTO);
+    PageResponse<InviteDTO> invites = inviteService.getInvites(criteria, pageRequest).map(InviteMapper::writeDTO);
     return ResponseDTO.newResponse(invites);
   }
 
@@ -205,7 +204,9 @@ public class InviteResource {
 
   @POST
   @ApiOperation(value = "Add a new invite for the specified project/organization", nickname = "sendInvite")
-  @Operation(operationId = "sendInvite", summary = "Send a user Invite to either Project or Organization",
+  @Operation(operationId = "sendInvite",
+      summary =
+          "Send a user Invite to either Project or Organization (Deprecated). Please use the /user/users API to invite users",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -287,7 +288,7 @@ public class InviteResource {
     Invite invite = InviteMapper.toInvite(inviteDTO, ngAccess);
     invite.setId(inviteId);
     Optional<Invite> inviteOptional = inviteService.updateInvite(invite);
-    return ResponseDTO.newResponse(inviteOptional.map(io.harness.ng.core.invites.mapper.InviteMapper::writeDTO));
+    return ResponseDTO.newResponse(inviteOptional.map(InviteMapper::writeDTO));
   }
 
   @DELETE
