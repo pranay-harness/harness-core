@@ -1,12 +1,12 @@
 Var index = 0
 Var one = 1
-Var null = null
+Var nullObj = null
 Var totalMetrics = Env:metricNames.length()
 Var timeSeriesList = []
 
 while Var:index != Var:totalMetrics {
 
-    Var metricName = Env:metricNames[Var:index]
+    Var metricNameStr = Env:metricNames[Var:index]
     Var urlPath = Env:urlPaths[Var:index]
     Var dataCollectionURL = concat(Env:baseUrl, Var:urlPath)
     Var startTimePlaceholder = Env:startTimePlaceholders[Var:index]
@@ -48,24 +48,24 @@ while Var:index != Var:totalMetrics {
     Var serviceInstanceArr = []
     Var serviceInstance = null
 
-    if Var:serviceInstanceJSONPath != Var:null {
+    if Var:serviceInstanceJSONPath != Var:nullObj {
         serviceInstanceArr = extract(Var:response,Var:serviceInstanceJSONPath)
         serviceInstance = Var:serviceInstanceArr[Var:index]
     }
 
-    if Var:metricValArr != Var:null  {
+    if Var:metricValArr != Var:nullObj  {
 
         Var totalMetricValues = Var:metricValArr.length()
 
         while Var:innerIndex != Var:totalMetricValues {
            Var metricVal = Var:metricValArr[Var:innerIndex]
            Var timestamp = Var:timestampArr[Var:innerIndex]
-
-           if Var:metricVal != Var:null {
-              Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp, host=Var:serviceInstance)
+           Var metricIdentifier = null
+           if Var:metricVal != Var:nullObj {
+              Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricIdentifier=Var:metricIdentifier, metricName=Var:metricNameStr, metricValue=Var:metricVal, timestamp=Var:timestamp, host=Var:serviceInstance)
               Var:timeSeriesList.append(Var:tsRecord)
            }
-           innerIndex = Var:one + Var:innerIndex
+           innerIndex = Var:innerIndex + Var:one
         }
     }
 
