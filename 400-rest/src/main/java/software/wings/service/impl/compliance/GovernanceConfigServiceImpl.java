@@ -501,6 +501,10 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
         // if any updates to an active window
         if (!entry.equals(oldWindow)) {
+          // Validating the User can not update the expires field in yaml
+          if (oldWindow.getTimeRange().isExpires() != entry.getTimeRange().isExpires()) {
+            throw new InvalidRequestException("Cannot update the expires field");
+          }
           if (oldWindow.checkIfActive()) {
             throw new InvalidRequestException("Cannot update active freeze window");
           }
