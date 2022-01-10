@@ -222,18 +222,4 @@ public class DelegateQueueTaskTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTaskBroadcast> argumentCaptor = ArgumentCaptor.forClass(DelegateTaskBroadcast.class);
     verify(broadcaster, times(0)).broadcast(argumentCaptor.capture());
   }
-
-  @Test
-  @Owner(developers = JENNY)
-  @Category(UnitTests.class)
-  public void testGetMaxBroadcastCount() {
-    DelegateTask task = DelegateTask.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).broadcastCount(0).build();
-    assertThat(broadcastHelper.getMaxBroadcastCount(task)).isEqualTo(1);
-    task.setBroadcastCount(3);
-    assertThat(broadcastHelper.getMaxBroadcastCount(task)).isEqualTo(5);
-    task.setBroadcastCount(6);
-    assertThat(broadcastHelper.getMaxBroadcastCount(task)).isEqualTo(10);
-    task.setBroadcastCount(7);
-    assertThat(broadcastHelper.getMaxBroadcastCount(task)).isEqualTo(10);
-  }
 }
