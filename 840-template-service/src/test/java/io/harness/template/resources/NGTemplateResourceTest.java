@@ -9,8 +9,10 @@ package io.harness.template.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.template.resources.NGTemplateResource.TEMPLATE;
 
+import static java.lang.Boolean.TRUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -341,5 +343,22 @@ public class NGTemplateResourceTest extends CategoryTest {
     verify(accessControlClient)
         .checkForAccessOrThrow(ResourceScope.of(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER),
             Resource.of(TEMPLATE, null), PermissionTypes.TEMPLATE_VIEW_PERMISSION);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testValidateIdentifierIsUnique() {
+    doReturn(true)
+        .when(templateService)
+        .validateIdentifierIsUnique(
+            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL);
+    ResponseDTO<Boolean> responseDTO = templateResource.validateTheIdentifierIsUnique(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL);
+
+    assertThat(responseDTO.getData()).isEqualTo(TRUE);
+    verify(templateService)
+        .validateIdentifierIsUnique(
+            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL);
   }
 }
