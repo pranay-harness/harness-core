@@ -8,6 +8,7 @@
 package io.harness.serializer.json;
 
 import io.harness.pms.contracts.execution.ExecutableResponse;
+import io.harness.pms.serializer.json.serializers.ProtoJsonSerializer;
 
 public class ExecutableResponseSerializer extends ProtoJsonSerializer<ExecutableResponse> {
   public ExecutableResponseSerializer(Class<ExecutableResponse> t) {

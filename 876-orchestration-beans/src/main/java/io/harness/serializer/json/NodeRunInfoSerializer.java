@@ -8,6 +8,7 @@
 package io.harness.serializer.json;
 
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
+import io.harness.pms.serializer.json.serializers.ProtoJsonSerializer;
 
 public class NodeRunInfoSerializer extends ProtoJsonSerializer<NodeRunInfo> {
   public NodeRunInfoSerializer() {

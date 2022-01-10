@@ -8,6 +8,7 @@
 package io.harness.serializer.json;
 
 import io.harness.pms.contracts.execution.skip.SkipInfo;
+import io.harness.pms.serializer.json.serializers.ProtoJsonSerializer;
 
 public class SkipInfoSerializer extends ProtoJsonSerializer<SkipInfo> {
   public SkipInfoSerializer() {
