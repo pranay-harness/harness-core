@@ -304,7 +304,7 @@ public enum StepType {
       asList(PhaseType.NON_ROLLBACK), asList(ROLLING, CANARY)),
   RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK(RancherK8sRollingDeployRollback.class, WorkflowConstants.RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK,
       asList(KUBERNETES), asList(K8S_PHASE_STEP, WRAP_UP), Lists.newArrayList(DeploymentType.KUBERNETES),
-      asList(PhaseType.ROLLBACK)),  
+      asList(PhaseType.ROLLBACK)),
 
   ROLLING_NODE_SELECT(RollingNodeSelectState.class, ROLLING_SELECT_NODES, asList(WorkflowStepType.KUBERNETES),
       asList(SELECT_NODE), asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK)),
