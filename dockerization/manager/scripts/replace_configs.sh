@@ -38,8 +38,8 @@ write_mongo_params() {
   done
 }
 
-yq delete -i $CONFIG_FILE server.applicationConnectors[0]
-yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
+yq delete -i $CONFIG_FILE 'server.applicationConnectors.(type==h2)'
+yq delete -i $CONFIG_FILE 'grpcServerConfig.connectors.(secure==true)'
 
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
@@ -247,17 +247,17 @@ fi
 yq write -i $CONFIG_FILE server.requestLog.appenders[0].threshold "TRACE"
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[2]
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==file)'
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==console)'
+  yq write -i $CONFIG_FILE 'logging.appenders.(type==gke-console).stackdriverLogEnabled' "true"
 else
   if [[ "$ROLLING_FILE_LOGGING_ENABLED" == "true" ]]; then
-    yq delete -i $CONFIG_FILE logging.appenders[1]
-    yq write -i $CONFIG_FILE logging.appenders[1].currentLogFilename "/opt/harness/logs/portal.log"
-    yq write -i $CONFIG_FILE logging.appenders[1].archivedLogFilenamePattern "/opt/harness/logs/portal.%d.%i.log"
+    yq delete -i $CONFIG_FILE 'logging.appenders.(type==gke-console)'
+    yq write -i $CONFIG_FILE 'logging.appenders.(type==file).currentLogFilename' "/opt/harness/logs/portal.log"
+    yq write -i $CONFIG_FILE 'logging.appenders.(type==file).archivedLogFilenamePattern' "/opt/harness/logs/portal.%d.%i.log"
   else
-    yq delete -i $CONFIG_FILE logging.appenders[2]
-    yq delete -i $CONFIG_FILE logging.appenders[1]
+    yq delete -i $CONFIG_FILE 'logging.appenders.(type==file)'
+    yq delete -i $CONFIG_FILE 'logging.appenders.(type==gke-console)'
   fi
 fi
 
@@ -721,7 +721,7 @@ if [[ "" != "$REDIS_SENTINELS" ]]; then
   for REDIS_SENTINEL_URL in "${REDIS_SENTINEL_URLS[@]}"; do
     yq write -i $CONFIG_FILE redisLockConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
     yq write -i $CONFIG_FILE redisAtmosphereConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
-    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
+    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[$INDEX] "${REDIS_SENTINEL_URL}"
     INDEX=$(expr $INDEX + 1)
   done
 fi

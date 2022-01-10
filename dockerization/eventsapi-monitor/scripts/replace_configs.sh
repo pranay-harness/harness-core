@@ -28,10 +28,10 @@ if [[ "" != "$LOGGERS" ]]; then
 fi
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==console)'
+  yq write -i $CONFIG_FILE 'logging.appenders.(type==gke-console).stackdriverLogEnabled' "true"
 else
-  yq delete -i $CONFIG_FILE logging.appenders[1]
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==gke-console)'
 fi
 
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
