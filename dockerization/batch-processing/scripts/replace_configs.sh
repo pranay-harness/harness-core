@@ -246,3 +246,6 @@ replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
 
 replace_key_value banzaiRecommenderConfig.baseUrl "$BANZAI_RECOMMENDER_BASEURL"
 replace_key_value awsCurBilling "$AWS_CUR_BILLING"
+
+replace_key_value gcpConfig.gcpProjectId "$GCP_PROJECT_ID"
+replace_key_value gcpConfig.gcpAwsConnectorCrudPubSubTopic "$GCP_AWS_CONNECTOR_CRUD_PUBSUB_TOPIC"
