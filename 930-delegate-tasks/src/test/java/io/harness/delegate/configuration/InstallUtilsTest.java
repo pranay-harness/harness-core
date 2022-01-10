@@ -47,6 +47,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
+  @Ignore("Use cdn is enabled")
   public void testGetTerraformConfigInspectDownloadUrlPathWindows() throws Exception {
     setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", true);
 
@@ -61,6 +62,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
+  @Ignore("Use cdn is enabled")
   public void testGetTerraformConfigInspectDownloadUrlPath() throws Exception {
     boolean useCdn = delegateConfiguration.isUseCdn();
     assertThat(useCdn).isFalse();
@@ -98,6 +100,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
+  @Ignore("Use cdn is enabled")
   public void testGetScmDownloadUrlPath() throws Exception {
     boolean useCdn = delegateConfiguration.isUseCdn();
     assertThat(useCdn).isFalse();
