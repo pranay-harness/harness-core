@@ -710,6 +710,10 @@ public class DelegateServiceImpl implements DelegateService {
     Map<String, List<DelegateConnectionDetails>> perDelegateConnections =
         delegateConnectionDao.obtainActiveDelegateConnections(accountId);
 
+    if (!delegateConfiguration.getDelegateVersions().contains(versionInfoManager.getVersionInfo().getVersion())) {
+      return DelegateStatus.builder().delegates(buildInnerDelegates(delegates, perDelegateConnections, false)).build();
+    }
+
     return DelegateStatus.builder()
         .publishedVersions(delegateConfiguration.getDelegateVersions())
         .delegates(buildInnerDelegates(delegates, perDelegateConnections, false))
