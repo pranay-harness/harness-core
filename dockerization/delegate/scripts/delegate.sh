@@ -26,10 +26,9 @@ function jar_app_version() {
   echo $VERSION
 }
 
-USE_CDN="${USE_CDN:-false}"
 JVM_URL_BASE_PATH=$DELEGATE_STORAGE_URL
 ALPN_BOOT_JAR_BASE_PATH=$DELEGATE_STORAGE_URL
-if [ "$USE_CDN" = true ]; then
+if [[ $DEPLOY_MODE == "KUBERNETES" ]]; then
   JVM_URL_BASE_PATH=$JVM_URL_BASE_PATH/public/shared
   ALPN_BOOT_JAR_BASE_PATH=$JVM_URL_BASE_PATH/public/shared
 fi

@@ -169,8 +169,6 @@ spec:
           value: delegateci.txt
         - name: HELM_DESIRED_VERSION
           value: ""
-        - name: USE_CDN
-          value: "false"
         - name: CDN_URL
           value: http://localhost:9500
         - name: JRE_VERSION
