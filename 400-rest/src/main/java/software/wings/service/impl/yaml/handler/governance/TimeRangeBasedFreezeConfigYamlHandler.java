@@ -152,6 +152,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
     long to;
     Long duration = null;
     Long endTime = null;
+    boolean expires = false;
     TimeRangeOccurrence freezeOccurrence = null;
     boolean durationBased = timeRangeYaml.isDurationBased();
     try {
@@ -178,6 +179,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
       }
     }
     // time zone from DB document
-    return new TimeRange(from, to, timeZone, durationBased, duration, endTime, freezeOccurrence, false);
+    return new TimeRange(
+        from, to, timeZone, durationBased, duration, endTime, freezeOccurrence, timeRangeYaml.isExpires());
   }
 }
