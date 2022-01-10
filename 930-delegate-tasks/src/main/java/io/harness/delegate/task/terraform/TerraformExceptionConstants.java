@@ -32,11 +32,17 @@ public final class TerraformExceptionConstants {
         "Please check your terraform backend configuration";
     public static final String HINT_INVALID_CRED_FOR_S3_BACKEND =
         "Please check access_key and secret_key variables values in Backend Configuration Section or AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables";
+    public static final String HINT_CONFIG_FILE_PATH_NOT_EXIST =
+        "Please check your inputs for Configuration File Repository";
+    public static final String HINT_FAIL_TO_INSTALL_PROVIDER =
+        "To run pipelines, having same terraform config, in parallel, Please ensure they have unique Provisioner Identifier";
   }
 
   public static final class Explanation {
     public static final String EXPLANATION_INVALID_CREDENTIALS_AWS =
         "Provided credentials for AWS provider may be missing or are invalid";
+    public static final String EXPLANATION_FAIL_TO_INSTALL_PROVIDER =
+        "Multiple pipeline executions might be trying to use same directory path for installing terraform providers";
   }
 
   public static final class Message {
@@ -55,5 +61,7 @@ public final class TerraformExceptionConstants {
     public static final String NO_VALID_CRED_FOUND_FOR_S3_BACKEND = "No valid credential sources for S3 Backend found";
     public static final String ERROR_VALIDATING_PROVIDER_CRED = "Error validating provider credentials";
     public static final String NO_VALID_CRED_FOUND_FOR_AWS = "No valid credential sources found for AWS Provider";
+    public static final String CONFIG_FILE_PATH_NOT_EXIST = "Could not find provided terraform config folder";
+    public static final String FAIL_TO_INSTALL_PROVIDER = "Failed to install provider";
   }
 }
