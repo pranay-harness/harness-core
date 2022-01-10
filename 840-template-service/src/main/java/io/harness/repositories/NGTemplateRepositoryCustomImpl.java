@@ -163,6 +163,22 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
                 criteria, projectIdentifier, orgIdentifier, accountIdentifier, TemplateEntity.class));
   }
 
+  @Override
+  public boolean existsByAccountIdAndOrgIdAndProjectIdAndIdentifierAndVersionLabel(String accountId,
+      String orgIdentifier, String projectIdentifier, String templateIdentifier, String versionLabel) {
+    return gitAwarePersistence.exists(Criteria.where(TemplateEntityKeys.identifier)
+                                          .is(templateIdentifier)
+                                          .and(TemplateEntityKeys.projectIdentifier)
+                                          .is(projectIdentifier)
+                                          .and(TemplateEntityKeys.orgIdentifier)
+                                          .is(orgIdentifier)
+                                          .and(TemplateEntityKeys.accountId)
+                                          .is(accountId)
+                                          .and(TemplateEntityKeys.versionLabel)
+                                          .is(versionLabel),
+        projectIdentifier, orgIdentifier, accountId, TemplateEntity.class);
+  }
+
   boolean shouldLogAudits(String accountId, String orgIdentifier, String projectIdentifier) {
     // if git sync is disabled or if git sync is enabled (only for default branch)
     return !gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier);

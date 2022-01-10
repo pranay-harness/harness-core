@@ -54,4 +54,7 @@ public interface NGTemplateService {
       String templateIdentifier, String versionLabel, String invalidYaml);
 
   TemplateEntity fullSyncTemplate(EntityDetailProtoDTO entityDetailProtoDTO);
+
+  boolean validateIdentifierIsUnique(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String templateIdentifier, String versionLabel);
 }
