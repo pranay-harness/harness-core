@@ -8,6 +8,7 @@
 package io.harness.delegate.task.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.SERVICE_ACCOUNT;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.USER_PASSWORD;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesConnectorTestHelper.inClusterDelegateK8sConfig;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesConnectorTestHelper.manualK8sConfig;
@@ -40,6 +41,7 @@ import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.MLUKIC;
 import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -197,6 +199,7 @@ import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import io.kubernetes.client.openapi.models.V1ServicePortBuilder;
 import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
 import io.kubernetes.client.openapi.models.V1TokenReviewStatusBuilder;
+import io.kubernetes.client.openapi.models.VersionInfo;
 import io.kubernetes.client.util.Yaml;
 import java.io.IOException;
 import java.net.URL;
@@ -215,6 +218,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.networking.v1alpha3.Destination;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationBuilder;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
@@ -250,6 +254,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @OwnedBy(CDP)
 @RunWith(JUnitParamsRunner.class)
+@Slf4j
 public class K8sTaskHelperBaseTest extends CategoryTest {
   private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder().build();
   private static final String DEFAULT = "default";
@@ -3047,10 +3052,9 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = YOGESH)
+  @Owner(developers = MLUKIC)
   @Category(UnitTests.class)
-  @Parameters(method = "badUrlExceptions")
-  public void testValidateMissingURL(WingsException we) {
+  public void testValidateK8sConnectionBadCredentials() {
     KubernetesClusterConfigDTO clusterConfigDTO =
         KubernetesClusterConfigDTO.builder()
             .credential(KubernetesCredentialDTO.builder()
@@ -3060,18 +3064,50 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
                                         .build())
                             .build())
             .build();
-    doReturn(KubernetesConfig.builder().build())
+
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+
+    doReturn(kubernetesConfig)
         .when(mockK8sYamlToDelegateDTOMapper)
         .createKubernetesConfigFromClusterConfig(clusterConfigDTO);
-    doThrow(new UrlNotProvidedException("URL not provided"))
+
+    doThrow(InvalidRequestException.builder().message("Unable to retrieve k8s version. Code: 401").build())
         .when(mockKubernetesContainerService)
-        .validateMasterUrl(any(KubernetesConfig.class));
+        .getVersion(kubernetesConfig);
     try {
       k8sTaskHelperBase.validate(clusterConfigDTO, emptyList());
     } catch (HintException he) {
-      assertThat(he.getMessage()).contains("master URL");
+      assertThat(he.getMessage()).contains(K8sExceptionConstants.KUBERNETES_CLUSTER_CONNECTION_VALIDATION_FAILED);
       assertThat(he.getCause()).isInstanceOf(ExplanationException.class);
+      assertThat(he.getCause().getMessage()).contains("Unable to retrieve k8s version. Code: 401");
     }
+  }
+
+  @Test
+  @Owner(developers = MLUKIC)
+  @Category(UnitTests.class)
+  public void testValidateK8sConnectionCorrectCredentials() {
+    KubernetesClusterConfigDTO clusterConfigDTO =
+        KubernetesClusterConfigDTO.builder()
+            .credential(KubernetesCredentialDTO.builder()
+                            .kubernetesCredentialType(MANUAL_CREDENTIALS)
+                            .config(KubernetesClusterDetailsDTO.builder()
+                                        .auth(KubernetesAuthDTO.builder().authType(SERVICE_ACCOUNT).build())
+                                        .build())
+                            .build())
+            .build();
+
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+
+    doReturn(kubernetesConfig)
+        .when(mockK8sYamlToDelegateDTOMapper)
+        .createKubernetesConfigFromClusterConfig(clusterConfigDTO);
+
+    doReturn(new VersionInfo()).when(mockKubernetesContainerService).getVersion(kubernetesConfig);
+
+    ConnectorValidationResult connectorValidationResult = k8sTaskHelperBase.validate(clusterConfigDTO, emptyList());
+
+    assertThat(connectorValidationResult.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
   }
 
   @Test
