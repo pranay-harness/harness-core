@@ -2979,7 +2979,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     } else if (entity instanceof CgEventConfig) {
       return getRootPathByEventConfig((CgEventConfig) entity);
     } else if (entity instanceof UserGroup){
-      return "";
+      return "Setup/";
     }
     throw new InvalidRequestException(
         "Unhandled case while obtaining yaml entity root path for entity type " + entity.getClass().getSimpleName());
