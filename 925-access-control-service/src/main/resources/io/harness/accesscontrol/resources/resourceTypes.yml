@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: resourceTypeConfiguration
-version: 4
+version: 5
 resourceTypes:
   - identifier: ACCOUNT
     permissionKey: account
@@ -56,3 +56,15 @@ resourceTypes:
     permissionKey: monitoredservice
   - identifier: SLO
     permissionKey: slo
+  - identifier: GITOPS_AGENT
+    permissionKey: agent
+  - identifier: GITOPS_APP
+    permissionKey: application
+  - identifier: GITOPS_REPOSITORY
+    permissionKey:  repository
+  - identifier: GITOPS_CLUSTER
+    permissionKey: cluster
+  - identifier: GITOPS_GPGKEY
+    permissionKey: gpgkey
+  - identifier: GITOPS_CERT
+    permissionKey: cert
