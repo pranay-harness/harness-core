@@ -2508,11 +2508,8 @@ public class K8sTaskHelperBase {
       return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
     } catch (Exception ex) {
       log.error(K8sExceptionConstants.KUBERNETES_CLUSTER_CONNECTION_VALIDATION_FAILED, ex);
-      return ConnectorValidationResult.builder()
-          .status(ConnectivityStatus.FAILURE)
-          .errorSummary(K8sExceptionConstants.KUBERNETES_CLUSTER_CONNECTION_VALIDATION_FAILED)
-          .errors(new ArrayList<>(Arrays.asList(ErrorDetail.builder().message(ex.getMessage()).build())))
-          .build();
+      throw NestedExceptionUtils.hintWithExplanationException(
+              K8sExceptionConstants.KUBERNETES_CLUSTER_CONNECTION_VALIDATION_FAILED, ex.getMessage(), ex);
     }
   }
 
