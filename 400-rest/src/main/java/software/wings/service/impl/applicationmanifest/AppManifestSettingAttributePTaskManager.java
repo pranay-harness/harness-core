@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -82,7 +83,7 @@ public class AppManifestSettingAttributePTaskManager implements SettingAttribute
     if (currSettingAttribute.getValue() instanceof HttpHelmRepoConfig) {
       HttpHelmRepoConfig currHttpHelmRepoConfig = (HttpHelmRepoConfig) currSettingAttribute.getValue();
       HttpHelmRepoConfig prevHttpHelmRepoConfig = (HttpHelmRepoConfig) prevSettingAttribute.getValue();
-      return !prevHttpHelmRepoConfig.getUsername().equals(currHttpHelmRepoConfig.getUsername())
+      return !StringUtils.equals(prevHttpHelmRepoConfig.getUsername(), currHttpHelmRepoConfig.getUsername())
           || !Arrays.equals(prevHttpHelmRepoConfig.getPassword(), currHttpHelmRepoConfig.getPassword());
     }
     return false;
@@ -92,18 +93,19 @@ public class AppManifestSettingAttributePTaskManager implements SettingAttribute
     if (currSettingAttribute.getValue() instanceof AmazonS3HelmRepoConfig) {
       AmazonS3HelmRepoConfig currAmazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) currSettingAttribute.getValue();
       AmazonS3HelmRepoConfig prevAmazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) prevSettingAttribute.getValue();
-      return !prevAmazonS3HelmRepoConfig.getConnectorId().equals(currAmazonS3HelmRepoConfig.getConnectorId())
-          || !prevAmazonS3HelmRepoConfig.getBucketName().equals(currAmazonS3HelmRepoConfig.getBucketName())
-          || !prevAmazonS3HelmRepoConfig.getRegion().equals(currAmazonS3HelmRepoConfig.getRegion());
+      return !StringUtils.equals(
+                 prevAmazonS3HelmRepoConfig.getConnectorId(), currAmazonS3HelmRepoConfig.getConnectorId())
+          || !StringUtils.equals(prevAmazonS3HelmRepoConfig.getBucketName(), currAmazonS3HelmRepoConfig.getBucketName())
+          || !StringUtils.equals(prevAmazonS3HelmRepoConfig.getRegion(), currAmazonS3HelmRepoConfig.getRegion());
     } else if (currSettingAttribute.getValue() instanceof GCSHelmRepoConfig) {
       GCSHelmRepoConfig currGcsHelmRepoConfig = (GCSHelmRepoConfig) currSettingAttribute.getValue();
       GCSHelmRepoConfig prevGcsHelmRepoConfig = (GCSHelmRepoConfig) prevSettingAttribute.getValue();
-      return !prevGcsHelmRepoConfig.getConnectorId().equals(currGcsHelmRepoConfig.getConnectorId())
-          || !prevGcsHelmRepoConfig.getBucketName().equals(currGcsHelmRepoConfig.getBucketName());
+      return !StringUtils.equals(prevGcsHelmRepoConfig.getConnectorId(), currGcsHelmRepoConfig.getConnectorId())
+          || !StringUtils.equals(prevGcsHelmRepoConfig.getBucketName(), currGcsHelmRepoConfig.getBucketName());
     } else if (currSettingAttribute.getValue() instanceof HttpHelmRepoConfig) {
       HttpHelmRepoConfig currHttpHelmRepoConfig = (HttpHelmRepoConfig) currSettingAttribute.getValue();
       HttpHelmRepoConfig prevHttpHelmRepoConfig = (HttpHelmRepoConfig) prevSettingAttribute.getValue();
-      return !prevHttpHelmRepoConfig.getChartRepoUrl().equals(currHttpHelmRepoConfig.getChartRepoUrl());
+      return !StringUtils.equals(prevHttpHelmRepoConfig.getChartRepoUrl(), currHttpHelmRepoConfig.getChartRepoUrl());
     }
     return false;
   }
