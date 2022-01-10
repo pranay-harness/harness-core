@@ -11,6 +11,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.1.0
 	github.com/go-sql-driver/mysql v1.5.0
+	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang/mock v1.4.4
 	github.com/google/go-containerregistry v0.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.1
