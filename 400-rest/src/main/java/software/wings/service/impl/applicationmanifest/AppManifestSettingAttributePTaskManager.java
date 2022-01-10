@@ -58,7 +58,7 @@ public class AppManifestSettingAttributePTaskManager implements SettingAttribute
     }
 
     if (!connectorValueChanged(prevSettingAttribute, currSettingAttribute)
-        || !credentialsChanged(prevSettingAttribute, currSettingAttribute)) {
+        && !credentialsChanged(prevSettingAttribute, currSettingAttribute)) {
       return;
     }
 
