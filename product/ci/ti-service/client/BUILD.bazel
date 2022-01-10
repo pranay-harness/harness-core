@@ -9,9 +9,9 @@ go_library(
     importpath = "github.com/wings-software/portal/product/ci/ti-service/client",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/ci/ti-service/logger",
+        "//commons/go/lib/logs",
         "//product/ci/ti-service/types",
-        "@com_github_cenkalti_backoff_v4//:backoff",
-        "@org_uber_go_zap//:zap",
+        "@com_github_cenkalti_backoff_v4//:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
     ],
 )

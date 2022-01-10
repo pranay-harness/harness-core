@@ -14,6 +14,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.GROUP;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.ng.core.utils.UserGroupMapper.toDTO;
 import static io.harness.ng.core.utils.UserGroupMapper.toEntity;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
@@ -23,6 +24,7 @@ import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_P
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -50,6 +52,7 @@ import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.events.UserGroupCreateEvent;
 import io.harness.ng.core.events.UserGroupDeleteEvent;
 import io.harness.ng.core.events.UserGroupUpdateEvent;
+import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.entities.UserGroup.UserGroupKeys;
 import io.harness.ng.core.user.remote.dto.UserFilter;
@@ -143,6 +146,20 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
+  private void addUsersOfGroupToScope(UserGroupDTO userGroupDTO, ScopeDTO scope) {
+    if (isNotEmpty(userGroupDTO.getUsers())) {
+      for (String userId : userGroupDTO.getUsers()) {
+        ngUserService.addUserToScope(userId,
+            Scope.builder()
+                .accountIdentifier(scope.getAccountIdentifier())
+                .orgIdentifier(scope.getOrgIdentifier())
+                .projectIdentifier(scope.getProjectIdentifier())
+                .build(),
+            singletonList(RoleBinding.builder().build()), emptyList(), SYSTEM);
+      }
+    }
+  }
+
   @Override
   public boolean copy(String accountIdentifier, String userGroupIdentifier, List<ScopeDTO> scopePairs) {
     Optional<UserGroup> userGroupOptional = get(accountIdentifier, null, null, userGroupIdentifier);
@@ -155,6 +172,8 @@ public class UserGroupServiceImpl implements UserGroupService {
       if (StringUtils.isEmpty(scope.getAccountIdentifier()) || StringUtils.isEmpty(scope.getOrgIdentifier())) {
         throw new InvalidRequestException("Invalid scope provided for copying user group " + userGroupIdentifier);
       }
+      addUsersOfGroupToScope(userGroupDTO, scope);
+
       log.info("Copying usergroup {} at scope {}", userGroupIdentifier, scope);
       userGroupDTO.setOrgIdentifier(scope.getOrgIdentifier());
       userGroupDTO.setProjectIdentifier(scope.getProjectIdentifier());

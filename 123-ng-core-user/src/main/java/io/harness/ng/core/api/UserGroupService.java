@@ -34,7 +34,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public interface UserGroupService {
   UserGroup create(UserGroupDTO userGroup);
 
-  boolean copy(String accountIdentifier, String userGroupidentifier, List<ScopeDTO> scopes);
+  boolean copy(String accountIdentifier, String userGroupIdentifier, List<ScopeDTO> scopes);
 
   Optional<UserGroup> get(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 

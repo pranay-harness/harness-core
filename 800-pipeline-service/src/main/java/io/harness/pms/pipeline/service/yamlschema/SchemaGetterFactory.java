@@ -37,7 +37,7 @@ public class SchemaGetterFactory {
     this.pmsYamlSchemaHelper = pmsYamlSchemaHelper;
   }
   public SchemaGetter obtainGetter(@NonNull String accountIdentifier, @NonNull ModuleType moduleType) {
-    if (moduleType == ModuleType.PMS) {
+    if (moduleType == ModuleType.PMS || moduleType == ModuleType.CF) {
       return new LocalSchemaGetter(accountIdentifier, moduleType, yamlSchemaProvider, approvalYamlSchemaService,
           featureFlagYamlService, pmsYamlSchemaHelper);
     }

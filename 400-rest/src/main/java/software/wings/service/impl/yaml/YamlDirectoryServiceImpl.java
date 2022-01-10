@@ -132,6 +132,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.defaults.Defaults;
 import software.wings.beans.governance.GovernanceConfig;
+import software.wings.beans.security.UserGroup;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
@@ -2977,8 +2978,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathForGovernanceConfig();
     } else if (entity instanceof CgEventConfig) {
       return getRootPathByEventConfig((CgEventConfig) entity);
+    } else if (entity instanceof UserGroup) {
+      return SETUP_FOLDER;
     }
-
     throw new InvalidRequestException(
         "Unhandled case while obtaining yaml entity root path for entity type " + entity.getClass().getSimpleName());
   }

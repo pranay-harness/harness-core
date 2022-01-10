@@ -8,7 +8,10 @@
 package io.harness.template.services;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import static java.lang.String.format;
 
@@ -29,6 +32,8 @@ import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
 import io.harness.grpc.utils.StringValueUtils;
+import io.harness.organization.remote.OrganizationClient;
+import io.harness.project.remote.ProjectClient;
 import io.harness.repositories.NGTemplateRepository;
 import io.harness.springdata.TransactionHelper;
 import io.harness.template.TemplateFilterPropertiesDTO;
@@ -42,6 +47,7 @@ import io.harness.template.mappers.NGTemplateDtoMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,6 +70,8 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   @Inject private GitSyncSdkService gitSyncSdkService;
   @Inject private TransactionHelper transactionHelper;
   @Inject EnforcementClientService enforcementClientService;
+  @Inject @Named("PRIVILEGED") private ProjectClient projectClient;
+  @Inject @Named("PRIVILEGED") private OrganizationClient organizationClient;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Template [%s] of versionLabel [%s] under Project[%s], Organization [%s] already exists";
@@ -72,10 +80,21 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   public TemplateEntity create(TemplateEntity templateEntity, boolean setStableTemplate, String comments) {
     enforcementClientService.checkAvailability(
         FeatureRestrictionName.TEMPLATE_SERVICE, templateEntity.getAccountIdentifier());
-    try {
-      NGTemplateServiceHelper.validatePresenceOfRequiredFields(
-          templateEntity.getAccountId(), templateEntity.getIdentifier(), templateEntity.getVersionLabel());
 
+    NGTemplateServiceHelper.validatePresenceOfRequiredFields(
+        templateEntity.getAccountId(), templateEntity.getIdentifier(), templateEntity.getVersionLabel());
+    assureThatTheProjectAndOrgExists(
+        templateEntity.getAccountId(), templateEntity.getOrgIdentifier(), templateEntity.getProjectIdentifier());
+
+    if (!validateIdentifierIsUnique(templateEntity.getAccountId(), templateEntity.getOrgIdentifier(),
+            templateEntity.getProjectIdentifier(), templateEntity.getIdentifier(), templateEntity.getVersionLabel())) {
+      throw new InvalidRequestException(String.format(
+          "The template with identifier %s and version label %s already exists in the account %s, org %s, project %s",
+          templateEntity.getIdentifier(), templateEntity.getVersionLabel(), templateEntity.getAccountId(),
+          templateEntity.getOrgIdentifier(), templateEntity.getProjectIdentifier()));
+    }
+
+    try {
       // Check if this is template identifier first entry, for marking it as stable template.
       boolean firstVersionEntry =
           getAllTemplatesForGivenIdentifier(templateEntity.getAccountId(), templateEntity.getOrgIdentifier(),
@@ -513,12 +532,46 @@ public class NGTemplateServiceImpl implements NGTemplateService {
     }
   }
 
+  @Override
+  public boolean validateIdentifierIsUnique(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String templateIdentifier, String versionLabel) {
+    return !templateRepository.existsByAccountIdAndOrgIdAndProjectIdAndIdentifierAndVersionLabel(
+        accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel);
+  }
+
+  private void assureThatTheProjectAndOrgExists(String accountId, String orgId, String projectId) {
+    if (isNotEmpty(projectId)) {
+      // it's project level template
+      if (isEmpty(orgId)) {
+        throw new InvalidRequestException(String.format("Project %s specified without the org Identifier", projectId));
+      }
+      checkProjectExists(accountId, orgId, projectId);
+    } else if (isNotEmpty(orgId)) {
+      // its a org level connector
+      checkThatTheOrganizationExists(orgId, accountId);
+    }
+  }
+
+  private void checkProjectExists(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    if (isNotEmpty(orgIdentifier) && isNotEmpty(projectIdentifier)) {
+      getResponse(projectClient.getProject(projectIdentifier, accountIdentifier, orgIdentifier),
+          String.format("Project with orgIdentifier %s and identifier %s not found", orgIdentifier, projectIdentifier));
+    }
+  }
+
+  private void checkThatTheOrganizationExists(String accountIdentifier, String orgIdentifier) {
+    if (isNotEmpty(orgIdentifier)) {
+      getResponse(organizationClient.getOrganization(orgIdentifier, accountIdentifier),
+          String.format("Organization with orgIdentifier %s not found", orgIdentifier));
+    }
+  }
+
   @VisibleForTesting
   String getActualComments(String accountId, String orgIdentifier, String projectIdentifier, String comments) {
     boolean gitSyncEnabled = gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier);
     if (gitSyncEnabled) {
       GitEntityInfo gitEntityInfo = GitContextHelper.getGitEntityInfo();
-      if (gitEntityInfo != null && EmptyPredicate.isNotEmpty(gitEntityInfo.getCommitMsg())) {
+      if (gitEntityInfo != null && isNotEmpty(gitEntityInfo.getCommitMsg())) {
         return gitEntityInfo.getCommitMsg();
       }
     }

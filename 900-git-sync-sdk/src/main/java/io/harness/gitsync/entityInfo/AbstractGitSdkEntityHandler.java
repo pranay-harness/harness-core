@@ -20,7 +20,6 @@ import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
 import io.harness.gitsync.scm.ScmGitUtils;
 import io.harness.gitsync.sdk.EntityGitDetails;
-import io.harness.manage.GlobalContextManager;
 
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -57,16 +56,6 @@ public abstract class AbstractGitSdkEntityHandler<B extends GitSyncableEntity, Y
   public abstract Optional<EntityGitDetails> getEntityDetailsIfExists(String accountIdentifier, String yaml);
 
   public abstract Y getYamlDTO(String yaml);
-
-  @Override
-  public Y fullSyncEntity(FullSyncChangeSet fullSyncChangeSet) {
-    final EntityDetailProtoDTO entityDetail = fullSyncChangeSet.getEntityDetail();
-    final String yaml = getYamlFromEntityRef(entityDetail);
-    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
-      GlobalContextManager.upsertGlobalContextRecord(createGitEntityInfo(fullSyncChangeSet));
-      return update(fullSyncChangeSet.getAccountIdentifier(), yaml, ChangeType.ADD);
-    }
-  }
 
   public GitSyncBranchContext createGitEntityInfo(FullSyncChangeSet fullSyncChangeSet) {
     return GitSyncBranchContext.builder()

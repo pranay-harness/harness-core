@@ -11,6 +11,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.serializer.json.serializers.ProtoJsonSerializer;
 
 @OwnedBy(PIPELINE)
 public class ExecutionTriggerInfoSerializer extends ProtoJsonSerializer<ExecutionTriggerInfo> {
