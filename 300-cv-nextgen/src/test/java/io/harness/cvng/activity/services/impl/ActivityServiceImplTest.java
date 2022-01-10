@@ -15,6 +15,7 @@ import static io.harness.eraro.ErrorCode.FAILED_TO_ACQUIRE_PERSISTENT_LOCK;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 
@@ -60,7 +61,10 @@ import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.cdng.entities.CVNGStepTask;
+import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -109,6 +113,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private VerificationJobInstanceService realVerificationJobInstanceService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
+  @Inject private CVNGStepTaskService cvngStepTaskService;
   @Mock private VerificationJobService verificationJobService;
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @Mock private HealthVerificationHeatMapService healthVerificationHeatMapService;
@@ -765,6 +770,35 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
 
     assertThat(activities.get(0).getAnalysisStatus().name()).isEqualTo(ActivityVerificationStatus.NOT_STARTED.name());
     assertThat(activities.get(0).getVerificationSummary()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testHealthSources() throws IllegalAccessException {
+    String verificationJobInstanceId = generateUuid();
+    String cvConfigIdentifier = "nameSpaced/identifier";
+    String activityId = "activityId";
+    CVConfig cvConfig = builderFactory.appDynamicsCVConfigBuilder().identifier(cvConfigIdentifier).build();
+    CVNGStepTask cvngStepTask = builderFactory.cvngStepTaskBuilder()
+                                    .accountId(accountId)
+                                    .skip(true)
+                                    .callbackId(activityId)
+                                    .verificationJobInstanceId(verificationJobInstanceId)
+                                    .status(CVNGStepTask.Status.IN_PROGRESS)
+                                    .build();
+    cvngStepTaskService.create(cvngStepTask);
+    VerificationJobInstance verificationJobInstance = builderFactory.verificationJobInstanceBuilder()
+                                                          .uuid(verificationJobInstanceId)
+                                                          .cvConfigMap(new HashMap<String, CVConfig>() {
+                                                            { put(cvConfigIdentifier, cvConfig); }
+                                                          })
+                                                          .build();
+    realVerificationJobInstanceService.create(verificationJobInstance);
+    FieldUtils.writeField(activityService, "verificationJobInstanceService", realVerificationJobInstanceService, true);
+    Set<HealthSourceDTO> healthSourceDTOSet = activityService.healthSources(accountId, activityId);
+    assertThat(healthSourceDTOSet.size()).isEqualTo(1);
+    assertThat(healthSourceDTOSet.iterator().next().getIdentifier()).isEqualTo(cvConfigIdentifier);
   }
 
   @Test
