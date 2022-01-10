@@ -187,7 +187,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -2509,7 +2508,7 @@ public class K8sTaskHelperBase {
     } catch (Exception ex) {
       log.error(K8sExceptionConstants.KUBERNETES_CLUSTER_CONNECTION_VALIDATION_FAILED, ex);
       throw NestedExceptionUtils.hintWithExplanationException(
-              K8sExceptionConstants.KUBERNETES_CLUSTER_CONNECTION_VALIDATION_FAILED, ex.getMessage(), ex);
+          K8sExceptionConstants.KUBERNETES_CLUSTER_CONNECTION_VALIDATION_FAILED, ex.getMessage(), ex);
     }
   }
 
