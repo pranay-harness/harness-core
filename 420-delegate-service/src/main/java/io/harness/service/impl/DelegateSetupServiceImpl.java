@@ -1,9 +1,19 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.filter.FilterType.DELEGATEPROFILE;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.service.impl.DelegateConnectivityStatus.GROUP_STATUS_CONNECTED;
+import static io.harness.service.impl.DelegateConnectivityStatus.GROUP_STATUS_DISCONNECTED;
+import static io.harness.service.impl.DelegateConnectivityStatus.GROUP_STATUS_PARTIALLY_CONNECTED;
 
 import static java.time.Duration.ofMinutes;
 import static java.util.Collections.emptyList;
@@ -68,9 +78,6 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private FilterService filterService;
   private static final Duration HEARTBEAT_EXPIRY_TIME = ofMinutes(5);
-  private static final String GROUP_STATUS_CONNECTED = "connected";
-  private static final String GROUP_STATUS_DISCONNECTED = "disconnected";
-  private static final String GROUP_STATUS_PARTIALLY_CONNECTED = "partially connected";
 
   @Override
   public long getDelegateGroupCount(
@@ -459,8 +466,8 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
               return buildDelegateGroupDetails(
                   accountId, delegateGroup, delegatesByGroup.get(delegateGroupId), delegateGroupId);
             })
+            .sorted(new DelegateGroupDetailsComparator())
             .collect(toList());
-
     return DelegateGroupListing.builder().delegateGroupDetails(delegateGroupDetails).build();
   }
 

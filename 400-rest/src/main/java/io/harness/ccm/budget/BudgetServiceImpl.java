@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ccm.budget;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
@@ -92,6 +99,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public String create(Budget budget) {
     accountChecker.checkIsCeEnabled(budget.getAccountId());
+    budget.setNgBudget(false);
     validateBudget(budget, true);
     removeEmailDuplicates(budget);
     validateAppliesToField(budget);
@@ -120,6 +128,7 @@ public class BudgetServiceImpl implements BudgetService {
                              .userGroupIds(budget.getUserGroupIds())
                              .emailAddresses(budget.getEmailAddresses())
                              .notifyOnSlack(budget.isNotifyOnSlack())
+                             .isNgBudget(budget.isNgBudget())
                              .build();
     return create(cloneBudget);
   }
@@ -166,6 +175,11 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public List<Budget> list(String accountId) {
     return budgetDao.list(accountId, Integer.MAX_VALUE - 1, 0);
+  }
+
+  @Override
+  public List<Budget> listCgBudgets(String accountId) {
+    return budgetDao.listCgBudgets(accountId, Integer.MAX_VALUE - 1, 0);
   }
 
   @Override

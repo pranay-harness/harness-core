@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.app.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
@@ -56,7 +63,7 @@ public class CIYamlSchemaResource implements YamlSchemaResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
     List<PartialSchemaDTO> schema =
-        ciYamlSchemaService.getIntegrationStageYamlSchema(orgIdentifier, projectIdentifier, scope);
+        ciYamlSchemaService.getIntegrationStageYamlSchema(accountIdentifier, orgIdentifier, projectIdentifier, scope);
     return ResponseDTO.newResponse(schema);
   }
 
@@ -93,8 +100,8 @@ public class CIYamlSchemaResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
-    List<YamlSchemaWithDetails> schemaWithDetails =
-        ciYamlSchemaService.getIntegrationStageYamlSchemaWithDetails(orgIdentifier, projectIdentifier, scope);
+    List<YamlSchemaWithDetails> schemaWithDetails = ciYamlSchemaService.getIntegrationStageYamlSchemaWithDetails(
+        accountIdentifier, orgIdentifier, projectIdentifier, scope);
     return ResponseDTO.newResponse(
         YamlSchemaDetailsWrapper.builder().yamlSchemaWithDetailsList(schemaWithDetails).build());
   }
@@ -108,7 +115,7 @@ public class CIYamlSchemaResource implements YamlSchemaResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope,
       @RequestBody(required = true,
           description = "Step Schema with details") YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper) {
-    PartialSchemaDTO schema = ciYamlSchemaService.getMergedIntegrationStageYamlSchema(
+    PartialSchemaDTO schema = ciYamlSchemaService.getMergedIntegrationStageYamlSchema(accountIdentifier,
         projectIdentifier, orgIdentifier, scope, yamlSchemaDetailsWrapper.getYamlSchemaWithDetailsList());
     return ResponseDTO.newResponse(schema);
   }

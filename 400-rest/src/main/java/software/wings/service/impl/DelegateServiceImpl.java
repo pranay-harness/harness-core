@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -323,6 +330,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   private static final String DELEGATE_CREATED_EVENT = "Delegate Created";
   private static final String DELEGATE_REGISTERED_EVENT = "Delegate Registered";
+  private static final String deployVersion = System.getenv(DEPLOY_VERSION);
 
   static {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -661,13 +669,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isBlank(delegateSetupDetails.getName())) {
       throw new InvalidRequestException("Delegate Name must be provided.", USER);
     }
-    Query<DelegateGroup> query = persistence.createQuery(DelegateGroup.class)
-                                     .filter(DelegateGroupKeys.accountId, accountId)
-                                     .filter(DelegateGroupKeys.ng, true)
-                                     .filter(DelegateGroupKeys.name, delegateSetupDetails.getName());
-    if (query.get() != null) {
-      throw new InvalidRequestException("Delegate Name must be unique across account.", USER);
-    }
+    checkUniquenessOfDelegateName(accountId, delegateSetupDetails.getName());
     if (delegateSetupDetails.getSize() == null) {
       throw new InvalidRequestException("Delegate Size must be provided.", USER);
     }
@@ -726,7 +728,9 @@ public class DelegateServiceImpl implements DelegateService {
     List<DelegateScalingGroup> scalingGroups = getDelegateScalingGroups(accountId, activeDelegateConnections);
 
     return DelegateStatus.builder()
-        .publishedVersions(delegateVersionListWithoutPatch(delegateConfiguration.getDelegateVersions()))
+        .publishedVersions(DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())
+                ? Lists.newArrayList()
+                : delegateVersionListWithoutPatch(delegateConfiguration.getDelegateVersions()))
         .scalingGroups(scalingGroups)
         .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections, false))
         .build();
@@ -1059,7 +1063,12 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateScripts getDelegateScriptsNg(
       String accountId, String version, String managerHost, String verificationHost) throws IOException {
-    String delegateXmx = "-Xmx" + (DELEGATE_RAM_PER_REPLICA - WATCHER_RAM_IN_MB - POD_BASE_RAM_IN_MB) + "m";
+    String delegateXmx;
+    if (DeployVariant.isCommunity(deployVersion)) {
+      delegateXmx = "-Xmx500m";
+    } else {
+      delegateXmx = "-Xmx" + (DELEGATE_RAM_PER_REPLICA - WATCHER_RAM_IN_MB - POD_BASE_RAM_IN_MB) + "m";
+    }
 
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
         TemplateParameters.builder()
@@ -1500,6 +1509,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public File downloadScripts(String managerHost, String verificationUrl, String accountId, String delegateName,
       String delegateProfile, String tokenName) throws IOException {
+    checkUniquenessOfDelegateName(accountId, delegateName);
     File delegateFile = File.createTempFile(DELEGATE_DIR, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(delegateFile))) {
@@ -1639,6 +1649,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public File downloadDocker(String managerHost, String verificationUrl, String accountId, String delegateName,
       String delegateProfile, String tokenName) throws IOException {
+    checkUniquenessOfDelegateName(accountId, delegateName);
     File dockerDelegateFile = File.createTempFile(DOCKER_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(dockerDelegateFile))) {
@@ -1722,6 +1733,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public File downloadKubernetes(String managerHost, String verificationUrl, String accountId, String delegateName,
       String delegateProfile, String tokenName) throws IOException {
+    checkUniquenessOfDelegateName(accountId, delegateName);
     File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(kubernetesDelegateFile))) {
@@ -1784,6 +1796,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public File downloadCeKubernetesYaml(String managerHost, String verificationUrl, String accountId,
       String delegateName, String delegateProfile, String tokenName) throws IOException {
+    checkUniquenessOfDelegateName(accountId, delegateName);
     String version;
     if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
       List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
@@ -1839,7 +1852,7 @@ public class DelegateServiceImpl implements DelegateService {
   public File downloadDelegateValuesYamlFile(String managerHost, String verificationUrl, String accountId,
       String delegateName, String delegateProfile, String tokenName) throws IOException {
     String version;
-
+    checkUniquenessOfDelegateName(accountId, delegateName);
     if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
       List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
       version = delegateVersions.get(delegateVersions.size() - 1);
@@ -1874,6 +1887,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public File downloadECSDelegate(String managerHost, String verificationUrl, String accountId, boolean awsVpcMode,
       String hostname, String delegateGroupName, String delegateProfile, String tokenName) throws IOException {
+    checkUniquenessOfDelegateName(accountId, delegateGroupName);
     File ecsDelegateFile = File.createTempFile(ECS_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(ecsDelegateFile))) {
@@ -3739,8 +3753,6 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   public DelegateSizeDetails fetchDefaultDelegateSize() {
-    String deployVersion = System.getenv(DEPLOY_VERSION);
-
     String fileName;
     if (DeployVariant.isCommunity(deployVersion)) {
       fileName = "delegatesizes/default_community_size.json";
@@ -3785,13 +3797,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isBlank(delegateSetupDetails.getName())) {
       throw new InvalidRequestException("Delegate Name must be provided.");
     }
-    Query<DelegateGroup> query = persistence.createQuery(DelegateGroup.class)
-                                     .filter(DelegateGroupKeys.accountId, accountId)
-                                     .filter(DelegateGroupKeys.ng, true)
-                                     .filter(DelegateGroupKeys.name, delegateSetupDetails.getName());
-    if (query.get() != null) {
-      throw new InvalidRequestException("Delegate Name must be unique across account.");
-    }
+    checkUniquenessOfDelegateName(accountId, delegateSetupDetails.getName());
   }
 
   @Override
@@ -3963,5 +3969,15 @@ public class DelegateServiceImpl implements DelegateService {
         .filter(size -> delegateSetupDetails != null && (size.getSize() == delegateSetupDetails.getSize()))
         .findFirst()
         .orElse(fetchDefaultDelegateSize());
+  }
+
+  private void checkUniquenessOfDelegateName(String accountId, String delegateName) {
+    Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .filter(DelegateKeys.delegateName, delegateName);
+    if (delegateQuery.get() != null) {
+      throw new InvalidRequestException(
+          "Delegate with same name exists either in CG or NG. Delegate name must be unique across CG and NG.", USER);
+    }
   }
 }

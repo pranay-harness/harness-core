@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 13
+version: 14
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -69,6 +69,13 @@ roles:
         - core_template_delete
         - core_template_edit
         - core_template_view
+        - core_governancePolicySets_view
+        - core_governancePolicySets_edit
+        - core_governancePolicySets_delete
+        - core_governancePolicySets_evaluate
+        - core_governancePolicy_view
+        - core_governancePolicy_edit
+        - core_governancePolicy_delete
         - chi_monitoredservice_view
         - chi_monitoredservice_edit
         - chi_monitoredservice_delete
@@ -98,6 +105,8 @@ roles:
         - core_resourcegroup_view
         - core_serviceaccount_view
         - core_template_view
+        - core_governancePolicy_view
+        - core_governancePolicySets_view
         - chi_monitoredservice_view
         - chi_slo_view
       allowedScopeLevels:
@@ -153,6 +162,13 @@ roles:
         - core_template_delete
         - core_template_edit
         - core_template_view
+        - core_governancePolicySets_view
+        - core_governancePolicySets_edit
+        - core_governancePolicySets_delete
+        - core_governancePolicySets_evaluate
+        - core_governancePolicy_view
+        - core_governancePolicy_edit
+        - core_governancePolicy_delete
       allowedScopeLevels:
         - organization
       managed: true
@@ -174,6 +190,8 @@ roles:
         - core_resourcegroup_view
         - core_serviceaccount_view
         - core_template_view
+        - core_governancePolicy_view
+        - core_governancePolicySets_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -232,6 +250,13 @@ roles:
         - core_template_delete
         - core_template_edit
         - core_template_view
+        - core_governancePolicySets_view
+        - core_governancePolicySets_edit
+        - core_governancePolicySets_delete
+        - core_governancePolicySets_evaluate
+        - core_governancePolicy_view
+        - core_governancePolicy_edit
+        - core_governancePolicy_delete
       allowedScopeLevels:
         - account
       managed: true
@@ -255,6 +280,8 @@ roles:
         - core_account_view
         - core_serviceaccount_view
         - core_template_view
+        - core_governancePolicy_view
+        - core_governancePolicySets_view
       allowedScopeLevels:
         - account
       managed: true
@@ -293,6 +320,22 @@ roles:
         - ff_targetgroup_view
         - ff_target_view
         - ff_environment_apiKeyView
+      managed: true
+      allowedScopeLevels:
+        - account
+        - organization
+        - project
+    - identifier: _governance_admin
+      name: Governance Admin
+      description: Can view, edit, and delete Policies and Policy Sets
+      permissions:
+        - core_governancePolicySets_view
+        - core_governancePolicySets_edit
+        - core_governancePolicySets_delete
+        - core_governancePolicySets_evaluate
+        - core_governancePolicy_view
+        - core_governancePolicy_edit
+        - core_governancePolicy_delete
       managed: true
       allowedScopeLevels:
         - account

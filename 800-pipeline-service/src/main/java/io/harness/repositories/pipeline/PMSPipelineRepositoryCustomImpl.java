@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.repositories.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -15,6 +22,7 @@ import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.events.PipelineCreateEvent;
 import io.harness.pms.events.PipelineDeleteEvent;
 import io.harness.pms.events.PipelineUpdateEvent;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineMetadata;
@@ -22,6 +30,7 @@ import io.harness.pms.pipeline.service.PipelineMetadataService;
 import io.harness.springdata.TransactionHelper;
 
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -52,6 +61,7 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   private final GitSyncSdkService gitSyncSdkService;
   private final TransactionHelper transactionHelper;
   private final PipelineMetadataService pipelineMetadataService;
+  private final PmsGitSyncHelper pmsGitSyncHelper;
   OutboxService outboxService;
 
   @Override
@@ -90,21 +100,17 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
     return transactionHelper.performTransaction(() -> {
       PipelineEntity savedEntity = gitAwarePersistence.save(
           pipelineToSave, pipelineToSave.getYaml(), ChangeType.ADD, PipelineEntity.class, supplier);
-      PipelineMetadata metadata = PipelineMetadata.builder()
-                                      .accountIdentifier(savedEntity.getAccountIdentifier())
-                                      .orgIdentifier(savedEntity.getOrgIdentifier())
-                                      .projectIdentifier(savedEntity.getProjectIdentifier())
-                                      .executionSummaryInfo(savedEntity.getExecutionSummaryInfo())
-                                      .runSequence(0)
-                                      .identifier(savedEntity.getIdentifier())
-                                      .branch(savedEntity.getBranch())
-                                      .filePath(savedEntity.getFilePath())
-                                      .rootFolder(savedEntity.getRootFolder())
-                                      .isEntityInvalid(savedEntity.isEntityInvalid())
-                                      .isFromDefaultBranch(savedEntity.getIsFromDefaultBranch())
-                                      .objectIdOfYaml(savedEntity.getObjectIdOfYaml())
-                                      .yamlGitConfigRef(savedEntity.getYamlGitConfigRef())
-                                      .build();
+      ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal(savedEntity);
+      PipelineMetadata metadata =
+          PipelineMetadata.builder()
+              .accountIdentifier(savedEntity.getAccountIdentifier())
+              .orgIdentifier(savedEntity.getOrgIdentifier())
+              .projectIdentifier(savedEntity.getProjectIdentifier())
+              .executionSummaryInfo(savedEntity.getExecutionSummaryInfo())
+              .runSequence(0)
+              .identifier(savedEntity.getIdentifier())
+              .entityGitDetails(pmsGitSyncHelper.getEntityGitDetailsFromBytes(gitSyncBranchContext))
+              .build();
       pipelineMetadataService.save(metadata);
       return savedEntity;
     });

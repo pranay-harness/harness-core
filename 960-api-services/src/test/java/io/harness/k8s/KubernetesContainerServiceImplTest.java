@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -1055,7 +1062,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldFetchCompressedReleaseHistoryFromSecrets() throws Exception {
-    byte[] dummyReleaseHistory = encodeBase64ToByteArray(compressString("test"));
+    byte[] dummyReleaseHistory = compressString("test");
     V1Secret v1Secret = new V1SecretBuilder()
                             .withData(ImmutableMap.of(ReleaseHistoryKeyName, dummyReleaseHistory,
                                 CompressedReleaseHistoryFlag, new byte[] {(byte) 1}))
@@ -1363,7 +1370,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testFetchReleaseHistoryFromCompressedSecret() throws IOException {
-    byte[] dummyReleaseHistory = encodeBase64ToByteArray(compressString(DUMMY_RELEASE_HISTORY));
+    byte[] dummyReleaseHistory = compressString(DUMMY_RELEASE_HISTORY);
     V1Secret compressedSecret =
         new V1SecretBuilder()
             .withMetadata(

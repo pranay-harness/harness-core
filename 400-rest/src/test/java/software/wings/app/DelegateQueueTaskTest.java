@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.app;
 
 import static io.harness.beans.DelegateTask.Status.PARKED;
@@ -214,19 +221,5 @@ public class DelegateQueueTaskTest extends WingsBaseTest {
     delegateQueueTask.rebroadcastUnassignedTasks();
     ArgumentCaptor<DelegateTaskBroadcast> argumentCaptor = ArgumentCaptor.forClass(DelegateTaskBroadcast.class);
     verify(broadcaster, times(0)).broadcast(argumentCaptor.capture());
-  }
-
-  @Test
-  @Owner(developers = JENNY)
-  @Category(UnitTests.class)
-  public void testGetMaxBroadcastCount() {
-    DelegateTask task = DelegateTask.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).broadcastCount(0).build();
-    assertThat(broadcastHelper.getMaxBroadcastCount(task)).isEqualTo(1);
-    task.setBroadcastCount(3);
-    assertThat(broadcastHelper.getMaxBroadcastCount(task)).isEqualTo(5);
-    task.setBroadcastCount(6);
-    assertThat(broadcastHelper.getMaxBroadcastCount(task)).isEqualTo(10);
-    task.setBroadcastCount(7);
-    assertThat(broadcastHelper.getMaxBroadcastCount(task)).isEqualTo(10);
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.beans.DelegateTask.Status.QUEUED;
@@ -104,6 +111,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   public static final String SCOPE_WILDCARD = "*";
   private static final SecureRandom random = new SecureRandom();
   public static final long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds
+  public static final long MAX_DELEGATE_LONG_LAST_HEARTBEAT = TimeUnit.MINUTES.toMillis(20);
 
   public static final String ERROR_MESSAGE =
       "Delegate selection log: Delegate id: %s, Name: %s, Host name: %s, Profile name: %s, %s with note: %s at: %s";
@@ -607,7 +615,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
             Delegate delegate = delegateCache.get(task.getAccountId(), delegateId, false);
             String delegateName =
                 isNotEmpty(delegate.getDelegateName()) ? delegate.getDelegateName() : delegate.getUuid();
-            log.info("Task Activity log, No matching criteria {} found in delegate {}", criteria, delegateName);
+            String noMatchError = String.format("No matching criteria %s found in delegate %s", criteria, delegateName);
+            delegateTaskServiceClassic.addToTaskActivityLog(task, noMatchError);
             break;
           }
         }
@@ -850,7 +859,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   public List<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch) {
     List<String> eligibleDelegateIds = new ArrayList<>();
     try {
-      List<Delegate> accountDelegates = getAccountDelegates(task.getAccountId());
+      List<Delegate> accountDelegates = fetchActiveDelegates(task.getAccountId());
       if (isEmpty(accountDelegates)) {
         delegateTaskServiceClassic.addToTaskActivityLog(task, "Account has no delegates");
         return eligibleDelegateIds;
@@ -947,6 +956,17 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       return canAssignSelectors;
     }
     return true;
+  }
+
+  @Override
+  public List<Delegate> fetchActiveDelegates(String accountId) {
+    List<Delegate> accountDelegates = getAccountDelegates(accountId);
+    long oldestAcceptableHeartBeat = currentTimeMillis() - MAX_DELEGATE_LONG_LAST_HEARTBEAT;
+    return accountDelegates.stream()
+        .filter(delegate
+            -> delegate.getStatus() == DelegateInstanceStatus.ENABLED
+                && delegate.getLastHeartBeat() > oldestAcceptableHeartBeat)
+        .collect(toList());
   }
 
   private List<Delegate> getDelegatesWithOwnerShipCriteriaMatch(DelegateTask task, List<Delegate> delegates) {

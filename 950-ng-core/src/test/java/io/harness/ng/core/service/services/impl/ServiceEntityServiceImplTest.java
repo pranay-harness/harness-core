@@ -1,8 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.core.service.services.impl;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.MOHIT_GARG;
+import static io.harness.rule.OwnerRule.PRABU;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -179,8 +187,28 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
     serviceEntityService.bulkCreate(ACCOUNT_ID, serviceEntities);
 
     List<ServiceEntity> serviceEntityList =
-        serviceEntityService.getAllServices(ACCOUNT_ID, ORG_ID, PROJECT_ID, pageSize);
+        serviceEntityService.getAllServices(ACCOUNT_ID, ORG_ID, PROJECT_ID, pageSize, true);
     assertThat(serviceEntityList.size()).isEqualTo(numOfServices);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testGetAllNonDeletedServices() {
+    List<ServiceEntity> serviceEntities = new ArrayList<>();
+    int numOfServices = 20;
+    for (int i = 0; i < numOfServices; i++) {
+      String serviceIdentifier = "identifier " + i;
+      String serviceName = "serviceName " + i;
+      ServiceEntity serviceEntity = createServiceEntity(serviceIdentifier, serviceName);
+      serviceEntity.setDeleted(i % 2 == 0); // Every alternate service is deleted
+      serviceEntities.add(serviceEntity);
+    }
+    serviceEntityService.bulkCreate(ACCOUNT_ID, serviceEntities);
+
+    List<ServiceEntity> serviceEntityList =
+        serviceEntityService.getAllNonDeletedServices(ACCOUNT_ID, ORG_ID, PROJECT_ID);
+    assertThat(serviceEntityList.size()).isEqualTo(numOfServices / 2);
   }
 
   @Test

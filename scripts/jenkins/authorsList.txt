@@ -62,6 +62,7 @@ George Georgiev george@harness.io
 Guna Chandrasekaran guna.chandrasekaran@harness.io
 Hannah Tang hannah.tang@harness.io
 Harsh Jain harsh.jain@harness.io
+Hemanth Mantri hemanth.mantri@harness.io
 Hitesh Aringa hitesh.aringa@harness.io
 Igor Gere igor.gere@harness.io
 Inderpreet Chera inderpreet.chera@harness.io
@@ -218,3 +219,4 @@ Hodaya Gamliel hodaya.gamliel@harness.io
 Amnon Danieli amnon.danieli@harness.io
 Gaurav Jain gaurav.jain@harness.io
 Trunapushpa trunapushpa.surkar@harness.io
+David Warren david.warren@harness.io

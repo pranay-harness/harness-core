@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.batch.processing.budgets.service.impl;
 
 import static io.harness.ccm.budget.AlertThresholdBase.ACTUAL_COST;
@@ -263,11 +270,13 @@ public class BudgetAlertsServiceImpl {
 
   private void updateCGBudget(Budget budget) {
     try {
+      log.info("Updating CG budget {}", budget.toString());
       if (budget.getPeriod() == null) {
         budget.setPeriod(BudgetPeriod.MONTHLY);
         budget.setStartTime(BudgetUtils.getStartOfMonth(false));
         budget.setEndTime(BudgetUtils.getEndTimeForBudget(budget.getStartTime(), budget.getPeriod()));
         budget.setGrowthRate(0D);
+        budget.setNgBudget(false);
         budgetDao.update(budget.getUuid(), budget);
       }
     } catch (Exception e) {

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.BOJAN;
@@ -11,6 +18,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.NoEligibleDelegatesInAccountException;
 import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.TaskData;
@@ -29,8 +37,10 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -49,6 +59,7 @@ public class DelegateMetricsServiceTest extends WingsBaseTest {
 
   @Mock private MetricService metricService;
   @Mock private AssignDelegateService assignDelegateService;
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -119,6 +130,7 @@ public class DelegateMetricsServiceTest extends WingsBaseTest {
   @Owner(developers = BOJAN)
   @Category(UnitTests.class)
   public void testRecordMetrics_noEligibleDelegates() {
+    thrown.expect(NoEligibleDelegatesInAccountException.class);
     delegateTaskServiceClassic.processDelegateTask(createDefaultDelegateTask(), DelegateTask.Status.QUEUED);
     Mockito.verify(metricService).incCounter(eq("delegate_task_no_eligible_delegates"));
     Mockito.verify(metricService).incCounter(eq("delegate_response"));

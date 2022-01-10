@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.yaml.schema;
 
 import io.harness.EntityType;
@@ -48,7 +55,7 @@ public class CdPartialYamlSchemaResource implements YamlSchemaResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
     List<PartialSchemaDTO> schema =
-        cdYamlSchemaService.getDeploymentStageYamlSchema(orgIdentifier, projectIdentifier, scope);
+        cdYamlSchemaService.getDeploymentStageYamlSchema(accountIdentifier, orgIdentifier, projectIdentifier, scope);
     return ResponseDTO.newResponse(schema);
   }
 
@@ -59,8 +66,8 @@ public class CdPartialYamlSchemaResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
-    List<YamlSchemaWithDetails> schemaWithDetails =
-        cdYamlSchemaService.getDeploymentStageYamlSchemaWithDetails(orgIdentifier, projectIdentifier, scope);
+    List<YamlSchemaWithDetails> schemaWithDetails = cdYamlSchemaService.getDeploymentStageYamlSchemaWithDetails(
+        accountIdentifier, orgIdentifier, projectIdentifier, scope);
     return ResponseDTO.newResponse(
         YamlSchemaDetailsWrapper.builder().yamlSchemaWithDetailsList(schemaWithDetails).build());
   }
@@ -74,7 +81,7 @@ public class CdPartialYamlSchemaResource implements YamlSchemaResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope,
       @RequestBody(required = true,
           description = "Step Schema with details") YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper) {
-    PartialSchemaDTO schema = cdYamlSchemaService.getMergedDeploymentStageYamlSchema(
+    PartialSchemaDTO schema = cdYamlSchemaService.getMergedDeploymentStageYamlSchema(accountIdentifier,
         projectIdentifier, orgIdentifier, scope, yamlSchemaDetailsWrapper.getYamlSchemaWithDetailsList());
     return ResponseDTO.newResponse(schema);
   }

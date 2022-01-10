@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 CHECK_MESSAGE=hook.commit-msg.check
 if [ "`git config $CHECK_MESSAGE`" == "false" ]
@@ -8,7 +12,7 @@ else
     echo -e '\033[0;34m' checking message ... to disable: '\033[0;37m'git config --add $CHECK_MESSAGE false '\033[0m'
 
     # regex to validate in commit msg
-    commit_regex='^\[(BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|FFM|ONP|OPS|PIE|PL|SEC|SWAT|GTM|LWG)-[0-9]+]: |Merge branch '
+    commit_regex='^\[(BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|FFM|OPA|ONP|OPS|PIE|PL|SEC|SWAT|GTM|LWG)-[0-9]+]: |Merge branch '
     error_msg="Aborting commit. [`cat $1`] is missing a JIRA Issue and Commit Content. Example Commit Message: \"[JIRAProject-123]: Message \""
 
     if [ ! -z "`cat $1`" ]
@@ -19,5 +23,3 @@ else
         fi
     fi
 fi
-
-

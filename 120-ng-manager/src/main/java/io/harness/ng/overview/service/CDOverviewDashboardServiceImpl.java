@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.overview.service;
 
 import static io.harness.NGDateUtils.DAY_IN_MS;
@@ -632,7 +639,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     long previousStartTime = getStartTimeOfPreviousInterval(startTime, numberOfDays);
 
     List<ServiceEntity> services =
-        ServiceEntityServiceImpl.getAllServices(accountIdentifier, orgIdentifier, projectIdentifier);
+        ServiceEntityServiceImpl.getAllNonDeletedServices(accountIdentifier, orgIdentifier, projectIdentifier);
 
     List<WorkloadDeploymentInfo> workloadDeploymentInfoList = getDashboardWorkloadDeployment(
         accountIdentifier, orgIdentifier, projectIdentifier, startTime, endTime, previousStartTime, null)
