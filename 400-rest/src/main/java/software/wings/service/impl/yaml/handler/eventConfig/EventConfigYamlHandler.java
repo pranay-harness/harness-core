@@ -58,6 +58,7 @@ public class EventConfigYamlHandler extends BaseYamlHandler<CgEventConfig.Yaml, 
                          .build();
     }
     WebHookEventConfig webHookEventConfig = bean.getConfig();
+
     return CgEventConfig.Yaml.builder()
         .enabled(bean.isEnabled())
         .type(YamlType.EVENT_RULE.name())
