@@ -26,12 +26,14 @@ import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileChange;
+import io.harness.gitsync.FullSyncChangeSet;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.exceptions.NGYamlParsingException;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.grpc.utils.StringValueUtils;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.utils.NGYamlUtils;
 
@@ -173,5 +175,15 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
     final Optional<ConnectorResponseDTO> connectorResponseDTO = connectorService.get(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
     return connectorResponseDTO.map(ConnectorResponseDTO::getGitDetails);
+  }
+
+  @Override
+  public ConnectorDTO fullSyncEntity(FullSyncChangeSet fullSyncChangeSet) {
+    final EntityDetailProtoDTO entityDetail = fullSyncChangeSet.getEntityDetail();
+    final String yaml = getYamlFromEntityRef(entityDetail);
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(super.createGitEntityInfo(fullSyncChangeSet));
+      return update(fullSyncChangeSet.getAccountIdentifier(), yaml, ChangeType.ADD);
+    }
   }
 }
