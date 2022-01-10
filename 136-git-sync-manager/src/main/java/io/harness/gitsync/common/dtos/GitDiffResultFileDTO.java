@@ -24,4 +24,5 @@ import lombok.experimental.FieldDefaults;
 public class GitDiffResultFileDTO {
   ChangeType changeType;
   String path;
+  String prevFilePath; // In case of MOVE/RENAME
 }

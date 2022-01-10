@@ -94,6 +94,8 @@ public class GitChangeSetMapper {
             .yamlInputErrorType(ChangeSetWithYamlStatusDTO.YamlInputErrorType.ENTITY_NOT_FOUND)
             .build();
       }
+    } else if (changeType == ChangeType.RENAME) {
+      //
     } else {
       try {
         EntityType entityType = GitSyncUtils.getEntityTypeFromYaml(fileContent.getContent());
