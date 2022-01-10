@@ -71,7 +71,8 @@ public class CustomHealthDataCollectionInfo extends TimeSeriesDataCollectionInfo
       MetricResponseMappingDTO responseMapping = metricInfo.getResponseMapping();
       timestampJSONPaths.add(responseMapping.getTimestampJsonPath());
       metricValueJSONPaths.add(responseMapping.getMetricValueJsonPath());
-      serviceInstanceJSONPaths.add(responseMapping.getServiceInstanceJsonPath());
+      serviceInstanceJSONPaths.add(
+          isEmpty(responseMapping.getServiceInstanceJsonPath()) ? null : responseMapping.getServiceInstanceJsonPath());
     });
 
     Map<String, Object> envVars = new HashMap<>();
