@@ -545,7 +545,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     context.resetPreparedCache();
     if (isNotEmpty(scriptStateExecutionData.getTemplateVariable())) {
       scriptStateExecutionData.getTemplateVariable().replaceAll(
-          (k, v) -> context.renderExpression(v.toString(), stateExecutionContext));
+          (k, v) -> (v != null) ? context.renderExpression(v.toString(), stateExecutionContext) : v);
     }
 
     String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask, stateExecutionContext);
