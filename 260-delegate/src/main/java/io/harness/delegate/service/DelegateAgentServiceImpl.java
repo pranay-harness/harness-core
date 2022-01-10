@@ -446,6 +446,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         perpetualTaskWorker.setAccountId(accountId);
       }
       log.info("Delegate will start running on JRE {}", System.getProperty(JAVA_VERSION));
+      log.info("The deploy mode for delegate is [{}]", System.getenv().get("DEPLOY_MODE"));
       startTime = clock.millis();
       DelegateStackdriverLogAppender.setTimeLimiter(timeLimiter);
       DelegateStackdriverLogAppender.setManagerClient(delegateAgentManagerClient);
