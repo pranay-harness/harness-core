@@ -80,10 +80,8 @@ public class CgEventRule {
   public static final class Yaml extends BaseYamlWithType {
     private CgRuleType ruleType;
     private PipelineRule.Yaml pipelineRule;
-    private WorkflowRule.Yaml workflowRule;
     @lombok.Builder
-    public Yaml(CgRuleType cgRuleType, PipelineRule.Yaml pipelineRule, WorkflowRule.Yaml workflowRule) {
-      this.workflowRule = workflowRule;
+    public Yaml(CgRuleType cgRuleType, PipelineRule.Yaml pipelineRule) {
       this.pipelineRule = pipelineRule;
       this.ruleType = cgRuleType;
     }
