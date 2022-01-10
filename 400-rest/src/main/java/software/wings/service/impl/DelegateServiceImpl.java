@@ -330,6 +330,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   private static final String DELEGATE_CREATED_EVENT = "Delegate Created";
   private static final String DELEGATE_REGISTERED_EVENT = "Delegate Registered";
+  private static final String deployVersion = System.getenv(DEPLOY_VERSION);
 
   static {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -1062,7 +1063,12 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateScripts getDelegateScriptsNg(
       String accountId, String version, String managerHost, String verificationHost) throws IOException {
-    String delegateXmx = "-Xmx" + (DELEGATE_RAM_PER_REPLICA - WATCHER_RAM_IN_MB - POD_BASE_RAM_IN_MB) + "m";
+    String delegateXmx;
+    if (DeployVariant.isCommunity(deployVersion)) {
+      delegateXmx = "-Xmx500m";
+    } else {
+      delegateXmx = "-Xmx" + (DELEGATE_RAM_PER_REPLICA - WATCHER_RAM_IN_MB - POD_BASE_RAM_IN_MB) + "m";
+    }
 
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
         TemplateParameters.builder()
@@ -3747,8 +3753,6 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   public DelegateSizeDetails fetchDefaultDelegateSize() {
-    String deployVersion = System.getenv(DEPLOY_VERSION);
-
     String fileName;
     if (DeployVariant.isCommunity(deployVersion)) {
       fileName = "delegatesizes/default_community_size.json";
