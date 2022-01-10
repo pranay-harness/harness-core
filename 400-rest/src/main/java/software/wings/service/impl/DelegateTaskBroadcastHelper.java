@@ -21,8 +21,6 @@ import software.wings.service.intfc.AssignDelegateService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.Broadcaster;
@@ -39,9 +37,6 @@ public class DelegateTaskBroadcastHelper {
   @Inject private HPersistence persistence;
   @Inject private ExecutorService executorService;
   @Inject private FeatureFlagService featureFlagService;
-
-  // with every broadcast interval , broadcast only max number of delegates at a time for sync/async task
-  private List<Integer> delegatesToBroadcast = Arrays.asList(1, 2, 3, 5, 8, 10);
 
   public void broadcastNewDelegateTaskAsync(DelegateTask task) {
     executorService.submit(() -> {
@@ -68,12 +63,5 @@ public class DelegateTaskBroadcastHelper {
 
     Broadcaster broadcaster = broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true);
     broadcaster.broadcast(delegateTaskBroadcast);
-  }
-
-  public int getMaxBroadcastCount(DelegateTask delegateTask) {
-    int nextBroadcastCount = delegateTask.getBroadcastCount();
-    return (nextBroadcastCount < delegatesToBroadcast.size() - 1)
-        ? delegatesToBroadcast.get(nextBroadcastCount)
-        : delegatesToBroadcast.get(delegatesToBroadcast.size() - 1);
   }
 }

@@ -121,6 +121,7 @@ import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Value;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -1973,7 +1974,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = JENNY)
   @Category(UnitTests.class)
-  public void testEligibleDelegatesForTask() {}
+  public void testGetActiveEligibleDelegatesForTask() throws ExecutionException {
+    List<Delegate> delegates = createAccountDelegates();
+    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(delegates);
+    List<String> delegateIds = delegates.stream().map(delegate -> delegate.getUuid()).collect(toList());
+    assertThat(assignDelegateService.fetchActiveDelegates("ACCOUNT_ID").size() == 2);
+  }
 
   private DelegateTask constructDelegateTask(boolean async, Set<String> validatingTaskIds, DelegateTask.Status status) {
     DelegateTask delegateTask =
@@ -2007,5 +2013,54 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .build();
     persistence.save(delegate);
     return delegate;
+  }
+
+  private List<Delegate> createAccountDelegates() {
+    Delegate delegate1 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .delegateName("testDelegateName")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.ENABLED)
+                             .supportedTaskTypes(supportedTasks)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+    persistence.save(delegate1);
+    Delegate delegate2 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .delegateName("testDelegateName")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.ENABLED)
+                             .supportedTaskTypes(supportedTasks)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+    persistence.save(delegate2);
+    Delegate delegate3 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .delegateName("testDelegateName")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.WAITING_FOR_APPROVAL)
+                             .supportedTaskTypes(supportedTasks)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+    persistence.save(delegate3);
+    // non connected delegate
+    Delegate delegate4 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .delegateName("testDelegateName")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.ENABLED)
+                             .supportedTaskTypes(supportedTasks)
+                             .lastHeartBeat(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(26))
+                             .build();
+    persistence.save(delegate4);
+    return Lists.newArrayList(delegate1, delegate2, delegate3, delegate4);
   }
 }
