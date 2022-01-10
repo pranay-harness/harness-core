@@ -1,4 +1,4 @@
-package software.wings.sm.states;
+package software.wings.sm.states.rancher;
 
 import com.google.inject.Inject;
 import io.harness.beans.Cd1SetupFields;
@@ -35,7 +35,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
-import software.wings.sm.states.rancher.RancherStateHelper;
 
 import java.util.Collections;
 import java.util.List;
@@ -55,9 +54,6 @@ public class RancherResolveState extends State {
     @Inject private transient DelegateService delegateService;
     @Inject private transient InfrastructureDefinitionService infrastructureDefinitionService;
     @Inject private SecretManager secretManager;
-
-    public static final String RANCHER_RESOLVE_CLUSTERS_COMMAND_NAME = "Rancher Resolve Clusters";
-
 
     public RancherResolveState(String name) {
         super(name, RANCHER_RESOLVE.name());
@@ -97,7 +93,6 @@ public class RancherResolveState extends State {
                         .accountId(context.getApp().getAccountId())
                         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getApp().getUuid())
                         .waitId(waitId)
-                        .tags(null)
                         .data(TaskData.builder()
                                 .async(true)
                                 .taskType(TaskType.RANCHER_RESOLVE_CLUSTERS.name())
@@ -108,9 +103,8 @@ public class RancherResolveState extends State {
                         .selectionLogsTrackingEnabled(true)
                         .build();
 
-        StateExecutionData executionData = new StateExecutionData();
-
         delegateService.queueTask(delegateTask);
+        StateExecutionData executionData = new StateExecutionData();
 
         return ExecutionResponse.builder()
                 .async(true)
@@ -129,8 +123,7 @@ public class RancherResolveState extends State {
                 .collect(Collectors.toList());
 
         sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-                .name(RancherK8sClusterProcessor.RancherClusterElementList.SWEEPING_OUTPUT_NAME +
-                        getPhaseParamName(context))
+                .name(RancherK8sClusterProcessor.RancherClusterElementList.getSweepingOutputID(context))
                 .value(new RancherK8sClusterProcessor.RancherClusterElementList(clusterElements))
                 .build());
 

@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.PhaseElement;
 import software.wings.api.RancherClusterElement;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
@@ -61,10 +60,7 @@ public class RancherK8sClusterProcessor implements ExpressionProcessor {
     public List<RancherClusterElement> list() {
         RancherClusterElementList clusterElementList = sweepingOutputService
                 .findSweepingOutput(context.prepareSweepingOutputInquiryBuilder()
-                        .name(RancherClusterElementList.SWEEPING_OUTPUT_NAME +
-                                ((PhaseElement)context.getContextElement(ContextElementType.PARAM,
-                                        PhaseElement.PHASE_PARAM))
-                                        .getPhaseName().trim())
+                        .name(RancherClusterElementList.getSweepingOutputID(context))
                         .build());
 
         return clusterElementList.getRancherClusterElements();
@@ -81,6 +77,10 @@ public class RancherK8sClusterProcessor implements ExpressionProcessor {
         @Override
         public String getType() {
             return SWEEPING_OUTPUT_TYPE;
+        }
+
+        public static String getSweepingOutputID(ExecutionContext context) {
+            return SWEEPING_OUTPUT_NAME + context.getWorkflowExecutionId().trim();
         }
     }
 }

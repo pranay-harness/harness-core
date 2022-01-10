@@ -8,7 +8,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -40,6 +39,7 @@ import software.wings.service.intfc.*;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.StateType;
 import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.ApplicationManifestUtils;
@@ -87,6 +87,10 @@ public class K8sRollingDeploy extends AbstractK8sState {
 
   public K8sRollingDeploy(String name) {
     super(name, K8S_DEPLOYMENT_ROLLING.name());
+  }
+
+  protected K8sRollingDeploy(String name, StateType stateType) {
+    super(name, stateType.name());
   }
 
   @Override
@@ -275,10 +279,5 @@ public class K8sRollingDeploy extends AbstractK8sState {
       invalidFields.put("Export manifests & inherit manifests", "Can't export and inherit manifests at the same time");
     }
     return invalidFields;
-  }
-
-  @Override
-  public ContextElementType getRequiredContextElementType() {
-    return ContextElementType.RANCHER_K8S_CLUSTER_CRITERIA;
   }
 }
