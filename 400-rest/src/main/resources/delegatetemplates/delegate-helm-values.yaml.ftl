@@ -36,7 +36,6 @@ watcherCheckLocation: ${watcherCheckLocation}
 remoteWatcherUrlCdn: ${remoteWatcherUrlCdn}
 delegateStorageUrl: ${delegateStorageUrl}
 delegateCheckLocation: ${delegateCheckLocation}
-useCdn: ${useCdn}
 cdnUrl: ${cdnUrl}
 jreVersion: ${jreVersion}
 </#if>

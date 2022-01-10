@@ -18,7 +18,6 @@ services:
       - REMOTE_WATCHER_URL_CDN=${remoteWatcherUrlCdn}
       - DELEGATE_STORAGE_URL=${delegateStorageUrl}
       - DELEGATE_CHECK_LOCATION=${delegateCheckLocation}
-      - USE_CDN=${useCdn}
       - CDN_URL=${cdnUrl}
 </#if>
       - DEPLOY_MODE=${deployMode}

@@ -162,11 +162,6 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   fi
 fi
 
-if ! `grep useCdn config-delegate.yml > /dev/null`; then
-  echo "useCdn: ${useCdn}" >> config-delegate.yml
-else
-  sed -i.bak "s|^useCdn:.*$|useCdn: ${useCdn}|" config-delegate.yml
-fi
 if ! `grep cdnUrl config-delegate.yml > /dev/null`; then
   echo "cdnUrl: ${cdnUrl}" >> config-delegate.yml
 else

@@ -10,6 +10,7 @@ package io.harness.delegate.configuration;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.configuration.DeployMode;
 
 import lombok.Builder;
 import lombok.Data;
@@ -39,8 +40,6 @@ public class DelegateConfiguration {
   private String managerAuthority;
   private String queueFilePath;
 
-  private boolean useCdn;
-
   private String cdnUrl;
 
   private String helmPath;
@@ -56,4 +55,8 @@ public class DelegateConfiguration {
   private boolean clientToolsDownloadDisabled;
   private boolean installClientToolsInBackground;
   private boolean versionCheckDisabled;
+
+  public boolean isUseCdn() {
+    return !DeployMode.isOnPrem(System.getenv().get("DEPLOY_MODE"));
+  }
 }

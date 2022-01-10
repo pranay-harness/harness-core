@@ -75,10 +75,6 @@
           "value": ""
         },
         {
-          "name": "USE_CDN",
-          "value": "${useCdn}"
-        },
-        {
           "name": "CDN_URL",
           "value": "${cdnUrl}"
         },
