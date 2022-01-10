@@ -165,12 +165,6 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
             "Invalid connector type [%s] for identifier: [%s], expected [%s]", connectorInfo.getConnectorType().name(),
             infrastructure.getConnectorReference().getValue(), ConnectorType.GCP.name()));
       }
-
-      GcpConnectorDTO gcpConnector = (GcpConnectorDTO) connectorInfo.getConnectorConfig();
-      if (GcpCredentialType.INHERIT_FROM_DELEGATE == gcpConnector.getCredential().getGcpCredentialType()) {
-        throw new InvalidRequestException(
-            "Deployment using Google Kubernetes Engine infrastructure with inheriting credentials from delegate is not supported yet");
-      }
     }
   }
 
