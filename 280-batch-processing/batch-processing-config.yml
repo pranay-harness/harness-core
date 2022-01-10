@@ -134,3 +134,7 @@ awsCurBilling: true
 connectorHealthUpdateJobConfig:
   enabled: true
 
+gcpConfig:
+  gcpProjectId: "ccm-play"
+  gcpAwsConnectorCrudPubSubTopic: "ce-aws-connector-crud"
+

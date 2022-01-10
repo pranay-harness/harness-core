@@ -7,6 +7,7 @@
 
 package io.harness.batch.processing.config;
 
+import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.cf.CfClientConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.ff.FeatureFlagConfig;
@@ -49,4 +50,5 @@ public class BatchMainConfig {
   @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
   @JsonProperty("banzaiRecommenderConfig") private ServiceHttpClientConfig banzaiRecommenderConfig;
   @JsonProperty("connectorHealthUpdateJobConfig") private ConnectorHealthUpdateJobConfig connectorHealthUpdateJobConfig;
+  @JsonProperty("gcpConfig") private GcpConfig gcpConfig;
 }
