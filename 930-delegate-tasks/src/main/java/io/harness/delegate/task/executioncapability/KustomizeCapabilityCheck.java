@@ -71,7 +71,7 @@ public class KustomizeCapabilityCheck implements CapabilityCheck, ProtoCapabilit
   private static String renderPathUsingEnvVariables(String kustomizePluginPath) {
     if (isNotEmpty(kustomizePluginPath)) {
       try {
-        return executeShellCommand(format("echo %s", kustomizePluginPath));
+        return executeShellCommand(format("echo \"%s\"", kustomizePluginPath));
       } catch (Exception ex) {
         log.error(format("Could not echo kustomizePluginPath %s", kustomizePluginPath));
       }
