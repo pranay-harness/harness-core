@@ -5,7 +5,7 @@
  * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
  */
 
-package io.harness.ngmigration;
+package io.harness.ngmigration.service;
 
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.ng.core.environment.beans.EnvironmentType.PreProduction;
@@ -18,7 +18,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ngmigration.beans.MigrationInputDTO;
 import io.harness.ngmigration.beans.NgEntityDetail;
-import io.harness.ngmigration.service.NgMigration;
 
 import software.wings.beans.Environment;
 import software.wings.infra.InfrastructureDefinition;

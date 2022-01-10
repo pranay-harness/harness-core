@@ -5,7 +5,7 @@
  * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
  */
 
-package io.harness.ngmigration;
+package io.harness.ngmigration.service;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -26,8 +26,6 @@ import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.ngmigration.beans.MigrationInputDTO;
 import io.harness.ngmigration.beans.NgEntityDetail;
-import io.harness.ngmigration.service.MigratorUtility;
-import io.harness.ngmigration.service.NgMigration;
 import io.harness.pms.yaml.ParameterField;
 
 import software.wings.beans.Service;
