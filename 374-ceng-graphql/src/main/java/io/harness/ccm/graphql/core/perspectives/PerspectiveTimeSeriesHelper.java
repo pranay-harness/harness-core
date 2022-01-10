@@ -183,7 +183,7 @@ public class PerspectiveTimeSeriesHelper {
 
     if (conversionField != null) {
       costDataPointsMap =
-          getUpdatedDataPointsMap(costDataPointsMap, new ArrayList<>(entityNames), conversionField, accountId);
+          getUpdatedDataPointsMap(costDataPointsMap, new ArrayList<>(entityNames), accountId, conversionField);
     }
 
     return PerspectiveTimeSeriesData.builder()
@@ -275,8 +275,9 @@ public class PerspectiveTimeSeriesHelper {
     Map<String, String> entityIdToName =
         entityMetadataService.getEntityIdToNameMapping(entityIds, harnessAccountId, fieldName);
     Map<Timestamp, List<DataPoint>> updatedDataPointsMap = new HashMap<>();
+    List<Timestamp> timestamps = costDataPointsMap.keySet().stream().sorted().collect(Collectors.toList());
     if (entityIdToName != null) {
-      costDataPointsMap.keySet().forEach(timestamp
+      timestamps.forEach(timestamp
           -> updatedDataPointsMap.put(
               timestamp, getUpdatedDataPoints(costDataPointsMap.get(timestamp), entityIdToName)));
       return updatedDataPointsMap;
