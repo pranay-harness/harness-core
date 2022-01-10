@@ -11,9 +11,11 @@ import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.cvng.core.services.api.CVNGYamlSchemaService;
 import io.harness.encryption.Scope;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.security.annotations.PublicApi;
 import io.harness.yaml.schema.YamlSchemaResource;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
@@ -27,6 +29,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -80,7 +83,7 @@ public class CVNGPartialYamlSchemaResource implements YamlSchemaResource {
   @PublicApi // TODO: fix invalid credentials issue.
   @Path("/merged")
   @ApiOperation(value = "Get Merged Partial Yaml Schema", nickname = "getMergedPartialYamlSchema")
-  public ResponseDTO<PartialSchemaDTO> getMergedYamlSchema(
+  public ResponseDTO<List<PartialSchemaDTO>> getMergedYamlSchema(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope,
@@ -88,16 +91,24 @@ public class CVNGPartialYamlSchemaResource implements YamlSchemaResource {
           description = "Step Schema with details") YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper) {
     PartialSchemaDTO schema = cvngYamlSchemaService.getMergedDeploymentStageYamlSchema(
         projectIdentifier, orgIdentifier, scope, yamlSchemaDetailsWrapper.getYamlSchemaWithDetailsList());
-    return ResponseDTO.newResponse(schema);
+    return ResponseDTO.newResponse(Collections.singletonList(schema));
   }
 
-  @GET
+  @POST
   @PublicApi // TODO: fix invalid credentials issue.
-  @Path("/step")
+  @Path("/get")
   @ApiOperation(value = "Get step YAML schema", nickname = "getStepYamlSchema")
   public ResponseDTO<JsonNode> getStepYamlSchema(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType) {
-    return ResponseDTO.newResponse(cvngYamlSchemaService.getStepYamlSchema(entityType));
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope,
+      @QueryParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType, @QueryParam("yamlGroup") String yamlGroup,
+      @RequestBody(required = true,
+          description = "Step Schema with details") YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper) {
+    if (yamlGroup.equals(StepCategory.STAGE.toString())) {
+      throw new InvalidRequestException("cv module does not have any stage");
+    }
+    return ResponseDTO.newResponse(
+        cvngYamlSchemaService.getStepYamlSchema(entityType, orgIdentifier, projectIdentifier, scope));
   }
 }

@@ -93,8 +93,8 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   }
 
   @Override
-  public JsonNode getStepYamlSchema(EntityType entityType) {
-    return yamlSchemaProvider.getYamlSchema(entityType, null, null, null);
+  public JsonNode getIndividualYamlSchema(EntityType entityType, String orgId, String projectId, Scope scope) {
+    return yamlSchemaProvider.getYamlSchema(entityType, orgId, projectId, scope);
   }
 
   @Override

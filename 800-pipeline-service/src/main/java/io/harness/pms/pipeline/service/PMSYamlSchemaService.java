@@ -25,5 +25,6 @@ public interface PMSYamlSchemaService {
 
   void invalidateAllCache();
 
-  JsonNode getStepYamlSchema(String accountId, EntityType entityType);
+  JsonNode getIndividualYamlSchema(String accountId, String orgIdentifier, String projectIdentifier, Scope scope,
+      EntityType entityType, String yamlGroup);
 }
