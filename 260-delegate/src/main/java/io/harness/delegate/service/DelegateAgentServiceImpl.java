@@ -451,9 +451,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       DelegateStackdriverLogAppender.setManagerClient(delegateAgentManagerClient);
 
       logProxyConfiguration();
-      if (delegateConfiguration.isVersionCheckDisabled()) {
-        DelegateAgentManagerClientFactory.setSendVersionHeader(false);
-      }
+
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
                                 .version(getVersion())
@@ -752,9 +750,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       // Stream the request body
       RequestBuilder requestBuilder =
           client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersion());
-      if (delegateConfiguration.isVersionCheckDisabled()) {
-        requestBuilder = client.newRequestBuilder().method(METHOD.GET).uri(uri.toString());
-      }
 
       requestBuilder
           .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
