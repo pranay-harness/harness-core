@@ -215,7 +215,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   public static final String TASK_CATEGORY_MAP = "Task Category Map";
   private static final long CAPABILITIES_CHECK_TASK_TIMEOUT_IN_MINUTES = 1L;
 
-  private static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(12);
+  private static final long VALIDATION_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
 
   @Inject private HPersistence persistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -457,6 +457,9 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         // save eligible delegate ids as part of task (will be used for rebroadcasting)
         task.setEligibleToExecuteDelegateIds(new LinkedList<>(eligibleListOfDelegates));
 
+        log.info("Assignable/eligible delegates to execute task {} are {}.", task.getUuid(),
+            task.getEligibleToExecuteDelegateIds());
+
         // filter only connected ones from list
         List<String> connectedEligibleDelegates =
             assignDelegateService.getConnectedDelegateList(eligibleListOfDelegates, task.getAccountId(), batch);
@@ -489,7 +492,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         delegateSelectionLogsService.save(batch);
         persistence.save(task);
         delegateMetricsService.recordDelegateTaskMetrics(task, DELEGATE_TASK_CREATION);
-        log.info("Task {} marked as {} ", task.getUuid(), taskStatus);
+        log.info("Task {} marked as {} with first attempt broadcast to {}", task.getUuid(), taskStatus,
+            task.getBroadcastToDelegateIds());
         addToTaskActivityLog(task, "Task processing completed");
       } catch (Exception exception) {
         log.info("Task id {} failed with error {}", task.getUuid(), exception);
@@ -506,6 +510,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         return delegateId;
       }
     }
+    printCriteriaNoMatch(delegateTask);
     return eligibleListOfDelegates.get(random.nextInt(eligibleListOfDelegates.size()));
   }
 
@@ -1480,5 +1485,12 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
   private void printErrorMessageOnTaskFailure(DelegateTask task) {
     log.info("Task Activity Log {}", task.getTaskActivityLogs().stream().collect(Collectors.joining("\n")));
+  }
+  private void printCriteriaNoMatch(DelegateTask task) {
+    log.info("Task {} Criteria Mismatch with delegates :  {}", task.getUuid(),
+        task.getTaskActivityLogs()
+            .stream()
+            .filter(message -> message.startsWith("No matching criteria"))
+            .collect(Collectors.joining("\n")));
   }
 }
