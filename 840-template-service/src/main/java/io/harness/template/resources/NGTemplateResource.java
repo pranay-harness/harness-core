@@ -39,6 +39,11 @@ import io.harness.ng.core.template.TemplateListType;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.ng.core.template.TemplateReferenceSummary;
 import io.harness.ng.core.template.TemplateSummaryResponseDTO;
+import io.harness.pms.contracts.service.VariableMergeResponseProto;
+import io.harness.pms.contracts.service.VariablesServiceGrpc.VariablesServiceBlockingStub;
+import io.harness.pms.contracts.service.VariablesServiceRequest;
+import io.harness.pms.mappers.VariablesResponseDtoMapper;
+import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.template.TemplateFilterPropertiesDTO;
 import io.harness.template.beans.PermissionTypes;
@@ -49,6 +54,7 @@ import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.helpers.TemplateMergeHelper;
+import io.harness.template.helpers.TemplateYamlConversionHelper;
 import io.harness.template.mappers.NGTemplateDtoMapper;
 import io.harness.template.services.NGTemplateService;
 import io.harness.template.services.NGTemplateServiceHelper;
@@ -57,6 +63,7 @@ import io.harness.utils.PageUtils;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -64,6 +71,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashSet;
 import java.util.List;
@@ -134,6 +142,8 @@ public class NGTemplateResource {
   private final NGTemplateServiceHelper templateServiceHelper;
   private final AccessControlClient accessControlClient;
   private final TemplateMergeHelper templateMergeHelper;
+  private final VariablesServiceBlockingStub variablesServiceBlockingStub;
+  private final TemplateYamlConversionHelper templateYamlConversionHelper;
 
   public static final String TEMPLATE_PARAM_MESSAGE = "Template Identifier for the entity";
 
@@ -533,5 +543,33 @@ public class NGTemplateResource {
   public ResponseDTO<NGTemplateConfig> dummyApiForSwaggerSchemaCheck() {
     log.info("Get Template Config schema");
     return ResponseDTO.newResponse(NGTemplateConfig.builder().build());
+  }
+
+  @POST
+  @Path("/variables")
+  @Operation(operationId = "createVariables",
+      summary = "Get all the Variables which can be used as expression in the Template.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns all Variables used that are valid to be used as expression in template.")
+      })
+  @ApiOperation(value = "Create variables for Template", nickname = "createVariables")
+  public ResponseDTO<VariableMergeServiceResponse>
+  createVariables(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE,
+                      required = true) @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE, required = true) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE, required = true) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @RequestBody(required = true, description = "Template YAML") @NotNull @ApiParam(hidden = true) String yaml) {
+    log.info("Creating variables for template.");
+    TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountId, orgId, projectId, yaml);
+    String pmsUnderstandableYaml =
+        templateYamlConversionHelper.convertTemplateYamlToPMSUnderstandableYaml(templateEntity);
+    VariablesServiceRequest request = VariablesServiceRequest.newBuilder().setYaml(pmsUnderstandableYaml).build();
+    VariableMergeResponseProto variables = variablesServiceBlockingStub.getVariables(request);
+    VariableMergeServiceResponse variableMergeServiceResponse = VariablesResponseDtoMapper.toDto(variables);
+    return ResponseDTO.newResponse(variableMergeServiceResponse);
   }
 }

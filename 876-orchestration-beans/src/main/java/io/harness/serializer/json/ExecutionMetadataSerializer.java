@@ -8,6 +8,7 @@
 package io.harness.serializer.json;
 
 import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.serializer.json.serializers.ProtoJsonSerializer;
 
 public class ExecutionMetadataSerializer extends ProtoJsonSerializer<ExecutionMetadata> {
   public ExecutionMetadataSerializer() {
