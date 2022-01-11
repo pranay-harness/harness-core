@@ -13,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
@@ -116,7 +117,7 @@ public class RepeatState extends State {
         }
       }
     } catch (Exception ex) {
-      throw new WingsException(ex);
+      throw new InvalidRequestException("Unable to find qualifying clusters for deployment");
     }
 
     if (repeatTransitionStateName == null) {
