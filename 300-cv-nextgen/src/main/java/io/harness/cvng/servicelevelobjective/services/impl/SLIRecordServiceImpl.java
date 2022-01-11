@@ -23,6 +23,7 @@ import io.harness.cvng.servicelevelobjective.services.api.SLIRecordService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
@@ -132,6 +133,7 @@ public class SLIRecordServiceImpl implements SLIRecordService {
   @Override
   public SLOGraphData getGraphData(String sliId, Instant startTime, Instant endTime, int totalErrorBudgetMinutes,
       SLIMissingDataType sliMissingDataType, int sliVersion) {
+    Preconditions.checkState(totalErrorBudgetMinutes != 0, "Total error budget minutes should not be zero.");
     List<SLIRecord> sliRecords = sliRecords(sliId, startTime, endTime);
     List<Point> sliTread = new ArrayList<>();
     List<Point> errorBudgetBurndown = new ArrayList<>();
