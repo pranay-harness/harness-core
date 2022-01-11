@@ -29,7 +29,7 @@ func Handler(stream stream.Stream, store store.Store, config config.Config) http
 		sr := chi.NewRouter()
 		// Validate the incoming request with a global secret and return back a token
 		// for the given account ID if the match is successful (if auth is enabled).
-		if !config.Secrets.DisableAuth {
+		if !config.Auth.DisableAuth {
 			sr.Use(TokenGenerationMiddleware(config, true))
 		}
 
@@ -69,7 +69,7 @@ func Handler(stream stream.Stream, store store.Store, config config.Config) http
 	r.Mount("/stream", func() http.Handler {
 		sr := chi.NewRouter()
 		// Validate the accountID in URL with the token generated above and authorize the request
-		if !config.Secrets.DisableAuth {
+		if !config.Auth.DisableAuth {
 			sr.Use(AuthMiddleware(config))
 		}
 
@@ -86,7 +86,7 @@ func Handler(stream stream.Stream, store store.Store, config config.Config) http
 	// Format: /blob?accountID=&key=
 	r.Mount("/blob", func() http.Handler {
 		sr := chi.NewRouter()
-		if !config.Secrets.DisableAuth {
+		if !config.Auth.DisableAuth {
 			sr.Use(AuthMiddleware(config))
 		}
 

@@ -7,6 +7,8 @@
 
 package io.harness.cdng.provision.terraform;
 
+import static io.harness.cdng.provision.terraform.TerraformPlanCommand.APPLY;
+
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -174,7 +176,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollbackAndRbac<Terraf
     String entityId = helper.generateFullIdentifier(provisionerIdentifier, ambiance);
     builder.entityId(entityId);
     builder.currentStateFileId(helper.getLatestFileId(entityId));
-    TerraformInheritOutput inheritOutput = helper.getSavedInheritOutput(provisionerIdentifier, ambiance);
+    TerraformInheritOutput inheritOutput = helper.getSavedInheritOutput(provisionerIdentifier, APPLY.name(), ambiance);
     builder.workspace(inheritOutput.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
             inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))

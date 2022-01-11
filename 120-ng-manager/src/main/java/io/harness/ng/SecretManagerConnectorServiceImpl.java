@@ -38,6 +38,7 @@ import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.eraro.ErrorCode;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
@@ -343,5 +344,10 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   @Override
   public boolean checkConnectorExecutableOnDelegate(ConnectorInfoDTO connectorInfo) {
     return defaultConnectorService.checkConnectorExecutableOnDelegate(connectorInfo);
+  }
+
+  @Override
+  public ConnectorDTO fullSyncEntity(EntityDetailProtoDTO entityDetailProtoDTO) {
+    return defaultConnectorService.fullSyncEntity(entityDetailProtoDTO);
   }
 }

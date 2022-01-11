@@ -40,7 +40,7 @@ func TokenGenerationMiddleware(config config.Config, validateAccount bool) func(
 				return
 			}
 
-			if inputToken != config.Secrets.GlobalToken {
+			if inputToken != config.Auth.GlobalToken {
 				// Error: invalid token
 				WriteBadRequest(w, errors.New("token in request not authorized for receiving tokens"))
 				return
@@ -74,7 +74,7 @@ func AuthMiddleware(config config.Config) func(http.Handler) http.Handler {
 				return
 			}
 			// accountID in token should be same as accountID in URL
-			secret := []byte(config.Secrets.LogSecret)
+			secret := []byte(config.Auth.LogSecret)
 			login := authcookie.Login(inputToken, secret)
 			if login == "" || login != accountID {
 				WriteBadRequest(w, errors.New(fmt.Sprintf("operation not permitted for accountID: %s", accountID)))

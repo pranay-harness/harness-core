@@ -10,6 +10,7 @@ package io.harness.gitsync.core.fullsync;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 
+import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -25,6 +26,8 @@ import io.harness.gitsync.core.fullsync.service.FullSyncJobService;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
 
 import com.google.inject.Inject;
+import com.mongodb.client.result.UpdateResult;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +44,7 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
   EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
   GitFullSyncEntityService gitFullSyncEntityService;
   FullSyncJobService fullSyncJobService;
+  List<EntityType> entityTypeList;
 
   private static int MAX_RETRY_COUNT = 2;
 
@@ -83,7 +87,7 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
     logContext.put("messageId", messageId);
 
     return FullSyncChangeSet.newBuilder()
-        .setBranchName(yamlGitConfigDTO.getBranch())
+        .setBranchName(entityInfo.getBranchName())
         .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityInfo.getEntityDetail()))
         .setFilePath(entityInfo.getFilePath())
         .setYamlGitConfigIdentifier(yamlGitConfigDTO.getIdentifier())
@@ -102,8 +106,14 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
   @Override
   public void performFullSync(GitFullSyncJob fullSyncJob) {
     log.info("Started full sync for the job {}", fullSyncJob.getMessageId());
+    UpdateResult updateResult =
+        fullSyncJobService.markJobAsRunning(fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid());
+    if (updateResult.getModifiedCount() == 0L) {
+      log.info("There is no job to run for the id {}, maybe the other thread is running it", fullSyncJob.getUuid());
+    }
     List<GitFullSyncEntityInfo> allEntitiesToBeSynced =
         gitFullSyncEntityService.list(fullSyncJob.getAccountIdentifier(), fullSyncJob.getMessageId());
+    sortTheFilesInTheProcessingOrder(allEntitiesToBeSynced);
     log.info("Number of files is {}", emptyIfNull(allEntitiesToBeSynced).size());
     boolean processingFailed = false;
     for (GitFullSyncEntityInfo gitFullSyncEntityInfo : emptyIfNull(allEntitiesToBeSynced)) {
@@ -121,6 +131,11 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
 
     updateTheStatusOfJob(processingFailed, fullSyncJob);
     log.info("Completed full sync for the job {}", fullSyncJob.getMessageId());
+  }
+
+  private void sortTheFilesInTheProcessingOrder(List<GitFullSyncEntityInfo> allEntitiesToBeSynced) {
+    emptyIfNull(allEntitiesToBeSynced)
+        .sort(Comparator.comparingInt(f -> entityTypeList.indexOf(f.getEntityDetail().getType())));
   }
 
   private void updateTheStatusOfJob(boolean processingFailed, GitFullSyncJob fullSyncJob) {

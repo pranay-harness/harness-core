@@ -213,4 +213,32 @@ public class ConnectorEntityReferenceHelper {
     }
     return allSecretDetails;
   }
+
+  public void deleteExistingSetupUsages(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    IdentifierRefProtoDTO connectorReference = identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    EntityDetailProtoDTO connectorDetails = EntityDetailProtoDTO.newBuilder()
+                                                .setIdentifierRef(connectorReference)
+                                                .setType(EntityTypeProtoEnum.CONNECTORS)
+                                                .build();
+
+    EntitySetupUsageCreateV2DTO entityReferenceDTO = EntitySetupUsageCreateV2DTO.newBuilder()
+                                                         .setAccountIdentifier(accountIdentifier)
+                                                         .setReferredByEntity(connectorDetails)
+                                                         .setDeleteOldReferredByRecords(true)
+                                                         .build();
+    try {
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier, EventsFrameworkMetadataConstants.ACTION,
+                  EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION,
+                  EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE, EntityTypeProtoEnum.SECRETS.name()))
+              .setData(entityReferenceDTO.toByteString())
+              .build());
+    } catch (Exception ex) {
+      log.error("Error deleting the setup usages for the connector with the identifier {} in project {} in org {}",
+          identifier, projectIdentifier, orgIdentifier);
+    }
+  }
 }

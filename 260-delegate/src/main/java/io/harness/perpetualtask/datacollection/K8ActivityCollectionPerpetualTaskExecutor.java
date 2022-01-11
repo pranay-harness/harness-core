@@ -7,6 +7,7 @@
 
 package io.harness.perpetualtask.datacollection;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -25,6 +26,7 @@ import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.datacollection.k8s.ChangeIntelSharedInformerFactory;
 import io.harness.perpetualtask.k8s.watch.K8sWatchServiceDelegate.WatcherGroup;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.delegatetasks.cvng.K8InfoDataService;
@@ -34,6 +36,8 @@ import com.google.inject.Injector;
 import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.openapi.ApiClient;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
@@ -63,8 +67,10 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
 
         KubernetesClusterConfigDTO kubernetesClusterConfig =
             (KubernetesClusterConfigDTO) dataCollectionInfo.getConnectorConfigDTO();
-        KubernetesConfig kubernetesConfig = k8InfoDataService.getDecryptedKubernetesConfig(
-            kubernetesClusterConfig, dataCollectionInfo.getEncryptedDataDetails());
+
+        List<List<EncryptedDataDetail>> encryptedDataDetailList = dataCollectionInfo.getEncryptedDataDetails();
+        KubernetesConfig kubernetesConfig = k8InfoDataService.getDecryptedKubernetesConfig(kubernetesClusterConfig,
+            isNotEmpty(encryptedDataDetailList) ? encryptedDataDetailList.get(0) : new ArrayList<>());
 
         ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig).setVerifyingSsl(false);
 

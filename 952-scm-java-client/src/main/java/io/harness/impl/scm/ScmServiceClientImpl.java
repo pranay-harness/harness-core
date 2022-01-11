@@ -480,7 +480,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   @Override
-  public void createNewBranch(
+  public CreateBranchResponse createNewBranch(
       ScmConnector scmConnector, String branch, String baseBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
@@ -499,6 +499,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
         throw new ExplanationException(String.format("Failed to create branch %s", branch), e);
       }
     }
+    return createBranchResponse;
   }
 
   @Override

@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/wings-software/portal/commons/go/lib/secret"
 	"github.com/wings-software/portal/product/log-service/config"
 	"github.com/wings-software/portal/product/log-service/handler"
 	"github.com/wings-software/portal/product/log-service/logger"
@@ -35,6 +36,9 @@ type serverCommand struct {
 func (c *serverCommand) run(*kingpin.ParseContext) error {
 	godotenv.Load(c.envfile)
 
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+
 	// load the system configuration from the environment.
 	config, err := config.Load()
 	if err != nil {
@@ -43,10 +47,19 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		return err
 	}
 
+	// Parse the entire config to resolve any secrets (if required)
+	err = secret.Resolve(ctx, config.SecretResolution.Enabled, config.SecretResolution.GcpProject,
+		config.SecretResolution.GcpJsonPath, &config)
+	if err != nil {
+		logrus.WithError(err).
+			Errorln("could not resolve secrets")
+		return err
+	}
+
 	// init the system logging.
 	initLogging(config)
 
-	if config.Secrets.DisableAuth {
+	if config.Auth.DisableAuth {
 		logrus.Warnln("log service is being started without auth, SHOULD NOT BE DONE FOR PROD ENVIRONMENTS")
 	}
 
@@ -98,8 +111,6 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 
 	// trap the os signal to gracefully shutdown the
 	// http server.
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, os.Interrupt)
 	defer func() {
