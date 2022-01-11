@@ -25,6 +25,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -71,6 +72,13 @@ public final class LogAnalysisCluster implements PersistentEntity, UuidAware, Cr
   private long firstSeenTime;
   private double x;
   private double y;
+
+  public List<Frequency> getFrequencyTrend() {
+    if (frequencyTrend == null) {
+      return new ArrayList<>();
+    }
+    return frequencyTrend;
+  }
 
   @JsonIgnore @SchemaIgnore @FdTtlIndex private Date validUntil;
 
