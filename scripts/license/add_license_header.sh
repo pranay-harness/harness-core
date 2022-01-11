@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright 2021 Harness Inc. All rights reserved.
+# Copyright 2022 Harness Inc. All rights reserved.
 # Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
 # that can be found in the licenses directory at the root of this repository, also available at
 # https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
@@ -81,8 +81,8 @@ function create_output_file {
 }
 
 function add_header_if_required {
-  HEADER_WITHOUT_COMMENT_SYMBOL=$(sed 's/ 20[0-9][0-9] / <YEAR> /' <<< "$HEADER_WITHOUT_COMMENT_SYMBOL")
-  if [ "$HEADER_WITHOUT_COMMENT_SYMBOL" = "$LICENSE_TEXT" ]; then
+  HEADER_WITHOUT_YEAR=$(sed 's/ 20[0-9][0-9] / <YEAR> /' <<< "$HEADER_WITHOUT_COMMENT_SYMBOL")
+  if [ "$HEADER_WITHOUT_YEAR" = "$LICENSE_TEXT" ]; then
     debug "File has correct license header: $FILE"
   elif [ $(grep -m1 -ciE "(copyright|license)" <<<"$EXISTING_HEADER") -eq 1 ]; then
     debug "Skipping file with alternate license header: $FILE"
@@ -93,6 +93,7 @@ function add_header_if_required {
 
 function write_file_header {
   FILE_DATE=$(git log -1 --format="%ad" --date=format:%Y -- "$FILE")
+  FILE_DATE=${FILE_DATE:-$(date +'%Y')}
   while read license_line; do
     if [ -z "$license_line" ]; then
       echo "$SYMBOL" >> "$NEW_FILE"
