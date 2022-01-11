@@ -474,9 +474,11 @@ public class TemplateServiceImpl implements TemplateService {
           if (oldTemplate.getVariables().stream().allMatch(
                   existingVariable -> !existingVariable.getName().equals(variableName))) {
             checkVariableNamesContainDashes(variableName);
+            checkVariableNamesContainDots(variableName);
           }
         } else {
           checkVariableNamesContainDashes(variableName);
+          checkVariableNamesContainDots(variableName);
         }
 
         if (!variableNames.contains(variableName)) {
@@ -492,6 +494,12 @@ public class TemplateServiceImpl implements TemplateService {
     if (variableName.contains("-")) {
       throw new InvalidRequestException(
           format("Adding variable name %s with hyphens (dashes) is not allowed", variableName));
+    }
+  }
+
+  private void checkVariableNamesContainDots(String variableName) {
+    if (variableName.contains(".")) {
+      throw new InvalidRequestException(format("Adding variable name %s with dots (.) is not allowed", variableName));
     }
   }
 
