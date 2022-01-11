@@ -861,7 +861,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     try {
       List<Delegate> accountDelegates = fetchActiveDelegates(task.getAccountId());
       if (isEmpty(accountDelegates)) {
-        delegateTaskServiceClassic.addToTaskActivityLog(task, "Account has no delegates");
+        delegateTaskServiceClassic.addToTaskActivityLog(task, "Account has no active delegates");
         return eligibleDelegateIds;
       }
       List<Delegate> delegates = getDelegatesWithOwnerShipCriteriaMatch(task, accountDelegates);
