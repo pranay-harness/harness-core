@@ -980,12 +980,8 @@ public class AccountServiceImpl implements AccountService {
                     .filter(AccountKeys.uuid, GLOBAL_ACCOUNT_ID)
                     .project("delegateConfiguration", true)
                     .get();
-      return account.getDelegateConfiguration();
     }
-    return DelegateConfiguration.builder()
-        .accountVersion(true)
-        .delegateVersions(account.getDelegateConfiguration().getDelegateVersions())
-        .build();
+    return account.getDelegateConfiguration();
   }
 
   @Override
