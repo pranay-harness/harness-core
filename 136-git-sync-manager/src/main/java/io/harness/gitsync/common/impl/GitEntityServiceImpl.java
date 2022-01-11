@@ -49,6 +49,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -290,5 +292,21 @@ public class GitEntityServiceImpl implements GitEntityService {
     gitFileLocation.ifPresent(location -> fileLocation.setUuid(location.getUuid()));
     gitFileLocationRepository.save(fileLocation);
     return true;
+  }
+
+  public void updateFilePath(
+      String accountId, String prevFilePath, String repo, String branchName, String newFilePath) {
+    Criteria criteria = Criteria.where(GitFileLocationKeys.accountId)
+                            .is(accountId)
+                            .and(GitFileLocationKeys.completeGitPath)
+                            .is(prevFilePath)
+                            .and(GitFileLocationKeys.repo)
+                            .is(repo)
+                            .and(GitFileLocationKeys.branch)
+                            .is(branchName);
+
+    Update updateOperation = new Update();
+    updateOperation.set(GitFileLocationKeys.completeGitPath, newFilePath);
+    gitFileLocationRepository.update(new Query(criteria), updateOperation);
   }
 }

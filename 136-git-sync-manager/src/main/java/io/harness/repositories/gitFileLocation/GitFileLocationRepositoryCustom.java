@@ -19,6 +19,8 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(DX)
 public interface GitFileLocationRepositoryCustom {
@@ -34,4 +36,6 @@ public interface GitFileLocationRepositoryCustom {
   getByProjectIdAndOrganizationIdAndAccountIdAndGitSyncConfigIdentifierAndEntityTypeListAndBranch(
       String projectIdentifier, String orgIdentifier, String accountIdentifier, String gitSyncConfigIdentifier,
       String branch, List<EntityType> entityTypeList, String searchTerm, int size);
+
+  GitFileLocation update(Query query, Update update);
 }

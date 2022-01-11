@@ -47,4 +47,6 @@ public interface GitEntityService {
       String accountIdentifier, String organizationIdentifier, String projectIdentifier, String yamlGitConfigId);
 
   Optional<GitSyncEntityDTO> get(String accountIdentifier, String completeFilePath, String repoUrl, String branch);
+
+  void updateFilePath(String accountId, String prevFilePath, String repo, String branchName, String newFilePath);
 }

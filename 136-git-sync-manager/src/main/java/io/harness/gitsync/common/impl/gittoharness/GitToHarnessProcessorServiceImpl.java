@@ -279,6 +279,8 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
             "Got the processing response for the microservice {}, response {}", entry.getKey(), processingResponse);
         markEntitiesInvalidForYamlsWhichCouldBeProcessedByMicroService(
             microservice, filePathToChangeSetMap, gitToHarnessProcessRequest, gitToHarnessProcessingResponseDTO);
+        completeUpdateForFilesWithRenameOps(
+            filePathToChangeSetMap, gitToHarnessProcessRequest, gitToHarnessProcessingResponseDTO);
       } catch (Exception ex) {
         // This exception happens in the case when we are not able to connect to the microservice
         log.error("Exception in file processing for the microservice {}", entry.getKey(), ex);
@@ -442,6 +444,21 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
         .successCount(successCount)
         .totalCount(failureCount + queuedCount + skippedCount + successCount)
         .build();
+  }
+
+  private void completeUpdateForFilesWithRenameOps(Map<String, ChangeSet> filePathToChangeSetMap,
+      GitToHarnessProcessRequest request, GitToHarnessProcessingResponseDTO response) {
+    response.getFileResponses()
+        .stream()
+        .filter(x -> x.getFileProcessingStatus() == FileProcessingStatus.SUCCESS)
+        .map(FileProcessingResponseDTO::getFilePath)
+        .map(filePathToChangeSetMap::get)
+        .filter(Objects::nonNull)
+        .filter(x -> x.getChangeType() == io.harness.gitsync.ChangeType.RENAME)
+        .forEach(changeSet
+            -> gitEntityService.updateFilePath(request.getAccountId(), changeSet.getPrevFilePath(),
+                request.getGitToHarnessBranchInfo().getRepoUrl(), request.getGitToHarnessBranchInfo().getBranch(),
+                changeSet.getFilePath()));
   }
 
   private List<ChangeSetWithYamlStatusDTO> getInvalidChangeSetWithYamlStatusDTO(
