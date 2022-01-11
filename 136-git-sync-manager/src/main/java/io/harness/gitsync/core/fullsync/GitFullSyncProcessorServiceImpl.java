@@ -84,7 +84,7 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
     logContext.put("messageId", messageId);
 
     return FullSyncChangeSet.newBuilder()
-        .setBranchName(yamlGitConfigDTO.getBranch())
+        .setBranchName(entityInfo.getBranchName())
         .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityInfo.getEntityDetail()))
         .setFilePath(entityInfo.getFilePath())
         .setYamlGitConfigIdentifier(yamlGitConfigDTO.getIdentifier())
