@@ -15,6 +15,7 @@ import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.yaml.extended.reports.JUnitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReportType;
+import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.ci.serializer.SerializerUtils;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.vm.steps.VmJunitTestReport;
@@ -82,9 +83,17 @@ public class VmRunTestStepSerializer {
     String earlyExitCommand = SerializerUtils.getEarlyExitCommand(runTestsStepInfo.getShell());
     preCommand = earlyExitCommand + preCommand;
 
+    VmRunTestStepBuilder vmRunTestStepBuilder = VmRunTestStep.builder();
+    ConnectorDetails connectorDetails;
+    if (!StringUtils.isEmpty(image)) {
+      NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
+      connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorIdentifier);
+      image = IntegrationStageUtils.getFullyQualifiedImageName(image, connectorDetails);
+      vmRunTestStepBuilder.connector(connectorDetails);
+    }
+
     VmRunTestStepBuilder runTestStepBuilder =
-        VmRunTestStep.builder()
-            .image(image)
+        vmRunTestStepBuilder.image(image)
             .args(args)
             .entrypoint(SerializerUtils.getEntrypoint(runTestsStepInfo.getShell()))
             .language(language)
@@ -97,13 +106,6 @@ public class VmRunTestStepSerializer {
             .envVariables(envVars)
             .outputVariables(outputVarNames)
             .timeoutSecs(timeout);
-
-    ConnectorDetails connectorDetails;
-    if (!StringUtils.isEmpty(image) && !StringUtils.isEmpty(connectorIdentifier)) {
-      NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
-      connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorIdentifier);
-      runTestStepBuilder.connector(connectorDetails);
-    }
 
     if (runTestsStepInfo.getReports() != null) {
       if (runTestsStepInfo.getReports().getType() == UnitTestReportType.JUNIT) {

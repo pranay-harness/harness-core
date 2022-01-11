@@ -14,6 +14,7 @@ import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.yaml.extended.reports.JUnitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReportType;
+import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.ci.serializer.SerializerUtils;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.vm.steps.VmJunitTestReport;
@@ -61,20 +62,22 @@ public class VmRunStepSerializer {
 
     String earlyExitCommand = SerializerUtils.getEarlyExitCommand(runStepInfo.getShell());
     command = earlyExitCommand + command;
-    VmRunStepBuilder runStepBuilder = VmRunStep.builder()
-                                          .image(image)
-                                          .entrypoint(SerializerUtils.getEntrypoint(runStepInfo.getShell()))
-                                          .command(command)
-                                          .outputVariables(outputVarNames)
-                                          .envVariables(envVars)
-                                          .timeoutSecs(timeout);
 
+    VmRunStepBuilder runStepBuilder = VmRunStep.builder();
     ConnectorDetails connectorDetails;
     if (!StringUtils.isEmpty(image) && !StringUtils.isEmpty(connectorIdentifier)) {
       NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
       connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorIdentifier);
+      image = IntegrationStageUtils.getFullyQualifiedImageName(image, connectorDetails);
       runStepBuilder.imageConnector(connectorDetails);
     }
+
+    runStepBuilder.image(image)
+        .entrypoint(SerializerUtils.getEntrypoint(runStepInfo.getShell()))
+        .command(command)
+        .outputVariables(outputVarNames)
+        .envVariables(envVars)
+        .timeoutSecs(timeout);
 
     if (runStepInfo.getReports() != null) {
       if (runStepInfo.getReports().getType() == UnitTestReportType.JUNIT) {

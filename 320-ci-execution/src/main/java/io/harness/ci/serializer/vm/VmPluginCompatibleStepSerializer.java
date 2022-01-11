@@ -13,6 +13,7 @@ import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoUtils;
 import io.harness.beans.sweepingoutputs.StageInfraDetails.Type;
 import io.harness.ci.config.CIExecutionServiceConfig;
+import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
 import io.harness.delegate.beans.ci.vm.steps.VmPluginStep;
@@ -28,6 +29,7 @@ import io.harness.yaml.core.timeout.Timeout;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 public class VmPluginCompatibleStepSerializer {
@@ -52,6 +54,7 @@ public class VmPluginCompatibleStepSerializer {
     if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
       imageConnector = connectorUtils.getDefaultInternalConnector(ngAccess);
     }
+    image = IntegrationStageUtils.getFullyQualifiedImageName(image, connectorDetails);
     return VmPluginStep.builder()
         .image(image)
         .connector(connectorDetails)

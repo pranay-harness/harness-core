@@ -17,6 +17,7 @@ import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.yaml.extended.reports.JUnitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReportType;
 import io.harness.ci.config.CIExecutionServiceConfig;
+import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.ci.serializer.SerializerUtils;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.vm.steps.VmJunitTestReport;
@@ -70,17 +71,18 @@ public class VmPluginStepSerializer {
         VmPluginStep.builder().image(image).envVariables(envVars).timeoutSecs(timeout);
 
     // if the plugin type is git clone use default harnessImage Connector
-    // else if the connector is given in plugin, use that.
+    // else use connector is given in plugin config
     if (identifier.equals(GIT_CLONE_STEP_ID) && pluginStepInfo.isHarnessManagedImage()) {
-      image = ciExecutionServiceConfig.getStepConfig().getVmImageConfig().getGitClone();
-      pluginStepBuilder.image(image);
       NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
       ConnectorDetails connectorDetails = connectorUtils.getDefaultInternalConnector(ngAccess);
-      pluginStepBuilder.imageConnector(connectorDetails);
-    } else if (!StringUtils.isEmpty(image) && !StringUtils.isEmpty(connectorIdentifier)) {
+      String gitCloneImageFromConfig = ciExecutionServiceConfig.getStepConfig().getVmImageConfig().getGitClone();
+      image = IntegrationStageUtils.getFullyQualifiedImageName(gitCloneImageFromConfig, connectorDetails);
+      pluginStepBuilder.imageConnector(connectorDetails).image(image);
+    } else if (StringUtils.isNotEmpty(image)) {
       NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
       ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorIdentifier);
-      pluginStepBuilder.imageConnector(connectorDetails);
+      image = IntegrationStageUtils.getFullyQualifiedImageName(image, connectorDetails);
+      pluginStepBuilder.imageConnector(connectorDetails).image(image);
     }
 
     if (pluginStepInfo.getReports() != null) {
