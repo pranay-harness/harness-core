@@ -7,6 +7,11 @@
 
 package io.harness.gitsync;
 
+import static io.harness.EntityType.CONNECTORS;
+import static io.harness.EntityType.FEATURE_FLAGS;
+import static io.harness.EntityType.INPUT_SETS;
+import static io.harness.EntityType.PIPELINES;
+import static io.harness.EntityType.TEMPLATE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_FULL_SYNC_STREAM;
 
@@ -80,6 +85,8 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
@@ -107,6 +114,12 @@ public class GitSyncModule extends AbstractModule {
         .put(EntityType.INPUT_SETS, Microservice.PMS)
         .put(EntityType.TEMPLATE, Microservice.TEMPLATESERVICE)
         .build();
+  }
+
+  @Provides
+  @Singleton
+  List<EntityType> getEntityProcessingOrder() {
+    return Arrays.asList(CONNECTORS, PIPELINES, INPUT_SETS, TEMPLATE, FEATURE_FLAGS);
   }
 
   @Override

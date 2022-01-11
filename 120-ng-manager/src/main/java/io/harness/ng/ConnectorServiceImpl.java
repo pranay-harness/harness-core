@@ -54,6 +54,7 @@ import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -271,9 +272,6 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   private void validateTheUpdateRequestIsValid(ConnectorInfoDTO connectorInfo, String accountIdentifier) {
-    if (GitContextHelper.isFullSyncFlow()) {
-      return;
-    }
     final Optional<ConnectorResponseDTO> connectorDTO = findExistingConnector(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
     if (!connectorDTO.isPresent()) {
@@ -689,5 +687,10 @@ public class ConnectorServiceImpl implements ConnectorService {
       String projectIdentifier, String connectorIdentifier, String repo, String branch) {
     return defaultConnectorService.getFromBranch(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, repo, branch);
+  }
+
+  @Override
+  public ConnectorDTO fullSyncEntity(EntityDetailProtoDTO entityDetailProtoDTO) {
+    return defaultConnectorService.fullSyncEntity(entityDetailProtoDTO);
   }
 }

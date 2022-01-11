@@ -10,6 +10,7 @@ package io.harness.cvng.analysis.services.impl;
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LEARNING_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.MARK_FAILURE_PATH;
+import static io.harness.cvng.analysis.entities.LearningEngineTask.TaskPriority.P0;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -20,6 +21,7 @@ import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKe
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.metrics.CVNGMetricsUtils;
 import io.harness.cvng.metrics.beans.AccountMetricContext;
@@ -65,9 +67,8 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
     Query<LearningEngineTask> learningEngineTaskQuery =
         hPersistence.createQuery(LearningEngineTask.class)
             .filter(LearningEngineTaskKeys.taskStatus, ExecutionStatus.QUEUED)
-            .order(Sort.ascending(LearningEngineTaskKeys.taskPriority));
-    // TODO: add ordering based on createdAt.
-
+            .order(
+                Sort.ascending(LearningEngineTaskKeys.taskPriority), Sort.ascending(LearningEngineTaskKeys.createdAt));
     if (isNotEmpty(taskType)) {
       learningEngineTaskQuery.field(LearningEngineTaskKeys.analysisType).in(taskType);
     }
@@ -91,6 +92,9 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
     learningEngineTask.setTaskStatus(ExecutionStatus.QUEUED);
     VerificationTask verificationTask = verificationTaskService.get(learningEngineTask.getVerificationTaskId());
     learningEngineTask.setAccountId(verificationTask.getAccountId());
+    if (verificationTask.getTaskInfo().getTaskType() == TaskType.DEPLOYMENT) {
+      learningEngineTask.setTaskPriority(P0.getValue());
+    }
     return hPersistence.save(learningEngineTask);
   }
 

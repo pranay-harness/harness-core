@@ -169,6 +169,10 @@ if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.ceNextGenServiceSecret "$NEXT_GEN_MANAGER_SECRET"
 fi
 
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.ffServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi
+
 if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
@@ -246,6 +250,10 @@ fi
 
 if [[ "" != "$LW_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE lightwingClientConfig.baseUrl "$LW_CLIENT_BASEURL"
+fi
+
+if [[ "" != "$CF_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE ffServerClientConfig.baseUrl "$CF_CLIENT_BASEURL"
 fi
 
 if [[ "" != "$AUDIT_CLIENT_BASEURL" ]]; then
