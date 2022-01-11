@@ -42,6 +42,12 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.JIRA_CREATE)
   JIRA_CREATE_STEP(
       ModuleType.PMS, EntityTypeConstants.JIRA_CREATE, IdentifierRef.class, EntityYamlRootNames.JIRA_CREATE),
+  @JsonProperty(EntityTypeConstants.JIRA_UPDATE)
+  JIRA_UPDATE_STEP(
+      ModuleType.PMS, EntityTypeConstants.JIRA_UPDATE, IdentifierRef.class, EntityYamlRootNames.JIRA_UPDATE),
+  @JsonProperty(EntityTypeConstants.JIRA_APPROVAL)
+  JIRA_APPROVAL_STEP(
+      ModuleType.PMS, EntityTypeConstants.JIRA_APPROVAL, IdentifierRef.class, EntityYamlRootNames.JIRA_APPROVAL),
   @JsonProperty(EntityTypeConstants.SHELL_SCRIPT)
   SHELL_SCRIPT_STEP(
       ModuleType.PMS, EntityTypeConstants.SHELL_SCRIPT, IdentifierRef.class, EntityYamlRootNames.SHELL_SCRIPT),
