@@ -15,6 +15,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -49,6 +50,10 @@ public class GitFullSyncJob implements PersistentEntity, PersistentRegularIterab
   String projectIdentifier;
   String yamlGitConfigIdentifier;
   String syncStatus;
+  private boolean createPullRequest;
+  @Schema(description = "Target Branch for pull request") String targetBranch;
+  String branch;
+  String prTitle;
 
   int retryCount;
   @FdIndex @NonFinal Long nextRuntime;

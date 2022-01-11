@@ -12,11 +12,13 @@ import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.FullSyncChangeSet;
 import io.harness.gitsync.FullSyncResponse;
 import io.harness.gitsync.FullSyncServiceGrpc;
 import io.harness.gitsync.common.helper.GitSyncGrpcClientUtils;
+import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
 import io.harness.gitsync.core.fullsync.beans.GitFullSyncEntityProcessingResponse;
@@ -42,6 +44,7 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
   EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
   GitFullSyncEntityService gitFullSyncEntityService;
   FullSyncJobService fullSyncJobService;
+  ScmOrchestratorService scmOrchestratorService;
 
   private static int MAX_RETRY_COUNT = 2;
 
@@ -126,6 +129,9 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
     }
 
     updateTheStatusOfJob(processingFailed, fullSyncJob);
+    if (fullSyncJob.isCreatePullRequest()) {
+      createAPullRequest(fullSyncJob);
+    }
     log.info("Completed full sync for the job {}", fullSyncJob.getMessageId());
   }
 
@@ -141,5 +147,25 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
     } else {
       fullSyncJobService.markFullSyncJobAsSuccess(fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid());
     }
+  }
+
+  private void createAPullRequest(GitFullSyncJob fullSyncJob) {
+    String projectIdentifier = fullSyncJob.getProjectIdentifier();
+    String orgIdentifier = fullSyncJob.getOrgIdentifier();
+    String accountIdentifier = fullSyncJob.getAccountIdentifier();
+    String yamlGitConfigIdentifier = fullSyncJob.getYamlGitConfigIdentifier();
+    YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, );
+    GitPRCreateRequest createPRRequest = GitPRCreateRequest.builder()
+                                             .accountIdentifier(accountIdentifier)
+                                             .orgIdentifier(orgIdentifier)
+                                             .projectIdentifier(projectIdentifier)
+                                             .yamlGitConfigRef(yamlGitConfigIdentifier)
+                                             .title(fullSyncJob.getPrTitle())
+                                             .sourceBranch(fullSyncJob.getBranch())
+                                             .targetBranch(fullSyncJob.getTargetBranch())
+                                             .build();
+    scmOrchestratorService.processScmRequestUsingConnectorSettings(scmClientFacilitatorService
+        -> scmClientFacilitatorService.createPullRequest(createPRRequest),
+        projectIdentifier, orgIdentifier, accountIdentifier, yamlGitConfigDTO.getGitConnectorRef());
   }
 }

@@ -13,7 +13,6 @@ import static io.harness.gitsync.core.beans.GitFullSyncEntityInfo.SyncStatus.QUE
 
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
@@ -90,9 +89,6 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
       log.info("The job is not created for the message id {}, as a job with id already exists", messageId);
       return;
     }
-    if (fullSyncEventRequest.getCreatePr()) {
-      createAPullRequest(fullSyncEventRequest);
-    }
   }
 
   private GitFullSyncJob saveTheFullSyncJob(FullSyncEventRequest fullSyncEventRequest, String messageId) {
@@ -105,6 +101,10 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
                                      .syncStatus(QUEUED.name())
                                      .messageId(messageId)
                                      .retryCount(0)
+                                     .createPullRequest(fullSyncEventRequest.getCreatePr())
+                                     .targetBranch(fullSyncEventRequest.getTargetBranch())
+                                     .branch(fullSyncEventRequest.getBranch())
+                                     .prTitle(fullSyncEventRequest.getPrTitle())
                                      .build();
     try {
       return fullSyncJobService.save(fullSyncJob);
@@ -112,26 +112,6 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
       log.error("A full sync job already exists for the message {}", messageId, ex);
     }
     return null;
-  }
-
-  private void createAPullRequest(FullSyncEventRequest fullSyncEventRequest) {
-    final EntityScopeInfo gitConfigScope = fullSyncEventRequest.getGitConfigScope();
-    String projectIdentifier = gitConfigScope.getProjectId().getValue();
-    String orgIdentifier = gitConfigScope.getOrgId().getValue();
-    YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(
-        projectIdentifier, orgIdentifier, gitConfigScope.getAccountId(), gitConfigScope.getIdentifier());
-    GitPRCreateRequest createPRRequest = GitPRCreateRequest.builder()
-                                             .accountIdentifier(gitConfigScope.getAccountId())
-                                             .orgIdentifier(orgIdentifier)
-                                             .projectIdentifier(projectIdentifier)
-                                             .yamlGitConfigRef(gitConfigScope.getIdentifier())
-                                             .title(fullSyncEventRequest.getPrTitle())
-                                             .sourceBranch(fullSyncEventRequest.getBranch())
-                                             .targetBranch(fullSyncEventRequest.getTargetBranch())
-                                             .build();
-    scmOrchestratorService.processScmRequestUsingConnectorSettings(scmClientFacilitatorService
-        -> scmClientFacilitatorService.createPullRequest(createPRRequest),
-        projectIdentifier, orgIdentifier, gitConfigScope.getAccountId(), yamlGitConfigDTO.getGitConnectorRef());
   }
 
   private void saveFullSyncEntityInfo(EntityScopeInfo entityScopeInfo, String messageId, Microservice microservice,
