@@ -60,11 +60,11 @@ public class K8RollingWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
         .build();
   }
 
-  PhaseStep getRollingVerifyPhaseStep() {
+  protected PhaseStep getRollingVerifyPhaseStep() {
     return aPhaseStep(K8S_PHASE_STEP, "Verify").build();
   }
 
-  PhaseStep getRollingWrapUpPhaseStep() {
+  protected PhaseStep getRollingWrapUpPhaseStep() {
     return aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP).build();
   }
 
@@ -84,21 +84,7 @@ public class K8RollingWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
         .build();
   }
 
-  private PhaseStep getRancherRollingRollbackDeployPhaseStep() {
-    return aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.DEPLOY)
-        .addStep(GraphNode.builder()
-                     .id(generateUuid())
-                     .type(RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK.name())
-                     .name(WorkflowConstants.RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK)
-                     .rollback(true)
-                     .build())
-        .withPhaseStepNameForRollback(WorkflowServiceHelper.DEPLOY)
-        .withStatusForRollback(ExecutionStatus.SUCCESS)
-        .withRollback(true)
-        .build();
-  }
-
-  PhaseStep getRollingRollbackWrapUpPhaseStep() {
+  protected PhaseStep getRollingRollbackWrapUpPhaseStep() {
     return aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP)
         .withPhaseStepNameForRollback(WorkflowServiceHelper.WRAP_UP)
         .withRollback(true)
