@@ -279,7 +279,7 @@ public class TerraformDestroyStepTest extends CategoryTest {
 
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     TaskRequest taskRequest =
         terraformDestroyStep.obtainTaskAfterRbac(ambiance, stepElementParameters, stepInputPackage);
     assertThat(taskRequest).isNotNull();

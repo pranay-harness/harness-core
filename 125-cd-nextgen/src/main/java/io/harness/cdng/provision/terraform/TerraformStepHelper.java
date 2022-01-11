@@ -7,6 +7,7 @@
 
 package io.harness.cdng.provision.terraform;
 
+import static io.harness.cdng.provision.terraform.TerraformPlanCommand.APPLY;
 import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.provision.TerraformConstants.TF_DESTROY_NAME_PREFIX;
 import static io.harness.provision.TerraformConstants.TF_NAME_PREFIX;
@@ -96,6 +97,7 @@ import org.mongodb.morphia.query.Sort;
 @OwnedBy(HarnessTeam.CDP)
 public class TerraformStepHelper {
   private static final String INHERIT_OUTPUT_FORMAT = "tfInheritOutput_%s";
+  private static final String TF_INHERIT_OUTPUT_FORMAT = "tfInheritOutput_%s_%s";
   public static final String TF_CONFIG_FILES = "TF_CONFIG_FILES";
   public static final String TF_VAR_FILES = "TF_VAR_FILES_%d";
 
@@ -217,11 +219,16 @@ public class TerraformStepHelper {
     return purgedRepoUrl + "/" + purgedRepoName;
   }
 
-  public TerraformInheritOutput getSavedInheritOutput(String provisionerIdentifier, Ambiance ambiance) {
+  public TerraformInheritOutput getSavedInheritOutput(String provisionerIdentifier, String command, Ambiance ambiance) {
     String fullEntityId = generateFullIdentifier(provisionerIdentifier, ambiance);
-    String inheritOutputName = format(INHERIT_OUTPUT_FORMAT, fullEntityId);
     OptionalSweepingOutput output = executionSweepingOutputService.resolveOptional(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(inheritOutputName));
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(format(TF_INHERIT_OUTPUT_FORMAT, command, fullEntityId)));
+    if (!output.isFound()) {
+      // This is for backward compatibility as after we release this, there may be IN PROGRESS workflows which saved
+      // inherit output  with old name. To be removed after some time.
+      output = executionSweepingOutputService.resolveOptional(
+          ambiance, RefObjectUtils.getSweepingOutputRefObject(format(INHERIT_OUTPUT_FORMAT, fullEntityId)));
+    }
     if (!output.isFound()) {
       throw new InvalidRequestException(
           format("Did not find any Plan step for provisioner identifier: [%s]", provisionerIdentifier));
@@ -249,7 +256,8 @@ public class TerraformStepHelper {
         .planName(getTerraformPlanName(planStepParameters.getConfiguration().getCommand(), ambiance));
     String fullEntityId = generateFullIdentifier(
         ParameterFieldHelper.getParameterFieldValue(planStepParameters.getProvisionerIdentifier()), ambiance);
-    String inheritOutputName = format(INHERIT_OUTPUT_FORMAT, fullEntityId);
+    String inheritOutputName =
+        format(TF_INHERIT_OUTPUT_FORMAT, planStepParameters.getConfiguration().command.name(), fullEntityId);
     executionSweepingOutputService.consume(ambiance, inheritOutputName, builder.build(), StepOutcomeGroup.STAGE.name());
   }
 
@@ -320,7 +328,7 @@ public class TerraformStepHelper {
 
   public void saveRollbackDestroyConfigInherited(TerraformApplyStepParameters stepParameters, Ambiance ambiance) {
     TerraformInheritOutput inheritOutput = getSavedInheritOutput(
-        ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance);
+        ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), APPLY.name(), ambiance);
 
     TerraformConfig terraformConfig =
         TerraformConfig.builder()
