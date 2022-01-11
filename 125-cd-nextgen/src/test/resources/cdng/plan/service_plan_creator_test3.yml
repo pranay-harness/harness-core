@@ -1,0 +1,5 @@
+useFromStage:
+  stage: stage1
+stageOverrides:
+  manifests: []
+  variables: []
