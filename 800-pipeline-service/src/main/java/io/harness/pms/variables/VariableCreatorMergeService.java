@@ -62,7 +62,8 @@ public class VariableCreatorMergeService {
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
 
     YamlField processedYaml = YamlUtils.injectUuidWithLeafUuid(yaml);
-    YamlField topRootFieldInYaml = YamlUtils.getTopRootFieldInYaml(Objects.requireNonNull(processedYaml).getNode());
+    YamlField topRootFieldInYaml =
+        YamlUtils.getTopRootFieldInYamlField(Objects.requireNonNull(processedYaml).getNode());
 
     Dependencies dependencies =
         Dependencies.newBuilder()

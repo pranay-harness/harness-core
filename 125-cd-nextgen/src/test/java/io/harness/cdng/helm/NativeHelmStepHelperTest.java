@@ -163,7 +163,11 @@ public class NativeHelmStepHelperTest extends CategoryTest {
   @Spy @InjectMocks private NativeHelmStepHelper nativeHelmStepHelper;
 
   @Mock private LogCallback mockLogCallback;
-  private final Ambiance ambiance = Ambiance.newBuilder().putSetupAbstractions("accountId", "test-account").build();
+  private final Ambiance ambiance = Ambiance.newBuilder()
+                                        .putSetupAbstractions(SetupAbstractionKeys.accountId, "test-account")
+                                        .putSetupAbstractions(SetupAbstractionKeys.orgIdentifier, "test-org")
+                                        .putSetupAbstractions(SetupAbstractionKeys.projectIdentifier, "test-project")
+                                        .build();
   private static final String SOME_URL = "https://url.com/owner/repo.git";
 
   @Before
