@@ -7,6 +7,7 @@
 
 package io.harness.cdng.provision.terraform;
 
+import static io.harness.cdng.provision.terraform.TerraformPlanCommand.APPLY;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -148,7 +149,7 @@ public class TerraformStepHelperTest extends CategoryTest {
             .provisionerIdentifier(ParameterField.createValueField("provId"))
             .configuration(TerraformPlanExecutionDataParameters.builder()
                                .configFiles(configFilesWrapper)
-                               .command(TerraformPlanCommand.APPLY)
+                               .command(APPLY)
                                .secretManagerRef(ParameterField.createValueField("secret"))
                                .varFiles(varFilesMap)
                                .environmentVariables(ImmutableMap.of("KEY", ParameterField.createValueField("VAL")))
@@ -417,7 +418,7 @@ public class TerraformStepHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetTerraformPlanName() {
     Ambiance ambiance = getAmbiance();
-    String planName = helper.getTerraformPlanName(TerraformPlanCommand.APPLY, ambiance);
+    String planName = helper.getTerraformPlanName(APPLY, ambiance);
     assertThat(planName).isEqualTo("tfPlan-exec-id");
   }
 
@@ -531,7 +532,7 @@ public class TerraformStepHelperTest extends CategoryTest {
                                                          .targets(terraformConfig.targets)
                                                          .workspace(terraformConfig.workspace)
                                                          .build();
-    String inheritOutputName = "tfInheritOutput_test-account/test-org/test-project/provId_$";
+    String inheritOutputName = "tfInheritOutput_APPLY_test-account/test-org/test-project/provId_$";
     OptionalSweepingOutput optionalSweepingOutput =
         OptionalSweepingOutput.builder().found(true).output(terraformInheritOutput).build();
     Mockito.doReturn(optionalSweepingOutput)
@@ -605,6 +606,46 @@ public class TerraformStepHelperTest extends CategoryTest {
     assertThat(config.getAccountId()).isEqualTo("test-account");
     assertThat(config.getConfigFiles().toGitStoreConfig().getConnectorRef().getValue()).isEqualTo("terraform");
     assertThat(config.getConfigFiles().toGitStoreConfig().getBranch().getValue()).isEqualTo("master");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetSavedInheritOutputFirstNotfound() {
+    Ambiance ambiance = getAmbiance();
+    ExecutionSweepingOutput terraformInheritOutput = TerraformInheritOutput.builder().build();
+    OptionalSweepingOutput notFoundOptionalSweepingOutput =
+        OptionalSweepingOutput.builder().found(false).output(null).build();
+    OptionalSweepingOutput foundOptionalSweepingOutput =
+        OptionalSweepingOutput.builder().found(true).output(terraformInheritOutput).build();
+    Mockito.doReturn(foundOptionalSweepingOutput)
+        .when(mockExecutionSweepingOutputService)
+        .resolveOptional(ambiance,
+            RefObjectUtils.getSweepingOutputRefObject("tfInheritOutput_test-account/test-org/test-project/test"));
+    Mockito.doReturn(notFoundOptionalSweepingOutput)
+        .when(mockExecutionSweepingOutputService)
+        .resolveOptional(ambiance,
+            RefObjectUtils.getSweepingOutputRefObject("tfInheritOutput_APPLY_test-account/test-org/test-project/test"));
+    TerraformInheritOutput inheritOutput = helper.getSavedInheritOutput("test", "APPLY", ambiance);
+    assertThat(inheritOutput).isEqualTo(terraformInheritOutput);
+    verify(mockExecutionSweepingOutputService, times(2)).resolveOptional(any(), any());
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetSavedInheritOutputFoudFirst() {
+    Ambiance ambiance = getAmbiance();
+    ExecutionSweepingOutput terraformInheritOutput = TerraformInheritOutput.builder().build();
+    OptionalSweepingOutput foundOptionalSweepingOutput =
+        OptionalSweepingOutput.builder().found(true).output(terraformInheritOutput).build();
+    Mockito.doReturn(foundOptionalSweepingOutput)
+        .when(mockExecutionSweepingOutputService)
+        .resolveOptional(ambiance,
+            RefObjectUtils.getSweepingOutputRefObject("tfInheritOutput_APPLY_test-account/test-org/test-project/test"));
+    TerraformInheritOutput inheritOutput = helper.getSavedInheritOutput("test", "APPLY", ambiance);
+    assertThat(inheritOutput).isEqualTo(terraformInheritOutput);
+    verify(mockExecutionSweepingOutputService, times(1)).resolveOptional(any(), any());
   }
 
   @Test
