@@ -60,6 +60,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -225,19 +226,37 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       String repoIdentifier, String branch, GitSyncErrorType errorType) {
     Criteria criteria = new Criteria();
     List<String> branches = new ArrayList<>();
-    if (StringUtils.isNotEmpty(repoIdentifier)) {
+    List<Pair<String, String>> repoBranchList = new ArrayList<>();
+    if (StringUtils.isEmpty(repoIdentifier)) {
+      List<YamlGitConfigDTO> yamlGitConfigDTOS =
+          yamlGitConfigService.list(projectIdentifier, orgIdentifier, accountIdentifier);
+      repoBranchList = emptyIfNull(yamlGitConfigDTOS)
+                           .stream()
+                           .map(yamlGitConfigDTO -> {
+                             String repo = yamlGitConfigDTO.getRepo();
+                             String defaultBranch = yamlGitConfigDTO.getBranch();
+                             return Pair.of(repo, defaultBranch);
+                           })
+                           .collect(Collectors.toList());
+    } else {
       YamlGitConfigDTO yamlGitConfigDTO =
           yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoIdentifier);
       branch = StringUtils.isEmpty(branch) ? yamlGitConfigDTO.getBranch() : branch;
-      criteria.and(GitSyncErrorKeys.repoUrl).is(yamlGitConfigDTO.getRepo());
-      branches.add(branch);
-    } else if (errorType.equals(GitSyncErrorType.GIT_TO_HARNESS)) {
-      List<YamlGitConfigDTO> yamlGitConfigs =
-          yamlGitConfigService.list(projectIdentifier, orgIdentifier, accountIdentifier);
-      branches.addAll(yamlGitConfigs.stream().map(YamlGitConfigDTO::getBranch).collect(Collectors.toList()));
+      repoBranchList.add(Pair.of(yamlGitConfigDTO.getRepo(), branch));
     }
+
     if (errorType.equals(GitSyncErrorType.GIT_TO_HARNESS)) {
-      criteria.and(GitSyncErrorKeys.branchName).in(branches);
+      List<Criteria> criteriaList = new ArrayList<>();
+      for (Pair<String, String> repoBranch : repoBranchList) {
+        criteriaList.add(Criteria.where(GitSyncErrorKeys.repoUrl)
+                             .is(repoBranch.getLeft())
+                             .and(GitSyncErrorKeys.branchName)
+                             .is(repoBranch.getRight()));
+      }
+      criteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
+    } else {
+      List<String> repoUrls = repoBranchList.stream().map(repoBranch -> repoBranch.getLeft()).collect(toList());
+      criteria.and(GitSyncErrorKeys.repoUrl).in(repoUrls);
     }
     return criteria;
   }

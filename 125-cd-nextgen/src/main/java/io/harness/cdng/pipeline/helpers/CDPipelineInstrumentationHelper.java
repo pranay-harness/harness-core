@@ -173,7 +173,7 @@ public class CDPipelineInstrumentationHelper {
       activeServicesCountPropMap.put(ACTIVE_SERVICES_PIPELINE_ID, pipelineId);
       telemetryReporter.sendTrackEvent(ACTIVE_SERVICES_COUNT_EVENT, identity, accountId, activeServicesCountPropMap,
           Collections.singletonMap(AMPLITUDE, true), io.harness.telemetry.Category.GLOBAL,
-          io.harness.telemetry.TelemetryOption.builder().sendForCommunity(true).build());
+          io.harness.telemetry.TelemetryOption.builder().sendForCommunity(false).build());
 
     } catch (Exception e) {
       log.error("Failed to send count of active services event.", e);
@@ -192,7 +192,7 @@ public class CDPipelineInstrumentationHelper {
       serviceInstancesPropMap.put(SERVICE_INSTANCES_PIPELINE_ID, pipelineId);
       telemetryReporter.sendTrackEvent(SERVICE_INSTANCES_COUNT_EVENT, identity, accountId, serviceInstancesPropMap,
           Collections.singletonMap(AMPLITUDE, true), io.harness.telemetry.Category.GLOBAL,
-          io.harness.telemetry.TelemetryOption.builder().sendForCommunity(true).build());
+          io.harness.telemetry.TelemetryOption.builder().sendForCommunity(false).build());
     } catch (Exception e) {
       log.error("Failed to send count of service instances event.", e);
     }
@@ -220,7 +220,7 @@ public class CDPipelineInstrumentationHelper {
       serviceUsedPropMap.put(SERVICE_USED_EVENT_PIPELINE_ID, eventPipelineId);
       telemetryReporter.sendTrackEvent(SERVICE_USED_EVENT, identity, accountId, serviceUsedPropMap,
           Collections.singletonMap(AMPLITUDE, true), io.harness.telemetry.Category.GLOBAL,
-          io.harness.telemetry.TelemetryOption.builder().sendForCommunity(true).build());
+          io.harness.telemetry.TelemetryOption.builder().sendForCommunity(false).build());
     } catch (Exception e) {
       log.error("Failed to send service used event.", e);
     }

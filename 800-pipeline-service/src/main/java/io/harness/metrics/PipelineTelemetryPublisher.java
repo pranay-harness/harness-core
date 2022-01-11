@@ -7,18 +7,24 @@
 
 package io.harness.metrics;
 
+import static io.harness.telemetry.Destination.AMPLITUDE;
+
+import io.harness.account.AccountClient;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.ng.core.dto.AccountDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.remote.client.RestClientUtils;
 import io.harness.telemetry.TelemetryOption;
 import io.harness.telemetry.TelemetryReporter;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -28,7 +34,7 @@ public class PipelineTelemetryPublisher {
   @Inject PMSPipelineService pmsPipelineService;
   @Inject PMSExecutionService pmsExecutionService;
   @Inject TelemetryReporter telemetryReporter;
-
+  @Inject AccountClient accountClient;
   String PIPELINES_CREATED_IN_A_DAY = "pipelines_create_in_a_day";
   String TOTAL_NUMBER_OF_PIPELINES = "total_number_of_pipelines";
   String EXECUTIONS_IN_A_DAY = "pipelines_executed_in_a_day";
@@ -44,7 +50,6 @@ public class PipelineTelemetryPublisher {
       Long totalPipelinesExecuted = 0L;
 
       String accountId = getAccountId();
-
       if (EmptyPredicate.isNotEmpty(accountId)) {
         Criteria criteria =
             Criteria.where(PipelineEntityKeys.createdAt).gt(System.currentTimeMillis() - MILLISECONDS_IN_A_DAY);
@@ -61,12 +66,14 @@ public class PipelineTelemetryPublisher {
         totalPipelinesExecuted = pmsExecutionService.getCountOfExecutions(noCriteriaExecutions);
 
         HashMap<String, Object> map = new HashMap<>();
+        map.put("group_type", "Account");
+        map.put("group_id", accountId);
         map.put(PIPELINES_CREATED_IN_A_DAY, pipelinesCreatedInADay);
         map.put(TOTAL_NUMBER_OF_PIPELINES, totalNumberOfPipelines);
         map.put(EXECUTIONS_IN_A_DAY, pipelinesExecutedInADay);
         map.put(TOTAL_EXECUTIONS, totalPipelinesExecuted);
-        telemetryReporter.sendGroupEvent(
-            accountId, null, map, null, TelemetryOption.builder().sendForCommunity(true).build());
+        telemetryReporter.sendGroupEvent(accountId, null, map, Collections.singletonMap(AMPLITUDE, true),
+            TelemetryOption.builder().sendForCommunity(true).build());
         log.info("Scheduled PipelineTelemetryPublisher event sent!");
       } else {
         log.info("There is no Account found!. Can not send scheduled PipelineTelemetryPublisher event.");
@@ -79,11 +86,10 @@ public class PipelineTelemetryPublisher {
   }
 
   private String getAccountId() {
-    Criteria filterCriteria = new Criteria();
-    PipelineEntity pipelineEntity = pmsPipelineService.findFirstPipeline(filterCriteria);
-    if (pipelineEntity != null) {
-      return pipelineEntity.getAccountId();
+    List<AccountDTO> accountDTOList = RestClientUtils.getResponse(accountClient.getAllAccounts());
+    if (accountDTOList == null || accountDTOList.size() == 0) {
+      return null;
     }
-    return null;
+    return accountDTOList.get(0).getIdentifier();
   }
 }

@@ -33,6 +33,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.Nonnull;
@@ -187,6 +189,13 @@ public class TerraformClientImpl implements TerraformClient {
   CliResponse executeTerraformCLICommand(String command, long timeoutInMillis, Map<String, String> envVariables,
       String scriptDirectory, LogCallback executionLogCallBack, String loggingCommand, LogOutputStream logOutputStream)
       throws IOException, InterruptedException, TimeoutException, TerraformCommandExecutionException {
+    if (!Files.exists(Paths.get(scriptDirectory))) {
+      String noDirExistErrorMsg = format("Could not find provided terraform config folder [%s]", scriptDirectory);
+      throw new TerraformCliRuntimeException(
+          format("Failed to execute terraform Command %s : Reason: %s", command, noDirExistErrorMsg), command,
+          noDirExistErrorMsg);
+    }
+
     CliResponse response = cliHelper.executeCliCommand(
         command, timeoutInMillis, envVariables, scriptDirectory, executionLogCallBack, loggingCommand, logOutputStream);
     if (response != null && response.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {

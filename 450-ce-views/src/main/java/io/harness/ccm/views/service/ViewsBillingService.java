@@ -67,4 +67,6 @@ public interface ViewsBillingService {
 
   Integer getTotalCountForQuery(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy,
       String cloudProviderTableName, ViewQueryParams queryParams);
+
+  boolean isDataGroupedByAwsAccount(List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy);
 }

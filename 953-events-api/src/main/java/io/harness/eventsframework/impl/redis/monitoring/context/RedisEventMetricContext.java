@@ -9,6 +9,7 @@ package io.harness.eventsframework.impl.redis.monitoring.context;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACCOUNT_IDENTIFIER_METRICS_KEY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.STREAM_NAME_METRICS_KEY;
 import static io.harness.metrics.MetricConstants.METRIC_LABEL_PREFIX;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -30,6 +31,7 @@ public class RedisEventMetricContext implements AutoCloseable {
     if (isNotEmpty(redisEventMetricDTO.getAccountId())) {
       ThreadContext.put(METRIC_LABEL_PREFIX + ACCOUNT_IDENTIFIER_METRICS_KEY, redisEventMetricDTO.getAccountId());
     }
+    ThreadContext.put(METRIC_LABEL_PREFIX + STREAM_NAME_METRICS_KEY, redisEventMetricDTO.getStreamName());
   }
 
   private void removeFromContext(Class clazz) {

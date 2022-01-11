@@ -35,8 +35,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.name.Named;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +46,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
   @Inject private HPersistence hPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Named("NON_PRIVILEGED") @Inject private Provider<NextGenService> nextGenServiceProvider;
+  @Inject private NextGenService nextGenService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
@@ -166,7 +164,7 @@ public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
   }
 
   private String getServiceNameFromStep(CVNGStepTask step) {
-    return nextGenServiceProvider.get()
+    return nextGenService
         .getService(
             step.getAccountId(), step.getOrgIdentifier(), step.getProjectIdentifier(), step.getServiceIdentifier())
         .getName();

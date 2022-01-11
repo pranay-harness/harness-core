@@ -273,11 +273,8 @@ public class MetricServiceImpl implements MetricService {
 
     labelValues.put(ENV_LABEL, env);
 
-    if (labelNames.size() != labelValues.size()) {
-      log.error("Some labels were not found from the object while trying to record metric. Label Names: " + labelNames
-          + " and labels: " + labelValues);
-      // TODO: send a metric for this and add alert on it.
-    }
+    // TODO: send a metric for this and add alert on it. If labelNames.size() != labelValues.size()
+
     return labelValues;
   }
 }

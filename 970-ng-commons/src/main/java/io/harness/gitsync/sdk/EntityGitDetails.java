@@ -18,10 +18,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldNameConstants(innerTypeName = "EntityGitDetailsKeys")
 @Schema(name = "EntityGitDetails", description = "This contains Git Details of the Entity")
 @OwnedBy(DX)
 public class EntityGitDetails {

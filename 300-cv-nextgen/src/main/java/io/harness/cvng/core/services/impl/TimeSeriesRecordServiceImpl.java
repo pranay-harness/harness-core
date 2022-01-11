@@ -597,6 +597,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
   }
 
   private String getDemoTemplate(String templateIdentifier) throws IOException {
+    log.info("Template identifier: {}", templateIdentifier);
     String path = "/io/harness/cvng/analysis/liveMonitoring/timeSeries/$template/time_series_metrics_def.json";
     path = path.replace("$template", templateIdentifier);
     return Resources.toString(this.getClass().getResource(path), Charsets.UTF_8);

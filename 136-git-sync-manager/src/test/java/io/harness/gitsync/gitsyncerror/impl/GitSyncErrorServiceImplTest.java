@@ -100,6 +100,8 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
     doReturn(yamlGitConfigDTO).when(yamlGitConfigService).getByProjectIdAndRepo(any(), any(), any(), any());
     when(yamlGitConfigService.getByAccountAndRepo(anyString(), anyString()))
         .thenReturn(Collections.singletonList(yamlGitConfigDTO));
+    when(yamlGitConfigService.list(anyString(), anyString(), anyString())).thenReturn(Arrays.asList(yamlGitConfigDTO));
+
     FieldUtils.writeField(gitSyncErrorService, "yamlGitConfigService", yamlGitConfigService, true);
   }
 
@@ -291,6 +293,9 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
         accountId, orgId, projectId, repoId, new PageRequest(0, 10, new ArrayList<>()));
     assertThat(gitSyncErrorList.getContent()).isNotEmpty();
     assertThat(gitSyncErrorList.getContent()).hasSize(1);
+
+    when(yamlGitConfigService.list(anyString(), anyString(), anyString()))
+        .thenReturn(Arrays.asList(yamlGitConfigDTO, YamlGitConfigDTO.builder().repo("repoUrl1").build()));
 
     gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
         accountId, orgId, projectId, null, new PageRequest(0, 10, new ArrayList<>()));

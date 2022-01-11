@@ -7,6 +7,7 @@
 
 package io.harness.ccm.views.graphql;
 
+import static io.harness.ccm.commons.constants.ViewFieldConstants.NONE_FIELD;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
@@ -300,5 +301,23 @@ public class ViewsQueryHelper {
         .filter(f -> f.getViewMetadataFilter() != null)
         .findFirst()
         .map(x -> x.getViewMetadataFilter().getViewId());
+  }
+
+  public Boolean isGroupByNonePresent(List<QLCEViewGroupBy> groupByList) {
+    String noneFieldName = NONE_FIELD;
+    return groupByList.stream().anyMatch(groupBy
+        -> groupBy.getEntityGroupBy() != null && groupBy.getEntityGroupBy().getFieldName().equals(noneFieldName));
+  }
+
+  public Boolean isGroupByFieldPresent(List<QLCEViewGroupBy> groupByList, String fieldName) {
+    return groupByList.stream().anyMatch(
+        groupBy -> groupBy.getEntityGroupBy() != null && groupBy.getEntityGroupBy().getFieldName().equals(fieldName));
+  }
+
+  public List<QLCEViewGroupBy> removeGroupByNone(List<QLCEViewGroupBy> groupByList) {
+    return groupByList.stream()
+        .filter(groupBy
+            -> groupBy.getEntityGroupBy() != null && !groupBy.getEntityGroupBy().getFieldName().equals(NONE_FIELD))
+        .collect(Collectors.toList());
   }
 }

@@ -9,6 +9,7 @@ package io.harness.serializer.kryo;
 
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.security.AppFilter;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute;
@@ -28,5 +29,6 @@ public class RbacCoreKryoRegistrar implements KryoRegistrar {
     kryo.register(PermissionAttribute.Action.class, 5354);
     kryo.register(PermissionAttribute.PermissionType.class, 5353);
     kryo.register(PermissionAttribute.class, 5352);
+    kryo.register(AppFilter.class, 5357);
   }
 }

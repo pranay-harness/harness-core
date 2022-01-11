@@ -20,6 +20,7 @@ import io.harness.ccm.commons.utils.BigQueryHelper;
 import io.harness.ccm.graphql.core.budget.BudgetCostService;
 import io.harness.ccm.utils.LogAccountIdentifier;
 import io.harness.ccm.views.entities.CEView;
+import io.harness.ccm.views.entities.ViewType;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
@@ -219,6 +220,7 @@ public class PerspectiveResource {
       ceView.setCreatedBy(null);
       ceView.setCreatedAt(0);
       ceView.setUuid(null);
+      ceView.setViewType(ViewType.CUSTOMER);
     }
     return ResponseDTO.newResponse(updateTotalCost(ceViewService.save(ceView)));
   }

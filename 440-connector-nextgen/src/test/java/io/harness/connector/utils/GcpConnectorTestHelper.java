@@ -30,6 +30,7 @@ import lombok.experimental.UtilityClass;
 public class GcpConnectorTestHelper {
   String projectId = "projectId";
   String datasetId = "datasetId";
+  String tableId = "tableId";
   String serviceAccountEmail = "serviceAccountEmail";
 
   List<CEFeatures> featuresEnabled =
@@ -40,7 +41,7 @@ public class GcpConnectorTestHelper {
         .featuresEnabled(featuresEnabled)
         .projectId(projectId)
         .serviceAccountEmail(serviceAccountEmail)
-        .billingExportSpec(GcpBillingExportSpecDTO.builder().datasetId(datasetId).build())
+        .billingExportSpec(GcpBillingExportSpecDTO.builder().datasetId(datasetId).tableId(tableId).build())
         .build();
   }
 
@@ -53,7 +54,7 @@ public class GcpConnectorTestHelper {
         .featuresEnabled(featuresEnabled)
         .projectId(projectId)
         .serviceAccountEmail(serviceAccountEmail)
-        .billingExportDetails(GcpBillingExportDetails.builder().datasetId(datasetId).build())
+        .billingExportDetails(GcpBillingExportDetails.builder().datasetId(datasetId).tableId(tableId).build())
         .build();
   }
 }

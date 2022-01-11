@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.offset;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
@@ -76,7 +75,6 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -108,7 +106,6 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationJobService verificationJobService;
   @Inject private HeatMapService heatMapService;
   @Mock private NextGenService nextGenService;
-  @Mock Provider<NextGenService> nextGenServiceProvider;
 
   private String cvConfigId;
   private String verificationTaskId;
@@ -142,9 +139,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
     orgIdentifier = generateUuid();
     projectIdentifier = generateUuid();
 
-    when(nextGenServiceProvider.get()).thenReturn(nextGenService);
-
-    FieldUtils.writeField(cvConfigService, "nextGenServiceProvider", nextGenServiceProvider, true);
+    FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
     FieldUtils.writeField(timeSeriesAnalysisService, "heatMapService", heatMapService, true);
   }

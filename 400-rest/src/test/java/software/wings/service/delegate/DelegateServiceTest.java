@@ -96,6 +96,7 @@ import io.harness.capability.HttpConnectionParameters;
 import io.harness.capability.service.CapabilityService;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
+import io.harness.delegate.NoEligibleDelegatesInAccountException;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
@@ -2614,8 +2615,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testProcessDelegateTaskResponseWithDelegateMetaInfo() {
+    thrown.expect(NoEligibleDelegatesInAccountException.class);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED, false);
-
     DelegateMetaInfo delegateMetaInfo = DelegateMetaInfo.builder().id(DELEGATE_ID).hostName(HOST_NAME).build();
     JenkinsExecutionResponse jenkinsExecutionResponse =
         JenkinsExecutionResponse.builder().delegateMetaInfo(delegateMetaInfo).build();

@@ -127,6 +127,7 @@ public class TriggerExecutionHelper {
                 + ", For Trigger: " + ngTriggerEntity.getIdentifier() + " does not exists. ",
             USER);
       }
+      PipelineEntity pipelineEntity = pipelineEntityToExecute.get();
 
       String runtimeInputYaml = triggerDetails.getNgTriggerConfigV2().getInputYaml();
 
@@ -135,17 +136,17 @@ public class TriggerExecutionHelper {
           ExecutionMetadata.newBuilder()
               .setExecutionUuid(executionId)
               .setTriggerInfo(triggerInfo)
-              .setRunSequence(pmsPipelineService.incrementRunSequence(pipelineEntityToExecute.get()))
-              .setPipelineIdentifier(pipelineEntityToExecute.get().getIdentifier());
+              .setRunSequence(pmsPipelineService.incrementRunSequence(pipelineEntity))
+              .setPipelineIdentifier(pipelineEntity.getIdentifier());
 
       PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
           PlanExecutionMetadata.builder().planExecutionId(executionId).triggerJsonPayload(payload);
 
       String pipelineYaml;
       if (isBlank(runtimeInputYaml)) {
-        pipelineYaml = pipelineEntityToExecute.get().getYaml();
+        pipelineYaml = pipelineEntity.getYaml();
       } else {
-        String pipelineYamlBeforeMerge = pipelineEntityToExecute.get().getYaml();
+        String pipelineYamlBeforeMerge = pipelineEntity.getYaml();
         String sanitizedRuntimeInputYaml =
             InputSetSanitizer.sanitizeRuntimeInput(pipelineYamlBeforeMerge, runtimeInputYaml);
         if (isBlank(sanitizedRuntimeInputYaml)) {
@@ -162,18 +163,20 @@ public class TriggerExecutionHelper {
       } catch (IOException exception) {
         throw new InvalidRequestException("Could not parse pipeline yaml. Please ensure that it is correct.");
       }
-      if (pipelineEntityToExecute.get().getTemplateReference() != null
-          && pipelineEntityToExecute.get().getTemplateReference()) {
-        pipelineYaml = pipelineTemplateHelper
-                           .resolveTemplateRefsInPipeline(pipelineEntityToExecute.get().getAccountId(),
-                               pipelineEntityToExecute.get().getOrgIdentifier(),
-                               pipelineEntityToExecute.get().getProjectIdentifier(), pipelineYaml, true)
-                           .getMergedPipelineYaml();
+      if (pipelineEntity.getTemplateReference() != null && pipelineEntity.getTemplateReference()) {
+        pipelineYaml =
+            pipelineTemplateHelper
+                .resolveTemplateRefsInPipeline(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
+                    pipelineEntity.getProjectIdentifier(), pipelineYaml, true)
+                .getMergedPipelineYaml();
       }
+      String expandedJson = pmsPipelineService.fetchExpandedPipelineJSONFromYaml(pipelineEntity.getAccountId(),
+          pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineYaml);
 
       planExecutionMetadataBuilder.yaml(pipelineYaml);
       planExecutionMetadataBuilder.processedYaml(YamlUtils.injectUuid(pipelineYaml));
       planExecutionMetadataBuilder.triggerPayload(triggerPayload);
+      planExecutionMetadataBuilder.expandedPipelineJson(expandedJson);
 
       // Set Principle user as pipeline service.
       SecurityContextBuilder.setContext(new ServicePrincipal(PIPELINE_SERVICE.getServiceId()));

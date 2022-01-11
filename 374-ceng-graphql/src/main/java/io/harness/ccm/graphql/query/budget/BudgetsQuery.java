@@ -95,6 +95,31 @@ public class BudgetsQuery {
     return budgetService.getBudgetTimeSeriesStats(budgetDao.get(budgetId, accountId));
   }
 
+  @GraphQLQuery(name = "budgetSummaryList", description = "List of budget cards for perspectives")
+  public List<BudgetSummary> listBudgetSummaryForPerspective(
+      @GraphQLArgument(name = "perspectiveId") String perspectiveId,
+      @GraphQLEnvironment final ResolutionEnvironment env) {
+    final String accountId = graphQLUtils.getAccountIdentifier(env);
+    List<BudgetSummary> budgetSummaryList = new ArrayList<>();
+    try {
+      List<Budget> perspectiveBudgets = new ArrayList<>();
+      if (perspectiveId != null) {
+        List<Budget> budgets = budgetDao.list(accountId);
+        perspectiveBudgets =
+            budgets.stream()
+                .filter(
+                    perspectiveBudget -> BudgetUtils.isBudgetBasedOnGivenPerspective(perspectiveBudget, perspectiveId))
+                .collect(Collectors.toList());
+      }
+
+      perspectiveBudgets.forEach(budget -> budgetSummaryList.add(buildBudgetSummary(budget)));
+
+    } catch (Exception e) {
+      log.info("Exception while fetching budget summary cards for given perspective: ", e);
+    }
+    return budgetSummaryList;
+  }
+
   private BudgetSummary buildBudgetSummary(Budget budget) {
     return BudgetSummary.builder()
         .id(budget.getUuid())

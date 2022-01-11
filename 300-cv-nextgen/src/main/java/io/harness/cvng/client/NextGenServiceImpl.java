@@ -26,6 +26,7 @@ import io.harness.utils.IdentifierRefHelper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hazelcast.util.Preconditions;
 import java.util.HashMap;
@@ -42,13 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @OwnedBy(HarnessTeam.CV)
 public class NextGenServiceImpl implements NextGenService {
-  private NextGenClient nextGenClient;
-  private RequestExecutor requestExecutor;
-
-  public NextGenServiceImpl(NextGenClient nextGenClient, RequestExecutor requestExecutor) {
-    this.nextGenClient = nextGenClient;
-    this.requestExecutor = requestExecutor;
-  }
+  @Inject private NextGenClient nextGenClient;
+  @Inject private RequestExecutor requestExecutor;
 
   private LoadingCache<EntityKey, EnvironmentResponseDTO> environmentCache =
       CacheBuilder.newBuilder()

@@ -24,6 +24,7 @@ import io.harness.packages.HarnessPackages;
 import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
+import io.harness.yaml.schema.beans.YamlSchemaMetadata;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 
@@ -307,24 +308,44 @@ public class YamlSchemaUtils {
     }
     ((ObjectNode) stepsNode).set(ONE_OF_NODE, oneOfNode);
   }
-
-  public void addOneOfInExecutionWrapperConfig(
-      JsonNode pipelineSchema, List<YamlSchemaWithDetails> stepSchemaWithDetails, ModuleType moduleType) {
+  public void addOneOfInExecutionWrapperConfig(JsonNode pipelineSchema,
+      List<YamlSchemaWithDetails> stepSchemaWithDetails, ModuleType moduleType, List<String> enabledFeatureFlags) {
     JsonNode executionWrapperConfigProperties = pipelineSchema.get(EXECUTION_WRAPPER_CONFIG_NODE).get(PROPERTIES_NODE);
     ArrayNode oneOfNode = getOneOfNode(executionWrapperConfigProperties);
     JsonNode stepsNode = executionWrapperConfigProperties.get(STEP_NODE);
 
     for (YamlSchemaWithDetails schemaWithDetails : stepSchemaWithDetails) {
       String nameSpaceString = getNamespaceFromModuleType(schemaWithDetails.getModuleType());
-      if (schemaWithDetails.getYamlSchemaMetadata() != null
-          && schemaWithDetails.getYamlSchemaMetadata().getModulesSupported() != null
-          && schemaWithDetails.getYamlSchemaMetadata().getModulesSupported().contains(moduleType)) {
+      if (validateSchemaMetadata(schemaWithDetails, moduleType, enabledFeatureFlags)) {
         oneOfNode.add(JsonNodeUtils.upsertPropertyInObjectNode(new ObjectNode(JsonNodeFactory.instance), REF_NODE,
             "#/definitions/" + nameSpaceString + schemaWithDetails.getSchemaClassName()));
       }
     }
 
     ((ObjectNode) stepsNode).set(ONE_OF_NODE, oneOfNode);
+  }
+
+  private boolean validateSchemaMetadata(
+      YamlSchemaWithDetails yamlSchemaWithDetails, ModuleType moduleType, List<String> enabledFeatureFlags) {
+    YamlSchemaMetadata yamlSchemaMetadata = yamlSchemaWithDetails.getYamlSchemaMetadata();
+    if (yamlSchemaMetadata == null) {
+      return false;
+    }
+    List<ModuleType> supportedModules = yamlSchemaMetadata.getModulesSupported();
+    if (supportedModules == null || !supportedModules.contains(moduleType)) {
+      return false;
+    }
+
+    List<String> requiredFeatureFlags = yamlSchemaMetadata.getFeatureFlags();
+    if (requiredFeatureFlags == null) {
+      return true;
+    }
+    for (String featureFlag : requiredFeatureFlags) {
+      if (!enabledFeatureFlags.contains(featureFlag)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private String getNamespaceFromModuleType(ModuleType moduleType) {

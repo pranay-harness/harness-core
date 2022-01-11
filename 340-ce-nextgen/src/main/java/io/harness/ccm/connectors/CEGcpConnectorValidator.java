@@ -64,11 +64,12 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
     String connectorIdentifier = connectorResponseDTO.getConnector().getIdentifier();
     String projectId = gcpCloudCostConnectorDTO.getProjectId(); // Source project id
     String datasetId = gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId();
+    String gcpTableName = gcpCloudCostConnectorDTO.getBillingExportSpec().getTableId();
     String impersonatedServiceAccount = gcpCloudCostConnectorDTO.getServiceAccountEmail();
     final List<CEFeatures> featuresEnabled = gcpCloudCostConnectorDTO.getFeaturesEnabled();
     try {
       ConnectorValidationResult connectorValidationResult =
-          validateAccessToBillingReport(projectId, datasetId, impersonatedServiceAccount);
+          validateAccessToBillingReport(projectId, datasetId, gcpTableName, impersonatedServiceAccount);
       if (connectorValidationResult != null) {
         return connectorValidationResult;
       } else {
@@ -101,9 +102,8 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
   }
 
   public ConnectorValidationResult validateAccessToBillingReport(
-      String projectId, String datasetId, String impersonatedServiceAccount) {
+      String projectId, String datasetId, String gcpTableName, String impersonatedServiceAccount) {
     boolean isTablePresent = false;
-    String gcpTableName = "";
     ServiceAccountCredentials sourceCredentials = getGcpCredentials(GCP_CREDENTIALS_PATH);
     Credentials credentials = getGcpImpersonatedCredentials(sourceCredentials, impersonatedServiceAccount);
     BigQuery bigQuery;
@@ -130,27 +130,31 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
       } else {
         // 2. Check presence of table "gcp_billing_export_v1_*"
         log.info("dataset {} is present", datasetId);
-        Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
-        for (Table table : tableList.getValues()) {
-          if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {
-            isTablePresent = true;
-            gcpTableName = table.getTableId().getTable();
-            log.info("table {} is present", gcpTableName);
-            break;
+        if (!isEmpty(gcpTableName)) {
+          isTablePresent = true;
+        } else {
+          Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
+          for (Table table : tableList.getValues()) {
+            if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {
+              isTablePresent = true;
+              gcpTableName = table.getTableId().getTable();
+              break;
+            }
           }
         }
         if (!isTablePresent) {
           return ConnectorValidationResult.builder()
               .status(ConnectivityStatus.PARTIAL)
-              .errorSummary("Billing table " + GCP_BILLING_EXPORT_V_1 + "_* is not yet present in"
+              .errorSummary("Billing export table is not yet present in"
                   + " the dataset " + datasetId + " in GCP project " + projectId
                   + ". Wait for some time for table to show up or check the billing export configuration in your GCP project")
               .testedAt(Instant.now().toEpochMilli())
               .build();
         } else {
+          log.info("table {} is present", gcpTableName);
           // Check when this table was last modified on
-          TableId tableId = TableId.of(projectId, datasetId, gcpTableName);
-          Table tableGranularData = bigQuery.getTable(tableId);
+          TableId tableIdBq = TableId.of(projectId, datasetId, gcpTableName);
+          Table tableGranularData = bigQuery.getTable(tableIdBq);
           Long lastModifiedTime = tableGranularData.getLastModifiedTime();
           lastModifiedTime = lastModifiedTime != null ? lastModifiedTime : tableGranularData.getCreationTime();
           // Check for data at source only when 24 hrs have elapsed since connector last modified at
@@ -158,7 +162,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
           if (lastModifiedTime < now) {
             return ConnectorValidationResult.builder()
                 .status(ConnectivityStatus.FAILURE)
-                .errorSummary("Billing table " + tableId + " is not updated in the last 24 hrs."
+                .errorSummary("Billing table " + gcpTableName + " is not updated in the last 24 hrs."
                     + ". Please check billing export settings in your gcp project")
                 .testedAt(Instant.now().toEpochMilli())
                 .build();

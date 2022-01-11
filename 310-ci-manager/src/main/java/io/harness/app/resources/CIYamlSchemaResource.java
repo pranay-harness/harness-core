@@ -9,17 +9,22 @@ package io.harness.app.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
+import static java.lang.String.format;
+
 import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.intfc.CIYamlSchemaService;
 import io.harness.ci.plan.creator.execution.CIPipelineModuleInfo;
+import io.harness.common.EntityTypeConstants;
 import io.harness.encryption.Scope;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.yaml.schema.YamlSchemaResource;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.YamlSchemaDetailsWrapper;
@@ -32,6 +37,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -63,7 +69,7 @@ public class CIYamlSchemaResource implements YamlSchemaResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
     List<PartialSchemaDTO> schema =
-        ciYamlSchemaService.getIntegrationStageYamlSchema(orgIdentifier, projectIdentifier, scope);
+        ciYamlSchemaService.getIntegrationStageYamlSchema(accountIdentifier, orgIdentifier, projectIdentifier, scope);
     return ResponseDTO.newResponse(schema);
   }
 
@@ -100,8 +106,8 @@ public class CIYamlSchemaResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
-    List<YamlSchemaWithDetails> schemaWithDetails =
-        ciYamlSchemaService.getIntegrationStageYamlSchemaWithDetails(orgIdentifier, projectIdentifier, scope);
+    List<YamlSchemaWithDetails> schemaWithDetails = ciYamlSchemaService.getIntegrationStageYamlSchemaWithDetails(
+        accountIdentifier, orgIdentifier, projectIdentifier, scope);
     return ResponseDTO.newResponse(
         YamlSchemaDetailsWrapper.builder().yamlSchemaWithDetailsList(schemaWithDetails).build());
   }
@@ -109,23 +115,40 @@ public class CIYamlSchemaResource implements YamlSchemaResource {
   @POST
   @Path("/merged")
   @ApiOperation(value = "Get Merged Partial Yaml Schema", nickname = "getMergedPartialYamlSchema")
-  public ResponseDTO<PartialSchemaDTO> getMergedYamlSchema(
+  public ResponseDTO<List<PartialSchemaDTO>> getMergedYamlSchema(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope,
       @RequestBody(required = true,
           description = "Step Schema with details") YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper) {
-    PartialSchemaDTO schema = ciYamlSchemaService.getMergedIntegrationStageYamlSchema(
+    PartialSchemaDTO schema = ciYamlSchemaService.getMergedIntegrationStageYamlSchema(accountIdentifier,
         projectIdentifier, orgIdentifier, scope, yamlSchemaDetailsWrapper.getYamlSchemaWithDetailsList());
-    return ResponseDTO.newResponse(schema);
+    return ResponseDTO.newResponse(Collections.singletonList(schema));
   }
 
-  @GET
-  @Path("/step")
+  @POST
+  @Path("/get")
   @ApiOperation(value = "Get step YAML schema", nickname = "getStepYamlSchema")
   public ResponseDTO<JsonNode> getStepYamlSchema(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType) {
-    return ResponseDTO.newResponse(ciYamlSchemaService.getStepYamlSchema(entityType));
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope,
+      @QueryParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType, @QueryParam("yamlGroup") String yamlGroup,
+      @RequestBody(required = true,
+          description = "Step Schema with details") YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper) {
+    if (yamlGroup.equals(StepCategory.STAGE.toString())) {
+      // Add more cases when ci module contains more stages.
+      if (entityType.getYamlName().equals(EntityTypeConstants.INTEGRATION_STAGE)) {
+        return ResponseDTO.newResponse(
+            ciYamlSchemaService
+                .getMergedIntegrationStageYamlSchema(accountIdentifier, projectIdentifier, orgIdentifier, scope,
+                    yamlSchemaDetailsWrapper.getYamlSchemaWithDetailsList())
+                .getSchema());
+      } else {
+        throw new InvalidRequestException(format("stage %s does not exist in module ci", entityType));
+      }
+    }
+    return ResponseDTO.newResponse(
+        ciYamlSchemaService.getIndividualYamlSchema(entityType, orgIdentifier, projectIdentifier, scope));
   }
 }

@@ -10,8 +10,10 @@ package io.harness.pms.pipeline.gitsync;
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.common.EntityReference;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.engine.GovernanceService;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
@@ -30,8 +32,12 @@ import io.harness.grpc.utils.StringValueUtils;
 import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
+import io.harness.opaclient.model.OpaConstants;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
+import io.harness.pms.PmsFeatureFlagService;
+import io.harness.pms.contracts.governance.GovernanceMetadata;
+import io.harness.pms.contracts.governance.PolicySetMetadata;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
@@ -48,6 +54,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -59,15 +66,20 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   private final PMSPipelineTemplateHelper pipelineTemplateHelper;
   private final PMSYamlSchemaService pmsYamlSchemaService;
   private final PipelineFullGitSyncHandler pipelineFullGitSyncHandler;
+  private final PmsFeatureFlagService pmsFeatureFlagService;
+  private final GovernanceService governanceService;
 
   @Inject
   public PipelineEntityGitSyncHelper(PMSPipelineService pmsPipelineService,
       PMSPipelineTemplateHelper pipelineTemplateHelper, PMSYamlSchemaService pmsYamlSchemaService,
-      PipelineFullGitSyncHandler pipelineFullGitSyncHandler) {
+      PipelineFullGitSyncHandler pipelineFullGitSyncHandler, PmsFeatureFlagService pmsFeatureFlagService,
+      GovernanceService governanceService) {
     this.pmsPipelineService = pmsPipelineService;
     this.pipelineTemplateHelper = pipelineTemplateHelper;
     this.pmsYamlSchemaService = pmsYamlSchemaService;
     this.pipelineFullGitSyncHandler = pipelineFullGitSyncHandler;
+    this.pmsFeatureFlagService = pmsFeatureFlagService;
+    this.governanceService = governanceService;
   }
 
   @Override
@@ -107,10 +119,32 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   }
 
   private void validate(String accountIdentifier, PipelineEntity entity) {
+    String orgIdentifier = entity.getOrgIdentifier();
+    String projectIdentifier = entity.getProjectIdentifier();
+    if (pmsFeatureFlagService.isEnabled(accountIdentifier, FeatureName.OPA_PIPELINE_GOVERNANCE)) {
+      try {
+        String expandedPipelineJSON = pmsPipelineService.fetchExpandedPipelineJSONFromYaml(
+            accountIdentifier, orgIdentifier, projectIdentifier, entity.getYaml());
+        GovernanceMetadata governanceMetadata = governanceService.evaluateGovernancePolicies(expandedPipelineJSON,
+            accountIdentifier, orgIdentifier, projectIdentifier, OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_SAVE, "");
+        if (governanceMetadata.getDeny()) {
+          List<String> denyingPolicySetIds = governanceMetadata.getDetailsList()
+                                                 .stream()
+                                                 .filter(PolicySetMetadata::getDeny)
+                                                 .map(PolicySetMetadata::getIdentifier)
+                                                 .collect(Collectors.toList());
+          throw new InvalidRequestException(
+              "Pipeline does not follow the Policies in these Policy Sets: " + denyingPolicySetIds.toString());
+        }
+      } catch (Exception e) {
+        throw new InvalidRequestException("Unable to get governance data: " + e.getMessage(), e);
+      }
+    }
+
     TemplateMergeResponseDTO templateMergeResponseDTO = pipelineTemplateHelper.resolveTemplateRefsInPipeline(entity);
     entity.setTemplateReference(EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries()));
-    pmsYamlSchemaService.validateYamlSchema(accountIdentifier, entity.getOrgIdentifier(), entity.getProjectIdentifier(),
-        templateMergeResponseDTO.getMergedPipelineYaml());
+    pmsYamlSchemaService.validateYamlSchema(
+        accountIdentifier, orgIdentifier, projectIdentifier, templateMergeResponseDTO.getMergedPipelineYaml());
     // validate unique fqn in resolveTemplateRefsInPipeline
     try {
       pmsYamlSchemaService.validateUniqueFqn(templateMergeResponseDTO.getMergedPipelineYaml());
