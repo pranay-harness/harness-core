@@ -35,9 +35,6 @@ public class StageStatusUpdateNotificationEventHandler implements AsyncInformObs
   @Override
   public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
     NodeExecution nodeExecution = nodeUpdateInfo.getNodeExecution();
-    if (!nodeExecution.getAmbiance().getMetadata().getIsNotificationConfigured()) {
-      return;
-    }
     if (OrchestrationUtils.isStageNode(nodeExecution)) {
       Optional<PipelineEventType> pipelineEventType = notificationHelper.getEventTypeForStage(nodeExecution);
       pipelineEventType.ifPresent(eventType

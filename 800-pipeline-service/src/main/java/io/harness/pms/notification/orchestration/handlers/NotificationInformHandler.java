@@ -32,27 +32,21 @@ public class NotificationInformHandler implements AsyncInformObserver, Notificat
   @Override
   public void onSuccess(Ambiance ambiance) {
     try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(ambiance)) {
-      if (ambiance.getMetadata().getIsNotificationConfigured()) {
-        notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_SUCCESS, null, null);
-      }
+      notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_SUCCESS, null, null);
     }
   }
 
   @Override
   public void onPause(Ambiance ambiance) {
     try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(ambiance)) {
-      if (ambiance.getMetadata().getIsNotificationConfigured()) {
-        notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_PAUSED, null, null);
-      }
+      notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_PAUSED, null, null);
     }
   }
 
   @Override
   public void onFailure(Ambiance ambiance) {
     try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(ambiance)) {
-      if (ambiance.getMetadata().getIsNotificationConfigured()) {
-        notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_FAILED, null, null);
-      }
+      notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_FAILED, null, null);
     }
   }
 
@@ -64,9 +58,7 @@ public class NotificationInformHandler implements AsyncInformObserver, Notificat
   @Override
   public void onEnd(Ambiance ambiance) {
     try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(ambiance)) {
-      if (ambiance.getMetadata().getIsNotificationConfigured()) {
-        notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_END, null, null);
-      }
+      notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_END, null, null);
     }
   }
 }
