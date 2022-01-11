@@ -60,7 +60,7 @@ public class GitFullSyncConfigServiceImpl implements GitFullSyncConfigService {
       GitFullSyncConfig gitFullSyncConfig = gitFullSyncConfigOptional.get();
       gitFullSyncConfig.setBaseBranch(dto.getBaseBranch());
       gitFullSyncConfig.setBranch(dto.getBranch());
-      gitFullSyncConfig.setMessage(dto.getMessage());
+      gitFullSyncConfig.setPrTitle(dto.getPrTitle());
       gitFullSyncConfig.setCreatePullRequest(dto.isCreatePullRequest());
       gitFullSyncConfig.setYamlGitConfigIdentifier(dto.getRepoIdentifier());
       return GitFullSyncConfigMapper.toDTO(gitFullSyncConfigRepository.save(gitFullSyncConfig));

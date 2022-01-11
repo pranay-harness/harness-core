@@ -23,7 +23,7 @@ public class GitFullSyncConfigDTO {
   @Schema(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) private String projectIdentifier;
   @Schema(description = "Source Branch for pull request") private String baseBranch;
   @Schema(description = "Branch on which Entities will be pushed") private String branch;
-  @Schema(description = "PR Title") private String message;
+  @Schema(description = "PR Title") private String prTitle;
   @Schema(description = "This checks whether to create a pull request. Its default value is False")
   private boolean createPullRequest;
   @Schema(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE) private String repoIdentifier;

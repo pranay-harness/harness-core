@@ -66,7 +66,7 @@ public class FullSyncTriggerServiceImpl implements FullSyncTriggerService {
     TriggerFullSyncRequestDTO triggerFullSyncRequestDTO =
         TriggerFullSyncRequestDTO.builder()
             .branch(gitFullSyncConfigDTO.getBranch())
-            .commitMessage(gitFullSyncConfigDTO.getMessage())
+            .prTitle(gitFullSyncConfigDTO.getPrTitle())
             .createPR(gitFullSyncConfigDTO.isCreatePullRequest())
             .targetBranchForPR(gitFullSyncConfigDTO.getBaseBranch())
             .yamlGitConfigIdentifier(gitFullSyncConfigDTO.getRepoIdentifier())
@@ -99,7 +99,7 @@ public class FullSyncTriggerServiceImpl implements FullSyncTriggerService {
                                                      .setCreatePr(fullSyncRequest.isCreatePR());
 
     if (fullSyncRequest.isCreatePR()) {
-      builder.setTargetBranch(fullSyncRequest.getTargetBranchForPR());
+      builder.setTargetBranch(fullSyncRequest.getTargetBranchForPR()).setPrTitle(fullSyncRequest.getPrTitle());
     }
 
     try {

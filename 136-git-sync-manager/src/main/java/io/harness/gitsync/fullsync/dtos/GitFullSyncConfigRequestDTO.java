@@ -22,7 +22,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GitFullSyncConfigRequestDTO {
   @Schema(description = "Branch on which Entities will be pushed") @NotNull String branch;
-  @Schema(description = "PR Title") String message;
+  @Schema(description = "PR Title") String prTitle;
   @Schema(description = "Source Branch for pull request") String baseBranch;
   @Schema(description = "This checks whether to create a pull request. Its default value is False")
   boolean createPullRequest;

@@ -23,7 +23,7 @@ public class GitFullSyncConfigMapper {
     return GitFullSyncConfigDTO.builder()
         .branch(gitFullSyncConfig.getBranch())
         .baseBranch(gitFullSyncConfig.getBaseBranch())
-        .message(gitFullSyncConfig.getMessage())
+        .prTitle(gitFullSyncConfig.getPrTitle())
         .createPullRequest(gitFullSyncConfig.isCreatePullRequest())
         .repoIdentifier(gitFullSyncConfig.getYamlGitConfigIdentifier())
         .accountIdentifier(gitFullSyncConfig.getAccountIdentifier())
@@ -36,7 +36,7 @@ public class GitFullSyncConfigMapper {
       @NotNull GitFullSyncConfigRequestDTO gitFullSyncConfigRequestDTO) {
     return GitFullSyncConfig.builder()
         .baseBranch(gitFullSyncConfigRequestDTO.getBaseBranch())
-        .message(gitFullSyncConfigRequestDTO.getMessage())
+        .prTitle(gitFullSyncConfigRequestDTO.getPrTitle())
         .accountIdentifier(accountIdentifier)
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)

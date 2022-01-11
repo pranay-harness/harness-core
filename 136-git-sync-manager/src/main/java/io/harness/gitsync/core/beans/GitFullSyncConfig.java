@@ -49,7 +49,7 @@ public class GitFullSyncConfig {
   @LastModifiedBy private String lastModifiedBy;
   private String branch;
   private String baseBranch;
-  private String message;
+  private String prTitle;
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;

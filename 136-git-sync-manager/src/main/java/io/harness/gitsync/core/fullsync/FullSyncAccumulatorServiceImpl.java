@@ -110,13 +110,12 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
     String orgIdentifier = gitConfigScope.getOrgId().getValue();
     YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(
         projectIdentifier, orgIdentifier, gitConfigScope.getAccountId(), gitConfigScope.getIdentifier());
-    String title = "Full Sync for the project {}" + gitConfigScope.getProjectId();
     GitPRCreateRequest createPRRequest = GitPRCreateRequest.builder()
                                              .accountIdentifier(gitConfigScope.getAccountId())
                                              .orgIdentifier(orgIdentifier)
                                              .projectIdentifier(projectIdentifier)
                                              .yamlGitConfigRef(gitConfigScope.getIdentifier())
-                                             .title(title)
+                                             .title(fullSyncEventRequest.getPrTitle())
                                              .sourceBranch(fullSyncEventRequest.getBranch())
                                              .targetBranch(fullSyncEventRequest.getTargetBranch())
                                              .build();
