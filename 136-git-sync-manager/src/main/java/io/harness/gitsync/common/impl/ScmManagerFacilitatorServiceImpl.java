@@ -40,6 +40,7 @@ import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.ng.webhook.UpsertWebhookRequestDTO;
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
+import io.harness.product.ci.scm.proto.CreateBranchResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.CreateWebhookResponse;
@@ -250,7 +251,14 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     }
   }
 
-  private void createBranch(String branch, String baseBranch, ScmConnector scmConnector) {
-    scmClient.createNewBranch(scmConnector, branch, baseBranch);
+  @Override
+  public CreateBranchResponse createBranch(InfoForGitPush infoForGitPush, String yamlGitConfigIdentifier) {
+    final ScmConnector decryptedConnector = gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigIdentifier,
+        infoForGitPush.getProjectIdentifier(), infoForGitPush.getOrgIdentifier(), infoForGitPush.getAccountId());
+    return createBranch(infoForGitPush.getBranch(), infoForGitPush.getBaseBranch(), decryptedConnector);
+  }
+
+  private CreateBranchResponse createBranch(String branch, String baseBranch, ScmConnector scmConnector) {
+    return scmClient.createNewBranch(scmConnector, branch, baseBranch);
   }
 }

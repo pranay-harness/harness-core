@@ -20,6 +20,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
+import io.harness.product.ci.scm.proto.CreateBranchResponse;
 import io.harness.product.ci.scm.proto.FindCommitResponse;
 import io.harness.product.ci.scm.proto.FindPRResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
@@ -133,6 +134,15 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
         return ScmGitRefTaskResponseData.builder()
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .findCommitResponse(commitResponse.toByteArray())
+            .build();
+      }
+      case CREATE_NEW_BRANCH: {
+        final CreateBranchResponse createBranchResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.createNewBranch(scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getBranch(),
+                scmGitRefTaskParams.getBaseBranch(), SCMGrpc.newBlockingStub(c)));
+        return ScmGitRefTaskResponseData.builder()
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .createBranchResponse(createBranchResponse.toByteArray())
             .build();
       }
       default:
