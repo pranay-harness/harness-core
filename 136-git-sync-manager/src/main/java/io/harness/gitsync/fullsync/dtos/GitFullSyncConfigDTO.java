@@ -29,4 +29,5 @@ public class GitFullSyncConfigDTO {
   @Schema(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE) private String repoIdentifier;
   @Schema(description = "Checks the new Branch") boolean isNewBranch;
   @Schema(description = "Target Branch for pull request") String targetBranch;
+  @Schema(description = "Root Folder Path where entities will be pushed") String rootFolder;
 }
