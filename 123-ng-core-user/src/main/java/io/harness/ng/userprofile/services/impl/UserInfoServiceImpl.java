@@ -113,10 +113,12 @@ public class UserInfoServiceImpl implements UserInfoService {
   }
 
   private Optional<String> getUserEmail() {
-    String userEmail = null;
+    String userEmail;
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
         && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
       userEmail = ((UserPrincipal) (SourcePrincipalContextBuilder.getSourcePrincipal())).getEmail();
+    } else {
+      throw new InvalidRequestException("Current user can be accessed only by 'USER' principal type");
     }
     return Optional.of(userEmail);
   }

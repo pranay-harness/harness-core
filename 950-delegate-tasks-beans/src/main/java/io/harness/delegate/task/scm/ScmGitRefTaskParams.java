@@ -35,6 +35,7 @@ public class ScmGitRefTaskParams implements TaskParameters, ExecutionCapabilityD
   String initialCommitId;
   String finalCommitId;
   List<EncryptedDataDetail> encryptedDataDetails;
+  String baseBranch;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

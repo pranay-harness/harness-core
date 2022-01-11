@@ -20,6 +20,6 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class CVDataCollectionInfo {
   private ConnectorConfigDTO connectorConfigDTO;
-  private List<EncryptedDataDetail> encryptedDataDetails;
+  private List<List<EncryptedDataDetail>> encryptedDataDetails;
   private DataCollectionType dataCollectionType;
 }

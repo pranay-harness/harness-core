@@ -318,7 +318,7 @@ public class TerraformApplyStepTest extends CategoryTest {
 
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     TaskRequest taskRequest = terraformApplyStep.obtainTaskAfterRbac(ambiance, stepElementParameters, stepInputPackage);
     assertThat(taskRequest).isNotNull();
     PowerMockito.verifyStatic(StepUtils.class, times(1));
@@ -356,7 +356,7 @@ public class TerraformApplyStepTest extends CategoryTest {
 
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     String message = "Unknown configuration Type: [InheritFromApply]";
     try {
       terraformApplyStep.obtainTaskAfterRbac(ambiance, stepElementParameters, stepInputPackage);
@@ -396,7 +396,7 @@ public class TerraformApplyStepTest extends CategoryTest {
     doReturn(gitFetchFilesConfig).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     List<UnitProgress> unitProgresses = Collections.singletonList(UnitProgress.newBuilder().build());
     UnitProgressData unitProgressData = UnitProgressData.builder().unitProgresses(unitProgresses).build();
     TerraformTaskNGResponse terraformTaskNGResponse = TerraformTaskNGResponse.builder()
@@ -439,7 +439,7 @@ public class TerraformApplyStepTest extends CategoryTest {
     doReturn(gitFetchFilesConfig).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     List<UnitProgress> unitProgresses = Collections.singletonList(UnitProgress.newBuilder().build());
     UnitProgressData unitProgressData = UnitProgressData.builder().unitProgresses(unitProgresses).build();
     TerraformTaskNGResponse terraformTaskNGResponse = TerraformTaskNGResponse.builder()
@@ -489,7 +489,7 @@ public class TerraformApplyStepTest extends CategoryTest {
     doReturn(gitFetchFilesConfig).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     List<UnitProgress> unitProgresses = Collections.singletonList(UnitProgress.newBuilder().build());
     UnitProgressData unitProgressData = UnitProgressData.builder().unitProgresses(unitProgresses).build();
     TerraformTaskNGResponse terraformTaskNGResponse = TerraformTaskNGResponse.builder()
@@ -536,7 +536,7 @@ public class TerraformApplyStepTest extends CategoryTest {
     doReturn(gitFetchFilesConfig).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     List<UnitProgress> unitProgresses = Collections.singletonList(UnitProgress.newBuilder().build());
     UnitProgressData unitProgressData = UnitProgressData.builder().unitProgresses(unitProgresses).build();
 
