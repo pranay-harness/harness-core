@@ -8,7 +8,7 @@ package executor
 import (
 	"context"
 	"errors"
-	"fmt"
+	//"fmt"
 	"io"
 	"time"
 
@@ -73,29 +73,29 @@ func (e *stepExecutor) Run(ctx context.Context, step *pb.UnitStep) error {
 }
 
 func (e *stepExecutor) validate(step *pb.UnitStep) error {
-	if step.GetId() == "" {
-		err := fmt.Errorf("Step ID should be non-empty")
-		e.log.Errorw("Step ID is not set", zap.Error(err))
-		return err
-	}
-	if step.GetCallbackToken() == "" {
-		err := fmt.Errorf("Callback token should be non-empty")
-		e.log.Errorw("Callback token is not set", "step_id", step.GetId(),
-			zap.Error(err))
-		return err
-	}
-	if step.GetTaskId() == "" {
-		err := fmt.Errorf("Task ID should be non-empty")
-		e.log.Errorw("Task ID is not set", "step_id", step.GetId(),
-			zap.Error(err))
-		return err
-	}
-	if step.GetAccountId() == "" {
-		err := fmt.Errorf("Account ID should be non-empty")
-		e.log.Errorw("Account ID is not set", "step_id", step.GetId(),
-			zap.Error(err))
-		return err
-	}
+	//if step.GetId() == "" {
+	//	err := fmt.Errorf("Step ID should be non-empty")
+	//	e.log.Errorw("Step ID is not set", zap.Error(err))
+	//	return err
+	//}
+	//if step.GetCallbackToken() == "" {
+	//	err := fmt.Errorf("Callback token should be non-empty")
+	//	e.log.Errorw("Callback token is not set", "step_id", step.GetId(),
+	//		zap.Error(err))
+	//	return err
+	//}
+	//if step.GetTaskId() == "" {
+	//	err := fmt.Errorf("Task ID should be non-empty")
+	//	e.log.Errorw("Task ID is not set", "step_id", step.GetId(),
+	//		zap.Error(err))
+	//	return err
+	//}
+	//if step.GetAccountId() == "" {
+	//	err := fmt.Errorf("Account ID should be non-empty")
+	//	e.log.Errorw("Account ID is not set", "step_id", step.GetId(),
+	//		zap.Error(err))
+	//	return err
+	//}
 	return nil
 }
 

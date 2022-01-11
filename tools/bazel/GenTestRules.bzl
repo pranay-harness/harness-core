@@ -32,7 +32,7 @@ def run_tests(**kwargs):
                 "-XX:+HeapDumpOnOutOfMemoryError",
                 "-XX:HeapDumpPath=$${TEST_WARNINGS_OUTPUT_FILE}/../heap.hprof",
             ],
-            env = {"JAVA_HOME": "$(JAVABASE)"},
+            # env = {"JAVA_HOME": "$(JAVABASE)"},
             toolchains = ["@bazel_tools//tools/jdk:current_host_java_runtime"],
             test_class = test,
             testonly = True,
@@ -149,7 +149,7 @@ EOF""" % code,
                 "-XX:+HeapDumpOnOutOfMemoryError",
                 "-XX:HeapDumpPath=$${TEST_WARNINGS_OUTPUT_FILE}/../heap.hprof",
             ],
-            env = {"JAVA_HOME": "$(JAVABASE)"},
+            # env = {"JAVA_HOME": "$(JAVABASE)"},
             toolchains = ["@bazel_tools//tools/jdk:current_host_java_runtime"],
         )
 

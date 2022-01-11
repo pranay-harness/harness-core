@@ -11,9 +11,11 @@ go_library(
         "//product/ci/common/external",
         "//product/ci/engine/consts",
         "//product/ci/engine/grpc",
+        "//product/ci/engine/proto",
         "//product/ci/engine/legacy/executor",
         "@com_github_alexflint_go_arg//:go-arg",
         "@org_uber_go_zap//:zap",
+        "@com_github_golang_protobuf//proto"
     ],
 )
 
