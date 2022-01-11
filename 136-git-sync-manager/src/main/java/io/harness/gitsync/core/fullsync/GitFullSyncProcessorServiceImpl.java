@@ -25,6 +25,7 @@ import io.harness.gitsync.core.fullsync.service.FullSyncJobService;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
 
 import com.google.inject.Inject;
+import com.mongodb.client.result.UpdateResult;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +103,11 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
   @Override
   public void performFullSync(GitFullSyncJob fullSyncJob) {
     log.info("Started full sync for the job {}", fullSyncJob.getMessageId());
+    UpdateResult updateResult =
+        fullSyncJobService.markJobAsRunning(fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid());
+    if (updateResult.getModifiedCount() == 0L) {
+      log.info("There is no job to run for the id {}, maybe the other thread is running it", fullSyncJob.getUuid());
+    }
     List<GitFullSyncEntityInfo> allEntitiesToBeSynced =
         gitFullSyncEntityService.list(fullSyncJob.getAccountIdentifier(), fullSyncJob.getMessageId());
     log.info("Number of files is {}", emptyIfNull(allEntitiesToBeSynced).size());
