@@ -39,7 +39,7 @@ type Config struct {
 		Endpoint        string `envconfig:"LOG_SERVICE_S3_ENDPOINT"`
 		PathStyle       bool   `envconfig:"LOG_SERVICE_S3_PATH_STYLE"`
 		Region          string `envconfig:"LOG_SERVICE_S3_REGION"`
-		AccessKeyID     string `envconfig:"LOG_SERVICE_S3_ACCESS_KEY_ID"`
+		AccessKeyID     string `envconfig:"LOG_SERVICE_S3_ACCESS_KEY_ID" secret:"true"`
 		AccessKeySecret string `envconfig:"LOG_SERVICE_S3_SECRET_ACCESS_KEY" secret:"true"`
 	}
 
