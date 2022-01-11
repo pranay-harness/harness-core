@@ -19,6 +19,7 @@ import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.delegate.DelegateServiceResourceClient;
 import io.harness.delegate.DelegateServiceResourceClientModule;
 import io.harness.environment.EnvironmentResourceClientModule;
+import io.harness.gitops.GitopsResourceClientModule;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.organization.OrganizationClientModule;
 import io.harness.organization.remote.OrganizationClient;
@@ -141,5 +142,8 @@ public class ResourceGroupModule extends AbstractModule {
     install(new TemplateResourceClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceClients.getTemplateService().getBaseUrl()).build(),
         resourceClients.getTemplateService().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
+    install(new GitopsResourceClientModule(
+            ServiceHttpClientConfig.builder().baseUrl(resourceClients.getGitopsService().getBaseUrl()).build(),
+            resourceClients.getGitopsService().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
   }
 }

@@ -27,6 +27,7 @@ public class ResourceClientConfigs {
   @JsonProperty("pipeline-service") ServiceConfig pipelineService;
   @JsonProperty("resourceGroup") ServiceConfig resourceGroupService;
   @JsonProperty("template-service") ServiceConfig templateService;
+  @JsonProperty("gitops-service") ServiceConfig gitopsService;
 
   @Value
   @Builder
