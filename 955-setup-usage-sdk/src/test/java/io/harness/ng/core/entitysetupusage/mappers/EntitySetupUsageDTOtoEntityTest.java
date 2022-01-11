@@ -39,11 +39,11 @@ public class EntitySetupUsageDTOtoEntityTest extends CategoryTest {
   @Category(UnitTests.class)
   public void toEntityReference() {
     String accountIdentifier = "accountIdentifier";
-    String referredByEntityIdentifier = "referredByEntityIdentifier";
+    String referredByEntityIdentifier = "account.referredByEntityIdentifier";
     EntityType referredByEntityType = EntityType.PIPELINES;
     String referredByEntityName = "Pipeline 1";
     EntityType referredEntityType = EntityType.CONNECTORS;
-    String referredEntityIdentifier = "referredEntityIdentifier";
+    String referredEntityIdentifier = "account.referredEntityIdentifier";
     String referredEntityName = "Connector 1";
     EntityReference referredEntityRef =
         IdentifierRefHelper.getIdentifierRef(referredEntityIdentifier, accountIdentifier, null, null);

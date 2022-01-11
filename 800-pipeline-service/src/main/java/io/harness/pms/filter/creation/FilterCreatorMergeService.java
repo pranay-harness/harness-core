@@ -68,22 +68,12 @@ public class FilterCreatorMergeService {
   }
 
   public FilterCreatorMergeServiceResponse getPipelineInfo(PipelineEntity pipelineEntity) throws IOException {
-    Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
-    String yaml = pipelineEntity.getYaml();
-    String processedYaml = YamlUtils.injectUuid(yaml);
-    YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
-
-    Dependencies dependencies =
-        Dependencies.newBuilder()
-            .setYaml(processedYaml)
-            .putDependencies(pipelineField.getNode().getUuid(), pipelineField.getNode().getYamlPath())
-            .build();
+    Map<String, PlanCreatorServiceInfo> services = getServices();
+    Dependencies dependencies = getDependencies(pipelineEntity.getYaml());
 
     Map<String, String> filters = new HashMap<>();
-    SetupMetadata.Builder setupMetadataBuilder = SetupMetadata.newBuilder()
-                                                     .setAccountId(pipelineEntity.getAccountId())
-                                                     .setProjectId(pipelineEntity.getProjectIdentifier())
-                                                     .setOrgId(pipelineEntity.getOrgIdentifier());
+    SetupMetadata.Builder setupMetadataBuilder = getSetupMetadataBuilder(
+        pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier());
     ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
     if (gitSyncBranchContext != null) {
       setupMetadataBuilder.setGitSyncBranchContext(gitSyncBranchContext);
@@ -96,6 +86,24 @@ public class FilterCreatorMergeService {
         .filters(filters)
         .stageCount(response.getStageCount())
         .stageNames(new ArrayList<>(response.getStageNamesList()))
+        .build();
+  }
+
+  public SetupMetadata.Builder getSetupMetadataBuilder(String accountId, String orgId, String projectId) {
+    return SetupMetadata.newBuilder().setAccountId(accountId).setProjectId(projectId).setOrgId(orgId);
+  }
+
+  public Map<String, PlanCreatorServiceInfo> getServices() {
+    return pmsSdkHelper.getServices();
+  }
+
+  public Dependencies getDependencies(String yaml) throws IOException {
+    String processedYaml = YamlUtils.injectUuid(yaml);
+    YamlField topRootFieldInYaml = YamlUtils.getTopRootFieldInYaml(processedYaml);
+
+    return Dependencies.newBuilder()
+        .setYaml(processedYaml)
+        .putDependencies(topRootFieldInYaml.getNode().getUuid(), topRootFieldInYaml.getNode().getYamlPath())
         .build();
   }
 

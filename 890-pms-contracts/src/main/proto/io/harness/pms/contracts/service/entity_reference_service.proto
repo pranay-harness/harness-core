@@ -17,6 +17,10 @@ service EntityReferenceService {
 
 message EntityReferenceRequest {
   string yaml = 1;  // yaml construct that pms understands
+  string accountIdentifier = 2;
+  string orgIdentifier = 3;
+  string projectIdentifier = 4;
+  bytes gitSyncBranchContext = 5;
 }
 
 message EntityReferenceResponse {
