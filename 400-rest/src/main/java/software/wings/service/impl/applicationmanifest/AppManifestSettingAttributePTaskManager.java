@@ -13,7 +13,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
-import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.logcontext.SettingAttributeLogContext;
 import software.wings.service.impl.SettingAttributeObserver;
