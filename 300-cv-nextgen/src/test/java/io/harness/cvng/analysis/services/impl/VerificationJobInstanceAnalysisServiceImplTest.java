@@ -41,7 +41,6 @@ import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
-import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.HostRecordDTO;
@@ -66,7 +65,10 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -86,7 +88,7 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
-  @Inject private VerificationJobInstanceAnalysisService verificationJobInstanceAnalysisService;
+  @Inject private VerificationJobInstanceAnalysisServiceImpl verificationJobInstanceAnalysisService;
   @Inject private ActivityService activityService;
 
   private String accountId;
@@ -764,6 +766,18 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(
         verificationJobInstanceAnalysisService.getLatestRiskScore(accountId, verificationJobInstance.getUuid()).get())
         .isEqualTo(Risk.HEALTHY);
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetDemoTemplatePath_allProviders() throws IOException {
+    for (DataSourceType dataSourceType : DataSourceType.values()) {
+      String demoData =
+          Resources.toString(this.getClass().getResource(verificationJobInstanceAnalysisService.getDemoTemplatePath(
+                                 ActivityVerificationStatus.VERIFICATION_PASSED, dataSourceType)),
+              Charsets.UTF_8);
+      assertThat(demoData).isNotNull();
+    }
   }
 
   private HostRecordDTO createHostRecordDTO(Set<String> preDeploymentHosts, String verificationTaskId) {
