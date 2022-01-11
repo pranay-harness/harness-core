@@ -535,20 +535,13 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
 
-    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
-                                                      .stateExecutionData(scriptStateExecutionData)
-                                                      .scriptType(scriptType)
-                                                      .adoptDelegateDecryption(true)
-                                                      .expressionFunctorToken(expressionFunctorToken)
-                                                      .build();
-
-    context.resetPreparedCache();
-    if (isNotEmpty(scriptStateExecutionData.getTemplateVariable())) {
-      scriptStateExecutionData.getTemplateVariable().replaceAll(
-          (k, v) -> (v != null) ? context.renderExpression(v.toString(), stateExecutionContext) : v);
-    }
-
-    String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask, stateExecutionContext);
+    String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask,
+        StateExecutionContext.builder()
+            .stateExecutionData(scriptStateExecutionData)
+            .scriptType(scriptType)
+            .adoptDelegateDecryption(true)
+            .expressionFunctorToken(expressionFunctorToken)
+            .build());
 
     appendDelegateTaskDetails(context, delegateTask);
 
