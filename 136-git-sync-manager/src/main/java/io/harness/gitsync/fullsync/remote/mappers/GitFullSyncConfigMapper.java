@@ -29,6 +29,8 @@ public class GitFullSyncConfigMapper {
         .accountIdentifier(gitFullSyncConfig.getAccountIdentifier())
         .orgIdentifier(gitFullSyncConfig.getOrgIdentifier())
         .projectIdentifier(gitFullSyncConfig.getProjectIdentifier())
+        .targetBranch(gitFullSyncConfig.getTargetBranch())
+        .isNewBranch(gitFullSyncConfig.isNewBranch())
         .build();
   }
 
@@ -43,6 +45,8 @@ public class GitFullSyncConfigMapper {
         .branch(gitFullSyncConfigRequestDTO.getBranch())
         .yamlGitConfigIdentifier(gitFullSyncConfigRequestDTO.getRepoIdentifier())
         .createPullRequest(gitFullSyncConfigRequestDTO.isCreatePullRequest())
+        .targetBranch(gitFullSyncConfigRequestDTO.getTargetBranch())
+        .isNewBranch(gitFullSyncConfigRequestDTO.isNewBranch())
         .build();
   }
 }

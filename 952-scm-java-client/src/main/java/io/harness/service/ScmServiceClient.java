@@ -17,6 +17,7 @@ import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
+import io.harness.product.ci.scm.proto.CreateBranchResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.CreateWebhookResponse;
@@ -98,7 +99,7 @@ public interface ScmServiceClient {
   FileContentBatchResponse listFilesByCommitId(
       ScmConnector connector, List<String> filePaths, String commitId, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
-  void createNewBranch(
+  CreateBranchResponse createNewBranch(
       ScmConnector scmConnector, String branch, String baseBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   CreatePRResponse createPullRequest(
