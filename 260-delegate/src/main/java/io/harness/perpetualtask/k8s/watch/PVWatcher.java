@@ -9,7 +9,7 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.commons.constants.Constants.CLUSTER_ID_IDENTIFIER;
 import static io.harness.ccm.commons.constants.Constants.UID;
-import static io.harness.perpetualtask.k8s.utils.ResourceVersionMatch.MOST_RECENT;
+import static io.harness.perpetualtask.k8s.utils.ResourceVersionMatch.NOT_OLDER_THAN;
 import static io.harness.perpetualtask.k8s.watch.PVEvent.EventType.EVENT_TYPE_EXPANSION;
 import static io.harness.perpetualtask.k8s.watch.PVEvent.EventType.EVENT_TYPE_STOP;
 
@@ -101,7 +101,7 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
     sharedInformerFactory
         .sharedIndexInformerFor((CallGeneratorParams callGeneratorParams)
                                     -> coreV1Api.listPersistentVolumeCall(null, null, null, null, null, null,
-                                        callGeneratorParams.resourceVersion, MOST_RECENT,
+                                        callGeneratorParams.resourceVersion, NOT_OLDER_THAN,
                                         callGeneratorParams.timeoutSeconds, callGeneratorParams.watch, null),
             V1PersistentVolume.class, V1PersistentVolumeList.class)
         .addEventHandler(this);
