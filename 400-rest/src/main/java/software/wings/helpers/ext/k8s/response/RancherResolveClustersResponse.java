@@ -3,9 +3,9 @@ package software.wings.helpers.ext.k8s.response;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import lombok.*;
 
 import java.util.List;
+import lombok.*;
 
 @Builder
 @Data

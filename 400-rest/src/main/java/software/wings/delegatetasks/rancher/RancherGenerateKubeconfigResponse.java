@@ -8,6 +8,6 @@ import lombok.Data;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RancherGenerateKubeconfigResponse {
-    private String type;
-    private String config;
+  private String type;
+  private String config;
 }

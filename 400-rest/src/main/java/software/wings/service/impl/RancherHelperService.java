@@ -17,8 +17,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import org.jose4j.json.JsonUtil;
-import org.jose4j.lang.JoseException;
 import software.wings.beans.RancherConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.DelegateService;
@@ -33,6 +31,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHeaders;
+import org.jose4j.json.JsonUtil;
+import org.jose4j.lang.JoseException;
 
 @Singleton
 @Slf4j
@@ -46,11 +46,13 @@ public class RancherHelperService {
     List<KeyValuePair> headers = new ArrayList<>();
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
 
-    EncryptedData rancherBearerTokenSecretEncryptedData = secretManager.getSecretById(rancherConfig.getAccountId(), rancherConfig.getEncryptedBearerToken());
+    EncryptedData rancherBearerTokenSecretEncryptedData =
+        secretManager.getSecretById(rancherConfig.getAccountId(), rancherConfig.getEncryptedBearerToken());
 
     headers.add(KeyValuePair.builder()
                     .key(HttpHeaders.AUTHORIZATION)
-                    .value("Bearer ${secretManager.obtain(\"" + rancherBearerTokenSecretEncryptedData.getName() +"\", " + expressionFunctorToken + ")}")
+                    .value("Bearer ${secretManager.obtain(\"" + rancherBearerTokenSecretEncryptedData.getName() + "\", "
+                        + expressionFunctorToken + ")}")
                     .build());
 
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
@@ -81,13 +83,15 @@ public class RancherHelperService {
       Thread.currentThread().interrupt();
       throw new InvalidRequestException(e.getMessage(), USER);
     } catch (Exception e) {
-        throw new InvalidRequestException(e.getMessage(), USER);
+      throw new InvalidRequestException(e.getMessage(), USER);
     }
     return true;
   }
 
-  private void validateRancherDelegateResponse(HttpState.HttpStateExecutionResponse delegateResponseData) throws JoseException {
-    if (!(delegateResponseData.getExecutionStatus() == ExecutionStatus.SUCCESS && delegateResponseData.getHttpResponseCode() == 200)) {
+  private void validateRancherDelegateResponse(HttpState.HttpStateExecutionResponse delegateResponseData)
+      throws JoseException {
+    if (!(delegateResponseData.getExecutionStatus() == ExecutionStatus.SUCCESS
+            && delegateResponseData.getHttpResponseCode() == 200)) {
       String errorMessage = "";
       if (delegateResponseData.getErrorMessage() != null) {
         errorMessage = delegateResponseData.getErrorMessage();

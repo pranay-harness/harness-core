@@ -668,7 +668,7 @@ public enum StateType implements StateTypeDescriptor {
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK(RancherK8sRollingDeployRollback.class, KUBERNETES, 34,
-      WorkflowConstants.K8S_DEPLOYMENT_ROLLING_ROLLBACK,
+      WorkflowConstants.RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK,
       Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
