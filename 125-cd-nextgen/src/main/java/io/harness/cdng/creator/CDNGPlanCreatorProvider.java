@@ -9,6 +9,7 @@ package io.harness.cdng.creator;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.cdng.creator.filters.DeploymentStageFilterJsonCreator;
 import io.harness.cdng.creator.plan.artifact.ArtifactsPlanCreator;
 import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
@@ -205,6 +206,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
             .setName("Helm Deploy")
             .setType(StepSpecTypeConstants.HELM_DEPLOY)
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Helm").setFolderPath("Helm").build())
+            .setFeatureFlag(FeatureName.NG_NATIVE_HELM.name())
             .build();
 
     StepInfo helmRollback =
@@ -212,6 +214,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
             .setName("Helm Rollback")
             .setType(StepSpecTypeConstants.HELM_ROLLBACK)
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Helm").setFolderPath("Helm").build())
+            .setFeatureFlag(FeatureName.NG_NATIVE_HELM.name())
             .build();
 
     List<StepInfo> stepInfos = new ArrayList<>();
