@@ -180,10 +180,9 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
   @Override
   public ConnectorDTO fullSyncEntity(FullSyncChangeSet fullSyncChangeSet) {
     final EntityDetailProtoDTO entityDetail = fullSyncChangeSet.getEntityDetail();
-    final String yaml = getYamlFromEntityRef(entityDetail);
     try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
-      GlobalContextManager.upsertGlobalContextRecord(super.createGitEntityInfo(fullSyncChangeSet));
-      return update(fullSyncChangeSet.getAccountIdentifier(), yaml, ChangeType.ADD);
+      GlobalContextManager.upsertGlobalContextRecord(createGitEntityInfo(fullSyncChangeSet));
+      return connectorService.fullSyncEntity(entityDetail);
     }
   }
 }
