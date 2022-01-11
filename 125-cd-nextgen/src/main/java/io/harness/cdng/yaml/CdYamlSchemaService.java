@@ -22,5 +22,5 @@ public interface CdYamlSchemaService {
       String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails);
   List<YamlSchemaWithDetails> getDeploymentStageYamlSchemaWithDetails(
       String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope);
-  JsonNode getStepYamlSchema(EntityType entityType);
+  JsonNode getIndividualYamlSchema(EntityType entityType, String orgId, String projectId, Scope scope);
 }

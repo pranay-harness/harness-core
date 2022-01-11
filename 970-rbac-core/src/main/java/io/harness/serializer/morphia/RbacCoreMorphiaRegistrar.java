@@ -10,6 +10,7 @@ package io.harness.serializer.morphia;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
+import software.wings.security.AppFilter;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.ScopedEntity;
@@ -27,6 +28,7 @@ public class RbacCoreMorphiaRegistrar implements MorphiaRegistrar {
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     w.put("security.EnvFilter", EnvFilter.class);
     w.put("security.GenericEntityFilter", GenericEntityFilter.class);
+    w.put("security.AppFilter", AppFilter.class);
     w.put("security.WorkflowFilter", WorkflowFilter.class);
   }
 }

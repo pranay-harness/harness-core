@@ -60,6 +60,7 @@ public class GitFullSyncEntityInfo implements PersistentEntity, PersistentRegula
   @NotNull EntityDetail entityDetail;
   String syncStatus;
   String yamlGitConfigId;
+  String branchName;
   int retryCount;
   @FdIndex @NonFinal Long nextRuntime;
   List<String> errorMessage;
@@ -97,8 +98,8 @@ public class GitFullSyncEntityInfo implements PersistentEntity, PersistentRegula
                  .field(GitFullSyncEntityInfoKeys.syncStatus)
                  .field(GitFullSyncEntityInfoKeys.filePath)
                  .field(GitFullSyncEntityInfoKeys.entityDetail + "." + EntityDetailKeys.name)
-                 .field(GitFullSyncEntityInfoKeys.entityDetail + "." + EntityDetailKeys.entityRef + ".repoIdentifier")
-                 .field(GitFullSyncEntityInfoKeys.entityDetail + "." + EntityDetailKeys.entityRef + ".branch")
+                 .field(GitFullSyncEntityInfoKeys.yamlGitConfigId)
+                 .field(GitFullSyncEntityInfoKeys.branchName)
                  .collation(
                      Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
                  .build())

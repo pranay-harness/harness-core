@@ -62,12 +62,12 @@ public class VariableCreatorMergeService {
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
 
     YamlField processedYaml = YamlUtils.injectUuidWithLeafUuid(yaml);
-    YamlField pipelineField = YamlUtils.getPipelineField(Objects.requireNonNull(processedYaml).getNode());
+    YamlField topRootFieldInYaml = YamlUtils.getTopRootFieldInYaml(Objects.requireNonNull(processedYaml).getNode());
 
     Dependencies dependencies =
         Dependencies.newBuilder()
             .setYaml(processedYaml.getNode().getCurrJsonNode().toString())
-            .putDependencies(pipelineField.getNode().getUuid(), pipelineField.getNode().getYamlPath())
+            .putDependencies(topRootFieldInYaml.getNode().getUuid(), topRootFieldInYaml.getNode().getYamlPath())
             .build();
     VariablesCreationMetadata.Builder metadataBuilder = VariablesCreationMetadata.newBuilder();
     ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();

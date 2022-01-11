@@ -12,6 +12,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_LOCATION;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_LOCATION_ARGUMENT;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_FAILED_TO_GET_EXISTING_WORKSPACES;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_FAIL_TO_INSTALL_PROVIDER;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Message.MESSAGE_FAILED_TO_GET_EXISTING_WORKSPACES;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.TATHAGAT;
@@ -52,6 +53,10 @@ public class TerraformRuntimeExceptionHandlerTest {
       "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1mInvalid AWS Region: random\u001B[0m  \u001B[0m  on config.tf line 15, in provider \"aws\":   15: provider \"aws\" \u001B[4m{\u001B[0m \u001B[0m \u001B[0m\u001B[0m";
   private static final String TEST_ERROR_S3_BACKEND_CONFIG =
       "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1merror configuring S3 Backend: no valid credential sources for S3 Backend found \u001B[0m  \u001B[0m\u001B[0m\u001B[0m";
+  private static final String NO_DIR_EXIST_ERROR_MESSAGE =
+      "Could not find provided terraform config folder terraform-dir/module1";
+  private static final String TEST_ERROR_FAILED_INSTALL_PROVIDER =
+      "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1mFailed to install provider\u001B[0m  \u001B[0mError while installing hashicorp/null v3.1.0: mkdir .terraform: no such file or directory \u001B[0m\u001B[0m";
 
   TerraformRuntimeExceptionHandler handler = new TerraformRuntimeExceptionHandler();
 
@@ -105,12 +110,36 @@ public class TerraformRuntimeExceptionHandlerTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
+  public void testHandleConfigDirNotExistError() {
+    TerraformCliRuntimeException cliRuntimeException = new TerraformCliRuntimeException(
+        format("Failed to execute terraform Command %s : Reason: %s", "terraform init", NO_DIR_EXIST_ERROR_MESSAGE),
+        "terraform init", NO_DIR_EXIST_ERROR_MESSAGE);
+
+    assertSingleErrorMessage(handler.handleException(cliRuntimeException),
+        "Please check your inputs for Configuration File Repository", null,
+        format("terraform init failed with: %s", NO_DIR_EXIST_ERROR_MESSAGE));
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
   public void testHandleErrorInvalidS3BackendConfig() {
     TerraformCliRuntimeException cliRuntimeException =
         new TerraformCliRuntimeException("Terraform failed", "terraform init", TEST_ERROR_S3_BACKEND_CONFIG);
     assertSingleErrorMessage(handler.handleException(cliRuntimeException), HINT_FAILED_TO_GET_EXISTING_WORKSPACES,
         "error configuring S3 Backend: no valid credential sources for S3 Backend found",
         "terraform init failed with: error configuring S3 Backend: no valid credential sources for S3 Backend found");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testFailedToInstallProviderError() {
+    TerraformCliRuntimeException cliRuntimeException =
+        new TerraformCliRuntimeException("Terraform failed", "terraform init", TEST_ERROR_FAILED_INSTALL_PROVIDER);
+    assertSingleErrorMessage(handler.handleException(cliRuntimeException), HINT_FAIL_TO_INSTALL_PROVIDER,
+        "Error while installing hashicorp/null v3.1.0: mkdir .terraform: no such file or directory",
+        "terraform init failed with: Failed to install provider");
   }
 
   @Test

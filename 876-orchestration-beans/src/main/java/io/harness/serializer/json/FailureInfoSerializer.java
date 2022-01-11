@@ -8,6 +8,7 @@
 package io.harness.serializer.json;
 
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.serializer.json.serializers.ProtoJsonSerializer;
 
 public class FailureInfoSerializer extends ProtoJsonSerializer<FailureInfo> {
   public FailureInfoSerializer() {

@@ -7,6 +7,9 @@
 
 package io.harness.pms.mappers;
 
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.pms.contracts.plan.YamlOutputProperties;
+import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.contracts.service.ServiceExpressionPropertiesProto;
 import io.harness.pms.contracts.service.VariableMergeResponseProto;
 import io.harness.pms.contracts.service.VariableResponseMapValueProto;
@@ -14,6 +17,7 @@ import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.pms.variables.VariableMergeServiceResponse.ServiceExpressionProperties;
 import io.harness.pms.variables.VariableMergeServiceResponse.VariableResponseMapValue;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
@@ -22,16 +26,25 @@ import lombok.experimental.UtilityClass;
 public class VariablesResponseDtoMapper {
   public VariableMergeResponseProto toProto(VariableMergeServiceResponse variableMergeServiceResponse) {
     Map<String, VariableResponseMapValueProto> metadataMap =
-        variableMergeServiceResponse.getMetadataMap().entrySet().stream().collect(
+        EmptyPredicate.isEmpty(variableMergeServiceResponse.getMetadataMap())
+        ? Collections.emptyMap()
+        : variableMergeServiceResponse.getMetadataMap().entrySet().stream().collect(
             Collectors.toMap(Map.Entry::getKey, e -> toVariablesResponseMapProto(e.getValue())));
     return VariableMergeResponseProto.newBuilder()
-        .setYaml(variableMergeServiceResponse.getYaml())
-        .putAllMetadataMap(metadataMap)
-        .addAllErrorResponses(variableMergeServiceResponse.getErrorResponses())
-        .addAllServiceExpressionPropertiesList(variableMergeServiceResponse.getServiceExpressionPropertiesList()
-                                                   .stream()
-                                                   .map(VariablesResponseDtoMapper::toServiceExpressionProto)
-                                                   .collect(Collectors.toList()))
+        .setYaml(EmptyPredicate.isEmpty(variableMergeServiceResponse.getYaml())
+                ? ""
+                : variableMergeServiceResponse.getYaml())
+        .putAllMetadataMap(EmptyPredicate.isEmpty(metadataMap) ? Collections.emptyMap() : metadataMap)
+        .addAllErrorResponses(EmptyPredicate.isEmpty(variableMergeServiceResponse.getErrorResponses())
+                ? Collections.emptyList()
+                : variableMergeServiceResponse.getErrorResponses())
+        .addAllServiceExpressionPropertiesList(
+            EmptyPredicate.isEmpty(variableMergeServiceResponse.getServiceExpressionPropertiesList())
+                ? Collections.emptyList()
+                : variableMergeServiceResponse.getServiceExpressionPropertiesList()
+                      .stream()
+                      .map(VariablesResponseDtoMapper::toServiceExpressionProto)
+                      .collect(Collectors.toList()))
         .build();
   }
 
@@ -52,16 +65,24 @@ public class VariablesResponseDtoMapper {
 
   private VariableResponseMapValueProto toVariablesResponseMapProto(VariableResponseMapValue variableResponseMapValue) {
     return VariableResponseMapValueProto.newBuilder()
-        .setYamlProperties(variableResponseMapValue.getYamlProperties())
-        .setYamlOutputProperties(variableResponseMapValue.getYamlOutputProperties())
+        .setYamlProperties(variableResponseMapValue.getYamlProperties() == null
+                ? YamlProperties.newBuilder().build()
+                : variableResponseMapValue.getYamlProperties())
+        .setYamlOutputProperties(variableResponseMapValue.getYamlOutputProperties() == null
+                ? YamlOutputProperties.newBuilder().build()
+                : variableResponseMapValue.getYamlOutputProperties())
         .build();
   }
 
   private ServiceExpressionPropertiesProto toServiceExpressionProto(
       ServiceExpressionProperties serviceExpressionProperties) {
     return ServiceExpressionPropertiesProto.newBuilder()
-        .setServiceName(serviceExpressionProperties.getServiceName())
-        .setExpression(serviceExpressionProperties.getExpression())
+        .setServiceName(EmptyPredicate.isEmpty(serviceExpressionProperties.getServiceName())
+                ? ""
+                : serviceExpressionProperties.getServiceName())
+        .setExpression(EmptyPredicate.isEmpty(serviceExpressionProperties.getExpression())
+                ? ""
+                : serviceExpressionProperties.getExpression())
         .build();
   }
 

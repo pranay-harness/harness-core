@@ -21,6 +21,7 @@ import io.harness.repositories.fullSync.FullSyncJobRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mongodb.client.result.UpdateResult;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -37,8 +38,10 @@ public class FullSyncJobServiceImpl implements FullSyncJobService {
   FullSyncJobRepository fullSyncJobRepository;
   GitFullSyncEntityService gitFullSyncEntityService;
   GitFullSyncProcessorService gitFullSyncProcessorService;
-  private static final List<SyncStatus> runningStatuses =
+  private static final List<SyncStatus> statusOfJobsToBeRun =
       Arrays.asList(SyncStatus.QUEUED, SyncStatus.FAILED_WITH_RETRIES_LEFT);
+  private static final List<SyncStatus> statusOfRunningOrQueuedJobs =
+      Arrays.asList(SyncStatus.QUEUED, SyncStatus.RUNNING, SyncStatus.FAILED_WITH_RETRIES_LEFT);
 
   @Override
   public GitFullSyncJob save(GitFullSyncJob gitFullSyncJob) {
@@ -67,7 +70,18 @@ public class FullSyncJobServiceImpl implements FullSyncJobService {
   }
 
   @Override
-  public Optional<GitFullSyncJob> getRunningJobs(
+  public UpdateResult markJobAsRunning(String accountIdentifier, String uuid) {
+    Criteria criteria = new Criteria();
+    criteria.and(GitFullSyncEntityInfoKeys.uuid).is(uuid);
+    criteria.and(GitFullSyncEntityInfoKeys.accountIdentifier).is(accountIdentifier);
+    criteria.and(GitFullSyncJobKeys.syncStatus).in(statusOfJobsToBeRun);
+    Update update = new Update();
+    update.set(GitFullSyncEntityInfoKeys.syncStatus, SyncStatus.RUNNING);
+    return fullSyncJobRepository.update(criteria, update);
+  }
+
+  @Override
+  public Optional<GitFullSyncJob> getRunningOrQueuedJob(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Criteria criteria = Criteria.where(GitFullSyncJobKeys.accountIdentifier)
                             .is(accountIdentifier)
@@ -76,7 +90,7 @@ public class FullSyncJobServiceImpl implements FullSyncJobService {
                             .and(GitFullSyncJobKeys.projectIdentifier)
                             .is(projectIdentifier)
                             .and(GitFullSyncJobKeys.syncStatus)
-                            .in(runningStatuses);
+                            .in(statusOfRunningOrQueuedJobs);
     return Optional.ofNullable(fullSyncJobRepository.find(criteria));
   }
 }

@@ -28,4 +28,6 @@ public class TriggerFullSyncRequestDTO {
   String targetBranchForPR;
   String prTitle;
   @NotNull String yamlGitConfigIdentifier;
+  boolean isNewBranch;
+  String baseBranch;
 }

@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/wings-software/portal/product/ci/ti-service/logger"
+	logger "github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
 )

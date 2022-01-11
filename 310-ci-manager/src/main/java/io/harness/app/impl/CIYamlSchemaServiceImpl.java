@@ -93,7 +93,7 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
   }
 
   @Override
-  public JsonNode getStepYamlSchema(EntityType entityType) {
+  public JsonNode getIndividualYamlSchema(EntityType entityType, String orgId, String projectId, Scope scope) {
     return yamlSchemaProvider.getYamlSchema(entityType, null, null, null);
   }
 

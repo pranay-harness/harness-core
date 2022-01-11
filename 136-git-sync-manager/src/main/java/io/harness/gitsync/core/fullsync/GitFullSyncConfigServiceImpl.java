@@ -63,6 +63,8 @@ public class GitFullSyncConfigServiceImpl implements GitFullSyncConfigService {
       gitFullSyncConfig.setPrTitle(dto.getPrTitle());
       gitFullSyncConfig.setCreatePullRequest(dto.isCreatePullRequest());
       gitFullSyncConfig.setYamlGitConfigIdentifier(dto.getRepoIdentifier());
+      gitFullSyncConfig.setTargetBranch(dto.getTargetBranch());
+      gitFullSyncConfig.setNewBranch(dto.isNewBranch());
       return GitFullSyncConfigMapper.toDTO(gitFullSyncConfigRepository.save(gitFullSyncConfig));
     }
     throw new InvalidRequestException("No such configuration found, please check the scope.", WingsException.USER);

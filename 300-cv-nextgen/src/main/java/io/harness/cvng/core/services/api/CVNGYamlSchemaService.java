@@ -21,5 +21,5 @@ public interface CVNGYamlSchemaService {
       String projectIdentifier, String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails);
   List<YamlSchemaWithDetails> getDeploymentStageYamlSchemaWithDetails(
       String projectIdentifier, String orgIdentifier, Scope scope);
-  JsonNode getStepYamlSchema(EntityType entityType);
+  JsonNode getStepYamlSchema(EntityType entityType, String orgId, String projectId, Scope scope);
 }

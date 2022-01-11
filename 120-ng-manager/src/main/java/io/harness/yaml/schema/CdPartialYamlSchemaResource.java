@@ -7,13 +7,18 @@
 
 package io.harness.yaml.schema;
 
+import static java.lang.String.format;
+
 import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.cdng.yaml.CdYamlSchemaService;
+import io.harness.common.EntityTypeConstants;
 import io.harness.encryption.Scope;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.YamlSchemaDetailsWrapper;
 import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
@@ -25,6 +30,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -75,7 +81,7 @@ public class CdPartialYamlSchemaResource implements YamlSchemaResource {
   @POST
   @Path("/merged")
   @ApiOperation(value = "Get Merged Partial Yaml Schema", nickname = "getMergedPartialYamlSchema")
-  public ResponseDTO<PartialSchemaDTO> getMergedYamlSchema(
+  public ResponseDTO<List<PartialSchemaDTO>> getMergedYamlSchema(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope,
@@ -83,15 +89,32 @@ public class CdPartialYamlSchemaResource implements YamlSchemaResource {
           description = "Step Schema with details") YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper) {
     PartialSchemaDTO schema = cdYamlSchemaService.getMergedDeploymentStageYamlSchema(accountIdentifier,
         projectIdentifier, orgIdentifier, scope, yamlSchemaDetailsWrapper.getYamlSchemaWithDetailsList());
-    return ResponseDTO.newResponse(schema);
+    return ResponseDTO.newResponse(Collections.singletonList(schema));
   }
 
-  @GET
-  @Path("/step")
+  @POST
+  @Path("/get")
   @ApiOperation(value = "Get step YAML schema", nickname = "getStepYamlSchema")
   public ResponseDTO<JsonNode> getStepYamlSchema(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType) {
-    return ResponseDTO.newResponse(cdYamlSchemaService.getStepYamlSchema(entityType));
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope,
+      @QueryParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType, @QueryParam("yamlGroup") String yamlGroup,
+      @RequestBody(required = true,
+          description = "Step Schema with details") YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper) {
+    if (yamlGroup.equals(StepCategory.STAGE.toString())) {
+      // Add more cases when cd module contains more stages.
+      if (entityType.getYamlName().equals(EntityTypeConstants.DEPLOYMENT_STAGE)) {
+        return ResponseDTO.newResponse(
+            cdYamlSchemaService
+                .getMergedDeploymentStageYamlSchema(accountIdentifier, projectIdentifier, orgIdentifier, scope,
+                    yamlSchemaDetailsWrapper.getYamlSchemaWithDetailsList())
+                .getSchema());
+      } else {
+        throw new InvalidRequestException(format("stage %s does not exist in module cd", entityType));
+      }
+    }
+    return ResponseDTO.newResponse(
+        cdYamlSchemaService.getIndividualYamlSchema(entityType, orgIdentifier, projectIdentifier, scope));
   }
 }
