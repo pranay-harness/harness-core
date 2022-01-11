@@ -83,6 +83,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -449,9 +450,10 @@ public class RoleAssignmentResource {
         createdRoleAssignments.add(roleAssignmentResponseDTO);
       } catch (Exception e) {
         log.error(String.format("Could not create role assignment %s", roleAssignment), e);
+        return Collections.emptyList();
       }
     }
-    return createdRoleAssignments;
+    return createdRoleAssignments.isEmpty() ? Collections.emptyList() : createdRoleAssignments;
   }
 
   private void checkUpdatePermission(HarnessScopeParams harnessScopeParams, RoleAssignment roleAssignment) {

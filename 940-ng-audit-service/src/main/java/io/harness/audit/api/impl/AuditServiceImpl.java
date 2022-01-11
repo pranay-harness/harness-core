@@ -84,11 +84,11 @@ public class AuditServiceImpl implements AuditService {
     } catch (DuplicateKeyException ex) {
       log.info("Audit for this entry already exists with id {} and account identifier {}", auditEvent.getInsertId(),
           auditEvent.getResourceScope().getAccountIdentifier());
-      return true;
+      return Boolean.TRUE;
     } catch (Exception e) {
       log.error("Could not audit this event with id {} and account identifier {}", auditEvent.getInsertId(),
           auditEvent.getResourceScope().getAccountIdentifier(), e);
-      return false;
+      return Boolean.FALSE;
     }
   }
 
