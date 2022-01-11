@@ -59,7 +59,7 @@ public class FullSyncTriggerServiceImpl implements FullSyncTriggerService {
                                  WingsException.USER));
 
     Optional<GitFullSyncJob> fullSyncJob =
-        fullSyncJobService.getRunningJobs(accountIdentifier, orgIdentifier, projectIdentifier);
+        fullSyncJobService.getRunningOrQueuedJob(accountIdentifier, orgIdentifier, projectIdentifier);
     if (fullSyncJob.isPresent()) {
       throw new InvalidRequestException("Full Sync is in process");
     }
