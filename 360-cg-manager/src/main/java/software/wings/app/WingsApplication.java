@@ -1215,7 +1215,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     queueListenerController.register(injector.getInstance(GeneralNotifyEventListener.class),
         configuration.getEventListenersCountConfig().getGeneralNotifyEventListenerCount());
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class),
-        configuration.getEventListenersCountConfig().getOrchestrationNotifyEventListenerCount());
+        50);
     queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
   }
 
