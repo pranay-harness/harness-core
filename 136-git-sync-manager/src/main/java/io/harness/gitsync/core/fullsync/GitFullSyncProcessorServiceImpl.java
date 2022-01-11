@@ -154,7 +154,8 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
     String orgIdentifier = fullSyncJob.getOrgIdentifier();
     String accountIdentifier = fullSyncJob.getAccountIdentifier();
     String yamlGitConfigIdentifier = fullSyncJob.getYamlGitConfigIdentifier();
-    YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, );
+    YamlGitConfigDTO yamlGitConfigDTO =
+        yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, yamlGitConfigIdentifier);
     GitPRCreateRequest createPRRequest = GitPRCreateRequest.builder()
                                              .accountIdentifier(accountIdentifier)
                                              .orgIdentifier(orgIdentifier)
