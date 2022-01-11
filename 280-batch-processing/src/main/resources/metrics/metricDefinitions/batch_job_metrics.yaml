@@ -2,11 +2,6 @@ name: Batch Job Metrics
 identifier: batchJobMetrics
 metricGroup: batch_job_group
 metrics:
-  - metricName: batchproc_dummyMetric
-    metricDefinition: Check whether metrics collection is working
-    unit: "1"
-    type: Count
-
   - metricName: batchproc_jobExecutionTimeInSec
     metricDefinition: Amount of time (in seconds) taken by job to complete
     unit: s

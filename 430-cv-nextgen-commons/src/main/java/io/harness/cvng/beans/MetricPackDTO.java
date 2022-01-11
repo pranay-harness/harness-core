@@ -8,6 +8,7 @@
 package io.harness.cvng.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.Builder;
@@ -26,6 +27,13 @@ public class MetricPackDTO {
   CVMonitoringCategory category;
   Set<MetricDefinitionDTO> metrics;
   List<TimeSeriesThresholdDTO> thresholds;
+
+  public Set<MetricDefinitionDTO> getMetrics() {
+    if (metrics == null) {
+      return new HashSet<>();
+    }
+    return metrics;
+  }
 
   @Value
   @Builder
