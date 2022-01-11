@@ -51,9 +51,15 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
       String resourceDirectory, String basePath, boolean useLatestChartMuseumVersion) throws Exception {
     GCSHelmRepoConfig gcsHelmRepoConfig = (GCSHelmRepoConfig) helmRepoConfig;
     GcpConfig config = (GcpConfig) connectorConfig;
-
-    return chartMuseumClientHelper.startGCSChartMuseumServer(gcsHelmRepoConfig.getBucketName(), basePath,
-        config.getServiceAccountKeyFileContent(), resourceDirectory, useLatestChartMuseumVersion);
+    try {
+      return chartMuseumClientHelper.startGCSChartMuseumServer(gcsHelmRepoConfig.getBucketName(), basePath,
+          config.getServiceAccountKeyFileContent(), resourceDirectory, useLatestChartMuseumVersion);
+    } catch (Exception ex) {
+      List<String> secrets = new ArrayList<>();
+      secrets.add(String.valueOf(config.getServiceAccountKeyFileContent()));
+      ExceptionMessageSanitizer.sanitizeException(ex, secrets);
+      throw ex;
+    }
   }
 
   private ChartMuseumServer startAmazonS3ChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig,
