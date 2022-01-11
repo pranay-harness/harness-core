@@ -40,10 +40,12 @@ public class YamlSchemaTransientHelper {
     {
       add(EntityType.HTTP_STEP);
       add(EntityType.JIRA_CREATE_STEP);
+      add(EntityType.JIRA_UPDATE_STEP);
       add(EntityType.SHELL_SCRIPT_STEP);
       add(EntityType.K8S_CANARY_DEPLOY_STEP);
       add(EntityType.TEMPLATE);
       add(EntityType.SERVICENOW_APPROVAL_STEP);
+      add(EntityType.JIRA_APPROVAL_STEP);
     }
   };
 
