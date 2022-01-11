@@ -9,15 +9,20 @@ package main
 	CI lite engine executes steps of stage provided as an input.
 */
 import (
+	//"io"
+	"encoding/base64"
+	"log"
 	"os"
 
 	"github.com/alexflint/go-arg"
+	"github.com/golang/protobuf/proto"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/commons/go/lib/metrics"
 	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/consts"
 	"github.com/wings-software/portal/product/ci/engine/grpc"
 	"github.com/wings-software/portal/product/ci/engine/legacy/executor"
+	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
 
@@ -59,6 +64,37 @@ func parseArgs() {
 	arg.MustParse(&args)
 }
 
+func generate() string {
+	// paths := []string{"/Users/vistaarjuneja/Downloads/step-exec/workspace/190-deployment-functional-tests",
+	// "/Users/vistaarjuneja/Downloads/step-exec/workspace/200-functional-test"}
+	runStep := &pb.UnitStep_RunTests{
+		RunTests: &pb.RunTestsStep{
+			Args:                 "test",
+			BuildTool:            "gradle",
+			Language:             "java",
+			ContainerPort:        8080,
+			RunOnlySelectedTests: true,
+		},
+	}
+	step0 := &pb.UnitStep{
+		Id:          "step4",
+		DisplayName: "display_name",
+		Step:        runStep,
+		LogKey:      "omg",
+	}
+	var steps []*pb.Step
+	steps = append(steps, &pb.Step{Step: &pb.Step_Unit{Unit: step0}})
+	execution := &pb.Execution{
+		Steps: steps,
+	}
+	data, err := proto.Marshal(execution)
+	if err != nil {
+		log.Fatalf("marshaling error: %v", err)
+	}
+	encoded := base64.StdEncoding.EncodeToString(data)
+	return encoded
+}
+
 func init() {
 	//TODO: perform any initialization
 }
@@ -75,12 +111,19 @@ func main() {
 	if args.LogMetrics {
 		metrics.Log(int32(os.Getpid()), "engine", log)
 	}
+	path := "/Users/vistaarjuneja/step-exec/.harness/tmp/"
+	args.Stage = &stageSchema{Input: generate(), TmpFilePath: path, Debug: true}
 
 	if args.Stage != nil {
 		// Starting stage execution
 		startServer(remoteLogger, true)
 		log.Infow("Starting stage execution")
+		go func() {
+			remoteLogger.Writer.Close()
+			os.Exit(1)
+		}()
 		err := executeStage(args.Stage.Input, args.Stage.TmpFilePath, args.Stage.ServicePorts, args.Stage.Debug, log)
+
 		if err != nil {
 			remoteLogger.Writer.Close()
 			os.Exit(1) // Exit the lite engine with status code of 1
