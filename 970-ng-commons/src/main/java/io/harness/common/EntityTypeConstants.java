@@ -39,7 +39,9 @@ public interface EntityTypeConstants {
   String FEATURE_FLAGS = "FeatureFlags";
   String HTTP = "Http";
   String JIRA_CREATE = "JiraCreate";
+  String JIRA_UPDATE = "JiraUpdate";
   String SHELL_SCRIPT = "ShellScript";
   String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
   String SERVICENOW_APPROVAL = "ServiceNowApproval";
+  String JIRA_APPROVAL = "JiraApproval";
 }

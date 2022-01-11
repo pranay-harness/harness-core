@@ -21,6 +21,7 @@ public class PmsStepFilterJsonCreatorV2 extends GenericStepPMSFilterJsonCreatorV
   @Override
   public Set<String> getSupportedStepTypes() {
     return Sets.newHashSet(StepSpecTypeConstants.HTTP, StepSpecTypeConstants.JIRA_CREATE,
-        StepSpecTypeConstants.SHELL_SCRIPT, StepSpecTypeConstants.SERVICENOW_APPROVAL);
+        StepSpecTypeConstants.JIRA_UPDATE, StepSpecTypeConstants.SHELL_SCRIPT,
+        StepSpecTypeConstants.SERVICENOW_APPROVAL);
   }
 }

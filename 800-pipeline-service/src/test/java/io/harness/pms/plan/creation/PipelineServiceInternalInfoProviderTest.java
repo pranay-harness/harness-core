@@ -46,9 +46,12 @@ import io.harness.pms.utils.InjectorUtils;
 import io.harness.pms.variables.HTTPStepVariableCreator;
 import io.harness.rule.Owner;
 import io.harness.steps.approval.ApprovalStepVariableCreator;
+import io.harness.steps.approval.step.jira.JiraApprovalStepPlanCreator;
 import io.harness.steps.approval.step.servicenow.ServiceNowApprovalStepPlanCreator;
 import io.harness.steps.approval.step.servicenow.ServiceNowApprovalStepVariableCreator;
 import io.harness.steps.jira.JiraStepVariableCreator;
+import io.harness.steps.jira.create.JiraCreateStepPlanCreator;
+import io.harness.steps.jira.update.JiraUpdateStepPlanCreator;
 import io.harness.steps.shellscript.ShellScriptStepVariableCreator;
 
 import java.util.List;
@@ -81,7 +84,7 @@ public class PipelineServiceInternalInfoProviderTest extends CategoryTest {
             .stream()
             .map(e -> e.getClass())
             .collect(Collectors.toSet());
-    assertThat(planCreatorClasses).hasSize(14);
+    assertThat(planCreatorClasses).hasSize(16);
     assertThat(planCreatorClasses.contains(NGPipelinePlanCreator.class)).isTrue();
     assertThat(planCreatorClasses.contains(StagesPlanCreator.class)).isTrue();
     assertThat(planCreatorClasses.contains(ParallelPlanCreator.class)).isTrue();
@@ -93,6 +96,9 @@ public class PipelineServiceInternalInfoProviderTest extends CategoryTest {
     assertThat(planCreatorClasses.contains(FeatureFlagStagePlanCreator.class)).isTrue();
     assertThat(planCreatorClasses.contains(CfExecutionPMSPlanCreator.class)).isTrue();
     assertThat(planCreatorClasses.contains(ServiceNowApprovalStepPlanCreator.class)).isTrue();
+    assertThat(planCreatorClasses.contains(JiraUpdateStepPlanCreator.class)).isTrue();
+    assertThat(planCreatorClasses.contains(JiraCreateStepPlanCreator.class)).isTrue();
+    assertThat(planCreatorClasses.contains(JiraApprovalStepPlanCreator.class)).isTrue();
   }
 
   @Test
