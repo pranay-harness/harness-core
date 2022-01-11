@@ -9,6 +9,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.expression.SecretString.SECRET_MASK;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.replaceEach;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -25,6 +26,9 @@ import java.util.List;
 public class ExceptionMessageSanitizer {
   public static void sanitizeException(Throwable ex, List<String> secrets)
       throws NoSuchFieldException, IllegalAccessException {
+    if (isNull(secrets)) {
+      return;
+    }
     Throwable exception = ex;
     while (exception != null) {
       sanitizeExceptionInternal(exception, secrets);
