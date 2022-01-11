@@ -569,6 +569,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         GcpConfig gcpConfig = (GcpConfig) settingAttribute.getValue();
         return StackDriverLogDataCollectionInfo.builder()
             .gcpConfig(gcpConfig)
+            .projectId(stackDriverLogState.getProjectId())
             .hostnameField(getResolvedFieldValue(executionContext, AnalysisContextKeys.hostNameField, hostnameField))
             .stateType(StateType.STACK_DRIVER_LOG)
             .applicationId(analysisContext.getAppId())

@@ -75,6 +75,8 @@ public class StackDriverState extends AbstractMetricAnalysisState {
 
   private boolean isLogState;
 
+  private String projectId;
+
   private List<StackDriverMetricDefinition> metricDefinitions;
 
   public void setMetricDefinitions(List<StackDriverMetricDefinition> metricDefinitions) {
@@ -156,6 +158,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
     final StackDriverDataCollectionInfo dataCollectionInfo =
         StackDriverDataCollectionInfo.builder()
             .gcpConfig(gcpConfig)
+            .projectId(projectId)
             .applicationId(context.getAppId())
             .stateExecutionId(context.getStateExecutionInstanceId())
             .workflowId(getWorkflowId(context))
