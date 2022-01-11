@@ -14,10 +14,10 @@ type Config struct {
 	Debug bool `envconfig:"LOG_SERVICE_DEBUG"`
 	Trace bool `envconfig:"LOG_SERVICE_TRACE"`
 
-	Secrets struct {
+	Auth struct {
 		DisableAuth bool   `envconfig:"LOG_SERVICE_DISABLE_AUTH"`
-		LogSecret   string `envconfig:"LOG_SERVICE_SECRET" default:"secret"`
-		GlobalToken string `envconfig:"LOG_SERVICE_GLOBAL_TOKEN" default:"token"`
+		LogSecret   string `envconfig:"LOG_SERVICE_SECRET" default:"secret" secret:"true"`
+		GlobalToken string `envconfig:"LOG_SERVICE_GLOBAL_TOKEN" default:"token" secret:"true"`
 	}
 
 	Server struct {
@@ -39,15 +39,23 @@ type Config struct {
 		Endpoint        string `envconfig:"LOG_SERVICE_S3_ENDPOINT"`
 		PathStyle       bool   `envconfig:"LOG_SERVICE_S3_PATH_STYLE"`
 		Region          string `envconfig:"LOG_SERVICE_S3_REGION"`
-		AccessKeyID     string `envconfig:"LOG_SERVICE_S3_ACCESS_KEY_ID"`
-		AccessKeySecret string `envconfig:"LOG_SERVICE_S3_SECRET_ACCESS_KEY"`
+		AccessKeyID     string `envconfig:"LOG_SERVICE_S3_ACCESS_KEY_ID" secret:"true"`
+		AccessKeySecret string `envconfig:"LOG_SERVICE_S3_SECRET_ACCESS_KEY" secret:"true"`
 	}
 
 	Redis struct {
 		Endpoint   string `envconfig:"LOG_SERVICE_REDIS_ENDPOINT"`
-		Password   string `envconfig:"LOG_SERVICE_REDIS_PASSWORD"`
+		Password   string `envconfig:"LOG_SERVICE_REDIS_PASSWORD" secret:"true"`
 		SSLEnabled bool   `envconfig:"LOG_SERVICE_REDIS_SSL_ENABLED"`
 		CertPath   string `envconfig:"LOG_SERVICE_REDIS_SSL_CA_CERT_PATH"`
+	}
+
+	// Whether to use secret env variables as they are, or talk to GCP secret
+	// manager to resolve them.
+	SecretResolution struct {
+		Enabled     bool   `envconfig:"LOG_SERVICE_SECRET_RESOLUTION_ENABLED"`
+		GcpProject  string `envconfig:"LOG_SERVICE_SECRET_RESOLUTION_GCP_PROJECT"`
+		GcpJsonPath string `envconfig:"LOG_SERVICE_SECRET_RESOLUTION_GCP_JSON_PATH"`
 	}
 }
 
