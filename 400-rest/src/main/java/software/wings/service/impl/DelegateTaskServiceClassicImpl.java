@@ -818,7 +818,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       if (delegateTask == null) {
         return null;
       }
-      delegateMetricsService.recordDelegateTaskMetrics(delegateTask, DELEGATE_TASK_ACQUIRE);
 
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
@@ -829,12 +828,12 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
           return assignTask(delegateId, taskId, delegateTask, delegateInstanceId);
         }
 
-        log.info("Delegate is blacklisted for task");
+        log.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
         return null;
       }
     } finally {
       if (log.isDebugEnabled()) {
-        log.debug("Done with acquire delegate task method");
+        log.debug("Done with acquire delegate task{} ", taskId);
       }
     }
   }
@@ -844,29 +843,29 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       final String accountId, final String delegateId, final String taskId, final boolean areClientToolsInstalled) {
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
     if (delegateTask == null) {
-      log.info("Task not found or was already assigned");
+      log.info("Task {} not found or was already assigned", taskId);
       return;
     }
 
     if (delegateTask.isForceExecute()) {
-      log.info("Task is set for force execution");
+      log.debug("Task is set for force execution");
       return;
     }
 
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
              TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
       if (!isValidationComplete(delegateTask)) {
-        log.info("Task is still being validated");
+        log.info(
+            "Task {} is still being validated with delegate ids {} ", taskId, delegateTask.getValidatingDelegateIds());
         return;
       }
       // Check whether a whitelisted delegate is connected
       List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
       if (isNotEmpty(whitelistedDelegates)) {
-        log.info("Waiting for task to be acquired by a whitelisted delegate: {}", whitelistedDelegates);
+        log.info("Waiting for task {} to be acquired by a whitelisted delegate: {}", taskId, whitelistedDelegates);
         return;
       }
 
-      log.info("No connected whitelisted delegates found for task");
       String errorMessage = generateValidationError(delegateTask, areClientToolsInstalled);
       log.info(errorMessage);
       DelegateResponseData response;
@@ -892,8 +891,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     final String clientToolsWarning = !areClientToolsInstalled
         ? "  -  This could be due to some client tools still being installed on the delegates. If this is the reason please retry in a few minutes."
         : "";
-
-    return format("No eligible delegates could perform the required capabilities for this task: [ %s ]%n"
+    return format(
+               "No connected whitelisted delegates found for task and no eligible delegates could perform the required capabilities for this task: [ %s ]%n"
                    + "  -  The capabilities were tested by the following delegates: [ %s ]%n"
                    + "  -  Following delegates were validating but never returned: [ %s ]%n"
                    + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions.",
@@ -1185,7 +1184,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       String delegateId, String taskId, DelegateTask delegateTask, String delegateInstanceId) {
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
-
+    delegateMetricsService.recordDelegateTaskMetrics(delegateTask, DELEGATE_TASK_ACQUIRE);
     log.info("Assigning {} task to delegate", delegateTask.getData().isAsync() ? ASYNC : SYNC);
     Query<DelegateTask> query = persistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())

@@ -742,7 +742,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, "", delegateTask.getUuid(), true);
     verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
     String expectedMessage =
-        "No eligible delegates could perform the required capabilities for this task: [ https://www.google.com ]\n"
+        "No connected whitelisted delegates found for task and no eligible delegates could perform the required capabilities for this task: [ https://www.google.com ]\n"
         + "  -  The capabilities were tested by the following delegates: [ DELEGATE_ID ]\n"
         + "  -  Following delegates were validating but never returned: [  ]\n"
         + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions.";
@@ -766,7 +766,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), false);
     // verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
     String expectedMessage =
-        "No eligible delegates could perform the required capabilities for this task: [ https://www.google.com ]\n"
+        "No connected whitelisted delegates found for task and no eligible delegates could perform the required capabilities for this task: [ https://www.google.com ]\n"
         + "  -  The capabilities were tested by the following delegates: [ DELEGATE_ID ]\n"
         + "  -  Following delegates were validating but never returned: [  ]\n"
         + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions."
