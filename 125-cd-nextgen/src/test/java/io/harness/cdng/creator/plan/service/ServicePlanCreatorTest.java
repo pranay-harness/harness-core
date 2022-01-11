@@ -24,16 +24,26 @@ import io.harness.cdng.licenserestriction.EnforcementValidator;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceDefinition;
+import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.pms.plan.creation.PlanCreatorUtils;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import java.util.HashMap;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -179,11 +189,124 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testPrepareMetadataForArtifactsPlanCreator() {
-    Map<String, ByteString> metadataDependency = new HashMap<>();
     String uuid = UUIDGenerator.generateUuid();
     ServiceConfig serviceConfig = ServiceConfig.builder().build();
-    servicePlanCreator.prepareMetadataForArtifactsPlanCreator(uuid, serviceConfig, metadataDependency);
+    Map<String, ByteString> metadataDependency =
+        servicePlanCreator.prepareMetadataForArtifactsPlanCreator(uuid, serviceConfig);
     assertThat(metadataDependency.size()).isEqualTo(2);
     assertThat(metadataDependency.containsKey(YamlTypes.UUID)).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testGetFieldClass() {
+    assertThat(servicePlanCreator.getFieldClass()).isEqualTo(ServiceConfig.class);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testGetSupportedTypes() {
+    Map<String, Set<String>> supportedTypes = servicePlanCreator.getSupportedTypes();
+    assertThat(supportedTypes.containsKey(YamlTypes.SERVICE_CONFIG)).isEqualTo(true);
+    assertThat(supportedTypes.get(YamlTypes.SERVICE_CONFIG).size()).isEqualTo(1);
+    assertThat(supportedTypes.get(YamlTypes.SERVICE_CONFIG).contains(PlanCreatorUtils.ANY_TYPE)).isEqualTo(true);
+  }
+
+  private void checksForDependenciesForArtifact(PlanCreationResponse planCreationResponse, String nodeUuid) {
+    assertThat(planCreationResponse.getDependencies().getDependenciesMap().containsKey(nodeUuid)).isEqualTo(true);
+    assertThat(planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().size())
+        .isEqualTo(2);
+    assertThat(
+        planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
+            YamlTypes.UUID))
+        .isEqualTo(true);
+    assertThat(
+        planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
+            YamlTypes.SERVICE_CONFIG))
+        .isEqualTo(true);
+  }
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testAddDependenciesForArtifactsWithServiceDefinition() throws IOException {
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
+
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    InputStream yamlFile = classLoader.getResourceAsStream("cdng/plan/service_plan_creator_test1.yml");
+    assertThat(yamlFile).isNotNull();
+
+    String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
+    yaml = YamlUtils.injectUuid(yaml);
+    YamlField serviceField = YamlUtils.readTree(yaml);
+
+    PlanCreationContext ctx = PlanCreationContext.builder().currentField(serviceField).build();
+    servicePlanCreator.actualServiceConfig = ServiceConfig.builder().build();
+    String nodeUuid = servicePlanCreator.addDependenciesForArtifacts(ctx, planCreationResponseMap);
+    assertThat(planCreationResponseMap.size()).isEqualTo(1);
+    assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
+    PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
+    checksForDependenciesForArtifact(planCreationResponse1, nodeUuid);
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid))
+        .isEqualTo("serviceDefinition/spec/artifacts");
+    assertThat(planCreationResponse1.getYamlUpdates()).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testAddDependenciesForArtifactsWithUseFromStageWithoutStageOverride() throws IOException {
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
+
+    servicePlanCreator.actualServiceConfig =
+        ServiceConfig.builder().useFromStage(ServiceUseFromStage.builder().stage("stage1").build()).build();
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    InputStream yamlFile = classLoader.getResourceAsStream("cdng/plan/service_plan_creator_test2.yml");
+    assertThat(yamlFile).isNotNull();
+
+    String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
+    yaml = YamlUtils.injectUuid(yaml);
+    YamlField serviceField = YamlUtils.readTree(yaml);
+
+    PlanCreationContext ctx = PlanCreationContext.builder().currentField(serviceField).build();
+    String nodeUuid = servicePlanCreator.addDependenciesForArtifacts(ctx, planCreationResponseMap);
+    assertThat(planCreationResponseMap.size()).isEqualTo(1);
+    assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
+    PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
+    checksForDependenciesForArtifact(planCreationResponse1, nodeUuid);
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid))
+        .isEqualTo("stageOverrides/artifacts");
+    assertThat(planCreationResponse1.getYamlUpdates().getFqnToYamlCount()).isEqualTo(1);
+    servicePlanCreator.actualServiceConfig = ServiceConfig.builder().build();
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testAddDependenciesForArtifactsWithUseFromStageWithoutArtifacts() throws IOException {
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
+
+    servicePlanCreator.actualServiceConfig =
+        ServiceConfig.builder().useFromStage(ServiceUseFromStage.builder().stage("stage1").build()).build();
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    InputStream yamlFile = classLoader.getResourceAsStream("cdng/plan/service_plan_creator_test3.yml");
+    assertThat(yamlFile).isNotNull();
+
+    String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
+    yaml = YamlUtils.injectUuid(yaml);
+    YamlField serviceField = YamlUtils.readTree(yaml);
+
+    PlanCreationContext ctx = PlanCreationContext.builder().currentField(serviceField).build();
+    String nodeUuid = servicePlanCreator.addDependenciesForArtifacts(ctx, planCreationResponseMap);
+    assertThat(planCreationResponseMap.size()).isEqualTo(1);
+    assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
+    PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
+    checksForDependenciesForArtifact(planCreationResponse1, nodeUuid);
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid))
+        .isEqualTo("stageOverrides/artifacts");
+
+    assertThat(planCreationResponse1.getYamlUpdates().getFqnToYamlCount()).isEqualTo(1);
+    servicePlanCreator.actualServiceConfig = ServiceConfig.builder().build();
   }
 }
