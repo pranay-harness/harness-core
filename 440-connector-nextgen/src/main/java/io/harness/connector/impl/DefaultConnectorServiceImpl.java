@@ -70,6 +70,8 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.errorhandling.NGErrorHelper;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DuplicateFieldException;
@@ -103,6 +105,7 @@ import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.PageUtils;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Collections;
@@ -438,13 +441,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
     Objects.requireNonNull(connector.getIdentifier());
     Optional<Connector> existingConnectorOptional;
-    if (GitContextHelper.isFullSyncFlow()) {
-      existingConnectorOptional = getUnSyncedConnector(
-          accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
-    } else {
-      existingConnectorOptional = getInternal(
-          accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
-    }
+
+    existingConnectorOptional = getInternal(
+        accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
     if (!existingConnectorOptional.isPresent()) {
       throw new InvalidRequestException(
           format("No connector exists with the  Identifier %s", connector.getIdentifier()));
@@ -491,9 +490,6 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             -> outboxService.save(new ConnectorUpdateEvent(
                 accountIdentifier, oldConnectorDTO.getConnector(), connectorRequest.getConnectorInfo()));
       }
-      if (GitContextHelper.isFullSyncFlow()) {
-        gitChangeType = ADD;
-      }
       Connector updatedConnector = connectorRepository.save(newConnector, connectorRequest, gitChangeType, supplier);
       connectorEntityReferenceHelper.createSetupUsageForSecret(connector, accountIdentifier, true);
       return getResponse(accountIdentifier, updatedConnector.getOrgIdentifier(),
@@ -501,6 +497,47 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
+    }
+  }
+
+  @Override
+  public ConnectorDTO fullSyncEntity(EntityDetailProtoDTO entityDetailProtoDTO) {
+    IdentifierRefProtoDTO identifierRef = entityDetailProtoDTO.getIdentifierRef();
+    String accountIdentifier = identifierRef.getAccountIdentifier().getValue();
+    String orgIdentifier = identifierRef.getOrgIdentifier().getValue();
+    String projectIdentifier = identifierRef.getProjectIdentifier().getValue();
+    String identifier = identifierRef.getIdentifier().getValue();
+
+    Preconditions.checkNotNull(accountIdentifier, "The account identifier input cannot be null for the full sync");
+    Preconditions.checkNotNull(orgIdentifier, "The org identifier input cannot be null for the full sync");
+    Preconditions.checkNotNull(projectIdentifier, "The project identifier input cannot be null for the full sync");
+    Preconditions.checkNotNull(identifier, "The connector identifier input cannot be null for the full sync");
+
+    Optional<Connector> existingConnectorOptional =
+        getUnSyncedConnector(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (!existingConnectorOptional.isPresent()) {
+      throw new InvalidRequestException(format("No connector exists with the  Identifier %s", identifier));
+    }
+    Connector updatedConnector = connectorRepository.save(existingConnectorOptional.get(), ADD);
+    ConnectorInfoDTO connectorInfoDTO = getResponse(accountIdentifier, updatedConnector.getOrgIdentifier(),
+        updatedConnector.getProjectIdentifier(), updatedConnector)
+                                            .getConnector();
+    deleteTheExistingReferences(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    connectorEntityReferenceHelper.createSetupUsageForSecret(connectorInfoDTO, accountIdentifier, true);
+    return ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build();
+  }
+
+  private void deleteTheExistingReferences(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    GitEntityInfo oldGitEntityInfo = GitContextHelper.getGitEntityInfo();
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      final GitEntityInfo emptyInfo = GitEntityInfo.builder().build();
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(emptyInfo).build());
+      connectorEntityReferenceHelper.deleteExistingSetupUsages(
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    } finally {
+      GlobalContextManager.upsertGlobalContextRecord(
+          GitSyncBranchContext.builder().gitBranchInfo(oldGitEntityInfo).build());
     }
   }
 
